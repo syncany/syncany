@@ -1,0 +1,132 @@
+<?xml version="1.0" ?>
+<!-- 
+	jedes Ant Skript besteht aus einem Projekt
+	Pro Projekt muss ein Default Target definiert sein!
+//-->
+<project name="SyncanyCore" default="dist" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+	<path id="test.classpath">
+		<pathelement location="./build" />
+		<fileset dir="./lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+
+	<target name="init" depends="init-ivy">
+		<!-- Create the time stamp -->
+		<tstamp />
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="build" />
+
+		<ivy:settings file="ivysettings.xml" />
+
+		<ivy:retrieve conf="cc-impl" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+		<!-- Compile the java code from ${src} into ${build} -->
+		<echo>Compiling SyncanyCore</echo>
+		<path id="project.class.path">
+			<fileset dir="lib" includes="*.jar" />
+		</path>
+		<javac srcdir="src" destdir="build" classpathref="project.class.path" includeantruntime="true" />
+		<javac srcdir="tests" destdir="build" classpathref="project.class.path" />
+	</target>
+
+	<target name="dist" depends="compile" description="generate the distribution">
+		<!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+		<echo>Creating Distribution</echo>
+		<manifestclasspath property="lib.list" jarfile="SyncanyCore.jar">
+			<classpath refid="project.class.path" />
+		</manifestclasspath>
+		<jar jarfile="SyncanyCore.jar" basedir="build">
+			<manifest>
+				<attribute name="Main-Class" value="org.syncany.Syncany" />
+				<attribute name="Class-Path" value="${lib.list}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="clean" description="clean up">
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="build" />
+		<delete dir="dist" />
+	</target>
+
+
+	<!-- ##### TESTS START ##### -->
+
+	<target name="scenario-sync-test1" depends="compile">
+		<ivy:retrieve conf="test" />
+		<parallel>
+			<daemons>
+				<junit fork="no" haltonfailure="yes" enableTestListenerEvents="yes">
+					<test name="org.syncany.tests.scenario.MainSyncanyDaemon" />
+					<formatter type="plain" usefile="true" />
+					<classpath refid="test.classpath" />
+				</junit>
+			</daemons>
+			<sequential>
+				<junit fork="yes" haltonfailure="yes">
+					<test name="org.syncany.tests.scenario.Scenario1" />
+					<formatter type="plain" usefile="true" />
+					<classpath refid="test.classpath" />
+				</junit>
+			</sequential>
+		</parallel>
+	</target>
+
+	<target name="scenario-sync-test2" depends="compile">
+		<ivy:retrieve conf="test" />
+		<parallel>
+			<daemons>
+				<junit fork="yes" haltonfailure="yes" enableTestListenerEvents="yes">
+					<test name="org.syncany.tests.scenario.MainSyncanyDaemon" />
+					<formatter type="plain" usefile="true" />
+					<classpath refid="test.classpath" />
+				</junit>
+			</daemons>
+			<sequential>
+				<junit fork="yes" haltonfailure="yes">
+					<test name="org.syncany.tests.scenario.Scenario2" />
+					<formatter type="plain" usefile="true" />
+					<classpath refid="test.classpath" />
+				</junit>
+			</sequential>
+		</parallel>
+	</target>
+
+
+	<!-- ##### TESTS END ##### -->
+
+	<!-- ##### IVY START ##### -->
+
+	<property name="ivy.install.version" value="2.1.0-rc2" />
+	<condition property="ivy.home" value="${env.IVY_HOME}">
+		<isset property="env.IVY_HOME" />
+	</condition>
+	<property name="ivy.home" value="${user.home}/.ant" />
+	<property name="ivy.jar.dir" value="${ivy.home}/lib" />
+	<property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+
+	<target name="download-ivy" unless="offline">
+		<mkdir dir="${ivy.jar.dir}" />
+		<!-- download Ivy from web site so that it can be used even without any special installation -->
+		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true" />
+	</target>
+
+	<target name="init-ivy" depends="download-ivy">
+		<!-- try to load ivy here from ivy home, in case the user has not already dropped
+                    it into ant's lib dir (note that the latter copy will always take precedence).
+                    We will not fail as long as local lib dir exists (it may be empty) and
+                    ivy is in at least one of ant's lib dir or the local lib dir. -->
+
+		<path id="ivy.lib.path">
+			<fileset dir="${ivy.jar.dir}" includes="*.jar" />
+		</path>
+		<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
+	</target>
+
+	<!-- ##### IVY END ##### -->
+</project>

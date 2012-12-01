@@ -1,0 +1,41 @@
+
+----------------------------------------------------------------------
+	SYNCANY - INSTRUCTIONS
+----------------------------------------------------------------------
+
+1.	svn check out
+
+2.	run build.xml with ant
+	
+3.	check paths in config.json and change if needed
+	
+4. 	java -jar SyncanyCore.jar 
+
+
+
+----------------------------------------------------------------------
+	SYNCANY - INSTRUCTIONS FOR ECLIPSE (Instruction based on Indigo)
+----------------------------------------------------------------------
+
+1.	Set Java JDK to version 6
+	Window -> Preferences -> Java -> Installed JREs ... add and select your Java 6 JDK
+
+2.	Get required eclipse svn plugins: 
+	Subclipse 1.6.x Update Site - http://subclipse.tigris.org/update_1.6.x
+	If SVNKit is not contained, use update site http://eclipse.svnkit.com/1.3.x
+	Ivy update site http://www.apache.org/dist/ant/ivyde/updatesite
+
+3.	due to JavaHL problems change the svn interface at Window -> Preferences -> Team -> SVN ... "SVN interface" -> Chose "SVNKit"
+
+4.	check out syncany from your svn repository:
+	* add svn perspective: Window -> Open Perspective -> Other ... Chose "SVN Repository Exploring"
+	* after adding your repository location in this view, run a checkout of "SyncanyCore"
+
+5.	after checkout configure ivy
+	* add ivy.xml to Ivy Library (Right-Click on ivy.xml -> "Add Ivy Library...")
+	* add ivysettings.xml to Ivy settings path:
+	Windows -> Preferences -> Ivy -> Settings ... Chose "Workspace..." below "Ivy settings path:" and add the ivysettings.xml which is within the workspace
+
+6.	run the build.xml as Ant Build
+	
+7. 	run Syncany.java as Java Application

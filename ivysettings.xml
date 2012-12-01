@@ -1,0 +1,22 @@
+<ivysettings>
+	<settings defaultResolver="chain" />
+
+	<include url="${ivy.default.settings.dir}/ivysettings-public.xml" />
+	<include url="${ivy.default.settings.dir}/ivysettings-shared.xml" />
+	<include url="${ivy.default.settings.dir}/ivysettings-local.xml" />
+	<include url="${ivy.default.settings.dir}/ivysettings-main-chain.xml" />
+	<include url="${ivy.default.settings.dir}/ivysettings-default-chain.xml" />
+
+	<resolvers>
+		<chain name="chain">
+			<!-- <url name="com.springsource.repository.bundles.release"> <ivy pattern="http://repository.springsource.com/ivy/bundles/release/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" 
+				/> <artifact pattern="http://repository.springsource.com/ivy/bundles/release/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" 
+				/> </url> -->
+			<ibiblio name="central" m2compatible="true" />
+			<filesystem name="libraries">
+				<artifact
+					pattern="${ivy.settings.dir}/local/[artifact]-[revision].[ext]" />
+			</filesystem>
+		</chain>
+	</resolvers>
+</ivysettings>

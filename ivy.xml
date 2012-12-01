@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.    
+-->
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+       
+    
+    <info
+        organisation="org.syncany"
+        module="SyncanyCore"
+        status="integration">
+	</info>
+	
+	<configurations>
+		<conf name="cc-impl" description="provide an implementation that use apache common collection framework"/>
+		<conf name="test" extends="cc-impl" visibility="private" description="for testing our framework"/>
+    </configurations>
+	 
+	<dependencies>
+		<!-- Jars are pulled from http://mvnrepository.com/ -->
+    	
+    	<!-- Other Stuff needed in Syncany -->
+    		<!-- Syncany.java -->
+    			<dependency org="commons-cli" name="commons-cli" rev="1.0"  conf="cc-impl->default"/>
+			
+			<!-- Indexer -->
+    			<dependency org="commons-codec" name="commons-codec" rev="1.5"  conf="cc-impl->default"/>
+    			<dependency org="org.apache.commons" name="commons-compress" rev="1.3"  conf="cc-impl->default"/>
+    			
+    		<!-- CSV PARSER -->
+    			<dependency org="org.ostermiller" name="utils" rev="1.07.00" conf="cc-impl->default"/>
+    			
+    		<!-- JUNIT DEPENDENCIES -->
+    			<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>
+    			
+    		<!-- GSON - Google JSON Parser -->
+    			<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
+    			
+    		<!-- JPATH WATCH -->
+    			<dependency org="jpathwatch-libs-only" name="jpathwatch-libs-only" rev="0.94" conf="cc-impl->default"/>	
+  	</dependencies>
+	
+</ivy-module>
