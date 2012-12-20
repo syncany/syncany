@@ -28,18 +28,18 @@ import java.io.OutputStream;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CustomMetaChunk extends MetaChunk {
+public class CustomMultiChunk extends MultiChunk {
     protected int checksumLength;
     protected DataOutputStream os;
     protected DataInputStream is;
     
-    public CustomMetaChunk(byte[] id, InputStream is) {
-        super(id, 0);
+    public CustomMultiChunk(InputStream is) {
+        super(0);
         this.is = new DataInputStream(is);
         this.checksumLength = -1;
     }
     
-    public CustomMetaChunk(byte[] id, int minSize, OutputStream os) {
+    public CustomMultiChunk(byte[] id, int minSize, OutputStream os) {
         super(id, minSize);
         this.os = new DataOutputStream(os);
         this.checksumLength = -1;
@@ -62,6 +62,9 @@ public class CustomMetaChunk extends MetaChunk {
         
         // First chunk: write checksum length!
         if (checksumLength == -1) {
+        	os.writeByte(this.getId().length);
+        	os.write(this.getId());
+        	
             checksumLength = chunk.getChecksum().length;
             os.writeByte(chunk.getChecksum().length);
         }
@@ -69,7 +72,7 @@ public class CustomMetaChunk extends MetaChunk {
         os.write(chunk.getChecksum());
 
         os.writeShort(chunk.getSize());
-        os.write(chunk.getContents(), 0, chunk.getSize());  
+        os.write(chunk.getContent(), 0, chunk.getSize());  
     }
     
 
@@ -77,7 +80,11 @@ public class CustomMetaChunk extends MetaChunk {
     public Chunk read() throws IOException {
         // First chunk: read checksum length!
         if (checksumLength == -1) {
-            checksumLength = is.readByte();
+        	int idLength = is.readByte();
+        	this.id = new byte[idLength];
+        	is.read(this.id);
+        	
+            this.checksumLength = is.readByte();
         }
         
         byte[] checksum = new byte[checksumLength];

@@ -1,5 +1,5 @@
 /*
- * Syncany
+ * Syncany, www.syncany.org
  * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,30 +20,34 @@ package org.syncany.util.chunk2.meta;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * @author pheckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CustomMetaChunker extends MetaChunker {
-    public CustomMetaChunker(int minChunkSize, int sleepMillis) {
-        super(minChunkSize, sleepMillis);
+public abstract class MultiChunker {
+    protected int minChunkSize;
+    protected int sleepMillis;
+        
+    public MultiChunker(int minChunkSize, int sleepMillis)  {
+        this.minChunkSize = minChunkSize;
+        this.sleepMillis = sleepMillis;
     }
 
-    @Override
-    public MetaChunk create(byte[] id, InputStream is) {
-        sleep();
-        return new CustomMetaChunk(id, is);
+    public int getMinChunkSize() {
+        return minChunkSize;
     }
-
-    @Override
-    public MetaChunk create(byte[] id, OutputStream os) throws IOException {
-        sleep();
-        return new CustomMetaChunk(id, minChunkSize, os);
+    
+    protected void sleep() {
+        try { Thread.sleep(sleepMillis); }
+        catch (Exception e) { }
     }
-
+        
+    public abstract MultiChunk createMultiChunk(InputStream is);
+    public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
+    
     @Override
-    public String toString() {
-        return "Custom-"+minChunkSize+"-"+sleepMillis;
-    }
+    public abstract String toString();    
 }

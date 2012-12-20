@@ -38,7 +38,7 @@ public class Chunk {
         return checksum;
     }
 
-    public byte[] getContents() {
+    public byte[] getContent() {
         return contents;
     }
 

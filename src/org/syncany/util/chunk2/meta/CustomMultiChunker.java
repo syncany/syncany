@@ -17,6 +17,7 @@
  */
 package org.syncany.util.chunk2.meta;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -24,12 +25,27 @@ import java.io.OutputStream;
  *
  * @author pheckel
  */
-public class NoMetaChunk extends CustomMetaChunk {
-    public NoMetaChunk(byte[] id, InputStream is) {
-        super(id, is);
+public class CustomMultiChunker extends MultiChunker {
+    public CustomMultiChunker(int minChunkSize, int sleepMillis) {
+        super(minChunkSize, sleepMillis);
+    }
+
+    @Override
+    public MultiChunk createMultiChunk(InputStream is) {
+        sleep();
+        return new CustomMultiChunk(is);
     }
     
-    public NoMetaChunk(byte[] id, OutputStream os) {
-        super(id, 0, os); // minSize is zero -> only one chunk fits in the metachunk        
-    }            
+    @Override
+    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
+        sleep();
+        return new CustomMultiChunk(id, minChunkSize, os);
+    }
+    
+    @Override
+    public String toString() {
+        return "Custom-"+minChunkSize+"-"+sleepMillis;
+    }
+
+
 }

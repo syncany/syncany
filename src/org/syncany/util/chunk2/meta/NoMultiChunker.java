@@ -25,21 +25,21 @@ import java.io.OutputStream;
  *
  * @author pheckel
  */
-public class NoMetaChunker extends MetaChunker {
-    public NoMetaChunker(int sleepMillis) {
+public class NoMultiChunker extends MultiChunker {
+    public NoMultiChunker(int sleepMillis) {
         super(0, sleepMillis);
     }
 
     @Override
-    public MetaChunk create(byte[] id, InputStream is) {
+    public MultiChunk createMultiChunk(InputStream is) {
         sleep();
-        return new NoMetaChunk(id, is);
+        return new NoMultiChunk(is);
     }
 
     @Override
-    public MetaChunk create(byte[] id, OutputStream os) throws IOException {
+    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
         sleep();
-        return new NoMetaChunk(id, os);
+        return new NoMultiChunk(id, os);
     }
 
     @Override

@@ -17,29 +17,33 @@
  */
 package org.syncany.util.chunk2.meta;
 
-import org.syncany.util.chunk2.chunking.Chunk;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
+
+import org.syncany.util.chunk2.chunking.Chunk;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class MetaChunk {
+public abstract class MultiChunk {
     protected byte[] id;
     protected List<Chunk> chunks;
     protected long size;
     protected int minSize;
     
-    public MetaChunk(byte[] id, int minSize) {
+    public MultiChunk(byte[] id, int minSize) {
         this.id = id;
         this.minSize = minSize;
 
         this.chunks = new ArrayList<Chunk>();
         this.size = 0;
+    }
+    
+    public MultiChunk(int minSize) {
+    	this(null, minSize);
     }
     
     public boolean isFull() {
@@ -70,7 +74,7 @@ public abstract class MetaChunk {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final MetaChunk other = (MetaChunk) obj;
+        final MultiChunk other = (MultiChunk) obj;
         if (!Arrays.equals(this.id, other.id)) {
             return false;
         }

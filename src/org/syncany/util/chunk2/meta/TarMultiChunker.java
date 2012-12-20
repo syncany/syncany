@@ -25,21 +25,21 @@ import java.io.OutputStream;
  *
  * @author pheckel
  */
-public class TarMetaChunker extends MetaChunker {
-    public TarMetaChunker(int minChunkSize, int sleepMillis) {
+public class TarMultiChunker extends MultiChunker {
+    public TarMultiChunker(int minChunkSize, int sleepMillis) {
         super(minChunkSize, sleepMillis);
     }
 
     @Override
-    public MetaChunk create(byte[] id, InputStream is) {
+    public MultiChunk createMultiChunk(InputStream is) {
         sleep();
-        return new TarMetaChunk(id, is);
+        return new TarMultiChunk(is);
     }
 
     @Override
-    public MetaChunk create(byte[] id, OutputStream os) throws IOException {
+    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
         sleep();
-        return new TarMetaChunk(id, minChunkSize, os);
+        return new TarMultiChunk(id, minChunkSize, os);
     }
     
     @Override

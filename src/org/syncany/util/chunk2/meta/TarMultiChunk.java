@@ -34,17 +34,17 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
  */
 
 
-public class TarMetaChunk extends MetaChunk {
+public class TarMultiChunk extends MultiChunk {
     private TarArchiveOutputStream tarOut;
     private TarArchiveInputStream tarIn;
     private Base64 b64;
 
-    public TarMetaChunk(byte[] id, InputStream is) {
-        super(id, 0);
+    public TarMultiChunk(InputStream is) {
+        super(0);
         this.tarIn = new TarArchiveInputStream(is);
     }
     
-    public TarMetaChunk(byte[] id, int minSize, OutputStream os) throws IOException {
+    public TarMultiChunk(byte[] id, int minSize, OutputStream os) throws IOException {
         super(id, minSize);
         
         this.tarOut = new TarArchiveOutputStream(os);
@@ -65,7 +65,7 @@ public class TarMetaChunk extends MetaChunk {
         entry.setSize(chunk.getSize());
 
         tarOut.putArchiveEntry(entry);
-        tarOut.write(chunk.getContents(), 0, chunk.getSize());
+        tarOut.write(chunk.getContent(), 0, chunk.getSize());
         tarOut.closeArchiveEntry();
     }        
     
