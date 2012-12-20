@@ -50,12 +50,14 @@ public class ChunkTest {
 		
 		File reassembledFile = new File("outputTest.html");
 		FileInputStream reassembledInputStream = new FileInputStream(outputFile);
+		Transformer decTrans = new GzipCompressor();
 		
-		MultiChunk outputMultiChunk = multiChunker.createMultiChunk(reassembledInputStream);
+		MultiChunk outputMultiChunk = multiChunker.createMultiChunk(decTrans.transform(reassembledInputStream));
 		Chunk outputChunk;
 		FileOutputStream assembledStream = new FileOutputStream(reassembledFile);
 		while((outputChunk = outputMultiChunk.read()) != null) {
-			assembledStream.write(outputChunk.getContent());
+			System.out.println(outputChunk.getSize());
+			assembledStream.write(outputChunk.getContent(), 0, outputChunk.getSize());
 		}
 		assembledStream.close();
 		outputMultiChunk.close();

@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.syncany.util.StringUtil;
-import org.syncany.util.io.CipherInputStreamUtils;
+import org.syncany.util.io.StreamUtils;
 
 /**
  *
@@ -89,13 +89,13 @@ public class CustomMultiChunk extends MultiChunk {
         	byte[] checksum = new byte[checksumLength];
         	// changed due to wrong behavior of standard methods
         	//is.read(checksum);
-        	CipherInputStreamUtils.read(checksum, is);
+        	StreamUtils.read(checksum, is);
         	
         	int chunkSize = is.readShort() & 0xffff;
             byte[] contents = new byte[chunkSize]; 
             // changed due to wrong behavior of standard methods
             //is.read(contents, 0, chunkSize);
-            CipherInputStreamUtils.read(contents, 0, chunkSize, is);
+            StreamUtils.read(contents, 0, chunkSize, is);
             
            // System.out.println(StringUtil.toHex(contents));
             

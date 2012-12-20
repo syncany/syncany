@@ -3,7 +3,7 @@ package org.syncany.util.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class CipherInputStreamUtils {
+public class StreamUtils {
 	public static void read(byte[] inp, InputStream is) throws IOException{
 		int l = inp.length;
 		

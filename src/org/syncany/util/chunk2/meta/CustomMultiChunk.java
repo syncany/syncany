@@ -19,7 +19,12 @@ package org.syncany.util.chunk2.meta;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+
+import org.syncany.util.StringUtil;
 import org.syncany.util.chunk2.chunking.Chunk;
+import org.syncany.util.io.StreamUtils;
+
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -66,35 +71,46 @@ public class CustomMultiChunk extends MultiChunk {
         	os.write(this.getId());
         	
             checksumLength = chunk.getChecksum().length;
-            os.writeByte(chunk.getChecksum().length);
+            os.writeByte(checksumLength);
         }
         
         os.write(chunk.getChecksum());
 
         os.writeShort(chunk.getSize());
+        System.out.println("chunk: "+chunk.getSize());
+        
         os.write(chunk.getContent(), 0, chunk.getSize());  
     }
-    
+        
 
     @Override
     public Chunk read() throws IOException {
-        // First chunk: read checksum length!
-        if (checksumLength == -1) {
-        	int idLength = is.readByte();
-        	this.id = new byte[idLength];
-        	is.read(this.id);
-        	
-            this.checksumLength = is.readByte();
-        }
-        
-        byte[] checksum = new byte[checksumLength];
-        is.read(checksum);
-        
-        int chunkSize = is.readShort();
-        byte[] contents = new byte[chunkSize];        
-        is.read(contents);
-        
-        return new Chunk(checksum, contents, chunkSize, checksum);
+    	try {
+	        // First chunk: read checksum length!
+	        if (checksumLength == -1) {
+	        	int idLength = is.readByte();
+	        	id = new byte[idLength];
+	        	is.read(id);
+	        	
+	            checksumLength = is.readByte();
+	        }
+	        
+	        // Use StreamUtils instead of InputStream due to faulty behavior of IS.read()
+	        // - is.read(checksum, 0, checksumLength);
+	        // - is.read(contents, 0, chunkSize);
+	        
+	        byte[] checksum = new byte[checksumLength];
+	        StreamUtils.read(checksum, 0, checksumLength, is);
+
+	        int chunkSize = is.readShort();	        
+	        byte[] contents = new byte[chunkSize];        
+	        StreamUtils.read(contents, 0, chunkSize, is);
+	        
+	        return new Chunk(checksum, contents, chunkSize, checksum);
+    	}
+    	catch (EOFException e) {
+    		return null;
+	    }
     }    
 }
 
