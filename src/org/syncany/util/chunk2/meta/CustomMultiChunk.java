@@ -77,8 +77,6 @@ public class CustomMultiChunk extends MultiChunk {
         os.write(chunk.getChecksum());
 
         os.writeShort(chunk.getSize());
-        System.out.println("chunk: "+chunk.getSize());
-        
         os.write(chunk.getContent(), 0, chunk.getSize());  
     }
         
