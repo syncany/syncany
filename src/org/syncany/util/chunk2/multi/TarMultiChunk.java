@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.meta;
+package org.syncany.util.chunk2.multi;
 
 import org.syncany.util.chunk2.chunking.Chunk;
 import java.io.IOException;

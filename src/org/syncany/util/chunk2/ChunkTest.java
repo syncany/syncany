@@ -5,14 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
 
-import org.apache.commons.lang.StringUtils;
 import org.syncany.util.StringUtil;
 import org.syncany.util.chunk2.chunking.Chunk;
 import org.syncany.util.chunk2.chunking.Chunker;
 import org.syncany.util.chunk2.chunking.FixedOffsetChunker;
-import org.syncany.util.chunk2.meta.CustomMultiChunker;
-import org.syncany.util.chunk2.meta.MultiChunk;
-import org.syncany.util.chunk2.meta.MultiChunker;
+import org.syncany.util.chunk2.multi.CustomMultiChunker;
+import org.syncany.util.chunk2.multi.MultiChunk;
+import org.syncany.util.chunk2.multi.MultiChunker;
 import org.syncany.util.chunk2.transform.Transformer;
 import org.syncany.util.chunk2.transform.compress.GzipCompressor;
 

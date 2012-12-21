@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.meta;
+package org.syncany.util.chunk2.multi;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -25,25 +24,12 @@ import java.io.OutputStream;
  *
  * @author pheckel
  */
-public class NoMultiChunker extends MultiChunker {
-    public NoMultiChunker(int sleepMillis) {
-        super(0, sleepMillis);
+public class NoMultiChunk extends CustomMultiChunk {
+    public NoMultiChunk(InputStream is) {
+        super(is);
     }
-
-    @Override
-    public MultiChunk createMultiChunk(InputStream is) {
-        sleep();
-        return new NoMultiChunk(is);
-    }
-
-    @Override
-    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
-        sleep();
-        return new NoMultiChunk(id, os);
-    }
-
-    @Override
-    public String toString() {
-        return "None-"+sleepMillis;
-    }
+    
+    public NoMultiChunk(byte[] id, OutputStream os) {
+        super(id, 0, os); // minSize is zero -> only one chunk fits in the metachunk        
+    }            
 }
