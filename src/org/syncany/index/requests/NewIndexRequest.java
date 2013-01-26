@@ -17,13 +17,12 @@
  */
 package org.syncany.index.requests;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import org.syncany.db.CloneFile;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
@@ -31,16 +30,19 @@ import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
+
 import org.syncany.Constants;
 import org.syncany.config.Profile;
 import org.syncany.db.CloneChunk;
+import org.syncany.db.CloneFile;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.db.Database;
-import org.syncany.util.chunk.Chunk;
-import org.syncany.util.chunk.CustomMultiChunk;
-import org.syncany.util.chunk.MultiChunk;
+import org.syncany.util.chunk2.chunking.Chunk;
+import org.syncany.util.chunk2.multi.CustomMultiChunk;
+import org.syncany.util.chunk2.multi.MultiChunk;
 
 /**
  *
@@ -51,7 +53,7 @@ public class NewIndexRequest extends IndexRequest {
     private static final long METACHUNK_UNFINISHED_TIMEOUT = 2000;
     private static final Semaphore metaChunkMutex = new Semaphore(1);
     
-    private static MultiChunk metaChunk;
+    private static MultiChunk multiChunk;
     private static Profile metaChunkProfile;
     private static File metaChunkTempFile;
     private static Set<CloneFile> metaChunkCompletedFiles;
@@ -210,7 +212,7 @@ public class NewIndexRequest extends IndexRequest {
                         
                 // Close metachunk if it is full
                 // NOTE: this might also be done by the meta chunk timer!
-                if (metaChunk != null && metaChunk.isFull()) {
+                if (multiChunk != null && multiChunk.isFull()) {
                 	logger.log(Level.INFO, "CLOSE METACHUNK INSIDE LOOP");
                     closeMetaChunk(false);
                 }
@@ -219,22 +221,22 @@ public class NewIndexRequest extends IndexRequest {
                 // NOTE: this must be AFTER the closeMetaChunk()-call
                 byte[] metaId;
                 
-                if (metaChunk != null && metaChunk.getId() != null) {
-                    metaId = metaChunk.getId();
+                if (multiChunk != null && multiChunk.getId() != null) {
+                    metaId = multiChunk.getId();
                 }
                 else {
                     metaId = chunk.getChecksum(); 
                 }                
                 
                 // Open new metachunk
-                if (metaChunk == null) {                   
+                if (multiChunk == null) {                   
                     int chunkSize = Profile.getInstance().getRepository().getChunkSize()*1024;
 
                     Cipher encCipher = Profile.getInstance().getRepository().getEncryption().createEncCipher(metaId);
 
                     metaChunkTempFile = Profile.getInstance().getCache().createTempFile("metachunk");
                     
-                    metaChunk = 
+                    multiChunk = 
                     		new CustomMultiChunk(metaId, chunkSize, new CipherOutputStream(new FileOutputStream(metaChunkTempFile), encCipher));
                     
                             //new FileOutputStream(metaChunkTempFile));                    
@@ -244,7 +246,7 @@ public class NewIndexRequest extends IndexRequest {
                     // FILES completed in this metachunk (-> can be uploaded)
                     metaChunkCompletedFiles = new HashSet<CloneFile>();
 
-                    logger.info("Opened new metachunk "+Profile.getInstance().getCache().getMetaChunkFile(metaChunk));
+                    logger.info("Opened new metachunk "+Profile.getInstance().getCache().getMetaChunkFile(multiChunk));
                 }     
                 
                 // Create chunk in DB and add to cache; DO create it!
@@ -254,7 +256,7 @@ public class NewIndexRequest extends IndexRequest {
                 cf.addChunk(dbChunk);
                 
                 // Now write it to the temp. metachunk
-                metaChunk.write(chunk);
+                multiChunk.write(chunk);
             } // while (all chunks)
             
                         
@@ -264,13 +266,13 @@ public class NewIndexRequest extends IndexRequest {
                 
                 // If this file had new chunks, 
                 // add the file to the "completed in this metachunk" list
-                if (metaChunk != null) {
+                if (multiChunk != null) {
                     metaChunkCompletedFiles.add(cf);
                 }
             }    
 
             // Metachunk is open, file is persisted when the metachunk is persisted
-            if (metaChunk != null) {
+            if (multiChunk != null) {
                 // Reset timer
                 if (metaChunkTimoutTimerTask != null) {
                     metaChunkTimoutTimerTask.cancel();
@@ -310,13 +312,13 @@ public class NewIndexRequest extends IndexRequest {
     }
     
     private static void closeMetaChunk(boolean timerTriggered) throws IOException {        
-        logger.log(Level.INFO, "Metachunk {0} is FULL.", Profile.getInstance().getCache().getMetaChunkFile(metaChunk));
+        logger.log(Level.INFO, "Metachunk {0} is FULL.", Profile.getInstance().getCache().getMetaChunkFile(multiChunk));
 
         // Close meta chunk and get ID (= last chunk's ID)
-        metaChunk.close();
+        multiChunk.close();
 
         // Rename to final 'temp' metachunk
-        File metaChunkFile = Profile.getInstance().getCache().getMetaChunkFile(metaChunk);
+        File metaChunkFile = Profile.getInstance().getCache().getMetaChunkFile(multiChunk);
         metaChunkTempFile.renameTo(metaChunkFile);
 
         Set<CloneFile> mergedFiles = new HashSet<CloneFile>();
@@ -332,11 +334,11 @@ public class NewIndexRequest extends IndexRequest {
             }                        
         }
         
-        metaChunkProfile.getUploader().queue(metaChunk, mergedFiles);                            
+        metaChunkProfile.getUploader().queue(multiChunk, mergedFiles);                            
 
         // Reset meta chunk
         logger.log(Level.INFO, "Metachunk flushed. NO OPEN Metachunk.");
-        metaChunk = null;           
+        multiChunk = null;           
     }
     
     private class MetaChunkTimeoutTimerTask extends TimerTask {
@@ -346,7 +348,7 @@ public class NewIndexRequest extends IndexRequest {
                 metaChunkMutex.acquire();   
                 
                 // Only run 'close', if there is an open meta chunk
-                if (metaChunk != null) {
+                if (multiChunk != null) {
                 	logger.log(Level.INFO, "CLOSING METACHUNK DUE TO TIMEOUT");
                     closeMetaChunk(true);
                 }

@@ -17,27 +17,21 @@
  */
 package org.syncany.index;
 
-import java.util.List;
-
-import org.syncany.communication.CommunicationController;
-import org.syncany.communication.CommunicationController.SyncanyStatus;
-import org.syncany.config.Profile;
-import org.syncany.db.CloneFile;
-import org.syncany.index.requests.CheckIndexRequest;
-import org.syncany.index.requests.DeleteIndexRequest;
-import org.syncany.index.requests.IndexRequest;
-import org.syncany.index.requests.MoveIndexRequest;
 import java.io.File;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.syncany.Application;
 import org.syncany.Constants;
+import org.syncany.config.Profile;
+import org.syncany.db.CloneFile;
 import org.syncany.db.Database;
+import org.syncany.index.requests.CheckIndexRequest;
+import org.syncany.index.requests.DeleteIndexRequest;
 import org.syncany.util.FileLister;
-import org.syncany.util.FileUtil;
 import org.syncany.util.FileLister.FileListerAdapter;
+import org.syncany.util.FileUtil;
 
 /**
  * Indexes new and changed files and adds corresponding database entries
@@ -54,8 +48,6 @@ public class Indexer {
     private static Indexer instance;
     
     private Database db;
-    private BlockingQueue<IndexRequest> queue;
-    private Thread worker;
 
     private Indexer() {
         if (logger.isLoggable(Level.INFO)) {
@@ -63,13 +55,7 @@ public class Indexer {
         }
         
         this.db = Database.getInstance();
-        this.queue = new LinkedBlockingQueue<IndexRequest>();
-        this.worker = null; // cp. start()
-    }
-    
-    public BlockingQueue<IndexRequest> getQueue() {
-		return queue;
-	}
+    } 
 
 	public static synchronized Indexer getInstance() {
         if (instance == null) {
@@ -77,34 +63,6 @@ public class Indexer {
         }
         
         return instance;
-    }
-
-    public synchronized void start() {
-        // Already running!
-        if (worker != null) {
-            return;
-        }
-        
-        // Start it
-        if (logger.isLoggable(Level.INFO)) {
-            logger.info("Starting indexer thread ...");
-        }
-        
-        worker = new Thread(new IndexWorker(), "Indexer");
-        worker.start();
-    }
-
-    public synchronized void stop() {
-        if (worker == null) {
-            return;
-        }
-        
-        if (logger.isLoggable(Level.INFO)) {
-            logger.info("Stopping indexer thread ...");
-        }
-        
-        worker.interrupt();
-        worker = null;
     }
 
     public void index(Profile profile) {
@@ -117,6 +75,7 @@ public class Indexer {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "- Folder {0} ...", rootFolder);
         }            
+        
         
         // Check for files that do NOT exist anymore
         List<CloneFile> dbFiles = db.getFiles();
@@ -139,57 +98,11 @@ public class Indexer {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "Startup indexing of profile {0} finished.", profile);
         }  
-        // setStatus to inSync = up-to-date
-        CommunicationController.getInstance().updateStatus(SyncanyStatus.inSync);
     }
     
     public void index(File file) {
         new CheckIndexRequest(file).process();
-    }
-    
-    /**
-     * Check database to find matches for the given file. If no matches
-     * or previous versions are found, the file is re-indexed completely.
-     * 
-     * @param file
-     */
-    public void queue(File file) {
-        queue.add(new CheckIndexRequest(file));
-    }
-
-    /**
-     * Adjusts the entry of a file that has been moved.
-     * @param fromFile
-     * @param toFile
-     */
-    public void queueMoved(File fromFile, File toFile) {
-        queue.add(new MoveIndexRequest(fromFile, toFile));
-    }
-
-    public void queueDeleted(File file) {
-        queue.add(new DeleteIndexRequest(file));
-    }
-
-    private class IndexWorker implements Runnable {
-        @Override
-        public void run() {
-            try {
-                IndexRequest req;
-                
-                while (null != (req = queue.take())) {
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, "Processing request {0}", req);
-                    }
-                    
-                    req.process();
-                }
-            }
-            catch (InterruptedException ex) {
-                logger.log(Level.WARNING, "Indexer interrupted. EXITING.");
-                return;
-            }
-        }
-    }
+    }   
     
     public static class FileListerListenerImpl extends FileListerAdapter {
         private Indexer indexer;

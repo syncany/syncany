@@ -21,7 +21,8 @@ import org.syncany.Constants;
 import org.syncany.db.CloneChunk;
 import java.io.File;
 import java.io.IOException;
-import org.syncany.util.chunk.MultiChunk;
+
+import org.syncany.util.chunk2.multi.MultiChunk;
 import org.syncany.util.exceptions.CacheException;
 
 /**

@@ -179,6 +179,7 @@ public class RemoteWatcher {
 			updateFileList();
 
 			// check for merging
+			// cleanup process, merge multiple db files to one/n remote repositories
 			if (mergeUpdatesIfPossible()) // merge executed, so refresh filelist
 				updateFileList();
 
@@ -396,8 +397,6 @@ public class RemoteWatcher {
 		while (!done) {
 			// Make update list
 			updateList = new UpdateQueue();
-			updateList.setLocalUpdateFile(getLocalUpdates()); // TODO Philipp XXXXXXXX eigentlich müsste man hier die datenbank übergeben, sodass man in
-			                                                  // TODO Philipp XXXXXXXX der queue dann die datenbank verwendet --> kein umweg über ein lokales update file
 
 			for (Map.Entry<CloneClient, UpdateFile> e : remoteUpdates
 					.entrySet()) {

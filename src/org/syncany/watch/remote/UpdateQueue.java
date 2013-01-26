@@ -57,9 +57,6 @@ public class UpdateQueue {
         this.fileHistoryComparator = new FileHistoryComparator();
     }
 
-    public void setLocalUpdateFile(UpdateFile updateFile) {
-    }
-    
     public void addRemoteUpdateFile(CloneClient client, UpdateFile updateFile) {
         if (logger.isLoggable(Level.INFO)) {
             logger.log(Level.INFO, "Adding update file to temp. DB [{0}, {1}] ...", new Object[]{client.getMachineName(), updateFile.getName()});
@@ -116,7 +113,7 @@ public class UpdateQueue {
                 	for (FileUpdate loopUpdate : loopFileHistory.getHistory().values()) {
                 		FileUpdate resultUpdate = resultFileHistory.get(loopUpdate.getVersion());
                 		if (DEBUG) System.err.println("resultUpdate: "+resultUpdate+"\nloopUpdate: "+loopUpdate);
-                        
+                     // FIXME: SINNLOSER LOOP?   
                 	
                 	}
                 	
@@ -144,13 +141,14 @@ public class UpdateQueue {
                             else {
                                 if (DEBUG) System.err.println("--> NOT identical");
                                 // The "result"-history wins (= could be my history or one from 
-                                // another client); now check if the "loop"-history is mine
+                                // another client); now check if the "loop"-history is mineresultUpdate
                                 // - if it is, this is a local CONFLICT -> attach "loop"-history to "result".
                                 // - if not, just ignore the result history
                                 if (resultUpdate.getUpdated().before(loopUpdate.getUpdated())) {                                   
                                     if (DEBUG) System.err.println("--> resultUpd wins");
                                     
-                                    if (loopFileHistory.getMachineName().equals(Settings.getInstance().getMachineName())) {                                        
+                                    if (loopFileHistory.getMachineName().equals(Settings.getInstance().getMachineName())) {
+                                        if (DEBUG) System.err.println("--> THIS CAN NOT HAPPEN; loopFileHistory is never a localUpdateFile");
                                         if (DEBUG) System.err.println("--> loopHistory is LOCAL -> branching new file");
                                         
                                         // Add a branch as new file
@@ -829,7 +827,6 @@ public class UpdateQueue {
 
         UpdateQueue ul = new UpdateQueue();
 
-        ul.setLocalUpdateFile(uf0);
         ul.addRemoteUpdateFile(new CloneClient(uf1.getMachineName(), 1), uf1);
         ul.addRemoteUpdateFile(new CloneClient(uf2.getMachineName(), 1), uf2);
 

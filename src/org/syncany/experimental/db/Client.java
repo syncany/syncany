@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.db;
+package org.syncany.experimental.db;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -24,8 +25,8 @@ import java.util.Date;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CloneClient implements Serializable {
-    private static final long serialVersionUID = 17398420202020111L;
+public class Client implements Serializable {
+    //private static final Config config = Config.getInstance();
 
     private Long id;
     private Long profileId;
@@ -33,19 +34,14 @@ public class CloneClient implements Serializable {
     private String userName;    
     private Date lastUpdate;
     
-    public CloneClient() {
+    public Client() {
         // Nothing.
-      }
+    }
 
-    public CloneClient(String machineName, long profileId) {
+    public Client(String machineName, long profileId) {
         this.machineName = machineName;
         this.id = (long) machineName.hashCode();
         this.profileId = profileId;
-    }
-    
-    public CloneClient(String machineName) {
-        this.machineName = machineName;
-        this.id = (long) machineName.hashCode();
     }
 
     public Long getId() {
@@ -86,7 +82,7 @@ public class CloneClient implements Serializable {
 
     public void setUserName(String userName) {
         this.userName = userName;
-    }
+    }    
     
     @Override
     public int hashCode() {
@@ -97,10 +93,10 @@ public class CloneClient implements Serializable {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof CloneClient)) 
+        if (!(object instanceof Client)) 
             return false;
 
-        CloneClient other = (CloneClient) object;
+        Client other = (Client) object;
 
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
@@ -112,9 +108,5 @@ public class CloneClient implements Serializable {
     public String toString() {
         return "CloneClient[id=" + id + ",name="+machineName+"]";
     }
-    
-    public void merge(){
-    	Database.getInstance().addClient(this);
-    	Database.getInstance().saveClients();
-    }
+
 }

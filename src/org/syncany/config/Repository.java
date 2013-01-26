@@ -24,8 +24,8 @@ import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import org.syncany.util.chunk.Chunker;
-import org.syncany.util.chunk.TTTDChunker;
+
+import org.syncany.util.chunk2.chunking.Chunker;
 import org.syncany.util.exceptions.CacheException;
 import org.syncany.util.exceptions.InvalidRepositoryException;
 import org.syncany.util.exceptions.NoRepositoryFoundException;

@@ -21,7 +21,6 @@ import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.index.Indexer;
 import org.syncany.watch.remote.ChangeManager;
-import org.syncany.watch.local.LocalWatcher;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.syncany.util.exceptions.InitializationException;
@@ -73,7 +72,6 @@ public class Application {
 	private static final Logger logger = Logger.getLogger(Application.class.getSimpleName());
 
 	private Indexer indexer;
-	private LocalWatcher localWatcher;
 
 	public Application() {
 		// Nothing.
@@ -101,15 +99,12 @@ public class Application {
 
 				// Synchronously index files and add file system watches
 				indexer.index(profile);
-				localWatcher.watch();
 
 				// Start threads
 				profile.getRemoteWatcher().start();
 
 				// Start the rest
 				indexer.start();
-				localWatcher.start();
-				// periodic.start();
 			}
 		}, "InitProfile").start();
 	}
@@ -120,19 +115,15 @@ public class Application {
 		}
 
 		indexer = Indexer.getInstance();
-		localWatcher = LocalWatcher.getInstance();
 	}
 
 	public void doShutdown() {
 		logger.info("Shutting down ...");
 
-		LocalWatcher.getInstance().unwatch();
-
 		Profile.getInstance().getUploader().stop();
 		Profile.getInstance().getRemoteWatcher().stop();
 
 		Indexer.getInstance().stop();
-		LocalWatcher.getInstance().stop();
 
 		System.exit(0);
 	}
