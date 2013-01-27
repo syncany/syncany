@@ -32,7 +32,6 @@ import java.util.Map;
  * @author pheckel
  */
 public class Content implements Persistable, Serializable {
-    private Long id;
     private byte[] checksum;
     private int contentSize;
     private List<ContentChunk> chunks;
@@ -48,14 +47,6 @@ public class Content implements Persistable, Serializable {
         this.db = db;
     }        
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
     public void addChunk(ChunkEntry chunk) {
         chunks.add(new ContentChunk(this, chunk, chunks.size()));        
     }    

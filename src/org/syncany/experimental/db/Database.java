@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.syncany.Constants;
 import org.syncany.util.StringUtil;
 
 /**
@@ -40,6 +41,7 @@ import org.syncany.util.StringUtil;
  * @author pheckel
  */
 public class Database {
+	private static final byte DATABASE_VERSION = 0x01;
     private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
     
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -88,7 +90,7 @@ public class Database {
         
         // Signature and version        
         dos.write("Syncany".getBytes()); 
-        dos.writeByte(1);
+        dos.writeByte(DATABASE_VERSION);
         
         // Chunks
         l = (full) ? chunkCache.values() : newChunkCache;
@@ -191,21 +193,7 @@ public class Database {
                     }                        
                 }
             }
-        }                
-        
-        /*l = chunkIndex.getMetaChunks();
-        
-        if (l != null && !l.isEmpty()) {
-            zip.putNextEntry(new ZipEntry("metachunk"));
-            DataOutputStream dos = new DataOutputStream(zip);
-            
-            for (Object obj : l) {
-                ((Persistable) obj).write(dos);
-                //lastChunkId.setValue(((Chunk) obj).getId());                     
-            }            
-
-            zip.closeEntry();
-        }       */         
+        }                        
         
         dos.close();     
         
@@ -238,7 +226,7 @@ public class Database {
         
         int version = dis.readByte();
         
-        if (version != 1) {
+        if ((version & 0xff) != DATABASE_VERSION) {
             throw new IOException("Invalid file: version "+version+" not supported.");
         }
                 
@@ -482,9 +470,11 @@ public class Database {
         	for (FileVersion e2 : e.getVersions()) {
         		sb.append("  + FileVersion "+e2.getVersion()+", "+e2.getPath()+"/"+e2.getName()+"\n");
         		
-        		for (ChunkEntry e3 : e2.getContent().getChunks()) {
-            		sb.append("    * Chunk "+StringUtil.toHex(e3.getChecksum())+"\n");
-            	}           		
+        		if (e2.getContent() != null) {
+	        		for (ChunkEntry e3 : e2.getContent().getChunks()) {
+	            		sb.append("    * Chunk "+StringUtil.toHex(e3.getChecksum())+"\n");
+	            	}           		
+        		}
         	}            	
     	}    	    	
     	

@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -455,15 +456,25 @@ public class FileUtil {
 		}
     }
 
-
-    // showBrowseDirectoryDialog was here
-    // showBrowseFileDialog was here
-    // showBrowseDialogLinux was here
-
-
-    // showBrowseDialogMac was here
-    // showBrowseDialogDefault was here
-        
-
+	public static void createRandomFile(File file, int fromSize, int toSize) throws IOException {
+		FileOutputStream fos = new FileOutputStream(file);
+		
+		int size = (int) Math.round(fromSize+(toSize-fromSize)*Math.random());
+		int pos = 0;
+		
+		byte[] buffer;
+		Random random = new Random();
+		
+		while (pos < size) {
+			buffer = NumberUtil.toByteArray(random.nextLong());
+			fos.write(buffer);		
+			
+			pos += buffer.length;
+		}
+		
+		fos.close();
+		
+		
+	}
 }
 

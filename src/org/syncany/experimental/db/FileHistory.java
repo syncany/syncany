@@ -19,11 +19,9 @@ package org.syncany.experimental.db;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -125,9 +123,6 @@ public class FileHistory implements Serializable, Persistable {
     @Override
     public int read(DataInput in) throws IOException {
         setFileId(in.readLong());
-        return 8;
-    }
-
-
-    
+        return Long.SIZE/8;
+    }    
 }

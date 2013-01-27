@@ -1,7 +1,19 @@
 package org.syncany.experimental.db;
 
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+
+import org.syncany.util.FileLister;
+import org.syncany.util.FileUtil;
+import org.syncany.util.chunk.chunking.Chunk;
+import org.syncany.util.chunk.chunking.Chunker;
+import org.syncany.util.chunk.chunking.FixedOffsetChunker;
 
 public class Main {
 
@@ -20,6 +32,14 @@ public class Main {
 		System.out.println("save2()");
 		System.out.println("----------------------------");
 		save2(db);
+
+		System.out.println("save3()");
+		System.out.println("----------------------------");
+		save3();		
+
+		System.out.println("load3()");
+		System.out.println("----------------------------");
+		load3();
 	}
 	
 	public static Database save1() throws IOException {
@@ -139,5 +159,160 @@ public class Main {
         System.out.println(db);
         return db;
 	}
+	
+	public static void save3() throws IOException {
+		// Create test environment
+		File rootDir = new File("/tmp/syncany-db-test");
+		
+		if (rootDir.exists()) {
+			FileUtil.deleteRecursively(rootDir);
+		}
+		
+		rootDir.mkdir();
+		
+		// Make lots of random files and folders
+		int maxFiles = 100;
+		
+		List<File> randomFiles = new ArrayList<File>();
+		List<File> randomDirs = new ArrayList<File>();
+		File currentDir = rootDir;
+		
+		for (int i=0; i<maxFiles; i++) {
+			if (!randomDirs.isEmpty()) {
+				currentDir = randomDirs.get((int) Math.random()*randomDirs.size());
+			}
 
+			if (Math.random() > 0.3) {
+				File newFile = new File(currentDir+"/file"+i);
+				FileUtil.createRandomFile(newFile, 1000, 500000);
+				
+				randomFiles.add(newFile);
+			}
+			else {
+				currentDir = new File(currentDir+"/file"+i);
+				currentDir.mkdir();
+				
+				randomDirs.add(currentDir);
+				randomFiles.add(currentDir);
+			}
+		}
+		
+		// Now copy some files (1:1 copy), and slightly change some of them (1:0.9) 
+		for(int i=maxFiles; i<maxFiles+maxFiles/4; i++) {
+			File srcFile = randomFiles.get((int) (Math.random()*(double)randomFiles.size()));
+			File destDir = randomDirs.get((int) (Math.random()*(double)randomDirs.size()));			
+			
+			if (srcFile.isDirectory()) {
+				continue;
+			}
+			
+			// Alter some of the copies (change some bytes)
+			if (Math.random() > 0.5) {
+				File destFile = new File(destDir+"/file"+i+"-almost-the-same-as-"+srcFile.getName());
+				FileInputStream fis = new FileInputStream(srcFile);
+				FileOutputStream fos = new FileOutputStream(destFile);
+				
+				byte[] buffer = new byte[4096];				
+
+		        int len;
+		        while ((len = fis.read(buffer)) > 0) {
+		        	// Change 10% of the file
+		        	if (Math.random() < 0.5) {
+		        		//buffer[0] = (byte) (buffer[0]+1); // CHANGE SOMETHING!
+		        		fos.write(buffer, 0, len-1);
+		        	}
+		        	
+		        	// Or just copy stuff
+		        	else {
+		        		fos.write(buffer, 0, len);
+		        	}
+		        }
+
+		        fis.close();
+		        fos.close();
+			}
+			
+			// Or simply copy them
+			else {
+				File destFile = new File(destDir+"/file"+i+"-copy-of-"+srcFile.getName());
+				FileUtil.copy(srcFile, destFile);
+			}
+		}
+		
+		
+		// Now populate the database
+		Database db = new Database();		
+		Chunker chunker = new FixedOffsetChunker(4*1024);
+		
+		for (File file : randomFiles) {
+			// Check if file exists, or create new 
+			FileHistory fileHistory = db.getFileHistory(FileUtil.getRelativePath(rootDir, file), file.getName());
+			
+			if (fileHistory == null) {
+				fileHistory = db.createFileHistory();
+			}
+			
+			// Check for versions
+			FileVersion fileVersion = fileHistory.getLastVersion();
+			
+			if (fileVersion == null) {
+				fileVersion = db.createFileVersion(fileHistory);
+			}
+			
+			fileVersion.setPath(FileUtil.getRelativePath(rootDir, file));
+			fileVersion.setName(file.getName());
+			
+			if (file.isFile()) {
+				Content content = db.createContent();			
+				
+				// Create chunks from file
+				Enumeration<Chunk> chunks = chunker.createChunks(file);
+				
+				Chunk chunk = null;
+				while (chunks.hasMoreElements()) {
+					chunk = chunks.nextElement();
+					
+					ChunkEntry chunkEntry = db.getChunk(chunk.getChecksum());
+					
+					if (chunkEntry == null) {
+						chunkEntry = db.createChunk(chunk.getChecksum(), chunk.getSize(), true);					
+					}
+					
+					content.addChunk(chunkEntry);
+				}
+				
+				if (chunk != null) {
+					content.setChecksum(chunk.getChecksum());
+				}
+				else {
+					content.setChecksum(null);
+				}
+				
+				fileVersion.setContent(content);
+				db.addContent(content);
+			}
+			
+			fileHistory.addVersion(fileVersion);			
+			db.addFileHistory(fileHistory);
+		}
+		
+		// Save database
+		File dbFile3 = new File("/tmp/dbfile3");
+		db.save(dbFile3, true, false);
+		
+		System.out.println(db);
+	}
+
+	
+	public static Database load3() throws IOException {
+		Database db = new Database();
+		
+		// Load database
+        File dbFile = new File("/tmp/dbfile3");
+		db.load(dbFile, false);
+
+        System.out.println(db);
+        
+        return db;
+	}
 }

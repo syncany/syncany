@@ -29,16 +29,10 @@ import java.util.List;
  * @author pheckel
  */
 public class ChunkEntry implements Serializable, Persistable {
-    private Long id;    
-    private byte[] checksum;  
-    
-    private int chunksize;
-    
+    private byte[] checksum;      
+    private int chunksize;    
     private transient List<MultiChunkEntry> metaChunks;
     
-    // only for stats!
-    public transient int appearances = 0;
-
     public ChunkEntry() {
         this.metaChunks = new LinkedList<MultiChunkEntry>();
     }
@@ -47,15 +41,7 @@ public class ChunkEntry implements Serializable, Persistable {
         this();        
         this.checksum = checksum;
         this.chunksize = size;
-    }
-    
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    }    
 
     public void setChunksize(int chunksize) {
         this.chunksize = chunksize;
