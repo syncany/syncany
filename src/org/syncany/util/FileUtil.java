@@ -42,7 +42,7 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.syncany.config.Encryption;
-import org.syncany.util.exceptions.EncryptionException;
+import org.syncany.exceptions.EncryptionException;
 
 /**
  *
@@ -421,24 +421,6 @@ public class FileUtil {
         return enc.encrypt(gzipped);
     }
 
-    public static void main(String[] a) throws IOException {
-        //System.out.println(getRelativeParentDirectory(new File("/home/pheckel/Coding/syncany/syncany-platop"), new File("/home/pheckel/Coding/syncany/syncany-platop/untitled folder/untitled folder")));
-        //copy(new File("/home/pheckel/freed"), new File("/home/pheckel/freed2"), 100);
-        System.out.println(new File("/home/pheckel").getParentFile());
-    }
-
-    public static void browsePage(String url) {
-        try {
-            Desktop.getDesktop().browse(URI.create(url));
-        } catch (Exception ex) { /* Fressen */ }
-    }
-
-    public static void openFile(final File file) {
-        try {
-            Desktop.getDesktop().open(file);
-        } catch (Exception ex) { /* Fressen */ }
-    }
-    
     public static boolean checkForWriteLock(File file){
     	try {
 			FileChannel channel = new RandomAccessFile(file, "rw").getChannel();

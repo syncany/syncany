@@ -10,8 +10,8 @@ import org.syncany.db.CloneFile;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.db.CloneFileTree;
 import org.syncany.db.DatabaseIO;
+import org.syncany.exceptions.CloneTreeException;
 import org.syncany.tests.TestSettings;
-import org.syncany.util.exceptions.CloneTreeException;
 
 public class CloneFileTreeTest {
 	private static CloneFileTree tree;

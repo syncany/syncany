@@ -35,14 +35,14 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 
 import org.syncany.Constants;
+import org.syncany.chunk.chunking.Chunk;
+import org.syncany.chunk.multi.CustomMultiChunk;
+import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.db.Database;
-import org.syncany.util.chunk.chunking.Chunk;
-import org.syncany.util.chunk.multi.CustomMultiChunk;
-import org.syncany.util.chunk.multi.MultiChunk;
 
 /**
  *

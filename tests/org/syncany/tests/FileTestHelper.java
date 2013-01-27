@@ -16,13 +16,13 @@ import java.util.Random;
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CustomMultiChunk;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.TTTDChunker;
 import org.syncany.config.Profile;
-import org.syncany.util.chunk.Chunk;
-import org.syncany.util.chunk.Chunker;
-import org.syncany.util.chunk.CustomMultiChunk;
-import org.syncany.util.chunk.MultiChunk;
-import org.syncany.util.chunk.TTTDChunker;
-import org.syncany.util.exceptions.EncryptionException;
+import org.syncany.exceptions.EncryptionException;
 
 /**
  * 

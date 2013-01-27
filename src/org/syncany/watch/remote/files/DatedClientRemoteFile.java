@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import org.syncany.config.Repository;
-import org.syncany.util.exceptions.InvalidRepositoryException;
+import org.syncany.exceptions.InvalidRepositoryException;
 
 /**
  * 

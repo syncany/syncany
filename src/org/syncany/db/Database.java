@@ -30,9 +30,9 @@ import org.syncany.config.Profile;
 import org.syncany.config.Settings;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.db.CloneFile.SyncStatus;
+import org.syncany.exceptions.CloneTreeException;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-import org.syncany.util.exceptions.CloneTreeException;
 import org.syncany.watch.remote.FileHistory;
 import org.syncany.watch.remote.FileUpdate;
 

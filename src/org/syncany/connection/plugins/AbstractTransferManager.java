@@ -20,7 +20,7 @@ package org.syncany.connection.plugins;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.syncany.util.exceptions.StorageException;
+import org.syncany.exceptions.StorageException;
 import org.syncany.watch.remote.files.RemoteFile;
 
 /**

@@ -23,6 +23,7 @@ import java.util.Date;
 import org.syncany.watch.remote.files.RemoteFile;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
+import org.syncany.chunk.MultiChunk;
 import org.syncany.communication.CommunicationController;
 import org.syncany.communication.CommunicationController.SyncanyStatus;
 import org.syncany.config.Profile;
@@ -34,8 +35,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.syncany.db.Database;
-import org.syncany.util.chunk.MultiChunk;
-import org.syncany.util.exceptions.StorageException;
+import org.syncany.exceptions.StorageException;
 
 /**
  * Represents the remote storage.

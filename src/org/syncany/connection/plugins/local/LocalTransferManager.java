@@ -18,13 +18,13 @@
 package org.syncany.connection.plugins.local;
 
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.exceptions.CacheException;
+import org.syncany.exceptions.LocalFileNotFoundException;
+import org.syncany.exceptions.RemoteFileNotFoundException;
+import org.syncany.exceptions.StorageConnectException;
+import org.syncany.exceptions.StorageException;
 import org.syncany.watch.remote.files.RemoteFile;
 import org.syncany.util.FileUtil;
-import org.syncany.util.exceptions.CacheException;
-import org.syncany.util.exceptions.LocalFileNotFoundException;
-import org.syncany.util.exceptions.RemoteFileNotFoundException;
-import org.syncany.util.exceptions.StorageConnectException;
-import org.syncany.util.exceptions.StorageException;
 
 import java.io.File;
 import java.io.FilenameFilter;

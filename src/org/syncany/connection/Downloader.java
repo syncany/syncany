@@ -7,9 +7,9 @@ import java.util.logging.Logger;
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.CloneChunk;
-import org.syncany.util.exceptions.CacheException;
-import org.syncany.util.exceptions.InconsistentFileSystemException;
-import org.syncany.util.exceptions.StorageException;
+import org.syncany.exceptions.CacheException;
+import org.syncany.exceptions.InconsistentFileSystemException;
+import org.syncany.exceptions.StorageException;
 import org.syncany.watch.remote.files.RemoteFile;
 
 public class Downloader {

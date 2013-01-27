@@ -18,12 +18,13 @@
 package org.syncany.config;
 
 import org.syncany.Constants;
+import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.db.CloneChunk;
+import org.syncany.exceptions.CacheException;
+
 import java.io.File;
 import java.io.IOException;
 
-import org.syncany.util.chunk.multi.MultiChunk;
-import org.syncany.util.exceptions.CacheException;
 
 /**
  *

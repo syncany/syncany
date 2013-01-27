@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.syncany.Constants;
 import org.syncany.config.Profile;
-import org.syncany.util.exceptions.CloneTreeException;
+import org.syncany.exceptions.CloneTreeException;
 
 /**
  * 

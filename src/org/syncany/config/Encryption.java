@@ -28,7 +28,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.syncany.Constants;
-import org.syncany.util.exceptions.EncryptionException;
+import org.syncany.exceptions.EncryptionException;
 
 public class Encryption {	
 	

@@ -19,6 +19,8 @@ package org.syncany.watch.remote;
 
 import java.util.Collection;
 import java.util.NavigableMap;
+
+import org.syncany.chunk.Assembler;
 import org.syncany.config.Profile;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
@@ -36,9 +38,8 @@ import java.util.logging.Logger;
 import org.syncany.Constants;
 import org.syncany.db.CloneClient;
 import org.syncany.db.CloneFile.SyncStatus;
+import org.syncany.exceptions.InconsistentFileSystemException;
 import org.syncany.index.Indexer;
-import org.syncany.util.chunk.Assembler;
-import org.syncany.util.exceptions.InconsistentFileSystemException;
 import org.syncany.watch.remote.files.UpdateFile;
 
 /**

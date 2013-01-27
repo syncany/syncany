@@ -10,13 +10,13 @@ import java.util.Set;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.TTTDChunker;
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.db.CloneFile;
-import org.syncany.util.chunk.TTTDChunker;
-import org.syncany.util.chunk.Chunk;
-import org.syncany.util.chunk.MultiChunk;
 import org.syncany.tests.FileTestHelper;
 import org.syncany.tests.TestSettings;
 

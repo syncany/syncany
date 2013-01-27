@@ -1,5 +1,6 @@
 package org.syncany.experimental.db;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -10,15 +11,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
+import org.syncany.chunk.chunking.Chunk;
+import org.syncany.chunk.chunking.Chunker;
+import org.syncany.chunk.chunking.FixedOffsetChunker;
+import org.syncany.chunk.multi.CustomMultiChunker;
+import org.syncany.chunk.multi.MultiChunk;
+import org.syncany.chunk.multi.MultiChunker;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-import org.syncany.util.chunk.chunking.Chunk;
-import org.syncany.util.chunk.chunking.Chunker;
-import org.syncany.util.chunk.chunking.FixedOffsetChunker;
-import org.syncany.util.chunk.multi.CustomMultiChunker;
-import org.syncany.util.chunk.multi.MultiChunk;
-import org.syncany.util.chunk.multi.MultiChunker;
 
 public class Main {
 
@@ -195,7 +196,7 @@ public class Main {
 		repoDir.mkdir();
 		
 		// Make lots of random files and folders
-		int maxFiles = 10;
+		int maxFiles = 100;
 		
 		List<File> randomFiles = new ArrayList<File>();
 		List<File> randomDirs = new ArrayList<File>();
@@ -240,10 +241,13 @@ public class Main {
 
 		        int len;
 		        while ((len = fis.read(buffer)) > 0) {
-		        	// Change 10% of the file
+		        	// Change x% of the file
 		        	if (Math.random() < 0.5) {
-		        		//buffer[0] = (byte) (buffer[0]+1); // CHANGE SOMETHING!
-		        		fos.write(buffer, 0, len-1);
+		        		//buffer[0] = (byte) (0xff & (buffer[0]+1)); // CHANGE SOMETHING!
+		        		//fos.write(buffer, 0, len);
+		        		fos.write(buffer, 0, len-1);  // CHANGE SOMETHING!
+		        		//fos.write(0xff); // CHANGE SOMETHING!s
+//		        		fos.write(buffer, 0, len-1);  // CHANGE SOMETHING!
 		        	}
 		        	
 		        	// Or just copy stuff
@@ -427,7 +431,8 @@ public class Main {
 	        	
 	        	for (ChunkEntry chunkEntry : chunkEntries) {        		
 	        		File chunkFile = new File(cacheDir+"/chunk-"+StringUtil.toHex(chunkEntry.getChecksum()));
-
+	        		boolean chunkWritten = false;
+	        		
 	        		// Extract multichunk if chunk file does not exist	        		
 	        		if (!chunkFile.exists()) {
 		        		MultiChunkEntry multiChunkEntry = chunkEntry.getMultiChunk();
@@ -440,11 +445,22 @@ public class Main {
 	        			
 	        			while (null != (chunk = multiChunk.read())) {
 	        				FileUtil.writeFile(chunk.getContent(), new File(cacheDir+"/chunk-"+StringUtil.toHex(chunk.getChecksum())));
+	        				
+	        				if (Arrays.equals(chunk.getChecksum(), chunkEntry.getChecksum())) {
+	        					fos.write(chunk.getContent());	
+	        					chunkWritten = true;
+	        				}
 	        			}
 	        		}
-	        		
-	        		byte[] chunkData = FileUtil.readFile(chunkFile);
-	        		fos.write(chunkData);	        		
+	        		else {
+	        			byte[] chunkData = FileUtil.readFile(chunkFile);
+	        			fos.write(chunkData);
+	        			chunkWritten = true;
+	        		}
+	        		        		
+	        		if (!chunkWritten) {
+	        			throw new IOException("Chunk "+StringUtil.toHex(chunkEntry.getChecksum())+" not found.");
+	        		}
 	        	}
 	        	
 	        	fos.close();

@@ -18,20 +18,21 @@
 package org.syncany.config;
 
 import org.syncany.Constants;
+import org.syncany.chunk.chunking.Chunker;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.exceptions.CacheException;
+import org.syncany.exceptions.InvalidRepositoryException;
+import org.syncany.exceptions.NoRepositoryFoundException;
+import org.syncany.exceptions.RepositoryFoundException;
+import org.syncany.exceptions.StorageConnectException;
+import org.syncany.exceptions.StorageException;
+
 import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.syncany.util.chunk.chunking.Chunker;
-import org.syncany.util.exceptions.CacheException;
-import org.syncany.util.exceptions.InvalidRepositoryException;
-import org.syncany.util.exceptions.NoRepositoryFoundException;
-import org.syncany.util.exceptions.RepositoryFoundException;
-import org.syncany.util.exceptions.StorageConnectException;
-import org.syncany.util.exceptions.StorageException;
 import org.syncany.watch.remote.files.StructuredFileList;
 
 /**

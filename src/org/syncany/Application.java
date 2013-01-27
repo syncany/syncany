@@ -19,11 +19,11 @@ package org.syncany;
 
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
+import org.syncany.exceptions.InitializationException;
 import org.syncany.index.Indexer;
 import org.syncany.watch.remote.ChangeManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.syncany.util.exceptions.InitializationException;
 
 /**
  * Represents the application.

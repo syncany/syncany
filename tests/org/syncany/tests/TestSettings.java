@@ -9,7 +9,7 @@ import org.syncany.config.Profile;
 import org.syncany.config.Settings;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.util.exceptions.EncryptionException;
+import org.syncany.exceptions.EncryptionException;
 
 
 public class TestSettings {
