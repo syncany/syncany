@@ -9,9 +9,16 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 		Database db;
 		
+		System.out.println("save1()");
+		System.out.println("----------------------------");
 		save1();
+		
+		System.out.println("load1()");
+		System.out.println("----------------------------");
 		db = load1();
 		
+		System.out.println("save2()");
+		System.out.println("----------------------------");
 		save2(db);
 	}
 	
