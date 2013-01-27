@@ -1,4 +1,4 @@
-package org.syncany.util.chunk2;
+package org.syncany.util.chunk;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -6,14 +6,14 @@ import java.io.FileOutputStream;
 import java.util.Enumeration;
 
 import org.syncany.util.StringUtil;
-import org.syncany.util.chunk2.chunking.Chunk;
-import org.syncany.util.chunk2.chunking.Chunker;
-import org.syncany.util.chunk2.chunking.FixedOffsetChunker;
-import org.syncany.util.chunk2.multi.CustomMultiChunker;
-import org.syncany.util.chunk2.multi.MultiChunk;
-import org.syncany.util.chunk2.multi.MultiChunker;
-import org.syncany.util.chunk2.transform.Transformer;
-import org.syncany.util.chunk2.transform.compress.GzipCompressor;
+import org.syncany.util.chunk.chunking.Chunk;
+import org.syncany.util.chunk.chunking.Chunker;
+import org.syncany.util.chunk.chunking.FixedOffsetChunker;
+import org.syncany.util.chunk.multi.CustomMultiChunker;
+import org.syncany.util.chunk.multi.MultiChunk;
+import org.syncany.util.chunk.multi.MultiChunker;
+import org.syncany.util.chunk.transform.Transformer;
+import org.syncany.util.chunk.transform.compress.GzipCompressor;
 
 public class ChunkTest {
 	public static void main(String[] args) throws Exception {

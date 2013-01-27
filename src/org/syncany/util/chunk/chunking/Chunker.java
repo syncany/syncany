@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.chunking;
+package org.syncany.util.chunk.chunking;
 
 import java.io.BufferedInputStream;
 import java.io.File;

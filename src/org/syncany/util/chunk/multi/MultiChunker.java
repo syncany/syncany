@@ -15,38 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.chunking;
+package org.syncany.util.chunk.multi;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class Chunk {
-    private byte[] checksum;
-    private byte[] contents;
-    private int size;
-    private byte[] fileChecksum;
-
-    public Chunk(byte[] checksum, byte[] contents, int size, byte[] fileChecksum) {
-        this.checksum = checksum;
-        this.contents = contents;
-        this.size = size;
-        this.fileChecksum = fileChecksum;
+public abstract class MultiChunker {
+    protected int minChunkSize;
+    protected int sleepMillis;
+        
+    public MultiChunker(int minChunkSize, int sleepMillis)  {
+        this.minChunkSize = minChunkSize;
+        this.sleepMillis = sleepMillis;
     }
 
-    public byte[] getChecksum() {
-        return checksum;
+    public int getMinChunkSize() {
+        return minChunkSize;
     }
-
-    public byte[] getContent() {
-        return contents;
+    
+    protected void sleep() {
+        try { Thread.sleep(sleepMillis); }
+        catch (Exception e) { }
     }
-
-    public byte[] getFileChecksum() {
-        return fileChecksum;
-    }
-
-    public int getSize() {
-        return size;
-    }                
+        
+    public abstract MultiChunk createMultiChunk(InputStream is);
+    public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
+    
+    @Override
+    public abstract String toString();    
 }

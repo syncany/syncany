@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.multi;
+package org.syncany.util.chunk.multi;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.syncany.util.chunk2.chunking.Chunk;
+import org.syncany.util.chunk.chunking.Chunk;
 
 /**
  *

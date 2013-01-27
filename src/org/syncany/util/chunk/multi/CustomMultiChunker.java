@@ -1,5 +1,5 @@
 /*
- * Syncany, www.syncany.org
+ * Syncany
  * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,39 +15,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.multi;
+package org.syncany.util.chunk.multi;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author pheckel
  */
-public abstract class MultiChunker {
-    protected int minChunkSize;
-    protected int sleepMillis;
-        
-    public MultiChunker(int minChunkSize, int sleepMillis)  {
-        this.minChunkSize = minChunkSize;
-        this.sleepMillis = sleepMillis;
+public class CustomMultiChunker extends MultiChunker {
+    public CustomMultiChunker(int minChunkSize, int sleepMillis) {
+        super(minChunkSize, sleepMillis);
     }
 
-    public int getMinChunkSize() {
-        return minChunkSize;
+    @Override
+    public MultiChunk createMultiChunk(InputStream is) {
+        sleep();
+        return new CustomMultiChunk(is);
     }
-    
-    protected void sleep() {
-        try { Thread.sleep(sleepMillis); }
-        catch (Exception e) { }
-    }
-        
-    public abstract MultiChunk createMultiChunk(InputStream is);
-    public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
     
     @Override
-    public abstract String toString();    
+    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
+        sleep();
+        return new CustomMultiChunk(id, minChunkSize, os);
+    }
+    
+    @Override
+    public String toString() {
+        return "Custom-"+minChunkSize+"-"+sleepMillis;
+    }
+
+
 }

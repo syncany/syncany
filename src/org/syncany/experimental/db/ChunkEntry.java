@@ -34,13 +34,13 @@ public class ChunkEntry implements Serializable, Persistable {
     
     private int chunksize;
     
-    private transient List<MetaChunkEntry> metaChunks;
+    private transient List<MultiChunkEntry> metaChunks;
     
     // only for stats!
     public transient int appearances = 0;
 
     public ChunkEntry() {
-        this.metaChunks = new LinkedList<MetaChunkEntry>();
+        this.metaChunks = new LinkedList<MultiChunkEntry>();
     }
     
     public ChunkEntry(byte[] checksum, int size) {
@@ -73,15 +73,15 @@ public class ChunkEntry implements Serializable, Persistable {
         this.checksum = checksum;
     }
     
-    public void addMetaChunk(MetaChunkEntry metaChunk) {
+    public void addMetaChunk(MultiChunkEntry metaChunk) {
         metaChunks.add(metaChunk);
     }
     
-    public List<MetaChunkEntry> getMetaChunks() {
+    public List<MultiChunkEntry> getMetaChunks() {
         return metaChunks;
     }
     
-    public MetaChunkEntry getMetaChunk() {
+    public MultiChunkEntry getMetaChunk() {
         return (!metaChunks.isEmpty()) ? metaChunks.get(0) : null;
     }
     

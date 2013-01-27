@@ -102,9 +102,6 @@ public class Application {
 
 				// Start threads
 				profile.getRemoteWatcher().start();
-
-				// Start the rest
-				indexer.start();
 			}
 		}, "InitProfile").start();
 	}
@@ -122,8 +119,6 @@ public class Application {
 
 		Profile.getInstance().getUploader().stop();
 		Profile.getInstance().getRemoteWatcher().stop();
-
-		Indexer.getInstance().stop();
 
 		System.exit(0);
 	}

@@ -28,9 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.syncany.util.logging.LogFormatter;
-
-import org.syncany.communication.CommunicationController;
-import org.syncany.communication.CommunicationSocket;
 import org.syncany.util.StringUtil;
 
 
@@ -76,16 +73,7 @@ public class Syncany {
     		}
 		}
     }
-    
-    
-    /** Starting from GUI */
-    public static void start(int port) {
-    	/* Daemon connects to GUI and requests initialData */
-		CommunicationSocket comSock = CommunicationSocket.getInstance();
-		comSock.setPort(port);
-		comSock.connect();
-		CommunicationController.getInstance().requestInitialization();
-    }
+      
     
     /** Start with config and without GUI */
     public static void start(String pathToConfig) {
@@ -100,9 +88,6 @@ public class Syncany {
     		}
     		reader.close();
     		String json = fileData.toString();
-
-    		// initialize & start Syncany        		
-    		CommunicationController.getInstance().processInitialData(json);
     	}
         catch (Exception e) {
             System.err.println("ERROR: "+ e.getMessage());

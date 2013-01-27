@@ -33,6 +33,8 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.syncany.util.StringUtil;
+
 /**
  *
  * @author pheckel
@@ -41,7 +43,7 @@ public class Database {
     private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
     
     private Map<ByteArray, ChunkEntry> chunkCache;
-    private Map<ByteArray, MetaChunkEntry> metaChunkCache;
+    private Map<ByteArray, MultiChunkEntry> multiChunkCache;
     private Map<ByteArray, Content> contentCache;
     private Map<Long, FileHistory> historyCache;
     private Map<Long, FileVersion> versionCache;
@@ -49,21 +51,22 @@ public class Database {
     private Map<String, FileHistory> filenameHistoryCache;
     
     private Set<ChunkEntry> newChunkCache;
-    private Set<MetaChunkEntry> newMetaChunkCache;
+    private Set<MultiChunkEntry> newMultiChunkCache;
     private Set<Content> newContentCache;
     private Set<FileHistory> newHistoryCache;
     private Map<Long, FileVersion> newVersionCache;
 
     public Database() {
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
-        metaChunkCache = new HashMap<ByteArray, MetaChunkEntry>();
+        multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
         contentCache = new HashMap<ByteArray, Content>();
         historyCache = new HashMap<Long, FileHistory>();
+        versionCache = new HashMap<Long, FileVersion>();
         
         filenameHistoryCache = new HashMap<String, FileHistory>();
 
         newChunkCache = new HashSet<ChunkEntry>();
-        newMetaChunkCache = new HashSet<MetaChunkEntry>();
+        newMultiChunkCache = new HashSet<MultiChunkEntry>();
         newContentCache = new HashSet<Content>();
         newHistoryCache = new HashSet<FileHistory>();
         newVersionCache = new HashMap<Long, FileVersion>();
@@ -74,8 +77,14 @@ public class Database {
     }
     
     public synchronized void save(File file, boolean full) throws IOException {
+    	save(file, full, true);
+    }
+    
+    public synchronized void save(File file, boolean full, boolean gzip) throws IOException {
         Collection l;
-        DataOutputStream dos = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(file)));
+        DataOutputStream dos = (gzip) 
+        	? new DataOutputStream(new GZIPOutputStream(new FileOutputStream(file)))
+        	: new DataOutputStream(new FileOutputStream(file));
         
         // Signature and version        
         dos.write("Syncany".getBytes()); 
@@ -97,7 +106,7 @@ public class Database {
         }
         
         // Metachunks        
-        l = (full) ? metaChunkCache.values() : newMetaChunkCache;
+        l = (full) ? multiChunkCache.values() : newMultiChunkCache;
         
         if (l == null || l.isEmpty()) {                        
             dos.writeInt(0); // count
@@ -203,14 +212,20 @@ public class Database {
         
         // Clear the 'new' entries
         newChunkCache.clear();
-        newMetaChunkCache.clear();
+        newMultiChunkCache.clear();
         newContentCache.clear();
         newHistoryCache.clear();
         newVersionCache.clear();
     }
     
     public synchronized void load(File file) throws IOException {
-        DataInputStream dis = new DataInputStream(new GZIPInputStream(new FileInputStream(file)));
+    	load(file, true);
+    }
+    
+    public synchronized void load(File file, boolean gzip) throws IOException {
+        DataInputStream dis = (gzip)
+        	? new DataInputStream(new GZIPInputStream(new FileInputStream(file)))
+        	: new DataInputStream(new FileInputStream(file));
         
         // Signature and version
         byte[] shouldFileSig = "Syncany".getBytes();
@@ -245,13 +260,13 @@ public class Database {
         int metaChunkCount = dis.readInt();
 
         for (int i = 0; i < metaChunkCount; i++) {
-            MetaChunkEntry metaChunk = new MetaChunkEntry(this);
+            MultiChunkEntry metaChunk = new MultiChunkEntry(this);
             metaChunk.read(dis);
 
             //System.out.println("read metachunk "+Arrays.toString(metaChunk.getChecksum()));
             ByteArray key = new ByteArray(metaChunk.getChecksum());
-            if (!metaChunkCache.containsKey(key)) {
-                metaChunkCache.put(key, metaChunk);
+            if (!multiChunkCache.containsKey(key)) {
+                multiChunkCache.put(key, metaChunk);
             }
         }
         
@@ -349,21 +364,21 @@ public class Database {
     
     // Metachunk
     
-    public MetaChunkEntry createMetaChunk() {        
-        return new MetaChunkEntry();
+    public MultiChunkEntry createMultiChunk() {        
+        return new MultiChunkEntry();
     }    
     
-    public void addMetaChunk(MetaChunkEntry metaChunk) {
-        metaChunkCache.put(new ByteArray(metaChunk.getChecksum()), metaChunk);                
-        newMetaChunkCache.add(metaChunk);
+    public void addMultiChunk(MultiChunkEntry multiChunk) {
+        multiChunkCache.put(new ByteArray(multiChunk.getChecksum()), multiChunk);                
+        newMultiChunkCache.add(multiChunk);
     }
     
-    public Collection<MetaChunkEntry> getMetaChunks() {
-        return metaChunkCache.values();
+    public Collection<MultiChunkEntry> getMultiChunks() {
+        return multiChunkCache.values();
     }
 
-    public Collection<MetaChunkEntry> getNewMetaChunks() {
-        return newMetaChunkCache;
+    public Collection<MultiChunkEntry> getNewMultiChunks() {
+        return newMultiChunkCache;
     }
     
     // History
@@ -432,6 +447,48 @@ public class Database {
     public void addContent(Content content) {
         contentCache.put(new ByteArray(content.getChecksum()), content);
         newContentCache.add(content);
+    }
+    
+    public String toString() {
+    	StringBuffer sb = new StringBuffer();
+    	
+    	sb.append("chunkCache:\n");    	
+    	for (ChunkEntry e : chunkCache.values()) {
+    		sb.append("- Chunk "+StringUtil.toHex(e.getChecksum())+"\n");
+    	}
+    	
+    	sb.append("multiChunkCache:\n");
+    	for (MultiChunkEntry e : multiChunkCache.values()) {
+    		sb.append("- MultiChunk"+StringUtil.toHex(e.getChecksum())+": \n");
+    		
+        	for (ChunkEntry e2 : e.getChunks()) {
+        		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+"\n");
+        	}
+    	}    	
+    	
+    	sb.append("contentCache:\n");
+    	for (Content e : contentCache.values()) {
+    		sb.append("- Content "+StringUtil.toHex(e.getChecksum())+"\n");
+    		
+        	for (ChunkEntry e2 : e.getChunks()) {
+        		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+"\n");
+        	}    		
+    	}   
+    	
+    	sb.append("historyCache:\n");
+    	for (FileHistory e : historyCache.values()) {
+    		sb.append("- FileHistory "+e.getFileId()+"\n");
+    		
+        	for (FileVersion e2 : e.getVersions()) {
+        		sb.append("  + FileVersion "+e2.getVersion()+", "+e2.getPath()+"/"+e2.getName()+"\n");
+        		
+        		for (ChunkEntry e3 : e2.getContent().getChunks()) {
+            		sb.append("    * Chunk "+StringUtil.toHex(e3.getChecksum())+"\n");
+            	}           		
+        	}            	
+    	}    	    	
+    	
+    	return sb.toString();
     }
 
 }

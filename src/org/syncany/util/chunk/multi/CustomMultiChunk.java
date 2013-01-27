@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.multi;
+package org.syncany.util.chunk.multi;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
 import org.syncany.util.StringUtil;
-import org.syncany.util.chunk2.chunking.Chunk;
+import org.syncany.util.chunk.chunking.Chunk;
 import org.syncany.util.io.StreamUtils;
 
 import java.io.EOFException;

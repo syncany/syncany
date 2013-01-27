@@ -9,7 +9,7 @@
  * @author Casey Marshall
  * @version $Revision: 188 $
  */
-package org.syncany.util.chunk2.fingerprint;
+package org.syncany.util.chunk.fingerprint;
 
 public class Adler32Fingerprinter extends Fingerprinter {
     protected final int char_offset;

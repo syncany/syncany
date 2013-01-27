@@ -15,29 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.chunk2.fingerprint;
+package org.syncany.util.chunk.transform;
 
-import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  *
  * @author pheckel
  */
-public abstract class Fingerprinter {    
-    public static Fingerprinter getInstance(String name) throws NoSuchAlgorithmException {
-        try {
-            Class<?> clazz = Class.forName(Fingerprinter.class.getPackage().getName()+"."+name+Fingerprinter.class.getSimpleName());
-            return (Fingerprinter) clazz.newInstance();
-        }
-        catch (Exception e) {
-            throw new NoSuchAlgorithmException("No such fingerprinting algorithm: "+name, e);
-        }        
+public abstract class Transformer {
+    protected Transformer nextTransformer;
+    
+    public Transformer() {
+        this(null);
     }
     
-    public abstract int getValue();
-    public abstract void reset();
-    public abstract void roll(byte bt);
-    public abstract void check(byte[] buf, int off, int len);
+    public Transformer(Transformer nextTransformer) {
+        this.nextTransformer = nextTransformer;
+    }
+    
+    public abstract OutputStream transform(OutputStream out) throws IOException;
+    public abstract InputStream transform(InputStream in) throws IOException;
     
     @Override
     public abstract String toString();

@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author pheckel
  */
-public class MetaChunkEntry implements Persistable {
+public class MultiChunkEntry implements Persistable {
     private Long id;
     private byte[] checksum;    
     private int actualSize;
@@ -37,13 +37,13 @@ public class MetaChunkEntry implements Persistable {
     
     private transient Database db; // TODO this is ugly!
     
-    public MetaChunkEntry() {
+    public MultiChunkEntry() {
         this.chunks = new ArrayList<ChunkEntry>();
         this.actualSize = 0;
         this.chunkSize = 0;
     }
     
-    public MetaChunkEntry(Database db) {
+    public MultiChunkEntry(Database db) {
         this();
         this.db = db;
     }    

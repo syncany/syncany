@@ -40,9 +40,9 @@ import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.db.Database;
-import org.syncany.util.chunk2.chunking.Chunk;
-import org.syncany.util.chunk2.multi.CustomMultiChunk;
-import org.syncany.util.chunk2.multi.MultiChunk;
+import org.syncany.util.chunk.chunking.Chunk;
+import org.syncany.util.chunk.multi.CustomMultiChunk;
+import org.syncany.util.chunk.multi.MultiChunk;
 
 /**
  *
