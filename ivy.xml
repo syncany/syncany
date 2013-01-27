@@ -38,6 +38,10 @@
     	<!-- Other Stuff needed in Syncany -->
     		<!-- Syncany.java -->
     			<dependency org="commons-cli" name="commons-cli" rev="1.0"  conf="cc-impl->default"/>
+
+		    <!-- FTP PLugin -->
+		    	<dependency org="commons-net" name="commons-net" rev="2.0"  conf="cc-impl->default"/>
+		    
 			
 			<!-- Indexer -->
     			<dependency org="commons-codec" name="commons-codec" rev="1.5"  conf="cc-impl->default"/>
@@ -53,7 +57,7 @@
     			<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
     			
     		<!-- JPATH WATCH -->
-    			<dependency org="jpathwatch-libs-only" name="jpathwatch-libs-only" rev="0.94" conf="cc-impl->default"/>	
+    			<!--<dependency org="jpathwatch-libs-only" name="jpathwatch-libs-only" rev="0.94" conf="cc-impl->default"/>-->	
   	</dependencies>
 	
 </ivy-module>
