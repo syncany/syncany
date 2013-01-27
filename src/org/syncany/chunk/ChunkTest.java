@@ -11,8 +11,8 @@ import org.syncany.chunk.chunking.FixedOffsetChunker;
 import org.syncany.chunk.multi.CustomMultiChunker;
 import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.chunk.multi.MultiChunker;
+import org.syncany.chunk.transform.GzipCompressor;
 import org.syncany.chunk.transform.Transformer;
-import org.syncany.chunk.transform.compress.GzipCompressor;
 import org.syncany.util.StringUtil;
 
 public class ChunkTest {

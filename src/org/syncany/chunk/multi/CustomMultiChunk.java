@@ -21,8 +21,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
 import org.syncany.chunk.chunking.Chunk;
+import org.syncany.util.StreamUtils;
 import org.syncany.util.StringUtil;
-import org.syncany.util.io.StreamUtils;
 
 import java.io.EOFException;
 import java.io.IOException;

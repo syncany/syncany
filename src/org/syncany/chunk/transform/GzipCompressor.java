@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.chunk.transform.compress;
+package org.syncany.chunk.transform;
 
-import org.syncany.chunk.transform.Transformer;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -19,6 +19,7 @@ package org.syncany.config;
 
 import org.syncany.Constants;
 import org.syncany.chunk.chunking.Chunker;
+import org.syncany.chunk.chunking.FixedOffsetChunker;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.exceptions.CacheException;
@@ -54,9 +55,7 @@ public final class Repository{
         // Fressen
         connection = null; // Loaded or set dynamically!
         encryption = new Encryption();
-        chunker = new TTTDChunker(Constants.DEFAULT_CHUNK_SIZE, 
-        		TTTDChunker.DEFAULT_WINDOW_SIZE, TTTDChunker.DEFAULT_DIGEST_ALG, TTTDChunker.DEFAULT_FINGERPRINT_ALG);
-               
+        chunker = new FixedOffsetChunker(16*1024);
         lastUpdate = null;
         changed = false;
         connected = false;

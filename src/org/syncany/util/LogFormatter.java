@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util.logging;
+package org.syncany.util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -24,7 +24,6 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 import org.syncany.config.Profile;
-import org.syncany.util.StringUtil;
 
 /**
  * From: http://publib.boulder.ibm.com/infocenter/wasinfo/v6r0/index.jsp?topic=/com.ibm.websphere.express.doc/info/exp/ae/rtrb_createformatter.html

@@ -1,4 +1,4 @@
-package org.syncany.db;
+package org.syncany.util;
 
 /*
 

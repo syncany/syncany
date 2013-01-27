@@ -1,5 +1,6 @@
-package org.syncany.util.io;
+package org.syncany.util;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -30,5 +31,12 @@ public class StreamUtils {
 			
 			inp[s + i] = (byte)b;
 		}
+	}
+	
+	public static class CipherEOFException extends EOFException {		
+		public CipherEOFException(String msg){
+			super(msg);
+		}
+
 	}
 }
