@@ -450,7 +450,7 @@ public class Database {
     		sb.append("- MultiChunk "+StringUtil.toHex(e.getChecksum())+": \n");
     		
         	for (ChunkEntry e2 : e.getChunks()) {
-        		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+"\n");
+        		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+" (in MultiChunk "+StringUtil.toHex(e2.getMultiChunk().getChecksum())+")\n");
         	}
     	}    	
     	
@@ -459,7 +459,7 @@ public class Database {
     		sb.append("- Content "+StringUtil.toHex(e.getChecksum())+"\n");
     		
         	for (ChunkEntry e2 : e.getChunks()) {
-        		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+"\n");
+        		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+" (in MultiChunk "+StringUtil.toHex(e2.getMultiChunk().getChecksum())+")\n");
         	}    		
     	}   
     	
@@ -468,8 +468,10 @@ public class Database {
     		sb.append("- FileHistory "+e.getFileId()+"\n");
     		
         	for (FileVersion e2 : e.getVersions()) {
-        		sb.append("  + FileVersion "+e2.getVersion()+", folder "+((e2.isFolder()) ? "yes" : "no")+", "+e2.getPath()+"/"+e2.getName()+"\n");
-        		sb.append("    Content "+((e2.getContent() == null) ? "(none)" : StringUtil.toHex(e2.getContent().getChecksum()))+"\n");
+        		sb.append("  + FileVersion "+e2.getVersion()
+        				+", isFolder "+((e2.isFolder()) ? "yes" : "no")
+        				+", Content "+((e2.getContent() == null) ? "(none)" : StringUtil.toHex(e2.getContent().getChecksum()))
+        				+", "+e2.getPath()+"/"+e2.getName()+"\n");        		
         	}            	
     	}    	    	
     	

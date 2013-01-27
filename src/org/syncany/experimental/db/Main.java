@@ -145,7 +145,7 @@ public class Main {
 		// Create first file
         ChunkEntry chunkC1 = db.createChunk(new byte[] { 99,92,93,4,5,7,8,9,0}, 912,true);
         ChunkEntry chunkC2 = db.createChunk(new byte[] { 99,98,97,6,5,4,3,2,1}, 934, true);
-		
+               
         Content contentC = db.createContent();        
         contentC.addChunk(chunkC1);
         contentC.addChunk(chunkC2);
@@ -161,6 +161,13 @@ public class Main {
         versionC1.setContent(contentC);
                 
         db.addFileHistory(fileC);
+        
+        // Distribute chunks to multichunks
+        MultiChunkEntry multiChunkC = db.createMultiChunk();
+        multiChunkC.addChunk(chunkC1); // from fileC
+        multiChunkC.addChunk(chunkC2); // from fileC
+        multiChunkC.setChecksum(new byte[] {9,0,1,2,6,6,6,6,6});
+        db.addMultiChunk(multiChunkC);        
         
         // Save new stuff
         File dbFile2 = new File("/tmp/dbfile2");
@@ -247,12 +254,16 @@ public class Main {
 
 		        fis.close();
 		        fos.close();
+
+				randomFiles.add(destFile);
 			}
 			
 			// Or simply copy them
 			else {
 				File destFile = new File(destDir+"/file"+i+"-copy-of-"+srcFile.getName());
 				FileUtil.copy(srcFile, destFile);
+				
+				randomFiles.add(destFile);
 			}
 		}
 		
@@ -352,6 +363,17 @@ public class Main {
 			//fileHistory.addVersion(fileVersion);			
 			db.addFileHistory(fileHistory);
 		}
+		
+		// Close and add last multichunk
+		if (multiChunk != null) {
+			// Data
+            multiChunk.close();
+            multiChunk = null;
+            
+            // DB
+            db.addMultiChunk(multiChunkEntry);
+            multiChunkEntry = null;
+        }		
 		
 		// Save database
 		db.save(localDatabaseFile, true, false);
