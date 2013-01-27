@@ -8,12 +8,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 import org.syncany.util.chunk.chunking.Chunk;
 import org.syncany.util.chunk.chunking.Chunker;
 import org.syncany.util.chunk.chunking.FixedOffsetChunker;
+import org.syncany.util.chunk.multi.CustomMultiChunker;
+import org.syncany.util.chunk.multi.MultiChunk;
+import org.syncany.util.chunk.multi.MultiChunker;
 
 public class Main {
 
@@ -163,12 +168,19 @@ public class Main {
 	public static void save3() throws IOException {
 		// Create test environment
 		File rootDir = new File("/tmp/syncany-db-test");
+		File repoDir = new File("/tmp/syncany-db-test-repo");
+		File localDatabaseFile = new File(repoDir+"/db-philipp-"+(System.currentTimeMillis()/1000));
 		
 		if (rootDir.exists()) {
 			FileUtil.deleteRecursively(rootDir);
 		}
 		
+		if (repoDir.exists()) {
+			FileUtil.deleteRecursively(rootDir);
+		}		
+		
 		rootDir.mkdir();
+		repoDir.mkdir();
 		
 		// Make lots of random files and folders
 		int maxFiles = 100;
@@ -240,9 +252,20 @@ public class Main {
 		}
 		
 		
-		// Now populate the database
+		// NOW START CHUNKING, AND ADDING EVERYTHING TO THE DB
+		
+		// DB: Create DB and chunk/multichunk entries
 		Database db = new Database();		
+		
+		ChunkEntry chunkEntry = null;
+		MultiChunkEntry multiChunkEntry = null;
+
+		// Data: Create chunker and multichunker
 		Chunker chunker = new FixedOffsetChunker(4*1024);
+		MultiChunker multiChunker = new CustomMultiChunker(512*1024, 0);
+		
+		Chunk chunk = null;
+		MultiChunk multiChunk = null;
 		
 		for (File file : randomFiles) {
 			// Check if file exists, or create new 
@@ -268,17 +291,45 @@ public class Main {
 				// Create chunks from file
 				Enumeration<Chunk> chunks = chunker.createChunks(file);
 				
-				Chunk chunk = null;
 				while (chunks.hasMoreElements()) {
 					chunk = chunks.nextElement();
 					
-					ChunkEntry chunkEntry = db.getChunk(chunk.getChecksum());
+					// Update DB
+					chunkEntry = db.getChunk(chunk.getChecksum());
 					
 					if (chunkEntry == null) {
-						chunkEntry = db.createChunk(chunk.getChecksum(), chunk.getSize(), true);					
+						chunkEntry = db.createChunk(chunk.getChecksum(), chunk.getSize(), true);						
+						
+						// Add chunk data to multichunk
+						
+						// - Check if multichunk full
+						if (multiChunk != null && multiChunk.isFull()) {
+							// Data
+		                    multiChunk.close();
+		                    multiChunk = null;
+		                    
+		                    // DB
+		                    db.addMultiChunk(multiChunkEntry);
+		                    multiChunkEntry = null;
+		                }
+						
+						// - Open new multichunk if none existant
+						if (multiChunk == null) {
+							// Data
+							File multiChunkFile = new File(repoDir+"/multichunk-"+StringUtil.toHex(chunk.getChecksum()));							
+							multiChunk = multiChunker.createMultiChunk(chunk.getChecksum(), new FileOutputStream(multiChunkFile));
+							
+							// DB
+							multiChunkEntry = db.createMultiChunk();
+							multiChunkEntry.setChecksum(chunk.getChecksum());
+						}
+						
+						// - Add chunk data
+						multiChunk.write(chunk);
+						multiChunkEntry.addChunk(chunkEntry);
 					}
 					
-					content.addChunk(chunkEntry);
+					content.addChunk(chunkEntry);					
 				}
 				
 				if (chunk != null) {
@@ -297,8 +348,7 @@ public class Main {
 		}
 		
 		// Save database
-		File dbFile3 = new File("/tmp/dbfile3");
-		db.save(dbFile3, true, false);
+		db.save(localDatabaseFile, true, false);
 		
 		System.out.println(db);
 	}
