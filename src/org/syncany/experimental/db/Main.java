@@ -67,12 +67,14 @@ public class Main {
         FileHistory fileA = db.createFileHistory(true);
         
         FileVersion versionA1 = db.createFileVersion(fileA);
+        versionA1.setVersion(1L);
         versionA1.setPath("some/path");
         versionA1.setName("fileA.jpg");
         versionA1.setContent(contentA);
        // fileA.addVersion(versionA1);
         
         FileVersion versionA2 = db.createFileVersion(fileA);
+        versionA2.setVersion(2L);
         versionA2.setName("renamed-fileA.jpg");        
         //fileA.addVersion(versionA2);
         
@@ -91,12 +93,14 @@ public class Main {
         FileHistory fileB = db.createFileHistory(true);
         
         FileVersion versionB1 = db.createFileVersion(fileB);
+        versionB1.setVersion(1L);
         versionB1.setPath("some/other/path");
         versionB1.setName("fileB.jpg");
         versionB1.setContent(contentB);
         //fileB.addVersion(versionB1);
         
         FileVersion versionB2 = db.createFileVersion(fileB);
+        versionB1.setVersion(2L);
         versionB2.setName("renamed-fileB.jpg");        
         //fileB.addVersion(versionB2);
         
@@ -151,6 +155,7 @@ public class Main {
         FileHistory fileC = db.createFileHistory(true);
         
         FileVersion versionC1 = db.createFileVersion(fileC);
+        versionC1.setVersion(1L);
         versionC1.setPath("some/path");
         versionC1.setName("fileC.jpg");
         versionC1.setContent(contentC);
@@ -169,21 +174,21 @@ public class Main {
 		// Create test environment
 		File rootDir = new File("/tmp/syncany-db-test");
 		File repoDir = new File("/tmp/syncany-db-test-repo");
-		File localDatabaseFile = new File(repoDir+"/db-philipp-"+(System.currentTimeMillis()/1000));
+		File localDatabaseFile = new File(repoDir+"/db-philipp-now");
 		
 		if (rootDir.exists()) {
 			FileUtil.deleteRecursively(rootDir);
 		}
 		
 		if (repoDir.exists()) {
-			FileUtil.deleteRecursively(rootDir);
+			FileUtil.deleteRecursively(repoDir);
 		}		
 		
 		rootDir.mkdir();
 		repoDir.mkdir();
 		
 		// Make lots of random files and folders
-		int maxFiles = 100;
+		int maxFiles = 10;
 		
 		List<File> randomFiles = new ArrayList<File>();
 		List<File> randomDirs = new ArrayList<File>();
@@ -261,7 +266,7 @@ public class Main {
 		MultiChunkEntry multiChunkEntry = null;
 
 		// Data: Create chunker and multichunker
-		Chunker chunker = new FixedOffsetChunker(4*1024);
+		Chunker chunker = new FixedOffsetChunker(16*1024);
 		MultiChunker multiChunker = new CustomMultiChunker(512*1024, 0);
 		
 		Chunk chunk = null;
@@ -282,7 +287,8 @@ public class Main {
 				fileVersion = db.createFileVersion(fileHistory);
 			}
 			
-			fileVersion.setPath(FileUtil.getRelativePath(rootDir, file));
+			fileVersion.setVersion(1L);
+			fileVersion.setPath(FileUtil.getRelativePath(rootDir, file.getParentFile()));
 			fileVersion.setName(file.getName());
 			
 			if (file.isFile()) {
@@ -343,7 +349,7 @@ public class Main {
 				db.addContent(content);
 			}
 			
-			fileHistory.addVersion(fileVersion);			
+			//fileHistory.addVersion(fileVersion);			
 			db.addFileHistory(fileHistory);
 		}
 		
@@ -355,13 +361,73 @@ public class Main {
 
 	
 	public static Database load3() throws IOException {
-		Database db = new Database();
+		// Create test environment
+		File reconstructDir = new File("/tmp/syncany-db-test-reconstruct");
+		File repoDir = new File("/tmp/syncany-db-test-repo");
+		File cacheDir = new File("/tmp/syncany-db-test-cache");
+		File localDatabaseFile = new File(repoDir+"/db-philipp-now");
+						
+		if (reconstructDir.exists()) {
+			FileUtil.deleteRecursively(reconstructDir);
+		}
+		
+		if (cacheDir.exists()) {
+			FileUtil.deleteRecursively(cacheDir);
+		}		
+
+		cacheDir.mkdirs();
+		reconstructDir.mkdirs();
+		
+		MultiChunker multiChunker = new CustomMultiChunker(512*1024, 0);
 		
 		// Load database
-        File dbFile = new File("/tmp/dbfile3");
-		db.load(dbFile, false);
+		Database db = new Database();
+		db.load(localDatabaseFile, false);
 
         System.out.println(db);
+        
+        // Reconstruct all files from repo
+        for (FileHistory fileHistory : db.getFileHistories()) {
+        	FileVersion lastFileVersion = fileHistory.getLastVersion();
+        	File localFile = new File(reconstructDir+"/"+lastFileVersion.getPath()+"/"+lastFileVersion.getName());
+        	
+        	if (lastFileVersion.isFolder()) {
+        		localFile.mkdirs();
+        	}
+        	
+        	else {
+        		// Create folders
+        		localFile.getParentFile().mkdirs();
+        		
+        		// Reconstruct file
+        		FileOutputStream fos = new FileOutputStream(localFile);
+	        	List<ChunkEntry> chunkEntries = lastFileVersion.getContent().getChunks();
+	        	
+	        	for (ChunkEntry chunkEntry : chunkEntries) {        		
+	        		File chunkFile = new File(cacheDir+"/chunk-"+StringUtil.toHex(chunkEntry.getChecksum()));
+
+	        		// Extract multichunk if chunk file does not exist	        		
+	        		if (!chunkFile.exists()) {
+		        		MultiChunkEntry multiChunkEntry = chunkEntry.getMultiChunk();
+	        			System.out.println(multiChunkEntry);
+	        			System.out.println(StringUtil.toHex(multiChunkEntry.getChecksum()));
+	        			File multiChunkFile = new File(repoDir+"/multichunk-"+StringUtil.toHex(multiChunkEntry.getChecksum()));
+		        		
+	        			MultiChunk multiChunk = multiChunker.createMultiChunk(new FileInputStream(multiChunkFile));
+	        			Chunk chunk = null;
+	        			
+	        			while (null != (chunk = multiChunk.read())) {
+	        				FileUtil.writeFile(chunk.getContent(), new File(cacheDir+"/chunk-"+StringUtil.toHex(chunk.getChecksum())));
+	        			}
+	        		}
+	        		
+	        		byte[] chunkData = FileUtil.readFile(chunkFile);
+	        		fos.write(chunkData);	        		
+	        	}
+	        	
+	        	fos.close();
+        	}
+        }
         
         return db;
 	}

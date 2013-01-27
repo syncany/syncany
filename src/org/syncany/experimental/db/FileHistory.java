@@ -22,15 +22,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeMap;
 
 /**
  *
  * @author pheckel
  */
 public class FileHistory implements Serializable, Persistable {
-    private Long id;
     private Long fileId;
     private int profileId;
     private String rootId;
@@ -42,15 +43,7 @@ public class FileHistory implements Serializable, Persistable {
         this.fileId = new Random().nextLong();
         this.versions = new ArrayList<FileVersion>();
         this.newVersions = new ArrayList<FileVersion>();
-    }
-    
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    }    
 
     public Long getFileId() {
         return fileId;
@@ -91,7 +84,7 @@ public class FileHistory implements Serializable, Persistable {
     /* package */ FileVersion createVersion() {        
         FileVersion newVersion;
         
-        if (!versions.isEmpty()) {
+        if (!versions.isEmpty()) {        	
             FileVersion lastVersion = versions.get(versions.size()-1);        
             
             newVersion = (FileVersion) lastVersion.clone();

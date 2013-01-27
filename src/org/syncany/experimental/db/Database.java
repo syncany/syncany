@@ -447,7 +447,7 @@ public class Database {
     	
     	sb.append("multiChunkCache:\n");
     	for (MultiChunkEntry e : multiChunkCache.values()) {
-    		sb.append("- MultiChunk"+StringUtil.toHex(e.getChecksum())+": \n");
+    		sb.append("- MultiChunk "+StringUtil.toHex(e.getChecksum())+": \n");
     		
         	for (ChunkEntry e2 : e.getChunks()) {
         		sb.append("  + Chunk "+StringUtil.toHex(e2.getChecksum())+"\n");
@@ -468,13 +468,8 @@ public class Database {
     		sb.append("- FileHistory "+e.getFileId()+"\n");
     		
         	for (FileVersion e2 : e.getVersions()) {
-        		sb.append("  + FileVersion "+e2.getVersion()+", "+e2.getPath()+"/"+e2.getName()+"\n");
-        		
-        		if (e2.getContent() != null) {
-	        		for (ChunkEntry e3 : e2.getContent().getChunks()) {
-	            		sb.append("    * Chunk "+StringUtil.toHex(e3.getChecksum())+"\n");
-	            	}           		
-        		}
+        		sb.append("  + FileVersion "+e2.getVersion()+", folder "+((e2.isFolder()) ? "yes" : "no")+", "+e2.getPath()+"/"+e2.getName()+"\n");
+        		sb.append("    Content "+((e2.getContent() == null) ? "(none)" : StringUtil.toHex(e2.getContent().getChecksum()))+"\n");
         	}            	
     	}    	    	
     	

@@ -63,11 +63,11 @@ public class ChunkEntry implements Serializable, Persistable {
         metaChunks.add(metaChunk);
     }
     
-    public List<MultiChunkEntry> getMetaChunks() {
+    public List<MultiChunkEntry> getMultiChunks() {
         return metaChunks;
     }
     
-    public MultiChunkEntry getMetaChunk() {
+    public MultiChunkEntry getMultiChunk() {
         return (!metaChunks.isEmpty()) ? metaChunks.get(0) : null;
     }
     
