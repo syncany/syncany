@@ -26,7 +26,6 @@ public class TestSettings {
 	private File appCacheDir;
 	private File repDir;
 	private File rootFolder;
-	private String userName;
 	private String machineName;
 	
 	// for synchronization tests attributes for a "remote" syncany instance
@@ -54,7 +53,6 @@ public class TestSettings {
 			appCacheDir = new File("/opt/syncanytest/cache");
 			repDir = new File("/opt/syncanytest/repfolder");
 			rootFolder = new File("/opt/syncanytest/testfolder");
-			userName = "MAC-User";
 			machineName = "MACMachine";
 			
 			home1 = new File("/opt/syncanytest/");
@@ -74,7 +72,6 @@ public class TestSettings {
 			appCacheDir = new File("D:/Syncany/Testfolder/cache");
 			repDir = new File("D:/Syncany/Testfolder/repository");
 			rootFolder = new File("D:/Syncany/Testfolder/rootfolder");
-			userName = "Windows-User";
 			machineName = "WindowsMachine";
 			
 			home1 = new File("D:/Syncany/Testfolder/");
@@ -90,7 +87,6 @@ public class TestSettings {
 			appCacheDir = new File("/tmp/syncanytest/cache");
 			repDir = new File("/tmp/syncanytest/repfolder");
 			rootFolder = new File("/tmp/syncanytest/testfolder");
-			userName = "Linux-User";
 			machineName = "LinuxMachine";
 			
 			// "remote" folders
@@ -112,7 +108,7 @@ public class TestSettings {
 	/** Creates an instance of the original application settings with the test settings attributes */
 	public void createSettingsInstance() {
 		// SETTING EVERYTHING IN SETTINGS-CLASS
-		settings = Settings.createInstance(appDir, appCacheDir, userName, machineName);
+		settings = Settings.createInstance(appDir, appCacheDir, machineName);
 	}
 	
 	public Profile createProfile() {
@@ -174,10 +170,6 @@ public class TestSettings {
 
 	public File getRootFolder() {
 		return rootFolder;
-	}
-
-	public String getUserName() {
-		return userName;
 	}
 
 	public String getMachineName() {

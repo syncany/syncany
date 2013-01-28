@@ -23,9 +23,7 @@ import java.util.Date;
 import org.syncany.watch.remote.files.RemoteFile;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.communication.CommunicationController;
-import org.syncany.communication.CommunicationController.SyncanyStatus;
+import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.CloneFile.SyncStatus;
@@ -147,9 +145,6 @@ public class Uploader {
         }
 
         private void processRequest(UploadRequest req) {
-        	// Tray updating status icon was here
-        	CommunicationController.getInstance().updateStatus(SyncanyStatus.updating);
-        	
         	logger.log(Level.INFO, "PROCESSING UPLOAD REQUEST {0}", req.getMetaChunk());
         	System.out.println("Uploader Thread-ID: "+Thread.currentThread().getId());
             
@@ -195,9 +190,6 @@ public class Uploader {
                 
                 if (queue.isEmpty()) {
                 	System.out.println("Up-to-date-state");
-                	
-                    // try up-to-date status icon
-                	CommunicationController.getInstance().updateStatus(SyncanyStatus.inSync);
                 }                
                 
                 return;
@@ -206,7 +198,6 @@ public class Uploader {
             System.out.println("Uploader Thread-ID: "+Thread.currentThread().getId());
             
             System.out.println("Setting files to Syncing");
-            CommunicationController.getInstance().updateStatus(SyncanyStatus.updating);
             
             // Set files to syncing
             for (CloneFile file : req.getUpdatedFiles()) {
@@ -261,7 +252,6 @@ public class Uploader {
             	System.out.println("Up-to-date-state");
             	
             	// try up-to-date status icon
-            	CommunicationController.getInstance().updateStatus(SyncanyStatus.inSync);
             }
         }
 

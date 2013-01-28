@@ -34,6 +34,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.syncany.Constants;
+import org.syncany.util.ByteArray;
 import org.syncany.util.StringUtil;
 
 /**
@@ -41,7 +42,7 @@ import org.syncany.util.StringUtil;
  * @author pheckel
  */
 public class Database {
-	private static final byte DATABASE_VERSION = 0x01;
+	private static final byte DATABASE_FORMAT_VERSION = 0x01;
     private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
     
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -90,7 +91,7 @@ public class Database {
         
         // Signature and version        
         dos.write("Syncany".getBytes()); 
-        dos.writeByte(DATABASE_VERSION);
+        dos.writeByte(DATABASE_FORMAT_VERSION);
         
         // Chunks
         l = (full) ? chunkCache.values() : newChunkCache;
@@ -226,7 +227,7 @@ public class Database {
         
         int version = dis.readByte();
         
-        if ((version & 0xff) != DATABASE_VERSION) {
+        if ((version & 0xff) != DATABASE_FORMAT_VERSION) {
             throw new IOException("Invalid file: version "+version+" not supported.");
         }
                 

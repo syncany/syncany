@@ -1,4 +1,4 @@
-package org.syncany.experimental.db;
+package org.syncany.tests.chunk;
 
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -11,17 +11,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
+import org.junit.Test;
 import org.syncany.chunk.chunking.Chunk;
 import org.syncany.chunk.chunking.Chunker;
 import org.syncany.chunk.chunking.FixedOffsetChunker;
 import org.syncany.chunk.multi.CustomMultiChunker;
 import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.chunk.multi.MultiChunker;
+import org.syncany.experimental.db.ChunkEntry;
+import org.syncany.experimental.db.Content;
+import org.syncany.experimental.db.Database;
+import org.syncany.experimental.db.FileHistory;
+import org.syncany.experimental.db.FileVersion;
+import org.syncany.experimental.db.MultiChunkEntry;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-public class Main {
+public class ChunkAndDBTest130128 {
 
 	
 	public static void main(String[] args) throws IOException {
@@ -48,6 +55,7 @@ public class Main {
 		load3();
 	}
 	
+	@Test
 	public static Database save1() throws IOException {
 		Database db = new Database();
 		

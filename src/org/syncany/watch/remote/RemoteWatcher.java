@@ -17,21 +17,6 @@
  */
 package org.syncany.watch.remote;
 
-import java.util.Map.Entry;
-
-import org.syncany.communication.CommunicationController;
-import org.syncany.communication.CommunicationController.SyncanyStatus;
-import org.syncany.config.Profile;
-import org.syncany.config.Settings;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.db.CloneClient;
-import org.syncany.db.CloneFile;
-import org.syncany.db.Database;
-import org.syncany.exceptions.InconsistentFileSystemException;
-import org.syncany.exceptions.RemoteFileNotFoundException;
-import org.syncany.exceptions.StorageException;
-import org.syncany.watch.remote.files.RemoteFile;
-import org.syncany.watch.remote.files.UpdateFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -43,10 +28,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.syncany.config.Profile;
+import org.syncany.config.Settings;
+import org.syncany.connection.plugins.TransferManager;
+import org.syncany.db.CloneClient;
+import org.syncany.db.CloneFile;
+import org.syncany.db.Database;
+import org.syncany.exceptions.InconsistentFileSystemException;
+import org.syncany.exceptions.RemoteFileNotFoundException;
+import org.syncany.exceptions.StorageException;
+import org.syncany.watch.remote.files.RemoteFile;
 import org.syncany.watch.remote.files.StructuredFileList;
+import org.syncany.watch.remote.files.UpdateFile;
 
 /**
  * Does periodical checks on the online storage, and applies them locally.

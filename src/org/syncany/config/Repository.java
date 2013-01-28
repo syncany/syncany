@@ -52,7 +52,6 @@ public final class Repository{
 
     // New
     public Repository() {
-        // Fressen
         connection = null; // Loaded or set dynamically!
         encryption = new Encryption();
         chunker = new FixedOffsetChunker(16*1024);

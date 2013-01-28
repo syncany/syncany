@@ -22,10 +22,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.Constants;
-import org.syncany.chunk.Chunk;
-import org.syncany.chunk.CustomMultiChunk;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.chunk.TTTDChunker;
+import org.syncany.chunk.chunking.Chunk;
+import org.syncany.chunk.chunking.FixedOffsetChunker;
+import org.syncany.chunk.multi.CustomMultiChunk;
+import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.config.Settings;
 import org.syncany.db.CloneChunk;
@@ -41,7 +41,7 @@ public class ChunkerTest {
 	// Debug-Flag
 	private static boolean debug = false;
 	
-	private static TTTDChunker tttdChunker;
+	private static FixedOffsetChunker tttdChunker;
     private static File metaChunkTempFile;
     private static MultiChunk metaChunk;
     private static Set<CloneFile> metaChunkCompletedFiles;
@@ -86,7 +86,7 @@ public class ChunkerTest {
 		
 		testSettings.createSettingsInstance();
 		
-		tttdChunker = new TTTDChunker(16*1024, TTTDChunker.DEFAULT_WINDOW_SIZE, TTTDChunker.DEFAULT_DIGEST_ALG, TTTDChunker.DEFAULT_FINGERPRINT_ALG);
+		tttdChunker = new FixedOffsetChunker(32*1024);
 		
 		
 		if(debug) System.out.println("creating random file..");
@@ -226,7 +226,7 @@ public class ChunkerTest {
 	                metaChunk = new CustomMultiChunk(metaId, chunkSize, new CipherOutputStream(new FileOutputStream(metaChunkTempFile), encCipher));
 	                //metaChunk = new CustomMultiChunk(metaId, chunkSize, new FileOutputStream(metaChunkTempFile));
 	                
-	                if(debug) System.out.println("MetaChunkSize (actual): "+metaChunk.getActualSize());
+	                //if(debug) System.out.println("MetaChunkSize (actual): "+metaChunk.getActualSize());
 	                if(debug) System.out.println("metaChunk.getId: "+metaChunk.getId());
 	                
 	                        //new FileOutputStream(metaChunkTempFile));                    
@@ -359,7 +359,7 @@ public class ChunkerTest {
 					Cipher decCipher = Profile.getInstance().getRepository().getEncryption().createDecCipher(metaId);
 					
 					//CustomMultiChunk metaChunk = new CustomMultiChunk(metaId, new FileInputStream(encryptedMetaChunkFile));
-					CustomMultiChunk metaChunk = new CustomMultiChunk(metaId, new CipherInputStream(new FileInputStream(encryptedMetaChunkFile), decCipher));
+					CustomMultiChunk metaChunk = new CustomMultiChunk(new CipherInputStream(new FileInputStream(encryptedMetaChunkFile), decCipher));
 
 					if(debug) System.out.println("metaChunk: "+metaChunk);
 					if(debug) System.out.println("metaChunk.getId: "+metaChunk.getId());
@@ -373,7 +373,7 @@ public class ChunkerTest {
 						
 						if(debug) System.out.println(" - Extracting chunk " + CloneChunk.encodeIdStr(chunkx.getChecksum())+" to local cache ...");
 						
-						FileUtil.writeFile(chunkx.getContents(), decryptedChunkxFile);
+						FileUtil.writeFile(chunkx.getContent(), decryptedChunkxFile);
 					}
 
 //					encryptedMetaChunkFile.delete();
@@ -425,7 +425,7 @@ public class ChunkerTest {
 //        closeMetaChunk(false);
         
     	if(debug) System.out.println("Closing Metachunk..");
-    	if(debug) System.out.println("MetaChunkSize (actual): "+metaChunk.getActualSize());
+    	//if(debug) System.out.println("MetaChunkSize (actual): "+metaChunk.getActualSize());
         
         // Close meta chunk and get ID (= last chunk's ID)
         metaChunk.close();

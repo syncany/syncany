@@ -34,14 +34,11 @@ public class Settings {
 	
 	private File appDir;
 	private File appCacheDir;
-	private String userName;
-	private String machineName;
-	
+	private String machineName;	
 	
 	public Settings(){
 		appDir = null;
 		appCacheDir = null;
-		userName = null;
 		machineName = null;
 	}
 	
@@ -53,18 +50,12 @@ public class Settings {
 		return settings;
 	}
 	
-	public static Settings createInstance(File appDir, File appCacheDir, String userName, String machineName) {
+	public static Settings createInstance(File appDir, File appCacheDir, String machineName) {
 		settings = Settings.getInstance();
 		settings.setAppDir(appDir);
 		settings.setAppCacheDir(appCacheDir);
-		
-		// TODO: may later automatic
-		// userName = System.getProperty("user.name");
-		settings.setUserName(userName);
-		
-		// TODO: maybe later automatic
-		// machineName = InetAddress.getLocalHost().getHostName();
 		settings.setMachineName(machineName);
+		
 		return settings;
 	}
 	
@@ -112,10 +103,4 @@ public class Settings {
 		this.machineName = machineName;
 	}
 
-	public String getUserName() {
-		return userName;
-	}
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
 }

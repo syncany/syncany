@@ -16,11 +16,11 @@ import java.util.Random;
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 
-import org.syncany.chunk.Chunk;
-import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CustomMultiChunk;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.chunk.TTTDChunker;
+import org.syncany.chunk.chunking.Chunk;
+import org.syncany.chunk.chunking.Chunker;
+import org.syncany.chunk.chunking.FixedOffsetChunker;
+import org.syncany.chunk.multi.CustomMultiChunk;
+import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.exceptions.EncryptionException;
 
@@ -232,11 +232,11 @@ public class FileTestHelper {
 		return complete.digest();
 	}
 	
-	public static ArrayList<MultiChunk> getMetaChunksOfFile(File file) throws IOException, EncryptionException {
-		return FileTestHelper.getMetaChunksOfFile(file, null);
+	public static ArrayList<MultiChunk> getMultiChunksOfFile(File file) throws IOException, EncryptionException {
+		return FileTestHelper.getMultiChunksOfFile(file, null);
 	}
 	
-	public static ArrayList<MultiChunk> getMetaChunksOfFile(File file, File path) throws IOException, EncryptionException {
+	public static ArrayList<MultiChunk> getMultiChunksOfFile(File file, File path) throws IOException, EncryptionException {
 //		Chunker chunker = Profile.getInstance().getRepository().getChunker();
 		
 		if(file==null || !file.exists()) throw new FileNotFoundException();
@@ -245,7 +245,7 @@ public class FileTestHelper {
 		else if(!path.exists() && path.isDirectory()) path.mkdirs();
 		else throw new FileNotFoundException();
 		
-		Chunker chunker = new TTTDChunker(16*1024, TTTDChunker.DEFAULT_WINDOW_SIZE, TTTDChunker.DEFAULT_DIGEST_ALG, TTTDChunker.DEFAULT_FINGERPRINT_ALG);
+		Chunker chunker = new FixedOffsetChunker(16*1024);
 		Enumeration<Chunk> chunkEnum = chunker.createChunks(file);
 		
 //		List<String> chunkIdStrs = new ArrayList<String>();
@@ -261,7 +261,7 @@ public class FileTestHelper {
 			
             if (metaChunk != null && metaChunk.isFull()) {
             	generatedMetaChunks.add(metaChunk);
-            	metaChunk = closeMetaChunk(metaChunk, metaChunkTempFile);
+            	metaChunk = closeMultiChunk(metaChunk, metaChunkTempFile);
             }
             
             byte[] metaId;
@@ -276,7 +276,7 @@ public class FileTestHelper {
             if (metaChunk == null) {
             	int chunkSize = Profile.getInstance().getRepository().getChunkSize()*1024;
             	Cipher encCipher = Profile.getInstance().getRepository().getEncryption().createEncCipher(metaId);
-            	metaChunkTempFile = createTempFile("metachunk", path);
+            	metaChunkTempFile = createTempFile("multichunk", path);
             	metaChunk = new CustomMultiChunk(metaId, chunkSize, new CipherOutputStream(new FileOutputStream(metaChunkTempFile), encCipher));
             }
             
@@ -284,18 +284,18 @@ public class FileTestHelper {
 		}
 		if(metaChunk!=null) {
 			generatedMetaChunks.add(metaChunk);
-			closeMetaChunk(metaChunk, metaChunkTempFile);
+			closeMultiChunk(metaChunk, metaChunkTempFile);
 		}
 		return generatedMetaChunks;
 	}
 	
-	private static MultiChunk closeMetaChunk(MultiChunk metaChunk, File metaChunkTempFile) throws IOException {
-		metaChunk.close();
-		File metaChunkFile = Profile.getInstance().getCache().getMetaChunkFile(metaChunk);
-		metaChunkTempFile.renameTo(metaChunkFile);
+	private static MultiChunk closeMultiChunk(MultiChunk multiChunk, File multiChunkTempFile) throws IOException {
+		multiChunk.close();
+		File multiChunkFile = Profile.getInstance().getCache().getMetaChunkFile(multiChunk);
+		multiChunkTempFile.renameTo(multiChunkFile);
 		
-		metaChunk = null;
-		return metaChunk;
+		multiChunk = null;
+		return multiChunk;
 	}
 	
 	private static File createTempFile(String name, File folder) throws IOException {

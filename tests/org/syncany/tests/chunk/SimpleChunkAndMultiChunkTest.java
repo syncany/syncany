@@ -1,10 +1,11 @@
-package org.syncany.chunk;
+package org.syncany.tests.chunk;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
 
+import org.junit.Test;
 import org.syncany.chunk.chunking.Chunk;
 import org.syncany.chunk.chunking.Chunker;
 import org.syncany.chunk.chunking.FixedOffsetChunker;
@@ -15,8 +16,9 @@ import org.syncany.chunk.transform.GzipCompressor;
 import org.syncany.chunk.transform.Transformer;
 import org.syncany.util.StringUtil;
 
-public class ChunkTest {
-	public static void main(String[] args) throws Exception {
+public class SimpleChunkAndMultiChunkTest {
+	@Test
+	public void simpleChunkAndMultiChunkTest() throws Exception {
 		Chunker c = new FixedOffsetChunker(5*1024);
 		MultiChunker multiChunker = new CustomMultiChunker(512*1024, 0);
 		Transformer trans = new GzipCompressor();

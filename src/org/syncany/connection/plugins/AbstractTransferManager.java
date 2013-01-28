@@ -55,12 +55,6 @@ public abstract class AbstractTransferManager implements TransferManager {
     
     @Override
     public void clean() throws StorageException {
-        //for (RemoteFile rf : list("temp-").values()) {
-        //    delete(rf);
-        //}        
-        
-        // TODO implement this: should delete only files older than X
-        
         throw new UnsupportedOperationException("clean() not implemented yet.");
     }    
 }

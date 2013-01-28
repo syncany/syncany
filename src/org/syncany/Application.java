@@ -25,49 +25,6 @@ import org.syncany.watch.remote.ChangeManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Represents the application.
- * 
- * <ul>
- * <li>{@link Watcher}: Listens to changes of the file system in the given local
- * sync folder. Passes changes to the indexer.
- * <li>{@link Indexer}: Reads local files and compares them to the versions in
- * local database. If necessary, it creates DB versions of new or altered files
- * and passes them to the storage manager for upload.
- * <li>{@link Uploader}: Uploads and downloads remote files from the shared
- * storage. Receives upload requests by the {@link Indexer}, and download
- * requests by the {@link PeriodicStorageMonitor}.
- * <li>{@link PeriodicStorageMonitor}: Checks the online storage for changes in
- * regular intervals, then downloads changes and notifies the
- * {@link ChangeManager}.
- * </ul>
- * 
- * <p>
- * Medium priority To-Do list:
- * <ul>
- * <li>TODO [medium] Connectivity management: Handle broken connections in every
- * single class
- * <li>TODO [medium] Make checksum long value instead of int, cp.
- * </ul>
- * 
- * <p>
- * Low priority To-Do list:
- * <ul>
- * <li>TODO [low] make platform specific file manager integration (windows
- * explorer, mac finder, ...)
- * <li>TODO [low] cache: implement a cache-cleaning functionality for the local
- * and online storage.
- * <li>TODO [low] cache: implement a cache-size parameter for the local cache.
- * </ul>
- * 
- * <p>
- * Wish list:
- * <ul>
- * <li>TODO [wish] strategy for down/uploading : FIFO, larget first, ...
- * </ul>
- * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
 public class Application {
 	private static final Logger logger = Logger.getLogger(Application.class.getSimpleName());
 

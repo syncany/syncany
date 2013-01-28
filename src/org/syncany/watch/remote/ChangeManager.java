@@ -17,30 +17,25 @@
  */
 package org.syncany.watch.remote;
 
-import java.util.Collection;
-import java.util.NavigableMap;
-
-import org.syncany.chunk.Assembler;
-import org.syncany.config.Profile;
-import org.syncany.db.CloneChunk;
-import org.syncany.db.CloneFile;
-import org.syncany.db.CloneFile.Status;
-import org.syncany.db.Database;
-import org.syncany.util.FileUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.PriorityQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.syncany.Constants;
-import org.syncany.db.CloneClient;
+
+import org.syncany.config.Profile;
+import org.syncany.db.CloneChunk;
+import org.syncany.db.CloneFile;
+import org.syncany.db.CloneFile.Status;
 import org.syncany.db.CloneFile.SyncStatus;
+import org.syncany.db.Database;
 import org.syncany.exceptions.InconsistentFileSystemException;
 import org.syncany.index.Indexer;
-import org.syncany.watch.remote.files.UpdateFile;
+import org.syncany.util.FileUtil;
 
 /**
  *
@@ -49,10 +44,6 @@ import org.syncany.watch.remote.files.UpdateFile;
 public class ChangeManager {
     private static final Logger logger = Logger.getLogger(ChangeManager.class.getSimpleName());
 
-    // cp start()
-    private Assembler assembler;
-
-    // for the loop
     private List<FileHistory> updatedFiles;
 
     private Database db;
@@ -61,7 +52,6 @@ public class ChangeManager {
     public ChangeManager(Profile profile) {
         db = Database.getInstance();
         indexer = Indexer.getInstance();
-        assembler = new Assembler(profile);
     }
 
     public void processUpdates(UpdateQueue ul) throws InconsistentFileSystemException {
@@ -313,7 +303,8 @@ public class ChangeManager {
                                 throw new InconsistentFileSystemException("Could not apply update for file #"+lastUpdate.getFileId()+": "+lastUpdate+". Out-of-sync.");    
                             }
 
-                            indexer.queue(conflictFile);
+                            
+                            if (true) {System.out.println("FIXME FIXME"); System.exit(0); } //indexer.queue(conflictFile);
                         }
                     }
 
@@ -376,7 +367,7 @@ public class ChangeManager {
                         throw new InconsistentFileSystemException("Could not create temp file in cache.");
                     }
 
-                   assembler.assembleFile(chunkIdStrs, tempAssembledFile);
+                   if (true) {System.out.println("FIXME FIXME"); System.exit(0); } //assembler.assembleFile(chunkIdStrs, tempAssembledFile);
 
                     if (!fileAssembled) {
                         fileAssembled = true;

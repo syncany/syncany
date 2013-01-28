@@ -32,7 +32,8 @@ public class Scenario2 {
 		// cleanup & not cleaning up repository (this is done by the main test)
 		ScenarioTestHelper.cleanupDirectories(configPath2, false);
 		
-		Syncany.start(configPath2);
+		//Syncany.start(configPath2);
+		// FIXME XXXXXXXXXXXXXXXXXXXXXXXXXX DELETED PHILIPP
 		
 		rootFolder = Profile.getInstance().getRoot();
 		

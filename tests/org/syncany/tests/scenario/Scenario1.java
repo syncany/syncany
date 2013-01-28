@@ -35,7 +35,8 @@ public class Scenario1 {
 		
 		// LOGGING
 		
-		Syncany.start(configPath2);
+		//Syncany.start(configPath2); 
+		// FIXME XXXXXXXXXXXXXXXXXXXXXXXXXX DELETED PHILIPP
 		
 		rootFolder = Profile.getInstance().getRoot();
 		

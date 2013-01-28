@@ -11,17 +11,20 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.syncany.Syncany;
-import org.syncany.communication.CommunicationController.Data;
+import org.syncany.config.Config;
 import org.syncany.tests.FileTestHelper;
+import org.syncany.util.FileUtil;
+
+import com.google.gson.JsonSyntaxException;
 
 /**
  * Scenario test helper for cleaning up directories and setting up logging 
  */
 public class ScenarioTestHelper {
 
-	public static void cleanupDirectories(String configPath, boolean cleanRepo) {
+	public static void cleanupDirectories(String configPath, boolean cleanRepo) throws JsonSyntaxException, IOException {
 		// read without initializing objects
-		Data d = Syncany.getConfigData(configPath);
+		Config d = new Config(new File(configPath));
 		FileTestHelper.emptyDirectory(new File(d.getAppDir()));
 		FileTestHelper.emptyDirectory(new File(d.getCacheDir()));
 
@@ -38,7 +41,7 @@ public class ScenarioTestHelper {
 		l.setLevel(Level.ALL);
 		FileHandler fileHandler = new FileHandler(fileName);
 		fileHandler.setFormatter(new Formatter() {
-			@Override
+			@Override 
 			public String format(LogRecord record) {
 				return record.getLevel() + ": "
 						+ record.getSourceClassName() + "."

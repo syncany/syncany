@@ -27,7 +27,7 @@ public class MainSyncanyDaemon {
 		// cleanup
 		ScenarioTestHelper.cleanupDirectories(configPath, true);
 
-		Syncany.start(configPath);
+		//Syncany.start(configPath);
 
 		while (!exit) {
 			Thread.sleep(500);
