@@ -30,33 +30,24 @@ import org.syncany.util.StringUtil;
 
 public class ChunkAndDBTest130128 {
 
-	
-	public static void main(String[] args) throws IOException {
+	@Test
+	public void saveLoadSaveTest() throws IOException {
 		Database db;
 		
 		System.out.println("save1()");
 		System.out.println("----------------------------");
-		save1();
+		saveLoadSaveTestSave1();
 		
 		System.out.println("load1()");
 		System.out.println("----------------------------");
-		db = load1();
+		db = saveLoadSaveTestLoad1();
 		
 		System.out.println("save2()");
 		System.out.println("----------------------------");
-		save2(db);
-
-		System.out.println("save3()");
-		System.out.println("----------------------------");
-		save3();		
-
-		System.out.println("load3()");
-		System.out.println("----------------------------");
-		load3();
+		saveLoadSaveTestSave2(db);
 	}
 	
-	@Test
-	public static Database save1() throws IOException {
+	public Database saveLoadSaveTestSave1() throws IOException {
 		Database db = new Database();
 		
 		// Create first file
@@ -138,7 +129,7 @@ public class ChunkAndDBTest130128 {
         return db;
 	}
 	
-	public static Database load1() throws IOException {
+	public Database saveLoadSaveTestLoad1() throws IOException {
 		Database db = new Database();
 		
 		// Load database
@@ -150,7 +141,7 @@ public class ChunkAndDBTest130128 {
         return db;
 	}
 	
-	public static Database save2(Database db) throws IOException {
+	public Database saveLoadSaveTestSave2(Database db) throws IOException {
 		// Create first file
         ChunkEntry chunkC1 = db.createChunk(new byte[] { 99,92,93,4,5,7,8,9,0}, 912,true);
         ChunkEntry chunkC2 = db.createChunk(new byte[] { 99,98,97,6,5,4,3,2,1}, 934, true);
@@ -184,6 +175,12 @@ public class ChunkAndDBTest130128 {
 
         System.out.println(db);
         return db;
+	}
+	
+	@Test
+	public void createRandomFileTreeChunkFilesAndReconstructTest() throws IOException {
+		save3();
+		load3();
 	}
 	
 	public static void save3() throws IOException {
