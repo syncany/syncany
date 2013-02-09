@@ -56,7 +56,7 @@ public class ChunkAndDBTest130128 {
         ChunkEntry chunkA3 = db.createChunk(new byte[] { 1,1,1,1,1,1,1,1,1}, 56, true);
         ChunkEntry chunkA4 = db.createChunk(new byte[] { 2,2,2,2,2,2,2,2,2}, 78, true);
 		
-        Content contentA = db.createContent();        
+        Content contentA = new Content();        
         contentA.addChunk(chunkA1);
         contentA.addChunk(chunkA2);
         contentA.addChunk(chunkA3);
@@ -64,7 +64,7 @@ public class ChunkAndDBTest130128 {
         contentA.setChecksum(new byte[]{5,5,5,4,4,5,5,5,5});              
         db.addContent(contentA);
         
-        FileHistory fileA = db.createFileHistory(true);
+        FileHistory fileA = new FileHistory();
         
         FileVersion versionA1 = db.createFileVersion(fileA);
         versionA1.setVersion(1L);
@@ -84,13 +84,13 @@ public class ChunkAndDBTest130128 {
         ChunkEntry chunkB1 = db.createChunk(new byte[] { 3,3,3,3,3,3,3,3,3}, 910, true);
         ChunkEntry chunkB2 = db.createChunk(new byte[] { 4,4,4,4,4,4,4,4,4}, 1112, true);
         
-        Content contentB = db.createContent();
+        Content contentB = new Content();
         contentB.addChunk(chunkB1);
         contentB.addChunk(chunkB2);   
         contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
         db.addContent(contentB);
 
-        FileHistory fileB = db.createFileHistory(true);
+        FileHistory fileB = new FileHistory();
         
         FileVersion versionB1 = db.createFileVersion(fileB);
         versionB1.setVersion(1L);
@@ -107,14 +107,14 @@ public class ChunkAndDBTest130128 {
         db.addFileHistory(fileB);
         
         // Distribute chunks to multichunks
-        MultiChunkEntry multiChunkA = db.createMultiChunk();
+        MultiChunkEntry multiChunkA = new MultiChunkEntry();
         multiChunkA.addChunk(chunkA1); // from fileA
         multiChunkA.addChunk(chunkA2); // from fileA
         multiChunkA.addChunk(chunkA3); // from fileA
         multiChunkA.setChecksum(new byte[] {6,6,6,6,6,6,6,6,6});
         db.addMultiChunk(multiChunkA);
         
-        MultiChunkEntry multiChunkB = db.createMultiChunk();
+        MultiChunkEntry multiChunkB = new MultiChunkEntry();
         multiChunkB.addChunk(chunkA4); // from fileA
         multiChunkB.addChunk(chunkB1); // from fileB
         multiChunkB.addChunk(chunkB2); // from fileB
@@ -146,13 +146,13 @@ public class ChunkAndDBTest130128 {
         ChunkEntry chunkC1 = db.createChunk(new byte[] { 99,92,93,4,5,7,8,9,0}, 912,true);
         ChunkEntry chunkC2 = db.createChunk(new byte[] { 99,98,97,6,5,4,3,2,1}, 934, true);
                
-        Content contentC = db.createContent();        
+        Content contentC = new Content();        
         contentC.addChunk(chunkC1);
         contentC.addChunk(chunkC2);
         contentC.setChecksum(new byte[]{95,95,95,4,4,5,5,5,5});              
         db.addContent(contentC);
         
-        FileHistory fileC = db.createFileHistory(true);
+        FileHistory fileC = new FileHistory();
         
         FileVersion versionC1 = db.createFileVersion(fileC);
         versionC1.setVersion(1L);
@@ -163,7 +163,7 @@ public class ChunkAndDBTest130128 {
         db.addFileHistory(fileC);
         
         // Distribute chunks to multichunks
-        MultiChunkEntry multiChunkC = db.createMultiChunk();
+        MultiChunkEntry multiChunkC = new MultiChunkEntry();
         multiChunkC.addChunk(chunkC1); // from fileC
         multiChunkC.addChunk(chunkC2); // from fileC
         multiChunkC.setChecksum(new byte[] {9,0,1,2,6,6,6,6,6});
@@ -297,7 +297,7 @@ public class ChunkAndDBTest130128 {
 			FileHistory fileHistory = db.getFileHistory(FileUtil.getRelativePath(rootDir, file), file.getName());
 			
 			if (fileHistory == null) {
-				fileHistory = db.createFileHistory();
+				fileHistory = new FileHistory();
 			}
 			
 			// Check for versions
@@ -312,7 +312,7 @@ public class ChunkAndDBTest130128 {
 			fileVersion.setName(file.getName());
 			
 			if (file.isFile()) {
-				Content content = db.createContent();			
+				Content content = new Content();			
 				
 				// Create chunks from file
 				Enumeration<Chunk> chunks = chunker.createChunks(file);
@@ -346,7 +346,7 @@ public class ChunkAndDBTest130128 {
 							multiChunk = multiChunker.createMultiChunk(chunk.getChecksum(), new FileOutputStream(multiChunkFile));
 							
 							// DB
-							multiChunkEntry = db.createMultiChunk();
+							multiChunkEntry = new MultiChunkEntry();
 							multiChunkEntry.setChecksum(chunk.getChecksum());
 						}
 						

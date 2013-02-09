@@ -9,8 +9,9 @@ import org.syncany.util.FileUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+@Deprecated
 public class Config {
-	private String rootDir;
+	private String localDir;
 	private String appDir;
 	private String cacheDir;
 	private String machineName;
@@ -26,7 +27,7 @@ public class Config {
 	}
 	
 	public String getRootDir() {
-		return rootDir;
+		return localDir;
 	}
 	
 	public String getAppDir() {
