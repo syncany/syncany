@@ -44,7 +44,7 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
     private FileHistory history;
     private Long version;   
     private Client createdBy;
-    private Content content;
+    private FileContent content;
     private String path;
     private String name;   
     private Date lastModified;
@@ -69,11 +69,11 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
         this.id = id;
     }
 
-    public Content getContent() {
+    public FileContent getContent() {
         return content;
     }
 
-    public void setContent(Content content) {
+    public void setContent(FileContent content) {
         this.content = content;
     }
 

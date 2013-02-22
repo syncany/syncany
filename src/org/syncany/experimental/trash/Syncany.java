@@ -23,7 +23,7 @@ import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.Content;
+import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.Database;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
@@ -56,15 +56,15 @@ public class Syncany {
 	}
 	
 	public UpstreamStatus up(Config cfg) throws FileNotFoundException, IOException {
-		RepoDB localRepoDB = loadLocalRepoDB(cfg.getAppDir());
+		RepositoryDatabase localRepoDB = loadLocalRepoDB(cfg.getAppDir());
 		List<File> localFiles = listFiles(cfg.getRootDir());
-		RepoDB updatedRepoDB = index(localFiles,localRepoDB, null, null);
+		RepositoryDatabase updatedRepoDB = index(localFiles,localRepoDB, null, null);
 		
 		UpstreamStatus statusCode = null;
 		
 		//FIXME
 		TransferManager tm = (TransferManager) cfg.getConnection();
-		if(uploadMultiChunks(updatedRepoDB.getNewestDBVersion().getMetaMultiChunks(),cfg.getCacheDir(),tm)) {
+		if(uploadMultiChunks(updatedRepoDB.getNewestDatabaseVersion().getMetaMultiChunks(),cfg.getCacheDir(),tm)) {
 			boolean status = uploadLocalRepoDB(updatedRepoDB);
 			
 			statusCode.setResponse(status ? "Job" : "Nope"); 
@@ -81,13 +81,13 @@ public class Syncany {
 		return false;
 	}
 
-	private boolean uploadLocalRepoDB(RepoDBVersion updatedRepoDB) {
+	private boolean uploadLocalRepoDB(RepositoryDatabaseVersion updatedRepoDB) {
 		//upload DB, either in one big file, or each version seperatly
 		return true;
 	}
 
 	//FIXME
-	private RepoDB index(List<File> localFiles, RepoDBVersion localRepoDB, File localRepoDir, File localCacheDir) throws FileNotFoundException, IOException {
+	private RepositoryDatabase index(List<File> localFiles, RepositoryDatabaseVersion localRepoDB, File localRepoDir, File localCacheDir) throws FileNotFoundException, IOException {
 
 		// DB: Create DB and chunk/multichunk entries
 		Database db = new Database();
@@ -124,7 +124,7 @@ public class Syncany {
 			fileVersion.setName(file.getName());
 
 			if (file.isFile()) {
-				Content content = new Content();
+				FileContent content = new FileContent();
 
 				// Create chunks from file
 				Enumeration<Chunk> chunks = chunker.createChunks(file);
@@ -199,7 +199,7 @@ public class Syncany {
 			db.addMultiChunk(multiChunkEntry);
 			multiChunkEntry = null;
 		}
-		return (RepoDB) localRepoDB;
+		return (RepositoryDatabase) localRepoDB;
 	}
 
 	private List<File> listFiles(String rootDir) {
@@ -207,8 +207,8 @@ public class Syncany {
 		return files;
 	}
 
-	private RepoDB loadLocalRepoDB(String appDir) {
-		RepoDB newRepoDB = null; 
+	private RepositoryDatabase loadLocalRepoDB(String appDir) {
+		RepositoryDatabase newRepoDB = null; 
 		//load localRepoDB
 		return newRepoDB;
 	}

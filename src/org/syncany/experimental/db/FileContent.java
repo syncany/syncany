@@ -31,18 +31,18 @@ import java.util.Map;
  *
  * @author pheckel
  */
-public class Content implements Persistable, Serializable {
+public class FileContent implements Persistable, Serializable {
     private byte[] checksum;
     private int contentSize;
     private List<ContentChunk> chunks;
     
     private transient Database db; // TODO this is ugly!
     
-    public Content() {
+    public FileContent() {
         this.chunks = new ArrayList<ContentChunk>();
     }
        
-    public Content(Database db) {
+    public FileContent(Database db) {
         this();
         this.db = db;
     }        

@@ -27,12 +27,12 @@ public class ContentChunk implements Serializable {
     private long id;
     private ChunkEntry chunk;
     private int orderNumber;
-    private Content content;
+    private FileContent content;
     
     public ContentChunk() {
     }
 
-    public ContentChunk(Content content, ChunkEntry chunk, int orderNumber) {
+    public ContentChunk(FileContent content, ChunkEntry chunk, int orderNumber) {
         this.content = content;
         this.chunk = chunk;
         this.orderNumber = orderNumber;
@@ -42,7 +42,7 @@ public class ContentChunk implements Serializable {
         return chunk;
     }
 
-    public Content getContent() {
+    public FileContent getContent() {
         return content;
     }
 

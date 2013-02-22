@@ -54,7 +54,7 @@ public class Database {
     
     private Map<ByteArray, ChunkEntry> chunkCache;
     private Map<ByteArray, MultiChunkEntry> multiChunkCache;
-    private Map<ByteArray, Content> contentCache;
+    private Map<ByteArray, FileContent> contentCache;
     private Map<Long, FileHistory> historyCache;
     private Map<Long, FileVersion> versionCache;
     
@@ -62,14 +62,18 @@ public class Database {
     
     private Set<ChunkEntry> newChunkCache;
     private Set<MultiChunkEntry> newMultiChunkCache;
-    private Set<Content> newContentCache;
+    private Set<FileContent> newContentCache;
     private Set<FileHistory> newHistoryCache;
     private Map<Long, FileVersion> newVersionCache;
 
+    //XXXprivate Map<Long, FileVersion> databaseVersionTofileVersionMap;
+
+    
+    
     public Database() {
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
-        contentCache = new HashMap<ByteArray, Content>();
+        contentCache = new HashMap<ByteArray, FileContent>();
         historyCache = new HashMap<Long, FileHistory>();
         versionCache = new HashMap<Long, FileVersion>();
         
@@ -77,7 +81,7 @@ public class Database {
 
         newChunkCache = new HashSet<ChunkEntry>();
         newMultiChunkCache = new HashSet<MultiChunkEntry>();
-        newContentCache = new HashSet<Content>();
+        newContentCache = new HashSet<FileContent>();
         newHistoryCache = new HashSet<FileHistory>();
         newVersionCache = new HashMap<Long, FileVersion>();
     }
@@ -270,7 +274,7 @@ public class Database {
         int contentCount = dis.readInt();
 
         for (int i = 0; i < contentCount; i++) {
-            Content content = new Content(this);
+            FileContent content = new FileContent(this);
             content.read(dis);
 
             //System.out.println("read content "+Arrays.toString(content.getChecksum()));
@@ -333,20 +337,6 @@ public class Database {
     
     public ChunkEntry getChunk(byte[] checksum) {
         return chunkCache.get(new ByteArray(checksum));
-    }
-    
-    public ChunkEntry createChunk(byte[] checksum, int size) {
-        return createChunk(checksum, size, false);
-    }
-    
-    public ChunkEntry createChunk(byte[] checksum, int size, boolean add) {
-        ChunkEntry chunk = new ChunkEntry(checksum, size);
-        
-        if (add) {
-            addChunk(chunk);
-        }
-        
-        return chunk;
     }    
     
     public void addChunk(ChunkEntry chunk) {
@@ -414,11 +404,11 @@ public class Database {
         
     // Content
  
-    public Content getContent(byte[] checksum) {
+    public FileContent getContent(byte[] checksum) {
         return contentCache.get(new ByteArray(checksum));
     }
 
-    public void addContent(Content content) {
+    public void addContent(FileContent content) {
         contentCache.put(new ByteArray(content.getChecksum()), content);
         newContentCache.add(content);
     }
@@ -441,7 +431,7 @@ public class Database {
     	}    	
     	
     	sb.append("contentCache:\n");
-    	for (Content e : contentCache.values()) {
+    	for (FileContent e : contentCache.values()) {
     		sb.append("- Content "+StringUtil.toHex(e.getChecksum())+"\n");
     		
         	for (ChunkEntry e2 : e.getChunks()) {

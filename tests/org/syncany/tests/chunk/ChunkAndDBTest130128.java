@@ -19,7 +19,7 @@ import org.syncany.chunk.multi.CustomMultiChunker;
 import org.syncany.chunk.multi.MultiChunk;
 import org.syncany.chunk.multi.MultiChunker;
 import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.Content;
+import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.Database;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
@@ -51,12 +51,17 @@ public class ChunkAndDBTest130128 {
 		Database db = new Database();
 		
 		// Create first file
-        ChunkEntry chunkA1 = db.createChunk(new byte[] { 1,2,3,4,5,7,8,9,0}, 12,true);
-        ChunkEntry chunkA2 = db.createChunk(new byte[] { 9,8,7,6,5,4,3,2,1}, 34, true);
-        ChunkEntry chunkA3 = db.createChunk(new byte[] { 1,1,1,1,1,1,1,1,1}, 56, true);
-        ChunkEntry chunkA4 = db.createChunk(new byte[] { 2,2,2,2,2,2,2,2,2}, 78, true);
+        ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
+        ChunkEntry chunkA2 = new ChunkEntry(new byte[] { 9,8,7,6,5,4,3,2,1}, 34);
+        ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 1,1,1,1,1,1,1,1,1}, 56);
+        ChunkEntry chunkA4 = new ChunkEntry(new byte[] { 2,2,2,2,2,2,2,2,2}, 78);
+        
+        db.addChunk(chunkA1);
+        db.addChunk(chunkA2);
+        db.addChunk(chunkA3);
+        db.addChunk(chunkA4);
 		
-        Content contentA = new Content();        
+        FileContent contentA = new FileContent();        
         contentA.addChunk(chunkA1);
         contentA.addChunk(chunkA2);
         contentA.addChunk(chunkA3);
@@ -81,10 +86,13 @@ public class ChunkAndDBTest130128 {
         db.addFileHistory(fileA);
         
         // Create second file
-        ChunkEntry chunkB1 = db.createChunk(new byte[] { 3,3,3,3,3,3,3,3,3}, 910, true);
-        ChunkEntry chunkB2 = db.createChunk(new byte[] { 4,4,4,4,4,4,4,4,4}, 1112, true);
+        ChunkEntry chunkB1 = new ChunkEntry(new byte[] { 3,3,3,3,3,3,3,3,3}, 910);
+        ChunkEntry chunkB2 = new ChunkEntry(new byte[] { 4,4,4,4,4,4,4,4,4}, 1112);
         
-        Content contentB = new Content();
+        db.addChunk(chunkB1);
+        db.addChunk(chunkB2);
+        
+        FileContent contentB = new FileContent();
         contentB.addChunk(chunkB1);
         contentB.addChunk(chunkB2);   
         contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
@@ -143,10 +151,13 @@ public class ChunkAndDBTest130128 {
 	
 	public Database saveLoadSaveTestSave2(Database db) throws IOException {
 		// Create first file
-        ChunkEntry chunkC1 = db.createChunk(new byte[] { 99,92,93,4,5,7,8,9,0}, 912,true);
-        ChunkEntry chunkC2 = db.createChunk(new byte[] { 99,98,97,6,5,4,3,2,1}, 934, true);
+        ChunkEntry chunkC1 = new ChunkEntry(new byte[] { 99,92,93,4,5,7,8,9,0}, 912);
+        ChunkEntry chunkC2 = new ChunkEntry(new byte[] { 99,98,97,6,5,4,3,2,1}, 934);
+        
+        db.addChunk(chunkC1);
+        db.addChunk(chunkC2);
                
-        Content contentC = new Content();        
+        FileContent contentC = new FileContent();        
         contentC.addChunk(chunkC1);
         contentC.addChunk(chunkC2);
         contentC.setChecksum(new byte[]{95,95,95,4,4,5,5,5,5});              
@@ -312,7 +323,7 @@ public class ChunkAndDBTest130128 {
 			fileVersion.setName(file.getName());
 			
 			if (file.isFile()) {
-				Content content = new Content();			
+				FileContent content = new FileContent();			
 				
 				// Create chunks from file
 				Enumeration<Chunk> chunks = chunker.createChunks(file);
@@ -324,7 +335,8 @@ public class ChunkAndDBTest130128 {
 					chunkEntry = db.getChunk(chunk.getChecksum());
 					
 					if (chunkEntry == null) {
-						chunkEntry = db.createChunk(chunk.getChecksum(), chunk.getSize(), true);						
+						chunkEntry = new ChunkEntry(chunk.getChecksum(), chunk.getSize());
+						db.addChunk(chunkEntry);
 						
 						// Add chunk data to multichunk
 						
