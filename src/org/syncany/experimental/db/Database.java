@@ -37,15 +37,6 @@ import org.syncany.Constants;
 import org.syncany.util.ByteArray;
 import org.syncany.util.StringUtil;
 
-/**
- *1. Die DB hat keine Version die sie mitführt, das fehlt. Eine fortlaufende Nummer, die in jeden Speichervorgang mit reinsoll. Anhand der man dann den Dateinamen erzeugen kann
-(12:23:42 AM) Steffen Dangmann: die db-dateinamen, jib
-(12:24:53 AM) Philipp Heckel: 2. ich weiß nicht ob das Konzept newChunks, newMultiChunks, ... in der DB haltbar ist. Derzeit bleiben Chnks, Multichunks, etc. die per db.addXXX geadded werden in den newXXXX-Lists bis save() ausgeführt wird. In save() wird dann nur das zeug aus newXXX geschrieben oder die ganze DB. 
-(12:25:00 AM) Steffen Dangmann: (btw. für alle serializables http://frequal.com/java/PracticalSerialVersionIdGuidelines.html , sollte man auch noch nachziehen)
-(12:26:05 AM) Philipp Heckel: ich hatte noch was, das fällt mir aber grad nicht ein..
-(12:26:33 AM) Steffen Dangmann: Punkt 2 ist doch nen issue von cache+persistence..
- * @author pheckel
- */
 //FIXME fix it, introduce version. store out persistence-logic into DAO
 @Deprecated
 public class Database {

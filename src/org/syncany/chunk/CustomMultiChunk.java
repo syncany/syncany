@@ -20,9 +20,6 @@ package org.syncany.chunk;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-import org.syncany.util.StreamUtils;
-import org.syncany.util.StringUtil;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,17 +94,36 @@ public class CustomMultiChunk extends MultiChunk {
 	        // - is.read(contents, 0, chunkSize);
 	        
 	        byte[] checksum = new byte[checksumLength];
-	        StreamUtils.read(checksum, 0, checksumLength, is);
+	        readFromInputStreamFixed(checksum, 0, checksumLength, is);
 
 	        int chunkSize = is.readShort();	        
 	        byte[] contents = new byte[chunkSize];        
-	        StreamUtils.read(contents, 0, chunkSize, is);
+	        readFromInputStreamFixed(contents, 0, chunkSize, is);
 	        
 	        return new Chunk(checksum, contents, chunkSize, checksum);
     	}
     	catch (EOFException e) {
     		return null;
 	    }
-    }    
+    }  
+    
+    /**
+     * Fixes the read errors occurring with Cipher streams in the standard
+     * Java read implementation.
+     */
+    private void readFromInputStreamFixed(byte[] inp, int s, int l, InputStream is) throws IOException {
+		if(inp.length != l){
+			throw new IOException("Buffer to small");
+		}
+		
+		for(int i = 0; i < l; i++){
+			int b = is.read();
+			
+			if(b == -1)
+				throw new IOException("END OF STREAM REACHED");
+			
+			inp[s + i] = (byte)b;
+		}
+	}
 }
 

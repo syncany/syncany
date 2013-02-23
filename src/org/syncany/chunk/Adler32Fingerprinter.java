@@ -1,3 +1,22 @@
+/*
+ * Syncany, www.syncany.org
+ * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.syncany.chunk;
+
 /**
  * A simple 32-bit "rolling" checksum. This checksum algorithm is based
  * upon the algorithm outlined in the paper "The rsync algorithm" by
@@ -6,11 +25,11 @@
  * <em>X<sub>k</sub>...X<sub>l</sub></em>, then it is a simple matter to
  * compute the sum for <em>X<sub>k+1</sub>...X<sub>l+1</sub></em>.
  *
- * @author Casey Marshall
+ * The class has been adapted to work with the Syncany chunking classes. 
+ *
+ * @author Casey Marshall, Philipp C. Heckel <philipp.heckel@gmail.com>
  * @version $Revision: 188 $
  */
-package org.syncany.chunk;
-
 public class Adler32Fingerprinter extends Fingerprinter {
     protected final int char_offset;
     /**
@@ -57,8 +76,6 @@ public class Adler32Fingerprinter extends Fingerprinter {
      */
     protected byte[] new_block;
 
-// Constructors.
-    // -----------------------------------------------------------------
     /**
      * Creates a new rolling checksum. The <i>char_offset</i> argument
      * affects the output of this checksum; rsync uses a char offset of

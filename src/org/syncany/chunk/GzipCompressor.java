@@ -1,5 +1,5 @@
 /*
- * Syncany
+ * Syncany, www.syncany.org
  * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.syncany.chunk;
-
 
 import java.io.IOException;
 import java.io.InputStream;
