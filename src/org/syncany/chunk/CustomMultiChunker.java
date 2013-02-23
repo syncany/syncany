@@ -15,30 +15,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.chunk.fingerprint;
+package org.syncany.chunk;
 
-import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  *
  * @author pheckel
  */
-public abstract class Fingerprinter {    
-    public static Fingerprinter getInstance(String name) throws NoSuchAlgorithmException {
-        try {
-            Class<?> clazz = Class.forName(Fingerprinter.class.getPackage().getName()+"."+name+Fingerprinter.class.getSimpleName());
-            return (Fingerprinter) clazz.newInstance();
-        }
-        catch (Exception e) {
-            throw new NoSuchAlgorithmException("No such fingerprinting algorithm: "+name, e);
-        }        
+public class CustomMultiChunker extends MultiChunker {
+    public CustomMultiChunker(int minChunkSize, int sleepMillis) {
+        super(minChunkSize, sleepMillis);
+    }
+
+    @Override
+    public MultiChunk createMultiChunk(InputStream is) {
+        sleep();
+        return new CustomMultiChunk(is);
     }
     
-    public abstract int getValue();
-    public abstract void reset();
-    public abstract void roll(byte bt);
-    public abstract void check(byte[] buf, int off, int len);
+    @Override
+    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
+        sleep();
+        return new CustomMultiChunk(id, minChunkSize, os);
+    }
     
     @Override
-    public abstract String toString();
+    public String toString() {
+        return "Custom-"+minChunkSize+"-"+sleepMillis;
+    }
+
+
 }

@@ -8,12 +8,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.syncany.chunk.chunking.Chunk;
-import org.syncany.chunk.chunking.Chunker;
-import org.syncany.chunk.chunking.FixedOffsetChunker;
-import org.syncany.chunk.multi.CustomMultiChunker;
-import org.syncany.chunk.multi.MultiChunk;
-import org.syncany.chunk.multi.MultiChunker;
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CustomMultiChunker;
+import org.syncany.chunk.FixedOffsetChunker;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
 import org.syncany.config.Profile;
 import org.syncany.config.Settings;

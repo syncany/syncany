@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 import org.junit.Test;
-import org.syncany.chunk.chunking.Chunk;
-import org.syncany.chunk.chunking.Chunker;
-import org.syncany.chunk.chunking.FixedOffsetChunker;
-import org.syncany.chunk.multi.CustomMultiChunker;
-import org.syncany.chunk.multi.MultiChunk;
-import org.syncany.chunk.multi.MultiChunker;
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CustomMultiChunker;
+import org.syncany.chunk.FixedOffsetChunker;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.MultiChunker;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.Database;

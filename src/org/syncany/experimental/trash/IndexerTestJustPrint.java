@@ -5,17 +5,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.syncany.chunk.chunking.Chunk;
-import org.syncany.chunk.chunking.Chunker;
-import org.syncany.chunk.chunking.FixedOffsetChunker;
-import org.syncany.chunk.multi.CustomMultiChunker;
-import org.syncany.chunk.multi.MultiChunk;
-import org.syncany.chunk.multi.MultiChunker;
-import org.syncany.chunk.transform.GzipCompressor;
-import org.syncany.chunk.transform.Transformer;
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CustomMultiChunker;
+import org.syncany.chunk.FixedOffsetChunker;
+import org.syncany.chunk.GzipCompressor;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.Transformer;
 import org.syncany.experimental.trash.Deduper.IndexerListener;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileLister.FileListerListener;
+import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.StringUtil;
 
 public class IndexerTestJustPrint {
@@ -35,17 +36,10 @@ public class IndexerTestJustPrint {
 		final File localCacheDir = new File("/tmp/syncany-db-cache");		
 		localCacheDir.mkdirs();
 		
-		new FileLister(new File("/tmp/syncany-db-test"), new FileListerListener() {
+		new FileLister(new File("/tmp/syncany-db-test"), new FileListerAdapter() {
 			@Override public void proceedFile(File f) { files.add(f); }			
-
-			@Override public void startProcessing() { }			
-			@Override public void outDirectory(File directory) { }			
-			@Override public boolean fileFilter(File file) { return true; }			
-			@Override public void enterDirectory(File directory) { }			
-			@Override public void endOfProcessing() { }			
-			@Override public boolean directoryFilter(File directory) { return true; }
 		}).start();
-		 
+		  
 		deduper.deduplicate(files, chunker, multiChunker, transformer, new IndexerListener() {
 			@Override
 			public boolean onChunk(Chunk chunk) {

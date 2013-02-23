@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.syncany.chunk.chunking.Chunk;
-import org.syncany.chunk.chunking.Chunker;
-import org.syncany.chunk.multi.MultiChunk;
-import org.syncany.chunk.multi.MultiChunker;
-import org.syncany.chunk.transform.Transformer;
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.Transformer;
 
 public class Deduper {
 	public static interface IndexerListener {

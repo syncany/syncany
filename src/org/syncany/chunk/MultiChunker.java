@@ -1,5 +1,5 @@
 /*
- * Syncany
+ * Syncany, www.syncany.org
  * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,30 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.chunk.transform;
+package org.syncany.chunk;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * @author pheckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class Transformer {
-    protected Transformer nextTransformer;
-    
-    public Transformer() {
-        this(null);
+public abstract class MultiChunker {
+    protected int minChunkSize;
+    protected int sleepMillis;
+        
+    public MultiChunker(int minChunkSize, int sleepMillis)  {
+        this.minChunkSize = minChunkSize;
+        this.sleepMillis = sleepMillis;
+    }
+
+    public int getMinChunkSize() {
+        return minChunkSize;
     }
     
-    public Transformer(Transformer nextTransformer) {
-        this.nextTransformer = nextTransformer;
+    protected void sleep() {
+        try { Thread.sleep(sleepMillis); }
+        catch (Exception e) { }
     }
-    
-    public abstract OutputStream transform(OutputStream out) throws IOException;
-    public abstract InputStream transform(InputStream in) throws IOException;
+        
+    public abstract MultiChunk createMultiChunk(InputStream is);
+    public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
     
     @Override
-    public abstract String toString();
+    public abstract String toString();    
 }

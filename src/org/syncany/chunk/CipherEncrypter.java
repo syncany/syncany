@@ -15,37 +15,52 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.chunk.multi;
+package org.syncany.chunk;
+
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 
 /**
  *
  * @author pheckel
  */
-public class CustomMultiChunker extends MultiChunker {
-    public CustomMultiChunker(int minChunkSize, int sleepMillis) {
-        super(minChunkSize, sleepMillis);
+public class CipherEncrypter extends Transformer {
+    private Cipher cipher;
+    
+    public CipherEncrypter(Cipher cipher) {
+        this(cipher, null);
+    }
+    
+    public CipherEncrypter(Cipher cipher, Transformer nextTransformer) {
+        super(nextTransformer);
+        this.cipher = cipher;
+    }
+
+    public Cipher getCipher() {
+        return cipher;
+    }
+
+    public void setCipher(Cipher cipher) {
+        this.cipher = cipher;
+    }   
+    
+    @Override
+    public OutputStream transform(OutputStream out) throws IOException {
+        return new CipherOutputStream(out, cipher);
     }
 
     @Override
-    public MultiChunk createMultiChunk(InputStream is) {
-        sleep();
-        return new CustomMultiChunk(is);
-    }
-    
-    @Override
-    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
-        sleep();
-        return new CustomMultiChunk(id, minChunkSize, os);
+    public InputStream transform(InputStream in) throws IOException {
+        return new CipherInputStream(in, cipher);
     }
     
     @Override
     public String toString() {
-        return "Custom-"+minChunkSize+"-"+sleepMillis;
-    }
-
-
+        return (nextTransformer == null) ? "Cipher" : "Cipher-"+nextTransformer;
+    }         
 }

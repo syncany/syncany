@@ -10,7 +10,7 @@ import java.util.Set;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.syncany.chunk.multi.MultiChunk;
+import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.local.LocalConnection;

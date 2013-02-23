@@ -1,5 +1,5 @@
 /*
- * Syncany, www.syncany.org
+ * Syncany
  * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,38 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.chunk.chunking;
+package org.syncany.chunk;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author pheckel
  */
-public class Chunk {
-    private byte[] checksum;
-    private byte[] contents;
-    private int size;
-    private byte[] fileChecksum;
-
-    public Chunk(byte[] checksum, byte[] contents, int size, byte[] fileChecksum) {
-        this.checksum = checksum;
-        this.contents = contents;
-        this.size = size;
-        this.fileChecksum = fileChecksum;
+public abstract class Transformer {
+    protected Transformer nextTransformer;
+    
+    public Transformer() {
+        this(null);
     }
-
-    public byte[] getChecksum() {
-        return checksum;
+    
+    public Transformer(Transformer nextTransformer) {
+        this.nextTransformer = nextTransformer;
     }
-
-    public byte[] getContent() {
-        return contents;
-    }
-
-    public byte[] getFileChecksum() {
-        return fileChecksum;
-    }
-
-    public int getSize() {
-        return size;
-    }                
+    
+    public abstract OutputStream transform(OutputStream out) throws IOException;
+    public abstract InputStream transform(InputStream in) throws IOException;
+    
+    @Override
+    public abstract String toString();
 }

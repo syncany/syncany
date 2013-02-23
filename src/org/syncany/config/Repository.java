@@ -18,8 +18,8 @@
 package org.syncany.config;
 
 import org.syncany.Constants;
-import org.syncany.chunk.chunking.Chunker;
-import org.syncany.chunk.chunking.FixedOffsetChunker;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.exceptions.CacheException;

@@ -23,7 +23,7 @@ import java.util.Date;
 import org.syncany.watch.remote.files.RemoteFile;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
-import org.syncany.chunk.multi.MultiChunk;
+import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.CloneFile.SyncStatus;

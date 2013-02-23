@@ -35,9 +35,9 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 
 import org.syncany.Constants;
-import org.syncany.chunk.chunking.Chunk;
-import org.syncany.chunk.multi.CustomMultiChunk;
-import org.syncany.chunk.multi.MultiChunk;
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.CustomMultiChunk;
+import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
