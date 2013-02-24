@@ -88,6 +88,12 @@ public class DatabaseNEW {
 
 	public void setCurrentDatabaseVersion(long currentDatabaseVersion) {
 		this.currentDatabaseVersion = currentDatabaseVersion;
+		
+		versionChunks.put(currentDatabaseVersion, new HashSet<ChunkEntry>());
+		versionMultiChunks.put(currentDatabaseVersion, new HashSet<MultiChunkEntry>());
+		versionContents.put(currentDatabaseVersion, new HashSet<FileContent>());
+		versionFileHistories.put(currentDatabaseVersion, new HashSet<FileHistory>());
+		versionFileVersions.put(currentDatabaseVersion, new HashSet<FileVersion>());
 	}
 	
 	public Map<Long, FileVersion> getVersionCache() {
@@ -143,11 +149,8 @@ public class DatabaseNEW {
     }    
     
     public void addChunk(ChunkEntry chunk) {
-        chunkCache.put(new ByteArray(chunk.getChecksum()), chunk);
-        //newChunkCache.add(chunk);
-        
-        Set<ChunkEntry> versionChunks = versionChunks.get(currentDatabaseVersion);
-        versionChunks.put(currentDatabaseVersion, chunk);
+        chunkCache.put(new ByteArray(chunk.getChecksum()), chunk);        
+        versionChunks.get(currentDatabaseVersion).add(chunk);        
     }
     
     public Collection<ChunkEntry> getChunks() {
@@ -158,22 +161,18 @@ public class DatabaseNEW {
     
     public void addMultiChunk(MultiChunkEntry multiChunk) {
         multiChunkCache.put(new ByteArray(multiChunk.getChecksum()), multiChunk);                
-        versionMultiChunks.add(multiChunk);
+        versionMultiChunks.get(currentDatabaseVersion).add(multiChunk);        
     }
     
     public Collection<MultiChunkEntry> getMultiChunks() {
         return multiChunkCache.values();
-    }
-
-    public Collection<MultiChunkEntry> getNewMultiChunks() {
-        return versionMultiChunks;
     }
     
     // History
     
     public void addFileHistory(FileHistory history) {
         historyCache.put(history.getFileId(), history);
-        versionFileHistories.add(history);        
+        versionFileHistories.get(currentDatabaseVersion).add(history);
     }
     
     public FileHistory getFileHistory(Long fileId) {
@@ -216,7 +215,7 @@ public class DatabaseNEW {
 
     public void addContent(FileContent content) {
         contentCache.put(new ByteArray(content.getChecksum()), content);
-        versionContents.add(content);
+        versionContents.get(currentDatabaseVersion).add(content);
     }
     
     public String toString() {
