@@ -42,7 +42,9 @@ public class DatabaseNEW {
 	private static final byte DATABASE_FORMAT_VERSION = 0x01;
     private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
     
+    // DB Version and versions of other users (= DB basis) 
     private long currentDatabaseVersion;
+    private Map<String, Long> vectorClock; // MachineNameToDatabaseVersion;
     
     // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -58,7 +60,6 @@ public class DatabaseNEW {
     private Map<Long, Set<FileHistory>> versionFileHistories;
     private Map<Long, Set<FileVersion>> versionFileVersions;
     
-    private Map<String, Long> vectorClockMachineNameToDatabaseVersion;
 
     // Quick access
     private Map<String, FileHistory> filenameHistoryCache;
