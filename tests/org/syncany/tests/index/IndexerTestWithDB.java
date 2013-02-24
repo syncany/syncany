@@ -1,4 +1,4 @@
-package org.syncany.experimental.trash;
+package org.syncany.tests.index;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +19,7 @@ import org.syncany.experimental.db.Database;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
+import org.syncany.experimental.trash.Deduper;
 import org.syncany.experimental.trash.Deduper.IndexerListener;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;

@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.Application;
 import org.syncany.Constants;
 import org.syncany.config.Profile;
 import org.syncany.db.CloneFile;

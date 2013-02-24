@@ -1,4 +1,4 @@
-package org.syncany.experimental.trash;
+package org.syncany.tests.index;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +13,7 @@ import org.syncany.chunk.GzipCompressor;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
+import org.syncany.experimental.trash.Deduper;
 import org.syncany.experimental.trash.Deduper.IndexerListener;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileLister.FileListerListener;

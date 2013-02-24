@@ -1,4 +1,4 @@
-package org.syncany.experimental.trash;
+package org.syncany;
 
 public class UpstreamStatus {
 	String response;
