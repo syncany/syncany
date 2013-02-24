@@ -67,6 +67,7 @@ public class DatabaseNEW {
     
     public DatabaseNEW() {
     	currentDatabaseVersion = 0;
+    	vectorClock = new HashMap<String, Long>();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
