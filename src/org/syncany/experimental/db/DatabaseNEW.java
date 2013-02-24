@@ -17,34 +17,25 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.syncany.Constants;
 import org.syncany.util.ByteArray;
 import org.syncany.util.StringUtil;
 
-//FIXME fix it, introduce version. store out persistence-logic into DAO
 public class DatabaseNEW {
-	private static final byte DATABASE_FORMAT_VERSION = 0x01;
-    private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(DatabaseNEW.class.getSimpleName());
     
     // DB Version and versions of other users (= DB basis) 
-    private long currentDatabaseVersion;
-    private Map<String, Long> vectorClock; // MachineNameToDatabaseVersion;
+    private long localDatabaseVersion;
+    private Map<String, Long> globalDatabaseVersion; // vector clock, machine name to database version map
     
     // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -58,16 +49,14 @@ public class DatabaseNEW {
     private Map<Long, Set<MultiChunkEntry>> versionMultiChunks;
     private Map<Long, Set<FileContent>> versionContents;
     private Map<Long, Set<FileHistory>> versionFileHistories;
-    private Map<Long, Set<FileVersion>> versionFileVersions;
-    
+    private Map<Long, Set<FileVersion>> versionFileVersions;    
 
     // Quick access
     private Map<String, FileHistory> filenameHistoryCache;
-    
-    
+        
     public DatabaseNEW() {
-    	currentDatabaseVersion = 0;
-    	vectorClock = new HashMap<String, Long>();
+    	localDatabaseVersion = 0;
+    	globalDatabaseVersion = new HashMap<String, Long>();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
@@ -84,42 +73,26 @@ public class DatabaseNEW {
         filenameHistoryCache = new HashMap<String, FileHistory>();
     }
 
-    public long getCurrentDatabaseVersion() {
-		return currentDatabaseVersion;
+    public long getLocalDatabaseVersion() {
+		return localDatabaseVersion;
 	}
 
-	public void setCurrentDatabaseVersion(long currentDatabaseVersion) {
-		this.currentDatabaseVersion = currentDatabaseVersion;
+	public void incLocalDatabaseVersion() {
+		localDatabaseVersion++;
 		
-		versionChunks.put(currentDatabaseVersion, new HashSet<ChunkEntry>());
-		versionMultiChunks.put(currentDatabaseVersion, new HashSet<MultiChunkEntry>());
-		versionContents.put(currentDatabaseVersion, new HashSet<FileContent>());
-		versionFileHistories.put(currentDatabaseVersion, new HashSet<FileHistory>());
-		versionFileVersions.put(currentDatabaseVersion, new HashSet<FileVersion>());
+		versionChunks.put(localDatabaseVersion, new HashSet<ChunkEntry>());
+		versionMultiChunks.put(localDatabaseVersion, new HashSet<MultiChunkEntry>());
+		versionContents.put(localDatabaseVersion, new HashSet<FileContent>());
+		versionFileHistories.put(localDatabaseVersion, new HashSet<FileHistory>());
+		versionFileVersions.put(localDatabaseVersion, new HashSet<FileVersion>());
 	}
 	
-	public Map<Long, FileVersion> getVersionCache() {
-		return versionCache;
+	public Map<String, Long> getGlobalDatabaseVersion() {
+		return Collections.unmodifiableMap(globalDatabaseVersion);
 	}
 
-	public Map<Long, Set<ChunkEntry>> getVersionChunks() {
-		return versionChunks;
-	}
-
-	public Map<Long, Set<MultiChunkEntry>> getVersionMultiChunks() {
-		return versionMultiChunks;
-	}
-
-	public Map<Long, Set<FileContent>> getVersionContents() {
-		return versionContents;
-	}
-
-	public Map<Long, Set<FileHistory>> getVersionFileHistories() {
-		return versionFileHistories;
-	}
-
-	public Map<Long, Set<FileVersion>> getVersionFileVersions() {
-		return versionFileVersions;
+	public void setGlobalDatabaseVersion(String machineName, long machineVersion) {
+		globalDatabaseVersion.put(machineName, machineVersion);
 	}
 
 	public static String toDatabasePath(String filesystemPath) {
@@ -152,7 +125,7 @@ public class DatabaseNEW {
     
     public void addChunk(ChunkEntry chunk) {
         chunkCache.put(new ByteArray(chunk.getChecksum()), chunk);        
-        versionChunks.get(currentDatabaseVersion).add(chunk);        
+        versionChunks.get(localDatabaseVersion).add(chunk);        
     }
     
     public Collection<ChunkEntry> getChunks() {
@@ -163,7 +136,7 @@ public class DatabaseNEW {
     
     public void addMultiChunk(MultiChunkEntry multiChunk) {
         multiChunkCache.put(new ByteArray(multiChunk.getChecksum()), multiChunk);                
-        versionMultiChunks.get(currentDatabaseVersion).add(multiChunk);        
+        versionMultiChunks.get(localDatabaseVersion).add(multiChunk);        
     }
     
     public Collection<MultiChunkEntry> getMultiChunks() {
@@ -174,7 +147,7 @@ public class DatabaseNEW {
     
     public void addFileHistory(FileHistory history) {
         historyCache.put(history.getFileId(), history);
-        versionFileHistories.get(currentDatabaseVersion).add(history);
+        versionFileHistories.get(localDatabaseVersion).add(history);
     }
     
     public FileHistory getFileHistory(Long fileId) {
@@ -192,22 +165,7 @@ public class DatabaseNEW {
     
     // Version
     
-    public FileVersion createFileVersion(FileHistory history) {
-        FileVersion newVersion = history.createVersion();
-        FileVersion firstNewVersion = versionFileVersions.get(history.getFileId());
-                
-        if (firstNewVersion == null) {
-            versionFileVersions.put(history.getFileId(), newVersion);
-        }
-
-        //newHistoryCache.add(history); // history updated!
-                
-        // To file name based cache
-        String relativeFilename = newVersion.getPath()+Constants.DATABASE_FILE_SEPARATOR+newVersion.getName();
-        filenameHistoryCache.put(relativeFilename, history);
-        
-        return newVersion;
-    }
+  
         
     // Content
  
@@ -217,8 +175,32 @@ public class DatabaseNEW {
 
     public void addContent(FileContent content) {
         contentCache.put(new ByteArray(content.getChecksum()), content);
-        versionContents.get(currentDatabaseVersion).add(content);
+        versionContents.get(localDatabaseVersion).add(content);
     }
+    
+	public Map<Long, FileVersion> getVersionCache() {
+		return versionCache;
+	}
+
+	public Map<Long, Set<ChunkEntry>> getVersionChunks() {
+		return versionChunks;
+	}
+
+	public Map<Long, Set<MultiChunkEntry>> getVersionMultiChunks() {
+		return versionMultiChunks;
+	}
+
+	public Map<Long, Set<FileContent>> getVersionContents() {
+		return versionContents;
+	}
+
+	public Map<Long, Set<FileHistory>> getVersionFileHistories() {
+		return versionFileHistories;
+	}
+
+	public Map<Long, Set<FileVersion>> getVersionFileVersions() {
+		return versionFileVersions;
+	}    
     
     public String toString() {
     	StringBuffer sb = new StringBuffer();
