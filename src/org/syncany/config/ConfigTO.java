@@ -10,7 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 
-public class Config {
+public class ConfigTO {
 	//Directory which contains all files which shall be synced with remote repo 
 	private String localDir;
 	//Home / Config directory of syncany 
@@ -24,7 +24,7 @@ public class Config {
 	private ConnectionSettings connection;
 	private EncryptionSettings encryption;
 
-	public Config(String localDir, String appDir, String synchedDatabaseDir,
+	public ConfigTO(String localDir, String appDir, String synchedDatabaseDir,
 			String cacheDir, String machineName, ConnectionSettings connection,
 			EncryptionSettings encryption) {
 		super();
@@ -37,11 +37,11 @@ public class Config {
 		this.encryption = encryption;
 	}
 
-	public Config(File file) throws JsonSyntaxException, IOException {
+	public ConfigTO(File file) throws JsonSyntaxException, IOException {
 		load(file);
 	}
 	
-	public String getRootDir() {
+	public String getLocalDir() {
 		return localDir;
 	}
 	
@@ -67,7 +67,7 @@ public class Config {
 
 	public void load(File file) throws JsonSyntaxException, IOException {
 		Gson gson = new Gson();		
-		gson.fromJson(FileUtil.readFileToString(file), Config.class);
+		gson.fromJson(FileUtil.readFileToString(file), ConfigTO.class);
 	}
 	
 	public static class ConnectionSettings {

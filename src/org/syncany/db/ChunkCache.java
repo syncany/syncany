@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.util.AppendableObjectOutputStream;
 
 /**
@@ -51,12 +51,12 @@ public class ChunkCache {
 	// TODO: Implement this
 	private synchronized void load() {
 		try {
-			File f = new File(Settings.getInstance().getChunkDbFile());
+			File f = new File(Config.getInstance().getChunkDbFile());
 			if (!f.exists()) {
 				return;
 			}
 
-			FileInputStream fis = new FileInputStream(Settings.getInstance()
+			FileInputStream fis = new FileInputStream(Config.getInstance()
 					.getChunkDbFile());
 
 			ObjectInputStream ois = new ObjectInputStream(fis);
@@ -125,7 +125,7 @@ public class ChunkCache {
 	}
 
 	public static synchronized void initFile() throws IOException {
-		File f = new File(Settings.getInstance().getChunkDbFile());
+		File f = new File(Config.getInstance().getChunkDbFile());
 
 		f.delete();
 		f.createNewFile();
@@ -154,7 +154,7 @@ public class ChunkCache {
 
 		boolean append = testValidFile();
 		try {
-			fos = new FileOutputStream(Settings.getInstance().getChunkDbFile(),
+			fos = new FileOutputStream(Config.getInstance().getChunkDbFile(),
 					append); // append
 								// to
 								// end
@@ -186,7 +186,7 @@ public class ChunkCache {
 
 	private boolean testValidFile() {
 		try {
-			FileInputStream fis = new FileInputStream(Settings.getInstance()
+			FileInputStream fis = new FileInputStream(Config.getInstance()
 					.getChunkDbFile());
 
 			ObjectInputStream ois = new ObjectInputStream(fis);

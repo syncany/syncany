@@ -18,7 +18,7 @@
 package org.syncany.db;
 
 import org.syncany.config.Profile;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.util.FileUtil;
 import java.io.File;
 import java.io.Serializable;
@@ -110,7 +110,7 @@ public class CloneFile implements Serializable,	Cloneable {
 		this.checksum = null;
 		this.name = "(unknown)";
 		this.path = "(unknown)";
-		this.clientName = Settings.getInstance().getMachineName();
+		this.clientName = Config.getInstance().getMachineName();
 	}
 
 	

@@ -27,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.syncany.Constants;
 import org.syncany.config.Profile;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.db.CloneFile.SyncStatus;
 import org.syncany.exceptions.CloneTreeException;
@@ -122,7 +122,7 @@ public class Database {
 		
 		List<CloneFile> allFiles = cloneFileTree.getAllFiles();
 		for(CloneFile cf : allFiles){
-			FileHistory fh = new FileHistory(Settings.getInstance().getMachineName(), cf.getFileId());
+			FileHistory fh = new FileHistory(Config.getInstance().getMachineName(), cf.getFileId());
 			CloneFile f = cf;
 			while(true){
 				fh.add(FileUpdate.fromCloneFile(f));

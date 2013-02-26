@@ -8,8 +8,10 @@ import java.util.List;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CustomMultiChunker;
+import org.syncany.chunk.Deduper;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
+import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
@@ -19,8 +21,6 @@ import org.syncany.experimental.db.Database;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
-import org.syncany.experimental.trash.Deduper;
-import org.syncany.experimental.trash.Deduper.IndexerListener;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -55,7 +55,7 @@ public class IndexerTestWithDB {
 			@Override public boolean directoryFilter(File directory) { return true; }
 		}).start();		
 		
-		indexer.deduplicate(files, chunker, multiChunker, transformer, new IndexerListener() {
+		indexer.deduplicate(files, chunker, multiChunker, transformer, new DeduperListener() {
 			private FileHistory fileHistory;
 			private FileVersion fileVersion;
 			private ChunkEntry chunkEntry;		

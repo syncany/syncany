@@ -1,4 +1,4 @@
-package org.syncany.experimental.trash;
+package org.syncany.chunk;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -6,27 +6,9 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.syncany.chunk.Chunk;
-import org.syncany.chunk.Chunker;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.chunk.MultiChunker;
-import org.syncany.chunk.Transformer;
 
 public class Deduper {
-	public static interface IndexerListener {
-		public void onFileStart(File file);
-		public void onFileAddChunk(Chunk chunk);
-		public void onFileEnd(byte[] checksum);
-		
-		public boolean onChunk(Chunk chunk); // return TRUE if new, FALSE if old
-		
-		public void onOpenMultiChunk(MultiChunk multiChunk);
-		public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk);
-		public void onCloseMultiChunk(MultiChunk multiChunk);		
-		public File getMultiChunkFile(byte[] multiChunkId);
-	} 	
-	
-	public void deduplicate(List<File> files, Chunker chunker, MultiChunker multiChunker, Transformer transformer, IndexerListener listener) throws IOException {
+	public void deduplicate(List<File> files, Chunker chunker, MultiChunker multiChunker, Transformer transformer, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 
@@ -94,6 +76,4 @@ public class Deduper {
 		}
 
 	}
-
-
 }

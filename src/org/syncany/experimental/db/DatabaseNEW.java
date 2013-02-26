@@ -30,6 +30,7 @@ import org.syncany.Constants;
 import org.syncany.util.ByteArray;
 import org.syncany.util.StringUtil;
 
+//FIXME fix it, introduce version. store out persistence-logic into DAO
 public class DatabaseNEW {
     private static final Logger logger = Logger.getLogger(DatabaseNEW.class.getSimpleName());
     
@@ -53,7 +54,8 @@ public class DatabaseNEW {
 
     // Quick access
     private Map<String, FileHistory> filenameHistoryCache;
-        
+    
+    
     public DatabaseNEW() {
     	localDatabaseVersion = 0;
     	globalDatabaseVersion = new HashMap<String, Long>();

@@ -167,7 +167,7 @@ public class Uploader {
             System.out.println("Going on");
             
             MultiChunk metaChunk = req.getMetaChunk();            
-            File localMetaChunkFile = Profile.getInstance().getCache().getMetaChunkFile(metaChunk);
+            File localMetaChunkFile = Profile.getInstance().getCache().getMultiChunkFile(metaChunk);
             String remoteChunkFilename = CloneChunk.getFileName(null, metaChunk.getId());
                        
             // Chunk has been uploaded before; Skip upload

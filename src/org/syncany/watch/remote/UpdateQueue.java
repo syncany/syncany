@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.logging.Logger;
 import org.syncany.config.Repository;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.db.CloneFile.Status;
 import org.syncany.util.StringUtil;
 
@@ -147,7 +147,7 @@ public class UpdateQueue {
                                 if (resultUpdate.getUpdated().before(loopUpdate.getUpdated())) {                                   
                                     if (DEBUG) System.err.println("--> resultUpd wins");
                                     
-                                    if (loopFileHistory.getMachineName().equals(Settings.getInstance().getMachineName())) {
+                                    if (loopFileHistory.getMachineName().equals(Config.getInstance().getMachineName())) {
                                         if (DEBUG) System.err.println("--> THIS CAN NOT HAPPEN; loopFileHistory is never a localUpdateFile");
                                         if (DEBUG) System.err.println("--> loopHistory is LOCAL -> branching new file");
                                         
@@ -172,7 +172,7 @@ public class UpdateQueue {
                                 else {  
                                     if (DEBUG) System.err.println("--> loopUpd wins");
                                     
-                                    if (resultFileHistory.getMachineName().equals(Settings.getInstance().getMachineName())) {
+                                    if (resultFileHistory.getMachineName().equals(Config.getInstance().getMachineName())) {
                                         if (DEBUG) System.err.println("--> resultHistory is LOCAL -> branching new file");
                                         // Add a branch as new file
                                         FileHistory branchedResultFileHistory = resultFileHistory.branch();
@@ -370,7 +370,7 @@ public class UpdateQueue {
     }
 
     private static UpdateFile makeUpdateFileLocal(Repository repo) {
-        UpdateFile uf = new UpdateFile(repo, Settings.getInstance().getMachineName(), new Date());                
+        UpdateFile uf = new UpdateFile(repo, Config.getInstance().getMachineName(), new Date());                
         FileUpdate u;
         
         u = new FileUpdate(); 
@@ -817,7 +817,7 @@ public class UpdateQueue {
     }
 
     public static void main(String[] a) throws IOException {
-    	Settings.getInstance().setMachineName("platop");        
+    	Config.getInstance().setMachineName("platop");        
         
         Repository repo = new Repository();
 

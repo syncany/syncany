@@ -6,19 +6,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CustomMultiChunker;
+import org.syncany.chunk.Deduper;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
+import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
-import org.syncany.config.Config;
+import org.syncany.config.ConfigTO;
+import org.syncany.config.Encryption;
 import org.syncany.config.Profile;
-import org.syncany.config.Settings;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
@@ -30,8 +33,6 @@ import org.syncany.experimental.db.Database;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
-import org.syncany.experimental.trash.Deduper;
-import org.syncany.experimental.trash.Deduper.IndexerListener;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -50,11 +51,11 @@ public class Syncany {
 		}
 				
 		// Read config
-		Config cfg = new Config(configFile);
-		sy.init(cfg);
+		Profile profile = new Profile(new ConfigTO(configFile));
+		sy.init(profile);
 		
 		// sy up
-		sy.up(cfg);
+		sy.up(profile);
 	}
 	
 	public Syncany() {
@@ -62,13 +63,10 @@ public class Syncany {
 		// ...
 	}
 	
-	public UpstreamStatus up(Config cfg) throws FileNotFoundException, IOException {
-		final File localRepoDir = new File("/tmp/syncany-test-db");
-		final File localCacheDir = new File("/tmp/syncany-db-cache");		
-		
-		DatabaseNEW localRepoDB = loadLocalRepoDB(cfg.getAppDir());
-		List<File> localFiles = listFiles(cfg.getRootDir());
-		DatabaseNEW updatedRepoDB = index(localFiles,localRepoDB, localRepoDir, localCacheDir);
+	public UpstreamStatus up(Profile profile) throws FileNotFoundException, IOException {
+		DatabaseNEW localRepoDB = loadLocalRepoDB(profile.getAppDir());
+		List<File> localFiles = listFiles(profile.getLocalDir());
+		DatabaseNEW updatedRepoDB = index(localFiles, localRepoDB, profile.getAppDir(), profile.getAppCacheDir());
 		
 		UpstreamStatus statusCode = null;
 		
@@ -87,6 +85,12 @@ public class Syncany {
 	}	
 	
 	private boolean uploadMultiChunks(List<MultiChunkEntry> metaMultiChunks, String cacheDir, TransferManager tm) {
+		
+		
+		for (MultiChunkEntry multiChunkEntry : metaMultiChunks) {
+			
+			tm.upload(localFile, new RemoteFile(localFile.getName());
+		}
 		//Find and upload given multi chunks by the power of grayskull
 		return false;
 	}
@@ -97,14 +101,13 @@ public class Syncany {
 	}
 
 	//FIXME
-	private DatabaseNEW index(List<File> localFiles, final DatabaseNEW db, final File localRepoDir, final File localCacheDir) throws FileNotFoundException, IOException {
+	private DatabaseNEW index(List<File> localFiles, Chunker chunker, MultiChunker multiChunker, Transformer transformer, 
+			final DatabaseNEW db, final File localRepoDir, final File localCacheDir) throws FileNotFoundException, IOException {
+		
 		final Deduper indexer = new Deduper();
 		final List<File> files = new ArrayList<File>();
-		Chunker chunker = new FixedOffsetChunker(16 * 1024);
-		MultiChunker multiChunker = new CustomMultiChunker(512 * 1024, 0);
-		Transformer transformer = new GzipCompressor();		
 		
-		indexer.deduplicate(files, chunker, multiChunker, transformer, new IndexerListener() {
+		indexer.deduplicate(files, chunker, multiChunker, transformer, new DeduperListener() {
 			private FileHistory fileHistory;
 			private FileVersion fileVersion;
 			private ChunkEntry chunkEntry;		
@@ -239,52 +242,9 @@ public class Syncany {
 		return newRepoDB;
 	}
 
-	public void init(Config configFile) throws Exception {   
-	  	Profile profile; 
-    	Connection conn = null;
-    	File rootFolder;
-    	
-    	// create the needed directories if not already present
-    	new File(configFile.getAppDir()).mkdirs();
-    	new File(configFile.getCacheDir()).mkdirs();
-    	new File(configFile.getRootDir()).mkdirs();
-    	
-
-    	/* ATTENTION: Keep this order in mind 
-		 * Create and configure Settings first,
-		 * then create Profile */
-    	
-    	// SETTING EVERYTHING IN SETTINGS-CLASS
-    	Settings.createInstance(
-    			new File(configFile.getAppDir()), 
-    			new File(configFile.getCacheDir()),
-    			configFile.getMachineName()
-    	);
-
-    	profile = Profile.getInstance();
-
-    	// set encryption password & salt
-    	profile.getRepository().getEncryption().setPassword(configFile.getEncryption().getPass());
-    	profile.getRepository().getEncryption().setSalt("SALT"); // TODO: What to use as salt?    	
-    	profile.getRepository().setChunkSize(Constants.DEFAULT_CHUNK_SIZE); // TODO: Make configurable
-
-    	// Load the required plugin
-    	PluginInfo plugin = Plugins.get(configFile.getConnection().getType());
-    	
-    	if (plugin == null) {
-    		throw new Exception("Plugin not supported: " + configFile.getConnection().getType());
-    	}
-    	
-    	// initialize connection
-    	conn = plugin.createConnection();
-    	conn.init(configFile.getConnection().getSettings());
- 
-    	profile.getRepository().setConnection(conn);
-    	rootFolder = new File(configFile.getRootDir());
-    	profile.setRoot(rootFolder);    
-    	
-    	// load DB
-    	//if (p)
+	private void init(Profile profile) throws Exception {   
+    	profile.getAppDir().mkdirs();
+    	profile.getAppCacheDir().mkdirs();
 	}
 	
 }

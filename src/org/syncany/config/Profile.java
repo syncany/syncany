@@ -18,83 +18,159 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.io.IOException;
 
-import org.syncany.connection.Downloader;
-import org.syncany.connection.Uploader;
-import org.syncany.watch.remote.RemoteWatcher;
+import org.syncany.Constants;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CustomMultiChunker;
+import org.syncany.chunk.FixedOffsetChunker;
+import org.syncany.chunk.GzipCompressor;
+import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.Transformer;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginInfo;
+import org.syncany.connection.plugins.Plugins;
+import org.syncany.exceptions.EncryptionException;
+
+import com.google.gson.JsonSyntaxException;
 
 /**
  * 
  * @author Philipp C. Heckel
  */
 public class Profile {
-	private static Profile instance;
+	private File localDir;
+	private File appDir;
+	private File appCacheDir;
+	private String machineName;	
+    private int chunkSize;
 
-	private String name;
-	private Repository repository;
-	private File root;
-
-	private Uploader uploader;
-	private Downloader downloader;
-	private RemoteWatcher remoteWatcher;
 	private Cache cache;
-
-	private Profile() {
-		name = "(unknown)";
-		repository = new Repository();
-		cache = new Cache();
-
-		downloader = new Downloader(this);
-		uploader = new Uploader(this);
-		
-		remoteWatcher = new RemoteWatcher(this);
-	}
-
 	
-	public static Profile getInstance() {
-		if (instance == null) {
-			instance = new Profile();
-		}
-		return instance;
+	private Connection connection;
+    private Encryption encryption;
+    private Chunker chunker;
+    private MultiChunker multiChunker;
+    private Transformer transformer;
+    
+    
+	public Profile(ConfigTO configTO) throws Exception {		
+		localDir = new File(configTO.getLocalDir());
+		appDir = new File(configTO.getAppDir());
+		appCacheDir = new File(configTO.getCacheDir());
+		machineName = configTO.getMachineName();
+
+		cache = new Cache(appCacheDir);
+
+        connection = null; // Loaded or set dynamically!
+        encryption = new Encryption();
+		chunker = new FixedOffsetChunker(16 * 1024);
+		multiChunker = new CustomMultiChunker(512 * 1024, 0);
+		transformer = new GzipCompressor();		        
+		
+    	encryption = new Encryption();		
+    	encryption.setPassword(configTO.getEncryption().getPass());
+    	encryption.setSalt("SALT"); // TODO: What to use as salt?    	
+
+    	// Load the required plugin
+    	PluginInfo plugin = Plugins.get(configTO.getConnection().getType());
+    	
+    	if (plugin == null) {
+    		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());
+    	}
+    	
+    	connection = plugin.createConnection();
+    	connection.init(configTO.getConnection().getSettings());    	    	
 	}
 
-	public File getRoot() {
-		return root;
+	public File getAppDir() {
+		return appDir;
 	}
 
+	public void setAppDir(File appDir) {
+		this.appDir = appDir;
+	}
+	
+	public void setAppCacheDir(File file) {
+		appCacheDir = file;
+	}
+
+	public File getAppCacheDir() {
+		return appCacheDir;
+	}
+	
+	public String getMachineName() {
+		return machineName;
+	}
+
+	public void setMachineName(String machineName) {
+		this.machineName = machineName;
+	}	
+	
+    public int getChunkSize() {
+        return chunkSize;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(Connection connection) {
+        this.connection = connection;
+    }
+
+    public Encryption getEncryption() {
+        return encryption;
+    }
+
+    public void setChunkSize(int chunkSize) {
+        this.chunkSize = chunkSize;
+    }
+
+    public void setEncryption(Encryption encryption) {
+        this.encryption = encryption;
+    }
+
+    public Chunker getChunker() {
+        return chunker;
+    }
+
+    public void setChunker(Chunker chunker) {
+        this.chunker = chunker;
+    }
+    
 	public Cache getCache() {
 		return cache;
 	}
 
-	public Repository getRepository() {
-		return repository;
+	public MultiChunker getMultiChunker() {
+		return multiChunker;
 	}
 
-	public String getName() {
-		return name;
+	public void setMultiChunker(MultiChunker multiChunker) {
+		this.multiChunker = multiChunker;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public Transformer getTransformer() {
+		return transformer;
 	}
 
-	public void setRoot(File rootFolder) {
-		this.root = rootFolder;
+	public void setTransformer(Transformer transformer) {
+		this.transformer = transformer;
 	}
 
-	public void setRepository(Repository repository) {
-		this.repository = repository;
+	public void setCache(Cache cache) {
+		this.cache = cache;
 	}
 
-	public RemoteWatcher getRemoteWatcher() {
-		return remoteWatcher;
+	public File getLocalDir() {
+		return localDir;
 	}
 
-	public Uploader getUploader() {
-		return uploader;
+	public void setLocalDir(File localDir) {
+		this.localDir = localDir;
 	}
+	
+	
 
-	public Downloader getDownloader() {
-		return downloader;
-	}
 }

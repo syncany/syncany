@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Profile;
 import org.syncany.config.Repository;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.db.CloneClient;
 import org.syncany.db.Database;
 
@@ -61,7 +61,7 @@ public class StructuredFileList {
 					UpdateFile newUpdateFile = UpdateFile.createUpdateFile(repository, rf);
 
 					// Local?
-					if (newUpdateFile.getMachineName().equals(Settings.getInstance().getMachineName())) {
+					if (newUpdateFile.getMachineName().equals(Config.getInstance().getMachineName())) {
 						localUpdateFiles.put(newUpdateFile.getLastUpdate().getTime(), newUpdateFile);
 					}
 

@@ -246,7 +246,7 @@ public class NewIndexRequest extends IndexRequest {
                     // FILES completed in this metachunk (-> can be uploaded)
                     metaChunkCompletedFiles = new HashSet<CloneFile>();
 
-                    logger.info("Opened new metachunk "+Profile.getInstance().getCache().getMetaChunkFile(multiChunk));
+                    logger.info("Opened new metachunk "+Profile.getInstance().getCache().getMultiChunkFile(multiChunk));
                 }     
                 
                 // Create chunk in DB and add to cache; DO create it!
@@ -312,13 +312,13 @@ public class NewIndexRequest extends IndexRequest {
     }
     
     private static void closeMetaChunk(boolean timerTriggered) throws IOException {        
-        logger.log(Level.INFO, "Metachunk {0} is FULL.", Profile.getInstance().getCache().getMetaChunkFile(multiChunk));
+        logger.log(Level.INFO, "Metachunk {0} is FULL.", Profile.getInstance().getCache().getMultiChunkFile(multiChunk));
 
         // Close meta chunk and get ID (= last chunk's ID)
         multiChunk.close();
 
         // Rename to final 'temp' metachunk
-        File metaChunkFile = Profile.getInstance().getCache().getMetaChunkFile(multiChunk);
+        File metaChunkFile = Profile.getInstance().getCache().getMultiChunkFile(multiChunk);
         metaChunkTempFile.renameTo(metaChunkFile);
 
         Set<CloneFile> mergedFiles = new HashSet<CloneFile>();

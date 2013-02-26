@@ -26,7 +26,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.LinkedList;
 import java.util.List;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 
 public class DatabaseIO {
 
@@ -35,7 +35,7 @@ public class DatabaseIO {
 		FileOutputStream fos = null;
 		ObjectOutputStream out = null;
 		try {
-			fos = new FileOutputStream(Settings.getInstance().getCloneFileDbFile());
+			fos = new FileOutputStream(Config.getInstance().getCloneFileDbFile());
 			out = new ObjectOutputStream(fos);
 			out.writeObject(tree);
 			out.close();
@@ -49,14 +49,14 @@ public class DatabaseIO {
 	}
 
 	public static synchronized CloneFileTree readCompleteCloneFileTree() {
-		File f = new File(Settings.getInstance().getCloneFileDbFile());
+		File f = new File(Config.getInstance().getCloneFileDbFile());
 		if(!f.exists())
 			return new CloneFileTree();
 		
 		FileInputStream fis = null;
 		ObjectInputStream in = null;
 		try {
-			fis = new FileInputStream(Settings.getInstance().getCloneFileDbFile());
+			fis = new FileInputStream(Config.getInstance().getCloneFileDbFile());
 			in = new ObjectInputStream(fis);
 			CloneFileTree tree = (CloneFileTree) in.readObject();
 			in.close();
@@ -81,7 +81,7 @@ public class DatabaseIO {
 		try {
 			// TODO: Change when using more than one daemon, maybe folder by
 			// commandline arguments
-			fos = new FileOutputStream(Settings.getInstance().getCloneClientDbFile());
+			fos = new FileOutputStream(Config.getInstance().getCloneClientDbFile());
 			out = new ObjectOutputStream(fos);
 			out.writeObject(list);
 			out.close();
@@ -95,7 +95,7 @@ public class DatabaseIO {
 	}
 
 	public static synchronized List<CloneClient> readCloneClients() {
-		File f = new File(Settings.getInstance().getCloneClientDbFile());
+		File f = new File(Config.getInstance().getCloneClientDbFile());
 		if(!f.exists())
 			return new LinkedList<CloneClient>();
 		
@@ -103,7 +103,7 @@ public class DatabaseIO {
 		FileInputStream fis = null;
 		ObjectInputStream in = null;
 		try {
-			fis = new FileInputStream(Settings.getInstance().getCloneClientDbFile());
+			fis = new FileInputStream(Config.getInstance().getCloneClientDbFile());
 			in = new ObjectInputStream(fis);
 			@SuppressWarnings("unchecked")
 			List<CloneClient> list = (List<CloneClient>) in.readObject();

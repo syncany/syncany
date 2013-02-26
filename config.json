@@ -1,6 +1,6 @@
 {
-	"rootDir"		: "syncanyData/root",
-	"appDir"		: "syncanyData/data/applicationData",
+	"localDir"		: "syncanyData/root",
+	"appDir"		: "syncanyData/data/appData",
 	"cacheDir"		: "syncanyData/data/cache",
 	"machineName"	: "MachineName",
 	"connection"	:

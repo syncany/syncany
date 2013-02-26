@@ -27,7 +27,7 @@ import org.syncany.chunk.CustomMultiChunk;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.db.CloneChunk;
 import org.syncany.db.CloneFile;
 import org.syncany.db.Database;
@@ -431,7 +431,7 @@ public class ChunkerTest {
         metaChunk.close();
 
         // Rename to final 'temp' metachunk
-        File metaChunkFile = Profile.getInstance().getCache().getMetaChunkFile(metaChunk);
+        File metaChunkFile = Profile.getInstance().getCache().getMultiChunkFile(metaChunk);
 
         if(debug) {
         	System.out.println("metaChunkFile.exists(): "+metaChunkFile.exists());

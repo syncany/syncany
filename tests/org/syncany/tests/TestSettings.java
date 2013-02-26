@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.syncany.Constants;
 import org.syncany.config.Profile;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.exceptions.EncryptionException;
@@ -40,7 +40,7 @@ public class TestSettings {
 	// ChunkSize
 	private int chunkSize = Constants.DEFAULT_CHUNK_SIZE;
 	
-	private Settings settings;
+	private Config settings;
 	
 	private TestSettings() {
 		
@@ -108,7 +108,7 @@ public class TestSettings {
 	/** Creates an instance of the original application settings with the test settings attributes */
 	public void createSettingsInstance() {
 		// SETTING EVERYTHING IN SETTINGS-CLASS
-		settings = Settings.createInstance(appDir, appCacheDir, machineName);
+		settings = Config.createInstance(appDir, appCacheDir, machineName);
 	}
 	
 	public Profile createProfile() {
@@ -176,7 +176,7 @@ public class TestSettings {
 		return machineName;
 	}
 
-	public Settings getSettings() {
+	public Config getSettings() {
 		if(settings==null) createSettingsInstance();
 		
 		return settings;

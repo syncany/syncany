@@ -36,66 +36,32 @@ public class Cache {
      * 1 = Cache folder
      * 2 = Chunk file name (defined by {@link CloneChunk#getFileName()})
      */
-    private static String CHUNK_FORMAT = "%1$s/enc-%2$s";
-
+    private static String CHUNK_FORMAT = "%1$s/enc-%2$s"; 
     private static String PLAIN_CHUNK_FORMAT = "%1$s/plain-%2$s";
 
-    private int size;
-    private File folder;
+    private File cacheDir;
     
-    public Cache(){
-    	this.folder = Settings.getInstance().getAppCacheDir();
-    	this.size = Constants.DEFAULT_CACHE_SIZE;
+    public Cache(File cacheDir) {
+    	this.cacheDir = cacheDir;
     }
 
-    public void setFolder(File folder) {
-        this.folder = folder;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public File getFolder() {
-        return folder;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    // TODO: not used anymore?
-//    public File getCacheChunk(CloneChunk chunk) {
-//        return new File(String.format(CHUNK_FORMAT,
-//            folder.getAbsoluteFile(),
-//            chunk.getFileName())
-//        );
-//    }
-//    
-//    public File getCacheChunk(String chunkIdStr) {
-//        return new File(String.format(CHUNK_FORMAT,
-//            folder.getAbsoluteFile(),
-//            CloneChunk.getFileName(chunkIdStr))
-//        );
-//    }    
-    
-    public File getMetaChunkFile(MultiChunk metaChunk) {
+    public File getMultiChunkFile(MultiChunk multiChunk) {
         return new File(String.format(CHUNK_FORMAT,
-            folder.getAbsoluteFile(),
-            CloneChunk.getFileName(metaChunk.getId(), null))
+            cacheDir.getAbsoluteFile(),
+            CloneChunk.getFileName(multiChunk.getId(), null))
         );
     }
     
     public File getMetaChunkFile(byte[] metaChunkId) {
         return new File(String.format(CHUNK_FORMAT,
-            folder.getAbsoluteFile(),
+            cacheDir.getAbsoluteFile(),
             CloneChunk.getFileName(metaChunkId, null))
         );
     }       
     
     public File getPlainChunkFile(byte[] checksum) {
         return new File(String.format(PLAIN_CHUNK_FORMAT,
-            folder.getAbsoluteFile(),
+            cacheDir.getAbsoluteFile(),
             CloneChunk.getFileName(null, checksum))
         );            
     }    
@@ -109,7 +75,7 @@ public class Cache {
        try {
            return File.createTempFile(
                 String.format("temp-%s-", name),
-                ".tmp", folder);
+                ".tmp", cacheDir);
        }
        catch (IOException e) {
            throw new CacheException("Unable to create temporary file in cache.", e);

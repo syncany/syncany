@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.db.ChunkCache;
 import org.syncany.db.CloneFileTree;
 import org.syncany.db.DatabaseIO;
@@ -18,7 +18,7 @@ public class ReadDBTest {
 	public void simpleReadTest() {
 		if(debug) System.out.print("Reading from file");
 
-		Settings.getInstance().setAppDir(new File("/opt/syncanytest/db"));
+		Config.getInstance().setAppDir(new File("/opt/syncanytest/db"));
 
 		
 		CloneFileTree t = DatabaseIO.readCompleteCloneFileTree();
@@ -32,7 +32,7 @@ public class ReadDBTest {
 	public void simpleReadTest2() {
 		if(debug) System.out.print("Reading from file");
 		
-		Settings.getInstance().setAppDir(new File("/opt/syncanytest2/db"));
+		Config.getInstance().setAppDir(new File("/opt/syncanytest2/db"));
 
 		
 		CloneFileTree t = DatabaseIO.readCompleteCloneFileTree();
@@ -47,7 +47,7 @@ public class ReadDBTest {
 	public void simpleReadTestChunks() {
 		if(debug) System.out.print("Reading from file");
 		
-		Settings.getInstance().setAppDir(new File("/opt/syncanytest/db"));
+		Config.getInstance().setAppDir(new File("/opt/syncanytest/db"));
 		
 		ChunkCache cm = new ChunkCache();
 

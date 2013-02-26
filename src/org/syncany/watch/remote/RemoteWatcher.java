@@ -32,7 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Profile;
-import org.syncany.config.Settings;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.CloneClient;
 import org.syncany.db.CloneFile;
@@ -247,12 +247,12 @@ public class RemoteWatcher {
 			}
 
 			UpdateFile newUpdateFile = new UpdateFile(profile.getRepository(),
-					Settings.getInstance().getMachineName(), latestUpdate);
+					Config.getInstance().getMachineName(), latestUpdate);
 			File localUpdateFile = Profile
 					.getInstance()
 					.getCache()
 					.createTempFile(
-							"update-" + Settings.getInstance().getMachineName());
+							"update-" + Config.getInstance().getMachineName());
 			ObjectOutputStream oos = newUpdateFile.getObjectOutputStream(
 					localUpdateFile, DEBUG_GZIP_AND_ENCRYPT_UPDATE_FILES);
 
@@ -263,7 +263,7 @@ public class RemoteWatcher {
 						.getCache()
 						.createTempFile(
 								"update-"
-										+ Settings.getInstance()
+										+ Config.getInstance()
 												.getMachineName() + "-tomerge");
 				transfer.download(uf, tempUpdateFile);
 
@@ -465,7 +465,7 @@ public class RemoteWatcher {
 
 		File localUpdateFile = null;
 		UpdateFile remoteUpdateFile = new UpdateFile(profile.getRepository(),
-				Settings.getInstance().getMachineName(), lastUpdateFileDate);
+				Config.getInstance().getMachineName(), lastUpdateFileDate);
 
 		try {
 			// Make temp. update file
@@ -473,7 +473,7 @@ public class RemoteWatcher {
 					.getInstance()
 					.getCache()
 					.createTempFile(
-							"update-" + Settings.getInstance().getMachineName());
+							"update-" + Config.getInstance().getMachineName());
 			logger.info("4. Writing local changes to '" + localUpdateFile
 					+ "' ...");
 
@@ -503,7 +503,7 @@ public class RemoteWatcher {
 	private UpdateFile getLocalUpdates() {
 		try {
 			UpdateFile localUpdateFile = new UpdateFile(
-					profile.getRepository(), Settings.getInstance()
+					profile.getRepository(), Config.getInstance()
 							.getMachineName(), new Date());
 
 			// Make temp. update file
@@ -511,7 +511,7 @@ public class RemoteWatcher {
 					.getInstance()
 					.getCache()
 					.createTempFile(
-							"update-" + Settings.getInstance().getMachineName());
+							"update-" + Config.getInstance().getMachineName());
 			logger.info("4. Writing local changes to '" + tempLocalUpdateFile
 					+ "' ...");
 
@@ -525,13 +525,13 @@ public class RemoteWatcher {
 
 			List<CloneFile> allFiles = db.getFiles();
 			UpdateFile localUpdateFile2 = new UpdateFile(
-					profile.getRepository(), Settings.getInstance()
+					profile.getRepository(), Config.getInstance()
 							.getMachineName(), new Date());
 			File tempLocalUpdateFile2 = Profile
 					.getInstance()
 					.getCache()
 					.createTempFile(
-							"update-" + Settings.getInstance().getMachineName());
+							"update-" + Config.getInstance().getMachineName());
 			localUpdateFile2.setVersions(allFiles);
 			localUpdateFile2.write(tempLocalUpdateFile2,
 					DEBUG_GZIP_AND_ENCRYPT_UPDATE_FILES);

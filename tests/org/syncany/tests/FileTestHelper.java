@@ -291,7 +291,7 @@ public class FileTestHelper {
 	
 	private static MultiChunk closeMultiChunk(MultiChunk multiChunk, File multiChunkTempFile) throws IOException {
 		multiChunk.close();
-		File multiChunkFile = Profile.getInstance().getCache().getMetaChunkFile(multiChunk);
+		File multiChunkFile = Profile.getInstance().getCache().getMultiChunkFile(multiChunk);
 		multiChunkTempFile.renameTo(multiChunkFile);
 		
 		multiChunk = null;
