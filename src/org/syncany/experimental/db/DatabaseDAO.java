@@ -74,7 +74,7 @@ public class DatabaseDAO {
 
 
 	//FIXME
-    public synchronized void save(DatabaseNEW db, long versionFrom, long versionTo, File destinationFile) throws IOException {
+    public synchronized void save(Database db, long versionFrom, long versionTo, File destinationFile) throws IOException {
         Collection l;
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(destinationFile));  
         
@@ -83,13 +83,17 @@ public class DatabaseDAO {
         dos.writeByte(DATABASE_FORMAT_VERSION);
         
 		for (long i = versionFrom; i <= versionTo; i++) {
+			
 
-			//TODO get corresponding set for given DB-Version 
-			Set<ChunkEntry> newChunkCache;
-			Set<MultiChunkEntry> newMultiChunkCache;
-			Set<FileContent> newContentCache;
-			Set<FileHistory> newHistoryCache;
-			Set<FileVersion> newVersionCache;
+			// TODO write global database version (= vector clock)
+			// TODO write local database version
+
+			
+			Set<ChunkEntry> newChunkCache = db.getVersionChunks().get(i);
+			Set<MultiChunkEntry> newMultiChunkCache = db.getVersionMultiChunks().get(i);
+			Set<FileContent> newContentCache = db.getVersionContents().get(i);
+			Set<FileHistory> newHistoryCache = db.getVersionFileHistories().get(i);
+			Set<FileVersion> newVersionCache = db.getVersionFileVersions().get(i);
 
 			// Chunks
 			l = newChunkCache;

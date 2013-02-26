@@ -19,10 +19,8 @@ package org.syncany.experimental.db;
 
 import java.io.Serializable;
 
-/**
- *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
+// FIXME This can be done with a TreeMap in FileContent
+@Deprecated
 public class ContentChunk implements Serializable {    
     private long id;
     private ChunkEntry chunk;

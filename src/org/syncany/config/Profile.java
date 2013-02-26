@@ -42,6 +42,7 @@ public class Profile {
 	private File localDir;
 	private File appDir;
 	private File appCacheDir;
+	private File appDatabaseDir;
 	private String machineName;	
     private int chunkSize;
 
@@ -58,6 +59,7 @@ public class Profile {
 		localDir = new File(configTO.getLocalDir());
 		appDir = new File(configTO.getAppDir());
 		appCacheDir = new File(configTO.getCacheDir());
+		appDatabaseDir = new File(configTO.getDatabaseDir());
 		machineName = configTO.getMachineName();
 
 		cache = new Cache(appCacheDir);
@@ -169,6 +171,14 @@ public class Profile {
 
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;
+	}
+
+	public File getAppDatabaseDir() {
+		return appDatabaseDir;
+	}
+
+	public void setAppDatabaseDir(File appDatabaseDir) {
+		this.appDatabaseDir = appDatabaseDir;
 	}
 	
 	

@@ -35,7 +35,7 @@ public class MultiChunkEntry implements Persistable {
     private int chunkSize;
     private List<ChunkEntry> chunks;
     
-    private transient Database db; // TODO this is ugly!
+    private transient DatabaseOLD db; // TODO this is ugly!
     
     public MultiChunkEntry() {
         this.chunks = new ArrayList<ChunkEntry>();
@@ -43,7 +43,7 @@ public class MultiChunkEntry implements Persistable {
         this.chunkSize = 0;
     }
     
-    public MultiChunkEntry(Database db) {
+    public MultiChunkEntry(DatabaseOLD db) {
         this();
         this.db = db;
     }    

@@ -17,292 +17,88 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.syncany.Constants;
 import org.syncany.util.ByteArray;
 import org.syncany.util.StringUtil;
 
-//FIXME fix it, introduce version. store out persistence-logic into DAO
-@Deprecated
 public class Database {
-	private static final byte DATABASE_FORMAT_VERSION = 0x01;
     private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
     
+    // DB Version and versions of other users (= DB basis) 
+    private long localDatabaseVersion;
+    private Map<String, Long> globalDatabaseVersion; // vector clock, machine name to database version map
+    
+    // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunkCache;
     private Map<ByteArray, MultiChunkEntry> multiChunkCache;
     private Map<ByteArray, FileContent> contentCache;
     private Map<Long, FileHistory> historyCache;
     private Map<Long, FileVersion> versionCache;
     
+    // DB Version to X
+    private Map<Long, Set<ChunkEntry>> versionChunks;
+    private Map<Long, Set<MultiChunkEntry>> versionMultiChunks;
+    private Map<Long, Set<FileContent>> versionContents;
+    private Map<Long, Set<FileHistory>> versionFileHistories;
+    private Map<Long, Set<FileVersion>> versionFileVersions;    
+
+    // Quick access
     private Map<String, FileHistory> filenameHistoryCache;
-    
-    private Set<ChunkEntry> newChunkCache;
-    private Set<MultiChunkEntry> newMultiChunkCache;
-    private Set<FileContent> newContentCache;
-    private Set<FileHistory> newHistoryCache;
-    private Map<Long, FileVersion> newVersionCache;
-
-    //XXXprivate Map<Long, FileVersion> databaseVersionTofileVersionMap;
-
     
     
     public Database() {
+    	localDatabaseVersion = 0;
+    	globalDatabaseVersion = new HashMap<String, Long>();
+    	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
         contentCache = new HashMap<ByteArray, FileContent>();
         historyCache = new HashMap<Long, FileHistory>();
         versionCache = new HashMap<Long, FileVersion>();
         
+        versionChunks = new HashMap<Long, Set<ChunkEntry>>();
+        versionMultiChunks = new HashMap<Long, Set<MultiChunkEntry>>();
+        versionContents = new HashMap<Long, Set<FileContent>>();
+        versionFileHistories = new HashMap<Long, Set<FileHistory>>();
+        versionFileVersions = new HashMap<Long, Set<FileVersion>>();
+
         filenameHistoryCache = new HashMap<String, FileHistory>();
-
-        newChunkCache = new HashSet<ChunkEntry>();
-        newMultiChunkCache = new HashSet<MultiChunkEntry>();
-        newContentCache = new HashSet<FileContent>();
-        newHistoryCache = new HashSet<FileHistory>();
-        newVersionCache = new HashMap<Long, FileVersion>();
+        
+        incLocalDatabaseVersion();
     }
 
-    public synchronized void save(File file) throws IOException {
-        save(file, true);
-    }
-    
-    public synchronized void save(File file, boolean full) throws IOException {
-    	save(file, full, true);
-    }
-    
-    public synchronized void save(File file, boolean full, boolean gzip) throws IOException {
-        Collection l;
-        DataOutputStream dos = (gzip) 
-        	? new DataOutputStream(new GZIPOutputStream(new FileOutputStream(file)))
-        	: new DataOutputStream(new FileOutputStream(file));
-        
-        // Signature and version        
-        dos.write("Syncany".getBytes()); 
-        dos.writeByte(DATABASE_FORMAT_VERSION);
-        
-        // Chunks
-        l = (full) ? chunkCache.values() : newChunkCache;
-        
-        if (l == null || l.isEmpty()) {                        
-            dos.writeInt(0); // count
-        }
-        else {
-            dos.writeInt(l.size()); // count
-            
-            for (Object obj : l) {
-                ((Persistable) obj).write(dos);
-                //lastChunkId.setValue(((Chunk) obj).getId());                     
-            }            
-        }
-        
-        // Metachunks        
-        l = (full) ? multiChunkCache.values() : newMultiChunkCache;
-        
-        if (l == null || l.isEmpty()) {                        
-            dos.writeInt(0); // count
-        }
-        else {
-            dos.writeInt(l.size()); // count
-            
-            for (Object obj : l) {
-                ((Persistable) obj).write(dos);
-                //lastChunkId.setValue(((Chunk) obj).getId());                     
-            }            
-        }      
-        
-        // Content        
-        l = (full) ? contentCache.values() : newContentCache;
-        
-        if (l == null || l.isEmpty()) {                        
-            dos.writeInt(0); // count
-        }
-        else {
-            dos.writeInt(l.size()); // count
-            
-            for (Object obj : l) {
-                ((Persistable) obj).write(dos);
-                //lastChunkId.setValue(((Chunk) obj).getId());                     
-            }            
-        }      
-        
-        // File histories
-        l = (full) ? historyCache.values() : newHistoryCache;
-        
-        if (l == null || l.isEmpty()) {                        
-            dos.writeInt(0); // count
-        }
-        else {
-            dos.writeInt(l.size()); // count
-            
-            for (Object obj : l) {
-                //((Persistable) obj).write(dos);
-                FileHistory history = (FileHistory) obj;
-                history.write(dos);
-           }            
-        }      
+    public long getLocalDatabaseVersion() {
+		return localDatabaseVersion;
+	}
 
-        // File versions
-        if (full) {
-            // Count
-            int versionCount = 0;
+	public void incLocalDatabaseVersion() {
+		localDatabaseVersion++;
+		
+		versionChunks.put(localDatabaseVersion, new HashSet<ChunkEntry>());
+		versionMultiChunks.put(localDatabaseVersion, new HashSet<MultiChunkEntry>());
+		versionContents.put(localDatabaseVersion, new HashSet<FileContent>());
+		versionFileHistories.put(localDatabaseVersion, new HashSet<FileHistory>());
+		versionFileVersions.put(localDatabaseVersion, new HashSet<FileVersion>());
+	}
+	
+	public Map<String, Long> getGlobalDatabaseVersion() {
+		return Collections.unmodifiableMap(globalDatabaseVersion);
+	}
 
-            for (FileHistory history : historyCache.values()) {            
-                versionCount += history.getVersions().size();
-            }
-            
-            // Write
-            dos.writeInt(versionCount);
-            
-            for (FileHistory history : historyCache.values()) {            
-                for (FileVersion version : history.getVersions()) {
-                    version.write(dos);
-                }
-            }
-        }
-        else {
-            // Count
-            int versionCount = 0;
-            
-            for (FileVersion firstNewVersion : newVersionCache.values()) { // TODO O(n^2) !!
-                for (FileVersion version : firstNewVersion.getHistory().getVersions()) {
-                    if (version.getVersion() >= firstNewVersion.getVersion()) {
-                        versionCount++;
-                    }
-                }
-            }
-            
-            // Write
-            dos.writeInt(versionCount);
-            
-            for (FileVersion firstNewVersion : newVersionCache.values()) { // TODO O(n^2)
-                for (FileVersion version : firstNewVersion.getHistory().getVersions()) {
-                    if (version.getVersion() >= firstNewVersion.getVersion()) {
-                        version.write(dos);
-                    }                        
-                }
-            }
-        }                        
-        
-        dos.close();     
-        
-        
-        // Clear the 'new' entries
-        newChunkCache.clear();
-        newMultiChunkCache.clear();
-        newContentCache.clear();
-        newHistoryCache.clear();
-        newVersionCache.clear();
-    }
-    
-    public synchronized void load(File file) throws IOException {
-    	load(file, true);
-    }
-    
-    public synchronized void load(File file, boolean gzip) throws IOException {
-        DataInputStream dis = (gzip)
-        	? new DataInputStream(new GZIPInputStream(new FileInputStream(file)))
-        	: new DataInputStream(new FileInputStream(file));
-        
-        // Signature and version
-        byte[] shouldFileSig = "Syncany".getBytes();
-        byte[] isFileSig = new byte[shouldFileSig.length];
-        dis.read(isFileSig);
-        
-        if (!Arrays.equals(shouldFileSig, isFileSig)) {
-            throw new IOException("Invalid file: not a Syncany file.");
-        }
-        
-        int version = dis.readByte();
-        
-        if ((version & 0xff) != DATABASE_FORMAT_VERSION) {
-            throw new IOException("Invalid file: version "+version+" not supported.");
-        }
-                
-        // Chunks
-        int chunkCount = dis.readInt();
-        
-        for (int i = 0; i < chunkCount; i++) {
-            ChunkEntry chunk = new ChunkEntry();
-            chunk.read(dis);
-            
-            //System.out.println("read chunk "+Arrays.toString(chunk.getChecksum()));
-            ByteArray key = new ByteArray(chunk.getChecksum());
-            if (chunkCache.get(key) == null) {
-                chunkCache.put(key, chunk);
-            }
-        }
-        
-        // Metachunks
-        int metaChunkCount = dis.readInt();
+	public void setGlobalDatabaseVersion(String machineName, long machineVersion) {
+		globalDatabaseVersion.put(machineName, machineVersion);
+	}
 
-        for (int i = 0; i < metaChunkCount; i++) {
-            MultiChunkEntry metaChunk = new MultiChunkEntry(this);
-            metaChunk.read(dis);
-
-            //System.out.println("read metachunk "+Arrays.toString(metaChunk.getChecksum()));
-            ByteArray key = new ByteArray(metaChunk.getChecksum());
-            if (!multiChunkCache.containsKey(key)) {
-                multiChunkCache.put(key, metaChunk);
-            }
-        }
-        
-        // Content
-        int contentCount = dis.readInt();
-
-        for (int i = 0; i < contentCount; i++) {
-            FileContent content = new FileContent(this);
-            content.read(dis);
-
-            //System.out.println("read content "+Arrays.toString(content.getChecksum()));
-            ByteArray key = new ByteArray(content.getChecksum());
-            if (!contentCache.containsKey(key)) {
-                contentCache.put(key, content);
-            }
-        }        
-        
-        // Histories
-        int historyCount = dis.readInt();
-
-        for (int i = 0; i < historyCount; i++) {
-            FileHistory fileHistory = new FileHistory();
-            fileHistory.read(dis);
-
-            //System.out.println("read history "+fileHistory.getFileId());
-            if (!historyCache.containsKey(fileHistory.getFileId())) {
-                historyCache.put(fileHistory.getFileId(), fileHistory);
-            }          
-        }                   
-        
-        // Versions
-        int versionCount = dis.readInt();
-        
-        for (int i = 0; i < versionCount; i++) {
-            FileVersion fileVersion = new FileVersion(this);
-            fileVersion.read(dis);
-
-            //System.out.println("read version "+fileVersion.getName());
-            // added by the read-method
-        }
-        
-        dis.close();
-    }
-    
-    public static String toDatabasePath(String filesystemPath) {
+	public static String toDatabasePath(String filesystemPath) {
         return convertPath(filesystemPath, File.separator, Constants.DATABASE_FILE_SEPARATOR);
     }
     
@@ -331,8 +127,8 @@ public class Database {
     }    
     
     public void addChunk(ChunkEntry chunk) {
-        chunkCache.put(new ByteArray(chunk.getChecksum()), chunk);
-        newChunkCache.add(chunk);
+        chunkCache.put(new ByteArray(chunk.getChecksum()), chunk);        
+        versionChunks.get(localDatabaseVersion).add(chunk);        
     }
     
     public Collection<ChunkEntry> getChunks() {
@@ -343,22 +139,18 @@ public class Database {
     
     public void addMultiChunk(MultiChunkEntry multiChunk) {
         multiChunkCache.put(new ByteArray(multiChunk.getChecksum()), multiChunk);                
-        newMultiChunkCache.add(multiChunk);
+        versionMultiChunks.get(localDatabaseVersion).add(multiChunk);        
     }
     
     public Collection<MultiChunkEntry> getMultiChunks() {
         return multiChunkCache.values();
-    }
-
-    public Collection<MultiChunkEntry> getNewMultiChunks() {
-        return newMultiChunkCache;
     }
     
     // History
     
     public void addFileHistory(FileHistory history) {
         historyCache.put(history.getFileId(), history);
-        newHistoryCache.add(history);        
+        versionFileHistories.get(localDatabaseVersion).add(history);
     }
     
     public FileHistory getFileHistory(Long fileId) {
@@ -376,22 +168,7 @@ public class Database {
     
     // Version
     
-    public FileVersion createFileVersion(FileHistory history) {
-        FileVersion newVersion = history.createVersion();
-        FileVersion firstNewVersion = newVersionCache.get(history.getFileId());
-                
-        if (firstNewVersion == null) {
-            newVersionCache.put(history.getFileId(), newVersion);
-        }
-
-        //newHistoryCache.add(history); // history updated!
-                
-        // To file name based cache
-        String relativeFilename = newVersion.getPath()+Constants.DATABASE_FILE_SEPARATOR+newVersion.getName();
-        filenameHistoryCache.put(relativeFilename, history);
-        
-        return newVersion;
-    }
+  
         
     // Content
  
@@ -401,9 +178,35 @@ public class Database {
 
     public void addContent(FileContent content) {
         contentCache.put(new ByteArray(content.getChecksum()), content);
-        newContentCache.add(content);
+        versionContents.get(localDatabaseVersion).add(content);
     }
     
+	public Map<Long, FileVersion> getVersionCache() {
+		return versionCache;
+	}
+
+	public Map<Long, Set<ChunkEntry>> getVersionChunks() {
+		return versionChunks;
+	}
+
+	public Map<Long, Set<MultiChunkEntry>> getVersionMultiChunks() {
+		return versionMultiChunks;
+	}
+
+	public Map<Long, Set<FileContent>> getVersionContents() {
+		return versionContents;
+	}
+
+	public Map<Long, Set<FileHistory>> getVersionFileHistories() {
+		return versionFileHistories;
+	}
+
+	public Map<Long, Set<FileVersion>> getVersionFileVersions() {
+		return versionFileVersions;
+	}    
+    
+	
+	
     public String toString() {
     	StringBuffer sb = new StringBuffer();
     	

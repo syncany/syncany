@@ -51,13 +51,13 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
     private Date updated;
     private Status status;
     
-    private transient Database db;
+    private transient DatabaseOLD db;
     
     public FileVersion() {
         
     }
     
-    public FileVersion(Database db) {
+    public FileVersion(DatabaseOLD db) {
         this.db = db;
     }
     

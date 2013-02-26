@@ -34,15 +34,17 @@ import java.util.Map;
 public class FileContent implements Persistable, Serializable {
     private byte[] checksum;
     private int contentSize;
+    
+    // FIXME This can be done with a TreeMap (relic from JPA)
     private List<ContentChunk> chunks;
     
-    private transient Database db; // TODO this is ugly!
+    private transient DatabaseOLD db; // TODO this is ugly!
     
     public FileContent() {
         this.chunks = new ArrayList<ContentChunk>();
     }
        
-    public FileContent(Database db) {
+    public FileContent(DatabaseOLD db) {
         this();
         this.db = db;
     }        

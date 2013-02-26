@@ -18,7 +18,6 @@
 package org.syncany.db;
 
 import org.syncany.config.Profile;
-import org.syncany.config.Config;
 import org.syncany.util.FileUtil;
 import java.io.File;
 import java.io.Serializable;

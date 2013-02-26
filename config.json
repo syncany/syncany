@@ -1,13 +1,17 @@
 {
-	"localDir"		: "syncanyData/root",
-	"appDir"		: "syncanyData/data/appData",
-	"cacheDir"		: "syncanyData/data/cache",
-	"machineName"	: "MachineName",
-	"connection"	:
+	"machineName":		"MachineName",
+
+	"localDir": 		"syncanyData/localDir",
+	"appDir": 		"syncanyData/appDir",
+	"cacheDir": 		"syncanyData/appDir/cache",
+	"databaseDir":		"syncanyData/appDir/db",
+
+	"connection":
 	{
 		"type"		: "local",
 		"settings"	: {"path" : "syncanyData/repository"}
 	},
+
 	"encryption"	: 
 	{
 		"pass"	: "password"

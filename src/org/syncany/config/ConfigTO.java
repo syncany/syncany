@@ -16,7 +16,7 @@ public class ConfigTO {
 	//Home / Config directory of syncany 
 	private String appDir;
 	//Synched db-versions 
-	private String synchedDatabaseDir;
+	private String databaseDir;
 	//Local cache for chunks/multichunks/dbversions
 	private String cacheDir;
 	//local identifier for user
@@ -24,22 +24,27 @@ public class ConfigTO {
 	private ConnectionSettings connection;
 	private EncryptionSettings encryption;
 
-	public ConfigTO(String localDir, String appDir, String synchedDatabaseDir,
+	public ConfigTO(String localDir, String appDir, String databaseDir,
 			String cacheDir, String machineName, ConnectionSettings connection,
 			EncryptionSettings encryption) {
-		super();
+		
 		this.localDir = localDir;
 		this.appDir = appDir;
-		this.synchedDatabaseDir = synchedDatabaseDir;
+		this.databaseDir = databaseDir;
 		this.cacheDir = cacheDir;
 		this.machineName = machineName;
 		this.connection = connection;
 		this.encryption = encryption;
 	}
 
-	public ConfigTO(File file) throws JsonSyntaxException, IOException {
+	/*public ConfigTO(File file) throws JsonSyntaxException, IOException {
 		load(file);
-	}
+	}*/
+	
+	public static ConfigTO load(File file) throws JsonSyntaxException, IOException {
+		Gson gson = new Gson();		
+		return gson.fromJson(FileUtil.readFileToString(file), ConfigTO.class);
+	}	
 	
 	public String getLocalDir() {
 		return localDir;
@@ -63,11 +68,6 @@ public class ConfigTO {
 
 	public EncryptionSettings getEncryption() {
 		return encryption;
-	}
-
-	public void load(File file) throws JsonSyntaxException, IOException {
-		Gson gson = new Gson();		
-		gson.fromJson(FileUtil.readFileToString(file), ConfigTO.class);
 	}
 	
 	public static class ConnectionSettings {
@@ -101,8 +101,8 @@ public class ConfigTO {
 		}
 	}
 
-	public String getSynchedDatabaseDir() {
-		return synchedDatabaseDir;
+	public String getDatabaseDir() {
+		return databaseDir;
 	}
 
 	

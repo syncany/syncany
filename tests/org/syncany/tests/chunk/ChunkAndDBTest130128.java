@@ -20,7 +20,7 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.Database;
+import org.syncany.experimental.db.DatabaseOLD;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
@@ -32,7 +32,7 @@ public class ChunkAndDBTest130128 {
 
 	@Test
 	public void saveLoadSaveTest() throws IOException {
-		Database db;
+		DatabaseOLD db;
 		
 		System.out.println("save1()");
 		System.out.println("----------------------------");
@@ -47,8 +47,8 @@ public class ChunkAndDBTest130128 {
 		saveLoadSaveTestSave2(db);
 	}
 	
-	public Database saveLoadSaveTestSave1() throws IOException {
-		Database db = new Database();
+	public DatabaseOLD saveLoadSaveTestSave1() throws IOException {
+		DatabaseOLD db = new DatabaseOLD();
 		
 		// Create first file
         ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
@@ -137,8 +137,8 @@ public class ChunkAndDBTest130128 {
         return db;
 	}
 	
-	public Database saveLoadSaveTestLoad1() throws IOException {
-		Database db = new Database();
+	public DatabaseOLD saveLoadSaveTestLoad1() throws IOException {
+		DatabaseOLD db = new DatabaseOLD();
 		
 		// Load database
         File dbFile = new File("/tmp/dbfile");
@@ -149,7 +149,7 @@ public class ChunkAndDBTest130128 {
         return db;
 	}
 	
-	public Database saveLoadSaveTestSave2(Database db) throws IOException {
+	public DatabaseOLD saveLoadSaveTestSave2(DatabaseOLD db) throws IOException {
 		// Create first file
         ChunkEntry chunkC1 = new ChunkEntry(new byte[] { 99,92,93,4,5,7,8,9,0}, 912);
         ChunkEntry chunkC2 = new ChunkEntry(new byte[] { 99,98,97,6,5,4,3,2,1}, 934);
@@ -291,7 +291,7 @@ public class ChunkAndDBTest130128 {
 		// NOW START CHUNKING, AND ADDING EVERYTHING TO THE DB
 		
 		// DB: Create DB and chunk/multichunk entries
-		Database db = new Database();		
+		DatabaseOLD db = new DatabaseOLD();		
 		
 		ChunkEntry chunkEntry = null;
 		MultiChunkEntry multiChunkEntry = null;
@@ -403,7 +403,7 @@ public class ChunkAndDBTest130128 {
 	}
 
 	
-	public static Database load3() throws IOException {
+	public static DatabaseOLD load3() throws IOException {
 		// Create test environment
 		File reconstructDir = new File("/tmp/syncany-db-test-reconstruct");
 		File repoDir = new File("/tmp/syncany-db-test-repo");
@@ -424,7 +424,7 @@ public class ChunkAndDBTest130128 {
 		MultiChunker multiChunker = new CustomMultiChunker(512*1024, 0);
 		
 		// Load database
-		Database db = new Database();
+		DatabaseOLD db = new DatabaseOLD();
 		db.load(localDatabaseFile, false);
 
         System.out.println(db);

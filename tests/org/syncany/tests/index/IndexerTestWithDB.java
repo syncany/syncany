@@ -17,7 +17,7 @@ import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.Database;
+import org.syncany.experimental.db.DatabaseOLD;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
@@ -35,7 +35,7 @@ public class IndexerTestWithDB {
 	 */
 	public static void main(String[] args) throws IOException {
 		final Deduper indexer = new Deduper();
-		final Database db = new Database();
+		final DatabaseOLD db = new DatabaseOLD();
 		final List<File> files = new ArrayList<File>();
 		Chunker chunker = new FixedOffsetChunker(16 * 1024);
 		MultiChunker multiChunker = new CustomMultiChunker(512 * 1024, 0);
