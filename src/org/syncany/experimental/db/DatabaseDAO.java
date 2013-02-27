@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -82,13 +83,28 @@ public class DatabaseDAO {
         dos.write("Syncany".getBytes()); 
         dos.writeByte(DATABASE_FORMAT_VERSION);
         
+        // Amount of versions
+        dos.writeLong(versionTo-versionFrom);
+        
 		for (long i = versionFrom; i <= versionTo; i++) {
+			// Local version
+			// TODO THIS SHOULD BE VERSION-SPECIFIC
+			dos.writeLong(i);
 			
-
-			// TODO write global database version (= vector clock)
-			// TODO write local database version
-
+			// Global Version
+			// TODO THIS SHOULD BE VERSION-SPECIFIC
+			Map<String, Long> globalDatabaseVersion = db.getGlobalDatabaseVersion();
 			
+			for (Map.Entry<String, Long> clientVersionEntry : globalDatabaseVersion.entrySet()) {
+				String clientName = clientVersionEntry.getKey();
+				Long clientVersion = clientVersionEntry.getValue();
+				
+				dos.writeByte(clientName.length());
+				dos.writeBytes(clientName);
+				dos.writeLong(clientVersion);
+			}
+			
+			// Get the version
 			Set<ChunkEntry> newChunkCache = db.getVersionChunks().get(i);
 			Set<MultiChunkEntry> newMultiChunkCache = db.getVersionMultiChunks().get(i);
 			Set<FileContent> newContentCache = db.getVersionContents().get(i);
