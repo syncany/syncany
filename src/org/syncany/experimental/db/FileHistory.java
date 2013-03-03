@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -31,18 +33,13 @@ import java.util.TreeMap;
  *
  * @author pheckel
  */
-public class FileHistory implements Serializable, Persistable {
+public class FileHistory {
     private Long fileId;
-    private int profileId;
-    private String rootId;
-    private List<FileVersion> versions;
-
-    private transient List<FileVersion> newVersions;
+    private TreeMap<Long, FileVersion> versions;
     
     public FileHistory() {
         this.fileId = new Random().nextLong();
-        this.versions = new ArrayList<FileVersion>();
-        this.newVersions = new ArrayList<FileVersion>();
+        this.versions = new TreeMap<Long, FileVersion>();
     }    
 
     public Long getFileId() {
@@ -53,8 +50,12 @@ public class FileHistory implements Serializable, Persistable {
         this.fileId = fileId;
     }
 
-    public List<FileVersion> getVersions() {
-        return versions;
+    public Map<Long, FileVersion> getFileVersions() {
+        return Collections.unmodifiableMap(versions);
+    }
+    
+    public FileVersion getFileVersion(long version) {
+    	return versions.get(version);
     }
     
     public FileVersion getLastVersion() {
@@ -62,26 +63,11 @@ public class FileHistory implements Serializable, Persistable {
             return null;
         }
         
-        return versions.get(versions.size()-1);
-    }
-    
-    public int getProfileId() {
-        return profileId;
-    }
+        return versions.lastEntry().getValue();
+    }   
 
-    public void setProfileId(int profileId) {
-        this.profileId = profileId;
-    }
-
-    public String getRootId() {
-        return rootId;
-    }
-
-    public void setRootId(String rootId) {
-        this.rootId = rootId;
-    }        
-
-    /* package */ FileVersion createVersion() {        
+    @Deprecated
+    public FileVersion createVersion() {        
         FileVersion newVersion;
         
         if (!versions.isEmpty()) {        	
@@ -92,30 +78,17 @@ public class FileHistory implements Serializable, Persistable {
         }
         else {
             newVersion = new FileVersion();
-            newVersion.setHistory(this);
             newVersion.setVersion(1L);
         }
         
         // Add to list
-        versions.add(newVersion);        
-        newVersions.add(newVersion);
+        //versions.add(newVersion);        
+        //newVersions.add(newVersion);
         
         return newVersion;
     }
         
-    /* package */ void addVersion(FileVersion fileVersion) {
-        versions.add(fileVersion);        
+    public void addFileVersion(FileVersion fileVersion) {
+        versions.put(fileVersion.getVersion(), fileVersion);        
     }
-
-
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeLong(getFileId());        
-    }
-
-    @Override
-    public int read(DataInput in) throws IOException {
-        setFileId(in.readLong());
-        return Long.SIZE/8;
-    }    
 }

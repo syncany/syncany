@@ -17,12 +17,12 @@ import org.syncany.config.ConfigTO;
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.DatabaseDAO;
 import org.syncany.experimental.db.Database;
 import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.FileHistory;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
+import org.syncany.experimental.db.dao.DatabaseDAO;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.FileUtil;
@@ -202,7 +202,7 @@ public class Syncany {
 					content.setChecksum(checksum);
 
 					fileVersion.setContent(content);
-					db.addContent(content);
+					db.addFileContent(content);
 				}
 				
 				content = null;		

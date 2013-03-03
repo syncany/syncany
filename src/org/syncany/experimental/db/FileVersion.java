@@ -27,7 +27,7 @@ import java.util.Date;
  *
  * @author pheckel
  */
-public class FileVersion implements Cloneable, Serializable, Persistable {
+public class FileVersion implements Cloneable {
     
     /**
      * <ul>
@@ -41,7 +41,6 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
     public enum Status { NEW, CHANGED, RENAMED, DELETED, MERGED };
         
     private Long id;
-    private FileHistory history;
     private Long version;   
     private Client createdBy;
     private FileContent content;
@@ -49,16 +48,10 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
     private String name;   
     private Date lastModified;
     private Date updated;
-    private Status status;
-    
-    private transient DatabaseOLD db;
+    private Status status;    
     
     public FileVersion() {
         
-    }
-    
-    public FileVersion(DatabaseOLD db) {
-        this.db = db;
     }
     
     public Long getId() {
@@ -83,14 +76,6 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
 
     public void setCreatedBy(Client createdBy) {
         this.createdBy = createdBy;
-    }
-
-    public void setHistory(FileHistory history) {
-        this.history = history;
-    }
-
-    public FileHistory getHistory() {
-        return history;
     }
 
     public Long getVersion() {
@@ -152,7 +137,6 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
             
             clone.setContent(getContent());
             clone.setCreatedBy(getCreatedBy());
-            clone.setHistory(getHistory());
             clone.setLastModified(getLastModified());
             clone.setName(getName());
             clone.setPath(getPath());
@@ -165,58 +149,5 @@ public class FileVersion implements Cloneable, Serializable, Persistable {
         }        
     }
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeLong(getHistory().getFileId());
-        out.writeLong(getVersion());
-        //dos.writeLong(version.getLastModified().getTime());
-
-        if (getContent() == null) {
-            out.writeByte(0x00);
-        }
-        else {
-            out.writeByte(0x01);
-            out.writeByte(getContent().getChecksum().length);
-            out.write(getContent().getChecksum());
-        }
-
-        out.writeShort(getPath().length());
-        out.writeBytes(getPath());
-
-        out.writeShort(getName().length());
-        out.writeBytes(getName());
-    }
-
-    @Override
-    public int read(DataInput in) throws IOException {
-        // History (parent)
-        FileHistory fileHistory = db.getFileHistory(in.readLong());        
-        
-        setHistory(fileHistory);
-        fileHistory.addVersion(this);
-        
-        // Version
-        setVersion(in.readLong());
-        
-        // Content
-        byte hasContent = in.readByte();
-        
-        if ((hasContent & 0xff) == 0x01) {
-            byte[] contentChecksum = new byte[in.readByte()];
-            in.readFully(contentChecksum);
-            
-            setContent(db.getContent(contentChecksum));                        
-        }
-        
-        // Other properties
-        byte[] pathBytes = new byte[in.readShort()];
-        in.readFully(pathBytes);
-        setPath(new String(pathBytes));
-        
-        byte[] nameBytes = new byte[in.readShort()];
-        in.readFully(nameBytes);        
-        setName(new String(nameBytes));
-        
-        return 0;
-    }
+  
 }

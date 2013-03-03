@@ -17,40 +17,26 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.TreeMap;
 
 /**
  *
  * @author pheckel
  */
-public class FileContent implements Persistable, Serializable {
+public class FileContent {
     private byte[] checksum;
     private int contentSize;
     
-    // FIXME This can be done with a TreeMap (relic from JPA)
-    private List<ContentChunk> chunks;
-    
-    private transient DatabaseOLD db; // TODO this is ugly!
+    private TreeMap<Integer, ChunkEntry> chunks;
     
     public FileContent() {
-        this.chunks = new ArrayList<ContentChunk>();
+        this.chunks = new TreeMap<Integer, ChunkEntry>();
     }
        
-    public FileContent(DatabaseOLD db) {
-        this();
-        this.db = db;
-    }        
-
     public void addChunk(ChunkEntry chunk) {
-        chunks.add(new ContentChunk(this, chunk, chunks.size()));        
+        chunks.put(chunks.size(), chunk);        
     }    
 
     public byte[] getChecksum() {
@@ -69,59 +55,8 @@ public class FileContent implements Persistable, Serializable {
         this.contentSize = contentSize;
     }
 
-    public List<ChunkEntry> getChunks() {
-        List<ChunkEntry> realChunks = new LinkedList<ChunkEntry>();
-        
-        for (ContentChunk contentChunk : chunks) {
-            realChunks.add(contentChunk.getChunk());
-        }
-        
-        return realChunks;
+    public Collection<ChunkEntry> getChunks() {
+    	return Collections.unmodifiableCollection(chunks.values());
     }
-
-    @Override
-    public void write(DataOutput out) throws IOException {
-        // Content checksum + size
-        out.writeByte(checksum.length);
-        out.write(checksum);        
-        
-        out.writeInt(contentSize);
-
-        // Chunks (size + local references)
-        out.writeInt(chunks.size());
-
-        for (ContentChunk chunk : chunks) {
-            out.write(chunk.getChunk().getChecksum());                    
-        }
-    }
-
-    @Override
-    public int read(DataInput in) throws IOException {
-        int checksumLen = in.readByte();
-
-        checksum = new byte[checksumLen];
-        in.readFully(checksum, 0, checksumLen);        
-        
-        contentSize = in.readInt();
-        
-        int chunksCount = in.readInt();
-        
-        for (int i = 0; i < chunksCount; i++) {
-            byte[] chunkChecksum = new byte[checksumLen];
-            in.readFully(chunkChecksum);
-            
-            ChunkEntry chunk = db.getChunk(chunkChecksum);
-            
-            if (chunk == null) {
-                throw new IOException("Chunk with checksum "+Arrays.toString(chunkChecksum)+" does not exist.");
-            }
-            
-            addChunk(chunk);
-        }
-        
-        return 1+checksumLen+4+4+chunksCount*checksumLen;        
-    }
-
-    
             
 }

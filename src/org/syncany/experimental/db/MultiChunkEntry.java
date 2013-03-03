@@ -28,25 +28,14 @@ import java.util.List;
  *
  * @author pheckel
  */
-public class MultiChunkEntry implements Persistable {
+public class MultiChunkEntry  {
     private Long id;
     private byte[] checksum;    
-    private int actualSize;
-    private int chunkSize;
     private List<ChunkEntry> chunks;
-    
-    private transient DatabaseOLD db; // TODO this is ugly!
-    
+        
     public MultiChunkEntry() {
         this.chunks = new ArrayList<ChunkEntry>();
-        this.actualSize = 0;
-        this.chunkSize = 0;
     }
-    
-    public MultiChunkEntry(DatabaseOLD db) {
-        this();
-        this.db = db;
-    }    
 
     public Long getId() {
         return id;
@@ -75,66 +64,4 @@ public class MultiChunkEntry implements Persistable {
         return chunks;
     }
 
-    public int getActualSize() {
-        return actualSize;
-    }
-
-    public void setActualSize(int actualSize) {
-        this.actualSize = actualSize;
-    }
-
-    public int getChunkSize() {
-        return chunkSize;
-    }
-
-    public void setChunkSize(int chunkSize) {
-        this.chunkSize = chunkSize;
-    }
-    
-    @Override
-    public void write(DataOutput out) throws IOException {
-        // Content checksum + size
-        out.writeByte(checksum.length);
-        out.write(checksum);        
-        
-        // Chunks (size + local references)
-        out.writeShort(chunks.size());
-
-        for (ChunkEntry chunk : getChunks()) {                    
-            out.write(chunk.getChecksum());                    
-        }        
-    }
-
-    @Override
-    public int read(DataInput in) throws IOException {        
-        int checksumLen = in.readByte();
-        
-        checksum = new byte[checksumLen];
-        in.readFully(checksum, 0, checksumLen);
-        
-        int chunksCount = in.readShort();
-        
-        for (int i = 0; i < chunksCount; i++) {
-            byte[] chunkChecksum = new byte[checksumLen];
-            in.readFully(chunkChecksum);
-            
-            ChunkEntry chunk = db.getChunk(chunkChecksum);
-            
-            if (chunk == null) {
-                throw new IOException("Chunk with checksum "+Arrays.toString(chunkChecksum)+" does not exist.");
-            }
-
-            // Add to list
-            chunks.add(chunk);
-            chunkSize += chunk.getChunksize();
-
-            // Cross-reference
-            chunk.addMetaChunk(this);            
-        }
-        
-        return 1+checksumLen+2+chunksCount*checksumLen;
-    }
-
-
-            
 }

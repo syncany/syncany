@@ -67,7 +67,7 @@ public class ChunkAndDBTest130128 {
         contentA.addChunk(chunkA3);
         contentA.addChunk(chunkA4);
         contentA.setChecksum(new byte[]{5,5,5,4,4,5,5,5,5});              
-        db.addContent(contentA);
+        db.addFileContent(contentA);
         
         FileHistory fileA = new FileHistory();
         
@@ -96,7 +96,7 @@ public class ChunkAndDBTest130128 {
         contentB.addChunk(chunkB1);
         contentB.addChunk(chunkB2);   
         contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
-        db.addContent(contentB);
+        db.addFileContent(contentB);
 
         FileHistory fileB = new FileHistory();
         
@@ -161,7 +161,7 @@ public class ChunkAndDBTest130128 {
         contentC.addChunk(chunkC1);
         contentC.addChunk(chunkC2);
         contentC.setChecksum(new byte[]{95,95,95,4,4,5,5,5,5});              
-        db.addContent(contentC);
+        db.addFileContent(contentC);
         
         FileHistory fileC = new FileHistory();
         
@@ -378,7 +378,7 @@ public class ChunkAndDBTest130128 {
 				}
 				
 				fileVersion.setContent(content);
-				db.addContent(content);
+				db.addFileContent(content);
 			}
 			
 			//fileHistory.addVersion(fileVersion);			

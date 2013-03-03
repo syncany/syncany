@@ -17,10 +17,6 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,27 +24,27 @@ import java.util.List;
  *
  * @author pheckel
  */
-public class ChunkEntry implements Serializable, Persistable {
+public class ChunkEntry {
     private byte[] checksum;      
-    private int chunksize;    
-    private transient List<MultiChunkEntry> metaChunks;
+    private int size;    
+    private transient List<MultiChunkEntry> multiChunks;
     
     public ChunkEntry() {
-        this.metaChunks = new LinkedList<MultiChunkEntry>();
+        this.multiChunks = new LinkedList<MultiChunkEntry>();
     }
     
     public ChunkEntry(byte[] checksum, int size) {
         this();        
         this.checksum = checksum;
-        this.chunksize = size;
+        this.size = size;
     }    
 
-    public void setChunksize(int chunksize) {
-        this.chunksize = chunksize;
+    public void setSize(int chunksize) {
+        this.size = chunksize;
     }
 
-    public int getChunksize() {
-        return chunksize;
+    public int getSize() {
+        return size;
     }   
     
     public byte[] getChecksum() {
@@ -59,34 +55,20 @@ public class ChunkEntry implements Serializable, Persistable {
         this.checksum = checksum;
     }
     
+    @Deprecated
+    // FIXME how to handle cross-references in general
     public void addMetaChunk(MultiChunkEntry metaChunk) {
-        metaChunks.add(metaChunk);
+        multiChunks.add(metaChunk);
     }
     
     public List<MultiChunkEntry> getMultiChunks() {
-        return metaChunks;
+        return multiChunks;
     }
     
     public MultiChunkEntry getMultiChunk() {
-        return (!metaChunks.isEmpty()) ? metaChunks.get(0) : null;
+        return (!multiChunks.isEmpty()) ? multiChunks.get(0) : null;
     }
     
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeByte(checksum.length);
-        out.write(checksum);
-    }
 
-    @Override
-    public int read(DataInput in) throws IOException {
-        int checksumLen = in.readByte();
-        
-        checksum = new byte[checksumLen];
-        in.readFully(checksum, 0, checksumLen);
-        
-        return 1+checksumLen;
-    }
-   
-    
     
 }

@@ -157,7 +157,7 @@ public class IndexerTestWithDB {
 					content.setChecksum(checksum);
 
 					fileVersion.setContent(content);
-					db.addContent(content);
+					db.addFileContent(content);
 				}
 				
 				content = null;		
