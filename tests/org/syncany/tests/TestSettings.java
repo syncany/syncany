@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.syncany.Constants;
 import org.syncany.config.Profile;
-import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.exceptions.EncryptionException;

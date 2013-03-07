@@ -6,26 +6,19 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.db.CloneChunk;
 import org.syncany.exceptions.CacheException;
 import org.syncany.exceptions.InconsistentFileSystemException;
 import org.syncany.exceptions.StorageException;
 import org.syncany.watch.remote.files.RemoteFile;
 
 public class Downloader {
-
 	private static final Logger logger = Logger.getLogger(Downloader.class.getSimpleName());
 	
     private TransferManager transfer;
-    private Profile profile;
 	
-	public Downloader(Profile profile) {
-		this.profile = profile;
-	}
-	
-	public File downloadMetaChunk(String metaChunkFilename, String chunkIdStr) throws CacheException, InconsistentFileSystemException {
+	public File downloadMetaChunk(Profile profile, String metaChunkFilename, String chunkIdStr) throws CacheException, InconsistentFileSystemException {
 		if(profile!=null && transfer==null) {
-			transfer = profile.getRepository().getConnection().createTransferManager();
+			transfer = profile.getConnection().createTransferManager();
 		}
 		
 		// Download metachunk

@@ -25,7 +25,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Logger;
 import org.syncany.Constants;
-import org.syncany.db.CloneFile;
 
 /**
  *

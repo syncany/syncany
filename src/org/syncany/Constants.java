@@ -19,9 +19,6 @@ package org.syncany;
 
 import java.util.regex.Pattern;
 
-import org.syncany.db.CloneFile;
-import org.syncany.db.CloneFileFilter;
-import org.syncany.db.CloneFile.Status;
 
 /**
  *
@@ -85,11 +82,4 @@ public abstract class Constants {
     public static final String DATABASE_FILENAME_CLONECLIENT = "cloneclient.db";
 
     public static final String FILE_IGNORE_PREFIX = ".ignore";
-
-    public static final CloneFileFilter DELETED_MERGED_FILTER = new CloneFileFilter() {
-		@Override
-		public boolean test(CloneFile c) {
-			return (c != null && c.getStatus() != Status.DELETED && c.getStatus() != Status.MERGED);
-		}
-	};
 }

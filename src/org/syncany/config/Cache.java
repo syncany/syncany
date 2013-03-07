@@ -19,7 +19,6 @@ package org.syncany.config;
 
 import org.syncany.Constants;
 import org.syncany.chunk.MultiChunk;
-import org.syncany.db.CloneChunk;
 import org.syncany.exceptions.CacheException;
 
 import java.io.File;
