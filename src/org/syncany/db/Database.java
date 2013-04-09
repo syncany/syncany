@@ -33,7 +33,7 @@ import org.syncany.db.CloneFile.SyncStatus;
 import org.syncany.exceptions.CloneTreeException;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-import org.syncany.watch.remote.FileHistory;
+import org.syncany.watch.remote.FileHistoryPart;
 import org.syncany.watch.remote.FileUpdate;
 
 /**
@@ -117,27 +117,6 @@ public class Database {
 		return cloneFile;
 	}
 	
-	public synchronized List<FileHistory> getFileHistories(){
-		List<FileHistory> histories = new LinkedList<FileHistory>();
-		
-		List<CloneFile> allFiles = cloneFileTree.getAllFiles();
-		for(CloneFile cf : allFiles){
-			FileHistory fh = new FileHistory(Config.getInstance().getMachineName(), cf.getFileId());
-			CloneFile f = cf;
-			while(true){
-				fh.add(FileUpdate.fromCloneFile(f));
-				
-				if(f.getPreviousVersion() != null)
-					f = f.getPreviousVersion();
-				else
-					break;
-			}
-			
-			histories.add(fh);
-		}
-		
-		return histories;
-	}
 
 	public List<CloneFile> getChildren(CloneFile parentFile) {
 		return getChildren(parentFile, false);

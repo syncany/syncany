@@ -18,11 +18,13 @@ import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.Database;
+import org.syncany.experimental.db.DatabaseDAO;
+import org.syncany.experimental.db.DatabaseVersion;
 import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.FileHistory;
+import org.syncany.experimental.db.FileHistoryPart;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
-import org.syncany.experimental.db.dao.DatabaseDAO;
+import org.syncany.experimental.db.VectorClock;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.FileUtil;
@@ -53,12 +55,15 @@ public class Syncany {
 	}
 	
 	public UpstreamStatus up(Profile profile) throws FileNotFoundException, IOException {
-		Database db = loadLocalRepoDB(profile.getAppDir());
+		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
+		Database db = loadLocalRepoDB(localDatabaseFile);
+		
 		List<File> localFiles = listFiles(profile.getLocalDir());
 		long newestLocalDatabaseVersion = index(localFiles, profile.getChunker(), profile.getMultiChunker(), profile.getTransformer(),
-				db, profile.getAppDatabaseDir(), profile.getAppCacheDir());
+				db, profile.getLocalDir(), profile.getAppCacheDir());
 		
-		saveLocalRepoDB(db, 1, newestLocalDatabaseVersion, profile.getAppDatabaseDir());
+		long fromLocalDatabaseVersion = (newestLocalDatabaseVersion-1 >= 1) ? newestLocalDatabaseVersion : 1;		
+		saveLocalRepoDB(db, fromLocalDatabaseVersion, newestLocalDatabaseVersion, localDatabaseFile);
 		
 		
 		
@@ -96,27 +101,38 @@ public class Syncany {
 
 	//FIXME
 	private long index(List<File> localFiles, Chunker chunker, MultiChunker multiChunker, Transformer transformer, 
-			final Database db, final File appDatabaseDir, final File appCacheDir) throws FileNotFoundException, IOException {
+			final Database db, final File localDir, final File appCacheDir) throws FileNotFoundException, IOException {
 		
-		final Deduper indexer = new Deduper();
+		final Deduper deduper = new Deduper();
+		final DatabaseVersion dbv = new DatabaseVersion();
 		
-		indexer.deduplicate(localFiles, chunker, multiChunker, transformer, new DeduperListener() {
-			private FileHistory fileHistory;
+		deduper.deduplicate(localFiles, chunker, multiChunker, transformer, new DeduperListener() {
+			private FileHistoryPart fileHistory;
 			private FileVersion fileVersion;
 			private ChunkEntry chunkEntry;		
 			private MultiChunkEntry multiChunkEntry;	
 			private FileContent content;
-		
+			
+			/*
+			 * Checks if chunk already exists in all database versions (db)
+			 * Afterwards checks if chunk exists in new introduced databaseversion. 
+			 * (non-Javadoc)
+			 * @see org.syncany.chunk.DeduperListener#onChunk(org.syncany.chunk.Chunk)
+			 */
 			@Override
 			public boolean onChunk(Chunk chunk) {
 				System.out.println("CHUNK       "+chunk);
 				chunkEntry = db.getChunk(chunk.getChecksum());
 
 				if (chunkEntry == null) {
-					chunkEntry = new ChunkEntry(chunk.getChecksum(), chunk.getSize());
-					db.addChunk(chunkEntry);
+					chunkEntry = dbv.getChunk(chunk.getChecksum());
 					
-					return true;
+					if (chunkEntry == null) {
+						chunkEntry = new ChunkEntry(chunk.getChecksum(), chunk.getSize());
+						db.addChunk(chunkEntry);
+						
+						return true;	
+					}
 				}
 				
 				return false;
@@ -125,26 +141,35 @@ public class Syncany {
 			@Override
 			public void onFileStart(File file) {
 				System.out.println("FILE OPEN   "+file);
-				// Check if file exists, or create new
+				// Check if file exists in full database stock, or create new
+				// onFileStart is only called once for each file,
+				// thereby new dbv is not aware of incoming file   
 				fileHistory = db.getFileHistory(
-						FileUtil.getRelativePath(appDatabaseDir, file), file.getName());
+						FileUtil.getRelativePath(localDir,
+							file) + Constants.DATABASE_FILE_SEPARATOR + file.getName());
 	
 				if (fileHistory == null) {
-					fileHistory = new FileHistory();
+					fileHistory = new FileHistoryPart();
 				}
 	
 				// Check for versions
 				fileVersion = fileHistory.getLastVersion();
-	
+				FileVersion newFileVersion;
+				
 				if (fileVersion == null) {
-					fileVersion = new FileVersion();
-					fileVersion.setHistory(fileHistory);
+					newFileVersion = new FileVersion();
+					newFileVersion.setVersion(1L);
+				} 
+				else {
+					newFileVersion = (FileVersion) fileVersion.clone();
+					fileVersion.setVersion(fileVersion.getVersion()+1);	
 				}
-	
-				fileVersion.setVersion(1L);
-				fileVersion.setPath(FileUtil.getRelativePath(appDatabaseDir,
+				
+				newFileVersion.setPath(FileUtil.getRelativePath(localDir,
 						file.getParentFile()));
-				fileVersion.setName(file.getName());
+				newFileVersion.setName(file.getName());
+				dbv.addFileHistory(fileHistory);
+				dbv.addFileVersionToHistory(fileHistory.getFileId(),fileVersion);
 			}
 
 
@@ -158,11 +183,8 @@ public class Syncany {
 			@Override
 			public void onCloseMultiChunk(MultiChunk multiChunk) {
 				System.out.println("MULTI CLOSE  ");
-
-				db.addMultiChunk(multiChunkEntry);
+				dbv.addMultiChunk(multiChunkEntry);
 				multiChunkEntry = null;
-				
-				
 			}
 
 			@Override
@@ -202,21 +224,29 @@ public class Syncany {
 					content.setChecksum(checksum);
 
 					fileVersion.setContent(content);
-					db.addFileContent(content);
+					dbv.addFileContent(content);
 				}
 				
 				content = null;		
 				
 
 				// fileHistory.addVersion(fileVersion);
-				db.addFileHistory(fileHistory);
+				dbv.addFileHistory(fileHistory);
 				
 			}
-			
-			
+
+			@Override
+			public void onFinish() {
+				db.addDatabaseVersion(dbv);
+			}
+
+			@Override
+			public void onStart() {
+				// Go fish.
+			}
 		});
-		
-		return db.getLocalDatabaseVersion();
+				
+		return db.getLastLocalDatabaseVersion();
 	}
 
 	private List<File> listFiles(File localDir) {
@@ -229,15 +259,20 @@ public class Syncany {
 		return files;
 	}
 
-	private Database loadLocalRepoDB(File appDir) {
-		//DatabaseDAO dao = new DatabaseDAO();
+	private Database loadLocalRepoDB(File localDatabaseFile) throws IOException {
+		DatabaseDAO dao = new DatabaseDAO();
+		Database db = new Database();
+
+		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
+			dao.load(db, localDatabaseFile);
+		}
 		
-		return new Database();
+		return db;
 	}
 	
-	private void saveLocalRepoDB(Database db, long fromVersion, long toVersion, File appDatabaseDir) throws IOException {
-		File localDatabaseFile = new File(appDatabaseDir+"/local.db");
-		new DatabaseDAO().save(db, fromVersion, toVersion, localDatabaseFile);
+	private void saveLocalRepoDB(Database db, long fromVersion, long toVersion, File localDatabaseFile) throws IOException {
+		DatabaseDAO dao = new DatabaseDAO();
+		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}
 
 	private void init(Profile profile) throws Exception {   

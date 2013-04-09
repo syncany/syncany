@@ -1,10 +1,9 @@
-package org.syncany.experimental.db.dao;
+package org.syncany.experimental.db;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.syncany.experimental.db.ChunkEntry;
 
 public class ChunkDAO {
 	public void writeChunk(ChunkEntry chunk, DataOutputStream dos) throws IOException {		

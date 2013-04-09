@@ -20,6 +20,7 @@ package org.syncany.config;
 import org.syncany.Constants;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.exceptions.CacheException;
+import org.syncany.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,24 +48,16 @@ public class Cache {
     public File getMultiChunkFile(MultiChunk multiChunk) {
         return new File(String.format(CHUNK_FORMAT,
             cacheDir.getAbsoluteFile(),
-            CloneChunk.getFileName(multiChunk.getId(), null))
+            StringUtil.toHex(multiChunk.getId()))
         );
     }
-    
-    public File getMetaChunkFile(byte[] metaChunkId) {
-        return new File(String.format(CHUNK_FORMAT,
-            cacheDir.getAbsoluteFile(),
-            CloneChunk.getFileName(metaChunkId, null))
-        );
-    }       
     
     public File getPlainChunkFile(byte[] checksum) {
         return new File(String.format(PLAIN_CHUNK_FORMAT,
             cacheDir.getAbsoluteFile(),
-            CloneChunk.getFileName(null, checksum))
+            StringUtil.toHex(checksum))
         );            
-    }    
-    
+    }        
 
     public File createTempFile() throws CacheException {
         return createTempFile("temp");

@@ -3,6 +3,9 @@ package org.syncany.chunk;
 import java.io.File;
 
 public interface DeduperListener {
+	public void onFinish();
+	public void onStart();
+	
 	public void onFileStart(File file);
 	public void onFileAddChunk(Chunk chunk);
 	public void onFileEnd(byte[] checksum);

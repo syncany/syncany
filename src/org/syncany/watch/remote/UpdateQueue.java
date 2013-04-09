@@ -49,7 +49,7 @@ public class UpdateQueue {
     
     private Map<CloneClient, UpdateFile> remoteUpdateFiles;
     
-    private Map<Long, FileHistory> generatedResultMap;
+    private Map<Long, FileHistoryPart> generatedResultMap;
     private FileHistoryComparator fileHistoryComparator;
 
     public UpdateQueue() {
@@ -71,19 +71,19 @@ public class UpdateQueue {
      * a single update list. The generated list has correct dependencies (causally).
      * @return
      */
-    public PriorityQueue<FileHistory> getQueue() {
+    public PriorityQueue<FileHistoryPart> getQueue() {
         if (generatedResultMap != null) {
             return createQueue(generatedResultMap);
         }
         
-        Map<Long, FileHistory> resultHistories = new HashMap<Long, FileHistory>();
+        Map<Long, FileHistoryPart> resultHistories = new HashMap<Long, FileHistoryPart>();
         
         // STEP 1: create file histories for all file IDs
         //         - detects file ID conflicts and resolves them
         //         - filename conflicts are resovled in step 2
         
         // Add the local update file first
-        for (FileHistory history : Database.getInstance().getFileHistories()) {
+        for (FileHistoryPart history : Database.getInstance().getFileHistories()) {
             System.err.println("set last local for "+ history.getFileId() + " : " + history.getLastUpdate());
             history.setLastLocalUpdate(history.getLastUpdate());
             resultHistories.put(history.getFileId(), history);
@@ -97,8 +97,8 @@ public class UpdateQueue {
             
             files:
             for (Long fileId : thisUpdateFile.getFileIds()) {
-                FileHistory loopFileHistory = thisUpdateFile.getFileUpdates(fileId); // a file history in the update file of this client
-                FileHistory resultFileHistory = resultHistories.get(fileId); // file history of the same file (if already in list) 
+                FileHistoryPart loopFileHistory = thisUpdateFile.getFileUpdates(fileId); // a file history in the update file of this client
+                FileHistoryPart resultFileHistory = resultHistories.get(fileId); // file history of the same file (if already in list) 
                 
                 // No history for this file ID exists so far; just add it
                 if (resultFileHistory == null) {
@@ -152,7 +152,7 @@ public class UpdateQueue {
                                         if (DEBUG) System.err.println("--> loopHistory is LOCAL -> branching new file");
                                         
                                         // Add a branch as new file
-                                        FileHistory branchedLoopFileHistory = loopFileHistory.branch();
+                                        FileHistoryPart branchedLoopFileHistory = loopFileHistory.branch();
                                         resultHistories.put(branchedLoopFileHistory.getFileId(), branchedLoopFileHistory);                                           
                                         
                                         // Add prune history and link branch history
@@ -175,7 +175,7 @@ public class UpdateQueue {
                                     if (resultFileHistory.getMachineName().equals(Config.getInstance().getMachineName())) {
                                         if (DEBUG) System.err.println("--> resultHistory is LOCAL -> branching new file");
                                         // Add a branch as new file
-                                        FileHistory branchedResultFileHistory = resultFileHistory.branch();
+                                        FileHistoryPart branchedResultFileHistory = resultFileHistory.branch();
                                         resultHistories.put(branchedResultFileHistory.getFileId(), branchedResultFileHistory);                                                                                   
                                         
                                         // Add prune history and link branch history
@@ -240,12 +240,12 @@ public class UpdateQueue {
         // TODO This has O(n^2) runtime; can this be done more efficiently?
         if (DEBUG) System.err.println("Now do filename clash check ...");
         
-        for (FileHistory outerHistory : resultHistories.values()) {
+        for (FileHistoryPart outerHistory : resultHistories.values()) {
             long outerFileId = outerHistory.getFileId();
             FileUpdate outerLastUpdate = outerHistory.getLastUpdate();
             
             inner:
-            for (FileHistory innerHistory : resultHistories.values()) {                
+            for (FileHistoryPart innerHistory : resultHistories.values()) {                
                 long innerFileId = innerHistory.getFileId();
                 FileUpdate innerLastUpdate = innerHistory.getLastUpdate();
              
@@ -341,7 +341,7 @@ public class UpdateQueue {
         /// STEP 3: Remove the branched histories.        
         List<Long> removeIds = new ArrayList<Long>();
         
-        for (FileHistory history : resultHistories.values()) {
+        for (FileHistoryPart history : resultHistories.values()) {
             if (history.getBranchHistory() != null) {
                 removeIds.add(history.getBranchHistory().getFileId());
             }
@@ -355,10 +355,10 @@ public class UpdateQueue {
         return createQueue(generatedResultMap);
     }
     
-    private PriorityQueue<FileHistory> createQueue(Map<Long, FileHistory> resultMap) {
-        PriorityQueue<FileHistory> resultQueue = new PriorityQueue<FileHistory>(11, fileHistoryComparator);
+    private PriorityQueue<FileHistoryPart> createQueue(Map<Long, FileHistoryPart> resultMap) {
+        PriorityQueue<FileHistoryPart> resultQueue = new PriorityQueue<FileHistoryPart>(11, fileHistoryComparator);
         
-        for (FileHistory history : resultMap.values()) {
+        for (FileHistoryPart history : resultMap.values()) {
            resultQueue.add(history); 
         }
         
@@ -694,9 +694,9 @@ public class UpdateQueue {
     
     public void dump() {
         System.err.println("OUTPUT:");
-        FileHistory history;
+        FileHistoryPart history;
         
-        PriorityQueue<FileHistory> q = getQueue();
+        PriorityQueue<FileHistoryPart> q = getQueue();
         
         while (null != (history = q.poll())) {
             System.err.println("");
@@ -751,9 +751,9 @@ public class UpdateQueue {
      * Both:
      *   * Files with branches first. This is because 
      */
-    private class FileHistoryComparator implements Comparator<FileHistory> {
+    private class FileHistoryComparator implements Comparator<FileHistoryPart> {
         @Override
-        public int compare(FileHistory h1, FileHistory h2) {
+        public int compare(FileHistoryPart h1, FileHistoryPart h2) {
             // -1 = h1 to the front; 1 = h1 to the back
             FileUpdate u1 = h1.getLastUpdate();
             FileUpdate u2 = h2.getLastUpdate();

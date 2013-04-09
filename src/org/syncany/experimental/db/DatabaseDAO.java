@@ -1,4 +1,4 @@
-package org.syncany.experimental.db.dao;
+package org.syncany.experimental.db;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,13 +10,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.Database;
-import org.syncany.experimental.db.DatabaseVersion;
-import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.FileHistory;
-import org.syncany.experimental.db.FileVersion;
-import org.syncany.experimental.db.MultiChunkEntry;
 
 /**
  * Len             Description
@@ -113,7 +106,7 @@ public class DatabaseDAO {
 			DatabaseVersion dbv = db.getDatabaseVersion(i);
         				
 			// Global Version
-			Map<String, Long> globalDatabaseVersion = dbv.getGlobalDatabaseVersion();
+			Map<String, Long> globalDatabaseVersion = dbv.getDatabaseVersion();
 			
 			dos.writeInt(globalDatabaseVersion.size());
 			
@@ -130,7 +123,7 @@ public class DatabaseDAO {
 			Collection<ChunkEntry> newChunkCache = dbv.getChunks();
 			Collection<MultiChunkEntry> newMultiChunkCache = dbv.getMultiChunks();
 			Collection<FileContent> newContentCache = dbv.getFileContents();
-			Collection<FileHistory> newHistoryCache = dbv.getFileHistories();
+			Collection<FileHistoryPart> newHistoryCache = dbv.getFileHistories();
 
 			// Chunks
 			l = newChunkCache;
@@ -180,7 +173,7 @@ public class DatabaseDAO {
 				dos.writeInt(l.size()); // count
 
 				for (Object obj : l) {
-					fileHistoryDAO.writeFileHistory((FileHistory) obj, dos);
+					fileHistoryDAO.writeFileHistory((FileHistoryPart) obj, dos);
 				}
 			}
 		}
@@ -223,6 +216,7 @@ public class DatabaseDAO {
         	DatabaseVersion dbv = new DatabaseVersion();
         	
         	// Global database version
+        	VectorClock globalDatabaseVersionClock = new VectorClock(); 
         	int globalDatabaseVersionClientCount = dis.readInt();
         	
         	for (int j=0; j<globalDatabaseVersionClientCount; j++) {
@@ -236,8 +230,10 @@ public class DatabaseDAO {
         		long clientVersion = dis.readLong();
         		
         		// Add
-        		dbv.setGlobalDatabaseVersion(clientName, clientVersion);
+        		globalDatabaseVersionClock.setClock(clientName, clientVersion);
         	}
+        	
+        	dbv.setDatabaseVersion(globalDatabaseVersionClock);
         	
         	// Chunks
             int chunkCount = dis.readInt();
@@ -267,53 +263,15 @@ public class DatabaseDAO {
             int fileHistoryCount = dis.readInt();
 
             for (int j = 0; j < fileHistoryCount; j++) {
-                FileHistory fileHistory = fileHistoryDAO.readFileHistory(db, dis);
+                FileHistoryPart fileHistory = fileHistoryDAO.readFileHistory(db, dis);
                 dbv.addFileHistory(fileHistory);
             }                 
         	
             // Add version to Database object
-            db.setDatabaseVersion(localDatabaseVersion, dbv);
+            db.addDatabaseVersion(dbv);
         }
                        
         dis.close();
     }
     
-	public void merge(DatabaseVersion targetDatabaseVersion, DatabaseVersion sourceDatabaseVersion) {
-		// Chunks
-		for (ChunkEntry sourceChunk : sourceDatabaseVersion.getChunks()) {
-			if (targetDatabaseVersion.getChunk(sourceChunk.getChecksum()) == null) {
-				targetDatabaseVersion.addChunk(sourceChunk);
-			}
-		}
-		
-		// Multichunks
-		for (MultiChunkEntry sourceMultiChunk : sourceDatabaseVersion.getMultiChunks()) {
-			if (targetDatabaseVersion.getMultiChunk(sourceMultiChunk.getChecksum()) == null) {
-				targetDatabaseVersion.addMultiChunk(sourceMultiChunk);
-			}
-		}
-		
-		// Contents
-		for (FileContent sourceFileContent : sourceDatabaseVersion.getFileContents()) {
-			if (targetDatabaseVersion.getFileContent(sourceFileContent.getChecksum()) == null) {
-				targetDatabaseVersion.addFileContent(sourceFileContent);
-			}
-		}		
-		
-		// Histories
-		for (FileHistory sourceFileHistory : sourceDatabaseVersion.getFileHistories()) {
-			FileHistory targetFileHistory = targetDatabaseVersion.getFileHistory(sourceFileHistory.getFileId());
-			
-			if (targetFileHistory == null) {
-				targetDatabaseVersion.addFileHistory(sourceFileHistory);
-			}
-			else {
-				for (FileVersion sourceFileVersion : sourceFileHistory.getFileVersions().values()) {
-					if (targetFileHistory.getFileVersion(sourceFileVersion.getVersion()) == null) {
-						targetFileHistory.addFileVersion(sourceFileVersion);
-					}
-				}
-			}
-		}			
-	}
 }

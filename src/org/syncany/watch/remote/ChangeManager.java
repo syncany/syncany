@@ -44,7 +44,7 @@ import org.syncany.util.FileUtil;
 public class ChangeManager {
     private static final Logger logger = Logger.getLogger(ChangeManager.class.getSimpleName());
 
-    private List<FileHistory> updatedFiles;
+    private List<FileHistoryPart> updatedFiles;
 
     private Database db;
     private Indexer indexer;
@@ -58,12 +58,12 @@ public class ChangeManager {
     	// set tray icon to UPDATING state was here
         
         // Reset
-        updatedFiles = new ArrayList<FileHistory>();
+        updatedFiles = new ArrayList<FileHistoryPart>();
         
-        PriorityQueue<FileHistory> histories = ul.getQueue();
+        PriorityQueue<FileHistoryPart> histories = ul.getQueue();
         ul.dump();
         
-        FileHistory history;
+        FileHistoryPart history;
         
         while (null != (history = histories.poll())) {
         	System.out.println("Processing History..");
@@ -71,7 +71,7 @@ public class ChangeManager {
         }
     }    
         
-    private void processHistory(FileHistory history) throws InconsistentFileSystemException {
+    private void processHistory(FileHistoryPart history) throws InconsistentFileSystemException {
         FileUpdate lastUpdate = history.getLastUpdate();                
         FileUpdate lastLocalUpdate = history.getLastLocalUpdate();     
 
@@ -415,7 +415,7 @@ public class ChangeManager {
         updatedFiles.add(history);   
     }
 
-    private void addToDB(FileHistory history) throws InconsistentFileSystemException {
+    private void addToDB(FileHistoryPart history) throws InconsistentFileSystemException {
         // Prune conflicting stuff from DB
         if (history.getPruneHistory() != null) {
             for (FileUpdate pruneUpdate : history.getPruneHistory().getHistory().values()) {

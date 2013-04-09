@@ -1,13 +1,10 @@
-package org.syncany.experimental.db.dao;
+package org.syncany.experimental.db;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.Database;
-import org.syncany.experimental.db.MultiChunkEntry;
 
 public class MultiChunkDAO {
 	public void writeMultiChunk(MultiChunkEntry multiChunk, DataOutputStream dos) throws IOException {

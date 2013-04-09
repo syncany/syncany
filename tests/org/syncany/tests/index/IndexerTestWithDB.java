@@ -18,7 +18,7 @@ import org.syncany.chunk.Transformer;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.DatabaseOLD;
-import org.syncany.experimental.db.FileHistory;
+import org.syncany.experimental.db.FileHistoryPart;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
 import org.syncany.util.FileLister;
@@ -56,7 +56,7 @@ public class IndexerTestWithDB {
 		}).start();		
 		
 		indexer.deduplicate(files, chunker, multiChunker, transformer, new DeduperListener() {
-			private FileHistory fileHistory;
+			private FileHistoryPart fileHistory;
 			private FileVersion fileVersion;
 			private ChunkEntry chunkEntry;		
 			private MultiChunkEntry multiChunkEntry;	
@@ -85,7 +85,7 @@ public class IndexerTestWithDB {
 						FileUtil.getRelativePath(localRepoDir, file), file.getName());
 	
 				if (fileHistory == null) {
-					fileHistory = new FileHistory();
+					fileHistory = new FileHistoryPart();
 				}
 	
 				// Check for versions

@@ -43,7 +43,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.syncany.config.Repository;
 import org.syncany.db.Database;
-import org.syncany.watch.remote.FileHistory;
+import org.syncany.watch.remote.FileHistoryPart;
 import org.syncany.watch.remote.FileUpdate;
 
 /**
@@ -80,12 +80,12 @@ public class UpdateFile extends DatedClientRemoteFile {
 	/**
 	 * (file, (version, update)) the version-map (tree-map) is sorted ascending!
 	 */
-	private Map<Long, FileHistory> updates;
+	private Map<Long, FileHistoryPart> updates;
 
 	public UpdateFile(Repository repository, String clientName, Date lastUpdate) {
 		super(repository, PREFIX, clientName, lastUpdate);
 
-		this.updates = new HashMap<Long, FileHistory>();
+		this.updates = new HashMap<Long, FileHistoryPart>();
 	}
 
 	public static UpdateFile createUpdateFile(Repository repository,
@@ -336,10 +336,10 @@ public class UpdateFile extends DatedClientRemoteFile {
 	}
 
 	public void add(FileUpdate update) {
-		FileHistory fileVersionUpdates = updates.get(update.getFileId());
+		FileHistoryPart fileVersionUpdates = updates.get(update.getFileId());
 
 		if (fileVersionUpdates == null) {
-			fileVersionUpdates = new FileHistory(getMachineName(),
+			fileVersionUpdates = new FileHistoryPart(getMachineName(),
 					update.getFileId());
 		}
 
@@ -348,12 +348,12 @@ public class UpdateFile extends DatedClientRemoteFile {
 		updates.put(update.getFileId(), fileVersionUpdates);
 	}
 
-	public FileHistory getFileUpdates(long fileId) {
+	public FileHistoryPart getFileUpdates(long fileId) {
 		return updates.get(fileId);
 	}
 
 	public FileUpdate getFileUpdate(long fileId, long version) {
-		FileHistory versionUpdates = updates.get(fileId);
+		FileHistoryPart versionUpdates = updates.get(fileId);
 
 		if (versionUpdates == null) {
 			return null;
@@ -365,15 +365,15 @@ public class UpdateFile extends DatedClientRemoteFile {
 	public List<FileUpdate> getFileUpdates() {
 		List<FileUpdate> ret = new LinkedList<FileUpdate>();
 
-		for (FileHistory h : updates.values()) {
+		for (FileHistoryPart h : updates.values()) {
 			ret.addAll(h.getAllValues());
 		}
 
 		return ret;
 	}
 
-	public List<FileHistory> getHistories() {
-		List<FileHistory> histories = new ArrayList<FileHistory>();
+	public List<FileHistoryPart> getHistories() {
+		List<FileHistoryPart> histories = new ArrayList<FileHistoryPart>();
 
 		for (Long fileId : getFileIds()) {
 			histories.add(updates.get(fileId));

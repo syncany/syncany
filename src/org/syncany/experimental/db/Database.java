@@ -17,55 +17,26 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.File;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Logger;
-
-import org.syncany.Constants;
-import org.syncany.experimental.db.dao.DatabaseDAO;
-import org.syncany.util.ByteArray;
-import org.syncany.util.StringUtil;
 
 public class Database {
-    private long localDatabaseVersion;
-	
-    private DatabaseVersion fullDatabaseVersion;
-    private DatabaseVersion dirtyDatabaseVersion;
+
+	private DatabaseVersion fullDatabaseVersion;
+    private DatabaseVersion newestDatabaseVersion;
     private TreeMap<Long, DatabaseVersion> allDatabaseVersions;
-
-    // Quick access
-    private Map<String, FileHistory> filenameHistoryCache;    
     
+    private Map<String, FileHistoryPart> filenameHistoryCache;
+
     public Database() {
-    	localDatabaseVersion = 0;
-
     	fullDatabaseVersion = new DatabaseVersion();    	
-    	dirtyDatabaseVersion = null;
+    	newestDatabaseVersion = null;
     	allDatabaseVersions = new TreeMap<Long, DatabaseVersion>();
-
-        filenameHistoryCache = new HashMap<String, FileHistory>();
-        
-        incLocalDatabaseVersion();
+    	
+        filenameHistoryCache = new HashMap<String, FileHistoryPart>();
     }   
-    
-    public long getLocalDatabaseVersion() {
-		return localDatabaseVersion;
-	}
-
-	public DatabaseVersion incLocalDatabaseVersion() {
-		localDatabaseVersion++;
-		
-		dirtyDatabaseVersion = new DatabaseVersion();
-		allDatabaseVersions.put(localDatabaseVersion, dirtyDatabaseVersion);
-		
-		return dirtyDatabaseVersion;
-	}
 	
 	public long getFirstLocalDatabaseVersion() {
 		return allDatabaseVersions.firstKey();
@@ -73,6 +44,10 @@ public class Database {
 	
 	public long getLastLocalDatabaseVersion() {
 		return allDatabaseVersions.lastKey();
+	}
+	
+	public DatabaseVersion getLastDatabaseVersion() {
+		return allDatabaseVersions.lastEntry().getValue();
 	}
 
 	public DatabaseVersion getDatabaseVersion(long databaseVersion) {
@@ -83,22 +58,106 @@ public class Database {
 		return Collections.unmodifiableMap(allDatabaseVersions);
 	}
 
-	// FIXME This does not work if fullDatabase is not full
-	@Deprecated
 	public FileContent getContent(byte[] checksum) {
 		return fullDatabaseVersion.getFileContent(checksum);
 	}
 	
-	// FIXME This does not work if fullDatabase is not full
-	@Deprecated
 	public ChunkEntry getChunk(byte[] checksum) {
 		return fullDatabaseVersion.getChunk(checksum);
 	}
 	
-	// FIXME Should we add the new database objects to fullDatabase?
-	@Deprecated
-	public void setDatabaseVersion(long localDatabaseVersion, DatabaseVersion databaseVersion) {
-		allDatabaseVersions.put(localDatabaseVersion, databaseVersion);
-		new DatabaseDAO().merge(fullDatabaseVersion, databaseVersion);
+	public void addChunk(ChunkEntry chunk) {
+		fullDatabaseVersion.addChunk(chunk);
+		newestDatabaseVersion.addChunk(chunk);
+	}
+
+	public FileHistoryPart getFileHistory(String filePath) {
+		return filenameHistoryCache.get(filePath); 
+	}
+	
+	public void addDatabaseVersion(DatabaseVersion dbv) {	
+		// TODO This should figure out the last local version from the vector clock
+		// TODO Should the local version be identified by an empty string in the vector clock?
+		
+		
+		if (allDatabaseVersions.isEmpty()) {
+			// Increment local version
+			long newLocalDatabaseVersion = 1; 
+
+			// Set vector clock of database version
+			VectorClock newDatabaseVersion = new VectorClock();	
+			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
+			
+			dbv.setDatabaseVersion(newDatabaseVersion);
+			
+			// Add to map
+			allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
+		}
+		
+		else {
+			// Increment local version
+			long newLocalDatabaseVersion = allDatabaseVersions.lastKey()+1;
+
+			// Set vector clock of database version
+			VectorClock newDatabaseVersion = getLastDatabaseVersion().getDatabaseVersion().clone();	
+			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
+			
+			dbv.setDatabaseVersion(newDatabaseVersion);
+			
+			// Add to map
+			allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
+		}		
+		
+		// Merge full version / populate cache
+		mergeDBVinDB(fullDatabaseVersion, dbv);
 	} 
+	
+	private void mergeDBVinDB(DatabaseVersion targetDatabaseVersion, DatabaseVersion sourceDatabaseVersion) {
+		// Chunks
+		for (ChunkEntry sourceChunk : sourceDatabaseVersion.getChunks()) {
+			if (targetDatabaseVersion.getChunk(sourceChunk.getChecksum()) == null) {
+				targetDatabaseVersion.addChunk(sourceChunk);
+			}
+		}
+		
+		// Multichunks
+		for (MultiChunkEntry sourceMultiChunk : sourceDatabaseVersion.getMultiChunks()) {
+			if (targetDatabaseVersion.getMultiChunk(sourceMultiChunk.getChecksum()) == null) {
+				targetDatabaseVersion.addMultiChunk(sourceMultiChunk);
+			}
+		}
+		
+		// Contents
+		for (FileContent sourceFileContent : sourceDatabaseVersion.getFileContents()) {
+			if (targetDatabaseVersion.getFileContent(sourceFileContent.getChecksum()) == null) {
+				targetDatabaseVersion.addFileContent(sourceFileContent);
+			}
+		}		
+		
+		// Histories
+		for (FileHistoryPart sourceFileHistory : sourceDatabaseVersion.getFileHistories()) {
+			FileHistoryPart targetFileHistory = targetDatabaseVersion.getFileHistory(sourceFileHistory.getFileId());
+			
+			if (targetFileHistory == null) {
+				targetDatabaseVersion.addFileHistory(sourceFileHistory);
+			}
+			else {
+				for (FileVersion sourceFileVersion : sourceFileHistory.getFileVersions().values()) {
+					if (targetFileHistory.getFileVersion(sourceFileVersion.getVersion()) == null) {
+						targetFileHistory.addFileVersion(sourceFileVersion);
+					}
+				}
+			}
+		}
+		
+		// Cache all file paths + names to fileHistories
+		// TODO file a deleted, file b same path/name => chaos
+		for (FileHistoryPart cacheFileHistory : targetDatabaseVersion.getFileHistories()) {
+			String fileName = cacheFileHistory.getLastVersion().getFullName();
+			
+			filenameHistoryCache.put(fileName, cacheFileHistory);
+		}
+	}
+	
+	
 }

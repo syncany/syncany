@@ -1,13 +1,10 @@
-package org.syncany.experimental.db.dao;
+package org.syncany.experimental.db;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.Database;
-import org.syncany.experimental.db.FileContent;
 
 public class FileContentDAO {
 	public void writeFileContent(FileContent fileContent, DataOutputStream dos) throws IOException {

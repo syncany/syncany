@@ -17,14 +17,7 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -33,11 +26,11 @@ import java.util.TreeMap;
  *
  * @author pheckel
  */
-public class FileHistory {
+public class FileHistoryPart {
     private Long fileId;
     private TreeMap<Long, FileVersion> versions;
     
-    public FileHistory() {
+    public FileHistoryPart() {
         this.fileId = new Random().nextLong();
         this.versions = new TreeMap<Long, FileVersion>();
     }    
@@ -46,7 +39,7 @@ public class FileHistory {
         return fileId;
     }
 
-    public void setFileId(Long fileId) {
+    /* package */ void setFileId(Long fileId) {
         this.fileId = fileId;
     }
 
@@ -66,29 +59,7 @@ public class FileHistory {
         return versions.lastEntry().getValue();
     }   
 
-    @Deprecated
-    public FileVersion createVersion() {        
-        FileVersion newVersion;
-        
-        if (!versions.isEmpty()) {        	
-            FileVersion lastVersion = versions.get(versions.size()-1);        
-            
-            newVersion = (FileVersion) lastVersion.clone();
-            newVersion.setVersion(lastVersion.getVersion()+1);
-        }
-        else {
-            newVersion = new FileVersion();
-            newVersion.setVersion(1L);
-        }
-        
-        // Add to list
-        //versions.add(newVersion);        
-        //newVersions.add(newVersion);
-        
-        return newVersion;
-    }
-        
-    public void addFileVersion(FileVersion fileVersion) {
+    /* package */ void addFileVersion(FileVersion fileVersion) {
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
 }

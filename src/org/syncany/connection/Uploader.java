@@ -49,14 +49,11 @@ public class Uploader {
     private Thread worker;
 
     private Map<String, RemoteFile> fileList;
-    private Date cacheLastUpdate;
-    
-    private UploaderComparator uploaderComparator;
+    private Date cacheLastUpdate;    
     
     public Uploader(Profile profile) {
         this.profile = profile;
-        this.uploaderComparator = new UploaderComparator();
-        this.queue = new PriorityBlockingQueue<UploadRequest>(11, uploaderComparator);
+        this.queue = new PriorityBlockingQueue<UploadRequest>(11);
 
         this.worker = null; // cmp. method 'start'
     }   
@@ -65,7 +62,7 @@ public class Uploader {
         if (worker != null)
             return;
         
-        transfer = profile.getRepository().getConnection().createTransferManager();
+        transfer = profile.getConnection().createTransferManager();
         
         worker = new Thread(new Worker(), "UploaderWorker");        
         worker.start();
@@ -79,9 +76,9 @@ public class Uploader {
         worker = null;
     }
 
-    public synchronized void queue(MultiChunk metaChunk, Set<CloneFile> updatedFiles) {
+    public synchronized void queue(MultiChunk metaChunk) {
     	logger.log(Level.INFO, "QUEUING {0}", metaChunk);
-        queue.put(new UploadRequest(metaChunk, updatedFiles));
+        queue.put(new UploadRequest(metaChunk));
     }
     
     public boolean isEmtpy(){
@@ -90,15 +87,9 @@ public class Uploader {
     
     private class UploadRequest {
         private MultiChunk metaChunk;
-        private Set<CloneFile> updatedFiles;
 
-        public UploadRequest(MultiChunk metaChunk, Set<CloneFile> updatedFiles) {
+        public UploadRequest(MultiChunk metaChunk) {
             this.metaChunk = metaChunk;
-            this.updatedFiles = updatedFiles;
-        }
-
-        public Set<CloneFile> getUpdatedFiles() {
-            return updatedFiles;
         }
 
         public MultiChunk getMetaChunk() {
@@ -120,22 +111,25 @@ public class Uploader {
             return true;
         }
                 
-    }
+	}
 
-    private class Worker implements Runnable {
-        @Override
-        public void run() {
-            try {
-                UploadRequest req;
+	private class Worker implements Runnable {
+		@Override
+		public void run() {
+			try {
+				UploadRequest req;
 
-                while (null != (req = queue.take())) {
-                	System.out.println("Processing Queue.. size: "+queue.size());
-                	
-                	System.out.println("Uploader Thread-ID: "+Thread.currentThread().getId());
-                	
-                    processRequest(req);
-                }
-            }
+				while (null != (req = queue.take())) {
+					System.out.println("Processing Queue.. size: "
+							+ queue.size());
+
+					System.out.println("Uploader Thread-ID: "
+							+ Thread.currentThread().getId());
+
+					processRequest(req);
+				}
+																																				 
+			}
             catch (InterruptedException iex) {
                 iex.printStackTrace();
             }
@@ -172,18 +166,6 @@ public class Uploader {
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, "UploadManager: Chunk {0} already uploaded", remoteChunkFilename);
                 }
-
-                System.out.println("I'm here");
-                
-                for (CloneFile file : req.getUpdatedFiles()) {
-                    // Update DB sync status
-                    if (!file.isFolder()) {
-                        file.setSyncStatus(CloneFile.SyncStatus.UPTODATE);
-                        file.merge();
-
-                        touch(file, SyncStatus.UPTODATE);
-                    }
-                }
                 
                 if (queue.isEmpty()) {
                 	System.out.println("Up-to-date-state");
@@ -195,17 +177,7 @@ public class Uploader {
             System.out.println("Uploader Thread-ID: "+Thread.currentThread().getId());
             
             System.out.println("Setting files to Syncing");
-            
-            // Set files to syncing
-            for (CloneFile file : req.getUpdatedFiles()) {
-                // Update DB sync status
-                if (!file.isFolder()) {
-                    file.setSyncStatus(CloneFile.SyncStatus.SYNCING);
-                    file.merge();
-
-                    touch(file, SyncStatus.SYNCING);
-                }
-            }                            
+                                    
 
             System.out.println("Uploading it..");
             
@@ -234,17 +206,6 @@ public class Uploader {
                 logger.log(Level.INFO, "UploadManager: Chunk {0} uploaded", remoteChunkFilename);
             }
 
-            // Update DB sync status
-            for (CloneFile file : req.getUpdatedFiles()) {
-                // Update DB sync status
-                if (!file.isFolder()) {
-                    file.setSyncStatus(CloneFile.SyncStatus.SYNCING);
-                    file.merge();
-
-                    touch(file, SyncStatus.SYNCING);
-                }
-            }         
-
             if (queue.isEmpty()) {
             	System.out.println("Up-to-date-state");
             	
@@ -253,57 +214,5 @@ public class Uploader {
         }
 
         
-        // TODO delete or replace method
-        private void touch(CloneFile file, SyncStatus syncStatus) {
-            // Touch myself
-            // desktop.touch(file.getFile()) was here
-            
-            // Touch parents
-            Database db = Database.getInstance();
-            
-            CloneFile childCF = file;
-            CloneFile parentCF;
-            
-            while (null != (parentCF = db.getParent(childCF))) {
-                if (parentCF.getSyncStatus() != syncStatus) {
-                    parentCF.setSyncStatus(syncStatus);
-                    parentCF.merge();
-                    
-                    // desktop.touch(parentCF.getFile()) was here
-                }
-
-                childCF = parentCF;
-            }
-        }
-    }
-    
-    /**
-     * Sorts by size for files > 3MB and by name for the others.
-     */
-    private class UploaderComparator implements Comparator<UploadRequest> {
-        @Override
-        public int compare(UploadRequest r1, UploadRequest r2) {
-            return 0; // TODO this is complicated...
-        }        
-
-        /*@Override
-        public int compare(CloneFile c1, CloneFile c2) {
-            // Files bigger than 3 MB go to the back
-            if (c1.getFileSize() > 3*1024*1024 || c2.getFileSize() > 3*1024*1024) {
-                if (c1.getFileSize() == c2.getFileSize()) {
-                    return 0;
-                }
-                else if (c1.getFileSize() < c2.getFileSize()) {
-                    return -1;
-                }
-                else {
-                    return 1;
-                }
-            }
-            
-            // Smaller files by name
-            return c1.getFile().compareTo(c2.getFile());
-        }        */
-    
-    }
+    }    
 }

@@ -1,4 +1,4 @@
-package org.syncany.experimental.db.dao;
+package org.syncany.experimental.db;
 
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -7,13 +7,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.syncany.experimental.db.Database;
-import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.FileHistory;
-import org.syncany.experimental.db.FileVersion;
 
 public class FileHistoryDAO {
-	public void writeFileHistory(FileHistory fileHistory, DataOutputStream dos) throws IOException {
+	public void writeFileHistory(FileHistoryPart fileHistory, DataOutputStream dos) throws IOException {
 		// File history
 		dos.writeLong(fileHistory.getFileId());  
 		
@@ -30,9 +26,9 @@ public class FileHistoryDAO {
 		}		
 	}
 	
-	public FileHistory readFileHistory(Database db, DataInputStream dis) throws IOException {
+	public FileHistoryPart readFileHistory(Database db, DataInputStream dis) throws IOException {
 		// File history
-		FileHistory fileHistory = new FileHistory();
+		FileHistoryPart fileHistory = new FileHistoryPart();
 		fileHistory.setFileId(dis.readLong());
 
 		// And its versions
@@ -64,7 +60,7 @@ public class FileHistoryDAO {
 		out.writeBytes(fileVersion.getName());
 	}
 	
-	private FileVersion readFileVersion(Database db, FileHistory fileHistory, DataInputStream dis) throws IOException {
+	private FileVersion readFileVersion(Database db, FileHistoryPart fileHistory, DataInputStream dis) throws IOException {
 		FileVersion fileVersion = new FileVersion();
 				
 		// Version

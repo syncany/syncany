@@ -11,7 +11,9 @@ public class Deduper {
 	public void deduplicate(List<File> files, Chunker chunker, MultiChunker multiChunker, Transformer transformer, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
-
+		
+		listener.onStart();
+		
 		for (File file : files) {
 			listener.onFileStart(file);
 
@@ -74,6 +76,8 @@ public class Deduper {
 
 			listener.onCloseMultiChunk(multiChunk);
 		}
+		
+		listener.onFinish();
 
 	}
 }

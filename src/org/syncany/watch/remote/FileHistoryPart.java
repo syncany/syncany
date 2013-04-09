@@ -26,16 +26,16 @@ import java.util.TreeMap;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class FileHistory {
+public class FileHistoryPart {
     private String machineName;
     private long fileId;    
     
     private TreeMap<Long, FileUpdate> history;
-    private FileHistory pruneHistory;
-    private FileHistory branchHistory;
+    private FileHistoryPart pruneHistory;
+    private FileHistoryPart branchHistory;
     private FileUpdate lastLocalUpdate;
 
-    public FileHistory(String machineName, long fileId) {
+    public FileHistoryPart(String machineName, long fileId) {
         this.machineName = machineName;
         this.fileId = fileId;
         this.history = new TreeMap<Long, FileUpdate>();
@@ -79,11 +79,11 @@ public class FileHistory {
         return history;
     }
 
-    public FileHistory getPruneHistory() {
+    public FileHistoryPart getPruneHistory() {
         return pruneHistory;
     }
 
-    public void setPruneHistory(FileHistory pruneHistory) {
+    public void setPruneHistory(FileHistoryPart pruneHistory) {
         this.pruneHistory = pruneHistory;
     }
 
@@ -91,11 +91,11 @@ public class FileHistory {
         return lastLocalUpdate;
     }
 
-    public FileHistory getBranchHistory() {
+    public FileHistoryPart getBranchHistory() {
         return branchHistory;
     }
 
-    public void setBranchHistory(FileHistory branchHistory) {
+    public void setBranchHistory(FileHistoryPart branchHistory) {
         this.branchHistory = branchHistory;
     }
 
@@ -113,9 +113,9 @@ public class FileHistory {
         }
     }
 
-    public FileHistory branch() {
+    public FileHistoryPart branch() {
         long newFileId = new Random().nextLong(); // TODO Assumes no clashes; check!!                                        
-        FileHistory branch = new FileHistory(machineName, newFileId);
+        FileHistoryPart branch = new FileHistoryPart(machineName, newFileId);
         
         for (FileUpdate update : getHistory().values()) {
             FileUpdate newUpdate = (FileUpdate) update.clone();
@@ -135,7 +135,7 @@ public class FileHistory {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final FileHistory other = (FileHistory) obj;
+        final FileHistoryPart other = (FileHistoryPart) obj;
         if (this.history != other.history && (this.history == null || !this.history.equals(other.history))) {
             return false;
         }

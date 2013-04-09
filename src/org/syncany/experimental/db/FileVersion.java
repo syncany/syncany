@@ -17,11 +17,9 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.Date;
+
+import org.syncany.Constants;
 
 /**
  *
@@ -40,7 +38,7 @@ public class FileVersion implements Cloneable {
      */
     public enum Status { NEW, CHANGED, RENAMED, DELETED, MERGED };
         
-    private Long id;
+    private Long fileId;
     private Long version;   
     private Client createdBy;
     private FileContent content;
@@ -54,12 +52,12 @@ public class FileVersion implements Cloneable {
         
     }
     
-    public Long getId() {
-        return id;
+    public Long getFileId() {
+        return fileId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setFileId(Long id) {
+        this.fileId = id;
     }
 
     public FileContent getContent() {
@@ -128,6 +126,10 @@ public class FileVersion implements Cloneable {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+    
+    public String getFullName() {
+    	return this.path + Constants.DATABASE_FILE_SEPARATOR + this.name;
     }
     
     @Override

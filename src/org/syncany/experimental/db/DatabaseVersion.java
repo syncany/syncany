@@ -1,44 +1,40 @@
 package org.syncany.experimental.db;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import org.syncany.Constants;
 import org.syncany.util.ByteArray;
 
 public class DatabaseVersion {
-    private static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
     
     // DB Version and versions of other users (= DB basis) 
-    protected Map<String, Long> globalDatabaseVersion; // vector clock, machine name to database version map
+    private VectorClock databaseVersion; // vector clock, machine name to database version map
     
     // Full DB in RAM
-    protected Map<ByteArray, ChunkEntry> chunkCache;
-    protected Map<ByteArray, MultiChunkEntry> multiChunkCache;
-    protected Map<ByteArray, FileContent> contentCache;
-    protected Map<Long, FileHistory> historyCache;
+    private Map<ByteArray, ChunkEntry> chunkCache;
+    private Map<ByteArray, MultiChunkEntry> multiChunkCache;
+    private Map<ByteArray, FileContent> contentCache;
+    private Map<Long, FileHistoryPart> historyCache;
     
     public DatabaseVersion() {
-    	globalDatabaseVersion = new HashMap<String, Long>();
+    	databaseVersion = new VectorClock();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
         contentCache = new HashMap<ByteArray, FileContent>();
-        historyCache = new HashMap<Long, FileHistory>();  
+        historyCache = new HashMap<Long, FileHistoryPart>();  
+        //versionCache = new HashMap<Long, Map<Long, FileVersion>>(); ??  
     }
 
-	public Map<String, Long> getGlobalDatabaseVersion() {
-		return Collections.unmodifiableMap(globalDatabaseVersion);
+	public VectorClock getDatabaseVersion() {
+		return databaseVersion;
 	}
 
-	public void setGlobalDatabaseVersion(String machineName, long machineVersion) {
-		globalDatabaseVersion.put(machineName, machineVersion);
+	public void setDatabaseVersion(VectorClock dbv) {
+		databaseVersion = dbv;
 	}
    
 
@@ -69,7 +65,8 @@ public class DatabaseVersion {
     public Collection<MultiChunkEntry> getMultiChunks() {
         return multiChunkCache.values();
     }
-    
+
+	
 	// Content
 
 	public FileContent getFileContent(byte[] checksum) {
@@ -86,19 +83,19 @@ public class DatabaseVersion {
 	
     // History
     
-    public void addFileHistory(FileHistory history) {
+    public void addFileHistory(FileHistoryPart history) {
         historyCache.put(history.getFileId(), history);
     }
     
-    public FileHistory getFileHistory(Long fileId) {
+    public FileHistoryPart getFileHistory(long fileId) {
         return historyCache.get(fileId);
     }
         
-    public Collection<FileHistory> getFileHistories() {
+    public Collection<FileHistoryPart> getFileHistories() {
         return historyCache.values();
     }  
-  
-        
-	
-
+    
+    public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
+    	historyCache.get(fileHistoryID).addFileVersion(fileVersion);
+    }
 }

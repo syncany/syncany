@@ -21,7 +21,7 @@ import org.syncany.chunk.MultiChunker;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.DatabaseOLD;
-import org.syncany.experimental.db.FileHistory;
+import org.syncany.experimental.db.FileHistoryPart;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
 import org.syncany.util.FileLister;
@@ -69,7 +69,7 @@ public class ChunkAndDBTest130128 {
         contentA.setChecksum(new byte[]{5,5,5,4,4,5,5,5,5});              
         db.addFileContent(contentA);
         
-        FileHistory fileA = new FileHistory();
+        FileHistoryPart fileA = new FileHistoryPart();
         
         FileVersion versionA1 = db.createFileVersion(fileA);
         versionA1.setVersion(1L);
@@ -98,7 +98,7 @@ public class ChunkAndDBTest130128 {
         contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
         db.addFileContent(contentB);
 
-        FileHistory fileB = new FileHistory();
+        FileHistoryPart fileB = new FileHistoryPart();
         
         FileVersion versionB1 = db.createFileVersion(fileB);
         versionB1.setVersion(1L);
@@ -163,7 +163,7 @@ public class ChunkAndDBTest130128 {
         contentC.setChecksum(new byte[]{95,95,95,4,4,5,5,5,5});              
         db.addFileContent(contentC);
         
-        FileHistory fileC = new FileHistory();
+        FileHistoryPart fileC = new FileHistoryPart();
         
         FileVersion versionC1 = db.createFileVersion(fileC);
         versionC1.setVersion(1L);
@@ -305,10 +305,10 @@ public class ChunkAndDBTest130128 {
 		
 		for (File file : randomFiles) {
 			// Check if file exists, or create new 
-			FileHistory fileHistory = db.getFileHistory(FileUtil.getRelativePath(rootDir, file), file.getName());
+			FileHistoryPart fileHistory = db.getFileHistory(FileUtil.getRelativePath(rootDir, file), file.getName());
 			
 			if (fileHistory == null) {
-				fileHistory = new FileHistory();
+				fileHistory = new FileHistoryPart();
 			}
 			
 			// Check for versions
@@ -430,7 +430,7 @@ public class ChunkAndDBTest130128 {
         System.out.println(db);
         
         // Reconstruct all files from repo
-        for (FileHistory fileHistory : db.getFileHistories()) {
+        for (FileHistoryPart fileHistory : db.getFileHistories()) {
         	FileVersion lastFileVersion = fileHistory.getLastVersion();
         	File localFile = new File(reconstructDir+"/"+lastFileVersion.getPath()+"/"+lastFileVersion.getName());
         	
