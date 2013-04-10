@@ -96,7 +96,7 @@ public class DatabaseDAO {
         dos.writeByte(DATABASE_FORMAT_VERSION);
         
         // Amount of versions
-        dos.writeLong(versionTo-versionFrom);
+        dos.writeLong(versionTo-versionFrom+1);
         
         for (long i = versionFrom; i <= versionTo; i++) {
         	// Local version

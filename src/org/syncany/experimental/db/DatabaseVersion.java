@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.util.ByteArray;
+import org.syncany.util.StringUtil;
 
 public class DatabaseVersion {
     private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
@@ -26,7 +27,6 @@ public class DatabaseVersion {
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
         contentCache = new HashMap<ByteArray, FileContent>();
         historyCache = new HashMap<Long, FileHistoryPart>();  
-        //versionCache = new HashMap<Long, Map<Long, FileVersion>>(); ??  
     }
 
 	public VectorClock getDatabaseVersion() {
@@ -97,5 +97,30 @@ public class DatabaseVersion {
     
     public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
     	historyCache.get(fileHistoryID).addFileVersion(fileVersion);
-    }
+    }    
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("<chunks>");
+		for (ChunkEntry chunk : chunkCache.values()) {
+			sb.append("<chunk>");
+			sb.append(StringUtil.toHex(chunk.getChecksum()));
+			sb.append("</chunk>");
+		}
+		sb.append("</chunks>");
+		
+		sb.append("<multichunks>");
+		for (MultiChunkEntry multiChunk : multiChunkCache.values()) {
+			sb.append("<multichunk>");
+			sb.append(StringUtil.toHex(multiChunk.getChecksum()));
+			sb.append("</multichunk>");
+		}
+		sb.append("</multichunks>");
+		
+		sb.append("<rest/>");
+
+		return sb.toString();
+	}    
 }

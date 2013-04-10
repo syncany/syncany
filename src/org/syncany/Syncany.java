@@ -129,7 +129,7 @@ public class Syncany {
 					
 					if (chunkEntry == null) {
 						chunkEntry = new ChunkEntry(chunk.getChecksum(), chunk.getSize());
-						db.addChunk(chunkEntry);
+						dbv.addChunk(chunkEntry);
 						
 						return true;	
 					}
@@ -165,11 +165,14 @@ public class Syncany {
 					fileVersion.setVersion(fileVersion.getVersion()+1);	
 				}
 				
-				newFileVersion.setPath(FileUtil.getRelativePath(localDir,
-						file.getParentFile()));
+				newFileVersion.setPath(FileUtil.getRelativePath(localDir, file.getParentFile()));
 				newFileVersion.setName(file.getName());
+				
 				dbv.addFileHistory(fileHistory);
-				dbv.addFileVersionToHistory(fileHistory.getFileId(),fileVersion);
+				dbv.addFileVersionToHistory(fileHistory.getFileId(),newFileVersion);
+				
+				// Required for other events
+				fileVersion = newFileVersion;
 			}
 
 
@@ -265,6 +268,7 @@ public class Syncany {
 
 		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
 			dao.load(db, localDatabaseFile);
+			System.out.println(db);
 		}
 		
 		return db;

@@ -66,11 +66,6 @@ public class Database {
 		return fullDatabaseVersion.getChunk(checksum);
 	}
 	
-	public void addChunk(ChunkEntry chunk) {
-		fullDatabaseVersion.addChunk(chunk);
-		newestDatabaseVersion.addChunk(chunk);
-	}
-
 	public FileHistoryPart getFileHistory(String filePath) {
 		return filenameHistoryCache.get(filePath); 
 	}
@@ -157,6 +152,21 @@ public class Database {
 			
 			filenameHistoryCache.put(fileName, cacheFileHistory);
 		}
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("<versions>");
+		for (DatabaseVersion dbv : allDatabaseVersions.values()) {
+			sb.append("<version>");
+			sb.append(dbv);
+			sb.append("</version>");
+		}
+		sb.append("</version>");
+		
+		return sb.toString();
 	}
 	
 	
