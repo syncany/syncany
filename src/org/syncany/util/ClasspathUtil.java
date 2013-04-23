@@ -19,8 +19,8 @@ package org.syncany.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.net.JarURLConnection;
+import java.net.URL;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Map;

@@ -9,24 +9,23 @@ import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.Deduper;
+import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
-import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.DatabaseOLD;
 import org.syncany.experimental.db.FileHistoryPart;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
 import org.syncany.util.FileLister;
+import org.syncany.util.FileLister.FileListerListener;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-import org.syncany.util.FileLister.FileListerListener;
 
-public class IndexerTestWithDB {
+public class DeduperWithDBTest {
 
 
 	/**

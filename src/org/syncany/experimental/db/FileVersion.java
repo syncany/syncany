@@ -36,7 +36,7 @@ public class FileVersion implements Cloneable {
      * <li>MERGED: The file history has been merged to a different file.
      * </ul>
      */
-    public enum Status { NEW, CHANGED, RENAMED, DELETED, MERGED };
+    public enum FileStatus { NEW, CHANGED, RENAMED, DELETED, MERGED };
         
     private Long fileId;
     private Long version;   
@@ -46,7 +46,7 @@ public class FileVersion implements Cloneable {
     private String name;   
     private Date lastModified;
     private Date updated;
-    private Status status;    
+    private FileStatus status;    
     
     public FileVersion() {
         
@@ -120,11 +120,11 @@ public class FileVersion implements Cloneable {
         this.updated = updated;
     }
 
-    public Status getStatus() {
+    public FileStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(FileStatus status) {
         this.status = status;
     }
     

@@ -17,20 +17,20 @@
  */
 package org.syncany.connection.plugins.local;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.syncany.connection.RemoteFile;
 import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.exceptions.CacheException;
 import org.syncany.exceptions.LocalFileNotFoundException;
 import org.syncany.exceptions.RemoteFileNotFoundException;
 import org.syncany.exceptions.StorageConnectException;
 import org.syncany.exceptions.StorageException;
-import org.syncany.watch.remote.files.RemoteFile;
 import org.syncany.util.FileUtil;
-
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  *

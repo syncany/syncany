@@ -21,9 +21,9 @@ package org.syncany.util;
  *
  * @author pheckel
  */
-import java.io.ObjectOutput;
-import java.io.ObjectInput;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
 ByteArray wraps java byte arrays (byte[]) to allow

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.syncany.Syncany;
 import org.syncany.tests.FileTestHelper;
 import org.syncany.tests.TestSettings;
 

@@ -17,7 +17,6 @@
  */
 package org.syncany.experimental.db;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Date;
 

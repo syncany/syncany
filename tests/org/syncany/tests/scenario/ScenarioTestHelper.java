@@ -10,10 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.syncany.Syncany;
 import org.syncany.config.ConfigTO;
 import org.syncany.tests.FileTestHelper;
-import org.syncany.util.FileUtil;
 
 import com.google.gson.JsonSyntaxException;
 

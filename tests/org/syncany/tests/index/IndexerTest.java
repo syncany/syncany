@@ -10,13 +10,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.config.Profile;
-import org.syncany.db.CloneFile;
-import org.syncany.db.CloneFile.Status;
-import org.syncany.db.Database;
-import org.syncany.index.Indexer;
-import org.syncany.index.requests.DeleteIndexRequest;
-import org.syncany.index.requests.MoveIndexRequest;
-import org.syncany.index.requests.NewIndexRequest;
+import org.syncany.experimental.db.Database;
+import org.syncany.experimental.db.FileVersion.FileStatus;
 import org.syncany.tests.FileTestHelper;
 import org.syncany.tests.TestSettings;
 
@@ -137,7 +132,7 @@ public class IndexerTest {
 				if(debug) System.out.print("Validating NewIndexRequest for File \""+fileName1+"\".. ");
 				
 				Assert.assertTrue("Generated File \""+fileName1+"\" is not of type file!", !cf.isFolder());
-				Assert.assertTrue("Generated File \""+fileName1+"\" has not Status \"NEW\"!", cf.getStatus().equals(Status.NEW));
+				Assert.assertTrue("Generated File \""+fileName1+"\" has not Status \"NEW\"!", cf.getStatus().equals(FileStatus.NEW));
 				Assert.assertTrue("Generated File \""+fileName1+"\" and last added clone file have different names!", cf.getName()!=null && cf.getName().equals(randomlyCreatedFile.getName()));
 				Assert.assertTrue("Generated File \""+fileName1+"\" has not version 1", cf.getVersion()==1);
 				Assert.assertTrue("Version History of generated file \""+fileName1+"\" is not 1", cf.getVersionHistory()!=null && cf.getVersionHistory().size()==1);
@@ -189,7 +184,7 @@ public class IndexerTest {
 			if(cf.getName().equals(folderName)) {
 				if(debug) System.out.print("Validating NewIndexRequest for Folder \""+folderName+"\".. ");
 				
-				Assert.assertTrue("Generated folder \""+folderName+"\" has not Status \"NEW\"!", cf.getStatus().equals(Status.NEW));
+				Assert.assertTrue("Generated folder \""+folderName+"\" has not Status \"NEW\"!", cf.getStatus().equals(FileStatus.NEW));
 				Assert.assertTrue("Generated folder \""+folderName+"\" is not of type folder!", cf.isFolder());
 				Assert.assertTrue("Generated folder \""+folderName+"\" and last added clone file \""+cf.getName()+"\" have different names!", cf.getName().equals(folder.getName()));
 				Assert.assertTrue("Generated folder \""+folderName+"\" has not version 1", cf.getVersion()==1);
@@ -201,7 +196,7 @@ public class IndexerTest {
 				if(debug) System.out.print("Validating NewIndexRequest for File \""+moveFileName+"\".. ");
 				
 				Assert.assertTrue("Generated File \""+moveFileName+"\" is not of type file!", !cf.isFolder());
-				Assert.assertTrue("Generated File \""+moveFileName+"\" has not Status \"NEW\"!", cf.getStatus().equals(Status.NEW));
+				Assert.assertTrue("Generated File \""+moveFileName+"\" has not Status \"NEW\"!", cf.getStatus().equals(FileStatus.NEW));
 				Assert.assertTrue("Generated File \""+moveFileName+"\" and last added clone file have different names!", cf.getName().equals(moveFile.getName()));
 				Assert.assertTrue("Generated File \""+moveFileName+"\" has not version 1", cf.getVersion()==1);
 				Assert.assertTrue("Version History of generated file \""+moveFileName+"\" is not 1", cf.getVersionHistory()!=null && cf.getVersionHistory().size()==1);
@@ -265,7 +260,7 @@ public class IndexerTest {
 			else if(cf.getVersion()==2) {
 				CloneFile previousCF = cf.getPrevious();
 				Assert.assertTrue("No previous version of the file \""+fileName2+"\" found.", previousCF!=null);
-				Assert.assertTrue("Generated File \""+fileName2+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(Status.RENAMED));
+				Assert.assertTrue("Generated File \""+fileName2+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(FileStatus.RENAMED));
 				Assert.assertTrue("Name of previous File Version \""+fileName1+"\" and clone file \""+previousCF.getName()+"\" have different names!", fileName1.equals(previousCF.getName()));
 				Assert.assertTrue("Generated File \""+fileName2+"\" and last added clone file \""+cf.getName()+"\" have different names!", fileName2.equals(cf.getName()));
 			}
@@ -314,22 +309,22 @@ public class IndexerTest {
 				CloneFile previousCF = cf.getPrevious();
 				Assert.assertTrue("No previous version of the folder \""+folderName2+"\" found.", previousCF!=null);
 				Assert.assertTrue("Version of renamed folder \""+folderName2+"\" is not 2!", cf.getVersion()==2);
-				Assert.assertTrue("Renamed folder \""+folderName2+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(Status.RENAMED));
+				Assert.assertTrue("Renamed folder \""+folderName2+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(FileStatus.RENAMED));
 				Assert.assertTrue("Name of previous folder Version \""+folderName+"\" and clone file \""+previousCF.getName()+"\" have different names!", folderName.equals(previousCF.getName()));
 				Assert.assertTrue("Renamed Folder \""+folderName2+"\" and last added clone file \""+cf.getName()+"\" have different names!", folderName2.equals(cf.getName()));
 				Assert.assertTrue("Renamed folder \""+cf.getName()+"\" is not of type folder!", cf.isFolder());
 			} else if(folderName.equals(cf.getName())) {
 				Assert.assertTrue("Version of origin folder \""+folderName+"\" is not 1!", cf.getVersion()==1);
-				Assert.assertTrue("Folder \""+folderName+"\" has not Status \"NEW\"!", cf.getStatus().equals(Status.NEW));
+				Assert.assertTrue("Folder \""+folderName+"\" has not Status \"NEW\"!", cf.getStatus().equals(FileStatus.NEW));
 				Assert.assertTrue("Created folder \""+cf.getName()+"\" is not of type folder!", cf.isFolder());
 			} else if(moveFileName.equals(cf.getName())) {
 				if(cf.getVersion()==1) {
 					Assert.assertTrue("Version of File \""+moveFileName+"\" in origin folder \""+folderName+"\" is not 1!", cf.getVersion()==1);
-					Assert.assertTrue("File of folder \""+moveFileName+"\" has not Status \"NEW\"!", cf.getStatus().equals(Status.NEW));
+					Assert.assertTrue("File of folder \""+moveFileName+"\" has not Status \"NEW\"!", cf.getStatus().equals(FileStatus.NEW));
 					Assert.assertTrue("Path of File \""+moveFileName+"\" in the origin Folder \""+folderName+"\" is not the name of the clone file folder", cf.getPath()!=null && cf.getPath().equals(folderName));
 				} else if(cf.getVersion()==2) {
 					Assert.assertTrue("Version of File \""+moveFileName+"\" in renamed folder \""+folderName2+"\" is not 2!", cf.getVersion()==2);
-					Assert.assertTrue("File of folder \""+moveFileName+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(Status.RENAMED));
+					Assert.assertTrue("File of folder \""+moveFileName+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(FileStatus.RENAMED));
 					Assert.assertTrue("Path of File \""+moveFileName+"\" in the renamed Folder \""+folderName2+"\" is not the name of the renamed folder \""+folderName2+"\"", cf.getPath()!=null && cf.getPath().equals(folderName2));
 				}
 				
@@ -378,7 +373,7 @@ public class IndexerTest {
 				if(debug) System.out.print("Validating MoveIndexRequest for Move Operation for File \""+moveFileName+"\" for Version 1.. ");
 				
 				Assert.assertTrue("Previous file version is not of type file!", !cf.isFolder());
-				Assert.assertTrue("Generated File \""+moveFileName+"\" has not Status \"NEW\"!", cf.getStatus().equals(Status.NEW));
+				Assert.assertTrue("Generated File \""+moveFileName+"\" has not Status \"NEW\"!", cf.getStatus().equals(FileStatus.NEW));
 				Assert.assertTrue("Path of the previous version of the file \""+moveFileName+"\" is not the name of the subfolder \""+folderName+"\"", cf.getPath()!=null && cf.getPath().equals(folderName));
 				Assert.assertTrue("Name of 1st (previous) version of the CloneFile is equal to \""+moveFileName+"\"", moveFileName.equals(cf.getName()));
 				
@@ -388,7 +383,7 @@ public class IndexerTest {
 				
 				CloneFile previousCF = cf.getPrevious();
 				Assert.assertTrue("No previous version of the file \""+moveFileName+"\" found.", previousCF!=null);
-				Assert.assertTrue("Version 2 of File \""+moveFileName+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(Status.RENAMED));
+				Assert.assertTrue("Version 2 of File \""+moveFileName+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(FileStatus.RENAMED));
 				Assert.assertTrue("Previous version of the file has not version 1", previousCF.getVersion()==1);
 				Assert.assertTrue("Name of 2st (current) version of the CloneFile is equal to \""+moveFileName+"\"", moveFileName.equals(cf.getName()));
 				Assert.assertTrue("Current file version is not of type file!", !cf.isFolder());
@@ -400,7 +395,7 @@ public class IndexerTest {
 				
 				CloneFile previousCF = cf.getPrevious();
 				Assert.assertTrue("No previous version of the file \""+moveFileName+"\" found.", previousCF!=null);
-				Assert.assertTrue("Version 2 of File \""+moveFileName+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(Status.RENAMED));
+				Assert.assertTrue("Version 2 of File \""+moveFileName+"\" has not Status \"RENAMED\"!", cf.getStatus().equals(FileStatus.RENAMED));
 				Assert.assertTrue("Previous version of the file has not version 2", previousCF.getVersion()==2);
 				Assert.assertTrue("Name of 2st (current) version of the CloneFile is equal to \""+moveFileName+"\"", moveFileName.equals(cf.getName()));
 				Assert.assertTrue("Current file version is not of type file!", !cf.isFolder());
@@ -452,7 +447,7 @@ public class IndexerTest {
 				Assert.assertTrue("Deleted File \""+fileName2+"\" is not of type file!", !cf.isFolder());
 				Assert.assertTrue("Deleted File \""+fileName2+"\" and last added clone file have different names!", cf.getName().equals(toFileRename.getName()));
 				Assert.assertTrue("Deleted File \""+fileName2+"\" has no previous versions", cf.getPrevious()!=null);
-				Assert.assertTrue("Deleted File \""+fileName2+"\" has not Status deleted in last version", cf.getStatus().equals(Status.DELETED));
+				Assert.assertTrue("Deleted File \""+fileName2+"\" has not Status deleted in last version", cf.getStatus().equals(FileStatus.DELETED));
 				Assert.assertTrue("Deleted File \""+fileName2+"\" is not the last version of this File", cf.getNext()==null);
 				Assert.assertTrue("Version History of deleted file \""+fileName2+"\" is not 3", cf.getVersionHistory()!=null && cf.getVersionHistory().size()==3);
 				Assert.assertTrue("Path of deleted File \""+fileName2+"\" is not empty and hence not lying in the root", cf.getPath()==null || cf.getPath().equals(""));
@@ -504,13 +499,13 @@ public class IndexerTest {
 					Assert.assertTrue("Deleted Folder \""+folderName2+"\" is not of type folder!", cf.isFolder());
 					Assert.assertTrue("Deleted Folder \""+folderName2+"\" and current clone file have different names!", cf.getName().equals(toFolder.getName()));
 					Assert.assertTrue("Deleted Folder \""+folderName2+"\" has no previous versions", cf.getPrevious()!=null);
-					Assert.assertTrue("Deleted Folder \""+folderName2+"\" has not Status deleted in last version", cf.getStatus().equals(Status.DELETED));
+					Assert.assertTrue("Deleted Folder \""+folderName2+"\" has not Status deleted in last version", cf.getStatus().equals(FileStatus.DELETED));
 					Assert.assertTrue("Deleted Folder \""+folderName2+"\" is not the last version of this Folder", cf.getNext()==null);
 					Assert.assertTrue("Version History of deleted folder \""+folderName2+"\" is not 3", cf.getVersionHistory()!=null && cf.getVersionHistory().size()==3);
 					Assert.assertTrue("Path of deleted Folder \""+folderName2+"\" is not empty and hence not lying in the root", cf.getPath()==null || cf.getPath().equals(""));
 				} else if(cf.getVersion()==2) {
 					Assert.assertTrue("Folder in Version 2: \""+folderName2+"\" is not of type folder!", cf.isFolder());
-					Assert.assertTrue("Folder in Version 2: \""+folderName2+"\" has not Status \"Renamed\"!", cf.getStatus().equals(Status.RENAMED));
+					Assert.assertTrue("Folder in Version 2: \""+folderName2+"\" has not Status \"Renamed\"!", cf.getStatus().equals(FileStatus.RENAMED));
 					Assert.assertTrue("Folder in Version 2: Path of Folder \""+folderName2+"\" is not empty and hence not lying in the root", cf.getPath()==null || cf.getPath().equals(""));
 				}
 			} 

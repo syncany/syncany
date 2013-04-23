@@ -7,11 +7,7 @@ import org.syncany.tests.chunk.ChunkAndDBTest130128;
 import org.syncany.tests.chunk.ChunkerTest;
 import org.syncany.tests.chunk.SimpleChunkAndMultiChunkTest;
 import org.syncany.tests.config.EncryptionTest;
-import org.syncany.tests.connection.UploadTest;
-import org.syncany.tests.db.ChunkCacheFileTest;
-import org.syncany.tests.db.CloneFileTreeTest;
-import org.syncany.tests.db.ReadDBTest;
-import org.syncany.tests.index.IndexerTest;
+
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -19,9 +15,6 @@ import org.syncany.tests.index.IndexerTest;
 	ChunkerTest.class,
 	EncryptionTest.class,
 	//UploadTest.class,
-	ChunkCacheFileTest.class,
-	CloneFileTreeTest.class,
-	ReadDBTest.class,
 	//IndexerTest.class,
 	SimpleChunkAndMultiChunkTest.class,
 	ChunkAndDBTest130128.class

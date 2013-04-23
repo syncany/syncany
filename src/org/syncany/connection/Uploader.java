@@ -18,19 +18,17 @@
 package org.syncany.connection;
 
 import java.io.File;
-import java.util.Comparator;
 import java.util.Date;
-import org.syncany.watch.remote.files.RemoteFile;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.config.Profile;
-import org.syncany.connection.plugins.TransferManager;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.syncany.db.Database;
+
+import org.syncany.chunk.MultiChunk;
+import org.syncany.config.Profile;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.exceptions.StorageException;
+import org.syncany.util.StringUtil;
 
 /**
  * Represents the remote storage.
@@ -157,9 +155,11 @@ public class Uploader {
             
             System.out.println("Going on");
             
-            MultiChunk metaChunk = req.getMetaChunk();            
-            File localMetaChunkFile = Profile.getInstance().getCache().getMultiChunkFile(metaChunk);
-            String remoteChunkFilename = CloneChunk.getFileName(null, metaChunk.getId());
+            MultiChunk metaChunk = req.getMetaChunk();
+            //FIXME
+            File localMetaChunkFile = null;//Profile.getInstance().getCache().getMultiChunkFile(metaChunk);
+            //FIXME
+            String remoteChunkFilename = "multichunk-" + StringUtil.toHex(metaChunk.getId());
                        
             // Chunk has been uploaded before; Skip upload
             if (fileList.containsKey(remoteChunkFilename)) {

@@ -10,12 +10,11 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 
-
-import org.syncany.config.Encryption;
-import org.syncany.util.StringUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.syncany.config.Encryption;
+import org.syncany.util.StringUtil;
 
 
 public class EncryptionTest {

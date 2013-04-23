@@ -73,35 +73,31 @@ public class Database {
 	public void addDatabaseVersion(DatabaseVersion dbv) {	
 		// TODO This should figure out the last local version from the vector clock
 		// TODO Should the local version be identified by an empty string in the vector clock?
-		
-		
+		long newLocalDatabaseVersion;
+		VectorClock newDatabaseVersion = null;	
+
 		if (allDatabaseVersions.isEmpty()) {
 			// Increment local version
-			long newLocalDatabaseVersion = 1; 
-
+			newLocalDatabaseVersion = 1; 
+			
+			newDatabaseVersion = new VectorClock();
 			// Set vector clock of database version
-			VectorClock newDatabaseVersion = new VectorClock();	
 			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
-			
-			dbv.setDatabaseVersion(newDatabaseVersion);
-			
-			// Add to map
-			allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
 		}
 		
 		else {
 			// Increment local version
-			long newLocalDatabaseVersion = allDatabaseVersions.lastKey()+1;
+			newLocalDatabaseVersion = allDatabaseVersions.lastKey()+1;
 
 			// Set vector clock of database version
-			VectorClock newDatabaseVersion = getLastDatabaseVersion().getDatabaseVersion().clone();	
+			newDatabaseVersion = getLastDatabaseVersion().getDatabaseVersion().clone();	
 			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
-			
-			dbv.setDatabaseVersion(newDatabaseVersion);
-			
-			// Add to map
-			allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
 		}		
+		
+		dbv.setDatabaseVersion(newDatabaseVersion);
+		
+		// Add to map
+		allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
 		
 		// Merge full version / populate cache
 		mergeDBVinDB(fullDatabaseVersion, dbv);

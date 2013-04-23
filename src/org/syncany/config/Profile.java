@@ -18,9 +18,7 @@
 package org.syncany.config;
 
 import java.io.File;
-import java.io.IOException;
 
-import org.syncany.Constants;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
@@ -30,9 +28,6 @@ import org.syncany.chunk.Transformer;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.exceptions.EncryptionException;
-
-import com.google.gson.JsonSyntaxException;
 
 /**
  * 

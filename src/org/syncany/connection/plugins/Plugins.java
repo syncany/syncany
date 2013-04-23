@@ -17,14 +17,15 @@
  */
 package org.syncany.connection.plugins;
 
-import org.syncany.Constants;
-import org.syncany.util.ClasspathUtil;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+
+import org.syncany.Constants;
+import org.syncany.util.ClasspathUtil;
 import org.syncany.util.StringUtil;
 
 /**

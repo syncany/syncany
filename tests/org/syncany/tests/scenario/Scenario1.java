@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.syncany.Syncany;
 import org.syncany.config.Profile;
 import org.syncany.tests.FileTestHelper;
 import org.syncany.tests.TestSettings;

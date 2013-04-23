@@ -2,10 +2,8 @@ package org.syncany.tests.connection;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
-
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -14,11 +12,10 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.db.CloneFile;
 import org.syncany.tests.FileTestHelper;
 import org.syncany.tests.TestSettings;
 
-public class UploadTest {
+public class LocalUploadTest {
 	
 	
 	private static final int fileSize = 16*1024*2;

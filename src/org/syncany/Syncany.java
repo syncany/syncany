@@ -24,7 +24,6 @@ import org.syncany.experimental.db.FileContent;
 import org.syncany.experimental.db.FileHistoryPart;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
-import org.syncany.experimental.db.VectorClock;
 import org.syncany.util.FileLister;
 import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.FileUtil;

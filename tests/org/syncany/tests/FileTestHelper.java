@@ -1,28 +1,14 @@
 package org.syncany.tests;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Random;
-
-import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
-
-import org.syncany.chunk.Chunk;
-import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CustomMultiChunk;
-import org.syncany.chunk.FixedOffsetChunker;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.config.Profile;
-import org.syncany.exceptions.EncryptionException;
 
 /**
  * 

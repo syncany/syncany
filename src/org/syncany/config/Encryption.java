@@ -22,8 +22,9 @@ package org.syncany.config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 

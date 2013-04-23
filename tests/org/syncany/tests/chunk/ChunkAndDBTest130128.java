@@ -1,15 +1,13 @@
 package org.syncany.tests.chunk;
 
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
 
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
@@ -20,11 +18,9 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.experimental.db.ChunkEntry;
 import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.DatabaseOLD;
 import org.syncany.experimental.db.FileHistoryPart;
 import org.syncany.experimental.db.FileVersion;
 import org.syncany.experimental.db.MultiChunkEntry;
-import org.syncany.util.FileLister;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 

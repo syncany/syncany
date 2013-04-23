@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.syncany.Constants;
+import org.syncany.config.ConfigTO;
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
@@ -39,7 +40,7 @@ public class TestSettings {
 	// ChunkSize
 	private int chunkSize = Constants.DEFAULT_CHUNK_SIZE;
 	
-	private Config settings;
+	private ConfigTO settings;
 	
 	private TestSettings() {
 		
@@ -119,7 +120,7 @@ public class TestSettings {
 	
 	public boolean createCommunicationControlerInstance(Profile profile) {
 		
-    	profile.getRepository().getEncryption().setPassword("password");
+    	profile.getEncryption().setPassword("password");
     	try {
 			profile.getRepository().getEncryption().setSalt("SALT");
 		} catch (EncryptionException e) {

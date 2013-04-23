@@ -17,13 +17,14 @@
  */
 package org.syncany.connection.plugins.local;
 
+import java.io.File;
+import java.util.Map;
+
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.util.FileUtil;
-import java.io.File;
-import java.util.Map;
 
 /**
  *

@@ -1,29 +1,28 @@
 package org.syncany.connection;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.exceptions.CacheException;
-import org.syncany.exceptions.InconsistentFileSystemException;
 import org.syncany.exceptions.StorageException;
-import org.syncany.watch.remote.files.RemoteFile;
 
 public class Downloader {
 	private static final Logger logger = Logger.getLogger(Downloader.class.getSimpleName());
 	
     private TransferManager transfer;
 	
-	public File downloadMetaChunk(Profile profile, String metaChunkFilename, String chunkIdStr) throws CacheException, InconsistentFileSystemException {
+	public File downloadMetaChunk(Profile profile, String metaChunkFilename, String chunkIdStr) throws CacheException, IOException {
 		if(profile!=null && transfer==null) {
 			transfer = profile.getConnection().createTransferManager();
 		}
 		
 		// Download metachunk
 //		File encryptedMetaChunkFile = Profile.getInstance().getCache().createTempFile("metachunk-"+ CloneChunk.getMetaIdStr(chunkIdStr));
-		File encryptedMetaChunkFile = profile.getCache().createTempFile("enc-chunk-"+ CloneChunk.getMetaIdStr(chunkIdStr));
+		File encryptedMetaChunkFile = profile.getCache().createTempFile("enc-multichunk-"+ metaChunkFilename);
 		encryptedMetaChunkFile.deleteOnExit();
 		
 		try {
@@ -33,7 +32,7 @@ public class Downloader {
 				logger.log(Level.WARNING, "  ERR: Metachunk "+ metaChunkFilename + " not found", e);
 			}
 
-			throw new InconsistentFileSystemException(e);
+			throw new IOException(e);
 		}
 		
 		return encryptedMetaChunkFile;

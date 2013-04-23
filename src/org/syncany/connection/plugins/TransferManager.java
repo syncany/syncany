@@ -17,13 +17,14 @@
  */
 package org.syncany.connection.plugins;
 
+import java.io.File;
+import java.util.Map;
+
+import org.syncany.connection.RemoteFile;
 import org.syncany.exceptions.LocalFileNotFoundException;
 import org.syncany.exceptions.RemoteFileNotFoundException;
 import org.syncany.exceptions.StorageConnectException;
 import org.syncany.exceptions.StorageException;
-import org.syncany.watch.remote.files.RemoteFile;
-import java.io.File;
-import java.util.Map;
 
 /**
  * The transfer manager synchronously connects to the remote storage. It is
