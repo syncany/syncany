@@ -16,11 +16,11 @@ import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
-import org.syncany.experimental.db.ChunkEntry;
-import org.syncany.experimental.db.FileContent;
-import org.syncany.experimental.db.FileHistoryPart;
-import org.syncany.experimental.db.FileVersion;
-import org.syncany.experimental.db.MultiChunkEntry;
+import org.syncany.db.ChunkEntry;
+import org.syncany.db.FileContent;
+import org.syncany.db.FileHistoryPart;
+import org.syncany.db.FileVersion;
+import org.syncany.db.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 

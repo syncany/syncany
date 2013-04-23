@@ -1,4 +1,4 @@
-package org.syncany.experimental.db;
+package org.syncany.db;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

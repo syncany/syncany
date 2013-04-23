@@ -15,28 +15,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.experimental.db;
+package org.syncany.db;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author pheckel
  */
-public class FileContent {
-    private byte[] checksum;
-    private int contentSize;
-    
-    private TreeMap<Integer, ChunkEntry> chunks;
-    
-    public FileContent() {
-        this.chunks = new TreeMap<Integer, ChunkEntry>();
+public class MultiChunkEntry  {
+    private Long id;
+    private byte[] checksum;    
+    private List<ChunkEntry> chunks;
+        
+    public MultiChunkEntry() {
+        this.chunks = new ArrayList<ChunkEntry>();
     }
-       
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
     public void addChunk(ChunkEntry chunk) {
-        chunks.put(chunks.size(), chunk);        
+        chunks.add(chunk);
+        
+        // Cross-reference
+        chunk.addMetaChunk(this);
     }    
 
     public byte[] getChecksum() {
@@ -47,16 +56,8 @@ public class FileContent {
         this.checksum = checksum;
     }
 
-    public int getContentSize() {
-        return contentSize;
+    public List<ChunkEntry> getChunks() {
+        return chunks;
     }
 
-    public void setContentSize(int contentSize) {
-        this.contentSize = contentSize;
-    }
-
-    public Collection<ChunkEntry> getChunks() {
-    	return Collections.unmodifiableCollection(chunks.values());
-    }
-            
 }

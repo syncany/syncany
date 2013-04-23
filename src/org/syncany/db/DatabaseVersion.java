@@ -1,4 +1,4 @@
-package org.syncany.experimental.db;
+package org.syncany.db;
 
 import java.util.Collection;
 import java.util.HashMap;

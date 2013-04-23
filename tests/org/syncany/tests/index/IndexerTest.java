@@ -10,8 +10,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.config.Profile;
-import org.syncany.experimental.db.Database;
-import org.syncany.experimental.db.FileVersion.FileStatus;
+import org.syncany.db.Database;
+import org.syncany.db.FileVersion.FileStatus;
 import org.syncany.tests.FileTestHelper;
 import org.syncany.tests.TestSettings;
 

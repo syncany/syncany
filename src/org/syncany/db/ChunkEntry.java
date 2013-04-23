@@ -15,39 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.experimental.db;
+package org.syncany.db;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  *
  * @author pheckel
  */
-public class MultiChunkEntry  {
-    private Long id;
-    private byte[] checksum;    
-    private List<ChunkEntry> chunks;
-        
-    public MultiChunkEntry() {
-        this.chunks = new ArrayList<ChunkEntry>();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+public class ChunkEntry {
+    private byte[] checksum;      
+    private int size;    
+    private transient List<MultiChunkEntry> multiChunks;
+    
+    public ChunkEntry() {
+        this.multiChunks = new LinkedList<MultiChunkEntry>();
     }
     
-    public void addChunk(ChunkEntry chunk) {
-        chunks.add(chunk);
-        
-        // Cross-reference
-        chunk.addMetaChunk(this);
+    public ChunkEntry(byte[] checksum, int size) {
+        this();        
+        this.checksum = checksum;
+        this.size = size;
     }    
 
+    public void setSize(int chunksize) {
+        this.size = chunksize;
+    }
+
+    public int getSize() {
+        return size;
+    }   
+    
     public byte[] getChecksum() {
         return checksum;
     }
@@ -55,9 +54,21 @@ public class MultiChunkEntry  {
     public void setChecksum(byte[] checksum) {
         this.checksum = checksum;
     }
-
-    public List<ChunkEntry> getChunks() {
-        return chunks;
+    
+    @Deprecated
+    // FIXME how to handle cross-references in general
+    public void addMetaChunk(MultiChunkEntry metaChunk) {
+        multiChunks.add(metaChunk);
     }
+    
+    public List<MultiChunkEntry> getMultiChunks() {
+        return multiChunks;
+    }
+    
+    public MultiChunkEntry getMultiChunk() {
+        return (!multiChunks.isEmpty()) ? multiChunks.get(0) : null;
+    }
+    
 
+    
 }
