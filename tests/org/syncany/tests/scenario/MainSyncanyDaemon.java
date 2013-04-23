@@ -4,21 +4,21 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.syncany.tests.FileTestHelper;
-import org.syncany.tests.TestSettings;
+import org.syncany.tests.TestUtil;
+import org.syncany.tests.TestEnvironment;
 
 public class MainSyncanyDaemon {
 	public MainSyncanyDaemon() {}
 
 	public static boolean exit = false;
-	private static TestSettings settings = TestSettings.getInstance();
+	private static TestEnvironment settings = TestEnvironment.getInstance();
 	
 	@Test
 	public void initScenarioTest() throws InterruptedException, SecurityException, IOException {
 		String configPath = settings.getConfigPath();
 		String loggingFile = settings.getLoggingPath()+"mainDaemon.log";
 		
-		FileTestHelper.deleteFile(new File(loggingFile));
+		TestUtil.deleteFile(new File(loggingFile));
 		
 		// LOGGING
 		ScenarioTestHelper.setupLogging(loggingFile);

@@ -8,13 +8,13 @@ import java.util.logging.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Profile;
-import org.syncany.tests.FileTestHelper;
-import org.syncany.tests.TestSettings;
+import org.syncany.tests.TestUtil;
+import org.syncany.tests.TestEnvironment;
 
 public class Scenario1 {
 
 	private File rootFolder = null;
-	private TestSettings settings = TestSettings.getInstance();
+	private TestEnvironment settings = TestEnvironment.getInstance();
 	private Logger logger;
 	
 	@Before
@@ -23,7 +23,7 @@ public class Scenario1 {
 		String loggingFile = settings.getLoggingPath()+"scenario1.log";
 		
 		
-		FileTestHelper.deleteFile(new File(loggingFile));
+		TestUtil.deleteFile(new File(loggingFile));
 		
 		logger = ScenarioTestHelper.setupLogging(loggingFile);
 		
@@ -44,16 +44,16 @@ public class Scenario1 {
 
 	@Test
 	public void test() throws InterruptedException, IOException {
-		FileTestHelper.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 1);
+		TestUtil.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 1);
 		Thread.sleep(5000);
 
-		FileTestHelper.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 3);
+		TestUtil.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 3);
 		Thread.sleep(5000);
 
-		FileTestHelper.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 3);
+		TestUtil.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 3);
 		Thread.sleep(5000);
 
-		FileTestHelper.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 10);
+		TestUtil.generateRandomBinaryFilesIn(rootFolder, 1024 * 1024, 10);
 
 		// waiting for uploading all chunks
 		while(!Profile.getInstance().getUploader().isEmtpy()){

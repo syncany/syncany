@@ -1,4 +1,4 @@
-package org.syncany.tests.index;
+package org.syncany.tests.chunk;
 
 import java.io.File;
 import java.io.IOException;

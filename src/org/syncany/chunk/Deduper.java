@@ -7,8 +7,18 @@ import java.util.Enumeration;
 import java.util.List;
 
 
-public class Deduper {
-	public void deduplicate(List<File> files, Chunker chunker, MultiChunker multiChunker, Transformer transformer, DeduperListener listener) throws IOException {
+public class Deduper {	
+	private Chunker chunker;
+	private MultiChunker multiChunker;
+	private Transformer transformer;
+
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformerChain) {		
+		this.chunker = chunker;
+		this.multiChunker = multiChunker;
+		this.transformer = transformerChain;
+	}
+	
+	public void deduplicate(List<File> files, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		
@@ -78,6 +88,10 @@ public class Deduper {
 		}
 		
 		listener.onFinish();
-
+	}
+	
+	// TODO
+	public void deduplicateNOTIMPLEMENTED(File file, DeduperListener listener) {
+		throw new RuntimeException("Not yet implemented");
 	}
 }

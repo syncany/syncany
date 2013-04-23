@@ -48,8 +48,7 @@ public class Profile {
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
-    
-    
+        
 	public Profile(ConfigTO configTO) throws Exception {		
 		localDir = new File(configTO.getLocalDir());
 		appDir = new File(configTO.getAppDir());

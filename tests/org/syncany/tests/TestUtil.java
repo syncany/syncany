@@ -8,7 +8,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import org.syncany.config.Profile;
 
 /**
  * 
@@ -17,7 +21,7 @@ import java.util.Random;
  * @author Nikolai Hellwig, Andreas Fenske
  *
  */
-public class FileTestHelper {
+public class TestUtil {
 	
 	private static Random rnd = new Random();
 	
@@ -63,6 +67,16 @@ public class FileTestHelper {
 				copyIntoDirectory(srcFile, destFile);
 			}
 		}
+	}
+	
+	public static File createTempDirectoryInSystemTemp() throws Exception {
+		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir")+"/syncanytest-"+Math.abs(Math.random()));
+		
+		if (!tempDirectoryInSystemTemp.mkdir()) {
+			throw new Exception("Cannot create temp. directory "+tempDirectoryInSystemTemp);
+		}
+		
+		return tempDirectoryInSystemTemp;
 	}
 
 	public static boolean emptyDirectory(File path) {
@@ -141,21 +155,37 @@ public class FileTestHelper {
 		
 		raf.close();
 	}
-	
-	public static void generateRandomBinaryFilesIn(File rootFolder, long sizeInBytes, int numOfFiles) throws IOException{
-		for(int i = 0; i <numOfFiles; i++){
-			String fName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(rnd.nextInt()) + ".dat";
-			File f = new File(rootFolder, fName);
-			generateRandomBinaryFile(f, sizeInBytes);
-		}
+		
+	public static File createRandomFilenameInDirectory(File rootFolder) {
+		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(rnd.nextInt()) + ".dat";
+		File newRandomFile = new File(rootFolder, fileName);
+		
+		return newRandomFile;
 	}
 	
-	public static void generateRandomBinaryFile(File path, long sizeInBytes) throws IOException{
-		if(path!=null && path.exists()){
+	public static List<File> generateRandomBinaryFilesInDirectory(File rootFolder, long sizeInBytes, int numOfFiles) throws IOException{
+		List<File> newRandomFiles = new ArrayList<File>();
+		
+		for(int i = 0; i <numOfFiles; i++){
+			newRandomFiles.add(generateRandomBinaryFileInDirectory(rootFolder, sizeInBytes));
+		}
+		
+		return newRandomFiles;
+	}
+	
+	public static File generateRandomBinaryFileInDirectory(File rootFolder, long sizeInBytes) throws IOException{		
+		File newRandomFile = createRandomFilenameInDirectory(rootFolder);		
+		generateRandomBinaryFile(newRandomFile, sizeInBytes);
+		
+		return newRandomFile;
+	}
+	
+	public static void generateRandomBinaryFile(File fileToCreate, long sizeInBytes) throws IOException{
+		if(fileToCreate!=null && fileToCreate.exists()){
 			throw new IOException("File already exists");
 		}
 		
-		FileOutputStream fos = new FileOutputStream(path);
+		FileOutputStream fos = new FileOutputStream(fileToCreate);
 		int bufSize = 1024;
 		long cycles = sizeInBytes / bufSize;
 		
@@ -201,10 +231,14 @@ public class FileTestHelper {
 	}
 	
 	public static byte[] createChecksum(File filename) throws Exception {
+		return createChecksum(filename, "MD5");
+	}
+	
+	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {
 		FileInputStream fis =  new FileInputStream(filename);
 
 		byte[] buffer = new byte[1024];
-		MessageDigest complete = MessageDigest.getInstance("MD5");
+		MessageDigest complete = MessageDigest.getInstance(digestAlgorithm);
 		int numRead;
 
 		do {

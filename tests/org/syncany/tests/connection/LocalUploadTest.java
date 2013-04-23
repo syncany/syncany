@@ -12,15 +12,15 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.tests.FileTestHelper;
-import org.syncany.tests.TestSettings;
+import org.syncany.tests.TestUtil;
+import org.syncany.tests.TestEnvironment;
 
 public class LocalUploadTest {
 	
 	
 	private static final int fileSize = 16*1024*2;
 	 // ca. 4 chunks resulting
-	private static TestSettings testSettings; 
+	private static TestEnvironment testSettings; 
 	private static Uploader uploader;
 	private static MultiChunk metaChunk;
 	private static Set<CloneFile> updateSet;
@@ -32,11 +32,11 @@ public class LocalUploadTest {
 	@BeforeClass
 	public static void init() throws Exception {
 		
-		testSettings = TestSettings.getInstance();
+		testSettings = TestEnvironment.getInstance();
 		testSettings.createSettingsInstance();
 		
-		FileTestHelper.emptyDirectory(testSettings.getAppCacheDir());
-		FileTestHelper.emptyDirectory(testSettings.getAppDir());
+		TestUtil.emptyDirectory(testSettings.getAppCacheDir());
+		TestUtil.emptyDirectory(testSettings.getAppDir());
 		
 		Profile profile = Profile.getInstance();
     	LocalConnection con = new LocalConnection();
@@ -47,11 +47,11 @@ public class LocalUploadTest {
 		uploader = new Uploader(profile);
 		
 		String fileName = ("testfile-"+Math.random()).replace(".", "");  // random File name in order not to overwrite a possibly existing old file..
-		FileTestHelper.generateRandomBinaryFile(new File(TestSettings.getInstance().getRootFolder().getAbsolutePath()+File.separator+fileName), fileSize);
-		randomlyCreatedFile = new File(TestSettings.getInstance().getRootFolder().getAbsolutePath()+File.separator+fileName);
+		TestUtil.generateRandomBinaryFile(new File(TestEnvironment.getInstance().getRootFolder().getAbsolutePath()+File.separator+fileName), fileSize);
+		randomlyCreatedFile = new File(TestEnvironment.getInstance().getRootFolder().getAbsolutePath()+File.separator+fileName);
 		
 		
-		ArrayList<MultiChunk> metaChunkList = FileTestHelper.getMultiChunksOfFile(randomlyCreatedFile);
+		ArrayList<MultiChunk> metaChunkList = TestUtil.getMultiChunksOfFile(randomlyCreatedFile);
 		
 		
 		// TODO -> create this test data with methods 
@@ -113,6 +113,6 @@ public class LocalUploadTest {
 	
 	@AfterClass
 	public static void cleanUp() {
-		FileTestHelper.deleteFile(randomlyCreatedFile);
+		TestUtil.deleteFile(randomlyCreatedFile);
 	}
 }

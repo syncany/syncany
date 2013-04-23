@@ -102,10 +102,10 @@ public class Syncany {
 	private long index(List<File> localFiles, Chunker chunker, MultiChunker multiChunker, Transformer transformer, 
 			final Database db, final File localDir, final File appCacheDir) throws FileNotFoundException, IOException {
 		
-		final Deduper deduper = new Deduper();
+		final Deduper deduper = new Deduper(chunker, multiChunker, transformer);
 		final DatabaseVersion dbv = new DatabaseVersion();
 		
-		deduper.deduplicate(localFiles, chunker, multiChunker, transformer, new DeduperListener() {
+		deduper.deduplicate(localFiles, new DeduperListener() {
 			private FileHistoryPart fileHistory;
 			private FileVersion fileVersion;
 			private ChunkEntry chunkEntry;		

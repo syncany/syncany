@@ -4,15 +4,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.chunk.ChunkAndDBTest130128;
-import org.syncany.tests.chunk.ChunkerTest;
 import org.syncany.tests.chunk.SimpleChunkAndMultiChunkTest;
 import org.syncany.tests.config.EncryptionTest;
 
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	// Type in here all tests (execution in order)
-	ChunkerTest.class,
+	// Type in here all tests (execution in order)	
 	EncryptionTest.class,
 	//UploadTest.class,
 	//IndexerTest.class,
