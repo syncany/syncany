@@ -203,7 +203,7 @@ public class Syncany {
 			}
 
 			@Override
-			public void onFileAddChunk(Chunk chunk) {
+			public void onFileAddChunk(File file, Chunk chunk) {
 				System.out.println("ADD CHUNK TO CONTENT "+chunk);			
 				if (content == null) {
 					content = new FileContent();
@@ -213,7 +213,7 @@ public class Syncany {
 			}
 
 			@Override
-			public void onFileEnd(byte[] checksum) {
+			public void onFileEnd(File file, byte[] checksum) {
 				if (checksum != null) {
 					System.out.println("FILE END "+StringUtil.toHex(checksum));
 				}

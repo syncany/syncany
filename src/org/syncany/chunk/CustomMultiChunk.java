@@ -80,12 +80,12 @@ public class CustomMultiChunk extends MultiChunk {
     public Chunk read() throws IOException {
     	try {
 	        // First chunk: read checksum length!
-	        if (checksumLength == -1) {
-	        	int idLength = is.readByte();
+	        if (checksumLength <= 0) {
+	        	int idLength = is.read();	        	
 	        	id = new byte[idLength];
 	        	is.read(id);
-	        	
-	            checksumLength = is.readByte();
+	        	 
+	            checksumLength = is.readByte();	            
 	        }
 	        
 	        // Use StreamUtils instead of InputStream due to faulty behavior of IS.read()
@@ -110,19 +110,20 @@ public class CustomMultiChunk extends MultiChunk {
      * Fixes the read errors occurring with Cipher streams in the standard
      * Java read implementation.
      */
-    private void readFromInputStreamFixed(byte[] inp, int s, int l, InputStream is) throws IOException {
-		if(inp.length != l){
+    private void readFromInputStreamFixed(byte[] readToBuffer, int bufferOffset, int bufferLength, InputStream inputStream) throws IOException {
+		if(readToBuffer.length != bufferLength){
 			throw new IOException("Buffer to small");
 		}
 		
-		for(int i = 0; i < l; i++){
-			int b = is.read();
+		for(int i = 0; i < bufferLength; i++){
+			int byteRead = inputStream.read();
 			
-			if(b == -1)
-				throw new IOException("END OF STREAM REACHED");
+			if(byteRead == -1)
+				throw new EOFException("END OF STREAM REACHED");
 			
-			inp[s + i] = (byte)b;
+			readToBuffer[bufferOffset + i] = (byte)byteRead;
 		}
 	}
+       
 }
 

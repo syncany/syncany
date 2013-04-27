@@ -31,33 +31,44 @@ import javax.crypto.CipherOutputStream;
  * @author pheckel
  */
 public class CipherEncrypter extends Transformer {
-    private Cipher cipher;
+    private Cipher encryptCipher;
+    private Cipher decryptCipher;
     
-    public CipherEncrypter(Cipher cipher) {
-        this(cipher, null);
+    public CipherEncrypter(Cipher encryptCipher, Cipher decryptCipher) {
+        this(encryptCipher, decryptCipher, null);
     }
     
-    public CipherEncrypter(Cipher cipher, Transformer nextTransformer) {
+    public CipherEncrypter(Cipher cipher, Cipher cipherDec, Transformer nextTransformer) {
         super(nextTransformer);
-        this.cipher = cipher;
+        
+        this.encryptCipher = cipher;
+        this.decryptCipher = cipherDec;
     }
 
-    public Cipher getCipher() {
-        return cipher;
+    public Cipher getEncryptCipher() {
+        return encryptCipher;
     }
 
-    public void setCipher(Cipher cipher) {
-        this.cipher = cipher;
+    public void setEncryptCipher(Cipher cipher) {
+        this.encryptCipher = cipher;
     }   
     
-    @Override
+    public Cipher getDecryptCipher() {
+		return decryptCipher;
+	}
+
+	public void setDecryptCipher(Cipher decryptCipher) {
+		this.decryptCipher = decryptCipher;
+	}
+
+	@Override
     public OutputStream transform(OutputStream out) throws IOException {
-        return new CipherOutputStream(out, cipher);
+        return new CipherOutputStream(out, encryptCipher);
     }
 
     @Override
     public InputStream transform(InputStream in) throws IOException {
-        return new CipherInputStream(in, cipher);
+        return new CipherInputStream(in, decryptCipher);
     }
     
     @Override

@@ -49,25 +49,5 @@ public abstract class Chunker {
         }
         
         return (chunk == null) ? null : chunk.getFileChecksum();        
-    }    
-    
-    protected static long toLong(byte[] b) {
-        long l = 0;
-        
-        for (int i = 0; i < b.length; i++) {
-            l = (l << 8) + (b[i] & 0xff);
-        }
-        
-        return l;
-    }
-    
-    protected static byte[] toByteArray(long l) {
-        byte[] b = new byte[8];
-        
-        for (int i = 0; i < b.length; ++i) {
-            b[i] = (byte) (l >> (b.length - i - 1 << 3));
-        }    
-        
-        return b;
     }        
 }

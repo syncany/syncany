@@ -457,7 +457,7 @@ public class ChunkAndDBTest130128 {
 	        			Chunk chunk = null;
 	        			
 	        			while (null != (chunk = multiChunk.read())) {
-	        				FileUtil.writeFile(chunk.getContent(), new File(cacheDir+"/chunk-"+StringUtil.toHex(chunk.getChecksum())));
+	        				FileUtil.writeToFile(chunk.getContent(), new File(cacheDir+"/chunk-"+StringUtil.toHex(chunk.getChecksum())));
 	        				
 	        				if (Arrays.equals(chunk.getChecksum(), chunkEntry.getChecksum())) {
 	        					fos.write(chunk.getContent());	

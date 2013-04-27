@@ -9,16 +9,19 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.syncany.config.Profile;
+import org.syncany.util.ByteArray;
 
 /**
  * 
  * This Class provides file I/O helper methods for writing tests
  * 
- * @author Nikolai Hellwig, Andreas Fenske
+ * @author Nikolai Hellwig, Andreas Fenske, Philipp Heckel
  *
  */
 public class TestUtil {
@@ -190,8 +193,8 @@ public class TestUtil {
 		long cycles = sizeInBytes / bufSize;
 		
 		for(int i = 0; i < cycles; i++){
-			byte[] arr = createRandomArray(bufSize);
-			fos.write(arr);
+			byte[] randomByteArray = createRandomArray(bufSize);
+			fos.write(randomByteArray);
 		}
 		
 		// create last one
@@ -200,6 +203,26 @@ public class TestUtil {
 		fos.write(arr);
 		
 		fos.close();
+	}
+	
+	public static void generateBinaryFile(File fileToCreate, byte[] repeatFileContents, long sizeInBytes) throws IOException {
+		if(fileToCreate!=null && fileToCreate.exists()){
+			throw new IOException("File already exists");
+		}
+		
+		FileOutputStream fos = new FileOutputStream(fileToCreate);
+		
+		for(int i = 0; i < sizeInBytes; i++){
+			fos.write(repeatFileContents);
+		}
+		
+		fos.close();		
+	}
+	
+	public static void writeByteArrayToFile(byte[] inputByteArray, File fileToCreate) throws IOException {
+		FileOutputStream fos = new FileOutputStream(fileToCreate);		
+		fos.write(inputByteArray);
+		fos.close();			
 	}
 	
 	public static void moveFilesIntoSubdirectory(File folder, String subDirName){
@@ -250,6 +273,16 @@ public class TestUtil {
 
 		fis.close();
 		return complete.digest();
+	}
+
+	public static Map<File, ByteArray> createChecksums(List<File> inputFiles) throws Exception {
+		Map<File, ByteArray> inputFilesWithChecksums = new HashMap<File, ByteArray>();
+		
+		for (File inputFile : inputFiles) {
+			inputFilesWithChecksums.put(inputFile, new ByteArray(createChecksum(inputFile)));
+		}
+		
+		return inputFilesWithChecksums;
 	}
 	
 }

@@ -7,8 +7,8 @@ public interface DeduperListener {
 	public void onStart();
 	
 	public void onFileStart(File file);
-	public void onFileAddChunk(Chunk chunk);
-	public void onFileEnd(byte[] checksum);
+	public void onFileAddChunk(File file, Chunk chunk);
+	public void onFileEnd(File file, byte[] checksum);
 	
 	public boolean onChunk(Chunk chunk); // return TRUE if new, FALSE if old
 	

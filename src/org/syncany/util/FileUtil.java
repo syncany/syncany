@@ -349,7 +349,7 @@ public class FileUtil {
     }
 
     public static byte[] readFile(File file) throws IOException {
-        byte[] contents = new byte[(int) file.length()]; // TODO WARNING!!! load file in buffer compeltely!!
+        byte[] contents = new byte[(int) file.length()]; // TODO WARNING!!! load file in buffer completely!!
 
         FileInputStream fis = new FileInputStream(file);
         fis.read(contents);
@@ -372,11 +372,11 @@ public class FileUtil {
 		return fileData.toString();
     }
 
-    public static void writeFile(byte[] bytes, File file) throws IOException {
-        writeFile(new ByteArrayInputStream(bytes), file);
+    public static void writeToFile(byte[] bytes, File file) throws IOException {
+        writeToFile(new ByteArrayInputStream(bytes), file);
     }
 
-    public static void writeFile(InputStream is, File file) throws IOException {
+    public static void writeToFile(InputStream is, File file) throws IOException {
         FileOutputStream fos = new FileOutputStream(file);
 
         int read = 0;
@@ -388,6 +388,21 @@ public class FileUtil {
 
         is.close();
         fos.close();
+    }
+    
+    public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
+    	appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
+    }
+    
+    public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream) throws IOException {    
+        byte[] buf = new byte[4096];
+
+        int len;
+        while ((len = inputStream.read(buf)) > 0) {
+            outputStream.write(buf, 0, len);
+        }
+
+        inputStream.close();
     }
 
     public static boolean deleteRecursively(File file) {
@@ -473,5 +488,25 @@ public class FileUtil {
 		
 		
 	}
+	
+	public static long toLong(byte[] b) {
+        long l = 0;
+        
+        for (int i = 0; i < b.length; i++) {
+            l = (l << 8) + (b[i] & 0xff);
+        }
+        
+        return l;
+    }
+    
+    public static byte[] toByteArray(long l) {
+        byte[] b = new byte[8];
+        
+        for (int i = 0; i < b.length; ++i) {
+            b[i] = (byte) (l >> (b.length - i - 1 << 3));
+        }    
+        
+        return b;
+    }        	
 }
 

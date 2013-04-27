@@ -64,17 +64,17 @@ public class Deduper {
 						listener.onWriteMultiChunk(multiChunk, chunk);						
 					}
 
-					listener.onFileAddChunk(chunk);					
+					listener.onFileAddChunk(file, chunk);					
 					
 				}
 
 			}
 
 			if (chunk != null) {			
-				listener.onFileEnd(chunk.getChecksum());
+				listener.onFileEnd(file, chunk.getChecksum());
 			}
 			else {
-				listener.onFileEnd(null);
+				listener.onFileEnd(file, null);
 			}
 		}
 
@@ -88,10 +88,5 @@ public class Deduper {
 		}
 		
 		listener.onFinish();
-	}
-	
-	// TODO
-	public void deduplicateNOTIMPLEMENTED(File file, DeduperListener listener) {
-		throw new RuntimeException("Not yet implemented");
-	}
+	}	
 }
