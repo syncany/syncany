@@ -26,8 +26,9 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Profile;
+import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.exceptions.StorageException;
 import org.syncany.util.StringUtil;
 
 /**

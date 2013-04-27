@@ -26,6 +26,6 @@ import java.util.Map;
 public interface Connection {
     public TransferManager createTransferManager();
     public PluginInfo getPluginInfo();
-    public void init(Map<String, String> map);
+    public void init(Map<String, String> map) throws StorageException;
 }
 

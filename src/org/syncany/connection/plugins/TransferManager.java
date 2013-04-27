@@ -20,11 +20,6 @@ package org.syncany.connection.plugins;
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.connection.RemoteFile;
-import org.syncany.exceptions.LocalFileNotFoundException;
-import org.syncany.exceptions.RemoteFileNotFoundException;
-import org.syncany.exceptions.StorageConnectException;
-import org.syncany.exceptions.StorageException;
 
 /**
  * The transfer manager synchronously connects to the remote storage. It is
@@ -49,7 +44,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc.
      */
-    void connect() throws StorageConnectException;
+    public void connect() throws StorageException;
 
     /**
      * Disconnect from the remote storage.
@@ -57,7 +52,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc.
      */
-    void disconnect() throws StorageException;
+    public void disconnect() throws StorageException;
 
     /**
      * Download an existing remote file to the local disk.
@@ -75,7 +70,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc.
      */
-    void download(RemoteFile remoteFile, File localFile) throws RemoteFileNotFoundException, StorageException;
+    public void download(RemoteFile remoteFile, File localFile) throws StorageException;
 
     /**
      * Update an existing local file to the online storage.
@@ -92,7 +87,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc.
      */
-    void upload(File localFile, RemoteFile remoteFile) throws LocalFileNotFoundException, StorageException;
+    public void upload(File localFile, RemoteFile remoteFile) throws StorageException;
 
     /**
      * Deletes an existing file from the remote storage permanently.
@@ -106,7 +101,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc
      */
-    void delete(RemoteFile remoteFile) throws RemoteFileNotFoundException, StorageException;
+    public void delete(RemoteFile remoteFile) throws StorageException;
 
     /**
      * Retrieves a list of all files in the remote repository.
@@ -116,7 +111,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc
      */
-    Map<String, RemoteFile> list() throws StorageException;
+    public Map<String, RemoteFile> list() throws StorageException;
 
     /**
      * Retrieves a list of selected files in the remote repository, filtered by
@@ -129,7 +124,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc
      */
-    Map<String, RemoteFile> list(String namePrefix) throws StorageException;
+    public Map<String, RemoteFile> list(String namePrefix) throws StorageException;
 
     /**
      * Deletes unused old files from the remote storage, especially temporary files.
@@ -137,5 +132,5 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc
      */
-    void clean() throws StorageException;
+    public void clean() throws StorageException;
 }

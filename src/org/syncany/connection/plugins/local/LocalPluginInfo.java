@@ -26,8 +26,6 @@ import org.syncany.connection.plugins.PluginInfo;
  */
 public class LocalPluginInfo extends PluginInfo {
     public static final String ID = "local";
-
-    public LocalPluginInfo() { }
     
     @Override
     public String getId() {

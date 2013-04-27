@@ -6,9 +6,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Profile;
+import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.exceptions.CacheException;
-import org.syncany.exceptions.StorageException;
 
 public class Downloader {
 	private static final Logger logger = Logger.getLogger(Downloader.class.getSimpleName());

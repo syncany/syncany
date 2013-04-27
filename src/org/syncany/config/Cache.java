@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.syncany.chunk.MultiChunk;
-import org.syncany.exceptions.CacheException;
 import org.syncany.util.StringUtil;
 
 

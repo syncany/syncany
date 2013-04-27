@@ -6,10 +6,10 @@ import java.util.Map;
 
 import org.syncany.Constants;
 import org.syncany.config.ConfigTO;
+import org.syncany.config.EncryptionException;
 import org.syncany.config.Profile;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.exceptions.EncryptionException;
 
 
 public class TestEnvironment {

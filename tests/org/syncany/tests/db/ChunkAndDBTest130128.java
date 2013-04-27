@@ -1,4 +1,4 @@
-package org.syncany.tests.chunk;
+package org.syncany.tests.db;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -15,25 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.exceptions;
+package org.syncany.config;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class StorageException extends Exception {
-    public StorageException(Throwable cause) {
+public class EncryptionException extends Exception {
+
+    public EncryptionException(Throwable cause) {
         super(cause);
     }
 
-    public StorageException(String message, Throwable cause) {
+    public EncryptionException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public StorageException(String message) {
+    public EncryptionException(String message) {
         super(message);
     }
 
-    public StorageException() {
+    public EncryptionException() {
     }
+    
 }

@@ -27,10 +27,5 @@ public abstract class PluginInfo {
     public abstract String getId();
     public abstract String getName();
     public abstract Integer[] getVersion();
-
-    public abstract Connection createConnection();
-    
-    public String getVersionStr() {
-        return StringUtil.join(getVersion(), ".");
-    }
+    public abstract Connection createConnection();    
 }

@@ -23,31 +23,25 @@ import java.util.Map;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.util.FileUtil;
 
 /**
  *
  * @author Philipp C. Heckel
  */
 public class LocalConnection implements Connection {
-    /**
-	 * 
-	 */
-	private File folder;
-    private int throttleKbps;    
+	private File repoPath;
 
-    public LocalConnection() { }
-    
 	@Override
-	public void init(Map<String, String> map) {
+	public void init(Map<String, String> map) throws StorageException {
 		String path = map.get("path");
-		File folder = new File(path);
 		
-		// create local repository directory if not present
-		FileUtil.mkdirsVia(folder);
+		if (path == null) {
+			throw new StorageException("Config does not contain 'path' setting.");
+		}
 		
-		setFolder(folder);
+		setRepoPath(new File(path));
 	}
 
     @Override
@@ -60,19 +54,11 @@ public class LocalConnection implements Connection {
         return new LocalTransferManager(this);
     }
 
-    public File getFolder() {
-        return folder;
+    public File getRepoPath() {
+        return repoPath;
     }
 
-    public int getThrottleKbps() {
-        return throttleKbps;
+    public void setRepoPath(File repoPath) {
+        this.repoPath = repoPath;
     }
-
-    public void setFolder(File folder) {
-        this.folder = folder;
-    }
-
-    public void setThrottleKbps(int throttleKbps) {
-        this.throttleKbps = throttleKbps;
-    }              
 }

@@ -43,7 +43,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.syncany.config.Encryption;
-import org.syncany.exceptions.EncryptionException;
+import org.syncany.config.EncryptionException;
 
 /**
  *

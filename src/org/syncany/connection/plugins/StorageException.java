@@ -15,27 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.exceptions;
+package org.syncany.connection.plugins;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class RemoteFileNotFoundException extends StorageException {
-
-    public RemoteFileNotFoundException() {
-    }
-
-    public RemoteFileNotFoundException(String message) {
-        super(message);
-    }
-
-    public RemoteFileNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public RemoteFileNotFoundException(Throwable cause) {
+public class StorageException extends Exception {
+    public StorageException(Throwable cause) {
         super(cause);
     }
 
+    public StorageException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public StorageException(String message) {
+        super(message);
+    }
 }

@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.exceptions;
-
-import java.io.IOException;
+package org.syncany.config;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CacheException extends IOException {
+public class CacheException extends Exception {
 
     public CacheException(Throwable cause) {
         super(cause);
@@ -39,5 +37,5 @@ public class CacheException extends IOException {
 
     public CacheException() {
     }
-
+    
 }

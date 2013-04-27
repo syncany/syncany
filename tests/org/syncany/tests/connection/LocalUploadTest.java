@@ -40,7 +40,7 @@ public class LocalUploadTest {
 		
 		Profile profile = Profile.getInstance();
     	LocalConnection con = new LocalConnection();
-    	con.setFolder(testSettings.getRepDir());
+    	con.setRepoPath(testSettings.getRepDir());
     	profile.getRepository().setConnection(con);
     	profile.setRoot(testSettings.getRootFolder());
     	

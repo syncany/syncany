@@ -20,8 +20,6 @@ package org.syncany.connection.plugins;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.syncany.connection.RemoteFile;
-import org.syncany.exceptions.StorageException;
 
 /**
  *
