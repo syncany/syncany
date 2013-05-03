@@ -18,7 +18,8 @@
 package org.syncany.connection;
 
 import java.io.File;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,11 +39,12 @@ public class Uploader {
     
     private Connection connection;
     private TransferManager transferManager;
-    private PriorityBlockingQueue<UploadRequest> queue;
+    private BlockingQueue<UploadRequest> queue;
     private Thread worker;
 
     public Uploader(Connection connection) {
-        this.queue = new PriorityBlockingQueue<UploadRequest>(11);
+    	this.connection = connection;
+        this.queue = new LinkedBlockingQueue<UploadRequest>(11);
 
         this.worker = null; // cmp. method 'start'
     }   
@@ -65,11 +67,11 @@ public class Uploader {
         worker = null;
     }
 
-    public synchronized void queue(File localFile) {
+    public synchronized void queue(File localFile) throws InterruptedException {
     	queue(localFile, new RemoteFile(localFile.getName()));
     }
     
-    public synchronized void queue(File localFile, RemoteFile remoteFile) {
+    public synchronized void queue(File localFile, RemoteFile remoteFile) throws InterruptedException {
     	logger.log(Level.INFO, "QUEUING {0}", localFile);
         queue.put(new UploadRequest(localFile, remoteFile));
     }
