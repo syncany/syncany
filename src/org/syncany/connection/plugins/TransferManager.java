@@ -101,7 +101,7 @@ public interface TransferManager {
      * @throws StorageException If the connection fails due to no internet connection,
      *         authentication errors, etc
      */
-    public void delete(RemoteFile remoteFile) throws StorageException;
+    public boolean delete(RemoteFile remoteFile) throws StorageException;
 
     /**
      * Retrieves a list of all files in the remote repository.

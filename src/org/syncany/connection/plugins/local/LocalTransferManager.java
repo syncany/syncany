@@ -114,16 +114,16 @@ public class LocalTransferManager extends AbstractTransferManager {
     }
 
     @Override
-    public void delete(RemoteFile remoteFile) throws StorageException {
+    public boolean delete(RemoteFile remoteFile) throws StorageException {
         connect();
 
         File repoFile = getRepoFile(remoteFile);
 
         if (!repoFile.exists()) {
-            return;
+            return false;
         }
 
-        repoFile.delete();
+        return repoFile.delete();
     }
 
     @Override

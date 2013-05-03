@@ -77,12 +77,12 @@ public class FrameworkCombinationTests {
 
 	private void fillCombinations() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
 		// MultiChunks
-		List<MultiChunker> MultiChunkers = new LinkedList<MultiChunker>();
+		List<MultiChunker> multiChunkers = new LinkedList<MultiChunker>();
 
-		int[] MultiChunkSizes = new int[] { 250, 500 };
+		int[] multiChunkSizes = new int[] { 250000, 500000 };
 
-		for (int i = 0; i < MultiChunkSizes.length; i++) {
-			MultiChunkers.add(new CustomMultiChunker(MultiChunkSizes[i]));
+		for (int i = 0; i < multiChunkSizes.length; i++) {
+			multiChunkers.add(new CustomMultiChunker(multiChunkSizes[i]));
 		}
 
 		// Chunks
@@ -118,11 +118,11 @@ public class FrameworkCombinationTests {
 		transformerChains.add(new GzipCompressor());
 		transformerChains.add(new GzipCompressor(new CipherEncrypter(encryptCipher, decryptCipher)));
 
-		for (MultiChunker MultiChunker : MultiChunkers) {
+		for (MultiChunker multiChunker : multiChunkers) {
 			for (Transformer transformer : transformerChains) {
 				for (Chunker chunker : chunkers) {
-					String configName = MultiChunker + "/" + chunker + "/" + transformer;
-					combinations.add(new FrameworkCombination(configName, chunker, MultiChunker, transformer));
+					String configName = multiChunker + "/" + chunker + "/" + transformer;
+					combinations.add(new FrameworkCombination(configName, chunker, multiChunker, transformer));
 				}
 			}
 		}
@@ -130,7 +130,7 @@ public class FrameworkCombinationTests {
 
 	@After
 	public void tearDown() throws Exception {
-		//TestUtil.deleteDirectory(tempDir);
+		TestUtil.deleteDirectory(tempDir);
 	}
 
 	@Test

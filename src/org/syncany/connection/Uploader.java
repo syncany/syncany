@@ -18,18 +18,14 @@
 package org.syncany.connection;
 
 import java.io.File;
-import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.chunk.MultiChunk;
-import org.syncany.config.Profile;
+import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.util.StringUtil;
 
 /**
  * Represents the remote storage.
@@ -38,20 +34,14 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Uploader {
-    private static final int CACHE_FILE_LIST = 60000;
-    
     private static final Logger logger = Logger.getLogger(Uploader.class.getSimpleName());
     
-    private Profile profile;
-    private TransferManager transfer;
+    private Connection connection;
+    private TransferManager transferManager;
     private PriorityBlockingQueue<UploadRequest> queue;
     private Thread worker;
 
-    private Map<String, RemoteFile> fileList;
-    private Date cacheLastUpdate;    
-    
-    public Uploader(Profile profile) {
-        this.profile = profile;
+    public Uploader(Connection connection) {
         this.queue = new PriorityBlockingQueue<UploadRequest>(11);
 
         this.worker = null; // cmp. method 'start'
@@ -61,9 +51,9 @@ public class Uploader {
         if (worker != null)
             return;
         
-        transfer = profile.getConnection().createTransferManager();
+        transferManager = connection.createTransferManager();
         
-        worker = new Thread(new Worker(), "UploaderWorker");        
+        worker = new Thread(new Worker(), Uploader.class.getSimpleName());        
         worker.start();
     }
 
@@ -71,28 +61,34 @@ public class Uploader {
         if (worker == null || worker.isInterrupted())
             return;
 
-        worker.interrupt(); // why not stop?
+        worker.interrupt(); 
         worker = null;
     }
 
-    public synchronized void queue(MultiChunk metaChunk) {
-    	logger.log(Level.INFO, "QUEUING {0}", metaChunk);
-        queue.put(new UploadRequest(metaChunk));
+    public synchronized void queue(File localFile) {
+    	queue(localFile, new RemoteFile(localFile.getName()));
     }
     
-    public boolean isEmtpy(){
+    public synchronized void queue(File localFile, RemoteFile remoteFile) {
+    	logger.log(Level.INFO, "QUEUING {0}", localFile);
+        queue.put(new UploadRequest(localFile, remoteFile));
+    }
+    
+    public boolean isQueueEmtpy(){
     	return queue.isEmpty();
     }
+
+	public int queueSize() {
+		return queue.size();
+	}        
     
     private class UploadRequest {
-        private MultiChunk metaChunk;
-
-        public UploadRequest(MultiChunk metaChunk) {
-            this.metaChunk = metaChunk;
-        }
-
-        public MultiChunk getMetaChunk() {
-            return metaChunk;
+        private File localFile;
+        private RemoteFile remoteFile;
+        
+        public UploadRequest(File localFileToUpload, RemoteFile remoteFile) {
+            this.localFile = localFileToUpload;
+            this.remoteFile = remoteFile;
         }
 
         @Override
@@ -104,7 +100,7 @@ public class Uploader {
                 return false;
             }
             final UploadRequest other = (UploadRequest) obj;
-            if (this.metaChunk != other.metaChunk && (this.metaChunk == null || !this.metaChunk.equals(other.metaChunk))) {
+            if (this.localFile != other.localFile && (this.localFile == null || !this.localFile.equals(other.localFile))) {
                 return false;
             }
             return true;
@@ -116,16 +112,11 @@ public class Uploader {
 		@Override
 		public void run() {
 			try {
-				UploadRequest req;
+				UploadRequest currentUploadRequest;
 
-				while (null != (req = queue.take())) {
-					System.out.println("Processing Queue.. size: "
-							+ queue.size());
-
-					System.out.println("Uploader Thread-ID: "
-							+ Thread.currentThread().getId());
-
-					processRequest(req);
+				while (null != (currentUploadRequest = queue.take())) {
+					logger.log(Level.INFO, "Processing queue.. size: " + queue.size());
+					processRequest(currentUploadRequest);
 				}
 																																				 
 			}
@@ -134,86 +125,26 @@ public class Uploader {
             }
         }
 
-        private void processRequest(UploadRequest req) {
-        	logger.log(Level.INFO, "PROCESSING UPLOAD REQUEST {0}", req.getMetaChunk());
-        	System.out.println("Uploader Thread-ID: "+Thread.currentThread().getId());
+        private void processRequest(UploadRequest uploadRequest) {
+        	logger.log(Level.INFO, "Processing upload request {0}", uploadRequest.localFile);
             
-            // Get file list (to check if chunks already exist)
-            if (cacheLastUpdate == null || fileList == null || System.currentTimeMillis()-cacheLastUpdate.getTime() > CACHE_FILE_LIST) {
-                try { 
-                	System.out.println("checking if file exists..");
-                	
-                    fileList = transfer.list();
-                    
-                    System.out.println("Got list of remote files, list.size: "+fileList.size());
-                }
-                catch (StorageException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                    return;
-                    // TODO what to do here?
-                }
-            }                       
-            
-            System.out.println("Going on");
-            
-            MultiChunk metaChunk = req.getMetaChunk();
-            //FIXME
-            File localMetaChunkFile = null;//Profile.getInstance().getCache().getMultiChunkFile(metaChunk);
-            //FIXME
-            String remoteChunkFilename = "multichunk-" + StringUtil.toHex(metaChunk.getId());
-                       
-            // Chunk has been uploaded before; Skip upload
-            if (fileList.containsKey(remoteChunkFilename)) {
-                if (logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, "UploadManager: Chunk {0} already uploaded", remoteChunkFilename);
-                }
-                
-                if (queue.isEmpty()) {
-                	System.out.println("Up-to-date-state");
-                }                
-                
-                return;
+        	// TODO Caching for performance           
+        	
+            if (logger.isLoggable(Level.INFO)) {
+                logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
             }
             
-            System.out.println("Uploader Thread-ID: "+Thread.currentThread().getId());
-            
-            System.out.println("Setting files to Syncing");
-                                    
-
-            System.out.println("Uploading it..");
-            
-            // Upload it!
             try {
-                if (logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, "UploadManager: Uploading chunk {0} ...", remoteChunkFilename);
-                }
-
-                RemoteFile chunkFile = new RemoteFile(remoteChunkFilename);
-                
-                System.out.println("Starting upload..");
-                transfer.upload(localMetaChunkFile, chunkFile);
-                //transfer.upload(config.getCache().getCacheChunk(metaChunkFilename), chunkFile);
-
-                System.out.println("Putting to cache-list");
-                // Add to cache
-                fileList.put(remoteChunkFilename, chunkFile);
+                transferManager.upload(uploadRequest.localFile, uploadRequest.remoteFile);
             } 
             catch (StorageException ex) {
-                logger.log(Level.SEVERE,"UploadManager: Uploading chunk "+remoteChunkFilename+" FAILED !!",ex);
+            	logger.log(Level.SEVERE, "Uploader: Upload FAILED for chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
                 return; // TODO and now?
             }
 
             if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "UploadManager: Chunk {0} uploaded", remoteChunkFilename);
-            }
-
-            if (queue.isEmpty()) {
-            	System.out.println("Up-to-date-state");
-            	
-            	// try up-to-date status icon
+                logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
             }
         }
-
-        
-    }    
+    }
 }

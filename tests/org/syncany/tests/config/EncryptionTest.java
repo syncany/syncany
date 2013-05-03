@@ -26,10 +26,6 @@ public class EncryptionTest {
 	private String salt = "saltsalt";
 	private String text = "lorem ipsum dolor sit amet";
 	
-	@BeforeClass
-	public static void init(){}
-	
-	
 	@Test()
 	public void unsaltedEncryptionTest() throws Exception {
 

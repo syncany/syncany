@@ -1,12 +1,15 @@
-package org.syncany.tests.connection;
+package org.syncany.tests.connection.local;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.CookieHandler;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +101,7 @@ public class LocalConnectionPluginTest {
 	}
 
 	@Test
-	public void testLocalUploadListAndDownload() throws Exception {				
+	public void testLocalUploadListDownloadAndDelete() throws Exception {				
 		// Generate test files
 		Map<String, File> inputFiles = generateTestInputFile();
 
@@ -108,7 +111,7 @@ public class LocalConnectionPluginTest {
 
 		Map<File, RemoteFile> uploadedFiles = uploadFiles(transferManager, inputFiles.values());
 		Map<String, RemoteFile> remoteFiles = transferManager.list();
-		Map<RemoteFile, File> downloadedLocalFiles = downloadFiles(transferManager, remoteFiles.values());
+		Map<RemoteFile, File> downloadedLocalFiles = downloadRemoteFiles(transferManager, remoteFiles.values());
 
 		// Compare
 		assertEquals("Number of uploaded files should be the same as the input files.", uploadedFiles.size(), remoteFiles.size());
@@ -131,6 +134,50 @@ public class LocalConnectionPluginTest {
 			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumUploadedFile);
 			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumDownloadedFile);			
 		}
+		
+		// Delete
+		for (RemoteFile remoteFileToDelete : uploadedFiles.values()) {			
+			transferManager.delete(remoteFileToDelete);
+			
+			File uploadedFileOnRemoteStorage = new File(tempLocalRepoDir+"/"+remoteFileToDelete.getName());
+			assertFalse("Could not delete remote file.", uploadedFileOnRemoteStorage.exists());
+		}
+		
+		assertArrayEquals("Not all files were successfully deleted from remote storage.", new String[] { }, tempLocalRepoDir.list());
+	}	
+	
+	@Test
+	public void testDeleteNonExistantFile() throws StorageException {
+		TransferManager transferManager = loadPluginAndCreateTransferManager();		
+		transferManager.connect();	
+		
+		boolean fileDeletedSuccessfully = transferManager.delete(new RemoteFile("non-existant-file"));
+		assertFalse("File deletion expected to fail.", fileDeletedSuccessfully);
+	}
+	
+	@Test
+	public void testListWithPrefix() throws StorageException, IOException {
+		// Create remote files directly in the 'remote' directory
+		String correctPrefix = "prefix-";
+		String incorrectPrefix = "otherprefix-";
+		
+		Collection<File> remoteFiles = Arrays.asList(new File[] {
+			new File(tempLocalRepoDir+"/"+correctPrefix+"1"),
+			new File(tempLocalRepoDir+"/"+correctPrefix+"2"),
+			new File(tempLocalRepoDir+"/"+correctPrefix+"3"),
+			new File(tempLocalRepoDir+"/"+incorrectPrefix+"1")	
+		});
+		
+		for (File remoteFileToCreate : remoteFiles) {
+			TestUtil.generateRandomBinaryFile(remoteFileToCreate, 10*1024);
+		}
+		
+		// Connect and list
+		TransferManager transferManager = loadPluginAndCreateTransferManager();		
+		transferManager.connect();	
+		
+		Map<String, RemoteFile> listedRemoteFiles = transferManager.list(correctPrefix);
+		assertEquals("Expected 3 files with prefix "+correctPrefix, 3, listedRemoteFiles.size());
 	}
 
 	private Map<String, File> generateTestInputFile() throws IOException {
@@ -159,7 +206,7 @@ public class LocalConnectionPluginTest {
 		return inputFileOutputFile;
 	}
 	
-	private Map<RemoteFile, File> downloadFiles(TransferManager transferManager, Collection<RemoteFile> remoteFiles) throws StorageException {
+	private Map<RemoteFile, File> downloadRemoteFiles(TransferManager transferManager, Collection<RemoteFile> remoteFiles) throws StorageException {
 		Map<RemoteFile, File> downloadedLocalFiles = new HashMap<RemoteFile, File>();
 		
 		for (RemoteFile remoteFile : remoteFiles) {

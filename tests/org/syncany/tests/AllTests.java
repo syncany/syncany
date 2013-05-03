@@ -7,7 +7,7 @@ import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTests;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
-import org.syncany.tests.connection.LocalConnectionPluginTest;
+import org.syncany.tests.connection.local.LocalConnectionPluginTest;
 
 
 @RunWith(Suite.class)
