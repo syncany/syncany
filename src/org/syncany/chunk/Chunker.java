@@ -31,6 +31,13 @@ import java.util.logging.Logger;
 public abstract class Chunker {
     protected static final Logger logger = Logger.getLogger(Chunker.class.getSimpleName());   
 
+    /**
+     * Creates enumeration of Chunks which is filled on demand. 
+     * Does not read the whole file at once. 
+     * @param file to chunk
+     * @return
+     * @throws IOException
+     */
     public Enumeration<Chunk> createChunks(File file) throws IOException {
         return createChunks(new FileInputStream(file));
     }

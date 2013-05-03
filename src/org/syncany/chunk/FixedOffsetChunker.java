@@ -34,10 +34,19 @@ public class FixedOffsetChunker extends Chunker {
     private MessageDigest digest;
     private MessageDigest fileDigest;    
     
+    /**
+     * 
+     * @param chunkSize in byte
+     */
     public FixedOffsetChunker(int chunkSize) {
         this(chunkSize, DEFAULT_DIGEST_ALG);
     }
     
+    /**
+     * 
+     * @param chunkSize in byte
+     * @param digestAlg
+     */
     public FixedOffsetChunker(int chunkSize, String digestAlg) {
         this.chunkSize = chunkSize;        
  

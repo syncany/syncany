@@ -26,26 +26,22 @@ import java.io.OutputStream;
  * @author pheckel
  */
 public class CustomMultiChunker extends MultiChunker {
-    public CustomMultiChunker(int minChunkSize, int sleepMillis) {
-        super(minChunkSize, sleepMillis);
+    public CustomMultiChunker(int minMultiChunkSize) {
+        super(minMultiChunkSize);
     }
 
     @Override
     public MultiChunk createMultiChunk(InputStream is) {
-        sleep();
         return new CustomMultiChunk(is);
     }
     
     @Override
     public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
-        sleep();
-        return new CustomMultiChunk(id, minChunkSize, os);
+    	return new CustomMultiChunk(id, minMultiChunkSize, os);
     }
     
     @Override
     public String toString() {
-        return "Custom-"+minChunkSize+"-"+sleepMillis;
+        return "Custom-"+minMultiChunkSize;
     }
-
-
 }

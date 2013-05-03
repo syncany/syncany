@@ -46,7 +46,7 @@ public class TTTDChunkerTest {
 		// Setup				
 		File inputRandom5MBFile = TestUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);
 		
-		File outputCopyOfRandom5MBFile = TestUtil.createRandomFilenameInDirectory(tempDir);
+		File outputCopyOfRandom5MBFile = TestUtil.createRandomFileInDirectory(tempDir);
 		FileOutputStream outputCopyOfRandom5MBFileOutputStream = new FileOutputStream(outputCopyOfRandom5MBFile);
 		
 		Chunker chunker = new TTTDChunker(AVG_CHUNK_SIZE);

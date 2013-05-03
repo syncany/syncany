@@ -27,7 +27,7 @@ public class Chunk {
     private int size;
     private byte[] fileChecksum;
 
-    public Chunk(byte[] checksum, byte[] contents, int size, byte[] fileChecksum) {
+    /*package*/ Chunk(byte[] checksum, byte[] contents, int size, byte[] fileChecksum) {
         this.checksum = checksum;
         this.contents = contents;
         this.size = size;

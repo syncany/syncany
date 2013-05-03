@@ -61,7 +61,7 @@ public class Profile {
         connection = null; // Loaded or set dynamically!
         encryption = new Encryption();
 		chunker = new FixedOffsetChunker(16 * 1024);
-		multiChunker = new CustomMultiChunker(512 * 1024, 0);
+		multiChunker = new CustomMultiChunker(512 * 1024);
 		transformer = new GzipCompressor();		        
 		
     	encryption = new Encryption();		

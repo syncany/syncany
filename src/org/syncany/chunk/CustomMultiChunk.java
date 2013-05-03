@@ -33,7 +33,7 @@ public class CustomMultiChunk extends MultiChunk {
     protected DataOutputStream os;
     protected DataInputStream is;
     
-    public CustomMultiChunk(InputStream is) {
+    /*package*/ CustomMultiChunk(InputStream is) {
         super(0);
         this.is = new DataInputStream(is);
         this.checksumLength = -1;

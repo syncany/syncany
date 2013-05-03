@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.syncany.config.Profile;
 import org.syncany.util.ByteArray;
 
 /**
@@ -159,7 +158,7 @@ public class TestUtil {
 		raf.close();
 	}
 		
-	public static File createRandomFilenameInDirectory(File rootFolder) {
+	public static File createRandomFileInDirectory(File rootFolder) {
 		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(rnd.nextInt()) + ".dat";
 		File newRandomFile = new File(rootFolder, fileName);
 		
@@ -177,7 +176,7 @@ public class TestUtil {
 	}
 	
 	public static File generateRandomBinaryFileInDirectory(File rootFolder, long sizeInBytes) throws IOException{		
-		File newRandomFile = createRandomFilenameInDirectory(rootFolder);		
+		File newRandomFile = createRandomFileInDirectory(rootFolder);		
 		generateRandomBinaryFile(newRandomFile, sizeInBytes);
 		
 		return newRandomFile;

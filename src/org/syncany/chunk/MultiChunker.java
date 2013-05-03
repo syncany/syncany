@@ -26,24 +26,38 @@ import java.io.OutputStream;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class MultiChunker {
-    protected int minChunkSize;
-    protected int sleepMillis;
-        
-    public MultiChunker(int minChunkSize, int sleepMillis)  {
-        this.minChunkSize = minChunkSize;
-        this.sleepMillis = sleepMillis;
+    protected int minMultiChunkSize;
+    
+    /**
+     * Sets the minimum size of a multi chunk in kb.
+     * @param minMultiChunkSize
+     */
+    public MultiChunker(int minMultiChunkSize)  {
+        this.minMultiChunkSize = minMultiChunkSize;
     }
 
-    public int getMinChunkSize() {
-        return minChunkSize;
+    /**
+     * 
+     * @return min multi-chunk size in kb
+     */
+    public int getMinMultiChunkSize() {
+        return minMultiChunkSize;
     }
     
-    protected void sleep() {
-        try { Thread.sleep(sleepMillis); }
-        catch (Exception e) { }
-    }
-        
+    /**
+     * Creates multi chunk for read operations. 
+     * @param is InputStream to initialize an existing multiChunk for read-operations only
+     * @return
+     */
     public abstract MultiChunk createMultiChunk(InputStream is);
+    
+    /**
+     * 
+     * @param id of multichunk to create
+     * @param os Outputstream for new file
+     * @return
+     * @throws IOException
+     */
     public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
     
     @Override

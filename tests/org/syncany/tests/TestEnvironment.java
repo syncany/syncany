@@ -1,15 +1,9 @@
 package org.syncany.tests;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.syncany.Constants;
-import org.syncany.config.ConfigTO;
-import org.syncany.config.EncryptionException;
 import org.syncany.config.Profile;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.local.LocalConnection;
 
 
 public class TestEnvironment {

@@ -79,11 +79,10 @@ public class FrameworkCombinationTests {
 		// MultiChunks
 		List<MultiChunker> MultiChunkers = new LinkedList<MultiChunker>();
 
-		int sleepMillis = 0; // has no impact on chunking
 		int[] MultiChunkSizes = new int[] { 250, 500 };
 
 		for (int i = 0; i < MultiChunkSizes.length; i++) {
-			MultiChunkers.add(new CustomMultiChunker(MultiChunkSizes[i], sleepMillis));
+			MultiChunkers.add(new CustomMultiChunker(MultiChunkSizes[i]));
 		}
 
 		// Chunks
