@@ -50,33 +50,49 @@ public class Profile {
     private Transformer transformer;
         
 	public Profile(ConfigTO configTO) throws Exception {		
+		machineName = configTO.getMachineName();
+		
+		initDirectories(configTO);
+		initChunkingFramework(configTO);
+    	initEncryption(configTO);
+    	initConnectionPlugin(configTO);    
+    	initLogging(configTO); // TODO
+	}
+	
+	private void initDirectories(ConfigTO configTO) {
 		localDir = new File(configTO.getLocalDir());
 		appDir = new File(configTO.getAppDir());
 		appCacheDir = new File(configTO.getCacheDir());
 		appDatabaseDir = new File(configTO.getDatabaseDir());
-		machineName = configTO.getMachineName();
-
+		
 		cache = new Cache(appCacheDir);
+	}
 
-        connection = null; // Loaded or set dynamically!
-        encryption = new Encryption();
+	private void initChunkingFramework(ConfigTO configTO) {
 		chunker = new FixedOffsetChunker(16 * 1024);
 		multiChunker = new CustomMultiChunker(512 * 1024);
-		transformer = new GzipCompressor();		        
-		
+		transformer = new GzipCompressor();		        		
+	}
+	
+	private void initEncryption(ConfigTO configTO) throws EncryptionException {
     	encryption = new Encryption();		
     	encryption.setPassword(configTO.getEncryption().getPass());
-    	encryption.setSalt("SALT"); // TODO: What to use as salt?    	
-
-    	// Load the required plugin
-    	PluginInfo plugin = Plugins.get(configTO.getConnection().getType());
+    	encryption.setSalt("SALT"); // TODO: What to use as salt?    			
+	}
+	
+	private void initConnectionPlugin(ConfigTO configTO) throws Exception {
+		PluginInfo plugin = Plugins.get(configTO.getConnection().getType());
     	
     	if (plugin == null) {
     		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());
     	}
     	
     	connection = plugin.createConnection();
-    	connection.init(configTO.getConnection().getSettings());    	    	
+    	connection.init(configTO.getConnection().getSettings());    	
+	}
+	
+	private void initLogging(ConfigTO configTO) {
+		// TODO init logging
 	}
 
 	public File getAppDir() {
@@ -174,7 +190,4 @@ public class Profile {
 	public void setAppDatabaseDir(File appDatabaseDir) {
 		this.appDatabaseDir = appDatabaseDir;
 	}
-	
-	
-
 }

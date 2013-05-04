@@ -31,6 +31,8 @@ import org.syncany.connection.plugins.TransferManager;
 /**
  * Represents the remote storage.
  * Processes upload and download requests asynchronously.
+ * 
+ * TODO Create listener for upload success and upload failure per file
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -49,22 +51,32 @@ public class Uploader {
         this.worker = null; // cmp. method 'start'
     }   
 
-    public synchronized void start() {
-        if (worker != null)
-            return;
+    public synchronized boolean start() {
+        if (isRunning()) {
+            return false;
+        }
         
         transferManager = connection.createTransferManager();
         
-        worker = new Thread(new Worker(), Uploader.class.getSimpleName());        
+        worker = new Thread(new UploadWorker(), Uploader.class.getSimpleName());        
         worker.start();
+        
+        return true;
     }
 
-    public synchronized void stop() {
-        if (worker == null || worker.isInterrupted())
-            return;
+    public synchronized boolean stop() {
+        if (!isRunning()) {
+            return false;
+        }
 
         worker.interrupt(); 
         worker = null;
+        
+        return true;
+    }
+    
+    public synchronized boolean isRunning() {
+    	return worker != null && !worker.isInterrupted();
     }
 
     public synchronized void queue(File localFile) throws InterruptedException {
@@ -76,11 +88,11 @@ public class Uploader {
         queue.put(new UploadRequest(localFile, remoteFile));
     }
     
-    public boolean isQueueEmtpy(){
+    public synchronized boolean isQueueEmtpy(){
     	return queue.isEmpty();
     }
 
-	public int queueSize() {
+	public synchronized int getQueueSize() {
 		return queue.size();
 	}        
     
@@ -92,27 +104,13 @@ public class Uploader {
             this.localFile = localFileToUpload;
             this.remoteFile = remoteFile;
         }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final UploadRequest other = (UploadRequest) obj;
-            if (this.localFile != other.localFile && (this.localFile == null || !this.localFile.equals(other.localFile))) {
-                return false;
-            }
-            return true;
-        }
-                
 	}
 
-	private class Worker implements Runnable {
+	private class UploadWorker implements Runnable {
 		@Override
 		public void run() {
+			logger.log(Level.INFO, "Worker started.");
+			
 			try {
 				UploadRequest currentUploadRequest;
 
@@ -123,18 +121,12 @@ public class Uploader {
 																																				 
 			}
             catch (InterruptedException iex) {
-                iex.printStackTrace();
+            	logger.log(Level.INFO, "Worker interrupted.");
             }
         }
 
         private void processRequest(UploadRequest uploadRequest) {
-        	logger.log(Level.INFO, "Processing upload request {0}", uploadRequest.localFile);
-            
-        	// TODO Caching for performance           
-        	
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
-            }
+        	logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
             
             try {
                 transferManager.upload(uploadRequest.localFile, uploadRequest.remoteFile);
@@ -144,9 +136,7 @@ public class Uploader {
                 return; // TODO and now?
             }
 
-            if (logger.isLoggable(Level.INFO)) {
-                logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
-            }
+            logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
         }
     }
 }

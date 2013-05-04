@@ -55,7 +55,7 @@ public class UploaderWithLocalPluginTest {
 	
 	@After
 	public void tearDown() {
-		TestUtil.deleteDirectory(tempLocalSourceDir);
+		//TestUtil.deleteDirectory(tempLocalSourceDir);
 	}
 	
 	@Test
@@ -76,7 +76,7 @@ public class UploaderWithLocalPluginTest {
 			uploader.queue(localFileToUpload);
 		}
 		
-		assertEquals("Queue expected to contain "+localFilesToUpload.size()+" files.", localFilesToUpload.size(), uploader.queueSize());
+		assertEquals("Queue expected to contain "+localFilesToUpload.size()+" files.", localFilesToUpload.size(), uploader.getQueueSize());
 		
 		uploader.start();
 		
@@ -96,6 +96,28 @@ public class UploaderWithLocalPluginTest {
 			}
 		}, 5000);*/
 	}
+	
+	@Test
+	public void testMultipleStartsAndStops() throws StorageException {
+		Connection connection = loadPluginAndCreateConnection();
+		Uploader uploader = new Uploader(connection);
+		
+		boolean uploaderStartSuccess = uploader.start();
+		assertTrue("Uploader expected to start successfully.", uploaderStartSuccess);
+		
+		uploaderStartSuccess = uploader.start();
+		assertFalse("Uploader expected to fail second start.", uploaderStartSuccess);
+		
+		boolean uploaderIsRunning = uploader.isRunning();
+		assertTrue("Uploader expected to be running.", uploaderIsRunning);
+		
+		boolean uploaderStopSuccess = uploader.stop();
+		assertTrue("Uploader expected to be stopped.", uploaderStopSuccess);
+		
+		uploaderStopSuccess = uploader.stop();
+		assertFalse("Uploader expected to fail second stop.", uploaderStopSuccess);
+	}
+	
 	
 	private Connection loadPluginAndCreateConnection() throws StorageException {
 		PluginInfo pluginInfo = Plugins.get("local");	

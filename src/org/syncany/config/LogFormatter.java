@@ -30,13 +30,6 @@ import org.syncany.util.StringUtil;
  * Adapted by pheckel
  */
 public class LogFormatter extends Formatter {
-    /* private static final Config config = Config.getInstance();
-     * 
-     * WARNING: Do NOT add 'Config' as a static final here. 
-     *          Since this class is created in the Config constructor, 
-     *          Config.getInstance() will return NULL.
-     */
-    
     private DateFormat dateFormat;
 
     public LogFormatter() {

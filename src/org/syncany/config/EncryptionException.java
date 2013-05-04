@@ -22,8 +22,9 @@ package org.syncany.config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class EncryptionException extends Exception {
+	private static final long serialVersionUID = -4974450231162263359L;
 
-    public EncryptionException(Throwable cause) {
+	public EncryptionException(Throwable cause) {
         super(cause);
     }
 
@@ -36,6 +37,7 @@ public class EncryptionException extends Exception {
     }
 
     public EncryptionException() {
+    	// Intentionally left blank.
     }
     
 }

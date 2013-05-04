@@ -20,7 +20,6 @@ package org.syncany.config;
 import java.io.File;
 import java.io.IOException;
 
-import org.syncany.chunk.MultiChunk;
 import org.syncany.util.StringUtil;
 
 
@@ -29,13 +28,8 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Cache {
-	
-  	/**
-     * 1 = Cache folder
-     * 2 = Chunk file name (defined by {@link CloneChunk#getFileName()})
-     */
-    private static String CHUNK_FORMAT = "%1$s/enc-%2$s"; 
-    private static String PLAIN_CHUNK_FORMAT = "%1$s/plain-%2$s";
+	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-encrypted-%s";
+    private static String FILE_FORMAT_CHUNK_DECRYPTED = "chunk-decrypted-%s";
 
     private File cacheDir;
     
@@ -43,18 +37,12 @@ public class Cache {
     	this.cacheDir = cacheDir;
     }
 
-    public File getMultiChunkFile(MultiChunk multiChunk) {
-        return new File(String.format(CHUNK_FORMAT,
-            cacheDir.getAbsoluteFile(),
-            StringUtil.toHex(multiChunk.getId()))
-        );
+    public File getEncryptedMultiChunkFile(byte[] multiChunkId) {
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, multiChunkId);
     }
     
-    public File getPlainChunkFile(byte[] checksum) {
-        return new File(String.format(PLAIN_CHUNK_FORMAT,
-            cacheDir.getAbsoluteFile(),
-            StringUtil.toHex(checksum))
-        );            
+    public File getChunkFile(byte[] chunkId) {
+    	return getFileInCache(FILE_FORMAT_CHUNK_DECRYPTED, chunkId);
     }        
 
     public File createTempFile() throws CacheException {
@@ -63,12 +51,17 @@ public class Cache {
 
     public File createTempFile(String name) throws CacheException {
        try {
-           return File.createTempFile(
-                String.format("temp-%s-", name),
-                ".tmp", cacheDir);
+           return File.createTempFile(String.format("temp-%s-", name), ".tmp", cacheDir);
        }
        catch (IOException e) {
            throw new CacheException("Unable to create temporary file in cache.", e);
        }
-   }
+    }
+    
+    private File getFileInCache(String format, byte[] id) {
+        return new File(
+    		cacheDir.getAbsoluteFile()+File.separator+
+    		String.format(format, StringUtil.toHex(id))
+        );
+    }
 }
