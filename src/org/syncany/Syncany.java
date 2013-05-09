@@ -32,8 +32,8 @@ public class Syncany {
 		initApplication(profile);
 		
 		runOperation(application, operation);
-	}
-	
+	}	
+
 	private void readCommandLineArguments(String[] args) throws Exception {
 		if (args.length == 3) { // -f config.json up
 			readCommandLineArgumentsWithSpecificConfigFile(args);
