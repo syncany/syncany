@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.TTTDChunker;
-import org.syncany.tests.TestUtil;
+import org.syncany.tests.util.TestUtil;
 
 public class TTTDChunkerTest {
 	private File tempDir;

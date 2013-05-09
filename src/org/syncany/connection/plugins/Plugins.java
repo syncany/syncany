@@ -29,118 +29,117 @@ import org.syncany.util.ClasspathUtil;
 import org.syncany.util.StringUtil;
 
 /**
- *
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Plugins {
-    private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
-    private static final Map<String, PluginInfo> plugins = new TreeMap<String, PluginInfo>();
-    private static boolean loaded = false;
-    private static Thread asyncLoadThread = null;
-    
-    public static void loadAsync(){
-        if(asyncLoadThread == null){
-            // Pre-load the plugins
-            asyncLoadThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-		    logger.log(Level.INFO, "Preloading Plugins Start");	
-                    Plugins.load();
-		    logger.log(Level.INFO, "Preloading Plugins End");	
-                }
-            }, "PreloadPlugins");
-            asyncLoadThread.start();
-        }
-    }
-    
-    public static void waitForAsyncLoaded() throws InterruptedException {
-       if(asyncLoadThread!=null){
-           asyncLoadThread.join();
-       }
-    }
+	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
+	private static final Map<String, PluginInfo> plugins = new TreeMap<String, PluginInfo>();
+	private static boolean loaded = false;
+	private static Thread asyncLoadThread = null;
 
-    private static void load() {
-        if (loaded) {
-            return;
-        }
-        
-        loaded = true;
+	public static void loadAsync() {
+		if (asyncLoadThread == null) {
+			// Pre-load the plugins
+			asyncLoadThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					logger.log(Level.INFO, "Preloading Plugins Start");
+					Plugins.load();
+					logger.log(Level.INFO, "Preloading Plugins End");
+				}
+			}, "PreloadPlugins");
+			asyncLoadThread.start();
+		}
+	}
 
-        // TODO: Performance!!!!!!
-        for (String className : ClasspathUtil.getClasspathClasses().values()) {          
-            // Performance!!
-            if (!className.startsWith(Constants.PLUGIN_FQCN_PREFIX) || 
-                !className.endsWith(Constants.PLUGIN_FQCN_SUFFIX)) {
-                
-                continue;
-            }
+	public static void waitForAsyncLoaded() throws InterruptedException {
+		if (asyncLoadThread != null) {
+			asyncLoadThread.join();
+		}
+	}
 
-            Matcher m = Constants.PLUGIN_NAME_REGEX_PLUGIN_INFO.matcher(className);
+	private static void load() {
+		if (loaded) {
+			return;
+		}
 
-            if (!m.matches()) {
-                continue;
-            }
+		loaded = true;
 
-            //System.out.println(className);
-            loadPlugin(m.group(1));
-        }
-    }
+		// TODO: Performance!!!!!!
+		for (String className : ClasspathUtil.getClasspathClasses().values()) {
+			// Performance!!
+			if (!className.startsWith(Constants.PLUGIN_FQCN_PREFIX) || !className.endsWith(Constants.PLUGIN_FQCN_SUFFIX)) {
 
-    public static Collection<PluginInfo> list() {
-        loadAsync();
-        try{
-            waitForAsyncLoaded();
-        }catch(InterruptedException e){
-            // Swallow this Exception, not sure what to do here anyways.
-        }
-        return plugins.values();
-    }
+				continue;
+			}
 
-    /**
-     * Loads the plugin by a given ID.
-     *
-     * <p>Does not call the list() method to boost performance.
-     * 
-     * @param pluginId
-     * @return
-     */
-    public static PluginInfo get(String pluginId) {
-        // If already loaded, get from list
-        if (plugins.containsKey(pluginId)) {
-            return plugins.get(pluginId);
-        }
+			Matcher m = Constants.PLUGIN_NAME_REGEX_PLUGIN_INFO.matcher(className);
 
-        // Try to load via name
-        loadPlugin(pluginId);
+			if (!m.matches()) {
+				continue;
+			}
 
-        if (plugins.containsKey(pluginId)) {
-            return plugins.get(pluginId);
-        }
+			// System.out.println(className);
+			loadPlugin(m.group(1));
+		}
+	}
 
-        // Not found!
-        return null;
-    }
+	public static Collection<PluginInfo> list() {
+		loadAsync();
+		try {
+			waitForAsyncLoaded();
+		} catch (InterruptedException e) {
+			// Swallow this Exception, not sure what to do here anyways.
+		}
+		return plugins.values();
+	}
 
-    private static void loadPlugin(String pluginId) {
-        String className = String.format(Constants.PLUGIN_FQCN_PATTERN, pluginId, StringUtil.toCamelCase(pluginId));
-        loadPlugin(pluginId, className);
-    }
+	/**
+	 * Loads the plugin by a given ID.
+	 * 
+	 * <p>
+	 * Does not call the list() method to boost performance.
+	 * 
+	 * @param pluginId
+	 * @return
+	 */
+	public static PluginInfo get(String pluginId) {
+		// If already loaded, get from list
+		if (plugins.containsKey(pluginId)) {
+			return plugins.get(pluginId);
+		}
 
-    private static void loadPlugin(String pluginId, String className) {
-        // Already loaded
-        if (plugins.containsKey(pluginId)) {
-            return;
-        }
+		// Try to load via name
+		loadPlugin(pluginId);
 
-        // Try to load!
-        try {
-            Class pluginInfoClass = Class.forName(className);
-            PluginInfo pluginInfo = (PluginInfo) pluginInfoClass.newInstance();
+		if (plugins.containsKey(pluginId)) {
+			return plugins.get(pluginId);
+		}
 
-            plugins.put(pluginId, pluginInfo);
-        }
-        catch (Exception ex) {
-            logger.log(Level.WARNING, "Could not load plugin : "+className, ex);
-        }
-    }
+		// Not found!
+		return null;
+	}
+
+	private static void loadPlugin(String pluginId) {
+		String className = String.format(Constants.PLUGIN_FQCN_PATTERN, pluginId, StringUtil.toCamelCase(pluginId));
+		loadPlugin(pluginId, className);
+	}
+
+	private static void loadPlugin(String pluginId, String className) {
+		// Already loaded
+		if (plugins.containsKey(pluginId)) {
+			return;
+		}
+
+		// Try to load!
+		try {
+			Class<?> pluginInfoClass = Class.forName(className);
+			PluginInfo pluginInfo = (PluginInfo) pluginInfoClass.newInstance();
+
+			plugins.put(pluginId, pluginInfo);
+		} catch (Exception ex) {
+			logger.log(Level.WARNING, "Could not load plugin : " + className, ex);
+		}
+	}
 }

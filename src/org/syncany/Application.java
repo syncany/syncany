@@ -281,5 +281,10 @@ public class Application {
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}
 
+	public void syncDown() throws Exception {
+		throw new Exception("Not yet implemented.");
+		
+	}
+
 	
 }

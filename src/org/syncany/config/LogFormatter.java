@@ -17,34 +17,26 @@
  */
 package org.syncany.config;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
-import org.syncany.util.StringUtil;
-
-/**
- * From: http://publib.boulder.ibm.com/infocenter/wasinfo/v6r0/index.jsp?topic=/com.ibm.websphere.express.doc/info/exp/ae/rtrb_createformatter.html
- * Adapted by pheckel
- */
 public class LogFormatter extends Formatter {
     private DateFormat dateFormat;
 
     public LogFormatter() {
-        super();
-
         dateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
     }
 
     @Override
     public String format(LogRecord record) {
-        // Create a StringBuffer to contain the formatted record
-        // start with the date.
         StringBuilder sb = new StringBuilder();
 
-        // Get the date from the LogRecord and add it to the buffer        
         sb.append(dateFormat.format(new Date(record.getMillis())));
         sb.append(" | ");
         sb.append(String.format("%-20s", record.getLoggerName()));
@@ -57,9 +49,17 @@ public class LogFormatter extends Formatter {
         sb.append("\n");
 
         if (record.getThrown() != null) {
-            sb.append(StringUtil.getStackTrace(record.getThrown()));
+            sb.append(getStackTrace(record.getThrown()));
         }
 
         return sb.toString();
     }
+    
+    private static String getStackTrace(Throwable aThrowable) {
+        Writer result = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(result);
+        aThrowable.printStackTrace(printWriter);
+        
+        return result.toString();
+    }      
 }

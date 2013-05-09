@@ -17,8 +17,8 @@
  */
 package org.syncany.db;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Arrays;
+
 
 /**
  *
@@ -27,14 +27,12 @@ import java.util.List;
 public class ChunkEntry {
     private byte[] checksum;      
     private int size;    
-    private transient List<MultiChunkEntry> multiChunks;
     
     public ChunkEntry() {
-        this.multiChunks = new LinkedList<MultiChunkEntry>();
+    	this(null, 0);        
     }
     
     public ChunkEntry(byte[] checksum, int size) {
-        this();        
         this.checksum = checksum;
         this.size = size;
     }    
@@ -54,21 +52,29 @@ public class ChunkEntry {
     public void setChecksum(byte[] checksum) {
         this.checksum = checksum;
     }
-    
-    @Deprecated
-    // FIXME how to handle cross-references in general
-    public void addMetaChunk(MultiChunkEntry metaChunk) {
-        multiChunks.add(metaChunk);
-    }
-    
-    public List<MultiChunkEntry> getMultiChunks() {
-        return multiChunks;
-    }
-    
-    public MultiChunkEntry getMultiChunk() {
-        return (!multiChunks.isEmpty()) ? multiChunks.get(0) : null;
-    }
-    
 
-    
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(checksum);
+		result = prime * result + size;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ChunkEntry other = (ChunkEntry) obj;
+		if (!Arrays.equals(checksum, other.checksum))
+			return false;
+		if (size != other.size)
+			return false;
+		return true;
+	}    
 }

@@ -17,7 +17,6 @@
  */
 package org.syncany.connection.plugins;
 
-import org.syncany.util.StringUtil;
 
 /**
  *

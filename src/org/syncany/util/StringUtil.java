@@ -20,9 +20,6 @@ package org.syncany.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.math.BigInteger;
 import java.util.Collection;
 
@@ -93,14 +90,6 @@ public class StringUtil {
         return sb.toString();
     }
     
-    public static String getStackTrace(Throwable aThrowable) {
-        final Writer result = new StringWriter();
-        final PrintWriter printWriter = new PrintWriter(result);
-        aThrowable.printStackTrace(printWriter);
-        
-        return result.toString();
-    }  
-    
     public static String toHex(byte[] bytes) {
         BigInteger bi = new BigInteger(1, bytes);
         return String.format("%0" + (bytes.length << 1) + "x", bi);
@@ -126,16 +115,7 @@ public class StringUtil {
         }
         
         return count - 1;                
-    }
-    
-    public static void main(String[] args) {
-        System.out.println(count("/some/path", "/"));
-        System.out.println(count("some/path/", "/"));
-        System.out.println(count("/some/path/", "/"));
-        /*byte[] b = new byte[]{1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0};
-        System.out.println(Arrays.equals(b, fromHex(toHex(b))));*/
-        
-    }   
+    }    
     
     public static String readStream(InputStream in, String charsetName) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

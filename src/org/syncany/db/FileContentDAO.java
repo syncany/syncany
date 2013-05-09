@@ -23,7 +23,7 @@ public class FileContentDAO {
         }		
 	}
 
-	public FileContent readFileContent(Database db, DataInputStream dis) throws IOException {
+	public FileContent readFileContent(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {
 		FileContent fileContent = new FileContent();
 		
 		// Content checksum
@@ -46,8 +46,11 @@ public class FileContentDAO {
 			ChunkEntry chunk = db.getChunk(chunkChecksum);
 
 			if (chunk == null) {
-				throw new IOException("Chunk with checksum "
-						+ Arrays.toString(chunkChecksum) + " does not exist.");
+				chunk = dbv.getChunk(chunkChecksum);
+				
+				if (chunk == null) {
+					throw new IOException("Chunk with checksum " + Arrays.toString(chunkChecksum) + " does not exist.");
+				}
 			}
 
 			fileContent.addChunk(chunk);

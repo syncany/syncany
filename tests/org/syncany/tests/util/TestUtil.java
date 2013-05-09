@@ -1,4 +1,4 @@
-package org.syncany.tests;
+package org.syncany.tests.util;
 
 import java.io.File;
 import java.io.FileInputStream;

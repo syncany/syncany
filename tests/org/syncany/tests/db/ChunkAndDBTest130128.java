@@ -17,6 +17,8 @@ import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.db.ChunkEntry;
+import org.syncany.db.Database;
+import org.syncany.db.DatabaseVersion;
 import org.syncany.db.FileContent;
 import org.syncany.db.FileHistoryPart;
 import org.syncany.db.FileVersion;
@@ -28,7 +30,7 @@ public class ChunkAndDBTest130128 {
 
 	@Test
 	public void saveLoadSaveTest() throws IOException {
-		DatabaseOLD db;
+		Database db;
 		
 		System.out.println("save1()");
 		System.out.println("----------------------------");
@@ -43,8 +45,9 @@ public class ChunkAndDBTest130128 {
 		saveLoadSaveTestSave2(db);
 	}
 	
-	public DatabaseOLD saveLoadSaveTestSave1() throws IOException {
-		DatabaseOLD db = new DatabaseOLD();
+	public Database saveLoadSaveTestSave1() throws IOException {
+		Database db = new Database();
+		DatabaseVersion dbv = new DatabaseVersion();
 		
 		// Create first file
         ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
@@ -52,10 +55,10 @@ public class ChunkAndDBTest130128 {
         ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 1,1,1,1,1,1,1,1,1}, 56);
         ChunkEntry chunkA4 = new ChunkEntry(new byte[] { 2,2,2,2,2,2,2,2,2}, 78);
         
-        db.addChunk(chunkA1);
-        db.addChunk(chunkA2);
-        db.addChunk(chunkA3);
-        db.addChunk(chunkA4);
+        dbv.addChunk(chunkA1);
+        dbv.addChunk(chunkA2);
+        dbv.addChunk(chunkA3);
+        dbv.addChunk(chunkA4);
 		
         FileContent contentA = new FileContent();        
         contentA.addChunk(chunkA1);
@@ -63,52 +66,52 @@ public class ChunkAndDBTest130128 {
         contentA.addChunk(chunkA3);
         contentA.addChunk(chunkA4);
         contentA.setChecksum(new byte[]{5,5,5,4,4,5,5,5,5});              
-        db.addFileContent(contentA);
+        dbv.addFileContent(contentA);
         
         FileHistoryPart fileA = new FileHistoryPart();
         
-        FileVersion versionA1 = db.createFileVersion(fileA);
+        FileVersion versionA1 = dbv.createFileVersion(fileA);
         versionA1.setVersion(1L);
         versionA1.setPath("some/path");
         versionA1.setName("fileA.jpg");
         versionA1.setContent(contentA);
        // fileA.addVersion(versionA1);
         
-        FileVersion versionA2 = db.createFileVersion(fileA);
+        FileVersion versionA2 = dbv.createFileVersion(fileA);
         versionA2.setVersion(2L);
         versionA2.setName("renamed-fileA.jpg");        
         //fileA.addVersion(versionA2);
         
-        db.addFileHistory(fileA);
+        dbv.addFileHistory(fileA);
         
         // Create second file
         ChunkEntry chunkB1 = new ChunkEntry(new byte[] { 3,3,3,3,3,3,3,3,3}, 910);
         ChunkEntry chunkB2 = new ChunkEntry(new byte[] { 4,4,4,4,4,4,4,4,4}, 1112);
         
-        db.addChunk(chunkB1);
-        db.addChunk(chunkB2);
+        dbv.addChunk(chunkB1);
+        dbv.addChunk(chunkB2);
         
         FileContent contentB = new FileContent();
         contentB.addChunk(chunkB1);
         contentB.addChunk(chunkB2);   
         contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
-        db.addFileContent(contentB);
+        dbv.addFileContent(contentB);
 
         FileHistoryPart fileB = new FileHistoryPart();
         
-        FileVersion versionB1 = db.createFileVersion(fileB);
+        FileVersion versionB1 = dbv.createFileVersion(fileB);
         versionB1.setVersion(1L);
         versionB1.setPath("some/other/path");
         versionB1.setName("fileB.jpg");
         versionB1.setContent(contentB);
         //fileB.addVersion(versionB1);
         
-        FileVersion versionB2 = db.createFileVersion(fileB);
+        FileVersion versionB2 = dbv.createFileVersion(fileB);
         versionB1.setVersion(2L);
         versionB2.setName("renamed-fileB.jpg");        
         //fileB.addVersion(versionB2);
         
-        db.addFileHistory(fileB);
+        dbv.addFileHistory(fileB);
         
         // Distribute chunks to multichunks
         MultiChunkEntry multiChunkA = new MultiChunkEntry();
@@ -116,18 +119,18 @@ public class ChunkAndDBTest130128 {
         multiChunkA.addChunk(chunkA2); // from fileA
         multiChunkA.addChunk(chunkA3); // from fileA
         multiChunkA.setChecksum(new byte[] {6,6,6,6,6,6,6,6,6});
-        db.addMultiChunk(multiChunkA);
+        dbv.addMultiChunk(multiChunkA);
         
         MultiChunkEntry multiChunkB = new MultiChunkEntry();
         multiChunkB.addChunk(chunkA4); // from fileA
         multiChunkB.addChunk(chunkB1); // from fileB
         multiChunkB.addChunk(chunkB2); // from fileB
         multiChunkB.setChecksum(new byte[] {7,7,7,7,7,7,7,7,7});
-        db.addMultiChunk(multiChunkB);
+        dbv.addMultiChunk(multiChunkB);
 
         // Save database
         File dbFile = new File("/tmp/dbfile");
-        db.save(dbFile, true, false);        
+        dbv.save(dbFile, true, false);        
         
         System.out.println(db);
         return db;

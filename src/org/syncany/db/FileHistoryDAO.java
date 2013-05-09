@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.syncany.util.NumberUtil;
+import org.syncany.util.StringUtil;
+
 
 public class FileHistoryDAO {
 	public void writeFileHistory(FileHistoryPart fileHistory, DataOutputStream dos) throws IOException {
@@ -19,23 +22,27 @@ public class FileHistoryDAO {
 		if (versions.isEmpty()) {
 			dos.writeInt(0); // count						
 		}
-		else {
+		else { 
+			dos.writeInt(versions.size());
+			
 			for (FileVersion fileVersion : versions) {
 				writeFileVersion(fileVersion, dos);
 			}
 		}		
 	}
 	
-	public FileHistoryPart readFileHistory(Database db, DataInputStream dis) throws IOException {
+	public FileHistoryPart readFileHistory(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {
 		// File history
 		FileHistoryPart fileHistory = new FileHistoryPart();
-		fileHistory.setFileId(dis.readLong());
+		
+		long fileId = dis.readLong();
+		fileHistory.setFileId(fileId);
 
 		// And its versions
 		int fileVersionCount = dis.readInt();
 		
 		for (int i=0; i<fileVersionCount; i++) {
-			FileVersion fileVersion = readFileVersion(db, fileHistory, dis);
+			FileVersion fileVersion = readFileVersion(db, dbv, fileHistory, dis);
 			fileHistory.addFileVersion(fileVersion);
 		}
 		
@@ -60,16 +67,17 @@ public class FileHistoryDAO {
 		out.writeBytes(fileVersion.getName());
 	}
 	
-	private FileVersion readFileVersion(Database db, FileHistoryPart fileHistory, DataInputStream dis) throws IOException {
+	private FileVersion readFileVersion(Database db, DatabaseVersion dbv, FileHistoryPart fileHistory, DataInputStream dis) throws IOException {
 		FileVersion fileVersion = new FileVersion();
 				
 		// Version
-		fileVersion.setVersion(dis.readLong());
-
+		long version = dis.readLong();
+		fileVersion.setVersion(version);
+		
 		// Content
-		byte hasContent = dis.readByte();
-
-		if ((hasContent & 0xff) == 0x01) {
+		byte hasContent = dis.readByte();		
+		
+		if (hasContent == 0x01) {
 			byte fileContentChecksumLength = dis.readByte();
 			byte[] fileContentChecksum = new byte[fileContentChecksumLength];
 			dis.readFully(fileContentChecksum);
@@ -77,8 +85,11 @@ public class FileHistoryDAO {
 			FileContent fileContent = db.getContent(fileContentChecksum);
 			
 			if (fileContent == null) {
-				throw new IOException("File content with checksum "
-						+ Arrays.toString(fileContentChecksum) + " does not exist.");
+				fileContent = dbv.getFileContent(fileContentChecksum);
+				
+				if (fileContent == null) {
+					throw new IOException("File content with checksum " + Arrays.toString(fileContentChecksum) + " does not exist.");
+				}
 			}
 			
 			fileVersion.setContent(fileContent);
@@ -88,12 +99,14 @@ public class FileHistoryDAO {
 		short pathBytesLength = dis.readShort();
 		byte[] pathBytes = new byte[pathBytesLength];
 		dis.readFully(pathBytes);
-		fileVersion.setPath(new String(pathBytes));
+		String path = new String(pathBytes);
+		fileVersion.setPath(path);
 
 		short nameBytesLength = dis.readShort();
 		byte[] nameBytes = new byte[nameBytesLength];
 		dis.readFully(nameBytes);
-		fileVersion.setName(new String(nameBytes));
+		String name = new String(nameBytes);
+		fileVersion.setName(name);
 
 		return fileVersion;
 	}

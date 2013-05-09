@@ -10,7 +10,7 @@ import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.local.LocalConnectionPluginTest;
 import org.syncany.tests.connection.local.UploaderWithLocalPluginTest;
-
+import org.syncany.tests.db.DatabaseWriteReadTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -25,11 +25,11 @@ import org.syncany.tests.connection.local.UploaderWithLocalPluginTest;
 	
 	// Connection
 	LocalConnectionPluginTest.class,
-	UploaderWithLocalPluginTest.class
+	UploaderWithLocalPluginTest.class,
 	
-	// Alte Tests
-	//ChunkAndDBTest130128.class
+	// Database
+	DatabaseWriteReadTest.class
 })
-public class AllTests {
+public class AllTestsSuite {
 	// This class executes all tests
 }

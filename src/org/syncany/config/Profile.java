@@ -56,7 +56,6 @@ public class Profile {
 		initChunkingFramework(configTO);
     	initEncryption(configTO);
     	initConnectionPlugin(configTO);    
-    	initLogging(configTO); // TODO
 	}
 	
 	private void initDirectories(ConfigTO configTO) {
@@ -89,10 +88,6 @@ public class Profile {
     	
     	connection = plugin.createConnection();
     	connection.init(configTO.getConnection().getSettings());    	
-	}
-	
-	private void initLogging(ConfigTO configTO) {
-		// TODO init logging
 	}
 
 	public File getAppDir() {

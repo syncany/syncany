@@ -36,7 +36,7 @@ import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.TTTDChunker;
 import org.syncany.chunk.Transformer;
-import org.syncany.tests.TestUtil;
+import org.syncany.tests.util.TestUtil;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;

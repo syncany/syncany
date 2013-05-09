@@ -73,7 +73,7 @@ import java.util.Map;
  *     q byte      Name 
  */  
 public class DatabaseDAO {
-	
+	private static final byte[] DATABASE_MAGIC = "Syncany".getBytes();
 	private static final byte DATABASE_FORMAT_VERSION = 0x01;
 
 	
@@ -82,7 +82,6 @@ public class DatabaseDAO {
 	}
 	
 	public void save(Database db, long versionFrom, long versionTo, File destinationFile) throws IOException {		
-        Collection l;
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(destinationFile));  
 		
         // DAOs
@@ -92,15 +91,17 @@ public class DatabaseDAO {
 		FileContentDAO fileContentDAO = new FileContentDAO();
         
         // Signature and version        
-        dos.write("Syncany".getBytes()); 
+        dos.write(DATABASE_MAGIC); 
         dos.writeByte(DATABASE_FORMAT_VERSION);
         
         // Amount of versions
-        dos.writeLong(versionTo-versionFrom+1);
+        long databaseVersionCount = versionTo-versionFrom+1; 
+        dos.writeLong(databaseVersionCount);
         
         for (long i = versionFrom; i <= versionTo; i++) {
         	// Local version
-			dos.writeLong(i);
+        	long localDatabaseVersion = i;
+			dos.writeLong(localDatabaseVersion);
 
 			// Write object
 			DatabaseVersion dbv = db.getDatabaseVersion(i);
@@ -119,61 +120,55 @@ public class DatabaseDAO {
 				dos.writeLong(clientVersion);
 			}
 			
-			// Get the version
-			Collection<ChunkEntry> newChunkCache = dbv.getChunks();
-			Collection<MultiChunkEntry> newMultiChunkCache = dbv.getMultiChunks();
-			Collection<FileContent> newContentCache = dbv.getFileContents();
-			Collection<FileHistoryPart> newHistoryCache = dbv.getFileHistories();
-
 			// Chunks
-			l = newChunkCache;
+			Collection<ChunkEntry> chunks = dbv.getChunks();
 
-			if (l == null || l.isEmpty()) {
+			if (chunks == null || chunks.isEmpty()) {
 				dos.writeInt(0); // count
 			} else {
-				dos.writeInt(l.size()); // count
+				dos.writeInt(chunks.size()); // count
 
-				for (Object obj : l) {
-					chunkDAO.writeChunk((ChunkEntry) obj, dos);
+				for (ChunkEntry chunk : chunks) {
+					chunkDAO.writeChunk(chunk, dos);
 				}
 			}
 
 			// Multichunks
-			l = newMultiChunkCache;
+			Collection<MultiChunkEntry> multiChunks = dbv.getMultiChunks();
 
-			if (l == null || l.isEmpty()) {
+			if (multiChunks == null || multiChunks.isEmpty()) {
 				dos.writeInt(0); // count
 			} else {
-				dos.writeInt(l.size()); // count
+				dos.writeInt(multiChunks.size()); // count
 
-				for (Object obj : l) {
-					multiChunkDAO.writeMultiChunk((MultiChunkEntry) obj, dos);
+				for (MultiChunkEntry multiChunk : multiChunks) {
+					multiChunkDAO.writeMultiChunk(multiChunk, dos);
 				}
 			}
 
 			// Content
-			l = newContentCache;
+			Collection<FileContent> fileContents = dbv.getFileContents();
 
-			if (l == null || l.isEmpty()) {
+			if (fileContents == null || fileContents.isEmpty()) {
 				dos.writeInt(0); // count
 			} else {
-				dos.writeInt(l.size()); // count
+				dos.writeInt(fileContents.size()); // count
 
-				for (Object obj : l) {
-					fileContentDAO.writeFileContent((FileContent) obj, dos);
+				for (FileContent fileContent : fileContents) {
+					fileContentDAO.writeFileContent(fileContent, dos);
 				}
 			}
 
 			// File histories & versions
-			l = newHistoryCache;
+			Collection<FileHistoryPart> fileHistories = dbv.getFileHistories();
 
-			if (l == null || l.isEmpty()) {
+			if (fileHistories == null || fileHistories.isEmpty()) {
 				dos.writeInt(0); // count
 			} else {
-				dos.writeInt(l.size()); // count
+				dos.writeInt(fileHistories.size()); // count
 
-				for (Object obj : l) {
-					fileHistoryDAO.writeFileHistory((FileHistoryPart) obj, dos);
+				for (FileHistoryPart fileHistory : fileHistories) {
+					fileHistoryDAO.writeFileHistory(fileHistory, dos);
 				}
 			}
 		}
@@ -211,8 +206,9 @@ public class DatabaseDAO {
         for (long i=0; i<databaseVersionCount; i++) {
         	// Local database version (= key)
         	long localDatabaseVersion = dis.readLong();
+        	// TODO do something with this!
 
-        	// Read obect (= value)
+        	// Read object (= value)
         	DatabaseVersion dbv = new DatabaseVersion();
         	
         	// Global database version
@@ -247,7 +243,7 @@ public class DatabaseDAO {
             int metaChunkCount = dis.readInt();
 
             for (int j = 0; j < metaChunkCount; j++) {
-                MultiChunkEntry multiChunk = multiChunkDAO.readMultiChunk(db, dis);
+                MultiChunkEntry multiChunk = multiChunkDAO.readMultiChunk(db, dbv, dis);
                 dbv.addMultiChunk(multiChunk);                
             }
             
@@ -255,15 +251,16 @@ public class DatabaseDAO {
             int fileContentCount = dis.readInt();
 
             for (int j = 0; j < fileContentCount; j++) {
-                FileContent content = fileContentDAO.readFileContent(db, dis);
+                FileContent content = fileContentDAO.readFileContent(db, dbv, dis);
                 dbv.addFileContent(content);
             }        
             
             // Histories
             int fileHistoryCount = dis.readInt();
+            System.out.println("fileHistoryCount = "+fileHistoryCount);
 
             for (int j = 0; j < fileHistoryCount; j++) {
-                FileHistoryPart fileHistory = fileHistoryDAO.readFileHistory(db, dis);
+                FileHistoryPart fileHistory = fileHistoryDAO.readFileHistory(db, dbv, dis);
                 dbv.addFileHistory(fileHistory);
             }                 
         	

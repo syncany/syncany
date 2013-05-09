@@ -20,7 +20,7 @@ public class MultiChunkDAO {
 		}
 	}
 
-	public MultiChunkEntry readMultiChunk(Database db, DataInputStream dis) throws IOException {
+	public MultiChunkEntry readMultiChunk(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {
 		MultiChunkEntry multiChunk = new MultiChunkEntry();
 		
 		// Multichunk checksum
@@ -39,8 +39,11 @@ public class MultiChunkDAO {
 			ChunkEntry chunk = db.getChunk(chunkChecksum);
 
 			if (chunk == null) {
-				throw new IOException("Chunk with checksum "
-						+ Arrays.toString(chunkChecksum) + " does not exist.");
+				chunk = dbv.getChunk(chunkChecksum);
+				
+				if (chunk == null) {
+					throw new IOException("Chunk with checksum " + Arrays.toString(chunkChecksum) + " does not exist.");
+				}
 			}
 
 			multiChunk.addChunk(chunk);

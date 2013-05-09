@@ -26,22 +26,6 @@ import java.util.regex.Pattern;
  */
 public abstract class Constants {
     /**
-     * Syncany divides bigger files in chunks. This value defines the kilobytes (KB) of
-     * how big one (unencrypted) chunk might become (1024 = 1 MB).
-     */
-    public static final int DEFAULT_CHUNK_SIZE = 512;
-
-    /**
-     * Minimum size of one chunk in kilobytes (KB).
-     */
-    public static final int MINIMUM_CHUNK_SIZE = 128;
-
-    /**
-     * Default size of the syncany cache in megabytes (MB).
-     */
-    public static final int DEFAULT_CACHE_SIZE = 1024;
-
-    /**
      * Default cipher to encrypt the chunks.
      */
     public static final String DEFAULT_ENCRYPTION_CIPHER = "AES";
@@ -53,7 +37,6 @@ public abstract class Constants {
     
 
     public static final Pattern PLUGIN_NAME_REGEX_PLUGIN_INFO = Pattern.compile("org\\.syncany\\.connection\\.plugins\\.([^.]+)\\.[\\w\\d]+PluginInfo");
-
     public static final String PLUGIN_FQCN_PREFIX = "org.syncany.connection.plugins.";
     public static final String PLUGIN_FQCN_SUFFIX = "PluginInfo";
     public static final String PLUGIN_FQCN_PATTERN = PLUGIN_FQCN_PREFIX+"%s.%s"+PLUGIN_FQCN_SUFFIX;
@@ -77,9 +60,6 @@ public abstract class Constants {
      * system separator.
      */
     public static final String DATABASE_FILE_SEPARATOR = "/";
-    public static final String DATABASE_FILENAME_CLONEFILES = "clonefilesdb.db";
-    public static final String DATABASE_FILENAME_CHUNKS = "chunkdb.db";
-    public static final String DATABASE_FILENAME_CLONECLIENT = "cloneclient.db";
 
     public static final String FILE_IGNORE_PREFIX = ".ignore";
 }

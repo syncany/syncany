@@ -22,8 +22,9 @@ package org.syncany.config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CacheException extends Exception {
+	private static final long serialVersionUID = -2597072828323649406L;
 
-    public CacheException(Throwable cause) {
+	public CacheException(Throwable cause) {
         super(cause);
     }
 

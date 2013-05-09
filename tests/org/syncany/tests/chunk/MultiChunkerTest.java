@@ -21,7 +21,7 @@ import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
-import org.syncany.tests.TestUtil;
+import org.syncany.tests.util.TestUtil;
 
 public class MultiChunkerTest {
 

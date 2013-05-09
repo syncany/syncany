@@ -22,7 +22,9 @@ package org.syncany.connection.plugins;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StorageException extends Exception {
-    public StorageException(Throwable cause) {
+	private static final long serialVersionUID = -311986990752074527L;
+
+	public StorageException(Throwable cause) {
         super(cause);
     }
 

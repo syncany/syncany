@@ -27,7 +27,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.connection.plugins.local.LocalPluginInfo;
 import org.syncany.connection.plugins.local.LocalTransferManager;
-import org.syncany.tests.TestUtil;
+import org.syncany.tests.util.TestUtil;
 
 public class LocalConnectionPluginTest {
 	private File tempLocalSourceDir;
