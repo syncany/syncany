@@ -16,17 +16,17 @@ public class ChunkDAO {
 	}
 	
 	public ChunkEntry readChunk(DataInputStream dis) throws IOException {
-        ChunkEntry chunk = new ChunkEntry();
 		
         // Size
         int chunkSize = dis.readInt();
-        chunk.setSize(chunkSize);
         
         // Checksum
 		int checksumLen = dis.readByte();        
-        byte[] checksum = new byte[checksumLen];
-        dis.readFully(checksum, 0, checksumLen);
-        chunk.setChecksum(checksum);
+        byte[] chunkChecksum = new byte[checksumLen];
+        dis.readFully(chunkChecksum, 0, checksumLen);
+
+        // Create chunk entry object
+        ChunkEntry chunk = new ChunkEntry(chunkChecksum, chunkSize);
         
         return chunk;
 	}

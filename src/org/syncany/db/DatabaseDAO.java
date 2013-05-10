@@ -107,7 +107,7 @@ public class DatabaseDAO {
 			DatabaseVersion dbv = db.getDatabaseVersion(i);
         				
 			// Global Version
-			Map<String, Long> globalDatabaseVersion = dbv.getDatabaseVersion();
+			Map<String, Long> globalDatabaseVersion = dbv.getVectorClock();
 			
 			dos.writeInt(globalDatabaseVersion.size());
 			
@@ -229,7 +229,7 @@ public class DatabaseDAO {
         		globalDatabaseVersionClock.setClock(clientName, clientVersion);
         	}
         	
-        	dbv.setDatabaseVersion(globalDatabaseVersionClock);
+        	dbv.setVectorClock(globalDatabaseVersionClock);
         	
         	// Chunks
             int chunkCount = dis.readInt();
@@ -257,7 +257,6 @@ public class DatabaseDAO {
             
             // Histories
             int fileHistoryCount = dis.readInt();
-            System.out.println("fileHistoryCount = "+fileHistoryCount);
 
             for (int j = 0; j < fileHistoryCount; j++) {
                 FileHistoryPart fileHistory = fileHistoryDAO.readFileHistory(db, dbv, dis);

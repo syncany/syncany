@@ -1,5 +1,6 @@
 package org.syncany.tests.db;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -21,9 +22,10 @@ import org.syncany.db.FileContent;
 import org.syncany.db.FileHistoryPart;
 import org.syncany.db.FileVersion;
 import org.syncany.db.MultiChunkEntry;
+import org.syncany.db.VectorClock;
 import org.syncany.tests.util.TestUtil;
 
-public class DatabaseWriteReadTest {
+public class DatabaseWriteReadIndividualObjectsTest {
 	private File tempDir;
 	
 	@Before
@@ -35,7 +37,7 @@ public class DatabaseWriteReadTest {
 	public void tearDown() {
 		TestUtil.deleteDirectory(tempDir);
 	}
-	
+	 
 	@Test
 	public void testWriteAndReadChunks() throws IOException {
 		// Prepare
@@ -57,7 +59,13 @@ public class DatabaseWriteReadTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		writeReadAndCompareDatabase(newDatabase);
+		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		
+		// Check chunks
+		assertEquals("Chunk not found in database loaded.", chunkA1, loadedDatabase.getChunk(chunkA1.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA2, loadedDatabase.getChunk(chunkA2.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA3, loadedDatabase.getChunk(chunkA3.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA4, loadedDatabase.getChunk(chunkA4.getChecksum()));
 	}
 		
 	@Test
@@ -83,25 +91,42 @@ public class DatabaseWriteReadTest {
         newDatabaseVersion.addChunk(chunkB2);        
         
         // Distribute chunks to multichunks
-        MultiChunkEntry multiChunkA = new MultiChunkEntry();
+        MultiChunkEntry multiChunkA = new MultiChunkEntry(new byte[] {6,6,6,6,6,6,6,6,6});
         multiChunkA.addChunk(chunkA1); 
         multiChunkA.addChunk(chunkA2); 
         multiChunkA.addChunk(chunkA3); 
-        multiChunkA.setChecksum(new byte[] {6,6,6,6,6,6,6,6,6});
         newDatabaseVersion.addMultiChunk(multiChunkA);
         
-        MultiChunkEntry multiChunkB = new MultiChunkEntry();
+        MultiChunkEntry multiChunkB = new MultiChunkEntry(new byte[] {7,7,7,7,7,7,7,7,7});
         multiChunkB.addChunk(chunkA4); 
         multiChunkB.addChunk(chunkB1); 
         multiChunkB.addChunk(chunkB2); 
-        multiChunkB.setChecksum(new byte[] {7,7,7,7,7,7,7,7,7});
         newDatabaseVersion.addMultiChunk(multiChunkB);        
         		
         // Add database version
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		writeReadAndCompareDatabase(newDatabase);
+		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		
+		// Check chunks
+		assertEquals("Chunk not found in database loaded.", chunkA1, loadedDatabase.getChunk(chunkA1.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA2, loadedDatabase.getChunk(chunkA2.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA3, loadedDatabase.getChunk(chunkA3.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA4, loadedDatabase.getChunk(chunkA4.getChecksum()));
+
+		assertEquals("Chunk not found in database loaded.", chunkB1, loadedDatabase.getChunk(chunkB1.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkB2, loadedDatabase.getChunk(chunkB2.getChecksum()));
+
+		// Check multichunks
+		MultiChunkEntry loadedMultiChunkA = loadedDatabase.getMultiChunk(multiChunkA.getId());
+		MultiChunkEntry loadedMultiChunkB = loadedDatabase.getMultiChunk(multiChunkB.getId());
+		
+		assertEquals("Multichunk not found in database loaded.", multiChunkA, loadedMultiChunkA);
+		assertEquals("Multichunk not found in database loaded.", multiChunkB, loadedMultiChunkB);
+	
+		assertArrayEquals("Chunks in multichunk expected to be different.", multiChunkA.getChunks().toArray(), loadedMultiChunkA.getChunks().toArray());
+		assertArrayEquals("Chunks in multichunk expected to be different.", multiChunkB.getChunks().toArray(), loadedMultiChunkB.getChunks().toArray());
 	}	
 	
 	@Test
@@ -145,7 +170,26 @@ public class DatabaseWriteReadTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		writeReadAndCompareDatabase(newDatabase);		
+		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		
+		// Check chunks
+		assertEquals("Chunk not found in database loaded.", chunkA1, loadedDatabase.getChunk(chunkA1.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA2, loadedDatabase.getChunk(chunkA2.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA3, loadedDatabase.getChunk(chunkA3.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkA4, loadedDatabase.getChunk(chunkA4.getChecksum()));
+
+		assertEquals("Chunk not found in database loaded.", chunkB1, loadedDatabase.getChunk(chunkB1.getChecksum()));
+		assertEquals("Chunk not found in database loaded.", chunkB2, loadedDatabase.getChunk(chunkB2.getChecksum()));
+		
+		// Check file contents
+		FileContent loadedContentA = loadedDatabase.getContent(contentA.getChecksum());
+		FileContent loadedContentB = loadedDatabase.getContent(contentB.getChecksum());
+		
+		assertEquals("File content not found in database loaded.", contentA, loadedContentA);
+		assertEquals("File content not found in database loaded.", contentB, loadedContentB	);
+	
+		assertArrayEquals("Chunks in file content expected to be different.", contentA.getChunks().toArray(), loadedContentA.getChunks().toArray());
+		assertArrayEquals("Chunks in file content expected to be different.", contentB.getChunks().toArray(), loadedContentB.getChunks().toArray());
 	}
 	
 	@Test
@@ -192,9 +236,48 @@ public class DatabaseWriteReadTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		writeReadAndCompareDatabase(newDatabase);
-	}	
+		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		
+		// File histories
+		FileHistoryPart loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
+		FileHistoryPart loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileId());
+		
+		assertEquals("File history not found in database loaded.", fileHistoryA, loadedFileHistoryA);
+		assertEquals("File history not found in database loaded.", fileHistoryB, loadedFileHistoryB);
+		
+		assertArrayEquals("File versions differ in loaded database.", fileHistoryA.getFileVersions().values().toArray(), 
+				loadedFileHistoryA.getFileVersions().values().toArray());
+		
+		assertArrayEquals("File versions differ in loaded database.", fileHistoryB.getFileVersions().values().toArray(), 
+				loadedFileHistoryB.getFileVersions().values().toArray());
+	}		
 	
+	@Test
+	@Ignore
+	public void testWriteAndReadVectorClock() throws IOException {
+		// Prepare
+		Database newDatabase = new Database();
+		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+
+		// Create new vector clock
+		VectorClock vc = new VectorClock();
+		
+		vc.setClock("User 1", 14234234L);
+		vc.setClock("User 2", 9433431232432L);
+		vc.setClock("User 3", 1926402374L);
+		
+		newDatabaseVersion.setVectorClock(vc);
+		
+        // Add database version
+		newDatabase.addDatabaseVersion(newDatabaseVersion);
+		
+		// Write database to disk, read it again, and compare them
+		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		
+		// Check VC
+		//loadedDatabase.getV
+	}
+		
 	@Test
 	@Ignore
 	public void testWriteAndReadMultipleDatabaseVersions() {
@@ -205,11 +288,13 @@ public class DatabaseWriteReadTest {
 		// TODO testWriteAndReadMultipleDatabaseVersions
 	}
 	
-	private void writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
+	private Database writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
 		File writtenDatabaseFile = writeDatabaseFileToDisk(writtenDatabase);
 		Database readDatabase = readDatabaseFileFromDisk(writtenDatabaseFile);
 		
 		compareDatabases(writtenDatabase, readDatabase);
+		
+		return readDatabase;
 	}		
 
 	private File writeDatabaseFileToDisk(Database db) throws IOException {
@@ -248,13 +333,17 @@ public class DatabaseWriteReadTest {
 	}	
 	
 	private void compareDatabaseVersions(DatabaseVersion writtenDatabaseVersion, DatabaseVersion readDatabaseVersion) {
+		compareDatabaseVersionVectorClocks(writtenDatabaseVersion.getVectorClock(), readDatabaseVersion.getVectorClock());
 		compareDatabaseVersionChunks(writtenDatabaseVersion.getChunks(), readDatabaseVersion.getChunks());
 		compareDatabaseVersionMultiChunks(writtenDatabaseVersion.getMultiChunks(), readDatabaseVersion.getMultiChunks());
 		compareDatabaseVersionFileContents(writtenDatabaseVersion.getFileContents(), readDatabaseVersion.getFileContents());
-		// TODO File Content + the rest
-		
-	}	
-	
+		compareDatabaseVersionFileHistories(writtenDatabaseVersion.getFileHistories(), readDatabaseVersion.getFileHistories());	
+	}		
+
+	private void compareDatabaseVersionVectorClocks(VectorClock writtenVectorClock, VectorClock readVectorClock) {
+		assertEquals("Vector clocks differ.", writtenVectorClock, readVectorClock);		
+	}
+
 	private void compareDatabaseVersionChunks(Collection<ChunkEntry> writtenChunks, Collection<ChunkEntry> readChunks) {	
 		assertEquals("Different amount of Chunk objects.", writtenChunks.size(), readChunks.size());
 		assertTrue("Chunk objects in written/read database version different.", writtenChunks.containsAll(readChunks));
@@ -268,5 +357,10 @@ public class DatabaseWriteReadTest {
 	private void compareDatabaseVersionFileContents(Collection<FileContent> writtenFileContents, Collection<FileContent> readFileContents) {
 		assertEquals("Different amount of FileContent objects.", writtenFileContents.size(), readFileContents.size());
 		assertTrue("FileContent objects in written/read database version different.", writtenFileContents.containsAll(readFileContents));		
+	}	
+	
+	private void compareDatabaseVersionFileHistories(Collection<FileHistoryPart> writtenFileHistories, Collection<FileHistoryPart> readFileHistories) {
+		assertEquals("Different amount of FileHistory objects.", writtenFileHistories.size(), readFileHistories.size());
+		assertTrue("FileHistory objects in written/read database version different.", writtenFileHistories.containsAll(readFileHistories));		
 	}	
 }

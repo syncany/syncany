@@ -1,4 +1,4 @@
-package org.syncany.tests.db;
+package org.syncany.tests.combination;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,7 +106,7 @@ public class DeduperWithDBTest {
 			public void onOpenMultiChunk(MultiChunk multiChunk) {
 				System.out.println("MULTI OPEN  "+multiChunk);
 				multiChunkEntry = new MultiChunkEntry();
-				multiChunkEntry.setChecksum(chunkEntry.getChecksum());
+				multiChunkEntry.setId(chunkEntry.getChecksum());
 			}
 
 			@Override

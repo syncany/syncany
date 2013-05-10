@@ -40,7 +40,7 @@ public class FileVersion implements Cloneable {
         
     private Long fileId;
     private Long version;   
-    private Client createdBy;
+    private String createdBy;
     private FileContent content;
     private String path;
     private String name;   
@@ -68,11 +68,11 @@ public class FileVersion implements Cloneable {
         this.content = content;
     }
 
-    public Client getCreatedBy() {
+    public String getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Client createdBy) {
+    public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
     }
 
@@ -150,6 +150,76 @@ public class FileVersion implements Cloneable {
             throw new RuntimeException(ex);
         }        
     }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((content == null) ? 0 : content.hashCode());
+		result = prime * result + ((createdBy == null) ? 0 : createdBy.hashCode());
+		result = prime * result + ((fileId == null) ? 0 : fileId.hashCode());
+		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((status == null) ? 0 : status.hashCode());
+		result = prime * result + ((updated == null) ? 0 : updated.hashCode());
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FileVersion other = (FileVersion) obj;
+		if (content == null) {
+			if (other.content != null)
+				return false;
+		} else if (!content.equals(other.content))
+			return false;
+		if (createdBy == null) {
+			if (other.createdBy != null)
+				return false;
+		} else if (!createdBy.equals(other.createdBy))
+			return false;
+		if (fileId == null) {
+			if (other.fileId != null)
+				return false;
+		} else if (!fileId.equals(other.fileId))
+			return false;
+		if (lastModified == null) {
+			if (other.lastModified != null)
+				return false;
+		} else if (!lastModified.equals(other.lastModified))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (path == null) {
+			if (other.path != null)
+				return false;
+		} else if (!path.equals(other.path))
+			return false;
+		if (status != other.status)
+			return false;
+		if (updated == null) {
+			if (other.updated != null)
+				return false;
+		} else if (!updated.equals(other.updated))
+			return false;
+		if (version == null) {
+			if (other.version != null)
+				return false;
+		} else if (!version.equals(other.version))
+			return false;
+		return true;
+	}
 
   
 }

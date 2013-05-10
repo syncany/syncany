@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.syncany.util.ByteArray;
+import org.syncany.util.FileUtil;
 
 /**
  * 
@@ -25,7 +26,7 @@ import org.syncany.util.ByteArray;
  */
 public class TestUtil {
 	
-	private static Random rnd = new Random();
+	private static Random rnd = new Random(); 
 	
 	private static void copyFileToDirectory(File from, File toDirectory)
 			throws IOException {
@@ -81,30 +82,6 @@ public class TestUtil {
 		return tempDirectoryInSystemTemp;
 	}
 
-	public static boolean emptyDirectory(File path) {
-		System.out.println("emptying " + path);
-		boolean ret = true;
-
-		if(path!=null) {
-			if(path.exists()) {
-				for (File f : path.listFiles()) {
-					boolean r = true;
-					if (f.isDirectory())
-						ret = deleteDirectory(f);
-					else
-						ret = f.delete();
-
-					if (!r)
-						ret = r;
-				}
-			} else {
-				path.mkdirs();
-			}
-		}
-		
-		return ret;
-	}
-
 	public static boolean deleteDirectory(File path) {
 		if (path!=null && path.exists() && path.isDirectory()) {
 			File[] files = path.listFiles();
@@ -126,18 +103,18 @@ public class TestUtil {
 	}
 	
 	
-	public static void changeRandomPartOfBinaryFile(File path, short percentage, int minSizeOfBlock) throws IOException{
-		if(path!=null && !path.exists()){
+	public static void changeRandomPartOfBinaryFile(File path, double percentage, int minSizeOfBlock) throws IOException{
+		if (path!=null && !path.exists()){
 			throw new IOException("File does not exist!");
 		}
 		
-		if(percentage < 1 || percentage > 99){
+		if (percentage < 0.01 || percentage > 0.99){
 			throw new IllegalArgumentException("percentage value must be between 1 and 99");
 		}
 		
 		long fileSize = path.length();
 		long maxPositions = fileSize / minSizeOfBlock;
-		long percentagedSize = (long)(fileSize * (percentage / 100.0));
+		long percentagedSize = (long)((float) fileSize * percentage);
 		long cycles = percentagedSize / minSizeOfBlock;
 		
 		RandomAccessFile raf = new RandomAccessFile(path, "rw");
@@ -164,6 +141,62 @@ public class TestUtil {
 		
 		return newRandomFile;
 	}
+	
+	public static List<File> createRandomFileTreeInDirectory(File rootFolder, int maxFiles) throws IOException {
+		List<File> randomFiles = new ArrayList<File>();
+		List<File> randomDirs = new ArrayList<File>();
+		File currentDir = rootFolder;
+		
+		for (int i=0; i<maxFiles; i++) {
+			if (!randomDirs.isEmpty()) {
+				currentDir = randomDirs.get((int) Math.random()*randomDirs.size());
+			}
+	
+			if (Math.random() > 0.3) {
+				File newFile = new File(currentDir+"/file"+i);
+				int newFileSize = (int) Math.round(1000.0+Math.random()*500000.0);
+				
+				generateRandomBinaryFile(newFile, newFileSize);				
+				randomFiles.add(newFile);
+			}
+			else {
+				currentDir = new File(currentDir+"/folder"+i);
+				currentDir.mkdir();
+				
+				randomDirs.add(currentDir);
+				randomFiles.add(currentDir);
+			}
+		}
+		
+		// Now copy some files (1:1 copy), and slightly change some of them (1:0.9) 
+		for (int i=maxFiles; i<maxFiles+maxFiles/4; i++) {
+			File srcFile = randomFiles.get((int) (Math.random()*(double)randomFiles.size()));
+			File destDir = randomDirs.get((int) (Math.random()*(double)randomDirs.size()));			
+			
+			if (srcFile.isDirectory()) {
+				continue;
+			}
+			
+			// Alter some of the copies (change some bytes)
+			if (Math.random() > 0.5) {
+				File destFile = new File(destDir+"/file"+i+"-almost-the-same-as-"+srcFile.getName());
+				FileUtil.copy(srcFile, destFile);
+				
+				changeRandomPartOfBinaryFile(destFile, 0.1, 500);				
+				randomFiles.add(destFile);
+			}
+			
+			// Or simply copy them
+			else {
+				File destFile = new File(destDir+"/file"+i+"-copy-of-"+srcFile.getName());
+				FileUtil.copy(srcFile, destFile);
+				
+				randomFiles.add(destFile);
+			}
+		}
+		
+		return randomFiles;
+	}	
 	
 	public static List<File> generateRandomBinaryFilesInDirectory(File rootFolder, long sizeInBytes, int numOfFiles) throws IOException{
 		List<File> newRandomFiles = new ArrayList<File>();

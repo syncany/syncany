@@ -31,12 +31,10 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -51,24 +49,6 @@ import org.syncany.config.EncryptionException;
  */
 public class FileUtil {
     private static final Logger logger = Logger.getLogger(FileUtil.class.getSimpleName());    
-    private static final double BASE = 1024, KB = BASE, MB = KB * BASE, GB = MB * BASE;
-    private static final DecimalFormat df = new DecimalFormat("#.##");
-
-    public static String formatSize(double size) {
-        if (size >= GB) {
-            return df.format(size / GB) + " GiB";
-        }
-
-        if (size >= MB) {
-            return df.format(size / MB) + " MiB";
-        }
-
-        if (size >= KB) {
-            return df.format(size / KB) + " KiB";
-        }
-
-        return "" + (int) size + " bytes";
-    }
 
     public static String getRelativePath(File base, File file) {
         //System.err.println("rel path = base = "+base.getAbsolutePath() + " - file: "+file.getAbsolutePath()+ " ---> ");
@@ -310,44 +290,7 @@ public class FileUtil {
         in.close();
         out.close();
     }
-
-    /**
-     * Allows throttling local copy operations.
-     *
-     * @param src
-     * @param dst
-     * @param kbps
-     * @throws IOException
-     */
-    public static void copy(File src, File dst, int kbps) throws IOException {
-        if (kbps <= 0) {
-            copy(src, dst);
-            return;
-        }
-
-        InputStream in = new FileInputStream(src);
-        OutputStream out = new FileOutputStream(dst);
-
-        int bytesPer100ms = Math.round(((float) kbps) * 1024 / 10);
-        //System.out.println(new Date()+" -- bytes per 100ms:"+bytesPer100ms);
-        byte[] buf = new byte[bytesPer100ms];
-
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-            //System.out.println(new Date()+" -- copy "+len);
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-            }
-        }
-
-        //System.out.println(new Date()+" -- fertig");
-
-        in.close();
-        out.close();
-    }
-
+    
     public static byte[] readFile(File file) throws IOException {
         byte[] contents = new byte[(int) file.length()]; // TODO WARNING!!! load file in buffer completely!!
 
@@ -467,26 +410,5 @@ public class FileUtil {
 			return false;
 		}
     }
-
-	public static void createRandomFile(File file, int fromSize, int toSize) throws IOException {
-		FileOutputStream fos = new FileOutputStream(file);
-		
-		int size = (int) Math.round(fromSize+(toSize-fromSize)*Math.random());
-		int pos = 0;
-		
-		byte[] buffer;
-		Random random = new Random();
-		
-		while (pos < size) {
-			buffer = NumberUtil.toByteArray(random.nextLong());
-			fos.write(buffer);		
-			
-			pos += buffer.length;
-		}
-		
-		fos.close();
-		
-		
-	}	
 }
 

@@ -41,8 +41,8 @@ import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-public class FrameworkCombinationTests {
-	private static final Logger logger = Logger.getLogger(FrameworkCombinationTests.class.getSimpleName());
+public class FrameworkCombinationTest {
+	private static final Logger logger = Logger.getLogger(FrameworkCombinationTest.class.getSimpleName());
 	
 	private File tempDir;	
 	private List<FrameworkCombination> combinations;

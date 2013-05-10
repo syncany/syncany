@@ -12,7 +12,7 @@ public class DatabaseVersion {
     private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
     
     // DB Version and versions of other users (= DB basis) 
-    private VectorClock databaseVersion; // vector clock, machine name to database version map
+    private VectorClock vectorClock; // vector clock, machine name to database version map
     
     // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -21,7 +21,7 @@ public class DatabaseVersion {
     private Map<Long, FileHistoryPart> historyCache;
     
     public DatabaseVersion() {
-    	databaseVersion = new VectorClock();
+    	vectorClock = new VectorClock();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
@@ -29,12 +29,12 @@ public class DatabaseVersion {
         historyCache = new HashMap<Long, FileHistoryPart>();  
     }
 
-	public VectorClock getDatabaseVersion() {
-		return databaseVersion;
+	public VectorClock getVectorClock() {
+		return vectorClock;
 	}
 
-	public void setDatabaseVersion(VectorClock dbv) {
-		databaseVersion = dbv;
+	public void setVectorClock(VectorClock vectorClock) {
+		this.vectorClock = vectorClock;
 	}
    
 
@@ -55,7 +55,7 @@ public class DatabaseVersion {
     // Multichunk    
     
     public void addMultiChunk(MultiChunkEntry multiChunk) {
-        multiChunkCache.put(new ByteArray(multiChunk.getChecksum()), multiChunk);                
+        multiChunkCache.put(new ByteArray(multiChunk.getId()), multiChunk);                
     }
     
     public MultiChunkEntry getMultiChunk(byte[] multiChunkId) {
@@ -114,7 +114,7 @@ public class DatabaseVersion {
 		sb.append("<multichunks>");
 		for (MultiChunkEntry multiChunk : multiChunkCache.values()) {
 			sb.append("<multichunk>");
-			sb.append(StringUtil.toHex(multiChunk.getChecksum()));
+			sb.append(StringUtil.toHex(multiChunk.getId()));
 			sb.append("</multichunk>");
 		}
 		sb.append("</multichunks>");

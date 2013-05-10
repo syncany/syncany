@@ -23,6 +23,7 @@ import org.syncany.db.FileContent;
 import org.syncany.db.FileHistoryPart;
 import org.syncany.db.FileVersion;
 import org.syncany.db.MultiChunkEntry;
+import org.syncany.tests.util.TestUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -118,14 +119,14 @@ public class ChunkAndDBTest130128 {
         multiChunkA.addChunk(chunkA1); // from fileA
         multiChunkA.addChunk(chunkA2); // from fileA
         multiChunkA.addChunk(chunkA3); // from fileA
-        multiChunkA.setChecksum(new byte[] {6,6,6,6,6,6,6,6,6});
+        multiChunkA.setId(new byte[] {6,6,6,6,6,6,6,6,6});
         dbv.addMultiChunk(multiChunkA);
         
         MultiChunkEntry multiChunkB = new MultiChunkEntry();
         multiChunkB.addChunk(chunkA4); // from fileA
         multiChunkB.addChunk(chunkB1); // from fileB
         multiChunkB.addChunk(chunkB2); // from fileB
-        multiChunkB.setChecksum(new byte[] {7,7,7,7,7,7,7,7,7});
+        multiChunkB.setId(new byte[] {7,7,7,7,7,7,7,7,7});
         dbv.addMultiChunk(multiChunkB);
 
         // Save database
@@ -176,7 +177,7 @@ public class ChunkAndDBTest130128 {
         MultiChunkEntry multiChunkC = new MultiChunkEntry();
         multiChunkC.addChunk(chunkC1); // from fileC
         multiChunkC.addChunk(chunkC2); // from fileC
-        multiChunkC.setChecksum(new byte[] {9,0,1,2,6,6,6,6,6});
+        multiChunkC.setId(new byte[] {9,0,1,2,6,6,6,6,6});
         db.addMultiChunk(multiChunkC);        
         
         // Save new stuff
@@ -211,80 +212,7 @@ public class ChunkAndDBTest130128 {
 		repoDir.mkdir();
 		
 		// Make lots of random files and folders
-		int maxFiles = 100;
-		
-		List<File> randomFiles = new ArrayList<File>();
-		List<File> randomDirs = new ArrayList<File>();
-		File currentDir = rootDir;
-		
-		for (int i=0; i<maxFiles; i++) {
-			if (!randomDirs.isEmpty()) {
-				currentDir = randomDirs.get((int) Math.random()*randomDirs.size());
-			}
-
-			if (Math.random() > 0.3) {
-				File newFile = new File(currentDir+"/file"+i);
-				FileUtil.createRandomFile(newFile, 1000, 500000);
-				
-				randomFiles.add(newFile);
-			}
-			else {
-				currentDir = new File(currentDir+"/file"+i);
-				currentDir.mkdir();
-				
-				randomDirs.add(currentDir);
-				randomFiles.add(currentDir);
-			}
-		}
-		
-		// Now copy some files (1:1 copy), and slightly change some of them (1:0.9) 
-		for(int i=maxFiles; i<maxFiles+maxFiles/4; i++) {
-			File srcFile = randomFiles.get((int) (Math.random()*(double)randomFiles.size()));
-			File destDir = randomDirs.get((int) (Math.random()*(double)randomDirs.size()));			
-			
-			if (srcFile.isDirectory()) {
-				continue;
-			}
-			
-			// Alter some of the copies (change some bytes)
-			if (Math.random() > 0.5) {
-				File destFile = new File(destDir+"/file"+i+"-almost-the-same-as-"+srcFile.getName());
-				FileInputStream fis = new FileInputStream(srcFile);
-				FileOutputStream fos = new FileOutputStream(destFile);
-				
-				byte[] buffer = new byte[4096];				
-
-		        int len;
-		        while ((len = fis.read(buffer)) > 0) {
-		        	// Change x% of the file
-		        	if (Math.random() < 0.5) {
-		        		//buffer[0] = (byte) (0xff & (buffer[0]+1)); // CHANGE SOMETHING!
-		        		//fos.write(buffer, 0, len);
-		        		fos.write(buffer, 0, len-1);  // CHANGE SOMETHING!
-		        		//fos.write(0xff); // CHANGE SOMETHING!s
-//		        		fos.write(buffer, 0, len-1);  // CHANGE SOMETHING!
-		        	}
-		        	
-		        	// Or just copy stuff
-		        	else {
-		        		fos.write(buffer, 0, len);
-		        	}
-		        }
-
-		        fis.close();
-		        fos.close();
-
-				randomFiles.add(destFile);
-			}
-			
-			// Or simply copy them
-			else {
-				File destFile = new File(destDir+"/file"+i+"-copy-of-"+srcFile.getName());
-				FileUtil.copy(srcFile, destFile);
-				
-				randomFiles.add(destFile);
-			}
-		}
+		List<File> randomFiles = TestUtil.createRandomFileTreeInDirectory(rootDir, 100);
 		
 		
 		// NOW START CHUNKING, AND ADDING EVERYTHING TO THE DB
@@ -358,7 +286,7 @@ public class ChunkAndDBTest130128 {
 							
 							// DB
 							multiChunkEntry = new MultiChunkEntry();
-							multiChunkEntry.setChecksum(chunk.getChecksum());
+							multiChunkEntry.setId(chunk.getChecksum());
 						}
 						
 						// - Add chunk data
@@ -453,8 +381,8 @@ public class ChunkAndDBTest130128 {
 	        		if (!chunkFile.exists()) {
 		        		MultiChunkEntry multiChunkEntry = chunkEntry.getMultiChunk();
 	        			System.out.println(multiChunkEntry);
-	        			System.out.println(StringUtil.toHex(multiChunkEntry.getChecksum()));
-	        			File multiChunkFile = new File(repoDir+"/multichunk-"+StringUtil.toHex(multiChunkEntry.getChecksum()));
+	        			System.out.println(StringUtil.toHex(multiChunkEntry.getId()));
+	        			File multiChunkFile = new File(repoDir+"/multichunk-"+StringUtil.toHex(multiChunkEntry.getId()));
 		        		
 	        			MultiChunk multiChunk = multiChunker.createMultiChunk(new FileInputStream(multiChunkFile));
 	        			Chunk chunk = null;

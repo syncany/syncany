@@ -23,18 +23,13 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class Database {
-
 	private DatabaseVersion fullDatabaseVersion;
-    private DatabaseVersion newestDatabaseVersion;
-    private TreeMap<Long, DatabaseVersion> allDatabaseVersions;
-    
+    private TreeMap<Long, DatabaseVersion> allDatabaseVersions;    
     private Map<String, FileHistoryPart> filenameHistoryCache;
 
     public Database() {
     	fullDatabaseVersion = new DatabaseVersion();    	
-    	newestDatabaseVersion = null;
-    	allDatabaseVersions = new TreeMap<Long, DatabaseVersion>();
-    	
+    	allDatabaseVersions = new TreeMap<Long, DatabaseVersion>();    	
         filenameHistoryCache = new HashMap<String, FileHistoryPart>();
     }   
 	
@@ -66,8 +61,16 @@ public class Database {
 		return fullDatabaseVersion.getChunk(checksum);
 	}
 	
+	public MultiChunkEntry getMultiChunk(byte[] id) {
+		return fullDatabaseVersion.getMultiChunk(id);
+	}	
+	
 	public FileHistoryPart getFileHistory(String filePath) {
 		return filenameHistoryCache.get(filePath); 
+	}
+	
+	public FileHistoryPart getFileHistory(long fileId) {
+		return fullDatabaseVersion.getFileHistory(fileId); 
 	}
 	
 	public void addDatabaseVersion(DatabaseVersion dbv) {	
@@ -90,11 +93,11 @@ public class Database {
 			newLocalDatabaseVersion = allDatabaseVersions.lastKey()+1;
 
 			// Set vector clock of database version
-			newDatabaseVersion = getLastDatabaseVersion().getDatabaseVersion().clone();	
+			newDatabaseVersion = getLastDatabaseVersion().getVectorClock().clone();	
 			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
 		}		
 		
-		dbv.setDatabaseVersion(newDatabaseVersion);
+		dbv.setVectorClock(newDatabaseVersion);
 		
 		// Add to map
 		allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
@@ -113,7 +116,7 @@ public class Database {
 		
 		// Multichunks
 		for (MultiChunkEntry sourceMultiChunk : sourceDatabaseVersion.getMultiChunks()) {
-			if (targetDatabaseVersion.getMultiChunk(sourceMultiChunk.getChecksum()) == null) {
+			if (targetDatabaseVersion.getMultiChunk(sourceMultiChunk.getId()) == null) {
 				targetDatabaseVersion.addMultiChunk(sourceMultiChunk);
 			}
 		}

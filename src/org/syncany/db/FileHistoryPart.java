@@ -62,4 +62,35 @@ public class FileHistoryPart {
     /* package */ void addFileVersion(FileVersion fileVersion) {
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((fileId == null) ? 0 : fileId.hashCode());
+		result = prime * result + ((versions == null) ? 0 : versions.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FileHistoryPart other = (FileHistoryPart) obj;
+		if (fileId == null) {
+			if (other.fileId != null)
+				return false;
+		} else if (!fileId.equals(other.fileId))
+			return false;
+		if (versions == null) {
+			if (other.versions != null)
+				return false;
+		} else if (!versions.equals(other.versions))
+			return false;
+		return true;
+	}
 }

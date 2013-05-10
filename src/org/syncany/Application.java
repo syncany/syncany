@@ -86,7 +86,7 @@ public class Application {
 	
 	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getChecksum()); // FIXME id != checksum
+			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId()); // FIXME id != checksum
 			uploader.queue(multiChunkFile);
 		}
 		
@@ -181,8 +181,7 @@ public class Application {
 			@Override
 			public void onOpenMultiChunk(MultiChunk multiChunk) {
 				System.out.println("MULTI OPEN  "+multiChunk);
-				multiChunkEntry = new MultiChunkEntry();
-				multiChunkEntry.setChecksum(chunkEntry.getChecksum());
+				multiChunkEntry = new MultiChunkEntry(chunkEntry.getChecksum());
 			}
 
 			@Override

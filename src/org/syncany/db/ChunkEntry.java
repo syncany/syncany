@@ -27,11 +27,7 @@ import java.util.Arrays;
 public class ChunkEntry {
     private byte[] checksum;      
     private int size;    
-    
-    public ChunkEntry() {
-    	this(null, 0);        
-    }
-    
+
     public ChunkEntry(byte[] checksum, int size) {
         this.checksum = checksum;
         this.size = size;

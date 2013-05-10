@@ -8,9 +8,9 @@ import java.util.Arrays;
 
 public class MultiChunkDAO {
 	public void writeMultiChunk(MultiChunkEntry multiChunk, DataOutputStream dos) throws IOException {
-		// Multichunk checksum + size
-		dos.writeByte(multiChunk.getChecksum().length);
-		dos.write(multiChunk.getChecksum());
+		// Multichunk id + size
+		dos.writeByte(multiChunk.getId().length);
+		dos.write(multiChunk.getId());
 
 		// Chunks (size + local references)
 		dos.writeShort(multiChunk.getChunks().size());
@@ -20,20 +20,20 @@ public class MultiChunkDAO {
 		}
 	}
 
-	public MultiChunkEntry readMultiChunk(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {
-		MultiChunkEntry multiChunk = new MultiChunkEntry();
-		
+	public MultiChunkEntry readMultiChunk(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {		
 		// Multichunk checksum
-		int checksumLen = dis.readByte();
-		byte[] checksum = new byte[checksumLen];
-		dis.readFully(checksum, 0, checksumLen);
-		multiChunk.setChecksum(checksum);
+		int multiChunkIdLen = dis.readByte();
+		byte[] multiChunkId = new byte[multiChunkIdLen];
+		dis.readFully(multiChunkId, 0, multiChunkIdLen);
+		
+		// Create multichunk entry object
+		MultiChunkEntry multiChunk = new MultiChunkEntry(multiChunkId);	
 
 		// Chunks
 		int chunksCount = dis.readShort();
 
 		for (int i = 0; i < chunksCount; i++) {
-			byte[] chunkChecksum = new byte[checksumLen];
+			byte[] chunkChecksum = new byte[multiChunkIdLen];
 			dis.readFully(chunkChecksum);
 
 			ChunkEntry chunk = db.getChunk(chunkChecksum);
