@@ -2,20 +2,26 @@ package org.syncany;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.syncany.commands.Command;
+import org.syncany.commands.SyncDownCommand;
+import org.syncany.commands.SyncUpCommand;
 import org.syncany.config.ConfigTO;
 import org.syncany.config.Profile;
 
 import com.google.gson.JsonSyntaxException;
 
 public class Syncany {
-	public enum Operation { SYNC_UP, SYNC_DOWN };
+	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
+	public enum CommandArgument { SYNC_UP, SYNC_DOWN };
 	
 	private String[] args;
-	private Operation operation;
+	private CommandArgument commandArgument;
+	private Command command;
 	private File configFile;
 	private Profile profile;	
-	private Application application;
 		
 	public static void main(String[] args) throws Exception {
 		new Syncany(args).start();
@@ -29,13 +35,13 @@ public class Syncany {
 		readCommandLineArguments(args);
 		
 		initProfileFromConfigFile(configFile);
-		initApplication(profile);
+		initCommand(profile);
 		
-		runOperation(application, operation);
+		runCommand();
 	}	
 
 	private void readCommandLineArguments(String[] args) throws Exception {
-		if (args.length == 3) { // -f config.json up
+		if (args.length == 3) { // -c config.json up
 			readCommandLineArgumentsWithSpecificConfigFile(args);
 		}
 		else if (args.length == 1) { // up
@@ -50,17 +56,17 @@ public class Syncany {
 		String defaultConfigFileArgument = "config.json";
 		
 		readCommandLineArgumentConfigFile(defaultConfigFileArgument);
-		readCommandLineArgumentOperation(args[1]);		
+		readCommandLineArgumentCommand(args[1]);		
 	}
 
 	private void readCommandLineArgumentsWithSpecificConfigFile(String[] args) throws Exception {
-		// -f config.json
-		if (!"-f".equals(args[0])) {
+		// -c config.json
+		if (!"-c".equals(args[0])) {
 			throw new Exception("Invalid command line syntax.");
 		}
 		
 		readCommandLineArgumentConfigFile(args[1]);
-		readCommandLineArgumentOperation(args[2]);		
+		readCommandLineArgumentCommand(args[2]);		
 	}
 	
 	private void readCommandLineArgumentConfigFile(String configFileArgument) throws Exception {
@@ -71,12 +77,12 @@ public class Syncany {
 		}		
 	}
 	
-	private void readCommandLineArgumentOperation(String operationArgument) throws Exception {
-		if ("up".equals(operationArgument)) {
-			operation = Operation.SYNC_UP;
+	private void readCommandLineArgumentCommand(String commandArgument) throws Exception {
+		if ("up".equals(commandArgument)) {
+			this.commandArgument = CommandArgument.SYNC_UP;
 		}
-		else if ("down".equals(operationArgument)) {
-			operation = Operation.SYNC_DOWN;
+		else if ("down".equals(commandArgument)) {
+			this.commandArgument = CommandArgument.SYNC_DOWN;
 		}
 		else {
 			throw new Exception("Given operation is unknown.");
@@ -86,22 +92,31 @@ public class Syncany {
 	private void initProfileFromConfigFile(File configFile) throws JsonSyntaxException, IOException, Exception {
 		ConfigTO configTO = ConfigTO.load(configFile);
 		profile = new Profile(configTO);
+		
+		createProfileDirectories();
 	}
 	
-	private void initApplication(Profile profile) throws Exception {
-		application = new Application(profile);
-		application.initProfileDirectories();
-	}
-	
-	private void runOperation(Application application, Operation operation) throws Exception {
-		if (operation == Operation.SYNC_UP) {
-			application.syncUp();
+	private void createProfileDirectories() throws Exception {   
+		logger.log(Level.INFO, "Create profile directories ...");
+		
+    	profile.getAppDir().mkdirs();
+    	profile.getAppCacheDir().mkdirs();
+    	profile.getAppDatabaseDir().mkdirs();
+	}	
+
+	private void initCommand(Profile profile) throws Exception {
+		if (commandArgument == CommandArgument.SYNC_UP) {
+			command = new SyncUpCommand(profile);
 		}
-		else if (operation == Operation.SYNC_UP) {
-			application.syncDown();
+		else if (commandArgument == CommandArgument.SYNC_DOWN) {
+			command = new SyncDownCommand(profile);
 		}
 		else {
 			throw new Exception("Unknown operation.");
 		}
+	}	
+		
+	private void runCommand() throws Exception {
+		command.execute();		
 	}
 }

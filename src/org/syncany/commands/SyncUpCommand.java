@@ -1,4 +1,4 @@
-package org.syncany;
+package org.syncany.commands;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,12 +16,12 @@ import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
+import org.syncany.config.Constants;
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.db.ChunkEntry;
 import org.syncany.db.Database;
-import org.syncany.db.DatabaseDAO;
 import org.syncany.db.DatabaseVersion;
 import org.syncany.db.FileContent;
 import org.syncany.db.FileHistoryPart;
@@ -32,27 +32,18 @@ import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-public class Application {
-	private static final Logger logger = Logger.getLogger(Application.class.getSimpleName());
+public class SyncUpCommand extends Command {
+	private static final Logger logger = Logger.getLogger(SyncUpCommand.class.getSimpleName());
 	
-	private Profile profile;
 	private Uploader uploader;
 	
-	public Application(Profile profile) {
-		this.profile = profile;
+	public SyncUpCommand(Profile profile) {
+		super(profile);
 		this.uploader = new Uploader(profile.getConnection());
-	}
-	
-	public void initProfileDirectories() throws Exception {   
-		logger.log(Level.INFO, "Create profile directories ...");
-		
-    	profile.getAppDir().mkdirs();
-    	profile.getAppCacheDir().mkdirs();
-    	profile.getAppDatabaseDir().mkdirs();
 	}	
 	
-	public boolean syncUp() throws FileNotFoundException, IOException, InterruptedException {
-		logger.log(Level.INFO, "Sync Up ...");
+	public void execute() throws Exception {
+		logger.log(Level.INFO, "Sync up ...");
 		
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
 		Database db = loadLocalDatabase(localDatabaseFile);
@@ -67,26 +58,12 @@ public class Application {
 		boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 		
 		if (uploadMultiChunksSuccess) {
-			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDatabaseFile);			
-			return uploadLocalDatabaseSuccess; 
+			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDatabaseFile, newestLocalDatabaseVersion);			
 		}
 		else {
-			return false;
+			throw new Exception("aa");
 		}		
 	}	
-	
-	public boolean syncDown() throws Exception {
-		logger.log(Level.INFO, "Sync Up ...");
-		
-		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
-		Database db = loadLocalDatabase(localDatabaseFile);
-		
-		// 1. check which file to download
-		// 2. xxx
-		
-		throw new Exception("Not yet fully implemented.");
-		//return false;
-	}
 	
 	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
@@ -99,8 +76,8 @@ public class Application {
 		return true; // FIXME
 	}
 
-	private boolean uploadLocalDatabase(File localDatabaseFile) throws InterruptedException {
-		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName());
+	private boolean uploadLocalDatabase(File localDatabaseFile, long newestLocalDatabaseVersion) throws InterruptedException {
+		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
 		uploader.queue(localDatabaseFile, remoteDatabaseFile);
 		return true;
 	}
@@ -255,6 +232,7 @@ public class Application {
 		return db.getLastLocalDatabaseVersion();
 	}
 
+	// FIXME this should not be here
 	private List<File> listFiles(File localDir) {
 		final List<File> files = new ArrayList<File>();
 		
@@ -264,23 +242,4 @@ public class Application {
 		
 		return files;
 	}
-
-	private Database loadLocalDatabase(File localDatabaseFile) throws IOException {
-		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
-		
-		DatabaseDAO dao = new DatabaseDAO();
-		Database db = new Database();
-
-		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
-			dao.load(db, localDatabaseFile);
-			System.out.println(db);
-		}
-		
-		return db;
-	}
-	
-	private void saveLocalDatabase(Database db, long fromVersion, long toVersion, File localDatabaseFile) throws IOException {
-		DatabaseDAO dao = new DatabaseDAO();
-		dao.save(db, fromVersion, toVersion, localDatabaseFile);
-	}	
 }

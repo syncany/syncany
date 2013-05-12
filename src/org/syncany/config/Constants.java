@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany;
+package org.syncany.config;
 
 import java.util.regex.Pattern;
 
@@ -40,20 +40,6 @@ public abstract class Constants {
     public static final String PLUGIN_FQCN_PREFIX = "org.syncany.connection.plugins.";
     public static final String PLUGIN_FQCN_SUFFIX = "PluginInfo";
     public static final String PLUGIN_FQCN_PATTERN = PLUGIN_FQCN_PREFIX+"%s.%s"+PLUGIN_FQCN_SUFFIX;
-
-    /**
-     * If an indexed file is not found in the DB by its path, the file is looked
-     * up by its checksum. If more than one file with the same checksum is found,
-     * the one with the smallest Leivenstein distance is used as previous version.
-     * This value sets an upper bound. If the Levenshtein distance exceeds this
-     * value, the file is assumed to be new.
-     *
-     * <p>The Levenshtein distance represents the number of edits required to
-     * change one string into another. Example: d(aab, ccb) = 2
-     *
-     * @see http://en.wikipedia.org/wiki/Levenshtein_distance
-     */
-    public static final int MAXIMUM_FILENAME_LEVENSHTEIN_DISTANCE = 4;
 
     /**
      * File separator in the database; Does not have to be equal to the file 

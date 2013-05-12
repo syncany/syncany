@@ -28,7 +28,6 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.syncany.Constants;
 
 public class Encryption {	
 	

@@ -19,7 +19,7 @@ package org.syncany.db;
 
 import java.util.Date;
 
-import org.syncany.Constants;
+import org.syncany.config.Constants;
 
 /**
  *

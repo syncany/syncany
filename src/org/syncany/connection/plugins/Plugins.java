@@ -24,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
-import org.syncany.Constants;
+import org.syncany.config.Constants;
 import org.syncany.util.ClasspathUtil;
 import org.syncany.util.StringUtil;
 

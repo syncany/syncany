@@ -30,6 +30,7 @@ import org.syncany.util.StringUtil;
 public class Cache {
 	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-encrypted-%s";
     private static String FILE_FORMAT_CHUNK_DECRYPTED = "chunk-decrypted-%s";
+    private static String FILE_FORMAT_DATABASE_FILE_ENCRYPTED = "db-encrypted-%s";
 
     private File cacheDir;
     
@@ -38,12 +39,16 @@ public class Cache {
     }
 
     public File getEncryptedMultiChunkFile(byte[] multiChunkId) {
-    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, multiChunkId);
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, StringUtil.toHex(multiChunkId));
     }
     
     public File getChunkFile(byte[] chunkId) {
-    	return getFileInCache(FILE_FORMAT_CHUNK_DECRYPTED, chunkId);
-    }        
+    	return getFileInCache(FILE_FORMAT_CHUNK_DECRYPTED, StringUtil.toHex(chunkId));
+    }      
+    
+	public File getDatabaseFile(String name) {
+		return getFileInCache(FILE_FORMAT_DATABASE_FILE_ENCRYPTED, name);		
+	}    
 
     public File createTempFile() throws CacheException {
         return createTempFile("temp");
@@ -58,10 +63,10 @@ public class Cache {
        }
     }
     
-    private File getFileInCache(String format, byte[] id) {
+    private File getFileInCache(String format, Object... params) {
         return new File(
     		cacheDir.getAbsoluteFile()+File.separator+
-    		String.format(format, StringUtil.toHex(id))
+    		String.format(format, params)
         );
     }
 }

@@ -84,8 +84,12 @@ public class Uploader {
     }
     
     public synchronized void queue(File localFile, RemoteFile remoteFile) throws InterruptedException {
+    	queue(localFile, remoteFile, null);
+    }
+    
+    public synchronized void queue(File localFile, RemoteFile remoteFile, UploadListener uploadListener) throws InterruptedException {
     	logger.log(Level.INFO, "QUEUING {0}", localFile);
-        queue.put(new UploadRequest(localFile, remoteFile));
+        queue.put(new UploadRequest(localFile, remoteFile, uploadListener));
     }
     
     public synchronized boolean isQueueEmtpy(){
@@ -94,15 +98,23 @@ public class Uploader {
 
 	public synchronized int getQueueSize() {
 		return queue.size();
-	}        
+	}       
+	
+	public interface UploadListener {
+		public void onUploadStart(File localFile, RemoteFile remoteFile);
+		public void onUploadSuccess(File localFile, RemoteFile remoteFile);
+		public void onUploadFailure(File localFile, RemoteFile remoteFile, Throwable exception);
+	}
     
     private class UploadRequest {
         private File localFile;
         private RemoteFile remoteFile;
+        private UploadListener uploadListener;
         
-        public UploadRequest(File localFileToUpload, RemoteFile remoteFile) {
+        public UploadRequest(File localFileToUpload, RemoteFile remoteFile, UploadListener uploadListener) {
             this.localFile = localFileToUpload;
             this.remoteFile = remoteFile;
+            this.uploadListener = uploadListener;
         }
 	}
 
@@ -127,16 +139,36 @@ public class Uploader {
 
         private void processRequest(UploadRequest uploadRequest) {
         	logger.log(Level.INFO, "Uploader: Uploading {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
+        	fireUploadStartEvent(uploadRequest);        	
             
             try {
                 transferManager.upload(uploadRequest.localFile, uploadRequest.remoteFile);
+                
+                logger.log(Level.INFO, "Uploader: Successful upload {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
+                fireUploadSuccessEvent(uploadRequest);                
             } 
             catch (StorageException ex) {
             	logger.log(Level.SEVERE, "Uploader: Upload FAILED for {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
-                return; // TODO and now?
+            	fireUploadFailureEvent(uploadRequest, ex);
             }
-
-            logger.log(Level.INFO, "Uploader: Successful upload {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
         }
+        
+        private void fireUploadSuccessEvent(UploadRequest uploadRequest) {
+        	if (uploadRequest.uploadListener != null) {
+        		uploadRequest.uploadListener.onUploadSuccess(uploadRequest.localFile, uploadRequest.remoteFile);
+        	}
+        }
+        
+        private void fireUploadFailureEvent(UploadRequest uploadRequest, Throwable exception) {
+        	if (uploadRequest.uploadListener != null) {
+        		uploadRequest.uploadListener.onUploadFailure(uploadRequest.localFile, uploadRequest.remoteFile, exception);
+        	}
+        }
+        
+        private void fireUploadStartEvent(UploadRequest uploadRequest) {
+        	if (uploadRequest.uploadListener != null) {
+        		uploadRequest.uploadListener.onUploadStart(uploadRequest.localFile, uploadRequest.remoteFile);
+        	}
+        }        
     }
 }
