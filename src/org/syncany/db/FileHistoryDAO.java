@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.syncany.util.NumberUtil;
-import org.syncany.util.StringUtil;
-
 
 public class FileHistoryDAO {
 	public void writeFileHistory(FileHistoryPart fileHistory, DataOutputStream dos) throws IOException {
@@ -59,7 +56,7 @@ public class FileHistoryDAO {
 			out.writeByte(fileVersion.getContent().getChecksum().length);
 			out.write(fileVersion.getContent().getChecksum());
 		}
-
+		
 		out.writeShort(fileVersion.getPath().length());
 		out.writeBytes(fileVersion.getPath());
 

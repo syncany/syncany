@@ -19,7 +19,6 @@ import org.syncany.chunk.Transformer;
 import org.syncany.config.Profile;
 import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.ChunkEntry;
 import org.syncany.db.Database;
 import org.syncany.db.DatabaseDAO;
@@ -52,37 +51,42 @@ public class Application {
     	profile.getAppDatabaseDir().mkdirs();
 	}	
 	
-	public UpstreamStatus syncUp() throws FileNotFoundException, IOException, InterruptedException {
+	public boolean syncUp() throws FileNotFoundException, IOException, InterruptedException {
 		logger.log(Level.INFO, "Sync Up ...");
 		
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
-		Database db = loadLocalRepoDB(localDatabaseFile);
+		Database db = loadLocalDatabase(localDatabaseFile);
 		
 		List<File> localFiles = listFiles(profile.getLocalDir());
 		long newestLocalDatabaseVersion = index(localFiles, profile.getChunker(), profile.getMultiChunker(), profile.getTransformer(),
 				db, profile.getLocalDir(), profile.getAppCacheDir());
 		
 		long fromLocalDatabaseVersion = (newestLocalDatabaseVersion-1 >= 1) ? newestLocalDatabaseVersion : 1;		
-		saveLocalRepoDB(db, fromLocalDatabaseVersion, newestLocalDatabaseVersion, localDatabaseFile);
+		saveLocalDatabase(db, fromLocalDatabaseVersion, newestLocalDatabaseVersion, localDatabaseFile);
 		
+		boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 		
-		
-		
-		UpstreamStatus statusCode = null;
-		
-		TransferManager trm = profile.getConnection().createTransferManager();
-		
-		if (uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks())) {
-			boolean status = uploadLocalRepoDB(localDatabaseFile);
-			
-			//statusCode.setResponse(status ? "Job" : "Nope"); 
+		if (uploadMultiChunksSuccess) {
+			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDatabaseFile);			
+			return uploadLocalDatabaseSuccess; 
 		}
 		else {
-			//statusCode.setResponse("Error");
-		}
-		
-		return statusCode;
+			return false;
+		}		
 	}	
+	
+	public boolean syncDown() throws Exception {
+		logger.log(Level.INFO, "Sync Up ...");
+		
+		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
+		Database db = loadLocalDatabase(localDatabaseFile);
+		
+		// 1. check which file to download
+		// 2. xxx
+		
+		throw new Exception("Not yet fully implemented.");
+		//return false;
+	}
 	
 	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
@@ -95,7 +99,7 @@ public class Application {
 		return true; // FIXME
 	}
 
-	private boolean uploadLocalRepoDB(File localDatabaseFile) throws InterruptedException {
+	private boolean uploadLocalDatabase(File localDatabaseFile) throws InterruptedException {
 		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName());
 		uploader.queue(localDatabaseFile, remoteDatabaseFile);
 		return true;
@@ -261,7 +265,7 @@ public class Application {
 		return files;
 	}
 
-	private Database loadLocalRepoDB(File localDatabaseFile) throws IOException {
+	private Database loadLocalDatabase(File localDatabaseFile) throws IOException {
 		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
 		
 		DatabaseDAO dao = new DatabaseDAO();
@@ -275,15 +279,8 @@ public class Application {
 		return db;
 	}
 	
-	private void saveLocalRepoDB(Database db, long fromVersion, long toVersion, File localDatabaseFile) throws IOException {
+	private void saveLocalDatabase(Database db, long fromVersion, long toVersion, File localDatabaseFile) throws IOException {
 		DatabaseDAO dao = new DatabaseDAO();
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
-	}
-
-	public void syncDown() throws Exception {
-		throw new Exception("Not yet implemented.");
-		
-	}
-
-	
+	}	
 }

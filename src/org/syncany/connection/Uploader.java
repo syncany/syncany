@@ -126,17 +126,17 @@ public class Uploader {
         }
 
         private void processRequest(UploadRequest uploadRequest) {
-        	logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
+        	logger.log(Level.INFO, "Uploader: Uploading {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
             
             try {
                 transferManager.upload(uploadRequest.localFile, uploadRequest.remoteFile);
             } 
             catch (StorageException ex) {
-            	logger.log(Level.SEVERE, "Uploader: Upload FAILED for chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
+            	logger.log(Level.SEVERE, "Uploader: Upload FAILED for {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
                 return; // TODO and now?
             }
 
-            logger.log(Level.INFO, "Uploader: Uploading chunk {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
+            logger.log(Level.INFO, "Uploader: Successful upload {0} to {1} ...", new Object[] { uploadRequest.localFile, uploadRequest.remoteFile });
         }
     }
 }
