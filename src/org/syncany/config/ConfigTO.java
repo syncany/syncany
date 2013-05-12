@@ -1,13 +1,11 @@
 package org.syncany.config;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 import org.syncany.util.FileUtil;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
 
 public class ConfigTO {
@@ -23,27 +21,15 @@ public class ConfigTO {
 	private String machineName;
 	private ConnectionSettings connection;
 	private EncryptionSettings encryption;
-
-	public ConfigTO(String localDir, String appDir, String databaseDir,
-			String cacheDir, String machineName, ConnectionSettings connection,
-			EncryptionSettings encryption) {
-		
-		this.localDir = localDir;
-		this.appDir = appDir;
-		this.databaseDir = databaseDir;
-		this.cacheDir = cacheDir;
-		this.machineName = machineName;
-		this.connection = connection;
-		this.encryption = encryption;
-	}
-
-	/*public ConfigTO(File file) throws JsonSyntaxException, IOException {
-		load(file);
-	}*/
 	
-	public static ConfigTO load(File file) throws JsonSyntaxException, IOException {
-		Gson gson = new Gson();		
-		return gson.fromJson(FileUtil.readFileToString(file), ConfigTO.class);
+	public static ConfigTO load(File file) throws ConfigException {
+		try {
+			Gson gson = new Gson();		
+			return gson.fromJson(FileUtil.readFileToString(file), ConfigTO.class);
+		}
+		catch (Exception ex) {
+			throw new ConfigException("Config file does not exist or is invalid: "+file, ex);
+		}
 	}	
 	
 	public String getLocalDir() {

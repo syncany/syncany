@@ -1,7 +1,6 @@
 package org.syncany;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,8 +9,6 @@ import org.syncany.commands.SyncDownCommand;
 import org.syncany.commands.SyncUpCommand;
 import org.syncany.config.ConfigTO;
 import org.syncany.config.Profile;
-
-import com.google.gson.JsonSyntaxException;
 
 public class Syncany {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
@@ -89,7 +86,9 @@ public class Syncany {
 		}		
 	}
 
-	private void initProfileFromConfigFile(File configFile) throws JsonSyntaxException, IOException, Exception {
+	private void initProfileFromConfigFile(File configFile) throws Exception {
+		logger.log(Level.INFO, "Loading config from {0} ...", configFile);
+		
 		ConfigTO configTO = ConfigTO.load(configFile);
 		profile = new Profile(configTO);
 		
@@ -97,7 +96,7 @@ public class Syncany {
 	}
 	
 	private void createProfileDirectories() throws Exception {   
-		logger.log(Level.INFO, "Create profile directories ...");
+		logger.log(Level.INFO, "Creating profile directories ...");
 		
     	profile.getAppDir().mkdirs();
     	profile.getAppCacheDir().mkdirs();
