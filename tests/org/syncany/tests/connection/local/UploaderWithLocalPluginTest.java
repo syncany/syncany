@@ -1,23 +1,14 @@
 package org.syncany.tests.connection.local;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.net.CookieHandler;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,12 +17,7 @@ import org.syncany.connection.Uploader;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.connection.plugins.local.LocalPluginInfo;
-import org.syncany.connection.plugins.local.LocalTransferManager;
 import org.syncany.tests.util.TestUtil;
 
 public class UploaderWithLocalPluginTest {
@@ -55,7 +41,7 @@ public class UploaderWithLocalPluginTest {
 	
 	@After
 	public void tearDown() {
-		//TestUtil.deleteDirectory(tempLocalSourceDir);
+		TestUtil.deleteDirectory(tempLocalSourceDir);
 	}
 	
 	@Test
@@ -111,10 +97,10 @@ public class UploaderWithLocalPluginTest {
 		boolean uploaderIsRunning = uploader.isRunning();
 		assertTrue("Uploader expected to be running.", uploaderIsRunning);
 		
-		boolean uploaderStopSuccess = uploader.stop();
+		boolean uploaderStopSuccess = uploader.stopImmediately();
 		assertTrue("Uploader expected to be stopped.", uploaderStopSuccess);
 		
-		uploaderStopSuccess = uploader.stop();
+		uploaderStopSuccess = uploader.stopImmediately();
 		assertFalse("Uploader expected to fail second stop.", uploaderStopSuccess);
 	}
 	

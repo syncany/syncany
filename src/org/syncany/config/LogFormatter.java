@@ -31,7 +31,7 @@ public class LogFormatter extends Formatter {
     private DateFormat dateFormat;
 
     public LogFormatter() {
-        dateFormat = new SimpleDateFormat("d-m-y H:mm:ss");
+        dateFormat = new SimpleDateFormat("d-MM-y H:mm:ss");
     }
 
     @Override
@@ -61,8 +61,8 @@ public class LogFormatter extends Formatter {
 	}
     
     private String formatThreadName(String threadName) {
-    	if (threadName.length() > 15) {
-    		threadName = threadName.substring(0, 15);
+    	if (threadName.length() > 10) {
+    		threadName = threadName.substring(0, 10);
     	}
     	
     	return String.format("%-15s", threadName);

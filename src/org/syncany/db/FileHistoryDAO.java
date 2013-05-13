@@ -9,7 +9,7 @@ import java.util.Collection;
 
 
 public class FileHistoryDAO {
-	public void writeFileHistory(FileHistoryPart fileHistory, DataOutputStream dos) throws IOException {
+	public void writeFileHistory(PartialFileHistory fileHistory, DataOutputStream dos) throws IOException {
 		// File history
 		dos.writeLong(fileHistory.getFileId());  
 		
@@ -28,9 +28,9 @@ public class FileHistoryDAO {
 		}		
 	}
 	
-	public FileHistoryPart readFileHistory(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {
+	public PartialFileHistory readFileHistory(Database db, DatabaseVersion dbv, DataInputStream dis) throws IOException {
 		// File history
-		FileHistoryPart fileHistory = new FileHistoryPart();
+		PartialFileHistory fileHistory = new PartialFileHistory();
 		
 		long fileId = dis.readLong();
 		fileHistory.setFileId(fileId);
@@ -64,7 +64,7 @@ public class FileHistoryDAO {
 		out.writeBytes(fileVersion.getName());
 	}
 	
-	private FileVersion readFileVersion(Database db, DatabaseVersion dbv, FileHistoryPart fileHistory, DataInputStream dis) throws IOException {
+	private FileVersion readFileVersion(Database db, DatabaseVersion dbv, PartialFileHistory fileHistory, DataInputStream dis) throws IOException {
 		FileVersion fileVersion = new FileVersion();
 				
 		// Version

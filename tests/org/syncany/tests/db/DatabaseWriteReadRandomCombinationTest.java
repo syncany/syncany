@@ -11,7 +11,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.db.ChunkEntry;
 import org.syncany.db.FileContent;
-import org.syncany.db.FileHistoryPart;
+import org.syncany.db.PartialFileHistory;
 import org.syncany.db.FileVersion;
 import org.syncany.db.MultiChunkEntry;
 import org.syncany.tests.util.TestUtil;
@@ -43,7 +43,7 @@ public class DatabaseWriteReadRandomCombinationTest {
 		List<ChunkEntry> chunks = createRandomChunks(500, 20);
 		List<MultiChunkEntry> multiChunks = new ArrayList<MultiChunkEntry>();
 		List<FileContent> fileContents = new ArrayList<FileContent>();
-		List<FileHistoryPart> fileHistories = new ArrayList<FileHistoryPart>();
+		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
 		List<FileVersion> fileVersions = new ArrayList<FileVersion>();
 			
 		// TODO

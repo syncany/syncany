@@ -160,14 +160,14 @@ public class DatabaseDAO {
 			}
 
 			// File histories & versions
-			Collection<FileHistoryPart> fileHistories = dbv.getFileHistories();
+			Collection<PartialFileHistory> fileHistories = dbv.getFileHistories();
 
 			if (fileHistories == null || fileHistories.isEmpty()) {
 				dos.writeInt(0); // count
 			} else {
 				dos.writeInt(fileHistories.size()); // count
 
-				for (FileHistoryPart fileHistory : fileHistories) {
+				for (PartialFileHistory fileHistory : fileHistories) {
 					fileHistoryDAO.writeFileHistory(fileHistory, dos);
 				}
 			}
@@ -259,7 +259,7 @@ public class DatabaseDAO {
             int fileHistoryCount = dis.readInt();
 
             for (int j = 0; j < fileHistoryCount; j++) {
-                FileHistoryPart fileHistory = fileHistoryDAO.readFileHistory(db, dbv, dis);
+                PartialFileHistory fileHistory = fileHistoryDAO.readFileHistory(db, dbv, dis);
                 dbv.addFileHistory(fileHistory);
             }                 
         	

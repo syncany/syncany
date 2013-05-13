@@ -19,7 +19,7 @@ import org.syncany.db.Database;
 import org.syncany.db.DatabaseDAO;
 import org.syncany.db.DatabaseVersion;
 import org.syncany.db.FileContent;
-import org.syncany.db.FileHistoryPart;
+import org.syncany.db.PartialFileHistory;
 import org.syncany.db.FileVersion;
 import org.syncany.db.MultiChunkEntry;
 import org.syncany.db.VectorClock;
@@ -201,7 +201,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 		// Create directories (no content!)
 
 		// File A
-		FileHistoryPart fileHistoryA = new FileHistoryPart();
+		PartialFileHistory fileHistoryA = new PartialFileHistory();
 		newDatabaseVersion.addFileHistory(fileHistoryA);
 		
         FileVersion versionA1 = new FileVersion();
@@ -217,7 +217,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
 		       
         // File B
-		FileHistoryPart fileHistoryB = new FileHistoryPart();
+		PartialFileHistory fileHistoryB = new PartialFileHistory();
 		newDatabaseVersion.addFileHistory(fileHistoryB);
 		
         FileVersion versionB1 = new FileVersion();
@@ -239,8 +239,8 @@ public class DatabaseWriteReadIndividualObjectsTest {
 		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		
 		// File histories
-		FileHistoryPart loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
-		FileHistoryPart loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileId());
+		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
+		PartialFileHistory loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileId());
 		
 		assertEquals("File history not found in database loaded.", fileHistoryA, loadedFileHistoryA);
 		assertEquals("File history not found in database loaded.", fileHistoryB, loadedFileHistoryB);
@@ -359,7 +359,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 		assertTrue("FileContent objects in written/read database version different.", writtenFileContents.containsAll(readFileContents));		
 	}	
 	
-	private void compareDatabaseVersionFileHistories(Collection<FileHistoryPart> writtenFileHistories, Collection<FileHistoryPart> readFileHistories) {
+	private void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
 		assertEquals("Different amount of FileHistory objects.", writtenFileHistories.size(), readFileHistories.size());
 		assertTrue("FileHistory objects in written/read database version different.", writtenFileHistories.containsAll(readFileHistories));		
 	}	

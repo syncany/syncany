@@ -41,12 +41,12 @@ public class Uploader {
     
     private Connection connection;
     private TransferManager transferManager;
-    private BlockingQueue<UploadRequest> queue;
+    private BlockingQueue<Request> queue;
     private Thread worker;
 
     public Uploader(Connection connection) {
     	this.connection = connection;
-        this.queue = new LinkedBlockingQueue<UploadRequest>(11);
+        this.queue = new LinkedBlockingQueue<Request>(11);
 
         this.worker = null; // cmp. method 'start'
     }   
@@ -64,7 +64,7 @@ public class Uploader {
         return true;
     }
 
-    public synchronized boolean stop() {
+    public synchronized boolean stopImmediately() {
         if (!isRunning()) {
             return false;
         }
@@ -73,6 +73,21 @@ public class Uploader {
         worker = null;
         
         return true;
+    }
+    
+    public synchronized boolean stopWhenDone() {
+    	 if (!isRunning()) {
+             return false;
+         }
+    	 
+    	 try {
+    		 queue.put(new ShutdownRequest());
+    	 }
+    	 catch (InterruptedException e) {
+    		 logger.log(Level.INFO, "Uploader interrupted. Don't care because we wanted it to stop anyway.");
+    	 }
+    	 
+    	 return true;
     }
     
     public synchronized boolean isRunning() {
@@ -106,7 +121,10 @@ public class Uploader {
 		public void onUploadFailure(File localFile, RemoteFile remoteFile, Throwable exception);
 	}
     
-    private class UploadRequest {
+	private interface Request { /* Nothing. */ }	
+	private class ShutdownRequest implements Request { /* Nothing. */ }
+	
+    private class UploadRequest implements Request {
         private File localFile;
         private RemoteFile remoteFile;
         private UploadListener uploadListener;
@@ -121,16 +139,25 @@ public class Uploader {
 	private class UploadWorker implements Runnable {
 		@Override
 		public void run() {
-			logger.log(Level.INFO, "Worker started.");
+			logger.log(Level.INFO, "Upload worker thread started.");
 			
 			try {
-				UploadRequest currentUploadRequest;
+				Request currentRequest;
 
-				while (null != (currentUploadRequest = queue.take())) {
-					logger.log(Level.INFO, "Processing queue.. size: " + queue.size());
-					processRequest(currentUploadRequest);
+				while (null != (currentRequest = queue.take())) {					
+					if (currentRequest instanceof UploadRequest) {
+						logger.log(Level.INFO, "Processing upload request .. (remaining: {0})", queue.size());
+						processRequest((UploadRequest) currentRequest);
+					}
+					else if (currentRequest instanceof ShutdownRequest) {
+						logger.log(Level.INFO, "Shutdown request found in queue. Stopping upload worker.");
+						break; // Shutdown!
+					}
+					else {
+						logger.log(Level.WARNING, "Unknown request: {0}. Ignoring.", currentRequest);
+					}
 				}
-																																				 
+																																				
 			}
             catch (InterruptedException iex) {
             	logger.log(Level.INFO, "Worker interrupted.");

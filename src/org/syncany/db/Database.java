@@ -25,12 +25,12 @@ import java.util.TreeMap;
 public class Database {
 	private DatabaseVersion fullDatabaseVersion;
     private TreeMap<Long, DatabaseVersion> allDatabaseVersions;    
-    private Map<String, FileHistoryPart> filenameHistoryCache;
+    private Map<String, PartialFileHistory> filenameHistoryCache;
 
     public Database() {
     	fullDatabaseVersion = new DatabaseVersion();    	
     	allDatabaseVersions = new TreeMap<Long, DatabaseVersion>();    	
-        filenameHistoryCache = new HashMap<String, FileHistoryPart>();
+        filenameHistoryCache = new HashMap<String, PartialFileHistory>();
     }   
 	
 	public long getFirstLocalDatabaseVersion() {
@@ -65,11 +65,11 @@ public class Database {
 		return fullDatabaseVersion.getMultiChunk(id);
 	}	
 	
-	public FileHistoryPart getFileHistory(String filePath) {
+	public PartialFileHistory getFileHistory(String filePath) {
 		return filenameHistoryCache.get(filePath); 
 	}
 	
-	public FileHistoryPart getFileHistory(long fileId) {
+	public PartialFileHistory getFileHistory(long fileId) {
 		return fullDatabaseVersion.getFileHistory(fileId); 
 	}
 	
@@ -129,8 +129,8 @@ public class Database {
 		}		
 		
 		// Histories
-		for (FileHistoryPart sourceFileHistory : sourceDatabaseVersion.getFileHistories()) {
-			FileHistoryPart targetFileHistory = targetDatabaseVersion.getFileHistory(sourceFileHistory.getFileId());
+		for (PartialFileHistory sourceFileHistory : sourceDatabaseVersion.getFileHistories()) {
+			PartialFileHistory targetFileHistory = targetDatabaseVersion.getFileHistory(sourceFileHistory.getFileId());
 			
 			if (targetFileHistory == null) {
 				targetDatabaseVersion.addFileHistory(sourceFileHistory);
@@ -146,7 +146,7 @@ public class Database {
 		
 		// Cache all file paths + names to fileHistories
 		// TODO file a deleted, file b same path/name => chaos
-		for (FileHistoryPart cacheFileHistory : targetDatabaseVersion.getFileHistories()) {
+		for (PartialFileHistory cacheFileHistory : targetDatabaseVersion.getFileHistories()) {
 			String fileName = cacheFileHistory.getLastVersion().getFullName();
 			
 			filenameHistoryCache.put(fileName, cacheFileHistory);

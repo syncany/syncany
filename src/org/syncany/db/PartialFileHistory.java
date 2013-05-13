@@ -26,11 +26,11 @@ import java.util.TreeMap;
  *
  * @author pheckel
  */
-public class FileHistoryPart {
+public class PartialFileHistory {
     private Long fileId;
     private TreeMap<Long, FileVersion> versions;
     
-    public FileHistoryPart() {
+    public PartialFileHistory() {
         this.fileId = new Random().nextLong();
         this.versions = new TreeMap<Long, FileVersion>();
     }    
@@ -80,7 +80,7 @@ public class FileHistoryPart {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		FileHistoryPart other = (FileHistoryPart) obj;
+		PartialFileHistory other = (PartialFileHistory) obj;
 		if (fileId == null) {
 			if (other.fileId != null)
 				return false;

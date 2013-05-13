@@ -18,7 +18,7 @@ public class DatabaseVersion {
     private Map<ByteArray, ChunkEntry> chunkCache;
     private Map<ByteArray, MultiChunkEntry> multiChunkCache;
     private Map<ByteArray, FileContent> contentCache;
-    private Map<Long, FileHistoryPart> historyCache;
+    private Map<Long, PartialFileHistory> historyCache;
     
     public DatabaseVersion() {
     	vectorClock = new VectorClock();
@@ -26,7 +26,7 @@ public class DatabaseVersion {
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
         contentCache = new HashMap<ByteArray, FileContent>();
-        historyCache = new HashMap<Long, FileHistoryPart>();  
+        historyCache = new HashMap<Long, PartialFileHistory>();  
     }
 
 	public VectorClock getVectorClock() {
@@ -83,15 +83,15 @@ public class DatabaseVersion {
 	
     // History
     
-    public void addFileHistory(FileHistoryPart history) {
+    public void addFileHistory(PartialFileHistory history) {
         historyCache.put(history.getFileId(), history);
     }
     
-    public FileHistoryPart getFileHistory(long fileId) {
+    public PartialFileHistory getFileHistory(long fileId) {
         return historyCache.get(fileId);
     }
         
-    public Collection<FileHistoryPart> getFileHistories() {
+    public Collection<PartialFileHistory> getFileHistories() {
         return historyCache.values();
     }  
     
