@@ -4,19 +4,19 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.commands.Command;
-import org.syncany.commands.SyncDownCommand;
-import org.syncany.commands.SyncUpCommand;
 import org.syncany.config.ConfigTO;
 import org.syncany.config.Profile;
+import org.syncany.operations.Operation;
+import org.syncany.operations.SyncDownOperation;
+import org.syncany.operations.SyncUpOperation;
 
 public class Syncany {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
 	public enum CommandArgument { SYNC_UP, SYNC_DOWN };
 	
 	private String[] args;
-	private CommandArgument commandArgument;
-	private Command command;
+	private CommandArgument operationArgument;
+	private Operation operation;
 	private File configFile;
 	private Profile profile;	
 		
@@ -32,9 +32,9 @@ public class Syncany {
 		readCommandLineArguments(args);
 		
 		initProfileFromConfigFile(configFile);
-		initCommand(profile);
+		initOperation(profile);
 		
-		runCommand();
+		runOperation();
 	}	
 
 	private void readCommandLineArguments(String[] args) throws Exception {
@@ -76,10 +76,10 @@ public class Syncany {
 	
 	private void readCommandLineArgumentCommand(String commandArgument) throws Exception {
 		if ("up".equals(commandArgument)) {
-			this.commandArgument = CommandArgument.SYNC_UP;
+			this.operationArgument = CommandArgument.SYNC_UP;
 		}
 		else if ("down".equals(commandArgument)) {
-			this.commandArgument = CommandArgument.SYNC_DOWN;
+			this.operationArgument = CommandArgument.SYNC_DOWN;
 		}
 		else {
 			throw new Exception("Given operation is unknown.");
@@ -103,19 +103,19 @@ public class Syncany {
     	profile.getAppDatabaseDir().mkdirs();
 	}	
 
-	private void initCommand(Profile profile) throws Exception {
-		if (commandArgument == CommandArgument.SYNC_UP) {
-			command = new SyncUpCommand(profile);
+	private void initOperation(Profile profile) throws Exception {
+		if (operationArgument == CommandArgument.SYNC_UP) {
+			operation = new SyncUpOperation(profile);
 		}
-		else if (commandArgument == CommandArgument.SYNC_DOWN) {
-			command = new SyncDownCommand(profile);
+		else if (operationArgument == CommandArgument.SYNC_DOWN) {
+			operation = new SyncDownOperation(profile);
 		}
 		else {
 			throw new Exception("Unknown operation.");
 		}
 	}	
 		
-	private void runCommand() throws Exception {
-		command.execute();		
+	private void runOperation() throws Exception {
+		operation.execute();		
 	}
 }

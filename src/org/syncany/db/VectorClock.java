@@ -1,7 +1,6 @@
 package org.syncany.db;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 /**
  * Implements a VectorClock that records the time stamps of all send and receive
@@ -9,11 +8,9 @@ import java.util.HashMap;
  * 
  * @author Frits de Nijs
  * @author Peter Dijkshoorn
+ * @author Philipp C. Heckel
  */
-public class VectorClock extends HashMap<String, Long> {
-	/**
-	 * 
-	 */
+public class VectorClock extends TreeMap<String, Long> {
 	private static final long serialVersionUID = 109876543L;
 
 	public enum VectorClockComparison {
@@ -23,66 +20,37 @@ public class VectorClock extends HashMap<String, Long> {
 	/**
 	 * Increases the component of pUnit by 1.
 	 * 
-	 * @param pUnit
+	 * @param unit
 	 *            - The ID of the vector element being increased.
 	 */
-	public void incrementClock(String pUnit) {
+	public void incrementClock(String unit) {
 		// If we have it in the vector, increment.
-		if (this.containsKey(pUnit)) {
-			this.put(pUnit, this.get(pUnit).longValue() + 1);
+		if (this.containsKey(unit)) {
+			this.put(unit, this.get(unit).longValue() + 1);
 		}
 		// Else, store with value 1 (starts at 0, +1).
 		else {
-			this.put(pUnit, 1L);
+			this.put(unit, 1L);
 		}
 	}
 	
 	/**
 	 * Set the component of the pUnit.
 	 * 
-	 * @param pUnit
+	 * @param unit
 	 *            - The ID of the vector element being increased.
 	 */
-	public void setClock(String pUnit, long pValue) {
-		this.put(pUnit, pValue);	
+	public void setClock(String unit, long value) {
+		this.put(unit, value);	
 	}
-
-	/**
-	 * GUI operation, returns the IDs in some neat order.
-	 * 
-	 * @return The IDs of the elements in the Clock.
-	 */
-	public String[] getOrderedIDs() {
-		String[] lResult = new String[this.size()];
-
-		lResult = this.keySet().toArray(lResult);
-
-		Arrays.sort(lResult);
-
-		return lResult;
-	}
-
-	/**
-	 * GUI operation, returns the values in some neat order.
-	 * 
-	 * @return The Values of the elements in the Clock.
-	 */
-	public Long[] getOrderedValues() {
-		Long[] lResult = new Long[this.size()];
-		String[] lKeySet = this.getOrderedIDs();
-
-		int i = 0;
-		for (String lKey : lKeySet) {
-			lResult[i] = this.get(lKey);
-			i++;
-		}
-
-		return lResult;
+		
+	public Long getClock(String unit) {
+		return get(unit);
 	}
 
 	@Override
-	public Long get(Object key) {
-		Long lResult = super.get(key);
+	public Long get(Object unit) {
+		Long lResult = super.get(unit);
 
 		if (lResult == null)
 			lResult = 0L;
@@ -97,8 +65,8 @@ public class VectorClock extends HashMap<String, Long> {
 
 	@Override
 	public String toString() {
-		String[] lIDs = this.getOrderedIDs();
-		Long[] lRequests = this.getOrderedValues();
+		Object[] lIDs = this.keySet().toArray();
+		Object[] lRequests = this.values().toArray();
 
 		String lText = "(";
 
@@ -122,31 +90,30 @@ public class VectorClock extends HashMap<String, Long> {
 	 * for each element in either clock. Used in Buffer and Process to
 	 * manipulate clocks.
 	 * 
-	 * @param pOne
+	 * @param clock1
 	 *            - First Clock being merged.
-	 * @param pTwo
+	 * @param clock2
 	 *            - Second Clock being merged.
 	 * 
 	 * @return A new VectorClock with the maximum for each element in either
 	 *         clock.
 	 */
-	public static VectorClock max(VectorClock pOne,
-			VectorClock pTwo) {
+	public static VectorClock max(VectorClock clock1,	VectorClock clock2) {
 		// Create new Clock.
 		VectorClock lResult = new VectorClock();
 
 		// Go over all elements in clock One, put them in the new clock.
-		for (String lEntry : pOne.keySet()) {
-			lResult.put(lEntry, pOne.get(lEntry));
+		for (String lEntry : clock1.keySet()) {
+			lResult.put(lEntry, clock1.get(lEntry));
 		}
 
 		// Go over all elements in clock Two,
-		for (String lEntry : pTwo.keySet()) {
+		for (String lEntry : clock2.keySet()) {
 			// Insert the Clock Two value if it is not present in One, or if it
 			// is higher.
 			if (!lResult.containsKey(lEntry)
-					|| lResult.get(lEntry) < pTwo.get(lEntry)) {
-				lResult.put(lEntry, pTwo.get(lEntry));
+					|| lResult.get(lEntry) < clock2.get(lEntry)) {
+				lResult.put(lEntry, clock2.get(lEntry));
 			}
 		}
 
@@ -162,59 +129,61 @@ public class VectorClock extends HashMap<String, Long> {
 	 * Two. VectorComparison.SMALLER If One < Two. VectorComparison.SIMULTANEOUS
 	 * If One <> Two.
 	 * 
-	 * @param pOne
+	 * @param clock1
 	 *            - First Clock being compared.
-	 * @param pTwo
+	 * @param clock2
 	 *            - Second Clock being compared.
 	 * 
 	 * @return VectorComparison value indicating how One relates to Two.
 	 */
-	public static VectorClockComparison compare(VectorClock pOne,
-			VectorClock pTwo) {
+	public static VectorClockComparison compare(VectorClock clock1, VectorClock clock2) {
 		// Initially we assume it is all possible things.
-		boolean lEqual = true;
-		boolean lGreater = true;
-		boolean lSmaller = true;
+		boolean isEqual = true;
+		boolean isGreater = true;
+		boolean isSmaller = true;
 
 		// Go over all elements in Clock one.
-		for (String lEntry : pOne.keySet()) {
+		for (String lEntry : clock1.keySet()) {
 			// Compare if also present in clock two.
-			if (pTwo.containsKey(lEntry)) {
+			if (clock2.containsKey(lEntry)) {
 				// If there is a difference, it can never be equal.
 				// Greater / smaller depends on the difference.
-				if (pOne.get(lEntry) < pTwo.get(lEntry)) {
-					lEqual = false;
-					lGreater = false;
+				if (clock1.get(lEntry) < clock2.get(lEntry)) {
+					isEqual = false;
+					isGreater = false;
 				}
-				if (pOne.get(lEntry) > pTwo.get(lEntry)) {
-					lEqual = false;
-					lSmaller = false;
+				if (clock1.get(lEntry) > clock2.get(lEntry)) {
+					isEqual = false;
+					isSmaller = false;
 				}
 			}
 			// Else assume zero (default value is 0).
-			else if (pOne.get(lEntry) != 0) {
-				lEqual = false;
-				lSmaller = false;
+			else if (clock1.get(lEntry) != 0) {
+				isEqual = false;
+				isSmaller = false;
 			}
 		}
 
 		// Go over all elements in Clock two.
-		for (String lEntry : pTwo.keySet()) {
+		for (String lEntry : clock2.keySet()) {
 			// Only elements we have not found in One still need to be checked.
-			if (!pOne.containsKey(lEntry) && (pTwo.get(lEntry) != 0)) {
-				lEqual = false;
-				lGreater = false;
+			if (!clock1.containsKey(lEntry) && (clock2.get(lEntry) != 0)) {
+				isEqual = false;
+				isGreater = false;
 			}
 		}
 
 		// Return based on determined information.
-		if (lEqual) {
+		if (isEqual) {
 			return VectorClockComparison.EQUAL;
-		} else if (lGreater && !lSmaller) {
+		}
+		else if (isGreater && !isSmaller) {
 			return VectorClockComparison.GREATER;
-		} else if (lSmaller && !lGreater) {
+		}
+		else if (isSmaller && !isGreater) {
 			return VectorClockComparison.SMALLER;
-		} else {
+		}
+		else {
 			return VectorClockComparison.SIMULTANEOUS;
 		}
 	}

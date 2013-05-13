@@ -1,4 +1,4 @@
-package org.syncany.commands;
+package org.syncany.operations;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,12 +32,12 @@ import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-public class SyncUpCommand extends Command {
-	private static final Logger logger = Logger.getLogger(SyncUpCommand.class.getSimpleName());
+public class SyncUpOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(SyncUpOperation.class.getSimpleName());
 	
 	private Uploader uploader;
 	
-	public SyncUpCommand(Profile profile) {
+	public SyncUpOperation(Profile profile) {
 		super(profile);
 		this.uploader = new Uploader(profile.getConnection());
 	}	

@@ -1,6 +1,7 @@
-package org.syncany.commands;
+package org.syncany.operations;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +15,14 @@ import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.Database;
+import org.syncany.db.DatabaseDAO;
 import org.syncany.db.VectorClock;
+import org.syncany.db.VectorClock.VectorClockComparison;
 
-public class SyncDownCommand extends Command {
-	private static final Logger logger = Logger.getLogger(SyncDownCommand.class.getSimpleName());
+public class SyncDownOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
 	
-	public SyncDownCommand(Profile profile) {
+	public SyncDownOperation(Profile profile) {
 		super(profile);
 	}	
 	
@@ -40,6 +43,8 @@ public class SyncDownCommand extends Command {
 		
 		// 3. read the remote databases
 		// 4. compare the remote databases based on the file histories contained in them and figure out the winning file histories
+		reconcileDatabases(db, unknownRemoteDatabasesInCache);
+		
 		// 5. figure out which 
 		// 2. xxx
 		//
@@ -95,6 +100,42 @@ public class SyncDownCommand extends Command {
 		}
 		
 		return unknownRemoteDatabasesInCache;
+	}		
+
+	private void reconcileDatabases(Database db, List<File> remoteDatabasesInCache) throws IOException {
+		Database newLocalDatabase = db; // TODO shouldn't we clone this in case this goes wrong?
+		VectorClock lastLocalVectorClock = newLocalDatabase.getLastDatabaseVersion().getVectorClock();
+
+		logger.log(Level.INFO, "Reconciling local database with remote databases ...");
+		logger.log(Level.INFO, "- Local database version: {0}", lastLocalVectorClock.toString());
+		
+		for (File remoteDatabaseInCache : remoteDatabasesInCache) {
+			logger.log(Level.INFO, "- Processing remote database. Reading from {0} ...", remoteDatabaseInCache);
+			
+			Database remoteDatabase = new Database();
+			DatabaseDAO dbDAO = new DatabaseDAO();
+			
+			dbDAO.load(remoteDatabase, remoteDatabaseInCache);
+			
+			VectorClock lastRemoteVectorClock = remoteDatabase.getLastDatabaseVersion().getVectorClock();
+			VectorClockComparison localDatabaseIs = VectorClock.compare(lastLocalVectorClock, lastRemoteVectorClock);
+									
+			logger.log(Level.INFO, "  + Success. Remote database version: {0}", lastRemoteVectorClock.toString());
+
+			if (localDatabaseIs == VectorClockComparison.EQUAL) {
+				logger.log(Level.INFO, "  + Database versions are equal. Nothing to do.");
+			}
+			else if (localDatabaseIs == VectorClockComparison.GREATER) {
+				logger.log(Level.INFO, "  + Local database is greater. Nothing to do.");
+			}
+			else if (localDatabaseIs == VectorClockComparison.SMALLER) {
+				logger.log(Level.INFO, "  + Local database is SMALLER. Local update needed!");
+			}
+			else if (localDatabaseIs == VectorClockComparison.SIMULTANEOUS) {
+				logger.log(Level.INFO, "  + Databases are SIMULATANEOUS. Reconciliation needed!");
+			}
+		}
+		
 	}	
 	
 	private class RemoteDatabaseFile {
@@ -106,7 +147,7 @@ public class SyncDownCommand extends Command {
 			Matcher matcher = namePattern.matcher(remoteFile.getName());
 			
 			if (!matcher.matches()) {
-				throw new RuntimeException("aaa");
+				throw new RuntimeException("Remote database filename pattern does not match: db-xxxx..-nnnn.. expected.");
 			}
 			
 			this.clientName = matcher.group(1);

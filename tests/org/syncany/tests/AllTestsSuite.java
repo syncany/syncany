@@ -12,6 +12,7 @@ import org.syncany.tests.connection.local.LocalConnectionPluginTest;
 import org.syncany.tests.connection.local.UploaderWithLocalPluginTest;
 import org.syncany.tests.db.DatabaseWriteReadIndividualObjectsTest;
 import org.syncany.tests.db.DatabaseWriteReadRandomCombinationTest;
+import org.syncany.tests.db.VectorClockTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -30,8 +31,8 @@ import org.syncany.tests.db.DatabaseWriteReadRandomCombinationTest;
 	
 	// Database
 	DatabaseWriteReadIndividualObjectsTest.class,
-	DatabaseWriteReadRandomCombinationTest.class
-	
+	DatabaseWriteReadRandomCombinationTest.class,
+	VectorClockTest.class	
 })
 public class AllTestsSuite {
 	// This class executes all tests

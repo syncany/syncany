@@ -1,4 +1,4 @@
-package org.syncany.commands;
+package org.syncany.operations;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,11 +9,11 @@ import org.syncany.config.Profile;
 import org.syncany.db.Database;
 import org.syncany.db.DatabaseDAO;
 
-public abstract class Command {
-	private static final Logger logger = Logger.getLogger(Command.class.getSimpleName());
+public abstract class Operation {
+	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
 	protected Profile profile;
 	
-	public Command(Profile profile) {
+	public Operation(Profile profile) {
 		this.profile = profile;
 	}	
 
