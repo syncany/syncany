@@ -1,7 +1,7 @@
 package org.syncany.tests.chunk;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,13 +17,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
+import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.tests.util.TestUtil;
 
-public class MultiChunkerTest {
+public class CustomMultiChunkerTest {
 
 	private File tempDir;
 
@@ -45,38 +46,19 @@ public class MultiChunkerTest {
 		int fileSizeSmall = 1230;
 		int fileAmountSizeSmall = 2;
 		int fileAmountSizeBig = 3;
-		
-		Set<MultiChunk> resultMultiChunks = new HashSet<MultiChunk>();
 
 		try {
-			List<File> files = TestUtil.generateRandomBinaryFilesInDirectory(
-					tempDir, fileSizeSmall, fileAmountSizeSmall);
-			files.addAll(TestUtil.generateRandomBinaryFilesInDirectory(tempDir,
-					fileSizeBig, fileAmountSizeBig));
+			List<File> files = TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall,
+					fileAmountSizeSmall);
+			files.addAll(TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
 			FixedOffsetChunker foc = new FixedOffsetChunker(chunkSizeB);
-			MultiChunker customMultiChunker = new CustomMultiChunker(
-					minMultiChunkSize);
-			MultiChunk customMultiChunk = createNewMultiChunk(customMultiChunker);
+			MultiChunker customMultiChunker = new CustomMultiChunker(minMultiChunkSize);
 
-			for (File file : files) {
-				Enumeration<Chunk> chunks = foc.createChunks(file);
-				while (chunks.hasMoreElements()) {
-					Chunk chunk = chunks.nextElement();
-					customMultiChunk.write(chunk);
+			Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, foc, customMultiChunker);
 
-					if (customMultiChunk.isFull()) {
-						customMultiChunk.close();
-						resultMultiChunks.add(customMultiChunk);
-						customMultiChunk = createNewMultiChunk(customMultiChunker);
-					}
-				}
-			}
-			customMultiChunk.close();
-			resultMultiChunks.add(customMultiChunk);
-			
-			long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall); 
-			assertEquals((totalFilesSize / (minMultiChunkSize)),resultMultiChunks.size());
+			long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall);
+			assertEquals((totalFilesSize / (minMultiChunkSize)), resultMultiChunks.size());
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -86,16 +68,40 @@ public class MultiChunkerTest {
 
 	}
 
+	private Set<MultiChunk> chunkFileIntoMultiChunks(List<File> files, Chunker foc, MultiChunker customMultiChunker)
+			throws IOException {
+
+		Set<MultiChunk> resultMultiChunks = new HashSet<MultiChunk>();
+
+		MultiChunk customMultiChunk = createNewMultiChunk(customMultiChunker);
+
+		for (File file : files) {
+			Enumeration<Chunk> chunks = foc.createChunks(file);
+			while (chunks.hasMoreElements()) {
+				Chunk chunk = chunks.nextElement();
+				customMultiChunk.write(chunk);
+
+				if (customMultiChunk.isFull()) {
+					customMultiChunk.close();
+					resultMultiChunks.add(customMultiChunk);
+					customMultiChunk = createNewMultiChunk(customMultiChunker);
+				}
+			}
+		}
+		customMultiChunk.close();
+		resultMultiChunks.add(customMultiChunk);
+
+		return resultMultiChunks;
+	}
+
 	private MultiChunk createNewMultiChunk(MultiChunker customMultiChunker) {
 		FileOutputStream fos;
 		String multiChunkName = String.valueOf(new Random().nextInt());
 
 		MultiChunk customChunk = null;
 		try {
-			fos = new FileOutputStream(tempDir.getAbsolutePath()
-					+ "/MultiChunk" + multiChunkName);
-			customChunk = customMultiChunker.createMultiChunk(
-					multiChunkName.getBytes(), fos);
+			fos = new FileOutputStream(tempDir.getAbsolutePath() + "/MultiChunk" + multiChunkName);
+			customChunk = customMultiChunker.createMultiChunk(multiChunkName.getBytes(), fos);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

@@ -5,7 +5,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
-import org.syncany.tests.chunk.MultiChunkerTest;
+import org.syncany.tests.chunk.CustomMultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.local.LocalConnectionPluginTest;
@@ -20,7 +20,7 @@ import org.syncany.tests.db.VectorClockTest;
 	EncryptionTest.class,
 	
 	// Chunking Framework
-	MultiChunkerTest.class,
+	CustomMultiChunkerTest.class,
 	FixedOffsetChunkerTest.class,
 	TTTDChunkerTest.class,
 	FrameworkCombinationTest.class,
