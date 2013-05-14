@@ -39,7 +39,7 @@ public class CustomMultiChunkerTest {
 	}
 
 	@Test
-	public void testChunkFileIntoMultiChunks() {
+	public void testChunkFileIntoMultiChunks() throws IOException {
 		int minMultiChunkSize = 512 * 1024;
 		int chunkSizeB = 16000;
 		int fileSizeBig = 4560000;
@@ -47,25 +47,16 @@ public class CustomMultiChunkerTest {
 		int fileAmountSizeSmall = 2;
 		int fileAmountSizeBig = 3;
 
-		try {
-			List<File> files = TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall,
-					fileAmountSizeSmall);
-			files.addAll(TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
+		List<File> files = TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
+		files.addAll(TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
-			FixedOffsetChunker foc = new FixedOffsetChunker(chunkSizeB);
-			MultiChunker customMultiChunker = new CustomMultiChunker(minMultiChunkSize);
+		FixedOffsetChunker foc = new FixedOffsetChunker(chunkSizeB);
+		MultiChunker customMultiChunker = new CustomMultiChunker(minMultiChunkSize);
 
-			Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, foc, customMultiChunker);
+		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, foc, customMultiChunker);
 
-			long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall);
-			assertEquals((totalFilesSize / (minMultiChunkSize)), resultMultiChunks.size());
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+		long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall);
+		assertEquals((totalFilesSize / (minMultiChunkSize)), resultMultiChunks.size());
 	}
 
 	private Set<MultiChunk> chunkFileIntoMultiChunks(List<File> files, Chunker foc, MultiChunker customMultiChunker)
