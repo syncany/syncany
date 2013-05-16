@@ -14,10 +14,10 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.db.Database;
-import org.syncany.db.DatabaseDAO;
-import org.syncany.db.VectorClock;
-import org.syncany.db.VectorClock.VectorClockComparison;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
+import org.syncany.database.VectorClock;
+import org.syncany.database.VectorClock.VectorClockComparison;
 
 public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
@@ -104,10 +104,13 @@ public class SyncDownOperation extends Operation {
 
 	private void reconcileDatabases(Database db, List<File> remoteDatabasesInCache) throws IOException {
 		Database newLocalDatabase = db; // TODO shouldn't we clone this in case this goes wrong?
-		VectorClock lastLocalVectorClock = newLocalDatabase.getLastDatabaseVersion().getVectorClock();
+		VectorClock localVectorClock = newLocalDatabase.getLastDatabaseVersion().getVectorClock();
 
 		logger.log(Level.INFO, "Reconciling local database with remote databases ...");
-		logger.log(Level.INFO, "- Local database version: {0}", lastLocalVectorClock.toString());
+		logger.log(Level.INFO, "- Local database version: {0}", localVectorClock.toString());
+		
+		VectorClock latestRemoteVectorClock = null;
+		File latestRemoteDatabase = null;
 		
 		for (File remoteDatabaseInCache : remoteDatabasesInCache) {
 			logger.log(Level.INFO, "- Processing remote database. Reading from {0} ...", remoteDatabaseInCache);
@@ -117,10 +120,10 @@ public class SyncDownOperation extends Operation {
 			
 			dbDAO.load(remoteDatabase, remoteDatabaseInCache);
 			
-			VectorClock lastRemoteVectorClock = remoteDatabase.getLastDatabaseVersion().getVectorClock();
-			VectorClockComparison localDatabaseIs = VectorClock.compare(lastLocalVectorClock, lastRemoteVectorClock);
+			VectorClock remoteVectorClock = remoteDatabase.getLastDatabaseVersion().getVectorClock();
+			VectorClockComparison localDatabaseIs = VectorClock.compare(localVectorClock, remoteVectorClock);
 									
-			logger.log(Level.INFO, "  + Success. Remote database version: {0}", lastRemoteVectorClock.toString());
+			logger.log(Level.INFO, "  + Success. Remote database version: {0}", remoteVectorClock.toString());
 
 			if (localDatabaseIs == VectorClockComparison.EQUAL) {
 				logger.log(Level.INFO, "  + Database versions are equal. Nothing to do.");
@@ -130,6 +133,16 @@ public class SyncDownOperation extends Operation {
 			}
 			else if (localDatabaseIs == VectorClockComparison.SMALLER) {
 				logger.log(Level.INFO, "  + Local database is SMALLER. Local update needed!");
+				
+				if (latestRemoteVectorClock != null) {
+					VectorClockComparison latestRemoteDatabaseIs = VectorClock.compare(latestRemoteVectorClock, remoteVectorClock);
+					
+					if (latestRemoteDatabaseIs == VectorClockComparison.SMALLER) {
+						latestRemoteDatabase = remoteDatabaseInCache;
+						latestRemoteVectorClock = remoteVectorClock;
+					}
+				}
+				//updateLocalDatabase
 			}
 			else if (localDatabaseIs == VectorClockComparison.SIMULTANEOUS) {
 				logger.log(Level.INFO, "  + Databases are SIMULATANEOUS. Reconciliation needed!");

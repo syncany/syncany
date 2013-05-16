@@ -13,9 +13,9 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.db.Database;
-import org.syncany.db.DatabaseVersion;
-import org.syncany.db.MultiChunkEntry;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 
 public class SyncUpOperation extends Operation {

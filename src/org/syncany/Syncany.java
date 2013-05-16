@@ -53,7 +53,7 @@ public class Syncany {
 		String defaultConfigFileArgument = "config.json";
 		
 		readCommandLineArgumentConfigFile(defaultConfigFileArgument);
-		readCommandLineArgumentCommand(args[1]);		
+		readCommandLineArgumentCommand(args[0]);		
 	}
 
 	private void readCommandLineArgumentsWithSpecificConfigFile(String[] args) throws Exception {

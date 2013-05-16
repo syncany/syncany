@@ -15,31 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.db;
+package org.syncany.database;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.TreeMap;
+
 
 /**
  *
  * @author pheckel
  */
-public class FileContent {
-    private byte[] checksum;
-    private int contentSize;
-    
-    private TreeMap<Integer, ChunkEntry> chunks;
-    
-    public FileContent() {
-        this.chunks = new TreeMap<Integer, ChunkEntry>();
-    }
-       
-    public void addChunk(ChunkEntry chunk) {
-        chunks.put(chunks.size(), chunk);        
+public class ChunkEntry {
+    private byte[] checksum;      
+    private int size;    
+
+    public ChunkEntry(byte[] checksum, int size) {
+        this.checksum = checksum;
+        this.size = size;
     }    
 
+    public void setSize(int chunksize) {
+        this.size = chunksize;
+    }
+
+    public int getSize() {
+        return size;
+    }   
+    
     public byte[] getChecksum() {
         return checksum;
     }
@@ -48,25 +49,12 @@ public class FileContent {
         this.checksum = checksum;
     }
 
-    public int getContentSize() {
-        return contentSize;
-    }
-
-    public void setContentSize(int contentSize) {
-        this.contentSize = contentSize;
-    }
-
-    public Collection<ChunkEntry> getChunks() {
-    	return Collections.unmodifiableCollection(chunks.values());
-    }
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + Arrays.hashCode(checksum);
-		result = prime * result + ((chunks == null) ? 0 : chunks.hashCode());
-		result = prime * result + contentSize;
+		result = prime * result + size;
 		return result;
 	}
 
@@ -78,17 +66,11 @@ public class FileContent {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		FileContent other = (FileContent) obj;
+		ChunkEntry other = (ChunkEntry) obj;
 		if (!Arrays.equals(checksum, other.checksum))
 			return false;
-		if (chunks == null) {
-			if (other.chunks != null)
-				return false;
-		} else if (!chunks.equals(other.chunks))
-			return false;
-		if (contentSize != other.contentSize)
+		if (size != other.size)
 			return false;
 		return true;
-	}
-            
+	}    
 }

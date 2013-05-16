@@ -1,4 +1,4 @@
-package org.syncany.db;
+package org.syncany.database;
 
 import java.util.TreeMap;
 

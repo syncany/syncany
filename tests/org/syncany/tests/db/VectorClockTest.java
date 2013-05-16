@@ -3,8 +3,8 @@ package org.syncany.tests.db;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.syncany.db.VectorClock;
-import org.syncany.db.VectorClock.VectorClockComparison;
+import org.syncany.database.VectorClock;
+import org.syncany.database.VectorClock.VectorClockComparison;
 
 public class VectorClockTest {
 	@Test

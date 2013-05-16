@@ -6,8 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.db.Database;
-import org.syncany.db.DatabaseDAO;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
 
 public abstract class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());

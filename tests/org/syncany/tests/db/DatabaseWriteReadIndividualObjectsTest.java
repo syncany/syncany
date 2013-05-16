@@ -14,15 +14,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.syncany.db.ChunkEntry;
-import org.syncany.db.Database;
-import org.syncany.db.DatabaseDAO;
-import org.syncany.db.DatabaseVersion;
-import org.syncany.db.FileContent;
-import org.syncany.db.PartialFileHistory;
-import org.syncany.db.FileVersion;
-import org.syncany.db.MultiChunkEntry;
-import org.syncany.db.VectorClock;
+import org.syncany.database.ChunkEntry;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileContent;
+import org.syncany.database.FileVersion;
+import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.database.VectorClock;
 import org.syncany.tests.util.TestUtil;
 
 public class DatabaseWriteReadIndividualObjectsTest {
