@@ -7,8 +7,10 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.config.EncryptionException;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginInfo;
 import org.syncany.connection.plugins.Plugins;
@@ -22,7 +24,7 @@ public class SyncUpOperationTest {
 	private File tempDBDir; 
 	
 	private final String machineName = "syncUpMachine1";
-	
+
 	@Before
 	public void setUp() throws Exception {
 		tempLocalDir = TestUtil.createTempDirectoryInSystemTemp();
@@ -54,11 +56,15 @@ public class SyncUpOperationTest {
 		op.execute();
 
 		//Compare dbs
+		File localDatabaseFile = new File(tempLocalDir.getAbsoluteFile() + "/" + machineName);
+		File remoteDatabaseFile = new File(tempRepoDir.getAbsoluteFile() + "/" + machineName);
+		assertTrue(localDatabaseFile.exists());
+		assertTrue(remoteDatabaseFile.exists());
 		
 		//compare files listed in db remote & local 
 	}
 
-	private Config createTestConfig() {
+	private Config createTestConfig() throws EncryptionException {
 		Config config = new Config();
 		config.setMachineName(machineName);
 		config.setAppCacheDir(tempCacheDir);
