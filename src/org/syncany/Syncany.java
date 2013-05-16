@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.ConfigTO;
-import org.syncany.config.Profile;
+import org.syncany.config.Config;
 import org.syncany.operations.Operation;
 import org.syncany.operations.SyncDownOperation;
 import org.syncany.operations.SyncUpOperation;
@@ -18,7 +18,7 @@ public class Syncany {
 	private CommandArgument operationArgument;
 	private Operation operation;
 	private File configFile;
-	private Profile profile;	
+	private Config profile;	
 		
 	public static void main(String[] args) throws Exception {
 		new Syncany(args).start();
@@ -90,7 +90,7 @@ public class Syncany {
 		logger.log(Level.INFO, "Loading config from {0} ...", configFile);
 		
 		ConfigTO configTO = ConfigTO.load(configFile);
-		profile = new Profile(configTO);
+		profile = new Config(configTO);
 		
 		createProfileDirectories();
 	}
@@ -103,7 +103,7 @@ public class Syncany {
     	profile.getAppDatabaseDir().mkdirs();
 	}	
 
-	private void initOperation(Profile profile) throws Exception {
+	private void initOperation(Config profile) throws Exception {
 		if (operationArgument == CommandArgument.SYNC_UP) {
 			operation = new SyncUpOperation(profile);
 		}

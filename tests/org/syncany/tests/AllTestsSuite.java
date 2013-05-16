@@ -9,7 +9,6 @@ import org.syncany.tests.chunk.CustomMultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.local.LocalConnectionPluginTest;
-import org.syncany.tests.connection.local.UploaderWithLocalPluginTest;
 import org.syncany.tests.db.DatabaseWriteReadIndividualObjectsTest;
 import org.syncany.tests.db.DatabaseWriteReadRandomCombinationTest;
 import org.syncany.tests.db.VectorClockTest;
@@ -27,7 +26,6 @@ import org.syncany.tests.db.VectorClockTest;
 	
 	// Connection
 	LocalConnectionPluginTest.class,
-	UploaderWithLocalPluginTest.class,
 	
 	// Database
 	DatabaseWriteReadIndividualObjectsTest.class,

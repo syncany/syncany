@@ -11,7 +11,7 @@ import org.syncany.chunk.Deduper;
 import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Constants;
-import org.syncany.config.Profile;
+import org.syncany.config.Config;
 import org.syncany.db.ChunkEntry;
 import org.syncany.db.Database;
 import org.syncany.db.DatabaseVersion;
@@ -25,11 +25,11 @@ import org.syncany.util.StringUtil;
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
 	
-	private Profile profile;
+	private Config profile;
 	private Deduper deduper;
 	private Database db;
 	
-	public Indexer(Profile profile, Deduper deduper, Database db) {
+	public Indexer(Config profile, Deduper deduper, Database db) {
 		this.profile = profile;
 		this.deduper = deduper;
 		this.db = db;

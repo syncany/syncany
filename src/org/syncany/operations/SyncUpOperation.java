@@ -9,9 +9,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.chunk.Deduper;
-import org.syncany.config.Profile;
-import org.syncany.connection.Uploader;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.db.Database;
 import org.syncany.db.DatabaseVersion;
 import org.syncany.db.MultiChunkEntry;
@@ -20,11 +21,11 @@ import org.syncany.util.FileUtil;
 public class SyncUpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncUpOperation.class.getSimpleName());
 	
-	private Uploader uploader;
+	private TransferManager tm; 
 	
-	public SyncUpOperation(Profile profile) {
-		super(profile);
-		this.uploader = new Uploader(profile.getConnection());
+	public SyncUpOperation(Config config) {
+		super(config);
+		tm = config.getConnection().createTransferManager();
 	}	
 	
 	public void execute() throws Exception {
@@ -49,22 +50,21 @@ public class SyncUpOperation extends Operation {
 		}		
 	}	
 	
-	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException {
-		uploader.start();
+	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId()); 
-			uploader.queue(multiChunkFile);
+			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			RemoteFile remoteFile = new RemoteFile(multiChunkFile.getName());
+			tm.upload(multiChunkFile, remoteFile);
 		}
 		
 		return true; // FIXME
 	}
 
-	private boolean uploadLocalDatabase(File localDatabaseFile, long newestLocalDatabaseVersion) throws InterruptedException {
+	private boolean uploadLocalDatabase(File localDatabaseFile, long newestLocalDatabaseVersion) throws InterruptedException, StorageException {
 		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
 		
-		uploader.queue(localDatabaseFile, remoteDatabaseFile);
-		uploader.stopWhenDone();
+		tm.upload(localDatabaseFile, remoteDatabaseFile);
 		
 		return true;
 	}

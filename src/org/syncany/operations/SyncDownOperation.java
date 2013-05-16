@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.config.Profile;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
@@ -22,7 +22,7 @@ import org.syncany.db.VectorClock.VectorClockComparison;
 public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
 	
-	public SyncDownOperation(Profile profile) {
+	public SyncDownOperation(Config profile) {
 		super(profile);
 	}	
 	

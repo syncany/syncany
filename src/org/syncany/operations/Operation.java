@@ -5,15 +5,15 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.Profile;
+import org.syncany.config.Config;
 import org.syncany.db.Database;
 import org.syncany.db.DatabaseDAO;
 
 public abstract class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
-	protected Profile profile;
+	protected Config profile;
 	
-	public Operation(Profile profile) {
+	public Operation(Config profile) {
 		this.profile = profile;
 	}	
 

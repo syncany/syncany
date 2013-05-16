@@ -33,7 +33,7 @@ import org.syncany.connection.plugins.Plugins;
  * 
  * @author Philipp C. Heckel
  */
-public class Profile {
+public class Config {
 	private File localDir;
 	private File appDir;
 	private File appCacheDir;
@@ -49,13 +49,17 @@ public class Profile {
     private MultiChunker multiChunker;
     private Transformer transformer;
         
-	public Profile(ConfigTO configTO) throws Exception {		
+	public Config(ConfigTO configTO) throws Exception {		
 		machineName = configTO.getMachineName();
 		
 		initDirectories(configTO);
 		initChunkingFramework(configTO);
     	initEncryption(configTO);
     	initConnectionPlugin(configTO);    
+	}
+	
+	public Config() {
+		
 	}
 	
 	private void initDirectories(ConfigTO configTO) {
