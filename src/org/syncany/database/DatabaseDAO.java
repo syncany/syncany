@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -75,7 +76,6 @@ import java.util.Map;
 public class DatabaseDAO {
 	private static final byte[] DATABASE_MAGIC = "Syncany".getBytes();
 	private static final byte DATABASE_FORMAT_VERSION = 0x01;
-
 	
 	public void save(Database db, File destinationFile) throws IOException {
 		save(db, db.getFirstLocalDatabaseVersion(), db.getLastLocalDatabaseVersion(), destinationFile);
@@ -93,7 +93,7 @@ public class DatabaseDAO {
         // Signature and version        
         dos.write(DATABASE_MAGIC); 
         dos.writeByte(DATABASE_FORMAT_VERSION);
-        
+                
         // Amount of versions
         long databaseVersionCount = versionTo-versionFrom+1; 
         dos.writeLong(databaseVersionCount);
@@ -104,10 +104,13 @@ public class DatabaseDAO {
 			dos.writeLong(localDatabaseVersion);
 
 			// Write object
-			DatabaseVersion dbv = db.getDatabaseVersion(i);
+			DatabaseVersion currentDatabaseVersion = db.getDatabaseVersion(i);
         				
+            // Timestamp
+            dos.writeLong(currentDatabaseVersion.getTimestamp().getTime());
+        	
 			// Global Version
-			Map<String, Long> globalDatabaseVersion = dbv.getVectorClock();
+			Map<String, Long> globalDatabaseVersion = currentDatabaseVersion.getVectorClock();
 			
 			dos.writeInt(globalDatabaseVersion.size());
 			
@@ -121,7 +124,7 @@ public class DatabaseDAO {
 			}
 			
 			// Chunks
-			Collection<ChunkEntry> chunks = dbv.getChunks();
+			Collection<ChunkEntry> chunks = currentDatabaseVersion.getChunks();
 
 			if (chunks == null || chunks.isEmpty()) {
 				dos.writeInt(0); // count
@@ -134,7 +137,7 @@ public class DatabaseDAO {
 			}
 
 			// Multichunks
-			Collection<MultiChunkEntry> multiChunks = dbv.getMultiChunks();
+			Collection<MultiChunkEntry> multiChunks = currentDatabaseVersion.getMultiChunks();
 
 			if (multiChunks == null || multiChunks.isEmpty()) {
 				dos.writeInt(0); // count
@@ -147,7 +150,7 @@ public class DatabaseDAO {
 			}
 
 			// Content
-			Collection<FileContent> fileContents = dbv.getFileContents();
+			Collection<FileContent> fileContents = currentDatabaseVersion.getFileContents();
 
 			if (fileContents == null || fileContents.isEmpty()) {
 				dos.writeInt(0); // count
@@ -160,7 +163,7 @@ public class DatabaseDAO {
 			}
 
 			// File histories & versions
-			Collection<PartialFileHistory> fileHistories = dbv.getFileHistories();
+			Collection<PartialFileHistory> fileHistories = currentDatabaseVersion.getFileHistories();
 
 			if (fileHistories == null || fileHistories.isEmpty()) {
 				dos.writeInt(0); // count
@@ -209,7 +212,11 @@ public class DatabaseDAO {
         	// TODO do something with this!
 
         	// Read object (= value)
-        	DatabaseVersion dbv = new DatabaseVersion();
+        	DatabaseVersion currentDatabaseVersion = new DatabaseVersion();
+        	
+        	// Timestamp
+        	Date databaseVersionTimestamp = new Date(dis.readLong());
+        	currentDatabaseVersion.setTimestamp(databaseVersionTimestamp);
         	
         	// Global database version
         	VectorClock globalDatabaseVersionClock = new VectorClock(); 
@@ -229,42 +236,42 @@ public class DatabaseDAO {
         		globalDatabaseVersionClock.setClock(clientName, clientVersion);
         	}
         	
-        	dbv.setVectorClock(globalDatabaseVersionClock);
+        	currentDatabaseVersion.setVectorClock(globalDatabaseVersionClock);
         	
         	// Chunks
             int chunkCount = dis.readInt();
             
             for (int j = 0; j < chunkCount; j++) {
                 ChunkEntry chunk = chunkDAO.readChunk(dis);                
-                dbv.addChunk(chunk);
+                currentDatabaseVersion.addChunk(chunk);
             }
             
             // Multichunks
             int metaChunkCount = dis.readInt();
 
             for (int j = 0; j < metaChunkCount; j++) {
-                MultiChunkEntry multiChunk = multiChunkDAO.readMultiChunk(db, dbv, dis);
-                dbv.addMultiChunk(multiChunk);                
+                MultiChunkEntry multiChunk = multiChunkDAO.readMultiChunk(db, currentDatabaseVersion, dis);
+                currentDatabaseVersion.addMultiChunk(multiChunk);                
             }
             
             // Content
             int fileContentCount = dis.readInt();
 
             for (int j = 0; j < fileContentCount; j++) {
-                FileContent content = fileContentDAO.readFileContent(db, dbv, dis);
-                dbv.addFileContent(content);
+                FileContent content = fileContentDAO.readFileContent(db, currentDatabaseVersion, dis);
+                currentDatabaseVersion.addFileContent(content);
             }        
             
             // Histories
             int fileHistoryCount = dis.readInt();
 
             for (int j = 0; j < fileHistoryCount; j++) {
-                PartialFileHistory fileHistory = fileHistoryDAO.readFileHistory(db, dbv, dis);
-                dbv.addFileHistory(fileHistory);
+                PartialFileHistory fileHistory = fileHistoryDAO.readFileHistory(db, currentDatabaseVersion, dis);
+                currentDatabaseVersion.addFileHistory(fileHistory);
             }                 
         	
             // Add version to Database object
-            db.addDatabaseVersion(dbv);
+            db.addDatabaseVersion(currentDatabaseVersion);
         }
                        
         dis.close();

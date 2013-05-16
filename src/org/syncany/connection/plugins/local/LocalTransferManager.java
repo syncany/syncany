@@ -40,7 +40,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 
     public LocalTransferManager(LocalConnection connection) {
         super(connection);
-        folder = connection.getRepoPath();
+        folder = connection.getRepositoryPath();
     }
 
     @Override

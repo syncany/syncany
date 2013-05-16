@@ -36,7 +36,7 @@ public class Indexer {
 	}
 	
 	public DatabaseVersion index(List<File> files) throws IOException {
-		final DatabaseVersion newDatabaseVesion = new DatabaseVersion();
+		final DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 		
 		deduper.deduplicate(files, new DeduperListener() {
 			private PartialFileHistory fileHistory;
@@ -53,28 +53,30 @@ public class Indexer {
 			 */
 			@Override
 			public boolean onChunk(Chunk chunk) {
-				logger.log(Level.INFO, "CHUNK       "+chunk);
 				chunkEntry = db.getChunk(chunk.getChecksum());
 
 				if (chunkEntry == null) {
-					chunkEntry = newDatabaseVesion.getChunk(chunk.getChecksum());
+					chunkEntry = newDatabaseVersion.getChunk(chunk.getChecksum());
 					
 					if (chunkEntry == null) {
+						logger.log(Level.FINER, "- Chunk new: {0}", StringUtil.toHex(chunk.getChecksum()));
+						
 						chunkEntry = new ChunkEntry(chunk.getChecksum(), chunk.getSize());
-						newDatabaseVesion.addChunk(chunkEntry);
+						newDatabaseVersion.addChunk(chunkEntry);
 						
 						return true;	
 					}
 				}
 				
+				logger.log(Level.FINER, "- Chunk exists: {0}", StringUtil.toHex(chunk.getChecksum()));
 				return false;
 			}
 			
 			@Override
 			public void onFileStart(File file) {
-				logger.log(Level.INFO, "FILE OPEN   "+file);
-				// Check if file exists in full database stock, or create new
-				// onFileStart is only called once for each file,
+				logger.log(Level.FINER, "- +File {0}", file); 
+				
+				// Check if file exists in full database stock, or create new onFileStart is only called once for each file,
 				// thereby new dbv is not aware of incoming file   
 				String relativeFilePath = FileUtil.getRelativePath(profile.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName(); 
 				fileHistory = db.getFileHistory(relativeFilePath);
@@ -99,8 +101,8 @@ public class Indexer {
 				newFileVersion.setPath(FileUtil.getRelativePath(profile.getLocalDir(), file.getParentFile()));
 				newFileVersion.setName(file.getName());
 				
-				newDatabaseVesion.addFileHistory(fileHistory);
-				newDatabaseVesion.addFileVersionToHistory(fileHistory.getFileId(),newFileVersion);
+				newDatabaseVersion.addFileHistory(fileHistory);
+				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(),newFileVersion);
 				
 				// Required for other events
 				fileVersion = newFileVersion;
@@ -109,14 +111,15 @@ public class Indexer {
 
 			@Override
 			public void onOpenMultiChunk(MultiChunk multiChunk) {
-				logger.log(Level.INFO, "MULTI OPEN  "+multiChunk);
+				logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
 				multiChunkEntry = new MultiChunkEntry(chunkEntry.getChecksum());
 			}
 
 			@Override
 			public void onCloseMultiChunk(MultiChunk multiChunk) {
-				logger.log(Level.INFO, "MULTI CLOSE  ");
-				newDatabaseVesion.addMultiChunk(multiChunkEntry);
+				logger.log(Level.FINER, "- /MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
+				
+				newDatabaseVersion.addMultiChunk(multiChunkEntry);
 				multiChunkEntry = null;
 			}
 
@@ -127,27 +130,28 @@ public class Indexer {
 
 			@Override
 			public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk) {
-				logger.log(Level.INFO, "WRITE CHUNK TO MULTI "+chunk);			
+				logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
 				multiChunkEntry.addChunk(chunkEntry);				
 			}
 
 			@Override
 			public void onFileAddChunk(File file, Chunk chunk) {
-				logger.log(Level.INFO, "ADD CHUNK TO CONTENT "+chunk);			
 				if (content == null) {
+					logger.log(Level.FINER, "- +FileContent: {0}", file);			
 					content = new FileContent();
 				}
 				
+				logger.log(Level.FINER, "- Chunk > FileContent: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), file });
 				content.addChunk(chunkEntry);				
 			}
 
 			@Override
 			public void onFileEnd(File file, byte[] checksum) {
 				if (checksum != null) {
-					logger.log(Level.INFO, "FILE END "+StringUtil.toHex(checksum));
+					logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] { file, StringUtil.toHex(checksum) });
 				}
 				else {
-					logger.log(Level.INFO, "FILE END ");
+					logger.log(Level.FINER, "- /File: {0} (directory)", file);
 				}
 				
 				
@@ -155,15 +159,14 @@ public class Indexer {
 					content.setChecksum(checksum);
 
 					fileVersion.setContent(content);
-					newDatabaseVesion.addFileContent(content);
+					newDatabaseVersion.addFileContent(content);
 				}
 				
 				content = null;		
 				
 
 				// fileHistory.addVersion(fileVersion);
-				newDatabaseVesion.addFileHistory(fileHistory);
-				
+				newDatabaseVersion.addFileHistory(fileHistory);				
 			}
 
 			@Override
@@ -177,7 +180,7 @@ public class Indexer {
 			}
 		});
 			
-		return newDatabaseVesion;
+		return newDatabaseVersion;
 	}
 
 	

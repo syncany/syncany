@@ -34,7 +34,7 @@ import org.syncany.util.StringUtil;
  */
 public class Plugins {
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
-	private static final Map<String, PluginInfo> plugins = new TreeMap<String, PluginInfo>();
+	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 	private static boolean loaded = false;
 	private static Thread asyncLoadThread = null;
 
@@ -85,7 +85,7 @@ public class Plugins {
 		}
 	}
 
-	public static Collection<PluginInfo> list() {
+	public static Collection<Plugin> list() {
 		loadAsync();
 		try {
 			waitForAsyncLoaded();
@@ -104,7 +104,7 @@ public class Plugins {
 	 * @param pluginId
 	 * @return
 	 */
-	public static PluginInfo get(String pluginId) {
+	public static Plugin get(String pluginId) {
 		// If already loaded, get from list
 		if (plugins.containsKey(pluginId)) {
 			return plugins.get(pluginId);
@@ -135,7 +135,7 @@ public class Plugins {
 		// Try to load!
 		try {
 			Class<?> pluginInfoClass = Class.forName(className);
-			PluginInfo pluginInfo = (PluginInfo) pluginInfoClass.newInstance();
+			Plugin pluginInfo = (Plugin) pluginInfoClass.newInstance();
 
 			plugins.put(pluginId, pluginInfo);
 		} catch (Exception ex) {

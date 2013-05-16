@@ -102,7 +102,7 @@ public class SyncDownOperation extends Operation {
 		return unknownRemoteDatabasesInCache;
 	}		
 
-	private void reconcileDatabases(Database db, List<File> remoteDatabasesInCache) throws IOException {
+	private void reconcileDatabases(Database db, List<File> remoteDatabasesInCache) throws Exception {
 		Database newLocalDatabase = db; // TODO shouldn't we clone this in case this goes wrong?
 		VectorClock localVectorClock = newLocalDatabase.getLastDatabaseVersion().getVectorClock();
 
@@ -111,6 +111,7 @@ public class SyncDownOperation extends Operation {
 		
 		VectorClock latestRemoteVectorClock = null;
 		File latestRemoteDatabase = null;
+		List<File> conflictRemoteDatabases = new ArrayList<File>(); 
 		
 		for (File remoteDatabaseInCache : remoteDatabasesInCache) {
 			logger.log(Level.INFO, "- Processing remote database. Reading from {0} ...", remoteDatabaseInCache);
@@ -149,6 +150,7 @@ public class SyncDownOperation extends Operation {
 			}
 		}
 		
+		throw new Exception("This is nowhere near done.");
 	}	
 	
 	private class RemoteDatabaseFile {

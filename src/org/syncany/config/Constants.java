@@ -36,9 +36,9 @@ public abstract class Constants {
     public static final int DEFAULT_ENCRYPTION_KEYLENGTH = 128;
     
 
-    public static final Pattern PLUGIN_NAME_REGEX_PLUGIN_INFO = Pattern.compile("org\\.syncany\\.connection\\.plugins\\.([^.]+)\\.[\\w\\d]+PluginInfo");
+    public static final Pattern PLUGIN_NAME_REGEX_PLUGIN_INFO = Pattern.compile("org\\.syncany\\.connection\\.plugins\\.([^.]+)\\.[\\w\\d]+Plugin");
     public static final String PLUGIN_FQCN_PREFIX = "org.syncany.connection.plugins.";
-    public static final String PLUGIN_FQCN_SUFFIX = "PluginInfo";
+    public static final String PLUGIN_FQCN_SUFFIX = "Plugin";
     public static final String PLUGIN_FQCN_PATTERN = PLUGIN_FQCN_PREFIX+"%s.%s"+PLUGIN_FQCN_SUFFIX;
 
     /**

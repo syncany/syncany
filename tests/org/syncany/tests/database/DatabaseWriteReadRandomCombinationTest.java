@@ -1,4 +1,4 @@
-package org.syncany.tests.db;
+package org.syncany.tests.database;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,19 +14,19 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseWriteReadRandomCombinationTest {
 	private File tempDir;
 	
 	@Before
 	public void setUp() throws Exception {
-		tempDir = TestUtil.createTempDirectoryInSystemTemp();		
+		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();		
 	}
 	
 	@After
 	public void tearDown() {
-		TestUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 	 
 	@Test
@@ -53,7 +53,7 @@ public class DatabaseWriteReadRandomCombinationTest {
 		List<ChunkEntry> chunks = new ArrayList<ChunkEntry>();
 		
 		for (int i=0; i<chunkCount; i++) {
-			byte[] chunkChecksum = TestUtil.createRandomArray(checksumSize);
+			byte[] chunkChecksum = TestFileUtil.createRandomArray(checksumSize);
 			int chunkSize = (400 + new Random().nextInt(100)) * 1024;
 			
 			ChunkEntry chunkEntry = new ChunkEntry(chunkChecksum, chunkSize);

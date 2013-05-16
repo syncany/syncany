@@ -22,7 +22,7 @@ import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class CustomMultiChunkerTest {
 
@@ -30,12 +30,12 @@ public class CustomMultiChunkerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tempDir = TestUtil.createTempDirectoryInSystemTemp();
+		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 
 	@Test
@@ -47,8 +47,8 @@ public class CustomMultiChunkerTest {
 		int fileAmountSizeSmall = 2;
 		int fileAmountSizeBig = 3;
 
-		List<File> files = TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
-		files.addAll(TestUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
+		List<File> files = TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
+		files.addAll(TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
 		FixedOffsetChunker foc = new FixedOffsetChunker(chunkSizeB);
 		MultiChunker customMultiChunker = new CustomMultiChunker(minMultiChunkSize);

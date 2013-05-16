@@ -3,19 +3,22 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.chunk.CustomMultiChunkerTest;
 import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
-import org.syncany.tests.chunk.CustomMultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.local.LocalConnectionPluginTest;
-import org.syncany.tests.db.DatabaseWriteReadIndividualObjectsTest;
-import org.syncany.tests.db.DatabaseWriteReadRandomCombinationTest;
-import org.syncany.tests.db.VectorClockTest;
+import org.syncany.tests.database.DatabaseWriteReadIndividualObjectsTest;
+import org.syncany.tests.database.DatabaseWriteReadRandomCombinationTest;
+import org.syncany.tests.database.VectorClockTest;
+import org.syncany.tests.operations.IndexerTest;
+import org.syncany.tests.operations.SyncDownOperationTest;
+import org.syncany.tests.operations.SyncUpOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	// Type in here all tests (execution in order)	
+	// Config	
 	EncryptionTest.class,
 	
 	// Chunking Framework
@@ -30,7 +33,12 @@ import org.syncany.tests.db.VectorClockTest;
 	// Database
 	DatabaseWriteReadIndividualObjectsTest.class,
 	DatabaseWriteReadRandomCombinationTest.class,
-	VectorClockTest.class	
+	VectorClockTest.class,
+	
+	// Operations
+	IndexerTest.class,
+	SyncUpOperationTest.class,
+	SyncDownOperationTest.class
 })
 public class AllTestsSuite {
 	// This class executes all tests

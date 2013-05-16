@@ -24,7 +24,7 @@ import org.syncany.util.FileUtil;
  * @author Nikolai Hellwig, Andreas Fenske, Philipp Heckel
  *
  */
-public class TestUtil {
+public class TestFileUtil {
 	
 	private static Random rnd = new Random(); 
 	

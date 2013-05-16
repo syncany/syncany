@@ -26,7 +26,7 @@ import org.syncany.chunk.GzipCompressor;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginInfo;
+import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 
 /**
@@ -59,13 +59,13 @@ public class Config {
 	}
 	
 	public Config(String password) throws Exception {
-		chunker = new FixedOffsetChunker(16 * 1024);
-		multiChunker = new CustomMultiChunker(512 * 1024);
-		transformer = new GzipCompressor();		        
+		chunker = new FixedOffsetChunker(16 * 1024); // FIXME Duplicate code
+		multiChunker = new CustomMultiChunker(512 * 1024);  // FIXME Duplicate code
+		transformer = new GzipCompressor();	 // FIXME Duplicate code	        
 		
-    	encryption = new Encryption();		
-    	encryption.setPassword(password);
-    	encryption.setSalt("SALT"); // TODO: What to use as salt?    			
+    	encryption = new Encryption();	 // FIXME Duplicate code	
+    	encryption.setPassword(password); // FIXME Duplicate code
+    	encryption.setSalt("SALT"); // TODO: What to use as salt?      // FIXME Duplicate code			
 	}
 	
 	private void initDirectories(ConfigTO configTO) {
@@ -90,7 +90,7 @@ public class Config {
 	}
 	
 	private void initConnectionPlugin(ConfigTO configTO) throws Exception {
-		PluginInfo plugin = Plugins.get(configTO.getConnection().getType());
+		Plugin plugin = Plugins.get(configTO.getConnection().getType());
     	
     	if (plugin == null) {
     		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());

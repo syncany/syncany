@@ -36,7 +36,7 @@ import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.TTTDChunker;
 import org.syncany.chunk.Transformer;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -69,7 +69,7 @@ public class FrameworkCombinationTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tempDir = TestUtil.createTempDirectoryInSystemTemp();
+		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		combinations = new ArrayList<FrameworkCombination>();
 
 		fillCombinations();
@@ -130,13 +130,13 @@ public class FrameworkCombinationTest {
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 
 	@Test
 	public void testBlackBoxCombinationsWith50KBInputFile() throws Exception {
-		List<File> inputFiles = TestUtil.generateRandomBinaryFilesInDirectory(tempDir, 10*1024, 5);
-		Map<File, ByteArray> inputFilesWithChecksums = TestUtil.createChecksums(inputFiles);
+		List<File> inputFiles = TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, 10*1024, 5);
+		Map<File, ByteArray> inputFilesWithChecksums = TestFileUtil.createChecksums(inputFiles);
 		
 		for(FrameworkCombination combination : combinations) {
 			logger.info("Testing "+combination.name+" ...");
@@ -159,8 +159,8 @@ public class FrameworkCombinationTest {
 			File inputFile = inputFilesToReassembledOutputFilesEntry.getKey();
 			File outputFile = inputFilesToReassembledOutputFilesEntry.getValue();
 			
-			byte[] inputFileChecksum = TestUtil.createChecksum(inputFile);
-			byte[] outputFileChecksum = TestUtil.createChecksum(outputFile);
+			byte[] inputFileChecksum = TestFileUtil.createChecksum(inputFile);
+			byte[] outputFileChecksum = TestFileUtil.createChecksum(outputFile);
 			
 			assertArrayEquals("Input file and output file checksums do not match" +
 					"for files "+inputFile+" and "+outputFile, inputFileChecksum, outputFileChecksum);

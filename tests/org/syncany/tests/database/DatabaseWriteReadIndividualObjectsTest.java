@@ -1,4 +1,4 @@
-package org.syncany.tests.db;
+package org.syncany.tests.database;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -23,19 +23,19 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseWriteReadIndividualObjectsTest {
 	private File tempDir;
 	
 	@Before
 	public void setUp() throws Exception {
-		tempDir = TestUtil.createTempDirectoryInSystemTemp();		
+		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();		
 	}
 	
 	@After
 	public void tearDown() {
-		TestUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 	 
 	@Test

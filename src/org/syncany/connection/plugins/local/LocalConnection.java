@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginInfo;
+import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
@@ -31,7 +31,7 @@ import org.syncany.connection.plugins.TransferManager;
  * @author Philipp C. Heckel
  */
 public class LocalConnection implements Connection {
-	private File repoPath;
+	private File repositoryPath;
 
 	@Override
 	public void init(Map<String, String> map) throws StorageException {
@@ -41,12 +41,12 @@ public class LocalConnection implements Connection {
 			throw new StorageException("Config does not contain 'path' setting.");
 		}
 		
-		setRepoPath(new File(path));
+		setRepositoryPath(new File(path));
 	}
 
     @Override
-    public PluginInfo getPluginInfo() {
-        return Plugins.get(LocalPluginInfo.ID);
+    public Plugin getPlugin() {
+        return Plugins.get(LocalPlugin.ID);
     }
 
     @Override
@@ -54,11 +54,11 @@ public class LocalConnection implements Connection {
         return new LocalTransferManager(this);
     }
 
-    public File getRepoPath() {
-        return repoPath;
+    public File getRepositoryPath() {
+        return repositoryPath;
     }
 
-    public void setRepoPath(File repoPath) {
-        this.repoPath = repoPath;
+    public void setRepositoryPath(File repositoryPath) {
+        this.repositoryPath = repositoryPath;
     }
 }

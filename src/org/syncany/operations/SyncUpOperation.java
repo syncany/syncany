@@ -21,11 +21,11 @@ import org.syncany.util.FileUtil;
 public class SyncUpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncUpOperation.class.getSimpleName());
 	
-	private TransferManager tm; 
+	private TransferManager transferManager; 
 	
 	public SyncUpOperation(Config config) {
 		super(config);
-		tm = config.getConnection().createTransferManager();
+		transferManager = config.getConnection().createTransferManager();
 	}	
 	
 	public void execute() throws Exception {
@@ -55,7 +55,7 @@ public class SyncUpOperation extends Operation {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			RemoteFile remoteFile = new RemoteFile(multiChunkFile.getName());
-			tm.upload(multiChunkFile, remoteFile);
+			transferManager.upload(multiChunkFile, remoteFile);
 		}
 		
 		return true; // FIXME
@@ -64,7 +64,7 @@ public class SyncUpOperation extends Operation {
 	private boolean uploadLocalDatabase(File localDatabaseFile, long newestLocalDatabaseVersion) throws InterruptedException, StorageException {
 		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
 		
-		tm.upload(localDatabaseFile, remoteDatabaseFile);
+		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
 		
 		return true;
 	}

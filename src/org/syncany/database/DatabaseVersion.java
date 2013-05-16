@@ -1,6 +1,7 @@
 package org.syncany.database;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -11,7 +12,8 @@ import org.syncany.util.StringUtil;
 public class DatabaseVersion {
     private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
     
-    // DB Version and versions of other users (= DB basis) 
+    // DB Version and versions of other users (= DB basis)
+    private Date timestamp;
     private VectorClock vectorClock; // vector clock, machine name to database version map
     
     // Full DB in RAM
@@ -21,6 +23,7 @@ public class DatabaseVersion {
     private Map<Long, PartialFileHistory> historyCache;
     
     public DatabaseVersion() {
+    	timestamp = new Date();
     	vectorClock = new VectorClock();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
@@ -29,6 +32,14 @@ public class DatabaseVersion {
         historyCache = new HashMap<Long, PartialFileHistory>();  
     }
 
+	public Date getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}    
+	
 	public VectorClock getVectorClock() {
 		return vectorClock;
 	}
@@ -36,7 +47,6 @@ public class DatabaseVersion {
 	public void setVectorClock(VectorClock vectorClock) {
 		this.vectorClock = vectorClock;
 	}
-   
 
     // Chunk
     
@@ -122,5 +132,5 @@ public class DatabaseVersion {
 		sb.append("<rest/>");
 
 		return sb.toString();
-	}    
+	}
 }

@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class SyncDownOperationTest {
 	private File tempLocalSourceDir;
@@ -14,14 +14,14 @@ public class SyncDownOperationTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		tempLocalSourceDir = TestUtil.createTempDirectoryInSystemTemp();
+		tempLocalSourceDir = TestFileUtil.createTempDirectoryInSystemTemp();
 			
 		
 	}
 	
 	@After
 	public void tearDown() {
-		TestUtil.deleteDirectory(tempLocalSourceDir);
+		TestFileUtil.deleteDirectory(tempLocalSourceDir);
 	}
 	
 	@Test

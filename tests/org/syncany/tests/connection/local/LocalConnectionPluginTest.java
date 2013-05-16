@@ -18,15 +18,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginInfo;
+import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.connection.plugins.local.LocalPluginInfo;
+import org.syncany.connection.plugins.local.LocalPlugin;
 import org.syncany.connection.plugins.local.LocalTransferManager;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class LocalConnectionPluginTest {
 	private File tempLocalSourceDir;
@@ -35,7 +35,7 @@ public class LocalConnectionPluginTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		File rootDir = TestUtil.createTempDirectoryInSystemTemp();
+		File rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		
 		tempLocalSourceDir = new File(rootDir+"/local");
 		tempLocalSourceDir.mkdir();
@@ -49,7 +49,7 @@ public class LocalConnectionPluginTest {
 	
 	@After
 	public void tearDown() {
-		TestUtil.deleteDirectory(tempLocalSourceDir);
+		TestFileUtil.deleteDirectory(tempLocalSourceDir);
 	}
 	
 	@Test
@@ -59,7 +59,7 @@ public class LocalConnectionPluginTest {
 	
 	@Test
 	public void testLocalPluginInfo() {
-		PluginInfo pluginInfo = Plugins.get("local");
+		Plugin pluginInfo = Plugins.get("local");
 		
 		assertNotNull("PluginInfo should not be null.", pluginInfo);
 		assertEquals("Plugin ID should be 'local'.", "local", pluginInfo.getId());
@@ -69,7 +69,7 @@ public class LocalConnectionPluginTest {
 	
 	@Test(expected=StorageException.class)
 	public void testConnectToNonExistantFolder() throws StorageException {
-		PluginInfo pluginInfo = Plugins.get("local");
+		Plugin pluginInfo = Plugins.get("local");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
 		invalidPluginSettings.put("path", "/path/does/not/exist");
@@ -85,7 +85,7 @@ public class LocalConnectionPluginTest {
 	
 	@Test(expected=StorageException.class)
 	public void testConnectWithInvalidSettings() throws StorageException {
-		PluginInfo pluginInfo = Plugins.get("local");
+		Plugin pluginInfo = Plugins.get("local");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
 		// do NOT add 'path'
@@ -126,9 +126,9 @@ public class LocalConnectionPluginTest {
 			assertNotNull("Cannot be null.", uploadedFile);
 			assertNotNull("Cannot be null.", downloadedLocalFile);
 			
-			byte[] checksumOriginalFile = TestUtil.createChecksum(inputFile);
-			byte[] checksumUploadedFile = TestUtil.createChecksum(uploadedFileOnRemoteStorage);
-			byte[] checksumDownloadedFile = TestUtil.createChecksum(downloadedLocalFile);
+			byte[] checksumOriginalFile = TestFileUtil.createChecksum(inputFile);
+			byte[] checksumUploadedFile = TestFileUtil.createChecksum(uploadedFileOnRemoteStorage);
+			byte[] checksumDownloadedFile = TestFileUtil.createChecksum(downloadedLocalFile);
 			
 			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumUploadedFile);
 			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumDownloadedFile);			
@@ -168,7 +168,7 @@ public class LocalConnectionPluginTest {
 		});
 		
 		for (File remoteFileToCreate : remoteFiles) {
-			TestUtil.generateRandomBinaryFile(remoteFileToCreate, 10*1024);
+			TestFileUtil.generateRandomBinaryFile(remoteFileToCreate, 10*1024);
 		}
 		
 		// Connect and list
@@ -181,7 +181,7 @@ public class LocalConnectionPluginTest {
 
 	private Map<String, File> generateTestInputFile() throws IOException {
 		Map<String, File> inputFilesMap = new HashMap<String, File>();
-		List<File> inputFiles = TestUtil.generateRandomBinaryFilesInDirectory(tempLocalSourceDir, 50*1024, 10);
+		List<File> inputFiles = TestFileUtil.generateRandomBinaryFilesInDirectory(tempLocalSourceDir, 50*1024, 10);
 		
 		for (File file : inputFiles) {
 			inputFilesMap.put(file.getName(), file);
@@ -221,14 +221,14 @@ public class LocalConnectionPluginTest {
 	}	
 	
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
-		PluginInfo pluginInfo = Plugins.get("local");	
+		Plugin pluginInfo = Plugins.get("local");	
 		
 		Connection connection = pluginInfo.createConnection();				
 		connection.init(localPluginSettings);
 		
 		TransferManager transferManager = connection.createTransferManager();
 
-		assertEquals("LocalPluginInfo expected.", LocalPluginInfo.class, pluginInfo.getClass());
+		assertEquals("LocalPluginInfo expected.", LocalPlugin.class, pluginInfo.getClass());
 		assertEquals("LocalConnection expected.", LocalConnection.class, connection.getClass());
 		assertEquals("LocalTransferManager expected.", LocalTransferManager.class, transferManager.getClass());
 		

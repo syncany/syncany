@@ -44,9 +44,9 @@ public class Deduper {
 						// - Check if multichunk full
 						if (multiChunk != null && multiChunk.isFull()) {
 							multiChunk.close();
-							multiChunk = null;
-
 							listener.onCloseMultiChunk(multiChunk);
+
+							multiChunk = null;
 						}
 
 						// - Open new multichunk if none existant
@@ -82,9 +82,9 @@ public class Deduper {
 		if (multiChunk != null) {
 			// Data
 			multiChunk.close();
-			multiChunk = null;
-
 			listener.onCloseMultiChunk(multiChunk);
+
+			multiChunk = null;
 		}
 		
 		listener.onFinish();

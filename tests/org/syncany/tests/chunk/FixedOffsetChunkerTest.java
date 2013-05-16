@@ -14,19 +14,19 @@ import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.FixedOffsetChunker;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class FixedOffsetChunkerTest {
 	private File tempDir;
 
 	@Before
 	public void setUp() throws Exception {
-		tempDir = TestUtil.createTempDirectoryInSystemTemp();
+		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 
 	@Test
@@ -46,9 +46,9 @@ public class FixedOffsetChunkerTest {
 		final int EXPECTED_CHUNK_SIZE = EXACT_CHUNK_SIZE;
 		
 		// Setup				
-		File inputRandom5MBFile = TestUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);
+		File inputRandom5MBFile = TestFileUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);
 		
-		File outputCopyOfRandom5MBFile = TestUtil.createRandomFileInDirectory(tempDir);
+		File outputCopyOfRandom5MBFile = TestFileUtil.createRandomFileInDirectory(tempDir);
 		FileOutputStream outputCopyOfRandom5MBFileOutputStream = new FileOutputStream(outputCopyOfRandom5MBFile);
 		
 		Chunker chunker = new FixedOffsetChunker(EXACT_CHUNK_SIZE, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
@@ -75,8 +75,8 @@ public class FixedOffsetChunkerTest {
 		assertEquals("Unexpected number of chunks when chunking", EXPECTED_NUMBER_OF_CHUNKS, actualChunkCount);
 
 		// Checksums
-		byte[] inputFileChecksum = TestUtil.createChecksum(inputRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
-		byte[] outputFileChecksum = TestUtil.createChecksum(outputCopyOfRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
+		byte[] inputFileChecksum = TestFileUtil.createChecksum(inputRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
+		byte[] outputFileChecksum = TestFileUtil.createChecksum(outputCopyOfRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
 		
 		assertArrayEquals("Checksums of input and output file do not match.", inputFileChecksum, outputFileChecksum);
 		assertArrayEquals("Last chunk's getFileChecksum() should be the file checksum.", inputFileChecksum, lastChunk.getFileChecksum());
@@ -95,7 +95,7 @@ public class FixedOffsetChunkerTest {
 		final int EXACT_CHUNK_SIZE = 512*1024;
 		
 		// Setup				
-		File inputFile = TestUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
+		File inputFile = TestFileUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
 		Chunker chunker = new FixedOffsetChunker(EXACT_CHUNK_SIZE);
 		
 		// Create chunks

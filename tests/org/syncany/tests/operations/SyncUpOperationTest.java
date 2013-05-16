@@ -4,43 +4,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginInfo;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.operations.SyncUpOperation;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class SyncUpOperationTest {
-	private File tempLocalDir;
-	private File tempRepoDir;
-	private File tempCacheDir; 
-	private File tempDBDir; 
-	
-	private final String machineName = "syncUpMachine1";
+	private Config testConfig;	
 
 	@Before
 	public void setUp() throws Exception {
-		tempLocalDir = TestUtil.createTempDirectoryInSystemTemp();
-		tempRepoDir = TestUtil.createTempDirectoryInSystemTemp();
-		tempCacheDir = TestUtil.createTempDirectoryInSystemTemp();
-		tempDBDir = TestUtil.createTempDirectoryInSystemTemp();
+		testConfig = TestConfigUtil.createTestLocalConfig();
 	}
 	
 	@After
 	public void tearDown() throws Exception {
-		TestUtil.deleteDirectory(tempLocalDir);
-		TestUtil.deleteDirectory(tempRepoDir);
-		TestUtil.deleteDirectory(tempCacheDir);
-		TestUtil.deleteDirectory(tempDBDir);
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}
 
 	@Test
@@ -48,50 +33,30 @@ public class SyncUpOperationTest {
 		int fileSize = 1230 * 1024;
 		int fileAmount = 3;
 
-		List<File> originalFiles = TestUtil.generateRandomBinaryFilesInDirectory(tempLocalDir, fileSize,
+		List<File> originalFiles = TestFileUtil.generateRandomBinaryFilesInDirectory(testConfig.getLocalDir(), fileSize,
 				fileAmount);
 		
-		Config config = createTestConfig();
-		
-		SyncUpOperation op = new SyncUpOperation(config);
-		
+		// Run!
+		SyncUpOperation op = new SyncUpOperation(testConfig);		
 		op.execute();
 
 		//Compare dbs
-		File localDatabaseFile = new File(tempDBDir.getAbsoluteFile() + "/local.db");
-		File remoteDatabaseFile = new File(tempRepoDir.getAbsoluteFile() + "/db-" + machineName+"-1");
-	
+		LocalConnection localConnection = (LocalConnection) testConfig.getConnection();
+		
+		File localDatabaseFile = new File(testConfig.getAppDatabaseDir() + "/local.db");
+		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/db-" + testConfig.getMachineName()+"-1");
+		
 		assertTrue(localDatabaseFile.exists());
 		assertTrue(remoteDatabaseFile.exists());
-		assertEquals(TestUtil.getMD5Checksum(localDatabaseFile), TestUtil.getMD5Checksum(remoteDatabaseFile));
+		assertEquals(TestFileUtil.getMD5Checksum(localDatabaseFile), TestFileUtil.getMD5Checksum(remoteDatabaseFile));
 		
 		
 		
 		//compare files listed in db remote & local 
 	}
 
-	private Config createTestConfig() throws Exception {
-		Config config = new Config("Password");
-		config.setMachineName(machineName);
-		config.setAppCacheDir(tempCacheDir);
-		config.setAppDatabaseDir(tempDBDir);
-		config.setLocalDir(tempLocalDir);
-		
-		Connection conn = createTestLocalConnection();
-		
-		config.setConnection(conn);
+	
 
-		return config;
-	}
-
-	private Connection createTestLocalConnection() throws StorageException {
-		PluginInfo pluginInfo = Plugins.get("local");
-		Map<String, String> pluginSettings = new HashMap<String, String>();
-		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
-
-		Connection conn = pluginInfo.createConnection();
-		conn.init(pluginSettings);
-		return conn;
-	}
+	
 
 }

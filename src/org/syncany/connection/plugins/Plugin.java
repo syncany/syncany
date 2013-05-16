@@ -15,35 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.local;
+package org.syncany.connection.plugins;
 
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginInfo;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class LocalPluginInfo extends PluginInfo {
-    public static final String ID = "local";
-    
-    @Override
-    public String getId() {
-        return ID;
-    }    
-    
-    @Override
-    public String getName() {
-        return "Local";
-    }
-
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
-    }
-
-    @Override
-    public Connection createConnection() {
-        return new LocalConnection();
-    }
+public abstract class Plugin {
+    public abstract String getId();
+    public abstract String getName();
+    public abstract Integer[] getVersion();
+    public abstract Connection createConnection();    
 }

@@ -1,4 +1,4 @@
-package org.syncany.tests.db;
+package org.syncany.tests.database;
 
 import static org.junit.Assert.*;
 

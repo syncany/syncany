@@ -14,19 +14,19 @@ import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.TTTDChunker;
-import org.syncany.tests.util.TestUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class TTTDChunkerTest {
 	private File tempDir;
 
 	@Before
 	public void setUp() throws Exception {
-		tempDir = TestUtil.createTempDirectoryInSystemTemp();
+		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		TestUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 
 	@Test
@@ -44,9 +44,9 @@ public class TTTDChunkerTest {
 		final int AVG_CHUNK_SIZE = 512*1024;
 		
 		// Setup				
-		File inputRandom5MBFile = TestUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);
+		File inputRandom5MBFile = TestFileUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);
 		
-		File outputCopyOfRandom5MBFile = TestUtil.createRandomFileInDirectory(tempDir);
+		File outputCopyOfRandom5MBFile = TestFileUtil.createRandomFileInDirectory(tempDir);
 		FileOutputStream outputCopyOfRandom5MBFileOutputStream = new FileOutputStream(outputCopyOfRandom5MBFile);
 		
 		Chunker chunker = new TTTDChunker(AVG_CHUNK_SIZE);
@@ -70,8 +70,8 @@ public class TTTDChunkerTest {
 		// TODO How to test the number of chunks?
 
 		// Checksums
-		byte[] inputFileChecksum = TestUtil.createChecksum(inputRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
-		byte[] outputFileChecksum = TestUtil.createChecksum(outputCopyOfRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
+		byte[] inputFileChecksum = TestFileUtil.createChecksum(inputRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
+		byte[] outputFileChecksum = TestFileUtil.createChecksum(outputCopyOfRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
 		
 		assertArrayEquals("Checksums of input and output file do not match.", inputFileChecksum, outputFileChecksum);
 		assertArrayEquals("Last chunk's getFileChecksum() should be the file checksum.", inputFileChecksum, lastChunk.getFileChecksum());
@@ -90,7 +90,7 @@ public class TTTDChunkerTest {
 		final int CHUNK_SIZE = 512*1024;
 		
 		// Setup				
-		File inputFile = TestUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
+		File inputFile = TestFileUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
 		Chunker chunker = new TTTDChunker(CHUNK_SIZE);
 		
 		// Create chunks
