@@ -8,7 +8,7 @@ import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
-import org.syncany.tests.connection.local.LocalConnectionPluginTest;
+import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.database.DatabaseWriteReadIndividualObjectsTest;
 import org.syncany.tests.database.DatabaseWriteReadRandomCombinationTest;
 import org.syncany.tests.database.VectorClockTest;

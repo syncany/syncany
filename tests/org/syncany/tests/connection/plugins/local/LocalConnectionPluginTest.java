@@ -1,4 +1,4 @@
-package org.syncany.tests.connection.local;
+package org.syncany.tests.connection.plugins.local;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
