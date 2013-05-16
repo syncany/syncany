@@ -25,7 +25,6 @@ public abstract class Operation {
 
 		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
 			dao.load(db, localDatabaseFile);
-			System.out.println(db);
 		}
 		
 		return db;

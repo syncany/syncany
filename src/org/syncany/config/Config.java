@@ -58,8 +58,14 @@ public class Config {
     	initConnectionPlugin(configTO);    
 	}
 	
-	public Config() {
+	public Config(String password) throws Exception {
+		chunker = new FixedOffsetChunker(16 * 1024);
+		multiChunker = new CustomMultiChunker(512 * 1024);
+		transformer = new GzipCompressor();		        
 		
+    	encryption = new Encryption();		
+    	encryption.setPassword(password);
+    	encryption.setSalt("SALT"); // TODO: What to use as salt?    			
 	}
 	
 	private void initDirectories(ConfigTO configTO) {
@@ -104,6 +110,7 @@ public class Config {
 	
 	public void setAppCacheDir(File file) {
 		appCacheDir = file;
+		cache = new Cache(appCacheDir);
 	}
 
 	public File getAppCacheDir() {
