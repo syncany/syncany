@@ -1,17 +1,11 @@
 <?xml version="1.0" ?>
-<!-- 
-	jedes Ant Skript besteht aus einem Projekt
-	Pro Projekt muss ein Default Target definiert sein!
-//-->
 <project name="SyncanyCore" default="dist" xmlns:ivy="antlib:org.apache.ivy.ant">
-
 	<path id="test.classpath">
 		<pathelement location="./build" />
 		<fileset dir="./lib">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
-
 
 	<target name="init" depends="init-ivy">
 		<!-- Create the time stamp -->
@@ -52,53 +46,8 @@
 		<!-- Delete the ${build} and ${dist} directory trees -->
 		<delete dir="build" />
 		<delete dir="dist" />
+		<delete file="SyncanyCore.jar" />
 	</target>
-
-
-	<!-- ##### TESTS START ##### -->
-
-	<target name="scenario-sync-test1" depends="compile">
-		<ivy:retrieve conf="test" />
-		<parallel>
-			<daemons>
-				<junit fork="no" haltonfailure="yes" enableTestListenerEvents="yes">
-					<test name="org.syncany.tests.scenario.MainSyncanyDaemon" />
-					<formatter type="plain" usefile="true" />
-					<classpath refid="test.classpath" />
-				</junit>
-			</daemons>
-			<sequential>
-				<junit fork="yes" haltonfailure="yes">
-					<test name="org.syncany.tests.scenario.Scenario1" />
-					<formatter type="plain" usefile="true" />
-					<classpath refid="test.classpath" />
-				</junit>
-			</sequential>
-		</parallel>
-	</target>
-
-	<target name="scenario-sync-test2" depends="compile">
-		<ivy:retrieve conf="test" />
-		<parallel>
-			<daemons>
-				<junit fork="yes" haltonfailure="yes" enableTestListenerEvents="yes">
-					<test name="org.syncany.tests.scenario.MainSyncanyDaemon" />
-					<formatter type="plain" usefile="true" />
-					<classpath refid="test.classpath" />
-				</junit>
-			</daemons>
-			<sequential>
-				<junit fork="yes" haltonfailure="yes">
-					<test name="org.syncany.tests.scenario.Scenario2" />
-					<formatter type="plain" usefile="true" />
-					<classpath refid="test.classpath" />
-				</junit>
-			</sequential>
-		</parallel>
-	</target>
-
-
-	<!-- ##### TESTS END ##### -->
 
 	<!-- ##### IVY START ##### -->
 
