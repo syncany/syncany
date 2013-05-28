@@ -16,7 +16,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionIdentifier;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
@@ -42,7 +42,7 @@ public class SyncDownOperation extends Operation {
 		// 2. download the remote databases to the local cache folder
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 		
-		Map<String, List<DatabaseVersionIdentifier>> unknownDatabaseVersions = readDatabaseVersionIdentifierPerMachine(unknownRemoteDatabasesInCache);
+		List<DatabaseVersionHeader> unknownDatabaseVersions = readDatabaseVersionIdentifierPerMachine(unknownRemoteDatabasesInCache);
 		
 		detectUpdates(unknownDatabaseVersions);
 		// 3. read the remote databases
@@ -58,7 +58,9 @@ public class SyncDownOperation extends Operation {
 		//return false;
 	}	
 
-	private void detectUpdates(Map<String, List<DatabaseVersionIdentifier>> unknownDatabaseVersions) {
+	private void detectUpdates(List<DatabaseVersionHeader> unknownDatabaseVersions) {
+		
+		
 		// 1. collect conflict-free dbvs
 		// 2. collect conflicts
 		// 3. gather winner
@@ -66,35 +68,23 @@ public class SyncDownOperation extends Operation {
 		
 	}
 
-	private Map<String, List<DatabaseVersionIdentifier>> readDatabaseVersionIdentifierPerMachine(List<File> remoteDatabases) throws IOException {
-		Map<String, List<DatabaseVersionIdentifier>> databaseVersionIdentifiers = new HashMap<String,List<DatabaseVersionIdentifier>>();
+	private List<DatabaseVersionHeader> readDatabaseVersionIdentifierPerMachine(List<File> remoteDatabases) throws IOException {
+		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
 		
 		Database remoteDatabase = new Database();
 		DatabaseDAO dbDAO = new DatabaseDAO();
 		
 		for (File remoteDatabaseInCache : remoteDatabases) {
-			dbDAO.load(remoteDatabase, remoteDatabaseInCache);
-
-			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteDatabaseInCache.getName());
-			
-			String clientName = remoteDatabaseFile.getClientName();
-			
-			List<DatabaseVersionIdentifier> clientDatabaseIdentifiers = databaseVersionIdentifiers.get(clientName);
-			
-			if (clientDatabaseIdentifiers == null) {
-				clientDatabaseIdentifiers = new ArrayList<DatabaseVersionIdentifier>();
-				databaseVersionIdentifiers.put(clientName, clientDatabaseIdentifiers);
-			} 
-			
+			dbDAO.load(remoteDatabase, remoteDatabaseInCache);			
 			Map<Long,DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
-				DatabaseVersionIdentifier id = remoteDatabaseVersion.getId();
-				clientDatabaseIdentifiers.add(id);
+				DatabaseVersionHeader id = remoteDatabaseVersion.getHeader();
+				databaseVersionHeaders.add(id);
 			}
 		}
 		
-		return databaseVersionIdentifiers;
+		return databaseVersionHeaders;
 	}
 
 	private List<RemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager) throws StorageException {

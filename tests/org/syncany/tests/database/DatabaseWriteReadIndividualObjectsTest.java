@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
@@ -27,10 +28,12 @@ import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseWriteReadIndividualObjectsTest {
 	private File tempDir;
+	Random generator;
 	
 	@Before
 	public void setUp() throws Exception {
 		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();		
+		generator = new Random();
 	}
 	
 	@After
@@ -298,7 +301,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	}		
 
 	private File writeDatabaseFileToDisk(Database db) throws IOException {
-		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random());
+		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + generator.nextInt(Integer.MAX_VALUE));
 		
 		DatabaseDAO dao = new DatabaseDAO();
 		dao.save(db, writtenDatabaseFile);

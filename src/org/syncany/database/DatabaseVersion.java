@@ -12,7 +12,7 @@ import org.syncany.util.StringUtil;
 public class DatabaseVersion {
     private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
     
-    private DatabaseVersionIdentifier id; 
+    private DatabaseVersionHeader header; 
     
     // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -21,7 +21,7 @@ public class DatabaseVersion {
     private Map<Long, PartialFileHistory> historyCache;
     
     public DatabaseVersion() {
-    	id = new DatabaseVersionIdentifier();
+    	header = new DatabaseVersionHeader();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
@@ -29,24 +29,32 @@ public class DatabaseVersion {
         historyCache = new HashMap<Long, PartialFileHistory>();  
     }
     
-	public DatabaseVersionIdentifier getId() {
-		return id;
+	public DatabaseVersionHeader getHeader() {
+		return header;
 	}
 
 	public Date getTimestamp() {
-		return id.getTimestamp();
+		return header.getUploadedDate();
 	}
 
 	public void setTimestamp(Date timestamp) {
-		this.id.setTimestamp(timestamp);
+		this.header.setUploadedDate(timestamp);
 	}    
 	
 	public VectorClock getVectorClock() {
-		return id.getVectorClock();
+		return header.getVectorClock();
 	}
 
 	public void setVectorClock(VectorClock vectorClock) {
-		this.id.setVectorClock(vectorClock);
+		this.header.setVectorClock(vectorClock);
+	}
+	
+	public void setUploadedFrom(String client) {
+		this.header.setUploadedFromClient(client);
+	}
+	
+	public String getUploadedFrom() {
+		return header.getUploadedFromClient();
 	}
 
     // Chunk

@@ -2,29 +2,37 @@ package org.syncany.database;
 
 import java.util.Date;
 
-public class DatabaseVersionIdentifier {
+public class DatabaseVersionHeader {
 
     // DB Version and versions of other users (= DB basis)
-	// TODO weird
-    private Date timestamp;
+    private Date uploaded;
     private VectorClock vectorClock; // vector clock, machine name to database version map
+    private String uploadedFromClient;
     
-    public DatabaseVersionIdentifier() {
-    	timestamp = new Date();
+    public DatabaseVersionHeader() {
+    	uploaded = new Date();
     	vectorClock = new VectorClock();
     }
     
-	public Date getTimestamp() {
-		return timestamp;
+	public Date getUploadedDate() {
+		return uploaded;
 	}
-	public void setTimestamp(Date timestamp) {
-		this.timestamp = timestamp;
+	public void setUploadedDate(Date timestamp) {
+		this.uploaded = timestamp;
 	}
 	public VectorClock getVectorClock() {
 		return vectorClock;
 	}
 	public void setVectorClock(VectorClock vectorClock) {
 		this.vectorClock = vectorClock;
+	}
+	
+	public String getUploadedFromClient() {
+		return uploadedFromClient;
+	}
+
+	public void setUploadedFromClient(String uploadedFromClient) {
+		this.uploadedFromClient = uploadedFromClient;
 	}
 
 	@Override
@@ -43,7 +51,7 @@ public class DatabaseVersionIdentifier {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		DatabaseVersionIdentifier other = (DatabaseVersionIdentifier) obj;
+		DatabaseVersionHeader other = (DatabaseVersionHeader) obj;
 		if (vectorClock == null) {
 			if (other.vectorClock != null)
 				return false;

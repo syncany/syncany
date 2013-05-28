@@ -1,5 +1,6 @@
 package org.syncany.operations;
 
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -9,11 +10,15 @@ public class RemoteDatabaseFile {
 	private String clientName;
 	private long clientVersion;
 	
+	public RemoteDatabaseFile(File remoteFile) {
+		this(remoteFile.getName());
+	}
+	
 	public RemoteDatabaseFile(String remoteFile) {
 		Matcher matcher = namePattern.matcher(remoteFile);
 		
 		if (!matcher.matches()) {
-			throw new RuntimeException("Remote database filename pattern does not match: db-xxxx..-nnnn.. expected.");
+			throw new RuntimeException(remoteFile + " - Remote database filename pattern does not match: db-xxxx..-nnnn.. expected.");
 		}
 		
 		this.clientName = matcher.group(1);

@@ -11,6 +11,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import org.syncany.operations.RemoteDatabaseFile;
+
 
 /**
  * Len             Description
@@ -182,6 +184,8 @@ public class DatabaseDAO {
     public void load(Database db, File sourceFile) throws IOException {
         DataInputStream dis = new DataInputStream(new FileInputStream(sourceFile));
         
+        RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(sourceFile);
+        
         // DAOs
         ChunkDAO chunkDAO = new ChunkDAO();
         MultiChunkDAO multiChunkDAO = new MultiChunkDAO();
@@ -237,6 +241,7 @@ public class DatabaseDAO {
         	}
         	
         	currentDatabaseVersion.setVectorClock(globalDatabaseVersionClock);
+        	currentDatabaseVersion.setUploadedFrom(remoteDatabaseFile.getClientName());
         	
         	// Chunks
             int chunkCount = dis.readInt();
