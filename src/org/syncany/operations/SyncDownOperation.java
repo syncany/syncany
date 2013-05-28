@@ -3,12 +3,11 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
@@ -16,6 +15,8 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionIdentifier;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
@@ -36,14 +37,17 @@ public class SyncDownOperation extends Operation {
 		TransferManager transferManager = profile.getConnection().createTransferManager();
 
 		// 1. check which remote databases to download based on the last local vector clock		
-		List<RemoteFile> unknownRemoteDatabases = retrieveUnknownRemoteDatabasesList(db, transferManager);
+		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(db, transferManager);
 		
 		// 2. download the remote databases to the local cache folder
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 		
+		Map<String, List<DatabaseVersionIdentifier>> unknownDatabaseVersions = readDatabaseVersionIdentifierPerMachine(unknownRemoteDatabasesInCache);
+		
+		detectUpdates(unknownDatabaseVersions);
 		// 3. read the remote databases
 		// 4. compare the remote databases based on the file histories contained in them and figure out the winning file histories
-		reconcileDatabases(db, unknownRemoteDatabasesInCache);
+		detectUpdates(db, unknownRemoteDatabasesInCache);
 		
 		// 5. figure out which 
 		// 2. xxx
@@ -54,7 +58,46 @@ public class SyncDownOperation extends Operation {
 		//return false;
 	}	
 
-	private List<RemoteFile> retrieveUnknownRemoteDatabasesList(Database db, TransferManager transferManager) throws StorageException {
+	private void detectUpdates(Map<String, List<DatabaseVersionIdentifier>> unknownDatabaseVersions) {
+		// 1. collect conflict-free dbvs
+		// 2. collect conflicts
+		// 3. gather winner
+		// 4. collect winner
+		
+	}
+
+	private Map<String, List<DatabaseVersionIdentifier>> readDatabaseVersionIdentifierPerMachine(List<File> remoteDatabases) throws IOException {
+		Map<String, List<DatabaseVersionIdentifier>> databaseVersionIdentifiers = new HashMap<String,List<DatabaseVersionIdentifier>>();
+		
+		Database remoteDatabase = new Database();
+		DatabaseDAO dbDAO = new DatabaseDAO();
+		
+		for (File remoteDatabaseInCache : remoteDatabases) {
+			dbDAO.load(remoteDatabase, remoteDatabaseInCache);
+
+			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteDatabaseInCache.getName());
+			
+			String clientName = remoteDatabaseFile.getClientName();
+			
+			List<DatabaseVersionIdentifier> clientDatabaseIdentifiers = databaseVersionIdentifiers.get(clientName);
+			
+			if (clientDatabaseIdentifiers == null) {
+				clientDatabaseIdentifiers = new ArrayList<DatabaseVersionIdentifier>();
+				databaseVersionIdentifiers.put(clientName, clientDatabaseIdentifiers);
+			} 
+			
+			Map<Long,DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
+			
+			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
+				DatabaseVersionIdentifier id = remoteDatabaseVersion.getId();
+				clientDatabaseIdentifiers.add(id);
+			}
+		}
+		
+		return databaseVersionIdentifiers;
+	}
+
+	private List<RemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
 		List<RemoteFile> unknownRemoteDatabasesList = new ArrayList<RemoteFile>();
@@ -63,11 +106,13 @@ public class SyncDownOperation extends Operation {
 		VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
 		
 		for (RemoteFile remoteFile : remoteDatabaseFiles.values()) {
-			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteFile);
-			Long knownClientVersion = knownDatabaseVersions.get(remoteDatabaseFile.clientName);
+			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteFile.getName());
+			
+			String clientName = remoteDatabaseFile.getClientName();
+			Long knownClientVersion = knownDatabaseVersions.get(clientName);
 					
 			if (knownClientVersion != null) {
-				if (remoteDatabaseFile.clientVersion > knownClientVersion) {
+				if (remoteDatabaseFile.getClientVersion() > knownClientVersion) {
 					logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
 					unknownRemoteDatabasesList.add(remoteFile);
 				}
@@ -102,7 +147,7 @@ public class SyncDownOperation extends Operation {
 		return unknownRemoteDatabasesInCache;
 	}		
 
-	private void reconcileDatabases(Database db, List<File> remoteDatabasesInCache) throws Exception {
+	private void detectUpdates(Database db, List<File> remoteDatabasesInCache) throws Exception {
 		Database newLocalDatabase = db; // TODO shouldn't we clone this in case this goes wrong?
 		VectorClock localVectorClock = newLocalDatabase.getLastDatabaseVersion().getVectorClock();
 
@@ -152,23 +197,5 @@ public class SyncDownOperation extends Operation {
 		
 		throw new Exception("This is nowhere near done.");
 	}	
-	
-	private class RemoteDatabaseFile {
-		private Pattern namePattern = Pattern.compile("db-([^-]+)-(\\d+)");
-		private String clientName;
-		private long clientVersion;
-		
-		public RemoteDatabaseFile(RemoteFile remoteFile) {
-			Matcher matcher = namePattern.matcher(remoteFile.getName());
-			
-			if (!matcher.matches()) {
-				throw new RuntimeException("Remote database filename pattern does not match: db-xxxx..-nnnn.. expected.");
-			}
-			
-			this.clientName = matcher.group(1);
-			this.clientVersion = Long.parseLong(matcher.group(2));
-		}
-	}
 
-	
 }

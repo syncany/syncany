@@ -12,9 +12,7 @@ import org.syncany.util.StringUtil;
 public class DatabaseVersion {
     private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
     
-    // DB Version and versions of other users (= DB basis)
-    private Date timestamp;
-    private VectorClock vectorClock; // vector clock, machine name to database version map
+    private DatabaseVersionIdentifier id; 
     
     // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunkCache;
@@ -23,29 +21,32 @@ public class DatabaseVersion {
     private Map<Long, PartialFileHistory> historyCache;
     
     public DatabaseVersion() {
-    	timestamp = new Date();
-    	vectorClock = new VectorClock();
+    	id = new DatabaseVersionIdentifier();
     	
         chunkCache = new HashMap<ByteArray, ChunkEntry>();
         multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
         contentCache = new HashMap<ByteArray, FileContent>();
         historyCache = new HashMap<Long, PartialFileHistory>();  
     }
+    
+	public DatabaseVersionIdentifier getId() {
+		return id;
+	}
 
 	public Date getTimestamp() {
-		return timestamp;
+		return id.getTimestamp();
 	}
 
 	public void setTimestamp(Date timestamp) {
-		this.timestamp = timestamp;
+		this.id.setTimestamp(timestamp);
 	}    
 	
 	public VectorClock getVectorClock() {
-		return vectorClock;
+		return id.getVectorClock();
 	}
 
 	public void setVectorClock(VectorClock vectorClock) {
-		this.vectorClock = vectorClock;
+		this.id.setVectorClock(vectorClock);
 	}
 
     // Chunk
@@ -108,7 +109,7 @@ public class DatabaseVersion {
     public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
     	historyCache.get(fileHistoryID).addFileVersion(fileVersion);
     }    
-
+    
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
