@@ -50,11 +50,11 @@ public class DatabaseVersion {
 	}
 	
 	public void setUploadedFrom(String client) {
-		this.header.setUploadedFromClient(client);
+		this.header.setUploadedByClient(client);
 	}
 	
 	public String getUploadedFrom() {
-		return header.getUploadedFromClient();
+		return header.getUploadedByClient();
 	}
 
     // Chunk

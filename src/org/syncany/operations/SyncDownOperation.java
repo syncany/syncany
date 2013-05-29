@@ -3,9 +3,13 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,18 +40,19 @@ public class SyncDownOperation extends Operation {
 		// 0. Create TM
 		TransferManager transferManager = profile.getConnection().createTransferManager();
 
-		// 1. check which remote databases to download based on the last local vector clock		
+		// 1. Check which remote databases to download based on the last local vector clock		
 		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(db, transferManager);
 		
-		// 2. download the remote databases to the local cache folder
+		// 2. Download the remote databases to the local cache folder
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 		
-		List<DatabaseVersionHeader> unknownDatabaseVersions = readDatabaseVersionIdentifierPerMachine(unknownRemoteDatabasesInCache);
+		// 3. Read version headers (vector clocks)
+		List<DatabaseVersionHeader> unknownDatabaseVersionHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		
-		detectUpdates(unknownDatabaseVersions);
+		detectUpdates(unknownDatabaseVersionHeaders);
 		// 3. read the remote databases
 		// 4. compare the remote databases based on the file histories contained in them and figure out the winning file histories
-		detectUpdates(db, unknownRemoteDatabasesInCache);
+		//detectUpdates(db, unknownRemoteDatabasesInCache);
 		
 		// 5. figure out which 
 		// 2. xxx
@@ -58,29 +63,128 @@ public class SyncDownOperation extends Operation {
 		//return false;
 	}	
 
-	private void detectUpdates(List<DatabaseVersionHeader> unknownDatabaseVersions) {
+	private void detectUpdates(List<DatabaseVersionHeader> unknownDatabaseVersionHeaders) {
+		// 0. Create ascending order, 
+		List<DatabaseVersionHeader> sortedUnknownDatabaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(unknownDatabaseVersionHeaders);		
+		Collections.sort(sortedUnknownDatabaseVersionHeaders, new DatabaseVersionHeaderComparator());
+		
+		// 1. Get all conflicts
+		List<DatabaseVersionHeaderPair> conflicts = new ArrayList<DatabaseVersionHeaderPair>();
+		Set<DatabaseVersionHeader> conflictHeaders = new HashSet<DatabaseVersionHeader>();
+		
+		for (int i=0; i<unknownDatabaseVersionHeaders.size(); i++) { // compare all clocks to each other
+			for (int j=i+1; j<unknownDatabaseVersionHeaders.size(); j++) {
+				if (j != i) {
+					DatabaseVersionHeader header1 = unknownDatabaseVersionHeaders.get(i);
+					DatabaseVersionHeader header2 = unknownDatabaseVersionHeaders.get(j);
+					
+					VectorClockComparison vectorClockComparison = VectorClock.compare(header1.getVectorClock(), header2.getVectorClock());
+					
+					if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
+						conflictHeaders.add(header1);
+						conflictHeaders.add(header2);						
+						conflicts.add(new DatabaseVersionHeaderPair(header1, header2));
+					}
+				}
+			}
+		}		
+		
+		// 2. Determine the first conflict-free database version headers (1..n)
+		List<DatabaseVersionHeader> firstUnconflictingUnknownDatabaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
+		
+		DatabaseVersionHeader thisHeader = null;
+		DatabaseVersionHeader lastHeader = null;
+		
+		for (int i=0; i < sortedUnknownDatabaseVersionHeaders.size(); i++) {
+			thisHeader = sortedUnknownDatabaseVersionHeaders.get(i);
+			
+			if (conflictHeaders.contains(thisHeader)) {	// stop when first conflict found			 
+				break; // TODO (A, see below!)
+			}
+			
+			if (lastHeader != null && lastHeader.equals(thisHeader)) { // ignore duplicates
+				continue;
+			}
+			
+			firstUnconflictingUnknownDatabaseVersionHeaders.add(thisHeader);			
+			lastHeader = thisHeader;
+		}
+		
+		// TODO
+		// Now  firstUnconflictingUnknownDatabaseVersionHeaders should contain 
+		// 1.n database versions that do not conflict and could be safely applied locally
+		
+		// To determine the rest, conflicts must be resolved.
+		// Problem: determining the winner is not enough, because the whole branch of DBVs must be determined
+		// Possible solution: 
+		/*
+		   readUnknownDatabaseVersionHeaders should return a branch of DBVs for each client (so a Map<Client, Map<LocalVersion, DBV>>>)
+		   This map mu
+		   
+		   ARRG!
+		 */
+		
+		/*
+		 
+		 A  B  C
+		 1  1  1
+		 2  2  2
+		 x  y  x   // Conflict, A/C wins, choose A
+		 |  i  i   // Ignore B and C databases 
+		 |  i
+		 |
+		  
+		 The  
+		 
+		 
+		 for each conflict:
+		   determine winner and loser
+		   
+		 
+		 
+		 */
 		
 		
-		// 1. collect conflict-free dbvs
 		// 2. collect conflicts
 		// 3. gather winner
 		// 4. collect winner
 		
 	}
+	
+	private class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
 
-	private List<DatabaseVersionHeader> readDatabaseVersionIdentifierPerMachine(List<File> remoteDatabases) throws IOException {
-		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
+		@Override
+		public int compare(DatabaseVersionHeader header1, DatabaseVersionHeader header2) {
+			VectorClockComparison vectorClockComparison = VectorClock.compare(header1.getVectorClock(), header2.getVectorClock());
+			
+			if (vectorClockComparison == VectorClockComparison.GREATER) {
+				return 1;
+			}
+			else if (vectorClockComparison == VectorClockComparison.SMALLER) {
+				return -1;
+			}
+			else {
+				return 0;						
+			}
+		}
 		
-		Database remoteDatabase = new Database();
+	}
+	
+
+	private List<DatabaseVersionHeader> readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
+		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
+						
 		DatabaseDAO dbDAO = new DatabaseDAO();
 		
 		for (File remoteDatabaseInCache : remoteDatabases) {
+			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
+			
 			dbDAO.load(remoteDatabase, remoteDatabaseInCache);			
-			Map<Long,DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
+			Map<Long, DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
-				DatabaseVersionHeader id = remoteDatabaseVersion.getHeader();
-				databaseVersionHeaders.add(id);
+				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
+				databaseVersionHeaders.add(header);
 			}
 		}
 		

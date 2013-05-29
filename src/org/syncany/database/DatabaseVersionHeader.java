@@ -7,7 +7,7 @@ public class DatabaseVersionHeader {
     // DB Version and versions of other users (= DB basis)
     private Date uploaded;
     private VectorClock vectorClock; // vector clock, machine name to database version map
-    private String uploadedFromClient;
+    private String uploadedByClient;
     
     public DatabaseVersionHeader() {
     	uploaded = new Date();
@@ -27,12 +27,12 @@ public class DatabaseVersionHeader {
 		this.vectorClock = vectorClock;
 	}
 	
-	public String getUploadedFromClient() {
-		return uploadedFromClient;
+	public String getUploadedByClient() {
+		return uploadedByClient;
 	}
 
-	public void setUploadedFromClient(String uploadedFromClient) {
-		this.uploadedFromClient = uploadedFromClient;
+	public void setUploadedByClient(String uploadedByClient) {
+		this.uploadedByClient = uploadedByClient;
 	}
 
 	@Override

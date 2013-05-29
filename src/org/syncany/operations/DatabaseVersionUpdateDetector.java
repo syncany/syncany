@@ -12,11 +12,11 @@ import org.syncany.database.VectorClock;
 public class DatabaseVersionUpdateDetector {
 	public enum UpdateDetectionStatus { POSSIBLE_CONFLICT, NEWER_VERSION, NO_UPDATES };  
 
-	private Set<DatabaseVersionPair> possibleConflicts;
+	private Set<DatabaseVersionHeaderPair> possibleConflicts;
 	private VectorClock newestClock;
 				
 	public DatabaseVersionUpdateDetector() {
-		possibleConflicts = new HashSet<DatabaseVersionPair>();
+		possibleConflicts = new HashSet<DatabaseVersionHeaderPair>();
 		newestClock = null;
 	}
 	
