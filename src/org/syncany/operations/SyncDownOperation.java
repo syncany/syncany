@@ -109,7 +109,139 @@ public class SyncDownOperation extends Operation {
 			firstUnconflictingUnknownDatabaseVersionHeaders.add(thisHeader);			
 			lastHeader = thisHeader;
 		}
-		
+		/*
+		 * T    A                 B                C                     Remote Storage
+		 *  
+		 * ////////////////////////////////////////////////////////////////////////////////////////
+		 *      
+		 * 01                                      (  ,  ,C1) ---------> db-c-1
+		 * 02                                      (  ,  ,C2)         
+		 * 03                                      (  ,  ,C3) ---------> db-c-3
+		 * 04                     (  ,  ,C1) <
+		 * 04                     (  ,  ,C2) <
+		 * 04                     (  ,  ,C3) <-------------------------- db-c-1, db-c-3
+		 * 05                                      (  ,  ,C4) ---------> db-c-4
+		 * 06   (  ,  ,C1) <
+		 * 06   (  ,  ,C2) <
+		 * 06   (  ,  ,C3) <
+		 * 06   (  ,  ,C4) <-------------------------------------------- db-c-1, db-c-3, db-c-4
+		 * 07                     (  ,B1,C3) --------------------------> db-b-1
+		 * 08   (A1,  ,C4) 
+		 * 09   (A2,  ,C4) 
+		 * 10   (A3,  ,C4) --------------------------------------------> db-a-3
+		 *      
+		 *                        (CONFLICT 1) <------------------------ db-c-4, db-a-3
+		 *                        (  ,  ,C4) wins
+		 *                        (  ,B2,C4) after merge
+		 *                        To be uploaded
+		 *                        
+		 *      (CONFLICT 2) <------------------------------------------ db-b-1
+		 *      (  ,B1,C3) wins
+		 *      (A4,B1,C3) after merge
+		 *      To be uploaded
+		 *                                         (CONFLICT 3) <------- db-a-3, db-b-1
+		 *                                         (  ,  ,C4) wins
+		 *                                         Nothing to merge
+		 *                                         Nothing to upload
+		 *                                         
+		 * 11                     (  ,B2,C4) --------------------------> db-b-2
+		 * 12   (A4,B1,C3) --------------------------------------------> db-a-4
+		 * 
+		 *                        (CONFLICT 4) <------------------------ db-a-4
+		 *                        (  ,B2,C4) wins
+		 *                        Nothing to merge
+		 *                        Nothing to upload
+		 *                        
+		 *      (CONFLICT 5) <------------------------------------------ db-b-2
+		 *      (  ,B2,C4) wins
+		 *      (A5,B2,C4) after merge
+		 *      To be uploaded
+		 *      
+		 *                                         (CONFLICT 6) <------- db-a-4, db-b-2
+		 *                                         (  ,B2,C4) wins
+		 *                                         Apply changes locally
+		 *                                         Nothing to upload
+		 *                                         
+		 * 13  (A5,B2,C4) ---------------------------------------------> db-a-5  
+		 * 
+		 *                                         (CONFLICT 7) <------- db-a-5
+		 *                                         (A5,B2,C4) wins
+		 *                                         Apply changes locally
+		 *                                         Nothing to upload
+		 *                                         
+		 *                        (CONFLICT 8) <------------------------ db-a-4
+		 *                        (A5,B2,C4) wins
+		 *                        Apply changes locally
+		 *                        Nothing to upload
+		 *                                    
+		 * 
+		 * ////////////////////////////////////////////////////////////////////////////////////////     
+		 *  
+		 * CONFLICT 1 at B: 
+		 *  - Local:     (  ,B1,C3)/T=07
+		 *  - db-c-4:    (  ,  ,C4)/T=05
+		 *  - db-a-3:    (A1,  ,C4)/T=08
+		 *               (A2,  ,C4)/T=09
+		 *               (A3,  ,C4)/T=10
+		 *               
+		 *  - Sorted:    (  ,  ,C4) < (A1,  ,C4) < (A2,  ,C4) < (A3,  ,C4)
+		 *  - Conflicts: (  ,B1,C3)/T=07 || (  ,  ,C4)/T=05 --> (  ,  ,C4)/T=05
+		 *               (  ,B1,C3)/T=07 || (A1,  ,C4)/T=08 --> (  ,B1,C3)/T=07
+		 *               (  ,B1,C3)/T=07 || (A2,  ,C4)/T=09 --> (  ,B1,C3)/T=07 
+		 *               (  ,B1,C3)/T=07 || (A3,  ,C4)/T=10 --> (  ,B1,C3)/T=07
+		 *               .
+		 *               New: 
+		 *               (  ,  ,C4)/T=05 || (  ,B1,C3)/T=07 --> (  ,  ,C4)/T=05 
+		 *  - Result:
+		 *     Winner: (  ,  ,C4)/T=05 
+		 *     --> Conflicts with local version
+		 *     --> Local must merge local version (  ,B1,C3) in (  ,  ,C4)
+		 *     --> Local result is then (  ,B2,C4)
+		 * 
+		 * CONFLICT 2 at A: 
+		 *  - Local:     (A3,  ,C4)/T=10
+		 *  - db-b-1:    (  ,B1,C3)/T=07
+		 *               
+		 *  - Sorted:    (empty)
+		 *  - Conflicts: (A3,  ,C4)/T=10 || (  ,B1,C3)/T=07 --> (  ,B1,C3)/T=07
+		 *  - Result:
+		 *     Winner: (  ,B1,C3)/T=07 
+		 *     --> Conflicts with local version
+		 *     --> Local must merge local version (A3,  ,C4) in (  ,B1,C3)
+		 *     --> Local result is then (A4,B1,C3)
+		 *
+		 *     
+		 *     TODO   WHAT ABOUT C4??? 
+		 *     TODO   SHOULD WE THROW OLDER LOCAL VERSIONS IN THE MIX TOO?
+		 *     TODO   SHOULDN'T WE COMPARE (  ,B1,C3) with the older local version (  ,  ,C4)  (= first conflicting local version!)
+		 *     TODO   THEN, the branch of (  ,  ,C4) would win and the second conflict round would not be necessary!!!!!!!!!!!!!!!!!!!!!!!
+		 *              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * CONFLICT 3 at C: 
+		 *  - Local:     (  ,  ,C4)/T=05
+		 *  - db-a-3:    (A1,  ,C4)/T=08
+		 *               (A2,  ,C4)/T=09
+		 *               (A3,  ,C4)/T=10
+		 *  - db-b-1:    (  ,B1,C3)/T=07
+		 *               
+		 *  - Sorted:    (  ,  ,C4) < (A1,  ,C4) < (A2,  ,C4) < (A3,  ,C4)
+		 *  - Conflicts: (  ,B1,C3)/T=07 || (  ,  ,C4)/T=05 --> (  ,  ,C4)/T=05
+		 *               (  ,B1,C3)/T=07 || (A1,  ,C4)/T=08 --> (  ,B1,C3)/T=07
+		 *               (  ,B1,C3)/T=07 || (A2,  ,C4)/T=09 --> (  ,B1,C3)/T=07 
+		 *               (  ,B1,C3)/T=07 || (A3,  ,C4)/T=10 --> (  ,B1,C3)/T=07
+		 *               .
+		 *               New: 
+		 *               (  ,  ,C4)/T=05 || (  ,B1,C3)/T=07 --> (  ,  ,C4)/T=05 
+		 *  - Result:
+		 *     Winner: (  ,  ,C4)/T=05 
+		 *     --> Same as local version
+		 *     --> Nothing to do!
+		 * 
+		 */
 		// TODO
 		// Now  firstUnconflictingUnknownDatabaseVersionHeaders should contain 
 		// 1.n database versions that do not conflict and could be safely applied locally
