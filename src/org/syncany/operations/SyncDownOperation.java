@@ -110,6 +110,9 @@ public class SyncDownOperation extends Operation {
 			lastHeader = thisHeader;
 		}
 		/*
+		 * ALGORITHM A
+		 * ---------------------------------------------------------------
+		 * 
 		 * T    A                 B                C                     Remote Storage
 		 *  
 		 * ////////////////////////////////////////////////////////////////////////////////////////
@@ -169,14 +172,24 @@ public class SyncDownOperation extends Operation {
 		 *                                         Apply changes locally
 		 *                                         Nothing to upload
 		 *                                         
-		 *                        (CONFLICT 8) <------------------------ db-a-4
+		 *                        (CONFLICT 8) <------------------------ db-a-5
 		 *                        (A5,B2,C4) wins
 		 *                        Apply changes locally
 		 *                        Nothing to upload
 		 *                                    
-		 * 
 		 * ////////////////////////////////////////////////////////////////////////////////////////     
+		 * 
+		 *  Algorithm:
+		 *   - Take newest local version and all unknown remote versions
+		 *   - Compare all to each other and list conflicts
+		 *   - Determine global conflict winner (lowest timestamp)
+		 *   - Take action / apply
+		 *   
+		 *  Issues:
+		 *   - This takes multiple rounds  
 		 *  
+		 * ////////////////////////////////////////////////////////////////////////////////////////
+		 *      
 		 * CONFLICT 1 at B: 
 		 *  - Local:     (  ,B1,C3)/T=07
 		 *  - db-c-4:    (  ,  ,C4)/T=05
@@ -217,10 +230,6 @@ public class SyncDownOperation extends Operation {
 		 *     TODO   THEN, the branch of (  ,  ,C4) would win and the second conflict round would not be necessary!!!!!!!!!!!!!!!!!!!!!!!
 		 *              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
 		 * 
-		 * 
-		 * 
-		 * 
-		 * 
 		 * CONFLICT 3 at C: 
 		 *  - Local:     (  ,  ,C4)/T=05
 		 *  - db-a-3:    (A1,  ,C4)/T=08
@@ -240,8 +249,231 @@ public class SyncDownOperation extends Operation {
 		 *     Winner: (  ,  ,C4)/T=05 
 		 *     --> Same as local version
 		 *     --> Nothing to do!
+		 *     
+		 * CONFLICT 4 at B: 
+		 *  - Local:     (  ,B2,C4)/T=11
+		 *  - db-a-4:    (A4,B1,C3)/T=12
+		 *               
+		 *  - Sorted:    (empty)
+		 *  - Conflicts: (  ,B2,C4)/T=11 || (A4,B1,C3)/T=12 --> (  ,B2,C4)/T=11
+		 *  - Result:
+		 *     Winner: (  ,B2,C4)/T=11 
+		 *     --> Same as local version
+		 *     --> Nothing to do!     
 		 * 
+		 * CONFLICT 5 at A: 
+		 *  - Local:     (A4,B1,C3)/T=12
+		 *  - db-b-2:    (  ,B2,C4)/T=11
+		 *               
+		 *  - Sorted:    (empty)
+		 *  - Conflicts: (  ,B2,C4)/T=11 || (A4,B1,C3)/T=12 --> (  ,B2,C4)/T=11
+		 *  - Result:
+		 *     Winner: (  ,B2,C4)/T=11 
+		 *     --> Conflicts with local version
+		 *     --> Local must merge local version (A4,B1,C3) in (  ,B2,C4)
+		 *     --> Local result is then (A5,B2,C4)
+		 *     
+		 * CONFLICT 6 at C: 
+		 *  - Local:     (  ,  ,C4)/T=05
+		 *  - db-b-2:    (  ,B2,C4)/T=11
+		 *  - db-a-4:    (A4,B1,C3)/T=12
+		 *               
+		 *  - Sorted:    (empty) /// TODO This is empty, because (  ,  ,C4) conflicts withs (A4,B1,C3), even though (  ,  ,C4) < (  ,B2,C4)
+		 *  - Conflicts: (  ,B2,C4)/T=11 || (A4,B1,C3)/T=12 --> (  ,B2,C4)/T=11
+		 *  - Result:
+		 *     Winner: (  ,B2,C4)/T=11 
+		 *     --> Local version is basis of winner, must upgrade
+		 *     --> Local must upgrade local version (  ,  ,C4) to (  ,B2,C4)
+		 *     --> Local result is then (  ,B2,C4)
+		 *     
+		 * CONFLICT 7 at C: 
+		 *  - Local:     (  ,B2,C4)/T=11
+		 *  - db-a-5:    (A5,B2,C4)/T=13
+		 *               
+		 *  - Sorted:    (  ,B2,C4)/T=11 < (A5,B2,C4)/T=13 --> (A5,B2,C4)/T=13
+		 *  - Conflicts: (empty)
+		 *  - Result:
+		 *     Winner: (A5,B2,C4)/T=13 
+		 *     --> Local version is basis of winner, must upgrade
+		 *     --> Local must upgrade local version (  ,B2,C4) to (A5,B2,C4)
+		 *     --> Local result is then (A5,B2,C4)     
+		 *     
+		 * CONFLICT 8 at B: 
+		 *  - Local:     (  ,B2,C4)/T=11
+		 *  - db-a-5:    (A5,B2,C4)/T=13
+		 *               
+		 *  - Sorted:    (  ,B2,C4)/T=11 < (A5,B2,C4)/T=13 --> (A5,B2,C4)/T=13
+		 *  - Conflicts: (empty)
+		 *  - Result:
+		 *     Winner: (A5,B2,C4)/T=13 
+		 *     --> Local version is basis of winner, must upgrade
+		 *     --> Local must upgrade local version (  ,B2,C4) to (A5,B2,C4)
+		 *     --> Local result is then (A5,B2,C4)   		      
 		 */
+		
+
+		/*
+		 * ALGORITHM B
+		 * ---------------------------------------------------------------
+		 * 
+		 * T    A                       B                      C                        Remote Storage
+		 *  
+		 * ////////////////////////////////////////////////////////////////////////////////////////
+		 *      
+		 * 01                                                  (  ,  ,C1)/T=01 -------> db-c-1
+		 * 02                                                  (  ,  ,C2)/T=02         
+		 * 03                                                  (  ,  ,C3)/T=03 -------> db-c-3
+		 * 04                           (  ,  ,C1)/T=01 <
+		 * 04                           (  ,  ,C2)/T=02 <
+		 * 04                           (  ,  ,C3)/T=03 <------------------------------ db-c-1, db-c-3
+		 * 05                                                  (  ,  ,C4)/T=05 -------> db-c-4
+		 * 06   (  ,  ,C1)/T=01 <
+		 * 06   (  ,  ,C2)/T=02 <
+		 * 06   (  ,  ,C3)/T=03 <
+		 * 06   (  ,  ,C4)/T=05 <------------------------------------------------------ db-c-1, db-c-3, db-c-4
+		 * 07                           (  ,B1,C3)/T=07 ------------------------------> db-b-1
+		 * 08   (A1,  ,C4)/T=08 
+		 * 09   (A2,  ,C4)/T=09 
+		 * 10   (A3,  ,C4)/T=10 ------------------------------------------------------> db-a-3
+		 * 
+		 *                              (CONFLICT 1) <--------------------------------- db-c-4, db-a-3
+		 *                              (A3,  ,C4)/T=10 wins
+		 *                              (A3,B2,C4)/T=.. after merge
+		 *                              To be uploaded
+		 *                        
+		 *      (CONFLICT 2) <-------------------------------------------------------- db-b-1
+		 *      (A3,  ,C4)/T=10 wins
+		 *      That's me. Do nothing.
+		 *      
+		 *                                                     (CONFLICT 3) <-------- db-a-3, db-b-1
+		 *                                                     (A3,  ,C4)/T=10 wins
+		 *                                                     To be applied locally
+		 *                              
+		 * ////////////////////////////////////////////////////////////////////////////////////////     
+		 * 
+		 *  Algorithm:
+		 *   - Determine last versions per client A B C
+		 *   - Determine if there are conflicts between last versions of client, if yes continue 
+		 *   - Determine last common versions between clients
+		 *   - Determine first conflicting versions between clients (= last common version + 1)
+		 *   - Compare first conflicting versions and determine winner
+		 *   - If one client has the winning first conflicting version, take this client's history as a winner
+		 *   - If more than 2 clients are based on the winning first conflicting version, compare their other versions
+		 *      + Iterate forward (from conflicting to newer!), and check for conflicts 
+		 *      + If a conflict is found, determine the winner and continue the branch of the winner
+		 *      + This must be done until the last (newest!) version of the winning branch is reached
+		 *      
+		 *  In short:
+		 *    1. Go back to the first conflict of all versions
+		 *    2. Determine winner of this conflict. Follow the winner(s) branch.
+		 *    3. If another conflict occurs, go to step 2.
+		 *   
+		 *  Issues:
+		 *   - When db-b-1 is not applied, it is re-downloaded every time by clients A and C
+		 *     until B uploads a consolidated version
+		 *  
+		 * ////////////////////////////////////////////////////////////////////////////////////////
+		 *      
+		 * CONFLICT 1 at B: 
+		 *  - Local:     (  ,B1,C3)/T=10 (last A)
+		 *  - db-c-4:    (  ,  ,C1)/T=01
+		 *               (  ,  ,C2)/T=02
+		 *               (  ,  ,C3)/T=03
+		 *               (  ,  ,C4)/T=05 (last C)
+		 *  - db-a-3:    (  ,  ,C1)/T=01
+		 *               (  ,  ,C2)/T=02
+		 *               (  ,  ,C3)/T=03
+		 *               (  ,  ,C4)/T=05
+		 *               (A1,  ,C4)/T=08
+		 *               (A2,  ,C4)/T=09
+		 *               (A3,  ,C4)/T=10 (last A)
+		 *               
+		 *  - Last versions conflicts:                (  ,B1,C3)/T=07 || (  ,  ,C4)/T=05
+		 *                                            (  ,B1,C3)/T=07 || (A3,  ,C4)/T=10  
+		 *  - Last common version between clients:    (  ,  ,C3)/T=03
+		 *  - First conflicting version per client:   (  ,  ,C4)/T=05 (first conflicting A)
+		 *                                            (  ,B1,C3)/T=07 (first conflicting B)
+		 *                                            (  ,  ,C4)/T=05 (first conflicting C)
+		 *  - Winner of first conflicting versions:   (  ,  ,C4)/T=05
+		 *  - Winning clients histories:              A                  C
+		 *                                            (  ,  ,C4)/T=05    (  ,  ,C4)/T=05
+		 *                                            (A1,  ,C4)/T=08    (empty)
+		 *                                            (A2,  ,C4)/T=09
+		 *                                            (A3,  ,C4)/T=10
+		 *  - Conflicts in winning histories:         (empty)
+		 *  - Winning histories lengths               A                  C
+		 *                                            4                  1
+		 *  - Follow this history (ultimate winner):  A 
+		 *                                            
+		 *  - Result:
+		 *     Winner: (A3,  ,C4)/T=10 
+		 *     --> Conflicts with local version
+		 *     --> Local must merge local version (  ,B1,C3) in (A3,  ,C4)
+		 *     --> Local result is then (A3,B2,C4)		  
+		 *     
+		 * CONFLICT 2 at A: 
+		 *  - Local:     (A3,  ,C4)/T=10 (last A)
+		 *  - db-b-1:    (  ,  ,C1)/T=01
+		 *               (  ,  ,C2)/T=02
+		 *               (  ,  ,C3)/T=03
+		 *               (  ,B1,C3)/T=07 (last B)
+		 *               
+		 *  - Last versions conflicts:                (  ,B1,C3)/T=07 || (A3,  ,C4)/T=10
+		 *  - Last common version between clients:    (  ,  ,C3)/T=03 
+		 *  - First conflicting version per client:   (  ,  ,C4)/T=05 (first conflicting A)
+		 *                                            (  ,B1,C3)/T=07 (first conflicting B)
+		 *  - Winner of first conflicting versions:   (  ,  ,C4)/T=05
+		 *  - Winning clients histories:              A                   
+		 *                                            (  ,  ,C4)/T=05     
+		 *                                            (A1,  ,C4)/T=08    
+		 *                                            (A2,  ,C4)/T=09
+		 *                                            (A3,  ,C4)/T=10
+		 *  - Conflicts in winning histories:         (empty)
+		 *  - Winning histories lengths               4   
+		 *  - Follow this history (ultimate winner):  A 
+		 *                                            
+		 *  - Result:
+		 *     Winner: (A3,  ,C4)/T=10 
+		 *     --> That's me. Do nothing.     
+		 *     
+		 * CONFLICT 3 at C: 
+		 *  - Local:     (  ,  ,C4)/T=05 (last C)
+		 *  - db-b-1:    (  ,  ,C1)/T=01
+		 *               (  ,  ,C2)/T=02
+		 *               (  ,  ,C3)/T=03
+		 *               (  ,B1,C3)/T=07 (last B)
+		 *  - db-a-3:    (  ,  ,C1)/T=01
+		 *               (  ,  ,C2)/T=02
+		 *               (  ,  ,C3)/T=03
+		 *               (  ,  ,C4)/T=05
+		 *               (A1,  ,C4)/T=08
+		 *               (A2,  ,C4)/T=09
+		 *               (A3,  ,C4)/T=10 (last A)
+		 *               
+		 *  - Last versions conflicts:                (  ,B1,C3)/T=07 || (A3,  ,C4)/T=10
+		 *  - Last common version between clients:    (  ,  ,C3)/T=03
+		 *  - First conflicting version per client:   (  ,  ,C4)/T=05 (first conflicting A)
+		 *                                            (  ,B1,C3)/T=07 (first conflicting B)
+		 *                                            (  ,  ,C4)/T=05 (first conflicting C)
+    	 *  - Winner of first conflicting versions:   (  ,  ,C4)/T=05
+		 *  - Winning clients histories:              A                  C
+		 *                                            (  ,  ,C4)/T=05    (  ,  ,C4)/T=05
+		 *                                            (A1,  ,C4)/T=08    (empty)
+		 *                                            (A2,  ,C4)/T=09
+		 *                                            (A3,  ,C4)/T=10
+		 *  - Conflicts in winning histories:         (empty)
+		 *  - Winning histories lengths               A                  C
+		 *                                            4                  1
+		 *  - Follow this history (ultimate winner):  A 
+		 *                                            
+		 *  - Result:
+		 *     Winner: (A3,  ,C4)/T=10 
+		 *     --> That's not me. Must apply changes locally.     
+		 *     
+		 */		
+		
+		
+		
 		// TODO
 		// Now  firstUnconflictingUnknownDatabaseVersionHeaders should contain 
 		// 1.n database versions that do not conflict and could be safely applied locally
