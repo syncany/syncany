@@ -72,11 +72,11 @@ public class VectorClock extends TreeMap<String, Long> {
 
 		for (int i = 0; i < lRequests.length; i++) {
 			lText += lIDs[i];
-			lText += " = ";
+			lText += "-";
 			lText += lRequests[i].toString();
 
 			if (i + 1 < lRequests.length) {
-				lText += ", ";
+				lText += ",";
 			}
 		}
 

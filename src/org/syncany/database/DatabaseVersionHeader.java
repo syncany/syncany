@@ -12,8 +12,15 @@ public class DatabaseVersionHeader {
     public DatabaseVersionHeader() {
     	uploaded = new Date();
     	vectorClock = new VectorClock();
+    	uploadedByClient = "UnknownMachine";
     }
     
+	public DatabaseVersionHeader(Date uploaded, VectorClock vectorClock, String uploadedByClient) {
+		this.uploaded = uploaded;
+		this.vectorClock = vectorClock;
+		this.uploadedByClient = uploadedByClient;
+	}
+
 	public Date getUploadedDate() {
 		return uploaded;
 	}
@@ -58,6 +65,19 @@ public class DatabaseVersionHeader {
 		} else if (!vectorClock.equals(other.vectorClock))
 			return false;
 		return true;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+				
+		sb.append(uploadedByClient);
+		sb.append("/");
+		sb.append(vectorClock.toString());
+		sb.append("/T=");
+		sb.append(uploaded.getTime());
+		
+		return sb.toString();
 	}
   
 }
