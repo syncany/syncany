@@ -89,6 +89,25 @@ public class SyncUpOperationTest {
 		}
 		
 		assertEquals(localFileVersions,remoteFileVersions);
+		
+		compareFileVersionsAgainstOriginalFiles(originalFiles, localFileVersions);
+		compareFileVersionsAgainstOriginalFiles(originalFiles, remoteFileVersions);
+	}
+
+	private void compareFileVersionsAgainstOriginalFiles(List<File> originalFiles, List<FileVersion> localFileVersions) throws Exception {
+		int toFind = originalFiles.size();
+		for (File originalFile : originalFiles) {
+			String originalFileName = originalFile.getName();
+			
+			for (FileVersion fileVersion : localFileVersions) {
+				String fileVersionFileName = fileVersion.getName();
+				
+				if(fileVersionFileName.equals(originalFileName)) {
+					toFind--;
+				}
+			}
+		}
+		assertEquals(0, toFind);
 	}
 
 }
