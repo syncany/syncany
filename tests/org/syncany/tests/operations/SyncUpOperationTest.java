@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.After;
@@ -13,6 +15,9 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LocalDatabaseFile;
 import org.syncany.operations.RemoteDatabaseFile;
 import org.syncany.operations.SyncUpOperation;
@@ -60,13 +65,30 @@ public class SyncUpOperationTest {
 		dDAO.load(localDatabase, new LocalDatabaseFile(localDatabaseFile));
 		dDAO.load(remoteDatabase, new RemoteDatabaseFile(remoteDatabaseFile));
 		
-		//assertEquals(localDatabase, remoteDatabase);
-		// TODO
-		//compare files listed in db remote & local 
+		DatabaseVersion localDatabaseVersion = localDatabase.getLastDatabaseVersion();
+		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
+		
+		assertEquals(localDatabaseVersion.getHeader(), remoteDatabaseVersion.getHeader());
+
+		assertEquals(localDatabaseVersion.getFileHistories().size(),fileAmount);
+		assertEquals(localDatabaseVersion.getFileHistories().size(),remoteDatabaseVersion.getFileHistories().size());
+		
+		Collection<PartialFileHistory> localFileHistories = localDatabaseVersion.getFileHistories();
+		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
+	
+		List<FileVersion> remoteFileVersions = new ArrayList<FileVersion>(); 
+		List<FileVersion> localFileVersions = new ArrayList<FileVersion>();
+		
+		for (PartialFileHistory partialFileHistory : remoteFileHistories) {
+			remoteFileVersions.add(partialFileHistory.getLastVersion());
+			assertTrue(localFileHistories.contains(partialFileHistory));
+		}
+		
+		for (PartialFileHistory partialFileHistory : localFileHistories) {
+			localFileVersions.add(partialFileHistory.getLastVersion());
+		}
+		
+		assertEquals(localFileVersions,remoteFileVersions);
 	}
-
-	
-
-	
 
 }
