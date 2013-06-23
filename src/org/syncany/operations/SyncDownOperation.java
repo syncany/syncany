@@ -715,7 +715,8 @@ public class SyncDownOperation extends Operation {
 		for (File remoteDatabaseInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
 			
-			dbDAO.load(remoteDatabase, remoteDatabaseInCache);			
+			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
+			dbDAO.load(remoteDatabase, rdf);			
 			Map<Long, DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
@@ -794,7 +795,8 @@ public class SyncDownOperation extends Operation {
 			Database remoteDatabase = new Database();
 			DatabaseDAO dbDAO = new DatabaseDAO();
 			
-			dbDAO.load(remoteDatabase, remoteDatabaseInCache);
+			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
+			dbDAO.load(remoteDatabase, rdf);		
 			
 			VectorClock remoteVectorClock = remoteDatabase.getLastDatabaseVersion().getVectorClock();
 			VectorClockComparison localDatabaseIs = VectorClock.compare(localVectorClock, remoteVectorClock);

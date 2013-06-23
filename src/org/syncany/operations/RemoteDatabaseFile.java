@@ -4,32 +4,26 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RemoteDatabaseFile {
+public class RemoteDatabaseFile extends DatabaseFile{
 	private static Pattern namePattern = Pattern.compile("db-([^-]+)-(\\d+)");
 	
-	private String clientName;
-	private long clientVersion;
-	
 	public RemoteDatabaseFile(File remoteFile) {
-		this(remoteFile.getName());
+		super(remoteFile,namePattern);
 	}
 	
-	public RemoteDatabaseFile(String remoteFile) {
-		Matcher matcher = namePattern.matcher(remoteFile);
-		
-		if (!matcher.matches()) {
-			throw new RuntimeException(remoteFile + " - Remote database filename pattern does not match: db-xxxx..-nnnn.. expected.");
-		}
-		
+	public RemoteDatabaseFile(String fileName) {
+		super(fileName,namePattern);
+	}
+	
+	@Override
+	void initializeClientName(Matcher matcher) {
 		this.clientName = matcher.group(1);
-		this.clientVersion = Long.parseLong(matcher.group(2));
 	}
 
-	public String getClientName() {
-		return clientName;
+	@Override
+	void initializeClientVersion(Matcher matcher) {
+		this.clientVersion = Long.parseLong(matcher.group(2));		
 	}
 
-	public long getClientVersion() {
-		return clientVersion;
-	}	
+
 }

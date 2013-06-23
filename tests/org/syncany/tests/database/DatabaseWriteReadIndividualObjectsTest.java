@@ -24,6 +24,7 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.operations.RemoteDatabaseFile;
 import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseWriteReadIndividualObjectsTest {
@@ -313,7 +314,8 @@ public class DatabaseWriteReadIndividualObjectsTest {
 		Database db = new Database();
 		
 		DatabaseDAO dao = new DatabaseDAO();
-		dao.load(db, databaseFile);
+		RemoteDatabaseFile rdbf = new RemoteDatabaseFile(databaseFile);
+		dao.load(db, rdbf);
 		
 		return db;
 	}

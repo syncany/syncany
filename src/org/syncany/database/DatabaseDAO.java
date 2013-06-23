@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import org.syncany.operations.DatabaseFile;
 import org.syncany.operations.RemoteDatabaseFile;
 
 
@@ -181,10 +182,8 @@ public class DatabaseDAO {
 		dos.close();			
 	}	
     
-    public void load(Database db, File sourceFile) throws IOException {
-        DataInputStream dis = new DataInputStream(new FileInputStream(sourceFile));
-        
-        RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(sourceFile);
+    public void load(Database db, DatabaseFile databaseFile) throws IOException {
+        DataInputStream dis = new DataInputStream(new FileInputStream(databaseFile.getFile()));
         
         // DAOs
         ChunkDAO chunkDAO = new ChunkDAO();
@@ -241,7 +240,7 @@ public class DatabaseDAO {
         	}
         	
         	currentDatabaseVersion.setVectorClock(globalDatabaseVersionClock);
-        	currentDatabaseVersion.setUploadedFrom(remoteDatabaseFile.getClientName());
+        	currentDatabaseVersion.setUploadedFrom(databaseFile.getClientName());
         	
         	// Chunks
             int chunkCount = dis.readInt();

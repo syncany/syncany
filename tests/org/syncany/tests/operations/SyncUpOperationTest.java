@@ -11,6 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
+import org.syncany.operations.LocalDatabaseFile;
+import org.syncany.operations.RemoteDatabaseFile;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -50,8 +54,14 @@ public class SyncUpOperationTest {
 		assertTrue(remoteDatabaseFile.exists());
 		assertEquals(TestFileUtil.getMD5Checksum(localDatabaseFile), TestFileUtil.getMD5Checksum(remoteDatabaseFile));
 		
+		DatabaseDAO dDAO = new DatabaseDAO();
+		Database localDatabase = new Database();
+		Database remoteDatabase = new Database();
+		dDAO.load(localDatabase, new LocalDatabaseFile(localDatabaseFile));
+		dDAO.load(remoteDatabase, new RemoteDatabaseFile(remoteDatabaseFile));
 		
-		
+		//assertEquals(localDatabase, remoteDatabase);
+		// TODO
 		//compare files listed in db remote & local 
 	}
 
