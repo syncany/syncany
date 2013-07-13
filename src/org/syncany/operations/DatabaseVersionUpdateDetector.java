@@ -2,6 +2,7 @@ package org.syncany.operations;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -13,110 +14,63 @@ public class DatabaseVersionUpdateDetector {
 	private static final Logger logger = Logger.getLogger(DatabaseVersionUpdateDetector.class.getSimpleName());
 	
 	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders, TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
-		//Map<String, Long> currentRemoteKeys = new HashMap<String, Long>();
-		Long currentLocalKey = localDatabaseVersionHeaders.lastKey(); 		
-		/*
-		System.out.println("- Last local: "+localDatabaseVersionHeaders.get(currentLocalKey)+" (index: "+currentLocalKey+")");
-		for (String machineName : remoteDatabaseVersionHeaders.keySet()) {
-			currentRemoteKeys.put(machineName, remoteDatabaseVersionHeaders.get(machineName).lastKey());
-			System.out.println("- Last "+machineName+": "+remoteDatabaseVersionHeaders.get(machineName).lastEntry().getValue()+" (index: "+remoteDatabaseVersionHeaders.get(machineName).lastKey()+")");
-		}
-		*/
-		nextRemoteMachine: for (String remoteMachineName : remoteDatabaseVersionHeaders.keySet()) {
-			System.out.println("Comparing local to "+remoteMachineName);
-			Long currentRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lastKey();
+		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null; 
+				
+		for (Long currentLocalDatabaseKey = localDatabaseVersionHeaders.lastKey(); currentLocalDatabaseKey != null && lastCommonDatabaseVersionHeader == null; currentLocalDatabaseKey = localDatabaseVersionHeaders.lowerKey(currentLocalDatabaseKey)){
+			DatabaseVersionHeader currentLocalDatabaseVersionHeader = localDatabaseVersionHeaders.get(currentLocalDatabaseKey);
+			VectorClock currentVectorClock = currentLocalDatabaseVersionHeader.getVectorClock();
 			
-			nextLowestRemoteMachineKey: while (currentLocalKey != null && currentRemoteKey != null) {
-				
-				DatabaseVersionHeader currentRemoteDatabaseVersionHeader = remoteDatabaseVersionHeaders.get(remoteMachineName).get(currentRemoteKey);
-				DatabaseVersionHeader currentLocalDatabaseVersionHeader = localDatabaseVersionHeaders.get(currentLocalKey);
-				
-				VectorClockComparison comparisonResult = VectorClock.compare(currentLocalDatabaseVersionHeader.getVectorClock(), currentRemoteDatabaseVersionHeader.getVectorClock());
-				System.out.printf("- Comparison: %s <-> %s = %s\n", new Object[] { currentLocalDatabaseVersionHeader, currentRemoteDatabaseVersionHeader, comparisonResult });
-
-				if (comparisonResult == VectorClockComparison.SMALLER) {
-					currentRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lowerKey(currentRemoteKey);
-					//currentRemoteKeys.put(remoteMachineName, currentRemoteKey);
-				}
-				else if (comparisonResult == VectorClockComparison.GREATER) {
-					currentLocalKey = localDatabaseVersionHeaders.lowerKey(currentLocalKey);
-				}
-				else if (comparisonResult == VectorClockComparison.SIMULTANEOUS) {
-					Long previousRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lowerKey(currentRemoteKey);
-					Long previousLocalKey = localDatabaseVersionHeaders.lowerKey(currentLocalKey);					
-					System.out.println("aa---"+previousLocalKey+"---"+previousRemoteKey);
-					
-					if (previousLocalKey == null || previousRemoteKey == null) {
-						System.out.println("break: "+previousLocalKey+"//"+previousRemoteKey);
-						break nextLowestRemoteMachineKey;
-					}
-
-					DatabaseVersionHeader previousLocalDatabaseVersionHeader = localDatabaseVersionHeaders.get(previousLocalKey);
-					DatabaseVersionHeader previousRemoteDatabaseVersionHeader = remoteDatabaseVersionHeaders.get(remoteMachineName).get(previousRemoteKey);
-					
-					VectorClockComparison previousLocalToCurrentRemoteComparisonResult = VectorClock.compare(previousLocalDatabaseVersionHeader.getVectorClock(), currentRemoteDatabaseVersionHeader.getVectorClock());
-					VectorClockComparison previousRemoteToCurrentLocalComparisonResult = VectorClock.compare(previousRemoteDatabaseVersionHeader.getVectorClock(), currentLocalDatabaseVersionHeader.getVectorClock());
-					System.out.printf("  + Cross comparison 1: %s <-> %s = %s\n", new Object[] { previousLocalDatabaseVersionHeader, currentRemoteDatabaseVersionHeader, previousLocalToCurrentRemoteComparisonResult });
-					System.out.printf("  + Cross comparison 2: %s <-> %s = %s\n", new Object[] { previousRemoteDatabaseVersionHeader, currentLocalDatabaseVersionHeader, previousRemoteToCurrentLocalComparisonResult });
-					
-					if (previousLocalToCurrentRemoteComparisonResult != VectorClockComparison.SIMULTANEOUS) {
-						if (previousLocalToCurrentRemoteComparisonResult == VectorClockComparison.SMALLER) {
-							System.out.println("xx");
-							currentLocalKey = localDatabaseVersionHeaders.lowerKey(currentLocalKey);
-						}
-						else if (previousLocalToCurrentRemoteComparisonResult == VectorClockComparison.GREATER) {
-							System.out.println("yy");
-							currentRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lowerKey(currentRemoteKey);							
-						}
-						else if (previousLocalToCurrentRemoteComparisonResult == VectorClockComparison.EQUAL) {
-							System.out.println("zz");
-							currentLocalKey = localDatabaseVersionHeaders.lowerKey(currentLocalKey);
-							break nextLowestRemoteMachineKey;
-						}
-						else {
-							System.out.println("THIS SHOULD NOT HAPPEN");
-						}
-					}
-					
-					else if (previousRemoteToCurrentLocalComparisonResult != VectorClockComparison.SIMULTANEOUS) {
-						if (previousRemoteToCurrentLocalComparisonResult == VectorClockComparison.SMALLER) {
-							System.out.println("xx2");
-							currentRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lowerKey(currentRemoteKey);
-						}
-						else if (previousRemoteToCurrentLocalComparisonResult == VectorClockComparison.GREATER) {
-							System.out.println("yy2");
-							currentLocalKey = localDatabaseVersionHeaders.lowerKey(currentLocalKey);
-						}
-						else if (previousRemoteToCurrentLocalComparisonResult == VectorClockComparison.EQUAL) {
-							System.out.println("zz2");
-							currentRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lowerKey(currentRemoteKey);
-							break nextLowestRemoteMachineKey;
-						}
-						else {
-							System.out.println("THIS SHOULD NOT HAPPEN");
-						}
-					}
-					
-					else {
-						System.out.println("previous versions are all in conflict");
-						currentRemoteKey = remoteDatabaseVersionHeaders.get(remoteMachineName).lowerKey(currentRemoteKey);
-						currentLocalKey = localDatabaseVersionHeaders.lowerKey(currentLocalKey);
-					}
-				}
-				else if (comparisonResult == VectorClockComparison.EQUAL) {
-					System.out.println("equal");
-					continue nextRemoteMachine;
-				}
+			if(isKeyInAllRemoteDatabasesGreaterOrEqual(currentVectorClock,remoteDatabaseVersionHeaders)) {
+				lastCommonDatabaseVersionHeader = currentLocalDatabaseVersionHeader;
 			}
 		}
 		
-		if (currentLocalKey == null) {
-			return null;
+		return lastCommonDatabaseVersionHeader;
+	}
+
+	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock,
+			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
+		Set<String> clients = remoteDatabaseVersionHeaders.keySet();
+		Map<String, Boolean> foundInClientMatrix = initializeFoundInClientMatrix(clients);
+		
+		for (Map.Entry<String,TreeMap<Long,DatabaseVersionHeader>> remoteClientDatabaseVersionsSet : remoteDatabaseVersionHeaders.entrySet()) {
+			String currentRemoteClient = remoteClientDatabaseVersionsSet.getKey();
+			TreeMap<Long,DatabaseVersionHeader> remoteClientDatabaseVersions = remoteClientDatabaseVersionsSet.getValue();
+			
+			for (DatabaseVersionHeader remoteDatabaseVersionHeader : remoteClientDatabaseVersions.values()) {
+				VectorClock remoteVectorClock = remoteDatabaseVersionHeader.getVectorClock();
+				VectorClockComparison result = VectorClock.compare(remoteVectorClock,currentVectorClock);
+				if(result == VectorClockComparison.GREATER || result == VectorClockComparison.EQUAL) {
+					foundInClientMatrix.put(currentRemoteClient,true);
+					break;
+				}
+			}
+			
+			if(foundInClientMatrix.get(currentRemoteClient) == false) {
+				return false;
+			}
 		}
 		
-		return localDatabaseVersionHeaders.get(currentLocalKey);
+		return isFoundInClientMatrixFullyTrue(foundInClientMatrix);
 	}
-	
+
+	private Map<String, Boolean> initializeFoundInClientMatrix(Set<String> clients) {
+		Map<String, Boolean> foundInClientMatrix = new HashMap<String, Boolean>();
+		for (String client : clients) {
+			foundInClientMatrix.put(client, false);
+		}
+		return foundInClientMatrix;
+	}
+
+	private boolean isFoundInClientMatrixFullyTrue(Map<String, Boolean> foundInClientMatrix) {
+		for (Boolean isFound : foundInClientMatrix.values()) {
+			if(isFound == false) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public Map<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName, TreeMap<Long,DatabaseVersionHeader> localDatabaseVersionHeaders, Map<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
 		Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new HashMap<String, DatabaseVersionHeader>();
 		

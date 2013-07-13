@@ -310,7 +310,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		//remoteDatabaseVersionHeaders.put("C", cDatabaseVersionHeaders);
 		
 		DatabaseVersionUpdateDetector comp = new DatabaseVersionUpdateDetector();
-		DatabaseVersionHeader lastCommonHeader = comp.findLastCommonDatabaseVersionHeader2(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);		
+		DatabaseVersionHeader lastCommonHeader = comp.findLastCommonDatabaseVersionHeader(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);		
 		Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = comp.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, localMachineName, localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);
 		Map<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = comp.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingDatabaseVersionHeaders);
 		System.out.println("lastCommonHeader = " +lastCommonHeader);		
