@@ -12,7 +12,10 @@ import org.syncany.operations.DatabaseVersionUpdateDetector;
 public class DatabaseVersionUpdateDetectorTest {
 
 	@Test
-	public void testUpdateDetectorScenario1() {		
+	public void testUpdateDetectorScenario1() {	
+		System.out.println("SCENARIO 1");
+		System.out.println("----------------");
+		
 		VectorClock v1 = new VectorClock();
 		v1.setClock("C", 1);		
 		DatabaseVersionHeader d1 = new DatabaseVersionHeader(new Date(1), v1, "C");		
@@ -85,6 +88,9 @@ public class DatabaseVersionUpdateDetectorTest {
 	
 	@Test
 	public void testUpdateDetectorScenario2() {		
+		System.out.println("SCENARIO 2");
+		System.out.println("----------------");
+		
 		VectorClock v1 = new VectorClock();
 		v1.setClock("C", 1);		
 		DatabaseVersionHeader d1 = new DatabaseVersionHeader(new Date(1), v1, "C");		
@@ -212,6 +218,79 @@ public class DatabaseVersionUpdateDetectorTest {
 		testFromBsPerspective(aDatabaseVersionHeaders, bDatabaseVersionHeaders, cDatabaseVersionHeaders);
 	}	
 	
+	@Test
+	public void testUpdateDetectorScenario3() {	
+		System.out.println("SCENARIO 3");
+		System.out.println("----------------");
+		
+		VectorClock v1 = new VectorClock();
+		v1.setClock("C", 1);		
+		DatabaseVersionHeader d1 = new DatabaseVersionHeader(new Date(1), v1, "C");		
+		
+		VectorClock v2 = new VectorClock();
+		v2.setClock("C", 2);		
+		DatabaseVersionHeader d2 = new DatabaseVersionHeader(new Date(2), v2, "C");		
+		
+		VectorClock v3 = new VectorClock();
+		v3.setClock("C", 3);		
+		DatabaseVersionHeader d3 = new DatabaseVersionHeader(new Date(3), v3, "C");		
+		
+		VectorClock v5 = new VectorClock();
+		v5.setClock("C", 4);		
+		DatabaseVersionHeader d5 = new DatabaseVersionHeader(new Date(4), v5, "C");
+		
+		VectorClock v7 = new VectorClock();
+		v7.setClock("B", 1);		
+		v7.setClock("C", 3);		
+		DatabaseVersionHeader d7 = new DatabaseVersionHeader(new Date(7), v7, "B");		
+		
+		VectorClock v8 = new VectorClock();
+		v8.setClock("A", 1);		
+		v8.setClock("C", 4);		
+		DatabaseVersionHeader d8 = new DatabaseVersionHeader(new Date(8), v8, "A");		
+
+		VectorClock v9 = new VectorClock();
+		v9.setClock("A", 2);		
+		v9.setClock("C", 4);		
+		DatabaseVersionHeader d9 = new DatabaseVersionHeader(new Date(9), v9, "A");
+		
+		VectorClock v10 = new VectorClock();
+		v10.setClock("A", 3);		
+		v10.setClock("C", 4);		
+		DatabaseVersionHeader d10 = new DatabaseVersionHeader(new Date(10), v10, "A");
+				
+		// Branch (A)
+		TreeMap<Long, DatabaseVersionHeader> aDatabaseVersionHeaders = new TreeMap<Long, DatabaseVersionHeader>();
+		aDatabaseVersionHeaders.put(d1.getUploadedDate().getTime(), d1);
+		aDatabaseVersionHeaders.put(d2.getUploadedDate().getTime(), d2);
+		aDatabaseVersionHeaders.put(d3.getUploadedDate().getTime(), d3);
+		aDatabaseVersionHeaders.put(d5.getUploadedDate().getTime(), d5);
+		aDatabaseVersionHeaders.put(d8.getUploadedDate().getTime(), d8);
+		aDatabaseVersionHeaders.put(d9.getUploadedDate().getTime(), d9);
+		aDatabaseVersionHeaders.put(d10.getUploadedDate().getTime(), d10);
+		
+		// Branch (B)
+		TreeMap<Long, DatabaseVersionHeader> bDatabaseVersionHeaders = new TreeMap<Long, DatabaseVersionHeader>();
+		//bDatabaseVersionHeaders.put(d1.getUploadedDate().getTime(), d1);
+		//bDatabaseVersionHeaders.put(d2.getUploadedDate().getTime(), d2);
+		//bDatabaseVersionHeaders.put(d3.getUploadedDate().getTime(), d3);
+		bDatabaseVersionHeaders.put(d7.getUploadedDate().getTime(), d7);		
+
+		// Branch (C)
+		TreeMap<Long, DatabaseVersionHeader> cDatabaseVersionHeaders = new TreeMap<Long, DatabaseVersionHeader>();
+		/*cDatabaseVersionHeaders.put(d1.getUploadedDate().getTime(), d1);
+		cDatabaseVersionHeaders.put(d2.getUploadedDate().getTime(), d2);
+		cDatabaseVersionHeaders.put(d3.getUploadedDate().getTime(), d3);
+		cDatabaseVersionHeaders.put(d5.getUploadedDate().getTime(), d5);	*/	
+		
+		System.out.println("A:"); printMap(aDatabaseVersionHeaders);
+		System.out.println("B:"); printMap(bDatabaseVersionHeaders);
+		System.out.println("C:"); printMap(cDatabaseVersionHeaders);
+		
+		// Compare from A's perspective
+		testFromAsPerspective(aDatabaseVersionHeaders, bDatabaseVersionHeaders, cDatabaseVersionHeaders);
+	}	
+	
 	private void printMap(Map<?, ?> someMap) {
 		for (Map.Entry<?, ?> entry : someMap.entrySet()) {
 			System.out.println("- "+entry.getKey()+": "+entry.getValue());
@@ -228,13 +307,12 @@ public class DatabaseVersionUpdateDetectorTest {
 		
 		localDatabaseVersionHeaders = aDatabaseVersionHeaders;
 		remoteDatabaseVersionHeaders.put("B", bDatabaseVersionHeaders);
-		remoteDatabaseVersionHeaders.put("C", cDatabaseVersionHeaders);
+		//remoteDatabaseVersionHeaders.put("C", cDatabaseVersionHeaders);
 		
 		DatabaseVersionUpdateDetector comp = new DatabaseVersionUpdateDetector();
-		DatabaseVersionHeader lastCommonHeader = comp.findLastCommonDatabaseVersionHeader(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);		
+		DatabaseVersionHeader lastCommonHeader = comp.findLastCommonDatabaseVersionHeader2(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);		
 		Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = comp.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, localMachineName, localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);
 		Map<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = comp.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingDatabaseVersionHeaders);
-				
 		System.out.println("lastCommonHeader = " +lastCommonHeader);		
 		System.out.println("firstConflictingVersion = "); printMap(firstConflictingDatabaseVersionHeaders);
 		System.out.println("winningFirstConflictingVersion = "); printMap(winningFirstConflictingDatabaseVersionHeaders);
