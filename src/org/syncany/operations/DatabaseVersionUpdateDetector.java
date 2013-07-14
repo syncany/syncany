@@ -1,6 +1,8 @@
 package org.syncany.operations;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -108,11 +110,12 @@ public class DatabaseVersionUpdateDetector {
 		return firstConflictingDatabaseVersionHeaders;
 	}
 	
-	public Map<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(Map<String, DatabaseVersionHeader> databaseVersionHeaders) {
+	public Map<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
 		// TODO this method curently does not catch the scenario in which two first winning conflict headers have the same timestamp, this could be baaad, though very unlikely
 		DatabaseVersionHeader winningFirstConflictingDatabaseVersionHeader = null;
 		
-		for (DatabaseVersionHeader databaseVersionHeader : databaseVersionHeaders.values()) {
+		// Compare all first conflicting ones and take the one with the EARLIEST timestamp
+		for (DatabaseVersionHeader databaseVersionHeader : firstConflictingDatabaseVersionHeaders.values()) {
 			if (winningFirstConflictingDatabaseVersionHeader == null) {
 				winningFirstConflictingDatabaseVersionHeader = databaseVersionHeader;
 			}
@@ -121,13 +124,43 @@ public class DatabaseVersionUpdateDetector {
 			}
 		}
 		
-		Map<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = new HashMap<String, DatabaseVersionHeader>();
+		// Find all first conflicting entries with the SAME timestamp as the EARLIEST one (= multiple winning entries possible)
+		Map<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 
-		for (Map.Entry<String, DatabaseVersionHeader> entry : databaseVersionHeaders.entrySet()) {
+		for (Map.Entry<String, DatabaseVersionHeader> entry : firstConflictingDatabaseVersionHeaders.entrySet()) {
 			if (winningFirstConflictingDatabaseVersionHeader.equals(entry.getValue())) {
 				winningFirstConflictingDatabaseVersionHeaders.put(entry.getKey(), entry.getValue());
 			}
 		}
+		
+		// If any, find entries that are GREATER than the winners (= successors)
+		// TODO ugly
+		List<String> removeWinners = new ArrayList<String>();
+		Map<String, DatabaseVersionHeader> addWinners = new TreeMap<String, DatabaseVersionHeader>();
+		
+		for (Map.Entry<String, DatabaseVersionHeader> winningEntry : winningFirstConflictingDatabaseVersionHeaders.entrySet()) {
+			for (Map.Entry<String, DatabaseVersionHeader> aFirstConflictingEntry : firstConflictingDatabaseVersionHeaders.entrySet()) {
+				DatabaseVersionHeader winningDatabaseVersionHeader = winningEntry.getValue();
+				DatabaseVersionHeader aFirstConflictingDatabaseVersionHeader = aFirstConflictingEntry.getValue();
+				
+				if (!winningDatabaseVersionHeader.equals(aFirstConflictingDatabaseVersionHeader)) {
+					VectorClockComparison aFirstConflictingDatabaseVersionHeaderIs = VectorClock.compare(aFirstConflictingDatabaseVersionHeader.getVectorClock(), winningDatabaseVersionHeader.getVectorClock());
+					
+					// We found a greater one. Remove the original winner, and add this entry!
+					if (aFirstConflictingDatabaseVersionHeaderIs == VectorClockComparison.GREATER) {
+						addWinners.put(aFirstConflictingEntry.getKey(), aFirstConflictingEntry.getValue());				
+						removeWinners.add(winningEntry.getKey());
+					}
+				}
+			}
+		}
+		
+		winningFirstConflictingDatabaseVersionHeaders.putAll(addWinners);
+
+		for (String removeWinnerKey : removeWinners) {
+			winningFirstConflictingDatabaseVersionHeaders.remove(removeWinnerKey);
+		}
+		
 		
 		return winningFirstConflictingDatabaseVersionHeaders;
 	}
