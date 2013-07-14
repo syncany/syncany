@@ -1,9 +1,7 @@
 package org.syncany.tests.database;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -13,29 +11,8 @@ import org.syncany.operations.DatabaseVersionUpdateDetector;
 import org.syncany.tests.util.TestDatabaseVersionUtil;
 
 /*
- * ALGORITHM B
- * ----------------------------------------------------------------------------------------------------
- * 
- *  Algorithm:
- *   - Determine last versions per client A B C
- *   - Determine if there are conflicts between last versions of client, if yes continue 
- *   - Determine last common versions between clients
- *   - Determine first conflicting versions between clients (= last common version + 1)
- *   - Compare first conflicting versions and determine winner
- *   - If one client has the winning first conflicting version, take this client's history as a winner
- *   - If more than 2 clients are based on the winning first conflicting version, compare their other versions
- *      + Iterate forward (from conflicting to newer!), and check for conflicts 
- *      + If a conflict is found, determine the winner and continue the branch of the winner
- *      + This must be done until the last (newest!) version of the winning branch is reached
- *      
- *  In short:
- *    1. Go back to the first conflict of all versions
- *    2. Determine winner of this conflict. Follow the winner(s) branch.
- *    3. If another conflict occurs, go to step 2.
- *   
- *  Issues:
- *   - When db-b-1 is not applied, it is re-downloaded every time by clients A and C
- *     until B uploads a consolidated version
+ * This test class uses tests one scenario using the DatabaseVersionUpdateDetector.
+ * The algorithm used is described in the respective class ('algorithm B').
  *  
  * ////////////////////////////////////////////////////////////////////////////////////////////////////
  * 
@@ -420,6 +397,9 @@ public class DatabaseVersionUpdateDetectorTest {
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A1,C4)/T=8"
 		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A3,C4)/T=10"
+		}).firstEntry();
 				
 		/// Perform test ///
 		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
@@ -461,6 +441,9 @@ public class DatabaseVersionUpdateDetectorTest {
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
 			"A", "C/(C4)/T=5"
 		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A3,C4)/T=10"
+		}).firstEntry();
 				
 		/// Perform test ///
 		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
@@ -507,12 +490,323 @@ public class DatabaseVersionUpdateDetectorTest {
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A1,C4)/T=8"
 		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A3,C4)/T=10"
+		}).firstEntry();
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
+	}			
+	
+	@Test
+	public void testUpdateDetectorConflict4AtMachineB() throws Exception {	
+		System.out.println("CONFLICT 4");
+		System.out.println("----------------");
+		
+		/// Input data ///
+		String localMachineName = "B";
+		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		
+		// A
+		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"A/(A4,C4)/T=11",
+			"A/(A5,C4)/T=12", // db-a-5
+			"A/(A6,C4)/T=19", // db-a-6
+		}));
+		
+		// B
+		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"C/(C4)/T=5",
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10",
+			"B/(A3,B2,C4)/T=16",
+			"B/(A3,B3,C4)/T=17",
+			"B/(A3,B4,C4)/T=18",
+			"B/(A3,B5,C4)/T=20",
+		}));
+		
+		// C
+		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(A3,C5)/T=13", // db-c-5
+			"C/(A3,C6)/T=14",
+			"C/(A3,C7)/T=15", // db-c-7
+			"C/(A3,C8)/T=21", // db-c-8
+		}));		
+
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseVersionUtil.createFromString("A/(A3,C4)/T=10");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4,C4)/T=11",
+			"B", "B/(A3,B2,C4)/T=16",
+			"C", "C/(A3,C5)/T=13"
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4,C4)/T=11"
+		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A6,C4)/T=19"
+		}).firstEntry();
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
+	}			
+	
+	@Test
+	public void testUpdateDetectorConflict5AtMachineA() throws Exception {	
+		System.out.println("CONFLICT 5");
+		System.out.println("----------------");
+		
+		/// Input data ///
+		String localMachineName = "A";
+		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		
+		// A
+		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"C/(C4)/T=5",
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10",
+			"A/(A4,C4)/T=11",
+			"A/(A5,C4)/T=12", 
+			"A/(A6,C4)/T=19", 
+		}));
+		
+		// B
+		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+			"B/(A3,B2,C4)/T=16",
+			"B/(A3,B3,C4)/T=17",
+			"B/(A3,B4,C4)/T=18", // db-b-4
+			"B/(A3,B5,C4)/T=20", // db-b-5
+		}));
+		
+		// C
+		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(A3,C5)/T=13", // db-c-5
+			"C/(A3,C6)/T=14",
+			"C/(A3,C7)/T=15", // db-c-7
+			"C/(A3,C8)/T=21", // db-c-8
+		}));		
+
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseVersionUtil.createFromString("A/(A3,C4)/T=10");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4,C4)/T=11",
+			"B", "B/(A3,B2,C4)/T=16",
+			"C", "C/(A3,C5)/T=13"
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4,C4)/T=11"
+		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A6,C4)/T=19"
+		}).firstEntry();		
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
+	}				
+	
+	@Test
+	public void testUpdateDetectorConflict6AtMachineC() throws Exception {	
+		System.out.println("CONFLICT 6");
+		System.out.println("----------------");
+		
+		/// Input data ///
+		String localMachineName = "C";
+		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		
+		// A
+		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"A/(A4,C4)/T=11",
+			"A/(A5,C4)/T=12", // db-a-5
+			"A/(A6,C4)/T=19", // db-a-6
+		}));
+		
+		// B
+		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+			"B/(A3,B2,C4)/T=16",
+			"B/(A3,B3,C4)/T=17",
+			"B/(A3,B4,C4)/T=18", // db-b-4
+			"B/(A3,B5,C4)/T=20", // db-b-5
+		}));
+		
+		// C
+		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"C/(C4)/T=5",
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10",				
+			"C/(A3,C5)/T=13", 
+			"C/(A3,C6)/T=14",
+			"C/(A3,C7)/T=15", 
+			"C/(A3,C8)/T=21", 
+		}));		
+
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseVersionUtil.createFromString("A/(A3,C4)/T=10");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4,C4)/T=11",
+			"B", "B/(A3,B2,C4)/T=16",
+			"C", "C/(A3,C5)/T=13"
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4,C4)/T=11"
+		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A6,C4)/T=19"
+		}).firstEntry();		
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
+	}				
+	
+	@Test
+	public void testUpdateDetectorConflict7AtMachineC() throws Exception {	
+		System.out.println("CONFLICT 7");
+		System.out.println("----------------");
+		
+		/// Input data ///
+		String localMachineName = "C";
+		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		
+		// B
+		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			// TODO Fix pruning of machine histories
+			// Explanation: Note, this is the full 'B' history, but it does not include
+			// the 'pruned' histories or invalid parts of pruned histories.
+			// Here: db-b-1 is completely invalid! In other cases, only parts of
+			// an old history might be invalid!
+				
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"C/(C4)/T=5",
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10",
+			"A/(A3,B2,C4)/T=16",
+			"A/(A3,B3,C4)/T=17",
+			"A/(A3,B4,C4)/T=18", // db-b-4
+			"A/(A3,B5,C4)/T=20", // db-b-5
+			"B/(A3,B6,C4)/T=23", // db-b-6			
+		}));
+		
+		// C
+		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"C/(C4)/T=5",
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10",	
+			"A/(A4,C4)/T=11",
+			"A/(A5,C4)/T=12", 
+			"A/(A6,C4)/T=19", 			
+			"C/(A6,C9)/T=22", 
+		}));		
+
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseVersionUtil.createFromString("A/(A3,C4)/T=10");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"B", "A/(A3,B2,C4)/T=16", 
+			"C", "A/(A4,C4)/T=11" 
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"C", "A/(A4,C4)/T=11" 
+		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"C", "C/(A6,C9)/T=22"
+		}).firstEntry();		
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
+	}				
+	
+	@Test
+	public void testWinnersWinner() throws Exception {	 // TODO Extract this from this class, not related to the scenario
+		System.out.println("Winners winner test");
+		System.out.println("----------------");
+		
+		/// Input data ///
+		String localMachineName = "B";
+		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		
+		// A
+		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"A/(A1,C4)/T=8",     // last common
+			"A/(A2,C4)/T=9",     // first conflicting, wins
+			
+			"A/(A3,C4)/T=10",    // same as in B
+			"A/(A4,C4)/T=11",    // second conflict, wins, winners winner
+			"A/(A5,C4)/T=15"     // <<---- WINNERS WINNERS LAST DBV 
+		}));
+		
+		// B
+		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",	
+			"A/(A1,C4)/T=8",     // last common
+			"A/(A2,C4)/T=9",     // first conflicting, wins
+			
+			"A/(A3,C4)/T=10",    // same as in A
+			"B/(A3,B1,C5)/T=12", // second conflict, loses = winners loser
+			"B/(A3,B2,C5)/T=14"		
+		}));
+		
+		// C
+		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+			"C/(C1)/T=1",
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",	
+			"A/(A1,C4)/T=8", // last common
+			
+			"C/(A1,C5)/T=9", // first conflicting, loses
+		}));		
+				
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseVersionUtil.createFromString("A/(A1,C4)/T=8");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A2,C4)/T=9",
+			"B", "A/(A2,C4)/T=9",
+			"C", "C/(A1,C5)/T=8"			
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A2,C4)/T=9",
+			"B", "A/(A2,C4)/T=9",
+		});		
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A5,C4)/T=15"
+		}).firstEntry();
 				
 		/// Perform test ///
 		testFromMachinePerspective(localMachineName, allDatabaseVersionHeaders, expectedTestResult);
 	}			
 
-	private void testFromMachinePerspective(String localMachineName, TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders, TestResult expectedTestResult) {
+	private void testFromMachinePerspective(String localMachineName, TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders, TestResult expectedTestResult) throws Exception {
 		// Print them all
 		System.out.println("testFromMachinePerspective('"+localMachineName+"') with database version headers:");
 		
@@ -536,6 +830,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		actualTestResult.lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);		
 		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, localMachineName, localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);
 		actualTestResult.winningFirstConflictingDatabaseVersionHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(actualTestResult.firstConflictingDatabaseVersionHeaders);
+		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, allDatabaseVersionHeaders);
 		
 		System.out.println("Actual lastCommonDatabaseVersionHeader = " +actualTestResult.lastCommonHeader);
 		System.out.println("Expect lastCommonDatabaseVersionHeader = " +expectedTestResult.lastCommonHeader);
@@ -546,9 +841,13 @@ public class DatabaseVersionUpdateDetectorTest {
 		System.out.println("Actual winningFirstConflictingDatabaseVersionHeaders = "); printMap(actualTestResult.winningFirstConflictingDatabaseVersionHeaders);
 		System.out.println("Expect winningFirstConflictingDatabaseVersionHeaders = "); printMap(expectedTestResult.winningFirstConflictingDatabaseVersionHeaders);
 		
+		System.out.println("Actual winnersWinnersLastDatabaseVersionHeader = " + actualTestResult.winnersWinnersLastDatabaseVersionHeader);
+		System.out.println("Expect winnersWinnersLastDatabaseVersionHeader = " + expectedTestResult.winnersWinnersLastDatabaseVersionHeader);
+
 		assertEquals("Different last common database version header expected", expectedTestResult.lastCommonHeader, actualTestResult.lastCommonHeader);
 		assertEquals("Different first conflicting versions expected", expectedTestResult.firstConflictingDatabaseVersionHeaders, actualTestResult.firstConflictingDatabaseVersionHeaders);
 		assertEquals("Different winning first conflicting versions expected", expectedTestResult.winningFirstConflictingDatabaseVersionHeaders, actualTestResult.winningFirstConflictingDatabaseVersionHeaders);
+		assertEquals("Different winners winners last version expected", expectedTestResult.winnersWinnersLastDatabaseVersionHeader, actualTestResult.winnersWinnersLastDatabaseVersionHeader);
 	}
 
 	private void printMap(Map<?, ?> someMap) {
@@ -559,8 +858,8 @@ public class DatabaseVersionUpdateDetectorTest {
 	
 	private class TestResult {
 		DatabaseVersionHeader lastCommonHeader;		
-		Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders;
-		Map<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders;
-	
+		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders;
+		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders;
+		Map.Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader;	
 	}
 }

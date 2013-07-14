@@ -1,5 +1,6 @@
 package org.syncany.operations;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,42 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
+/*
+ * This class implements various parts of the sync down algorithm. Test scenarios are available
+ * in the DatabaseVersionUpdateDetectorTest class.
+ * 
+ * ALGORITHM B
+ * ----------------------------------------------------------------------------------------------------
+ * 
+ *  Algorithm:
+ *   - Determine last versions per client A B C
+ *   - Determine if there are conflicts between last versions of client, if yes continue 
+ *   - Determine last common versions between clients
+ *   - Determine first conflicting versions between clients (= last common version + 1)
+ *   - Compare first conflicting versions and determine winner
+ *
+ *   - TODO TALK ABOUT THE NEXT PARTS
+ *   
+ *   - If one client has the winning first conflicting version, take this client's history as a winner
+ *   - If more than 2 clients are based on the winning first conflicting version, compare their other versions
+ *      + Iterate forward (from conflicting to newer!), and check for conflicts 
+ *      + If a conflict is found, determine the winner and continue the branch of the winner
+ *      + This must be done until the last (newest!) version of the winning branch is reached
+ *    - If the local machine loses (= winning first conflicting database version is NOT from the local machine)
+ *      AND there is a first conflicting database version from the local machine (and possibly more database versions),
+ *       (1) these database versions must be pruned/deleted from the local database
+ *       (2) and these database versions must be merged somehow in the last winning database version 
+ *    - TODO Make an algorithm that constructs the new local history
+ *     
+ *  In short:
+ *    1. Go back to the first conflict of all versions
+ *    2. Determine winner of this conflict. Follow the winner(s) branch.
+ *    3. If another conflict occurs, go to step 2.
+ *   
+ *  Issues:
+ *   - When db-b-1 is not applied, it is re-downloaded every time by clients A and C
+ *     until B uploads a consolidated version
+ */
 public class DatabaseVersionUpdateDetector {
 	private static final Logger logger = Logger.getLogger(DatabaseVersionUpdateDetector.class.getSimpleName());
 	
@@ -73,8 +110,8 @@ public class DatabaseVersionUpdateDetector {
 		return true;
 	}
 
-	public Map<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName, TreeMap<Long,DatabaseVersionHeader> localDatabaseVersionHeaders, Map<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
-		Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new HashMap<String, DatabaseVersionHeader>();
+	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName, TreeMap<Long,DatabaseVersionHeader> localDatabaseVersionHeaders, Map<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
+		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 		
 		boolean next = false;
 		for (DatabaseVersionHeader databaseVersionHeader : localDatabaseVersionHeaders.values()) {
@@ -110,7 +147,7 @@ public class DatabaseVersionUpdateDetector {
 		return firstConflictingDatabaseVersionHeaders;
 	}
 	
-	public Map<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(Map<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
+	public TreeMap<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
 		// TODO this method curently does not catch the scenario in which two first winning conflict headers have the same timestamp, this could be baaad, though very unlikely
 		DatabaseVersionHeader winningFirstConflictingDatabaseVersionHeader = null;
 		
@@ -125,7 +162,7 @@ public class DatabaseVersionUpdateDetector {
 		}
 		
 		// Find all first conflicting entries with the SAME timestamp as the EARLIEST one (= multiple winning entries possible)
-		Map<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
+		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 
 		for (Map.Entry<String, DatabaseVersionHeader> entry : firstConflictingDatabaseVersionHeaders.entrySet()) {
 			if (winningFirstConflictingDatabaseVersionHeader.equals(entry.getValue())) {
@@ -136,7 +173,7 @@ public class DatabaseVersionUpdateDetector {
 		// If any, find entries that are GREATER than the winners (= successors)
 		// TODO ugly
 		List<String> removeWinners = new ArrayList<String>();
-		Map<String, DatabaseVersionHeader> addWinners = new TreeMap<String, DatabaseVersionHeader>();
+		TreeMap<String, DatabaseVersionHeader> addWinners = new TreeMap<String, DatabaseVersionHeader>();
 		
 		for (Map.Entry<String, DatabaseVersionHeader> winningEntry : winningFirstConflictingDatabaseVersionHeaders.entrySet()) {
 			for (Map.Entry<String, DatabaseVersionHeader> aFirstConflictingEntry : firstConflictingDatabaseVersionHeaders.entrySet()) {
@@ -162,7 +199,107 @@ public class DatabaseVersionUpdateDetector {
 		}
 		
 		
-		return winningFirstConflictingDatabaseVersionHeaders;
+		return winningFirstConflictingDatabaseVersionHeaders; 
+	}
+
+	public Map.Entry<String, DatabaseVersionHeader> findWinnersWinnersLastDatabaseVersionHeader(TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders,
+			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders) throws Exception {
+		
+		if (winningFirstConflictingDatabaseVersionHeaders.size() == 1) {
+			String winningMachineName = winningFirstConflictingDatabaseVersionHeaders.firstKey();
+			DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.get(winningMachineName).lastEntry().getValue();
+						
+			return new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(winningMachineName, winnersWinnersLastDatabaseVersionHeader);
+		}
+		
+		// Algorithm:
+		// Iterate over all machines' branches forward, find conflicts and decide who wins
+		
+		// 1. Find winners winners positions in branch		
+		Map<String, Long> machineBranchPositionIterator = new HashMap<String, Long>();
+		
+		for (String machineName : winningFirstConflictingDatabaseVersionHeaders.keySet()) {
+			DatabaseVersionHeader machineWinnersWinner = winningFirstConflictingDatabaseVersionHeaders.get(machineName);
+			TreeMap<Long, DatabaseVersionHeader> machineDatabaseVersionHeaders = allDatabaseVersionHeaders.get(machineName);
+			
+	        for (Map.Entry<Long, DatabaseVersionHeader> e = machineDatabaseVersionHeaders.firstEntry(); e != null; e = machineDatabaseVersionHeaders.higherEntry(e.getKey())) {
+	           if (machineWinnersWinner.equals(e.getValue())) {
+	        	   machineBranchPositionIterator.put(machineName, e.getKey());
+	        	   break;
+	           }
+	        }
+		}
+		
+		// 2. Compare all, go forward if all are identical
+		int machineInRaceCount = winningFirstConflictingDatabaseVersionHeaders.size();
+		
+		while (machineInRaceCount > 1) {
+			String currentComparisonMachineName = null;
+			DatabaseVersionHeader currentComparisonDatabaseVersionHeader = null;
+			
+			for (Map.Entry<String, Long> machineBranchPosition : machineBranchPositionIterator.entrySet()) {
+				String machineName = machineBranchPosition.getKey();
+				TreeMap<Long, DatabaseVersionHeader> machineDatabaseVersionHeaders = allDatabaseVersionHeaders.get(machineName);
+				Long machinePosition = machineBranchPosition.getValue();
+				
+				if (machinePosition == null) {
+					continue;
+				}
+				
+				DatabaseVersionHeader currentMachineDatabaseVersionHeader = machineDatabaseVersionHeaders.get(machinePosition);
+				
+				if (currentComparisonDatabaseVersionHeader == null) {
+					currentComparisonMachineName = machineName;
+					currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
+				}
+				else {
+					VectorClockComparison comparison = VectorClock.compare(currentComparisonDatabaseVersionHeader.getVectorClock(), currentMachineDatabaseVersionHeader.getVectorClock());
+					
+					if (comparison != VectorClockComparison.EQUAL) {
+						if (currentComparisonDatabaseVersionHeader.getUploadedDate().before(currentMachineDatabaseVersionHeader.getUploadedDate())) {
+							// Eliminate machine in current loop
+							
+							machineBranchPositionIterator.put(machineName, null);
+							machineInRaceCount--;
+						}
+						else if (currentMachineDatabaseVersionHeader.getUploadedDate().before(currentComparisonDatabaseVersionHeader.getUploadedDate())) {
+							// Eliminate comparison machine 
+							
+							machineBranchPositionIterator.put(currentComparisonMachineName, null);
+							machineInRaceCount--;
+							
+							currentComparisonMachineName = machineName;
+							currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
+						}
+						else {
+							throw new Exception("This should not happen."); // FIXME
+						}
+					}
+				}
+			}
+			
+			if (machineInRaceCount > 1) {
+				for (String machineName : machineBranchPositionIterator.keySet()) {
+					Long machineCurrentKey = machineBranchPositionIterator.get(machineName);
+					
+					if (machineCurrentKey != null) {
+						Long machineHigherKey = allDatabaseVersionHeaders.get(machineName).higherKey(machineCurrentKey);
+						machineBranchPositionIterator.put(machineName, machineHigherKey);
+					}
+				}
+			}
+		}
+		
+		for (String machineName : machineBranchPositionIterator.keySet()) {
+			Long machineCurrentKey = machineBranchPositionIterator.get(machineName);
+			
+			if (machineCurrentKey != null) {
+				DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.get(machineName).lastEntry().getValue();
+				return new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(machineName, winnersWinnersLastDatabaseVersionHeader);
+			}
+		}
+		
+		return null;
 	}
 	
 }
