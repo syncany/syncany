@@ -46,10 +46,12 @@ public class DatabaseVersionHeader {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((uploaded == null) ? 0 : uploaded.hashCode());
+		result = prime * result + ((uploadedByClient == null) ? 0 : uploadedByClient.hashCode());
 		result = prime * result + ((vectorClock == null) ? 0 : vectorClock.hashCode());
 		return result;
 	}
-
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -59,6 +61,16 @@ public class DatabaseVersionHeader {
 		if (getClass() != obj.getClass())
 			return false;
 		DatabaseVersionHeader other = (DatabaseVersionHeader) obj;
+		if (uploaded == null) {
+			if (other.uploaded != null)
+				return false;
+		} else if (!uploaded.equals(other.uploaded))
+			return false;
+		if (uploadedByClient == null) {
+			if (other.uploadedByClient != null)
+				return false;
+		} else if (!uploadedByClient.equals(other.uploadedByClient))
+			return false;
 		if (vectorClock == null) {
 			if (other.vectorClock != null)
 				return false;
@@ -66,7 +78,7 @@ public class DatabaseVersionHeader {
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
