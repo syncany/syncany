@@ -42,6 +42,10 @@ public class Database {
 	}
 	
 	public DatabaseVersion getLastDatabaseVersion() {
+		if (allDatabaseVersions.size() == 0) {
+			return null;
+		}
+		
 		return allDatabaseVersions.lastEntry().getValue();
 	}
 
