@@ -13,22 +13,6 @@ public class TestDatabaseVersionUtil {
 	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=(\\d+)");
 	private static Pattern vectorClockElementPattern = Pattern.compile("([^\\d]+)(\\d+)");
 	
-	public static void main(String[] args) throws Exception {
-		String[] databaseVersionHeaderStrings = new String[] {
-			"C/(C1)/T=1",
-			"C/(C2)/T=2",
-			"C/(C3)/T=3",
-			"C/(C4)/T=4",
-			"A/(A1,C4)/T=8",
-			"A/(A2,C4)/T=9",
-			"A/(A3,C4)/T=10"				
-		};
-		
-		for (String databaseVersionHeaderString : databaseVersionHeaderStrings) {
-			System.out.println("From: "+databaseVersionHeaderString+" --> To: "+createFromString(databaseVersionHeaderString));
-		}
-	}
-	
 	public static DatabaseVersionHeader createFromString(String databaseVersionHeaderString) throws Exception {
 		Matcher databaseVersionHeaderMatcher = databaseVersionHeaderPattern.matcher(databaseVersionHeaderString);
 		

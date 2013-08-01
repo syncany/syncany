@@ -18,7 +18,7 @@ abstract public class DatabaseFile {
 	}
 	
 	public DatabaseFile(String fileName, Pattern namePattern) {
-		this.fileName = file.getName();
+		this.fileName = fileName;
 		validateDatabaseFileName(namePattern);
 	}
 

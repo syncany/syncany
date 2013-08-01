@@ -13,8 +13,8 @@ import org.syncany.tests.database.DatabaseWriteReadIndividualObjectsTest;
 import org.syncany.tests.database.DatabaseWriteReadRandomCombinationTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
-import org.syncany.tests.operations.SyncDownOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
+import org.syncany.tests.scenarios.EvilCScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -38,7 +38,9 @@ import org.syncany.tests.operations.SyncUpOperationTest;
 	// Operations
 	IndexerTest.class,
 	SyncUpOperationTest.class,
-	SyncDownOperationTest.class
+	
+	// Scenarios
+	EvilCScenarioTest.class
 })
 public class AllTestsSuite {
 	// This class executes all tests

@@ -13,26 +13,38 @@ import org.syncany.connection.plugins.local.LocalConnection;
 
 public class TestConfigUtil {
 	public static Config createTestLocalConfig() throws Exception {
-		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		File tempAppDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		File tempAppCacheDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		File tempAppDatabaseDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		return createTestLocalConfig("syncanyclient");
+	}
+	
+	public static Config createTestLocalConfig(String machineName) throws Exception {
+		return createTestLocalConfig(machineName, createTestLocalConnection());
+	}
+	
+	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
+		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp("syncanyclient-"+machineName);
+		File tempLocalDir = new File(tempClientDir+"/local");
+		File tempAppDir = new File(tempClientDir+"/app");
+		File tempAppCacheDir =new File(tempClientDir+"/cache");
+		File tempAppDatabaseDir = new File(tempClientDir+"/db");
+		
+		tempLocalDir.mkdirs();
+		tempAppDir.mkdirs();
+		tempAppCacheDir.mkdirs();
+		tempAppDatabaseDir.mkdirs();
 		
 		Config config = new Config("Password");
-		config.setMachineName("MachineName"+Math.abs(new Random().nextInt()));
+		config.setMachineName(machineName+Math.abs(new Random().nextInt()));
 		config.setAppDir(tempAppDir);
 		config.setAppCacheDir(tempAppCacheDir);
 		config.setAppDatabaseDir(tempAppDatabaseDir);
-		config.setLocalDir(tempLocalDir);
-		
-		Connection conn = createTestLocalConnection();		
-		config.setConnection(conn);
+		config.setLocalDir(tempLocalDir);			
+		config.setConnection(connection);
 
 		return config;		
 	}
 	
 	public static Connection createTestLocalConnection() throws Exception {
-		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp("syncanyrepo");
 
 		Plugin plugin = Plugins.get("local");
 		

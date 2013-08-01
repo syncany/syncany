@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,7 +50,12 @@ public class SyncDownOperation extends Operation {
 		// 3. Read version headers (vector clocks)
 		List<DatabaseVersionHeader> unknownDatabaseVersionHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		
-		detectUpdates(unknownDatabaseVersionHeaders);
+
+		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		// TODO implement this: compare DatabaseVersionUpdateDetectorTest
+		
+		
+		//detectUpdates(unknownDatabaseVersionHeaders);
 		// 3. read the remote databases
 		// 4. compare the remote databases based on the file histories contained in them and figure out the winning file histories
 		//detectUpdates(db, unknownRemoteDatabasesInCache);
@@ -59,7 +65,7 @@ public class SyncDownOperation extends Operation {
 		//
 		//db.getLastDatabaseVersion().getVectorClock();
 		
-		throw new Exception("Not yet fully implemented.");
+		//throw new Exception("Not yet fully implemented.");
 		//return false;
 	}	
 
@@ -152,7 +158,7 @@ public class SyncDownOperation extends Operation {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
 			
 			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
-			dbDAO.load(remoteDatabase, rdf);			
+			dbDAO.load(remoteDatabase, rdf);		// FIXME This is very, very, very inefficient, DB is loaded and then discarded	
 			Map<Long, DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
@@ -170,32 +176,41 @@ public class SyncDownOperation extends Operation {
 		List<RemoteFile> unknownRemoteDatabasesList = new ArrayList<RemoteFile>();
 
 		Map<String, RemoteFile> remoteDatabaseFiles = transferManager.list("db-");
-		VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
 		
-		for (RemoteFile remoteFile : remoteDatabaseFiles.values()) {
-			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteFile.getName());
-			
-			String clientName = remoteDatabaseFile.getClientName();
-			Long knownClientVersion = knownDatabaseVersions.get(clientName);
-					
-			if (knownClientVersion != null) {
-				if (remoteDatabaseFile.getClientVersion() > knownClientVersion) {
-					logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
-					unknownRemoteDatabasesList.add(remoteFile);
-				}
-				else {
-					logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteFile.getName());
-					// Do nothing. We know this database.
-				}
-			}
-			
-			else {
-				logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
-				unknownRemoteDatabasesList.add(remoteFile);
-			}				
+		// No local database yet
+		if (db.getLastDatabaseVersion() == null) {
+			return new ArrayList<RemoteFile>(remoteDatabaseFiles.values());
 		}
 		
-		return unknownRemoteDatabasesList;
+		// At least one local database version exists
+		else {
+			VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
+			
+			for (RemoteFile remoteFile : remoteDatabaseFiles.values()) {
+				RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteFile.getName());
+				
+				String clientName = remoteDatabaseFile.getClientName();
+				Long knownClientVersion = knownDatabaseVersions.get(clientName);
+						
+				if (knownClientVersion != null) {
+					if (remoteDatabaseFile.getClientVersion() > knownClientVersion) {
+						logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
+						unknownRemoteDatabasesList.add(remoteFile);
+					}
+					else {
+						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteFile.getName());
+						// Do nothing. We know this database.
+					}
+				}
+				
+				else {
+					logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
+					unknownRemoteDatabasesList.add(remoteFile);
+				}				
+			}
+			
+			return unknownRemoteDatabasesList;			
+		}
 	}
 	
 	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<RemoteFile> unknownRemoteDatabases) throws StorageException {

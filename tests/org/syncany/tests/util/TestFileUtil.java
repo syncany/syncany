@@ -73,7 +73,11 @@ public class TestFileUtil {
 	}
 	
 	public static File createTempDirectoryInSystemTemp() throws Exception {
-		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir")+"/syncanytest-"+Math.abs(Math.random()));
+		return createTempDirectoryInSystemTemp("syncanytest");
+	}
+	
+	public static File createTempDirectoryInSystemTemp(String prefix) throws Exception {
+		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir")+"/"+prefix+"-"+Math.abs(Math.random()));
 		
 		if (!tempDirectoryInSystemTemp.mkdir()) {
 			throw new Exception("Cannot create temp. directory "+tempDirectoryInSystemTemp);
@@ -120,7 +124,7 @@ public class TestFileUtil {
 		RandomAccessFile raf = new RandomAccessFile(path, "rw");
 		
 		for(int i = 0; i < cycles; i++){
-			long pos = (rnd.nextLong() % maxPositions) * minSizeOfBlock;
+			long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
 			raf.seek(pos);
 			byte[] arr = createRandomArray(minSizeOfBlock);
 			raf.write(arr);
@@ -128,7 +132,7 @@ public class TestFileUtil {
 		
 		// write last one
 		byte[] arr = createRandomArray((int)(percentagedSize % minSizeOfBlock));
-		long pos = (rnd.nextLong() % maxPositions) * minSizeOfBlock;
+		long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
 		raf.seek(pos);
 		raf.write(arr);
 		

@@ -30,7 +30,7 @@ import org.syncany.util.StringUtil;
 public class Cache {
 	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-encrypted-%s";
     private static String FILE_FORMAT_CHUNK_DECRYPTED = "chunk-decrypted-%s";
-    private static String FILE_FORMAT_DATABASE_FILE_ENCRYPTED = "db-encrypted-%s";
+    private static String FILE_FORMAT_DATABASE_FILE_ENCRYPTED = "%s";
 
     private File cacheDir;
     
