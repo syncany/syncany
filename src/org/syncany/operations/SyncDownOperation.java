@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -18,6 +19,8 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.database.Branch;
+import org.syncany.database.Branches;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
@@ -48,10 +51,26 @@ public class SyncDownOperation extends Operation {
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 		
 		// 3. Read version headers (vector clocks)
-		List<DatabaseVersionHeader> unknownDatabaseVersionHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
+		Branches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		
 
 		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		
+		Branch localBranch = db.getBranch();		
+		Branches fullRemoteBranches = databaseVersionUpdateDetector.fillRemoteBranches(localBranch, unknownRemoteBranches);
+		Branches allBranches = fullRemoteBranches.clone();
+		allBranches.add(profile.getMachineName(), localBranch);
+		
+		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, fullRemoteBranches);
+		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, profile.getMachineName(), localBranch, fullRemoteBranches);
+		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);
+		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allBranches);
+		
+		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
+		Branch winnersBranch = allBranches.getBranch(winnersName);
+		
+		logger.log(Level.INFO, "Sync down compared: "+allBranches);
+		logger.log(Level.INFO, "Sync down winner is "+winnersName+" with: "+winnersBranch);
 		// TODO implement this: compare DatabaseVersionUpdateDetectorTest
 		
 		
@@ -149,9 +168,12 @@ public class SyncDownOperation extends Operation {
 	}
 	
 
-	private List<DatabaseVersionHeader> readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
-		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
-						
+	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
+		// Sort files (db-a-1 must be before db-a-2 !)
+		Collections.sort(remoteDatabases);
+		
+		// Read database files
+		Branches unknownRemoteBranches = new Branches();
 		DatabaseDAO dbDAO = new DatabaseDAO();
 		
 		for (File remoteDatabaseInCache : remoteDatabases) {
@@ -161,13 +183,16 @@ public class SyncDownOperation extends Operation {
 			dbDAO.load(remoteDatabase, rdf);		// FIXME This is very, very, very inefficient, DB is loaded and then discarded	
 			Map<Long, DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
+			// Pupulate branches
+			Branch remoteClientBranch = unknownRemoteBranches.getBranch(rdf.getClientName(), true);
+			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
-				databaseVersionHeaders.add(header);
+				remoteClientBranch.add(header);
 			}
 		}
 		
-		return databaseVersionHeaders;
+		return unknownRemoteBranches;
 	}
 
 	private List<RemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager) throws StorageException {

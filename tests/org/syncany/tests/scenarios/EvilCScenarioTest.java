@@ -35,7 +35,7 @@ public class EvilCScenarioTest {
 		clientA.createNewFile("newA2");
 		clientA.up();
 		clientA.moveFile("newA1", "newMovedA3");
-		clientA.updateFile("newMovedA3");
+		clientA.changeFile("newMovedA3");
 		clientA.up();
 		
 		clientB.down();

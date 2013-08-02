@@ -32,7 +32,7 @@ public class TestClient extends Client {
 		}
 	}	
 
-	public void updateFile(String name) throws IOException {
+	public void changeFile(String name) throws IOException {
 		TestFileUtil.changeRandomPartOfBinaryFile(toLocalFile(name), 0.5, 1*1024);		
 	}	
 	

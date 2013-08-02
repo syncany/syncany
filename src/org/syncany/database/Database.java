@@ -77,6 +77,16 @@ public class Database {
 		return fullDatabaseVersion.getFileHistory(fileId); 
 	}
 	
+	public Branch getBranch() {
+		Branch branch = new Branch();
+		
+		for (DatabaseVersion databaseVersion : allDatabaseVersions.values()) {
+			branch.add(databaseVersion.getHeader());
+		}
+		
+		return branch;
+	}
+	
 	public void addDatabaseVersion(DatabaseVersion dbv) {	
 		// TODO This should figure out the last local version from the vector clock
 		// TODO Should the local version be identified by an empty string in the vector clock?

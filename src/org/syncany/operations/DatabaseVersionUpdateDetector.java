@@ -9,8 +9,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import org.syncany.database.Branch;
+import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
+import org.syncany.database.Branch.BranchIterator;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
 /*
@@ -52,6 +55,7 @@ import org.syncany.database.VectorClock.VectorClockComparison;
 public class DatabaseVersionUpdateDetector {
 	private static final Logger logger = Logger.getLogger(DatabaseVersionUpdateDetector.class.getSimpleName());
 
+	@Deprecated
 	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,
 			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
 		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;
@@ -68,7 +72,47 @@ public class DatabaseVersionUpdateDetector {
 
 		return lastCommonDatabaseVersionHeader;
 	}
+	
+	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(Branch localBranch, Branches remoteBranches) {
+		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;
+		
+		for (BranchIterator localBranchIterator = localBranch.iteratorLast(); localBranchIterator.hasPrevious(); ) {
+			DatabaseVersionHeader currentLocalDatabaseVersionHeader = localBranchIterator.previous();
+			VectorClock currentVectorClock = currentLocalDatabaseVersionHeader.getVectorClock();
 
+			if (isKeyInAllRemoteDatabasesGreaterOrEqual(currentVectorClock, remoteBranches)) {
+				lastCommonDatabaseVersionHeader = currentLocalDatabaseVersionHeader;
+			}
+		}
+
+		return lastCommonDatabaseVersionHeader;
+	}	
+	
+	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock, Branches remoteDatabaseVersionHeaders) {
+		Set<String> remoteClients = remoteDatabaseVersionHeaders.getClients();
+		Map<String, Boolean> foundInClientMatrix = initializeFoundInClientMatrix(remoteClients);
+
+		for (String currentRemoteClient : remoteClients) {
+			Branch remoteBranch = remoteDatabaseVersionHeaders.getBranch(currentRemoteClient);
+
+			for (DatabaseVersionHeader remoteDatabaseVersionHeader : remoteBranch.getAll()) {
+				VectorClock remoteVectorClock = remoteDatabaseVersionHeader.getVectorClock();
+				VectorClockComparison result = VectorClock.compare(remoteVectorClock, currentVectorClock);
+				if (result == VectorClockComparison.GREATER || result == VectorClockComparison.EQUAL) {
+					foundInClientMatrix.put(currentRemoteClient, true);
+					break;
+				}
+			}
+
+			if (foundInClientMatrix.get(currentRemoteClient) == false) {
+				return false;
+			}
+		}
+
+		return isFoundInClientMatrixFullyTrue(foundInClientMatrix);
+	}	
+
+	@Deprecated
 	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock,
 			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
 		Set<String> clients = remoteDatabaseVersionHeaders.keySet();
@@ -112,6 +156,42 @@ public class DatabaseVersionUpdateDetector {
 		return true;
 	}
 
+	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName,
+			Branch localDatabaseVersionHeaders, Branches remoteDatabaseVersionHeaders) {
+		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
+
+		boolean next = false;
+		for (DatabaseVersionHeader databaseVersionHeader : localDatabaseVersionHeaders.getAll()) {
+			if (next) {
+				firstConflictingDatabaseVersionHeaders.put(localName, databaseVersionHeader);
+				break;
+			} else if (databaseVersionHeader.equals(lastCommonHeader)) {
+				next = true;
+			}
+		}
+
+		for (String remoteMachineName : remoteDatabaseVersionHeaders.getClients()) {
+			Branch remoteBranch = remoteDatabaseVersionHeaders.getBranch(remoteMachineName);
+
+			boolean next2 = false;
+			for (DatabaseVersionHeader databaseVersionHeader : remoteBranch.getAll()) {
+				if (next2) {
+					firstConflictingDatabaseVersionHeaders.put(remoteMachineName, databaseVersionHeader);
+					break;
+				} else if (databaseVersionHeader.equals(lastCommonHeader)) {
+					next2 = true;
+				}
+			}
+
+			if (next2 == false) { // Nothing found. Add first as conflict
+				firstConflictingDatabaseVersionHeaders.put(remoteMachineName, remoteBranch.getFirst());
+			}
+		}
+
+		return firstConflictingDatabaseVersionHeaders;
+	}
+
+	@Deprecated
 	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName,
 			TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,
 			Map<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
@@ -209,6 +289,109 @@ public class DatabaseVersionUpdateDetector {
 		return winningFirstConflictingDatabaseVersionHeaders;
 	}
 
+	public Map.Entry<String, DatabaseVersionHeader> findWinnersWinnersLastDatabaseVersionHeader(
+			TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders,
+			Branches allDatabaseVersionHeaders) throws Exception {
+
+		if (winningFirstConflictingDatabaseVersionHeaders.size() == 1) {
+			String winningMachineName = winningFirstConflictingDatabaseVersionHeaders.firstKey();
+			DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.getBranch(winningMachineName).getLast();
+
+			return new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(winningMachineName, winnersWinnersLastDatabaseVersionHeader);
+		}
+
+		// Algorithm:
+		// Iterate over all machines' branches forward, find conflicts and
+		// decide who wins
+
+		// 1. Find winners winners positions in branch
+		Map<String, Integer> machineBranchPositionIterator = new HashMap<String, Integer>();
+
+		for (String machineName : winningFirstConflictingDatabaseVersionHeaders.keySet()) {
+			DatabaseVersionHeader machineWinnersWinner = winningFirstConflictingDatabaseVersionHeaders.get(machineName);
+			Branch machineBranch = allDatabaseVersionHeaders.getBranch(machineName);
+
+			for (int i=0; i<machineBranch.size(); i++) {
+				DatabaseVersionHeader machineDatabaseVersionHeader = machineBranch.get(i);
+				
+				if (machineWinnersWinner.equals(machineDatabaseVersionHeader)) {
+					machineBranchPositionIterator.put(machineName, i);
+					break;
+				}
+			}
+		}
+
+		// 2. Compare all, go forward if all are identical
+		int machineInRaceCount = winningFirstConflictingDatabaseVersionHeaders.size();
+
+		while (machineInRaceCount > 1) {
+			String currentComparisonMachineName = null;
+			DatabaseVersionHeader currentComparisonDatabaseVersionHeader = null;
+
+			for (Map.Entry<String, Integer> machineBranchPosition : machineBranchPositionIterator.entrySet()) {
+				String machineName = machineBranchPosition.getKey();
+				Branch machineDatabaseVersionHeaders = allDatabaseVersionHeaders.getBranch(machineName);
+				Integer machinePosition = machineBranchPosition.getValue();
+
+				if (machinePosition == null) {
+					continue;
+				}
+
+				DatabaseVersionHeader currentMachineDatabaseVersionHeader = machineDatabaseVersionHeaders.get(machinePosition);
+
+				if (currentComparisonDatabaseVersionHeader == null) {
+					currentComparisonMachineName = machineName;
+					currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
+				} else {
+					VectorClockComparison comparison = VectorClock.compare(currentComparisonDatabaseVersionHeader.getVectorClock(),
+							currentMachineDatabaseVersionHeader.getVectorClock());
+
+					if (comparison != VectorClockComparison.EQUAL) {
+						if (currentComparisonDatabaseVersionHeader.getUploadedDate().before(currentMachineDatabaseVersionHeader.getUploadedDate())) {
+							// Eliminate machine in current loop
+
+							machineBranchPositionIterator.put(machineName, null);
+							machineInRaceCount--;
+						} else if (currentMachineDatabaseVersionHeader.getUploadedDate().before(
+								currentComparisonDatabaseVersionHeader.getUploadedDate())) {
+							// Eliminate comparison machine
+
+							machineBranchPositionIterator.put(currentComparisonMachineName, null);
+							machineInRaceCount--;
+
+							currentComparisonMachineName = machineName;
+							currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
+						} else {
+							throw new Exception("This should not happen."); // FIXME
+						}
+					}
+				}
+			}
+
+			if (machineInRaceCount > 1) {
+				for (String machineName : machineBranchPositionIterator.keySet()) {
+					Integer machineCurrentKey = machineBranchPositionIterator.get(machineName);
+
+					if (machineCurrentKey != null) {
+						machineBranchPositionIterator.put(machineName, machineCurrentKey+1);
+					}
+				}
+			}
+		}
+
+		for (String machineName : machineBranchPositionIterator.keySet()) {
+			Integer machineCurrentKey = machineBranchPositionIterator.get(machineName);
+
+			if (machineCurrentKey != null) {
+				DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.getBranch(machineName).getLast();
+				return new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(machineName, winnersWinnersLastDatabaseVersionHeader);
+			}
+		}
+
+		return null;
+	}
+	
+	@Deprecated
 	public Map.Entry<String, DatabaseVersionHeader> findWinnersWinnersLastDatabaseVersionHeader(
 			TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders,
 			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders) throws Exception {
@@ -311,6 +494,36 @@ public class DatabaseVersionUpdateDetector {
 		return null;
 	}
 
+	public Branches fillRemoteBranches(Branch localBranch, Branches remoteBranches) {
+		Branches filledRemoteBranches = new Branches();
+
+		for (String remoteClientName : remoteBranches.getClients()) {
+			Branch remoteBranch = remoteBranches.getBranch(remoteClientName);
+			Branch filledRemoteBranch = filledRemoteBranches.getBranch(remoteClientName, true);
+			
+			DatabaseVersionHeader firstRemoteDatabaseVersionHeader = remoteBranch.getFirst();
+			if (firstRemoteDatabaseVersionHeader == null) {
+				// Client in sync with local; why we have him listed as remote
+				// new dbv?
+				throw new RuntimeException("Client " + remoteClientName + " listed without any new DBV.");
+			}
+
+			VectorClock firstRemoteVectorClock = firstRemoteDatabaseVersionHeader.getVectorClock();
+
+			for (DatabaseVersionHeader localDatabaseVersion : localBranch.getAll()) {
+				VectorClock currentLocalVectorClock = localDatabaseVersion.getVectorClock();
+				if (VectorClock.compare(firstRemoteVectorClock, currentLocalVectorClock) == VectorClockComparison.GREATER) {
+					filledRemoteBranch.add(localDatabaseVersion);
+				} 
+			}
+			
+			filledRemoteBranch.addAll(remoteBranch.getAll());
+		}
+
+		return filledRemoteBranches;
+	}
+	
+	@Deprecated
 	public TreeMap<String, List<DatabaseVersionHeader>> orchestrateBranch(TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,
 			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
 		TreeMap<String, List<DatabaseVersionHeader>> orchestratedBranch = new TreeMap<String, List<DatabaseVersionHeader>>();
