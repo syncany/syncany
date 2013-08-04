@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+	<version>1</version>
+	<databaseVersions>
+		<databaseVersion>
+			<time>1375577454674</time>
+			<vectorClock>
+				<client name="C" value="1" />
+			</vectorClock>
+			<chunks>
+				<chunk checksum="bec886b4540bfb37c2849e3b102b8118011dff98" size="16384" />
+				<chunk checksum="6eed8d64da76b887d2757ff93c65efdacd16bb46" size="16384" />
+				<chunk checksum="8bac8a80b484c761c87f2d9af78f8b357302859d" size="16384" />
+				<chunk checksum="7ece21d83736cee087b015cdf0e2bc24db4565a8" size="2048" />
+				<chunk checksum="16af585ce7f48d70b1fc68a82943587c0fbe8871" size="16384" />
+				<chunk checksum="286b8d1331b19b3ffec67dd2e220dee711b7e3eb" size="16384" />
+				<chunk checksum="3d4339f18f16ae9d27b38fff429056d0e9977981" size="16384" />
+				<chunk checksum="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" size="2048" />
+			</chunks>
+			<multiChunks>
+				<multiChunk id="bec886b4540bfb37c2849e3b102b8118011dff98">
+					<chunkRefs>
+						<chunkRef ref="bec886b4540bfb37c2849e3b102b8118011dff98" />
+						<chunkRef ref="8bac8a80b484c761c87f2d9af78f8b357302859d" />
+						<chunkRef ref="286b8d1331b19b3ffec67dd2e220dee711b7e3eb" />
+						<chunkRef ref="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" />
+						<chunkRef ref="3d4339f18f16ae9d27b38fff429056d0e9977981" />
+						<chunkRef ref="16af585ce7f48d70b1fc68a82943587c0fbe8871" />
+						<chunkRef ref="6eed8d64da76b887d2757ff93c65efdacd16bb46" />
+						<chunkRef ref="7ece21d83736cee087b015cdf0e2bc24db4565a8" />
+					</chunkRefs>
+				</multiChunk>
+			</multiChunks>
+			<fileContents>
+				<fileContent checksum="7ece21d83736cee087b015cdf0e2bc24db4565a8" size="0">
+					<chunkRefs>
+						<chunkRef ref="3d4339f18f16ae9d27b38fff429056d0e9977981" />
+						<chunkRef ref="16af585ce7f48d70b1fc68a82943587c0fbe8871" />
+						<chunkRef ref="6eed8d64da76b887d2757ff93c65efdacd16bb46" />
+						<chunkRef ref="7ece21d83736cee087b015cdf0e2bc24db4565a8" />
+					</chunkRefs>
+				</fileContent>
+				<fileContent checksum="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" size="0">
+					<chunkRefs>
+						<chunkRef ref="bec886b4540bfb37c2849e3b102b8118011dff98" />
+						<chunkRef ref="8bac8a80b484c761c87f2d9af78f8b357302859d" />
+						<chunkRef ref="286b8d1331b19b3ffec67dd2e220dee711b7e3eb" />
+						<chunkRef ref="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" />
+					</chunkRefs>
+				</fileContent>
+			</fileContents>
+			<fileHistories>
+				<fileHistory id="-4572714700516206377">
+					<fileVersions>
+						<fileVersion version="1" fileContentRef="7ece21d83736cee087b015cdf0e2bc24db4565a8" path="" name="newC2" />
+					</fileVersions>
+				</fileHistory>
+				<fileHistory id="-4141209304244515005">
+					<fileVersions>
+						<fileVersion version="1" fileContentRef="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" path="" name="newC1" />
+					</fileVersions>
+				</fileHistory>
+			</fileHistories>
+		</databaseVersion>
+	</databaseVersions>
+</database>

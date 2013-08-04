@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
@@ -174,19 +174,19 @@ public class SyncDownOperation extends Operation {
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
-		DatabaseDAO dbDAO = new DatabaseDAO();
+		DatabaseDAO dbDAO = new DatabaseXmlDAO();
 		
 		for (File remoteDatabaseInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
 			
 			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
 			dbDAO.load(remoteDatabase, rdf);		// FIXME This is very, very, very inefficient, DB is loaded and then discarded	
-			Map<Long, DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
+			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			// Pupulate branches
 			Branch remoteClientBranch = unknownRemoteBranches.getBranch(rdf.getClientName(), true);
 			
-			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions.values()) {
+			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
 				remoteClientBranch.add(header);
 			}
@@ -269,7 +269,7 @@ public class SyncDownOperation extends Operation {
 			logger.log(Level.INFO, "- Processing remote database. Reading from {0} ...", remoteDatabaseInCache);
 			
 			Database remoteDatabase = new Database();
-			DatabaseDAO dbDAO = new DatabaseDAO();
+			DatabaseDAO dbDAO = new DatabaseXmlDAO();
 			
 			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
 			dbDAO.load(remoteDatabase, rdf);		

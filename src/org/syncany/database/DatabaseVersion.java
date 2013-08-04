@@ -116,30 +116,5 @@ public class DatabaseVersion {
     
     public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
     	historyCache.get(fileHistoryID).addFileVersion(fileVersion);
-    }    
-    
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("<chunks>");
-		for (ChunkEntry chunk : chunkCache.values()) {
-			sb.append("<chunk>");
-			sb.append(StringUtil.toHex(chunk.getChecksum()));
-			sb.append("</chunk>");
-		}
-		sb.append("</chunks>");
-		
-		sb.append("<multichunks>");
-		for (MultiChunkEntry multiChunk : multiChunkCache.values()) {
-			sb.append("<multichunk>");
-			sb.append(StringUtil.toHex(multiChunk.getId()));
-			sb.append("</multichunk>");
-		}
-		sb.append("</multichunks>");
-		
-		sb.append("<rest/>");
-
-		return sb.toString();
-	}
+    }        
 }

@@ -8,6 +8,9 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.VectorClock;
 
 public abstract class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
@@ -20,7 +23,7 @@ public abstract class Operation {
 	protected Database loadLocalDatabase(File localDatabaseFile) throws IOException {
 		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
 		
-		DatabaseDAO dao = new DatabaseDAO();
+		DatabaseDAO dao = new DatabaseXmlDAO();
 		Database db = new Database();
 
 		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
@@ -30,8 +33,12 @@ public abstract class Operation {
 		return db;
 	}		
 
-	protected void saveLocalDatabase(Database db, long fromVersion, long toVersion, File localDatabaseFile) throws IOException {
-		DatabaseDAO dao = new DatabaseDAO();
+	protected void saveLocalDatabase(Database db, File localDatabaseFile) throws IOException {
+		saveLocalDatabase(db, null, null, localDatabaseFile);
+	}	
+	
+	protected void saveLocalDatabase(Database db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
+		DatabaseDAO dao = new DatabaseXmlDAO();
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}	
 	

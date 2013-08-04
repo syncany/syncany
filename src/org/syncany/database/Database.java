@@ -17,56 +17,55 @@
  */
 package org.syncany.database;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class Database {
-	private DatabaseVersion fullDatabaseVersion;
-    private TreeMap<Long, DatabaseVersion> allDatabaseVersions;    
+    private List< DatabaseVersion> databaseVersions;    
+	private DatabaseVersion cachedFullDatabaseVersion;
     private Map<String, PartialFileHistory> filenameHistoryCache;
 
     public Database() {
-    	fullDatabaseVersion = new DatabaseVersion();    	
-    	allDatabaseVersions = new TreeMap<Long, DatabaseVersion>();    	
+    	cachedFullDatabaseVersion = new DatabaseVersion();    	
+    	databaseVersions = new ArrayList<DatabaseVersion>();    	
         filenameHistoryCache = new HashMap<String, PartialFileHistory>();
-    }   
-	
-	public long getFirstLocalDatabaseVersion() {
-		return allDatabaseVersions.firstKey();
-	}
-	
-	public long getLastLocalDatabaseVersion() {
-		return allDatabaseVersions.lastKey();
-	}
+    }   	
 	
 	public DatabaseVersion getLastDatabaseVersion() {
-		if (allDatabaseVersions.size() == 0) {
+		if (databaseVersions.size() == 0) {
 			return null;
 		}
 		
-		return allDatabaseVersions.lastEntry().getValue();
+		return databaseVersions.get(databaseVersions.size()-1);
 	}
-
-	public DatabaseVersion getDatabaseVersion(long databaseVersion) {
-		return allDatabaseVersions.get(databaseVersion);
+	
+	public DatabaseVersion getFirstDatabaseVersion() {
+		if (databaseVersions.size() == 0) {
+			return null;
+		}
+		
+		return databaseVersions.get(0);
 	}
 		
-	public Map<Long, DatabaseVersion> getDatabaseVersions() {
-		return Collections.unmodifiableMap(allDatabaseVersions);
+		
+	public List<DatabaseVersion> getDatabaseVersions() {
+		return Collections.unmodifiableList(databaseVersions);
 	}
 
 	public FileContent getContent(byte[] checksum) {
-		return fullDatabaseVersion.getFileContent(checksum);
+		return cachedFullDatabaseVersion.getFileContent(checksum);
 	}
 	
 	public ChunkEntry getChunk(byte[] checksum) {
-		return fullDatabaseVersion.getChunk(checksum);
+		return cachedFullDatabaseVersion.getChunk(checksum);
 	}
 	
 	public MultiChunkEntry getMultiChunk(byte[] id) {
-		return fullDatabaseVersion.getMultiChunk(id);
+		return cachedFullDatabaseVersion.getMultiChunk(id);
 	}	
 	
 	public PartialFileHistory getFileHistory(String filePath) {
@@ -74,50 +73,25 @@ public class Database {
 	}
 	
 	public PartialFileHistory getFileHistory(long fileId) {
-		return fullDatabaseVersion.getFileHistory(fileId); 
+		return cachedFullDatabaseVersion.getFileHistory(fileId); 
 	}
 	
 	public Branch getBranch() {
 		Branch branch = new Branch();
 		
-		for (DatabaseVersion databaseVersion : allDatabaseVersions.values()) {
+		for (DatabaseVersion databaseVersion : databaseVersions) {
 			branch.add(databaseVersion.getHeader());
 		}
 		
 		return branch;
 	}
 	
-	public void addDatabaseVersion(DatabaseVersion dbv) {	
-		// TODO This should figure out the last local version from the vector clock
-		// TODO Should the local version be identified by an empty string in the vector clock?
-		long newLocalDatabaseVersion;
-		VectorClock newDatabaseVersion = null;	
-
-		if (allDatabaseVersions.isEmpty()) {
-			// Increment local version
-			newLocalDatabaseVersion = 1; 
-			
-			newDatabaseVersion = new VectorClock();
-			// Set vector clock of database version
-			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
-		}
-		
-		else {
-			// Increment local version
-			newLocalDatabaseVersion = allDatabaseVersions.lastKey()+1;
-
-			// Set vector clock of database version
-			newDatabaseVersion = getLastDatabaseVersion().getVectorClock().clone();	
-			newDatabaseVersion.setClock("", newLocalDatabaseVersion); // TODO "" represents local client
-		}		
-		
-		dbv.setVectorClock(newDatabaseVersion);
-		
+	public void addDatabaseVersion(DatabaseVersion databaseVersion) {		
 		// Add to map
-		allDatabaseVersions.put(newLocalDatabaseVersion, dbv);
+		databaseVersions.add(databaseVersion);
 		
 		// Merge full version / populate cache
-		mergeDBVinDB(fullDatabaseVersion, dbv);
+		mergeDBVinDB(cachedFullDatabaseVersion, databaseVersion);
 	} 
 	
 	private void mergeDBVinDB(DatabaseVersion targetDatabaseVersion, DatabaseVersion sourceDatabaseVersion) {
@@ -166,21 +140,5 @@ public class Database {
 			filenameHistoryCache.put(fileName, cacheFileHistory);
 		}
 	}
-	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("<versions>");
-		for (DatabaseVersion dbv : allDatabaseVersions.values()) {
-			sb.append("<version>");
-			sb.append(dbv);
-			sb.append("</version>");
-		}
-		sb.append("</version>");
-		
-		return sb.toString();
-	}
-	
 	
 }

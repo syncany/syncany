@@ -16,6 +16,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LocalDatabaseFile;
@@ -59,7 +60,7 @@ public class SyncUpOperationTest {
 		assertTrue(remoteDatabaseFile.exists());
 		assertEquals(TestFileUtil.getMD5Checksum(localDatabaseFile), TestFileUtil.getMD5Checksum(remoteDatabaseFile));
 		
-		DatabaseDAO dDAO = new DatabaseDAO();
+		DatabaseDAO dDAO = new DatabaseXmlDAO();
 		Database localDatabase = new Database();
 		Database remoteDatabase = new Database();
 		dDAO.load(localDatabase, new LocalDatabaseFile(localDatabaseFile));

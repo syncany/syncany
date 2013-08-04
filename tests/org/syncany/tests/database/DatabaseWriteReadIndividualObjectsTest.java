@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -19,6 +20,7 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
@@ -304,7 +306,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	private File writeDatabaseFileToDisk(Database db) throws IOException {
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + generator.nextInt(Integer.MAX_VALUE));
 		
-		DatabaseDAO dao = new DatabaseDAO();
+		DatabaseDAO dao = new DatabaseXmlDAO();
 		dao.save(db, writtenDatabaseFile);
 		
 		return writtenDatabaseFile;
@@ -313,7 +315,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	private Database readDatabaseFileFromDisk(File databaseFile) throws IOException {
 		Database db = new Database();
 		
-		DatabaseDAO dao = new DatabaseDAO();
+		DatabaseDAO dao = new DatabaseXmlDAO();
 		RemoteDatabaseFile rdbf = new RemoteDatabaseFile(databaseFile);
 		dao.load(db, rdbf);
 		
@@ -321,17 +323,22 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	}
 	
 	private void compareDatabases(Database writtenDatabase, Database readDatabase) {
-		Map<Long, DatabaseVersion> writtenDatabaseVersions = writtenDatabase.getDatabaseVersions();
-		Map<Long, DatabaseVersion> readDatabaseVersions = readDatabase.getDatabaseVersions();
+		List<DatabaseVersion> writtenDatabaseVersions = writtenDatabase.getDatabaseVersions();
+		List<DatabaseVersion> readDatabaseVersions = readDatabase.getDatabaseVersions();
 		
 		assertEquals("Different number of database versions.", writtenDatabaseVersions.size(), readDatabaseVersions.size());
 			
-		for (Map.Entry<Long, DatabaseVersion> writtenDatabaseVersionEntry : writtenDatabaseVersions.entrySet()) {
-			long writtenDatabaseVersionNumber = writtenDatabaseVersionEntry.getKey();
-			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersionEntry.getValue();
+		for (DatabaseVersion writtenDatabaseVersion : writtenDatabaseVersions) {
+			DatabaseVersion readDatabaseVersion = null;
 			
-			DatabaseVersion readDatabaseVersion = readDatabaseVersions.get(writtenDatabaseVersionNumber);
-			assertNotNull("Database version "+writtenDatabaseVersionNumber+" does not exist in read database.", readDatabaseVersion);
+			for (DatabaseVersion aReadDatabaseVersion : readDatabaseVersions) {
+				if (aReadDatabaseVersion.equals(writtenDatabaseVersion)) {
+					readDatabaseVersion = aReadDatabaseVersion;
+					break;
+				}
+			}
+			
+			assertNotNull("Database version "+writtenDatabaseVersion+" does not exist in read database.", readDatabaseVersion);
 			
 			compareDatabaseVersions(writtenDatabaseVersion, readDatabaseVersion);
 		}

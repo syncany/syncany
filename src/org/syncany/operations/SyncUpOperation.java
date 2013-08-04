@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,6 +17,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.VectorClock;
 import org.syncany.util.FileUtil;
 
 public class SyncUpOperation extends Operation {
@@ -31,19 +33,28 @@ public class SyncUpOperation extends Operation {
 	public void execute() throws Exception {
 		logger.log(Level.INFO, "Sync up ...");
 		
+		logger.log(Level.INFO, "- Loading local database ...");
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
 		Database db = loadLocalDatabase(localDatabaseFile);
+		DatabaseVersion lastPersistentDatabaseVersion = db.getLastDatabaseVersion();
 		
+		logger.log(Level.INFO, "- Starting index process ...");
 		List<File> localFiles = FileUtil.getRecursiveFileList(profile.getLocalDir());
-		long newestLocalDatabaseVersion = index(localFiles, db);
+		DatabaseVersion lastDirtyDatabaseVersion = index(localFiles, db);
 		
-		long fromLocalDatabaseVersion = (newestLocalDatabaseVersion-1 >= 1) ? newestLocalDatabaseVersion : 1;		
-		saveLocalDatabase(db, fromLocalDatabaseVersion, newestLocalDatabaseVersion, localDatabaseFile);
+		logger.log(Level.INFO, "- Saving local database ...");
+		saveLocalDatabase(db, localDatabaseFile);
 		
+		logger.log(Level.INFO, "- Uploading new multichunks ...");
 		boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 		
 		if (uploadMultiChunksSuccess) {
-			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDatabaseFile, newestLocalDatabaseVersion);			
+			logger.log(Level.INFO, "- Saving delta database (for upload) ...");
+			File localDeltaDatabaseFile = profile.getCache().createTempFile();	
+			saveLocalDatabase(db, lastPersistentDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
+			
+			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
+			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDeltaDatabaseFile, newestLocalDatabaseVersion);			
 		}
 		else {
 			throw new Exception("aa");
@@ -69,13 +80,37 @@ public class SyncUpOperation extends Operation {
 		return true;
 	}
 
-	private long index(List<File> localFiles, Database db) throws FileNotFoundException, IOException {		
+	private DatabaseVersion index(List<File> localFiles, Database db) throws FileNotFoundException, IOException {			
+		// Get last vector clock
+		VectorClock lastVectorClock = null;
+		
+		if (db.getLastDatabaseVersion() != null) {
+			lastVectorClock = db.getLastDatabaseVersion().getVectorClock();
+		}
+		else {
+			lastVectorClock = new VectorClock();
+		}
+		
+		// New vector clock
+		VectorClock newVectorClock = lastVectorClock.clone();
+
+		Long lastLocalValue = lastVectorClock.getClock(profile.getMachineName());
+		Long newLocalValue = (lastLocalValue == null) ? 1 : lastLocalValue+1;
+		
+		newVectorClock.setClock(profile.getMachineName(), newLocalValue);		
+
+		// Index
 		Deduper deduper = new Deduper(profile.getChunker(), profile.getMultiChunker(), profile.getTransformer());
 		Indexer indexer = new Indexer(profile, deduper, db);
 		
-		DatabaseVersion dbv = indexer.index(localFiles);		
-		db.addDatabaseVersion(dbv);
+		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);	
+	
+		newDatabaseVersion.setVectorClock(newVectorClock);
+		newDatabaseVersion.setTimestamp(new Date());
+		
+		// Add to DB and populate cache!
+		db.addDatabaseVersion(newDatabaseVersion);
 						
-		return db.getLastLocalDatabaseVersion();
+		return db.getLastDatabaseVersion();
 	}
 }
