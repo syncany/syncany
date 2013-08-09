@@ -77,7 +77,13 @@ public class TestFileUtil {
 	}
 	
 	public static File createTempDirectoryInSystemTemp(String prefix) throws Exception {
-		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir")+"/"+prefix+"-"+Math.abs(Math.random()));
+		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir")+"/"+prefix);
+		
+		int i = 1;
+		while (tempDirectoryInSystemTemp.exists()) {
+			tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir")+"/"+prefix+"-"+i);
+			i++;
+		}
 		
 		if (!tempDirectoryInSystemTemp.mkdir()) {
 			throw new Exception("Cannot create temp. directory "+tempDirectoryInSystemTemp);

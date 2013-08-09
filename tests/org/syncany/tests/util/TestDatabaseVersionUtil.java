@@ -52,7 +52,7 @@ public class TestDatabaseVersionUtil {
 		
 		for (String databaseVersionHeaderString : databaseVersionHeaderStrings) {
 			DatabaseVersionHeader databaseVersionHeader = createFromString(databaseVersionHeaderString);
-			databaseVersionHeaderMap.put(databaseVersionHeader.getUploadedDate().getTime(), databaseVersionHeader);
+			databaseVersionHeaderMap.put(databaseVersionHeader.getDate().getTime(), databaseVersionHeader);
 		}
 
 		return databaseVersionHeaderMap;

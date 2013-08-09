@@ -10,7 +10,6 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseXmlDAO;
-import org.syncany.database.VectorClock;
 
 public abstract class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());

@@ -26,13 +26,19 @@ import java.util.TreeMap;
 
 public class Database {
     private List< DatabaseVersion> databaseVersions;    
-	private DatabaseVersion cachedFullDatabaseVersion;
+	
+    // Caches
+    private DatabaseVersion fullDatabaseVersionCache;
     private Map<String, PartialFileHistory> filenameHistoryCache;
+    private HashMap<VectorClock, DatabaseVersion> databaseVersionIdCache;
 
     public Database() {
-    	cachedFullDatabaseVersion = new DatabaseVersion();    	
     	databaseVersions = new ArrayList<DatabaseVersion>();    	
-        filenameHistoryCache = new HashMap<String, PartialFileHistory>();
+        
+    	// Caches
+    	fullDatabaseVersionCache = new DatabaseVersion();    	
+    	filenameHistoryCache = new HashMap<String, PartialFileHistory>();
+    	databaseVersionIdCache = new HashMap<VectorClock, DatabaseVersion>();
     }   	
 	
 	public DatabaseVersion getLastDatabaseVersion() {
@@ -55,17 +61,22 @@ public class Database {
 	public List<DatabaseVersion> getDatabaseVersions() {
 		return Collections.unmodifiableList(databaseVersions);
 	}
+	
+
+	public DatabaseVersion getDatabaseVersions(VectorClock vectorClock) {
+		return databaseVersionIdCache.get(vectorClock);
+	}	
 
 	public FileContent getContent(byte[] checksum) {
-		return cachedFullDatabaseVersion.getFileContent(checksum);
+		return fullDatabaseVersionCache.getFileContent(checksum);
 	}
 	
 	public ChunkEntry getChunk(byte[] checksum) {
-		return cachedFullDatabaseVersion.getChunk(checksum);
+		return fullDatabaseVersionCache.getChunk(checksum);
 	}
 	
 	public MultiChunkEntry getMultiChunk(byte[] id) {
-		return cachedFullDatabaseVersion.getMultiChunk(id);
+		return fullDatabaseVersionCache.getMultiChunk(id);
 	}	
 	
 	public PartialFileHistory getFileHistory(String filePath) {
@@ -73,7 +84,7 @@ public class Database {
 	}
 	
 	public PartialFileHistory getFileHistory(long fileId) {
-		return cachedFullDatabaseVersion.getFileHistory(fileId); 
+		return fullDatabaseVersionCache.getFileHistory(fileId); 
 	}
 	
 	public Branch getBranch() {
@@ -86,15 +97,16 @@ public class Database {
 		return branch;
 	}
 	
-	public void addDatabaseVersion(DatabaseVersion databaseVersion) {		
+	public void addDatabaseVersion(DatabaseVersion newDatabaseVersion) {		
 		// Add to map
-		databaseVersions.add(databaseVersion);
+		databaseVersions.add(newDatabaseVersion);
 		
-		// Merge full version / populate cache
-		mergeDBVinDB(cachedFullDatabaseVersion, databaseVersion);
+		// Populate caches
+		databaseVersionIdCache.put(newDatabaseVersion.getVectorClock(), newDatabaseVersion);
+		mergeDatabaseVersions(fullDatabaseVersionCache, newDatabaseVersion);
 	} 
 	
-	private void mergeDBVinDB(DatabaseVersion targetDatabaseVersion, DatabaseVersion sourceDatabaseVersion) {
+	private void mergeDatabaseVersions(DatabaseVersion targetDatabaseVersion, DatabaseVersion sourceDatabaseVersion) {
 		// Chunks
 		for (ChunkEntry sourceChunk : sourceDatabaseVersion.getChunks()) {
 			if (targetDatabaseVersion.getChunk(sourceChunk.getChecksum()) == null) {
@@ -140,5 +152,6 @@ public class Database {
 			filenameHistoryCache.put(fileName, cacheFileHistory);
 		}
 	}
+
 	
 }

@@ -21,6 +21,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class DatabaseXmlDAO implements DatabaseDAO {
+	private static final int XML_FORMAT_VERSION = 1;
 
 	@Override
 	public void save(Database db, File destinationFile) throws IOException {
@@ -34,20 +35,20 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 		
 		out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		out.print("<database>\n");
-		out.print("\t<version>1</version>\n");
+		out.print("\t<version>"+XML_FORMAT_VERSION+"</version>\n");
 		out.print("\t<databaseVersions>\n");
 		
 		for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
-			if ((versionFrom != null && VectorClock.compare(versionFrom.getVectorClock(), databaseVersion.getVectorClock()) == VectorClockComparison.SMALLER)
-					|| (versionTo != null && VectorClock.compare(databaseVersion.getVectorClock(), versionTo.getVectorClock()) == VectorClockComparison.GREATER)) {
+			if ((versionFrom != null && VectorClock.compare(versionFrom.getVectorClock(), databaseVersion.getVectorClock()) == VectorClockComparison.GREATER)
+					|| (versionTo != null && VectorClock.compare(databaseVersion.getVectorClock(), versionTo.getVectorClock()) == VectorClockComparison.SMALLER)) {
 				
 				continue;
 			}		
 			
-			out.print("\t\t<databaseVersion>\n");
-			
-			// Local timestamp
-			out.print("\t\t\t<time>"+databaseVersion.getTimestamp().getTime()+"</time>\n");
+			// Database version, client name and timestamp 
+			out.print("\t\t<databaseVersion "
+				+ "time=\""+databaseVersion.getTimestamp().getTime()+"\" "
+				+ "client=\""+databaseVersion.getUploadedFrom()+"\">\n");
 			
 			// Vector clock
 			out.print("\t\t\t<vectorClock>\n");			
@@ -170,10 +171,15 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 		public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 			elementPath += "/"+qName;
 			
-			System.out.println(elementPath+" (start) ");
+			//System.out.println(elementPath+" (start) ");
 			
-			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
+			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {				
+				Long time = Long.parseLong(attributes.getValue("time"));
+				String client = attributes.getValue("client");
+				
 				databaseVersion = new DatabaseVersion();
+				databaseVersion.setTimestamp(new Date(time));
+				databaseVersion.setUploadedFrom(client);
 			}			
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
 				vectorClock = new VectorClock();
@@ -225,8 +231,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					throw new SAXException("Cannot read ID from multichunk " + multChunkIdStr);
 				}
 				
-				multiChunk = new MultiChunkEntry(multiChunkId);	
-				System.out.println("multichunk = "+multiChunk);
+				multiChunk = new MultiChunkEntry(multiChunkId);					
 			}			
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");
@@ -293,18 +298,22 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				fileHistory.addFileVersion(fileVersion);
 			}
 			else {
-				System.out.println("NO MATCH");
+				//System.out.println("NO MATCH");
 			}
 		}
 		
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {
-			System.out.println(elementPath+" (end ) ");
+			//System.out.println(elementPath+" (end ) ");
 			
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
 				database.addDatabaseVersion(databaseVersion);
 				databaseVersion = null;
 			}	
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
+				databaseVersion.setVectorClock(vectorClock);
+				vectorClock = null;
+			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent")) {
 				databaseVersion.addFileContent(fileContent);
 				fileContent = null;
@@ -318,7 +327,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				fileHistory = null;
 			}	
 			else {
-				System.out.println("NO MATCH");
+				//System.out.println("NO MATCH");
 			}
 			
 			elementPath = elementPath.substring(0, elementPath.lastIndexOf("/"));					
@@ -326,14 +335,14 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 		@Override
 		public void characters(char[] ch, int start, int length) throws SAXException {
-			System.out.println(elementPath+" (chars) : "+new String(ch, start, length));
+			//System.out.println(elementPath+" (chars) : "+new String(ch, start, length));
 			
 			// Database version
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/time")) {
-				databaseVersion.setTimestamp(new Date(Long.parseLong(new String(ch, start, length))));				
+								
 			}
 			else {
-				System.out.println("NO MATCH");
+				//System.out.println("NO MATCH");
 			}
 		}		
 	}

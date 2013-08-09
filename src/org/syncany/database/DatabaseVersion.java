@@ -34,11 +34,11 @@ public class DatabaseVersion {
 	}
 
 	public Date getTimestamp() {
-		return header.getUploadedDate();
+		return header.getDate();
 	}
 
 	public void setTimestamp(Date timestamp) {
-		this.header.setUploadedDate(timestamp);
+		this.header.setDate(timestamp);
 	}    
 	
 	public VectorClock getVectorClock() {
@@ -50,11 +50,11 @@ public class DatabaseVersion {
 	}
 	
 	public void setUploadedFrom(String client) {
-		this.header.setUploadedByClient(client);
+		this.header.setClient(client);
 	}
 	
 	public String getUploadedFrom() {
-		return header.getUploadedByClient();
+		return header.getClient();
 	}
 
     // Chunk

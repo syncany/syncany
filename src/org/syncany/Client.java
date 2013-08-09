@@ -32,12 +32,10 @@ public class Client {
 	}		
 	
 	public void up() throws Exception {
-		logger.log(Level.INFO, "Running UP operation...");
 		new SyncUpOperation(config).execute();
 	}
 	
 	public void down() throws Exception {
-		logger.log(Level.INFO, "Running DOWN operation...");
 		new SyncDownOperation(config).execute();
 	}
 }

@@ -5,49 +5,52 @@ import java.util.Date;
 public class DatabaseVersionHeader {
 
     // DB Version and versions of other users (= DB basis)
-    private Date uploaded;
+    private Date date;
     private VectorClock vectorClock; // vector clock, machine name to database version map
-    private String uploadedByClient;
+    private String client;
     
     public DatabaseVersionHeader() {
-    	uploaded = new Date();
+    	date = new Date();
     	vectorClock = new VectorClock();
-    	uploadedByClient = "UnknownMachine";
+    	client = "UnknownMachine";
     }
     
-	public DatabaseVersionHeader(Date uploaded, VectorClock vectorClock, String uploadedByClient) {
-		this.uploaded = uploaded;
+	public DatabaseVersionHeader(Date date, VectorClock vectorClock, String client) {
+		this.date = date;
 		this.vectorClock = vectorClock;
-		this.uploadedByClient = uploadedByClient;
+		this.client = client;
 	}
 
-	public Date getUploadedDate() {
-		return uploaded;
+	public Date getDate() {
+		return date;
 	}
-	public void setUploadedDate(Date timestamp) {
-		this.uploaded = timestamp;
+	
+	public void setDate(Date timestamp) {
+		this.date = timestamp;
 	}
+	
 	public VectorClock getVectorClock() {
 		return vectorClock;
 	}
+	
 	public void setVectorClock(VectorClock vectorClock) {
 		this.vectorClock = vectorClock;
 	}
 	
-	public String getUploadedByClient() {
-		return uploadedByClient;
+	public String getClient() {
+		return client;
 	}
 
-	public void setUploadedByClient(String uploadedByClient) {
-		this.uploadedByClient = uploadedByClient;
+	public void setClient(String uploadedByClient) {
+		this.client = uploadedByClient;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((uploaded == null) ? 0 : uploaded.hashCode());
-		result = prime * result + ((uploadedByClient == null) ? 0 : uploadedByClient.hashCode());
+		result = prime * result + ((date == null) ? 0 : date.hashCode());
+		result = prime * result + ((client == null) ? 0 : client.hashCode());
 		result = prime * result + ((vectorClock == null) ? 0 : vectorClock.hashCode());
 		return result;
 	}
@@ -61,15 +64,15 @@ public class DatabaseVersionHeader {
 		if (getClass() != obj.getClass())
 			return false;
 		DatabaseVersionHeader other = (DatabaseVersionHeader) obj;
-		if (uploaded == null) {
-			if (other.uploaded != null)
+		if (date == null) {
+			if (other.date != null)
 				return false;
-		} else if (!uploaded.equals(other.uploaded))
+		} else if (!date.equals(other.date))
 			return false;
-		if (uploadedByClient == null) {
-			if (other.uploadedByClient != null)
+		if (client == null) {
+			if (other.client != null)
 				return false;
-		} else if (!uploadedByClient.equals(other.uploadedByClient))
+		} else if (!client.equals(other.client))
 			return false;
 		if (vectorClock == null) {
 			if (other.vectorClock != null)
@@ -83,11 +86,11 @@ public class DatabaseVersionHeader {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 				
-		sb.append(uploadedByClient);
+		sb.append(client);
 		sb.append("/");
 		sb.append(vectorClock.toString());
 		sb.append("/T=");
-		sb.append(uploaded.getTime());
+		sb.append(date.getTime());
 		
 		return sb.toString();
 	}

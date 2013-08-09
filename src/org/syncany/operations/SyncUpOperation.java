@@ -19,6 +19,7 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
 import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 
 public class SyncUpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncUpOperation.class.getSimpleName());
@@ -31,28 +32,35 @@ public class SyncUpOperation extends Operation {
 	}	
 	
 	public void execute() throws Exception {
-		logger.log(Level.INFO, "Sync up ...");
+		logger.log(Level.INFO, "");
+		logger.log(Level.INFO, "Running 'Sync up' at client "+profile.getMachineName()+" ...");
+		logger.log(Level.INFO, "--------------------------------------------");
 		
-		logger.log(Level.INFO, "- Loading local database ...");
+		logger.log(Level.INFO, "Loading local database ...");
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
 		Database db = loadLocalDatabase(localDatabaseFile);
-		DatabaseVersion lastPersistentDatabaseVersion = db.getLastDatabaseVersion();
 		
-		logger.log(Level.INFO, "- Starting index process ...");
+		logger.log(Level.INFO, "Starting index process ...");
 		List<File> localFiles = FileUtil.getRecursiveFileList(profile.getLocalDir());
 		DatabaseVersion lastDirtyDatabaseVersion = index(localFiles, db);
 		
-		logger.log(Level.INFO, "- Saving local database ...");
+		logger.log(Level.INFO, "Adding newest database version "+lastDirtyDatabaseVersion.getHeader()+" to local database ...");
+		db.addDatabaseVersion(lastDirtyDatabaseVersion);
+
+		logger.log(Level.INFO, "Saving local database to file "+localDatabaseFile+" ...");
 		saveLocalDatabase(db, localDatabaseFile);
 		
-		logger.log(Level.INFO, "- Uploading new multichunks ...");
+		logger.log(Level.INFO, "Uploading new multichunks ...");
 		boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 		
 		if (uploadMultiChunksSuccess) {
-			logger.log(Level.INFO, "- Saving delta database (for upload) ...");
 			File localDeltaDatabaseFile = profile.getCache().createTempFile();	
-			saveLocalDatabase(db, lastPersistentDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
+
+			logger.log(Level.INFO, "Saving local delta database file ...");
+			logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
+			saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
 			
+			logger.log(Level.INFO, "Uploading local delta database file ...");
 			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
 			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDeltaDatabaseFile, newestLocalDatabaseVersion);			
 		}
@@ -66,6 +74,8 @@ public class SyncUpOperation extends Operation {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			RemoteFile remoteFile = new RemoteFile(multiChunkFile.getName());
+			
+			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+multiChunkFile+" to "+remoteFile+" ...");
 			transferManager.upload(multiChunkFile, remoteFile);
 		}
 		
@@ -74,7 +84,8 @@ public class SyncUpOperation extends Operation {
 
 	private boolean uploadLocalDatabase(File localDatabaseFile, long newestLocalDatabaseVersion) throws InterruptedException, StorageException {
 		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
-		
+
+		logger.log(Level.INFO, "- Uploading "+localDatabaseFile+" to "+remoteDatabaseFile+" ..."); 		
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
 		
 		return true;
@@ -106,11 +117,9 @@ public class SyncUpOperation extends Operation {
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);	
 	
 		newDatabaseVersion.setVectorClock(newVectorClock);
-		newDatabaseVersion.setTimestamp(new Date());
-		
-		// Add to DB and populate cache!
-		db.addDatabaseVersion(newDatabaseVersion);
+		newDatabaseVersion.setTimestamp(new Date());	
+		newDatabaseVersion.setUploadedFrom(profile.getMachineName());
 						
-		return db.getLastDatabaseVersion();
+		return newDatabaseVersion;
 	}
 }

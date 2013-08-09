@@ -65,7 +65,7 @@ public class LogFormatter extends Formatter {
     		threadName = threadName.substring(0, 10);
     	}
     	
-    	return String.format("%-15s", threadName);
+    	return String.format("%-10s", threadName);
 	}    
     
     private String formatShortLogLevel(Level level) {

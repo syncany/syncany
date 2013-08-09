@@ -241,7 +241,7 @@ public class DatabaseVersionUpdateDetector {
 		for (DatabaseVersionHeader databaseVersionHeader : firstConflictingDatabaseVersionHeaders.values()) {
 			if (winningFirstConflictingDatabaseVersionHeader == null) {
 				winningFirstConflictingDatabaseVersionHeader = databaseVersionHeader;
-			} else if (databaseVersionHeader.getUploadedDate().before(winningFirstConflictingDatabaseVersionHeader.getUploadedDate())) {
+			} else if (databaseVersionHeader.getDate().before(winningFirstConflictingDatabaseVersionHeader.getDate())) {
 				winningFirstConflictingDatabaseVersionHeader = databaseVersionHeader;
 			}
 		}
@@ -347,13 +347,13 @@ public class DatabaseVersionUpdateDetector {
 							currentMachineDatabaseVersionHeader.getVectorClock());
 
 					if (comparison != VectorClockComparison.EQUAL) {
-						if (currentComparisonDatabaseVersionHeader.getUploadedDate().before(currentMachineDatabaseVersionHeader.getUploadedDate())) {
+						if (currentComparisonDatabaseVersionHeader.getDate().before(currentMachineDatabaseVersionHeader.getDate())) {
 							// Eliminate machine in current loop
 
 							machineBranchPositionIterator.put(machineName, null);
 							machineInRaceCount--;
-						} else if (currentMachineDatabaseVersionHeader.getUploadedDate().before(
-								currentComparisonDatabaseVersionHeader.getUploadedDate())) {
+						} else if (currentMachineDatabaseVersionHeader.getDate().before(
+								currentComparisonDatabaseVersionHeader.getDate())) {
 							// Eliminate comparison machine
 
 							machineBranchPositionIterator.put(currentComparisonMachineName, null);
@@ -449,13 +449,13 @@ public class DatabaseVersionUpdateDetector {
 							currentMachineDatabaseVersionHeader.getVectorClock());
 
 					if (comparison != VectorClockComparison.EQUAL) {
-						if (currentComparisonDatabaseVersionHeader.getUploadedDate().before(currentMachineDatabaseVersionHeader.getUploadedDate())) {
+						if (currentComparisonDatabaseVersionHeader.getDate().before(currentMachineDatabaseVersionHeader.getDate())) {
 							// Eliminate machine in current loop
 
 							machineBranchPositionIterator.put(machineName, null);
 							machineInRaceCount--;
-						} else if (currentMachineDatabaseVersionHeader.getUploadedDate().before(
-								currentComparisonDatabaseVersionHeader.getUploadedDate())) {
+						} else if (currentMachineDatabaseVersionHeader.getDate().before(
+								currentComparisonDatabaseVersionHeader.getDate())) {
 							// Eliminate comparison machine
 
 							machineBranchPositionIterator.put(currentComparisonMachineName, null);
@@ -554,6 +554,47 @@ public class DatabaseVersionUpdateDetector {
 		}
 
 		return orchestratedBranch;
+	}
+
+	public Branch findLosersPruneBranch(Branch losersBranch, Branch winnersBranch) {
+		Branch losersPruneBranch = new Branch();
+		
+		boolean pruneBranchStarted = false;
+		
+		for (int i=0; i<losersBranch.size(); i++) {
+			if (i == winnersBranch.size()) {
+				break;
+			}
+			else if (pruneBranchStarted) {
+				losersPruneBranch.add(losersBranch.get(i));
+			}
+			else if (!losersBranch.get(i).equals(winnersBranch.get(i))) {
+				pruneBranchStarted = true;
+				losersPruneBranch.add(losersBranch.get(i));
+			}
+		}
+		
+		return losersPruneBranch;
+	}
+
+	public Branch findWinnersApplyBranch(Branch losersBranch, Branch winnersBranch) {
+		Branch winnersApplyBranch = new Branch();
+		
+		boolean applyBranchStarted = false;
+		
+		for (int i=0; i<winnersBranch.size(); i++) {
+			if (!applyBranchStarted) {
+				if (i >= losersBranch.size() || !losersBranch.get(i).equals(winnersBranch.get(i))) {
+					applyBranchStarted = true;
+				}
+			}
+			
+			if (applyBranchStarted) {
+				winnersApplyBranch.add(winnersBranch.get(i));
+			}			
+		}
+		
+		return winnersApplyBranch;
 	}
 
 }

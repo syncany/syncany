@@ -22,7 +22,7 @@ public class Branches {
 	public Branch getBranch(String client, boolean createIfNotExistant) {
 		Branch branch = branches.get(client);
 		
-		if (branch == null) {
+		if (branch == null && createIfNotExistant) {
 			branch = new Branch();
 			branches.put(client, branch);
 		}

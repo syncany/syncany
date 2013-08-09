@@ -1,5 +1,7 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.fail;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,24 +33,29 @@ public class EvilCScenarioTest {
 		
 	@Test
 	public void testEvilC() throws Exception {
-		clientA.createNewFile("newA1");
-		clientA.createNewFile("newA2");
+		clientA.createNewFile("newA-somefile.txt");
 		clientA.up();
-		clientA.moveFile("newA1", "newMovedA3");
-		clientA.changeFile("newMovedA3");
+		clientA.moveFile("newA-somefile.txt", "newA-moved-somefile.txt");
+		clientA.changeFile("newA-moved-somefile.txt");
+		clientA.up();
+		clientA.createNewFile("newA-otherfile.txt");
 		clientA.up();
 		
 		clientB.down();
-		clientB.createNewFile("newB");
+		clientB.createNewFile("newB-a-file.txt");
 		clientB.up();
 		
-		clientC.createNewFile("newC1");
-		clientC.createNewFile("newC2");
+		clientC.createNewFile("newC");
+		clientC.changeFile("newC");
 		clientC.up();
-		clientC.createNewFile("newC3");
+		clientC.changeFile("newC");
+		clientC.up();
+		clientC.changeFile("newC");
 		clientC.up();
 		
 		clientA.down();
 		clientB.down();
+		
+		fail("No asserts yet.");
 	}
 }

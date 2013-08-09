@@ -24,8 +24,8 @@ public class TestConfigUtil {
 		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp("syncanyclient-"+machineName);
 		File tempLocalDir = new File(tempClientDir+"/local");
 		File tempAppDir = new File(tempClientDir+"/app");
-		File tempAppCacheDir =new File(tempClientDir+"/cache");
-		File tempAppDatabaseDir = new File(tempClientDir+"/db");
+		File tempAppCacheDir =new File(tempAppDir+"/cache");
+		File tempAppDatabaseDir = new File(tempAppDir+"/db");
 		
 		tempLocalDir.mkdirs();
 		tempAppDir.mkdirs();

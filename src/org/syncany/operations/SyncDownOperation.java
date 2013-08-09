@@ -4,12 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,12 +28,14 @@ import org.syncany.database.VectorClock.VectorClockComparison;
 public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
 	
-	public SyncDownOperation(Config profile) {
-		super(profile);
+	public SyncDownOperation(Config config) {
+		super(config);
 	}	
 	
 	public void execute() throws Exception {
-		logger.log(Level.INFO, "Sync down  ...");
+		logger.log(Level.INFO, "");
+		logger.log(Level.INFO, "Running 'Sync down' at client "+profile.getMachineName()+" ...");
+		logger.log(Level.INFO, "--------------------------------------------");		
 		
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
 		Database db = loadLocalDatabase(localDatabaseFile);
@@ -53,120 +52,100 @@ public class SyncDownOperation extends Operation {
 		// 3. Read version headers (vector clocks)
 		Branches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		
-
+		// 4. Determine winner branch
+		logger.log(Level.INFO, "Detect updates and conflicts ...");
+		logger.log(Level.INFO, "- DatabaseVersionUpdateDetector results:");
 		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
 		
 		Branch localBranch = db.getBranch();		
 		Branches fullRemoteBranches = databaseVersionUpdateDetector.fillRemoteBranches(localBranch, unknownRemoteBranches);
+		
 		Branches allBranches = fullRemoteBranches.clone();
 		allBranches.add(profile.getMachineName(), localBranch);
 		
-		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, fullRemoteBranches);
-		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, profile.getMachineName(), localBranch, fullRemoteBranches);
-		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);
+		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, fullRemoteBranches);		
+		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, profile.getMachineName(), localBranch, fullRemoteBranches);		
+		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
 		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allBranches);
 		
+		logger.log(Level.FINER, "   + localBranch: "+localBranch);
+		logger.log(Level.FINER, "   + fullRemoteBranches: "+fullRemoteBranches);
+		logger.log(Level.FINER, "   + allBranches: "+allBranches);
+		logger.log(Level.FINER, "   + lastCommonHeader: "+lastCommonHeader);
+		logger.log(Level.FINER, "   + firstConflictingHeaders: "+firstConflictingHeaders);
+		logger.log(Level.FINER, "   + winningFirstConflictingHeaders: "+winningFirstConflictingHeaders);
+		logger.log(Level.FINER, "   + winnersWinnersLastDatabaseVersionHeader: "+winnersWinnersLastDatabaseVersionHeader);
+
 		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
 		Branch winnersBranch = allBranches.getBranch(winnersName);
 		
-		logger.log(Level.INFO, "Sync down compared: "+allBranches);
-		logger.log(Level.INFO, "Sync down winner is "+winnersName+" with: "+winnersBranch);
-		// TODO implement this: compare DatabaseVersionUpdateDetectorTest
-		
-		
-		//detectUpdates(unknownDatabaseVersionHeaders);
-		// 3. read the remote databases
-		// 4. compare the remote databases based on the file histories contained in them and figure out the winning file histories
-		//detectUpdates(db, unknownRemoteDatabasesInCache);
-		
-		// 5. figure out which 
-		// 2. xxx
-		//
-		//db.getLastDatabaseVersion().getVectorClock();
-		
-		//throw new Exception("Not yet fully implemented.");
-		//return false;
-	}	
-
-	private void detectUpdates(List<DatabaseVersionHeader> unknownDatabaseVersionHeaders) {
-		// 0. Create ascending order, 
-		List<DatabaseVersionHeader> sortedUnknownDatabaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(unknownDatabaseVersionHeaders);		
-		Collections.sort(sortedUnknownDatabaseVersionHeaders, new DatabaseVersionHeaderComparator());
-		
-		// 1. Get all conflicts
-		List<DatabaseVersionHeaderPair> conflicts = new ArrayList<DatabaseVersionHeaderPair>();
-		Set<DatabaseVersionHeader> conflictHeaders = new HashSet<DatabaseVersionHeader>();
-		
-		for (int i=0; i<unknownDatabaseVersionHeaders.size(); i++) { // compare all clocks to each other
-			for (int j=i+1; j<unknownDatabaseVersionHeaders.size(); j++) {
-				if (j != i) {
-					DatabaseVersionHeader header1 = unknownDatabaseVersionHeaders.get(i);
-					DatabaseVersionHeader header2 = unknownDatabaseVersionHeaders.get(j);
-					
-					VectorClockComparison vectorClockComparison = VectorClock.compare(header1.getVectorClock(), header2.getVectorClock());
-					
-					if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
-						conflictHeaders.add(header1);
-						conflictHeaders.add(header2);						
-						conflicts.add(new DatabaseVersionHeaderPair(header1, header2));
-					}
-				}
-			}
-		}		
-		
-		// 2. Determine the first conflict-free database version headers (1..n)
-		List<DatabaseVersionHeader> firstUnconflictingUnknownDatabaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
-		
-		DatabaseVersionHeader thisHeader = null;
-		DatabaseVersionHeader lastHeader = null;
-		
-		for (int i=0; i < sortedUnknownDatabaseVersionHeaders.size(); i++) {
-			thisHeader = sortedUnknownDatabaseVersionHeaders.get(i);
-			
-			if (conflictHeaders.contains(thisHeader)) {	// stop when first conflict found			 
-				break; // TODO (A, see below!)
+		logger.log(Level.INFO, "- Compared branches: "+allBranches);
+		logger.log(Level.INFO, "- Winner is "+winnersName+" with branch "+winnersBranch);
+				
+		if (profile.getMachineName().equals(winnersName)) {
+			if (winnersBranch.size() > localBranch.size()) {
+				throw new RuntimeException("TODO implement use case 'restore remote backup'");
 			}
 			
-			if (lastHeader != null && lastHeader.equals(thisHeader)) { // ignore duplicates
-				continue;
-			}
-			
-			firstUnconflictingUnknownDatabaseVersionHeaders.add(thisHeader);			
-			lastHeader = thisHeader;
+			logger.log(Level.INFO, "- I won, noting to do locally");
 		}
-		
-		
-		
-		// TODO Use the the databaseVersionUpdateDetector
-		// TODO 
-		// TODO !
-		
-		
-		// 2. collect conflicts
-		// 3. gather winner
-		// 4. collect winner
-		
-	}
-	
-	private class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
-
-		@Override
-		public int compare(DatabaseVersionHeader header1, DatabaseVersionHeader header2) {
-			VectorClockComparison vectorClockComparison = VectorClock.compare(header1.getVectorClock(), header2.getVectorClock());
+		else {
+			logger.log(Level.INFO, "- Someone else won, now determine what to do ...");
 			
-			if (vectorClockComparison == VectorClockComparison.GREATER) {
-				return 1;
+			Branch localPruneBranch = databaseVersionUpdateDetector.findLosersPruneBranch(localBranch, winnersBranch);
+			logger.log(Level.INFO, "- Database versions to REMOVE locally: "+localPruneBranch);
+			
+			if (localPruneBranch.size() == 0) {
+				logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
 			}
-			else if (vectorClockComparison == VectorClockComparison.SMALLER) {
-				return -1;
+			
+			Branch winnersApplyBranch = databaseVersionUpdateDetector.findWinnersApplyBranch(localBranch, winnersBranch);
+			logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
+			
+			if (winnersApplyBranch.size() == 0) {
+				logger.log(Level.WARNING, "   ++++ NOTHING TO UPDATE FROM WINNER. This should not happen.");
 			}
 			else {
-				return 0;						
+				logger.log(Level.INFO, "- Loading winners database ...");
+				Database winnersDatabase = readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
+				
+				for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
+					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
+					
+					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersions(applyDatabaseVersionHeader.getVectorClock());									
+					db.addDatabaseVersion(applyDatabaseVersion);
+					
+					// TODO Do something with this dbv
+				}
+				
+				// TODO Do something on the file system!
+				logger.log(Level.INFO, "- Saving local database tp "+localDatabaseFile+" ...");
+				saveLocalDatabase(db, localDatabaseFile);
+			}
+			
+		}		
+		
+		//throw new Exception("Not yet fully implemented.");
+	}	
+
+
+	private Database readClientDatabase(String clientName, List<File> remoteDatabases) throws IOException {
+		// Sort files (db-a-1 must be before db-a-2 !)
+		Collections.sort(remoteDatabases);
+		
+		DatabaseDAO databaseDAO = new DatabaseXmlDAO();
+		Database clientDatabase = new Database(); // Database cannot be reused, since these might be different clients
+		
+		for (File remoteDatabaseInCache : remoteDatabases) {
+			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
+			
+			if (clientName.equals(rdf.getClientName())) {
+				databaseDAO.load(clientDatabase, rdf);	
 			}
 		}
 		
+		return clientDatabase;
 	}
-	
 
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
 		// Sort files (db-a-1 must be before db-a-2 !)
