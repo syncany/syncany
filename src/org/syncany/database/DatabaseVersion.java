@@ -49,7 +49,19 @@ public class DatabaseVersion {
 		this.header.setClient(client);
 	}
 	
-	public String getUploadedFrom() {
+	public void setPreviousClient(String previousClient) {
+		this.header.setPreviousClient(previousClient);
+	}
+	
+	public String getPreviousClient() {
+		return this.header.getPreviousClient();
+	}
+	
+	public VectorClock getPreviousVectorClock() {
+		return this.header.getPreviousVectorClock();
+	}
+	
+	public String getClient() {
 		return header.getClient();
 	}
 

@@ -4,6 +4,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -539,65 +540,57 @@ public class DatabaseVersionUpdateDetector {
 	}
 	
 	
-	public Branches stitchRemoteBranches(Branch localBranch, Branches allBranches, Branches remoteBranches) {
-		if ("1".equals("1")) {
-			throw new RuntimeException("Not yet implemented.");
-		}
+	public Branches stitchRemoteBranches(Branches unstitchedRemoteBranches, String localClientName, Branch localBranch) {
+		Branches allBranches = unstitchedRemoteBranches.clone();
+		allBranches.add(localClientName, localBranch);
 		
-		for (String clientName : allBranches.getClients()) {
-			//XXXXXXXXXXx 
-			// FIXME add "previous vector clock" or "previous client" to databaseversionheader
-			// this would make it easier to stich branches together.
-			// would this make findcommonheader, etc. obsolete?
-		}
+		Branches stitchedRemoteBranches = new Branches();
 		
-		Branches filledRemoteBranches = new Branches();
+		for (String remoteClientName : unstitchedRemoteBranches.getClients()) {
+			logger.log(Level.INFO, "Stitching {0}, going backwards ..", remoteClientName);	
+			List<DatabaseVersionHeader> reverseStitchedBranch = new ArrayList<DatabaseVersionHeader>();
+			Branch branch = allBranches.getBranch(remoteClientName);
+			logger.log(Level.INFO, "- Current branch is: "+branch);
+			
+			for (int i=branch.size()-1; i>=0; i--) {
+				DatabaseVersionHeader databaseVersionHeader = branch.get(i);				
 
-		for (String clientName : allBranches.getClients()) {
-			logger.log(Level.INFO, "Stitch: Stitching {0}", clientName);
-			
-			Branch branch = allBranches.getBranch(clientName);
-			
-			// Get first vector clock, e.g. (A3,B2,C1)
-			VectorClock firstVectorClock = branch.getFirst().getVectorClock();
-			logger.log(Level.INFO, "- First vector clock: {0}", firstVectorClock);
-			
-			// Make variations of first vector clock to find stitches, e.g. (A2,B2,C1), (A3,B1,C1), (A3,B2) 
-			List<VectorClock> possiblePreviousVectorClocks = new ArrayList<VectorClock>();
-			
-			for (String firstVectorClockClient : firstVectorClock.keySet()) {
-				VectorClock possiblePreviousVectorClock = firstVectorClock.clone();				
-				long clientToBeChanged = possiblePreviousVectorClock.getClock(firstVectorClockClient);
+				logger.log(Level.INFO, "- Adding "+databaseVersionHeader+" (mine)");
+				reverseStitchedBranch.add(databaseVersionHeader);
 				
-				if (clientToBeChanged > 1) {
-					possiblePreviousVectorClock.setClock(firstVectorClockClient, clientToBeChanged-1);					
+				while (databaseVersionHeader.getPreviousClient() != null && !remoteClientName.equals(databaseVersionHeader.getPreviousClient())) {
+					Branch previousClientBranch = allBranches.getBranch(databaseVersionHeader.getPreviousClient());
+
+					if (previousClientBranch == null) {
+						throw new RuntimeException("Unable to find previous client branch of '"+databaseVersionHeader.getPreviousClient());
+					}
+					
+					DatabaseVersionHeader previousDatabaseVersionHeader = previousClientBranch.get(databaseVersionHeader.getPreviousVectorClock());
+
+					if (previousDatabaseVersionHeader == null) {
+						throw new RuntimeException("Unable to find previous database version header in branch of '"+databaseVersionHeader.getPreviousClient()+"' using vector clock "+databaseVersionHeader.getPreviousVectorClock());
+					}
+					
+					logger.log(Level.INFO, "- Adding "+previousDatabaseVersionHeader+" (from "+databaseVersionHeader.getPreviousClient()+")");					
+					reverseStitchedBranch.add(previousDatabaseVersionHeader);
+					
+					databaseVersionHeader = previousDatabaseVersionHeader;
 				}
-				else {
-					possiblePreviousVectorClock.remove(firstVectorClockClient);					
-				}
-				
-				if (possiblePreviousVectorClock.size() > 0) {
-					possiblePreviousVectorClocks.add(possiblePreviousVectorClock);
-				}				
 			}
 			
-			logger.log(Level.INFO, "- Possible previous vector clocks: {0}", possiblePreviousVectorClocks);
+			// Now reverse again
+			Branch stitchedBranch = new Branch();
 			
-			// Find matching vector clock from others
-			for (String innerClientName : allBranches.getClients()) {
-				if (innerClientName.equals(clientName)) {
-					continue;
-				}
-				
-				Branch innerBranch = allBranches.getBranch(innerClientName);
-				VectorClock innerLastVectorClock = innerBranch.getLast().getVectorClock();
-				
-				logger.log(Level.INFO, "   + Testing "+innerClientName+" with "+innerLastVectorClock);
-				
+			for (int i=reverseStitchedBranch.size()-1; i>=0; i--) {
+				stitchedBranch.add(reverseStitchedBranch.get(i));
 			}
+			
+			logger.log(Level.INFO, "- Stitched branch is: "+stitchedBranch);
+			
+			stitchedRemoteBranches.add(remoteClientName, stitchedBranch);
 		}
-
-		return filledRemoteBranches;
+		
+		return stitchedRemoteBranches;
 	}
 	
 

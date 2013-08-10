@@ -16,6 +16,7 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
 import org.syncany.util.FileUtil;
@@ -93,12 +94,15 @@ public class SyncUpOperation extends Operation {
 
 	private DatabaseVersion index(List<File> localFiles, Database db) throws FileNotFoundException, IOException {			
 		// Get last vector clock
+		String previousClient = null;
 		VectorClock lastVectorClock = null;
 		
 		if (db.getLastDatabaseVersion() != null) {
+			previousClient = db.getLastDatabaseVersion().getClient();
 			lastVectorClock = db.getLastDatabaseVersion().getVectorClock();
 		}
 		else {
+			previousClient = null;
 			lastVectorClock = new VectorClock();
 		}
 		
@@ -119,6 +123,7 @@ public class SyncUpOperation extends Operation {
 		newDatabaseVersion.setVectorClock(newVectorClock);
 		newDatabaseVersion.setTimestamp(new Date());	
 		newDatabaseVersion.setClient(profile.getMachineName());
+		newDatabaseVersion.setPreviousClient(previousClient);
 						
 		return newDatabaseVersion;
 	}

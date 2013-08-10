@@ -62,7 +62,7 @@ public class Database {
 	}
 	
 
-	public DatabaseVersion getDatabaseVersions(VectorClock vectorClock) {
+	public DatabaseVersion getDatabaseVersion(VectorClock vectorClock) {
 		return databaseVersionIdCache.get(vectorClock);
 	}	
 
@@ -96,15 +96,25 @@ public class Database {
 		return branch;
 	}
 	
-	public void addDatabaseVersion(DatabaseVersion newDatabaseVersion) {		
-		// Add to map
-		databaseVersions.add(newDatabaseVersion);
+	public void addDatabaseVersion(DatabaseVersion databaseVersion) {		
+		databaseVersions.add(databaseVersion);
 		
-		// Populate caches
-		updateDatabaseVersionIdCache(newDatabaseVersion);
-		updateFullDatabaseVersionCache(newDatabaseVersion);
+		// Populate caches, do not reorder, order important!!
+		updateDatabaseVersionIdCache(databaseVersion);
+		updateFullDatabaseVersionCache(databaseVersion);
 		updateFilenameHistoryCache();
 	} 
+	
+
+	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {
+		databaseVersions.remove(databaseVersion);
+		
+		// Populate caches, do not reorder, order important!!
+		updateFullDatabaseVersionCache();
+		updateDatabaseVersionIdCache();
+		updateFilenameHistoryCache();
+	}
+	
 	
 	private void updateFilenameHistoryCache() {
 		// Cache all file paths + names to fileHistories
@@ -118,6 +128,22 @@ public class Database {
 	
 	private void updateDatabaseVersionIdCache(DatabaseVersion newDatabaseVersion) {
 		databaseVersionIdCache.put(newDatabaseVersion.getVectorClock(), newDatabaseVersion);
+	}
+	
+	private void updateDatabaseVersionIdCache() {
+		databaseVersionIdCache.clear();
+		
+		for (DatabaseVersion databaseVersion : databaseVersions) {
+			updateDatabaseVersionIdCache(databaseVersion);
+		}
+	}
+	
+	private void updateFullDatabaseVersionCache() {
+		fullDatabaseVersionCache = new DatabaseVersion();
+		
+		for (DatabaseVersion databaseVersion : databaseVersions) {
+			updateFullDatabaseVersionCache(databaseVersion);
+		}
 	}
 	
 	private void updateFullDatabaseVersionCache(DatabaseVersion newDatabaseVersion) {
@@ -158,6 +184,5 @@ public class Database {
 			}
 		}		
 	}
-
 	
 }

@@ -2,6 +2,8 @@ package org.syncany.tests.database;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -11,6 +13,7 @@ import org.syncany.database.Branch;
 import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.operations.DatabaseVersionUpdateDetector;
+import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseVersionUtil;
 
 /*
@@ -891,30 +894,106 @@ public class DatabaseVersionUpdateDetectorTest {
 
 	@Test
 	public void testStitchBranches() throws Exception {
-		Branch localBranch = TestDatabaseVersionUtil.createBranch(new String[] {
+		Branches allBranches = new Branches();
+		
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230/A",
+			"A/(A3)/T=1376074225256/A",
+		}));
+		
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"B/(A3,B1)/T=1376074225356/A"
+		}));
+		
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1376074225383",
-			"C/(C2)/T=1376074225399",
-			"C/(C3)/T=1376074225416",
-		});
+			"C/(C2)/T=1376074225399/C",
+			"C/(C3)/T=1376074225416/C",
+		}));		
 		
-		Branches remoteBranches = new Branches();
+		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(allBranches, "D", new Branch());
 		
-		remoteBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
+		Branches expectedStitchedBranches = new Branches();
+		
+		expectedStitchedBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
 			"A/(A2)/T=1376074225230",
 			"A/(A3)/T=1376074225256",
 		}));
 		
-		remoteBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+		expectedStitchedBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
 			"B/(A3,B1)/T=1376074225356"
 		}));
 		
-		Branches allBranches = remoteBranches.clone();
-		allBranches.add("C", localBranch);
+		expectedStitchedBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"C/(C1)/T=1376074225383",
+			"C/(C2)/T=1376074225399/C",
+			"C/(C3)/T=1376074225416/C",
+		}));
+		
+		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
+	}
+	
+	@Test
+	public void testStitchBranches2() throws Exception {		
+		Branches allBranches = new Branches();
+		
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1)/T=1",
+			"A/(A2)/T=2/A",
+			// --> B 
+			"A/(A3,B1)/T=4/B",
+			"A/(A4,B1)/T=5/A",
+			"A/(A5,B1)/T=6/A",
+			// --> C
+			
+		}));
+		
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"B/(A2,B1)/T=3/A",
+			// --> A
+			"B/(A5,B2,C2)/T=9/C",
+			// --> C
+		}));
+		
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
+			"C/(A5,B1,C1)/T=7/A",
+			"C/(A5,B1,C2)/T=8/C",
+			// --> B
+			"C/(A5,B2,C3)/T=10/B",
+		}));		
 		
 		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
-		databaseVersionUpdateDetector.stitchRemoteBranches(localBranch, allBranches, remoteBranches);
-	}
+		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(allBranches, "D", new Branch());
+		
+		Branches expectedStitchedBranches = new Branches();
+		
+		expectedStitchedBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
+		}));
+		
+		expectedStitchedBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
+			"B/(A3,B1)/T=1376074225356"
+		}));
+		
+		expectedStitchedBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"C/(C1)/T=1376074225383",
+			"C/(C2)/T=1376074225399/C",
+			"C/(C3)/T=1376074225416/C",
+		}));
+		
+		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
+	}	
 
 	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders, TestResult expectedTestResult) throws Exception {
 		// Print them all

@@ -8,18 +8,14 @@ public class DatabaseVersionHeader {
     private Date date;
     private VectorClock vectorClock; // vector clock, machine name to database version map
     private String client;
+    private String previousClient;
     
     public DatabaseVersionHeader() {
-    	date = new Date();
-    	vectorClock = new VectorClock();
-    	client = "UnknownMachine";
-    }
-    
-	public DatabaseVersionHeader(Date date, VectorClock vectorClock, String client) {
-		this.date = date;
-		this.vectorClock = vectorClock;
-		this.client = client;
-	}
+    	this.date = new Date();
+    	this.vectorClock = new VectorClock();
+    	this.client = "UnknownMachine";
+    	this.previousClient = "UnknownMachine";
+    }    
 
 	public Date getDate() {
 		return date;
@@ -33,6 +29,31 @@ public class DatabaseVersionHeader {
 		return vectorClock;
 	}
 	
+	public VectorClock getPreviousVectorClock() {
+		VectorClock previousVectorClock = vectorClock.clone();
+
+		Long lastPreviousClientLocalClock = previousVectorClock.get(client);
+		
+		if (lastPreviousClientLocalClock == null) {
+			throw new RuntimeException("Previous client '"+client+"' must be present in vector clock of database version header "+this.toString()+".");
+		}
+		
+		if (lastPreviousClientLocalClock == 1) {
+			previousVectorClock.remove(client);
+			
+			if (previousVectorClock.size() == 0) {
+				return null;
+			}
+			else {
+				return previousVectorClock;
+			}
+		}
+		else {
+			previousVectorClock.setClock(client, lastPreviousClientLocalClock-1);
+			return previousVectorClock;
+		}		
+	}
+	
 	public void setVectorClock(VectorClock vectorClock) {
 		this.vectorClock = vectorClock;
 	}
@@ -41,8 +62,16 @@ public class DatabaseVersionHeader {
 		return client;
 	}
 
-	public void setClient(String uploadedByClient) {
-		this.client = uploadedByClient;
+	public void setClient(String client) {
+		this.client = client;
+	}
+
+	public String getPreviousClient() {
+		return previousClient;
+	}
+
+	public void setPreviousClient(String previousClient) {
+		this.previousClient = previousClient;
 	}
 
 	@Override
@@ -91,6 +120,11 @@ public class DatabaseVersionHeader {
 		sb.append(vectorClock.toString());
 		sb.append("/T=");
 		sb.append(date.getTime());
+		
+		if (previousClient != null) {
+			sb.append("/");
+			sb.append(previousClient);
+		}
 		
 		return sb.toString();
 	}

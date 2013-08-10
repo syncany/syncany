@@ -15,7 +15,7 @@ public class VectorClock extends TreeMap<String, Long> {
 
 	public enum VectorClockComparison {
 		SMALLER, GREATER, EQUAL, SIMULTANEOUS;
-	}
+	}	
 	
 	/**
 	 * Increases the component of pUnit by 1.
@@ -186,5 +186,5 @@ public class VectorClock extends TreeMap<String, Long> {
 		else {
 			return VectorClockComparison.SIMULTANEOUS;
 		}
-	}
+	}	
 }

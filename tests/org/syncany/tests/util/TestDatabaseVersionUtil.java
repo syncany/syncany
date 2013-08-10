@@ -11,7 +11,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 
 public class TestDatabaseVersionUtil {
-	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=(\\d+)");
+	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)(?:/([^/]+))?");
 	private static Pattern vectorClockElementPattern = Pattern.compile("([^\\d]+)(\\d+)");
 	
 	public static DatabaseVersionHeader createFromString(String databaseVersionHeaderString) throws Exception {
@@ -21,9 +21,10 @@ public class TestDatabaseVersionUtil {
 			throw new Exception("Invalid database version header string: "+databaseVersionHeaderString);
 		}
 		
-		String uploadedbyClient = databaseVersionHeaderMatcher.group(1);
+		String client = databaseVersionHeaderMatcher.group(1);
 		String vectorClockString = databaseVersionHeaderMatcher.group(2);
 		long databaseVersionHeaderTime = Long.parseLong(databaseVersionHeaderMatcher.group(3));
+		String previousClient = (databaseVersionHeaderMatcher.groupCount() > 3) ? databaseVersionHeaderMatcher.group(4) : null;
 		
 		String[] vectorClockElements = vectorClockString.split(",");		
 		VectorClock vectorClock = new VectorClock();
@@ -45,7 +46,14 @@ public class TestDatabaseVersionUtil {
 			vectorClock.setClock(vectorClockMachineName, vectorClockTime);
 		}
 		
-		return new DatabaseVersionHeader(new Date(databaseVersionHeaderTime), vectorClock, uploadedbyClient);			
+		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
+		
+		newDatabaseVersionHeader.setDate(new Date(databaseVersionHeaderTime));
+		newDatabaseVersionHeader.setVectorClock(vectorClock);
+		newDatabaseVersionHeader.setClient(client);	
+		newDatabaseVersionHeader.setPreviousClient(previousClient); // optional!
+		
+		return newDatabaseVersionHeader;
 	}
 	
 	public static TreeMap<Long, DatabaseVersionHeader> createDatabaseVersionHeaderMapWithTimeKey(String[] databaseVersionHeaderStrings) throws Exception {

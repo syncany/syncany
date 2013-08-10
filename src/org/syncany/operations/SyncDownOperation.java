@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -57,29 +58,32 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "- DatabaseVersionUpdateDetector results:");
 		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
 		
-		Branch localBranch = db.getBranch();		
-		Branches fullRemoteBranches = databaseVersionUpdateDetector.fillRemoteBranches(localBranch, unknownRemoteBranches);
+		Branch localBranch = db.getBranch();	
+		Branches stitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(unknownRemoteBranches, profile.getMachineName(), localBranch);
+		//  TODO FIXME IMPORTANT Does this stitching make all the other algorithms obsolete?
+		//  TODO FIXME IMPORTANT --> Couldn't findWinnersWinnersLastDatabaseVersionHeader algorithm (walk forward, compare) be used instead?                       
+
+		Branches allStitchedBranches = stitchedRemoteBranches.clone();
+		allStitchedBranches.add(profile.getMachineName(), localBranch);
 		
-		Branches allBranches = fullRemoteBranches.clone();
-		allBranches.add(profile.getMachineName(), localBranch);
-		
-		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, fullRemoteBranches);		
-		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allBranches);		
+		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);		
+		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);		
 		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
-		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allBranches);
+		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
 		
 		logger.log(Level.FINER, "   + localBranch: "+localBranch);
-		logger.log(Level.FINER, "   + fullRemoteBranches: "+fullRemoteBranches);
-		logger.log(Level.FINER, "   + allBranches: "+allBranches);
+		logger.log(Level.FINER, "   + fullRemoteBranches: "+allStitchedBranches);
+		logger.log(Level.FINER, "   + unknownRemoteBranches: "+unknownRemoteBranches);
+		logger.log(Level.FINER, "   + allStitchedBranches: "+allStitchedBranches);
 		logger.log(Level.FINER, "   + lastCommonHeader: "+lastCommonHeader);
 		logger.log(Level.FINER, "   + firstConflictingHeaders: "+firstConflictingHeaders);
 		logger.log(Level.FINER, "   + winningFirstConflictingHeaders: "+winningFirstConflictingHeaders);
 		logger.log(Level.FINER, "   + winnersWinnersLastDatabaseVersionHeader: "+winnersWinnersLastDatabaseVersionHeader);
 
 		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
-		Branch winnersBranch = allBranches.getBranch(winnersName);
+		Branch winnersBranch = allStitchedBranches.getBranch(winnersName);
 		
-		logger.log(Level.INFO, "- Compared branches: "+allBranches);
+		logger.log(Level.INFO, "- Compared branches: "+allStitchedBranches);
 		logger.log(Level.INFO, "- Winner is "+winnersName+" with branch "+winnersBranch);
 				
 		if (profile.getMachineName().equals(winnersName)) {
@@ -87,7 +91,7 @@ public class SyncDownOperation extends Operation {
 				throw new RuntimeException("TODO implement use case 'restore remote backup'");
 			}
 			
-			logger.log(Level.INFO, "- I won, noting to do locally");
+			logger.log(Level.INFO, "- I won, nothing to do locally");
 		}
 		else {
 			logger.log(Level.INFO, "- Someone else won, now determine what to do ...");
@@ -98,6 +102,17 @@ public class SyncDownOperation extends Operation {
 			if (localPruneBranch.size() == 0) {
 				logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
 			}
+			else {
+				logger.log(Level.INFO, "  + Pruning databases locally ...");
+				
+				for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
+					logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
+					db.removeDatabaseVersion(db.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
+				}
+					
+				// TODO Do something on filesystem!!
+				logger.log(Level.WARNING, "  + TODO Prune on file system!");
+			}
 			
 			Branch winnersApplyBranch = databaseVersionUpdateDetector.findWinnersApplyBranch(localBranch, winnersBranch);
 			logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
@@ -106,20 +121,21 @@ public class SyncDownOperation extends Operation {
 				logger.log(Level.WARNING, "   ++++ NOTHING TO UPDATE FROM WINNER. This should not happen.");
 			}
 			else {
-				logger.log(Level.INFO, "- Loading winners database ...");
-				Database winnersDatabase = readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
+				logger.log(Level.INFO, "- Loading winners database ...");				
+				Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache); //readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
 				
 				for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
 					
-					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersions(applyDatabaseVersionHeader.getVectorClock());									
+					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
 					db.addDatabaseVersion(applyDatabaseVersion);
 					
 					// TODO Do something with this dbv
+					logger.log(Level.WARNING, "  + TODO Apply on file system!");
 				}
 				
 				// TODO Do something on the file system!
-				logger.log(Level.INFO, "- Saving local database tp "+localDatabaseFile+" ...");
+				logger.log(Level.INFO, "- Saving local database to "+localDatabaseFile+" ...");
 				saveLocalDatabase(db, localDatabaseFile);
 			}
 			
@@ -128,7 +144,59 @@ public class SyncDownOperation extends Operation {
 		//throw new Exception("Not yet fully implemented.");
 	}	
 
+	private Database readWinnersDatabase(Branch winnersApplyBranch, List<File> remoteDatabases) throws IOException {
+		// Make map 'short filename' -> 'full filename'
+		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
+		
+		for (File remoteDatabase : remoteDatabases) {
+			shortFilenameToFileMap.put(remoteDatabase.getName(), remoteDatabase);
+		}
+		
+		// Load individual databases for branch ranges
+		DatabaseDAO databaseDAO = new DatabaseXmlDAO();
+		Database winnerBranchDatabase = new Database(); // Database cannot be reused, since these might be different clients
+		
+		String clientName = null;
+		VectorClock clientVersionFrom = null;
+		VectorClock clientVersionTo = null;
+		
+		for (DatabaseVersionHeader databaseVersionHeader : winnersApplyBranch.getAll()) {
+			// First of range for this client
+			if (clientName == null || !clientName.equals(databaseVersionHeader.getClient())) {
+				clientName = databaseVersionHeader.getClient();
+				clientVersionFrom = databaseVersionHeader.getVectorClock();
+				clientVersionTo = databaseVersionHeader.getVectorClock();
+			}
 
+			// Still in range for this client
+			else if (clientName.equals(databaseVersionHeader.getClient())) {
+				clientVersionTo = databaseVersionHeader.getVectorClock();
+			}
+			
+			String potentialDatabaseShortFileNameForRange = "db-"+clientName+"-"+clientVersionTo.get(clientName);
+			File databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseShortFileNameForRange);
+			
+			if (databaseFileForRange != null) {
+				// Load database
+				logger.log(Level.INFO, "- Loading "+databaseFileForRange+" (from "+clientVersionFrom+", to "+clientVersionTo+") ...");
+				databaseDAO.load(winnerBranchDatabase, new RemoteDatabaseFile(databaseFileForRange), clientVersionFrom, clientVersionTo);
+						
+				// Reset range
+				clientName = null;
+				clientVersionFrom = null;
+				clientVersionTo = null;
+			}
+			
+			// TODO FIXME WARNING: This currently does not work for this situation:
+			logger.log(Level.WARNING, "TODO WARNING: This currently does not work for this situation: db-A-500  and branch A1-A5, because db-A-5 does NOT exist!!");
+			//   - db-A-500  and branch A1-A5, because db-A-5 does NOT exist!!
+			//   - To IMPLEMENT: if end of client range is reached (here: A5), load from next highest db-file of A (here: db-A-500)
+		}
+		
+		return winnerBranchDatabase;		
+	}
+
+	@Deprecated
 	private Database readClientDatabase(String clientName, List<File> remoteDatabases) throws IOException {
 		// Sort files (db-a-1 must be before db-a-2 !)
 		Collections.sort(remoteDatabases);
@@ -148,6 +216,7 @@ public class SyncDownOperation extends Operation {
 	}
 
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
+		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 		// Sort files (db-a-1 must be before db-a-2 !)
 		Collections.sort(remoteDatabases);
 		

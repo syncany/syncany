@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -22,6 +24,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class DatabaseXmlDAO implements DatabaseDAO {
 	private static final int XML_FORMAT_VERSION = 1;
+	private static final Logger logger = Logger.getLogger(DatabaseXmlDAO.class.getSimpleName());
 
 	@Override
 	public void save(Database db, File destinationFile) throws IOException {
@@ -46,9 +49,15 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			}		
 			
 			// Database version, client name and timestamp 
-			out.print("\t\t<databaseVersion "
-				+ "time=\""+databaseVersion.getTimestamp().getTime()+"\" "
-				+ "client=\""+databaseVersion.getUploadedFrom()+"\">\n");
+			out.print("\t\t<databaseVersion"
+				+ " time=\""+databaseVersion.getTimestamp().getTime()+"\""
+				+ " client=\""+databaseVersion.getClient()+"\"");
+			
+			if (databaseVersion.getPreviousClient() != null) {
+				out.print(" previousClient=\""+databaseVersion.getPreviousClient()+"\"");
+			}
+			
+			out.print(">\n");
 			
 			// Vector clock
 			out.print("\t\t\t<vectorClock>\n");			
@@ -139,32 +148,46 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 		out.close();
 	}
 	
+	@Override
 	public void load(Database db, DatabaseFile databaseFile) throws IOException {
+        load(db, databaseFile, null, null);
+	}
+	
+	@Override
+	public void load(Database db, DatabaseFile databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
         InputStream is = new FileInputStream(databaseFile.getFile());
         
         try {
+			logger.log(Level.INFO, "- Loading database from "+databaseFile.getFile()+" ...");
+
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
 			
-			saxParser.parse(is, new DatabaseXmlHandler(db));
+			saxParser.parse(is, new DatabaseXmlHandler(db, fromVersion, toVersion));
         }
         catch (Exception e) {
         	throw new IOException(e);
         } 
-	}
+	}	
 	
 	public static class DatabaseXmlHandler extends DefaultHandler {
-		private String elementPath;
 		private Database database;
+		private VectorClock versionFrom;
+		private VectorClock versionTo;
+
+		private String elementPath;
 		private DatabaseVersion databaseVersion;
 		private VectorClock vectorClock;
+		private boolean vectorClockInRange;
 		private FileContent fileContent;
 		private MultiChunkEntry multiChunk;
 		private PartialFileHistory fileHistory;
 		
-		public DatabaseXmlHandler(Database database) {
+		public DatabaseXmlHandler(Database database, VectorClock fromVersion, VectorClock toVersion) {
 			this.elementPath = "";
 			this.database = database;
+			this.versionFrom = fromVersion;
+			this.versionTo = toVersion;
 		}
 		
 		@Override
@@ -176,10 +199,12 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {				
 				Long time = Long.parseLong(attributes.getValue("time"));
 				String client = attributes.getValue("client");
+				String previousClient = attributes.getValue("previousClient");
 				
 				databaseVersion = new DatabaseVersion();
 				databaseVersion.setTimestamp(new Date(time));
 				databaseVersion.setClient(client);
+				databaseVersion.setPreviousClient(previousClient);
 			}			
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
 				vectorClock = new VectorClock();
@@ -309,10 +334,26 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			//System.out.println(elementPath+" (end ) ");
 			
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
-				database.addDatabaseVersion(databaseVersion);
+				if (vectorClockInRange) {
+					database.addDatabaseVersion(databaseVersion);
+					logger.log(Level.INFO, "   + Added database version "+databaseVersion.getHeader());
+				}
+				else {
+					logger.log(Level.INFO, "   + Ignoring database version "+databaseVersion.getHeader()+", not in load range: "+versionFrom+" - "+versionTo);
+				}
+
 				databaseVersion = null;
 			}	
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
+				if ((versionFrom != null && VectorClock.compare(versionFrom, vectorClock) == VectorClockComparison.GREATER)
+						|| (versionTo != null && VectorClock.compare(vectorClock, versionTo) == VectorClockComparison.SMALLER)) {
+					
+					vectorClockInRange = false;
+				}	
+				else {
+					vectorClockInRange = true;
+				}
+				
 				databaseVersion.setVectorClock(vectorClock);
 				vectorClock = null;
 			}

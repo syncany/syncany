@@ -27,6 +27,7 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.RemoteDatabaseFile;
+import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseWriteReadIndividualObjectsTest {
@@ -41,7 +42,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	
 	@After
 	public void tearDown() {
-		TestFileUtil.deleteDirectory(tempDir);
+		//TestFileUtil.deleteDirectory(tempDir);
 	}
 	 
 	@Test
@@ -236,14 +237,14 @@ public class DatabaseWriteReadIndividualObjectsTest {
         versionB2.setVersion(2L);
         versionB2.setPath("Pictures/2013");
         versionB2.setName("Egypt");        
-        newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB1);	        	
+        newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB2);	        	
         		
         // Add database version
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
 		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
-		
+		 
 		// File histories
 		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
 		PartialFileHistory loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileId());
@@ -375,22 +376,6 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	}	
 
 	private void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
-		assertCollectionEquals("FileHistory objects in written/read database version different.", writtenFileHistories, readFileHistories);
+		TestAssertUtil.assertCollectionEquals("FileHistory objects in written/read database version different.", writtenFileHistories, readFileHistories);
 	}	
-	
-	private void assertCollectionEquals(String message, Collection<? extends Object> expected, Collection<? extends Object> actual) {
-		assertEquals(message+": Different amount of objects.", expected.size(), actual.size());
-		
-		Iterator<? extends Object> expectedIt = expected.iterator();
-		Iterator<? extends Object> actualIt = actual.iterator();
-		
-		int i = 0;
-		while (expectedIt.hasNext()) {			
-			Object expectedObj = expectedIt.next();			
-			Object actualObj = actualIt.next();
-			
-			assertEquals(message+": actual["+i+"] differs from expected["+i+"]: ", expectedObj, actualObj);
-			i++;
-		}
-	}
 }

@@ -25,7 +25,23 @@ public class Branch {
 	}
 	
 	public DatabaseVersionHeader get(int index) {
-		return branch.get(index);
+		try {
+			return branch.get(index);
+		}
+		catch (ArrayIndexOutOfBoundsException e) {
+			return null;
+		}
+	}
+	
+	// FIXME inefficient! Map?
+	public DatabaseVersionHeader get(VectorClock vectorClock) {
+		for (DatabaseVersionHeader databaseVersionHeader : branch) {
+			if (databaseVersionHeader.getVectorClock().equals(vectorClock)) {
+				return databaseVersionHeader;
+			}
+		}
+		
+		return null;
 	}
 
 	public List<DatabaseVersionHeader> getAll() {
