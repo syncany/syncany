@@ -30,7 +30,7 @@ public class EvilCScenarioTest {
 		clientB.cleanup();
 		clientC.cleanup();*/
 	}
-		
+		 
 	@Test
 	public void testEvilC() throws Exception {
 		clientA.createNewFile("newA-somefile.txt");
@@ -55,6 +55,7 @@ public class EvilCScenarioTest {
 		
 		clientA.down();
 		clientB.down();
+		clientC.down();
 		
 		fail("No asserts yet.");
 	}

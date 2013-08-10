@@ -179,7 +179,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 				databaseVersion = new DatabaseVersion();
 				databaseVersion.setTimestamp(new Date(time));
-				databaseVersion.setUploadedFrom(client);
+				databaseVersion.setClient(client);
 			}			
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
 				vectorClock = new VectorClock();
@@ -207,7 +207,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				fileContent.setChecksum(checksum);
 				fileContent.setContentSize(size);							
 			}
-			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRef")) {
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRefs/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");
 				byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
 						
@@ -233,7 +233,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 				multiChunk = new MultiChunkEntry(multiChunkId);					
 			}			
-			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRef")) {
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRefs/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");
 				byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
 						
@@ -264,10 +264,15 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				String name = attributes.getValue("name");
 				String fileContentRefStr = attributes.getValue("fileContentRef");
 				
+				if (fileVersionStr == null || name == null || path == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, name and path are mandatory");
+				}
+				
 				FileVersion fileVersion = new FileVersion();
 				
-				fileVersion.setFileId(fileHistory.getFileId());
 				fileVersion.setVersion(Long.parseLong(fileVersionStr));
+				fileVersion.setPath(path);
+				fileVersion.setName(name);
 				
 				if (lastModifiedStr != null) {
 					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
@@ -277,9 +282,6 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					fileVersion.setCreatedBy(createdBy);
 				}
 				
-				fileVersion.setPath(path);
-				fileVersion.setName(name);
-
 				// Ref. to content
 				if (fileContentRefStr != null) {
 					byte[] fileContentRef = StringUtil.fromHex(fileContentRefStr);
@@ -335,15 +337,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 		@Override
 		public void characters(char[] ch, int start, int length) throws SAXException {
-			//System.out.println(elementPath+" (chars) : "+new String(ch, start, length));
-			
-			// Database version
-			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/time")) {
-								
-			}
-			else {
-				//System.out.println("NO MATCH");
-			}
+			// No <x>..</x> element yet, ref. with : new String(ch, start, length));			
 		}		
 	}
 }

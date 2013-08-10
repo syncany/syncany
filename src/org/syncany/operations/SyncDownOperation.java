@@ -64,7 +64,7 @@ public class SyncDownOperation extends Operation {
 		allBranches.add(profile.getMachineName(), localBranch);
 		
 		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, fullRemoteBranches);		
-		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, profile.getMachineName(), localBranch, fullRemoteBranches);		
+		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allBranches);		
 		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
 		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allBranches);
 		

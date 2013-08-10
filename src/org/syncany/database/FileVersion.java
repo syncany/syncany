@@ -26,19 +26,8 @@ import org.syncany.config.Constants;
  * @author pheckel
  */
 public class FileVersion implements Cloneable {
-    
-    /**
-     * <ul>
-     * <li>UNKNOWN
-     * <li>NEW: New file
-     * <lI>CHANGED: The file contents have changed. At least one chunk differs.
-     * <li>RENAMED: The file path or name has changed.
-     * <li>MERGED: The file history has been merged to a different file.
-     * </ul>
-     */
     public enum FileStatus { NEW, CHANGED, RENAMED, DELETED, MERGED };
         
-    private Long fileId;
     private Long version;   
     private String createdBy;
     private FileContent content;
@@ -49,16 +38,8 @@ public class FileVersion implements Cloneable {
     private FileStatus status;    
     
     public FileVersion() {
-        
-    }
-    
-    public Long getFileId() {
-        return fileId;
-    }
-
-    public void setFileId(Long id) {
-        this.fileId = id;
-    }
+        // Fressen.
+    }   
 
     public FileContent getContent() {
         return content;
@@ -133,6 +114,12 @@ public class FileVersion implements Cloneable {
     }
     
     @Override
+	public String toString() {
+		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", content=" + content + ", path=" + path
+				+ ", name=" + name + ", lastModified=" + lastModified + ", updated=" + updated + ", status=" + status + ")";
+	}
+
+	@Override
     public Object clone() {
         try {
             FileVersion clone = (FileVersion) super.clone();
@@ -157,7 +144,6 @@ public class FileVersion implements Cloneable {
 		int result = 1;
 		result = prime * result + ((content == null) ? 0 : content.hashCode());
 		result = prime * result + ((createdBy == null) ? 0 : createdBy.hashCode());
-		result = prime * result + ((fileId == null) ? 0 : fileId.hashCode());
 		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((path == null) ? 0 : path.hashCode());
@@ -185,11 +171,6 @@ public class FileVersion implements Cloneable {
 			if (other.createdBy != null)
 				return false;
 		} else if (!createdBy.equals(other.createdBy))
-			return false;
-		if (fileId == null) {
-			if (other.fileId != null)
-				return false;
-		} else if (!fileId.equals(other.fileId))
 			return false;
 		if (lastModified == null) {
 			if (other.lastModified != null)

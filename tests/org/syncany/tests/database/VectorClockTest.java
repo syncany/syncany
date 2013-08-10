@@ -172,7 +172,7 @@ public class VectorClockTest {
 		vc1.setClock("UnitBBB", 5L);
 		vc1.setClock("UnitAAA", 4L);
 		
-		assertEquals("Expected different serialization", "(UnitAAA = 4, UnitBBB = 5)", vc1.toString());
+		assertEquals("Expected different serialization", "(UnitAAA4,UnitBBB5)", vc1.toString());
 	}	
 	
 	@Test

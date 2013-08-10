@@ -118,7 +118,7 @@ public class SyncUpOperation extends Operation {
 	
 		newDatabaseVersion.setVectorClock(newVectorClock);
 		newDatabaseVersion.setTimestamp(new Date());	
-		newDatabaseVersion.setUploadedFrom(profile.getMachineName());
+		newDatabaseVersion.setClient(profile.getMachineName());
 						
 		return newDatabaseVersion;
 	}

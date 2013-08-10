@@ -8,8 +8,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.junit.After;
@@ -359,20 +359,38 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	private void compareDatabaseVersionChunks(Collection<ChunkEntry> writtenChunks, Collection<ChunkEntry> readChunks) {	
 		assertEquals("Different amount of Chunk objects.", writtenChunks.size(), readChunks.size());
 		assertTrue("Chunk objects in written/read database version different.", writtenChunks.containsAll(readChunks));
+		//assertCollectionEquals("Chunk objects in written/read database version different.", writtenChunks, readChunks);
 	}
 	
 	private void compareDatabaseVersionMultiChunks(Collection<MultiChunkEntry> writtenMultiChunks, Collection<MultiChunkEntry> readMultiChunks) {
 		assertEquals("Different amount of MultiChunk objects.", writtenMultiChunks.size(), readMultiChunks.size());
-		assertTrue("MultiChunk objects in written/read database version different.", writtenMultiChunks.containsAll(readMultiChunks));		
+		assertTrue("MultiChunk objects in written/read database version different.", writtenMultiChunks.containsAll(readMultiChunks));
+		//assertCollectionEquals("MultiChunk objects in written/read database version different.", writtenMultiChunks, readMultiChunks);
 	}	
 	
 	private void compareDatabaseVersionFileContents(Collection<FileContent> writtenFileContents, Collection<FileContent> readFileContents) {
 		assertEquals("Different amount of FileContent objects.", writtenFileContents.size(), readFileContents.size());
-		assertTrue("FileContent objects in written/read database version different.", writtenFileContents.containsAll(readFileContents));		
+		assertTrue("FileContent objects in written/read database version different.", writtenFileContents.containsAll(readFileContents));
+		//assertCollectionEquals("FileContent objects in written/read database version different.", writtenFileContents, readFileContents);
+	}	
+
+	private void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
+		assertCollectionEquals("FileHistory objects in written/read database version different.", writtenFileHistories, readFileHistories);
 	}	
 	
-	private void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
-		assertEquals("Different amount of FileHistory objects.", writtenFileHistories.size(), readFileHistories.size());
-		assertTrue("FileHistory objects in written/read database version different.", writtenFileHistories.containsAll(readFileHistories));		
-	}	
+	private void assertCollectionEquals(String message, Collection<? extends Object> expected, Collection<? extends Object> actual) {
+		assertEquals(message+": Different amount of objects.", expected.size(), actual.size());
+		
+		Iterator<? extends Object> expectedIt = expected.iterator();
+		Iterator<? extends Object> actualIt = actual.iterator();
+		
+		int i = 0;
+		while (expectedIt.hasNext()) {			
+			Object expectedObj = expectedIt.next();			
+			Object actualObj = actualIt.next();
+			
+			assertEquals(message+": actual["+i+"] differs from expected["+i+"]: ", expectedObj, actualObj);
+			i++;
+		}
+	}
 }

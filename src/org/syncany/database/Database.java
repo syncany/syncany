@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class Database {
     private List< DatabaseVersion> databaseVersions;    
@@ -102,38 +101,53 @@ public class Database {
 		databaseVersions.add(newDatabaseVersion);
 		
 		// Populate caches
-		databaseVersionIdCache.put(newDatabaseVersion.getVectorClock(), newDatabaseVersion);
-		mergeDatabaseVersions(fullDatabaseVersionCache, newDatabaseVersion);
+		updateDatabaseVersionIdCache(newDatabaseVersion);
+		updateFullDatabaseVersionCache(newDatabaseVersion);
+		updateFilenameHistoryCache();
 	} 
 	
-	private void mergeDatabaseVersions(DatabaseVersion targetDatabaseVersion, DatabaseVersion sourceDatabaseVersion) {
+	private void updateFilenameHistoryCache() {
+		// Cache all file paths + names to fileHistories
+		// TODO file a deleted, file b same path/name => chaos
+		for (PartialFileHistory cacheFileHistory : fullDatabaseVersionCache.getFileHistories()) {
+			String fileName = cacheFileHistory.getLastVersion().getFullName();
+			
+			filenameHistoryCache.put(fileName, cacheFileHistory);
+		}
+	}
+	
+	private void updateDatabaseVersionIdCache(DatabaseVersion newDatabaseVersion) {
+		databaseVersionIdCache.put(newDatabaseVersion.getVectorClock(), newDatabaseVersion);
+	}
+	
+	private void updateFullDatabaseVersionCache(DatabaseVersion newDatabaseVersion) {
 		// Chunks
-		for (ChunkEntry sourceChunk : sourceDatabaseVersion.getChunks()) {
-			if (targetDatabaseVersion.getChunk(sourceChunk.getChecksum()) == null) {
-				targetDatabaseVersion.addChunk(sourceChunk);
+		for (ChunkEntry sourceChunk : newDatabaseVersion.getChunks()) {
+			if (fullDatabaseVersionCache.getChunk(sourceChunk.getChecksum()) == null) {
+				fullDatabaseVersionCache.addChunk(sourceChunk);
 			}
 		}
 		
 		// Multichunks
-		for (MultiChunkEntry sourceMultiChunk : sourceDatabaseVersion.getMultiChunks()) {
-			if (targetDatabaseVersion.getMultiChunk(sourceMultiChunk.getId()) == null) {
-				targetDatabaseVersion.addMultiChunk(sourceMultiChunk);
+		for (MultiChunkEntry sourceMultiChunk : newDatabaseVersion.getMultiChunks()) {
+			if (fullDatabaseVersionCache.getMultiChunk(sourceMultiChunk.getId()) == null) {
+				fullDatabaseVersionCache.addMultiChunk(sourceMultiChunk);
 			}
 		}
 		
 		// Contents
-		for (FileContent sourceFileContent : sourceDatabaseVersion.getFileContents()) {
-			if (targetDatabaseVersion.getFileContent(sourceFileContent.getChecksum()) == null) {
-				targetDatabaseVersion.addFileContent(sourceFileContent);
+		for (FileContent sourceFileContent : newDatabaseVersion.getFileContents()) {
+			if (fullDatabaseVersionCache.getFileContent(sourceFileContent.getChecksum()) == null) {
+				fullDatabaseVersionCache.addFileContent(sourceFileContent);
 			}
 		}		
 		
 		// Histories
-		for (PartialFileHistory sourceFileHistory : sourceDatabaseVersion.getFileHistories()) {
-			PartialFileHistory targetFileHistory = targetDatabaseVersion.getFileHistory(sourceFileHistory.getFileId());
+		for (PartialFileHistory sourceFileHistory : newDatabaseVersion.getFileHistories()) {
+			PartialFileHistory targetFileHistory = fullDatabaseVersionCache.getFileHistory(sourceFileHistory.getFileId());
 			
 			if (targetFileHistory == null) {
-				targetDatabaseVersion.addFileHistory(sourceFileHistory);
+				fullDatabaseVersionCache.addFileHistory(sourceFileHistory);
 			}
 			else {
 				for (FileVersion sourceFileVersion : sourceFileHistory.getFileVersions().values()) {
@@ -142,15 +156,7 @@ public class Database {
 					}
 				}
 			}
-		}
-		
-		// Cache all file paths + names to fileHistories
-		// TODO file a deleted, file b same path/name => chaos
-		for (PartialFileHistory cacheFileHistory : targetDatabaseVersion.getFileHistories()) {
-			String fileName = cacheFileHistory.getLastVersion().getFullName();
-			
-			filenameHistoryCache.put(fileName, cacheFileHistory);
-		}
+		}		
 	}
 
 	

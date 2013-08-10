@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.junit.Test;
+import org.syncany.database.Branch;
+import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.operations.DatabaseVersionUpdateDetector;
 import org.syncany.tests.util.TestDatabaseVersionUtil;
@@ -887,6 +889,32 @@ public class DatabaseVersionUpdateDetectorTest {
 		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
 	}			
 
+	@Test
+	public void testStitchBranches() throws Exception {
+		Branch localBranch = TestDatabaseVersionUtil.createBranch(new String[] {
+			"C/(C1)/T=1376074225383",
+			"C/(C2)/T=1376074225399",
+			"C/(C3)/T=1376074225416",
+		});
+		
+		Branches remoteBranches = new Branches();
+		
+		remoteBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
+		}));
+		
+		remoteBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
+			"B/(A3,B1)/T=1376074225356"
+		}));
+		
+		Branches allBranches = remoteBranches.clone();
+		allBranches.add("C", localBranch);
+		
+		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		databaseVersionUpdateDetector.stitchRemoteBranches(localBranch, allBranches, remoteBranches);
+	}
 
 	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders, TestResult expectedTestResult) throws Exception {
 		// Print them all

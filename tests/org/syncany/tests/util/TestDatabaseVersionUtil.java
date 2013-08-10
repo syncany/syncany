@@ -6,6 +6,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.database.Branch;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 
@@ -69,6 +70,17 @@ public class TestDatabaseVersionUtil {
 		}
 
 		return databaseVersionHeaderMap;
+	}
+
+	public static Branch createBranch(String[] databaseVersionHeaderStrings) throws Exception {
+		Branch branch = new Branch();
+		
+		for (String databaseVersionHeaderString : databaseVersionHeaderStrings) {
+			DatabaseVersionHeader databaseVersionHeader = createFromString(databaseVersionHeaderString);
+			branch.add(databaseVersionHeader);
+		}
+
+		return branch;
 	}
 	
 }

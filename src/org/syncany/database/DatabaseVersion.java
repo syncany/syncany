@@ -4,14 +4,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.syncany.util.ByteArray;
-import org.syncany.util.StringUtil;
 
 public class DatabaseVersion {
-    private static final Logger logger = Logger.getLogger(DatabaseVersion.class.getSimpleName());
-    
     private DatabaseVersionHeader header; 
     
     // Full DB in RAM
@@ -49,7 +45,7 @@ public class DatabaseVersion {
 		this.header.setVectorClock(vectorClock);
 	}
 	
-	public void setUploadedFrom(String client) {
+	public void setClient(String client) {
 		this.header.setClient(client);
 	}
 	
@@ -116,5 +112,30 @@ public class DatabaseVersion {
     
     public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
     	historyCache.get(fileHistoryID).addFileVersion(fileVersion);
-    }        
+    }  
+    
+    @Override
+  	public int hashCode() {
+  		final int prime = 31;
+  		int result = 1;
+  		result = prime * result + ((header == null) ? 0 : header.hashCode());
+  		return result;
+  	}
+
+  	@Override
+  	public boolean equals(Object obj) {
+  		if (this == obj)
+  			return true;
+  		if (obj == null)
+  			return false;
+  		if (getClass() != obj.getClass())
+  			return false;
+  		DatabaseVersion other = (DatabaseVersion) obj;
+  		if (header == null) {
+  			if (other.header != null)
+  				return false;
+  		} else if (!header.equals(other.header))
+  			return false;
+  		return true;
+  	}    
 }

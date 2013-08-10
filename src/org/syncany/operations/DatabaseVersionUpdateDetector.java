@@ -3,10 +3,12 @@ package org.syncany.operations;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.database.Branch;
@@ -156,6 +158,39 @@ public class DatabaseVersionUpdateDetector {
 		return true;
 	}
 
+	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, Branches allDatabaseVersionHeaders) {
+		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
+		
+		nextClient:	for (String remoteMachineName : allDatabaseVersionHeaders.getClients()) {
+			Branch branch = allDatabaseVersionHeaders.getBranch(remoteMachineName);
+			
+			for (Iterator<DatabaseVersionHeader> i = branch.iteratorFirst(); i.hasNext(); ) {
+				DatabaseVersionHeader thisDatabaseVersionHeader = i.next();
+				
+				if (thisDatabaseVersionHeader.equals(lastCommonHeader)) {
+					if (i.hasNext()) {
+						DatabaseVersionHeader firstConflictingInBranch = i.next();
+						firstConflictingDatabaseVersionHeaders.put(remoteMachineName, firstConflictingInBranch);
+					}
+					else {
+						// No conflict here!
+					}
+					
+					continue nextClient;
+				} 
+			}
+
+			// Last common header not found; Add first as conflict			
+			if (branch.size() > 0) {
+				DatabaseVersionHeader firstConflictingInBranch = branch.get(0);
+				firstConflictingDatabaseVersionHeaders.put(remoteMachineName, firstConflictingInBranch);
+			}
+		}
+		
+		return firstConflictingDatabaseVersionHeaders;
+	}
+	
+	@Deprecated
 	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName,
 			Branch localDatabaseVersionHeaders, Branches remoteDatabaseVersionHeaders) {
 		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
@@ -337,8 +372,17 @@ public class DatabaseVersionUpdateDetector {
 					continue;
 				}
 
-				DatabaseVersionHeader currentMachineDatabaseVersionHeader = machineDatabaseVersionHeaders.get(machinePosition);
+				if (machinePosition >= machineDatabaseVersionHeaders.size()) {
+					// Eliminate machine in current loop
+					// TODO is this correct?
+					machineBranchPositionIterator.put(machineName, null);
+					machineInRaceCount--;
+					
+					continue;
+				}
 
+				DatabaseVersionHeader currentMachineDatabaseVersionHeader = machineDatabaseVersionHeaders.get(machinePosition);;
+				
 				if (currentComparisonDatabaseVersionHeader == null) {
 					currentComparisonMachineName = machineName;
 					currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
@@ -493,7 +537,71 @@ public class DatabaseVersionUpdateDetector {
 
 		return null;
 	}
+	
+	
+	public Branches stitchRemoteBranches(Branch localBranch, Branches allBranches, Branches remoteBranches) {
+		if ("1".equals("1")) {
+			throw new RuntimeException("Not yet implemented.");
+		}
+		
+		for (String clientName : allBranches.getClients()) {
+			//XXXXXXXXXXx 
+			// FIXME add "previous vector clock" or "previous client" to databaseversionheader
+			// this would make it easier to stich branches together.
+			// would this make findcommonheader, etc. obsolete?
+		}
+		
+		Branches filledRemoteBranches = new Branches();
 
+		for (String clientName : allBranches.getClients()) {
+			logger.log(Level.INFO, "Stitch: Stitching {0}", clientName);
+			
+			Branch branch = allBranches.getBranch(clientName);
+			
+			// Get first vector clock, e.g. (A3,B2,C1)
+			VectorClock firstVectorClock = branch.getFirst().getVectorClock();
+			logger.log(Level.INFO, "- First vector clock: {0}", firstVectorClock);
+			
+			// Make variations of first vector clock to find stitches, e.g. (A2,B2,C1), (A3,B1,C1), (A3,B2) 
+			List<VectorClock> possiblePreviousVectorClocks = new ArrayList<VectorClock>();
+			
+			for (String firstVectorClockClient : firstVectorClock.keySet()) {
+				VectorClock possiblePreviousVectorClock = firstVectorClock.clone();				
+				long clientToBeChanged = possiblePreviousVectorClock.getClock(firstVectorClockClient);
+				
+				if (clientToBeChanged > 1) {
+					possiblePreviousVectorClock.setClock(firstVectorClockClient, clientToBeChanged-1);					
+				}
+				else {
+					possiblePreviousVectorClock.remove(firstVectorClockClient);					
+				}
+				
+				if (possiblePreviousVectorClock.size() > 0) {
+					possiblePreviousVectorClocks.add(possiblePreviousVectorClock);
+				}				
+			}
+			
+			logger.log(Level.INFO, "- Possible previous vector clocks: {0}", possiblePreviousVectorClocks);
+			
+			// Find matching vector clock from others
+			for (String innerClientName : allBranches.getClients()) {
+				if (innerClientName.equals(clientName)) {
+					continue;
+				}
+				
+				Branch innerBranch = allBranches.getBranch(innerClientName);
+				VectorClock innerLastVectorClock = innerBranch.getLast().getVectorClock();
+				
+				logger.log(Level.INFO, "   + Testing "+innerClientName+" with "+innerLastVectorClock);
+				
+			}
+		}
+
+		return filledRemoteBranches;
+	}
+	
+
+	@Deprecated
 	public Branches fillRemoteBranches(Branch localBranch, Branches remoteBranches) {
 		Branches filledRemoteBranches = new Branches();
 

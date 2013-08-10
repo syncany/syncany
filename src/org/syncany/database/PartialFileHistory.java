@@ -63,6 +63,11 @@ public class PartialFileHistory {
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
 
+    @Override
+    public String toString() {
+    	return PartialFileHistory.class.getSimpleName()+"(fileId="+fileId+", versions="+versions+")";
+    }
+    
 	@Override
 	public int hashCode() {
 		final int prime = 31;
