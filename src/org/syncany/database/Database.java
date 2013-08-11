@@ -18,18 +18,22 @@
 package org.syncany.database;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.syncany.util.ByteArray;
+
 public class Database {
-    private List< DatabaseVersion> databaseVersions;    
+    private List<DatabaseVersion> databaseVersions;    
 	
     // Caches
     private DatabaseVersion fullDatabaseVersionCache;
     private Map<String, PartialFileHistory> filenameHistoryCache;
-    private HashMap<VectorClock, DatabaseVersion> databaseVersionIdCache;
+    private Map<VectorClock, DatabaseVersion> databaseVersionIdCache;
+    private Map<ByteArray, List<PartialFileHistory>> contentChecksumFileHistoriesCache;
 
     public Database() {
     	databaseVersions = new ArrayList<DatabaseVersion>();    	
@@ -38,6 +42,7 @@ public class Database {
     	fullDatabaseVersionCache = new DatabaseVersion();    	
     	filenameHistoryCache = new HashMap<String, PartialFileHistory>();
     	databaseVersionIdCache = new HashMap<VectorClock, DatabaseVersion>();
+    	contentChecksumFileHistoriesCache = new HashMap<ByteArray, List<PartialFileHistory>>();
     }   	
 	
 	public DatabaseVersion getLastDatabaseVersion() {
@@ -78,12 +83,27 @@ public class Database {
 		return fullDatabaseVersionCache.getMultiChunk(id);
 	}	
 	
-	public PartialFileHistory getFileHistory(String filePath) {
-		return filenameHistoryCache.get(filePath); 
+	/**
+     * Get a multichunk that this chunk is contained in.
+     */
+	public MultiChunkEntry getMultiChunk(ChunkEntry chunk) {
+		return fullDatabaseVersionCache.getMultiChunk(chunk);
+	}	
+	
+	public PartialFileHistory getFileHistory(String relativeFilePath) {
+		return filenameHistoryCache.get(relativeFilePath); 
 	}
+	
+	public Collection<PartialFileHistory> getFileHistories(byte[] fileContentChecksum) {
+		return contentChecksumFileHistoriesCache.get(new ByteArray(fileContentChecksum));
+	}	
 	
 	public PartialFileHistory getFileHistory(long fileId) {
 		return fullDatabaseVersionCache.getFileHistory(fileId); 
+	}	
+
+	public Collection<PartialFileHistory> getFileHistories() {
+		return fullDatabaseVersionCache.getFileHistories();		
 	}
 	
 	public Branch getBranch() {
@@ -103,8 +123,8 @@ public class Database {
 		updateDatabaseVersionIdCache(databaseVersion);
 		updateFullDatabaseVersionCache(databaseVersion);
 		updateFilenameHistoryCache();
-	} 
-	
+		updateContentChecksumCache(databaseVersion);
+	} 	
 
 	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {
 		databaseVersions.remove(databaseVersion);
@@ -113,12 +133,38 @@ public class Database {
 		updateFullDatabaseVersionCache();
 		updateDatabaseVersionIdCache();
 		updateFilenameHistoryCache();
+		updateContentChecksumCache();
+	}
+
+	private void updateContentChecksumCache() {
+		contentChecksumFileHistoriesCache.clear();
+		
+		for (DatabaseVersion databaseVersion : databaseVersions) {
+			updateContentChecksumCache(databaseVersion);
+		}
 	}
 	
-	
+	private void updateContentChecksumCache(DatabaseVersion databaseVersion) {
+		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
+			byte[] lastVersionChecksum = fileHistory.getLastVersion().getChecksum();
+			
+			if (lastVersionChecksum != null) {
+				ByteArray lastVersionChecksumByteArray = new ByteArray(lastVersionChecksum);
+				List<PartialFileHistory> historiesWithVersionsWithSameChecksum = contentChecksumFileHistoriesCache.get(lastVersionChecksumByteArray);
+				
+				if (historiesWithVersionsWithSameChecksum == null) {
+					historiesWithVersionsWithSameChecksum = new ArrayList<PartialFileHistory>();
+					contentChecksumFileHistoriesCache.put(lastVersionChecksumByteArray, historiesWithVersionsWithSameChecksum);
+				}
+				
+				historiesWithVersionsWithSameChecksum.add(fileHistory);
+			}
+		}
+	}	
+		
 	private void updateFilenameHistoryCache() {
 		// Cache all file paths + names to fileHistories
-		// TODO file a deleted, file b same path/name => chaos
+		// TODO [high] file a deleted, file b same path/name => chaos
 		for (PartialFileHistory cacheFileHistory : fullDatabaseVersionCache.getFileHistories()) {
 			String fileName = cacheFileHistory.getLastVersion().getFullName();
 			

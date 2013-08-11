@@ -28,8 +28,8 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Cache {
-	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-encrypted-%s";
-    private static String FILE_FORMAT_CHUNK_DECRYPTED = "chunk-decrypted-%s";
+	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-%s";
+    private static String FILE_FORMAT_CHUNK_DECRYPTED = "chunk-%s";
     private static String FILE_FORMAT_DATABASE_FILE_ENCRYPTED = "%s";
 
     private File cacheDir;

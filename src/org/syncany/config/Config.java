@@ -61,18 +61,21 @@ public class Config {
         // and initialized in the beginning.
 
     	try {
-    		// If JAR
-    		InputStream inputStream = Config.class.getResourceAsStream("/logging.properties");
+    		// Use file if exists, else use file embedded in JAR
+    		File logConfig = new File("logging.properties");
+    		InputStream logConfigInputStream;
     		
-    		// Otherwise
-    		if (inputStream == null) {
-    			inputStream = new FileInputStream(new File("logging.properties"));
+    		if (logConfig.exists() && logConfig.canRead()) {
+    			logConfigInputStream = new FileInputStream(new File("logging.properties"));
+    		}
+    		else {
+    			logConfigInputStream = Config.class.getResourceAsStream("/logging.properties");
     		}
     		
-    	    LogManager.getLogManager().readConfiguration(inputStream);
+    	    LogManager.getLogManager().readConfiguration(logConfigInputStream);
     	}
     	catch (Exception e) {
-    	    Logger.getAnonymousLogger().severe("Could not load default logging.properties file");
+    	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");
     	    Logger.getAnonymousLogger().severe(e.getMessage());
     	    
     	    e.printStackTrace();

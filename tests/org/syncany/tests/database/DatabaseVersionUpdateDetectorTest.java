@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.syncany.database.Branch;
 import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.operations.DatabaseVersionUpdateDetector;
+import org.syncany.operations.DatabaseReconciliator;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseVersionUtil;
 
@@ -912,7 +912,7 @@ public class DatabaseVersionUpdateDetectorTest {
 			"C/(C3)/T=1376074225416/C",
 		}));		
 		
-		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
 		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(allBranches, "D", new Branch());
 		
 		Branches expectedStitchedBranches = new Branches();
@@ -968,7 +968,7 @@ public class DatabaseVersionUpdateDetectorTest {
 			"C/(A5,B2,C3)/T=10/B",
 		}));		
 		
-		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
 		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(allBranches, "D", new Branch());
 		
 		Branches expectedStitchedBranches = new Branches();
@@ -1013,7 +1013,7 @@ public class DatabaseVersionUpdateDetectorTest {
 	
 		System.out.println("----------");
 		
-		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
 		TestResult actualTestResult = new TestResult();
 		
 		actualTestResult.lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);

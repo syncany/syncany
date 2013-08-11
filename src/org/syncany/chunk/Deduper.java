@@ -36,6 +36,7 @@ public class Deduper {
 
 					// old chunk
 					if (!listener.onChunk(chunk)) {
+						listener.onFileAddChunk(file, chunk);
 						continue;
 					}
 

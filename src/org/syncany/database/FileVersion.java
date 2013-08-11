@@ -17,6 +17,7 @@
  */
 package org.syncany.database;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import org.syncany.config.Constants;
@@ -30,7 +31,7 @@ public class FileVersion implements Cloneable {
         
     private Long version;   
     private String createdBy;
-    private FileContent content;
+    private byte[] checksum;
     private String path;
     private String name;   
     private Date lastModified;
@@ -39,15 +40,7 @@ public class FileVersion implements Cloneable {
     
     public FileVersion() {
         // Fressen.
-    }   
-
-    public FileContent getContent() {
-        return content;
-    }
-
-    public void setContent(FileContent content) {
-        this.content = content;
-    }
+    }      
 
     public String getCreatedBy() {
         return createdBy;
@@ -82,7 +75,7 @@ public class FileVersion implements Cloneable {
     }
     
     public boolean isFolder() {
-        return content == null;
+        return checksum == null;
     }
 
     public Date getLastModified() {
@@ -113,9 +106,17 @@ public class FileVersion implements Cloneable {
     	return this.path + Constants.DATABASE_FILE_SEPARATOR + this.name;
     }
     
-    @Override
+    public byte[] getChecksum() {
+		return checksum;
+	}
+
+	public void setChecksum(byte[] checksum) {
+		this.checksum = checksum;
+	}
+
+	@Override
 	public String toString() {
-		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", content=" + content + ", path=" + path
+		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", checksum=" + checksum + ", path=" + path
 				+ ", name=" + name + ", lastModified=" + lastModified + ", updated=" + updated + ", status=" + status + ")";
 	}
 
@@ -124,7 +125,7 @@ public class FileVersion implements Cloneable {
         try {
             FileVersion clone = (FileVersion) super.clone();
             
-            clone.setContent(getContent());
+            clone.setChecksum(getChecksum());
             clone.setCreatedBy(getCreatedBy());
             clone.setLastModified(getLastModified());
             clone.setName(getName());
@@ -142,7 +143,7 @@ public class FileVersion implements Cloneable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((content == null) ? 0 : content.hashCode());
+		result = prime * result + Arrays.hashCode(checksum);
 		result = prime * result + ((createdBy == null) ? 0 : createdBy.hashCode());
 		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
@@ -162,10 +163,7 @@ public class FileVersion implements Cloneable {
 		if (getClass() != obj.getClass())
 			return false;
 		FileVersion other = (FileVersion) obj;
-		if (content == null) {
-			if (other.content != null)
-				return false;
-		} else if (!content.equals(other.content))
+		if (!Arrays.equals(checksum, other.checksum))
 			return false;
 		if (createdBy == null) {
 			if (other.createdBy != null)
@@ -200,7 +198,5 @@ public class FileVersion implements Cloneable {
 		} else if (!version.equals(other.version))
 			return false;
 		return true;
-	}
-
-  
+	}  
 }

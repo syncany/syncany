@@ -31,15 +31,19 @@ public class PartialFileHistory {
     private TreeMap<Long, FileVersion> versions;
     
     public PartialFileHistory() {
-        this.fileId = new Random().nextLong();
-        this.versions = new TreeMap<Long, FileVersion>();
+    	this(new Random().nextLong());
     }    
+    
+    public PartialFileHistory(long fileId) {
+        this.fileId = fileId;
+        this.versions = new TreeMap<Long, FileVersion>();    	
+    }
 
     public Long getFileId() {
         return fileId;
     }
 
-    /* package */ void setFileId(Long fileId) {
+    /* package */  void setFileId(Long fileId) {
         this.fileId = fileId;
     }
 

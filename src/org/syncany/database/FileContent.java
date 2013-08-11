@@ -48,11 +48,11 @@ public class FileContent {
         this.checksum = checksum;
     }
 
-    public int getContentSize() {
+    public int getSize() {
         return contentSize;
     }
 
-    public void setContentSize(int contentSize) {
+    public void setSize(int contentSize) {
         this.contentSize = contentSize;
     }
 

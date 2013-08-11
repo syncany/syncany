@@ -54,15 +54,17 @@ public class SyncUpOperation extends Operation {
 		boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 		
 		if (uploadMultiChunksSuccess) {
-			File localDeltaDatabaseFile = profile.getCache().createTempFile();	
+			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
+
+			RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
+			File localDeltaDatabaseFile = profile.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
 
 			logger.log(Level.INFO, "Saving local delta database file ...");
 			logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
 			saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
 			
-			logger.log(Level.INFO, "Uploading local delta database file ...");
-			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
-			uploadLocalDatabase(localDeltaDatabaseFile, newestLocalDatabaseVersion);			
+			logger.log(Level.INFO, "- Uploading local delta database file ...");
+			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);			
 		}
 		else {
 			throw new Exception("aa");
@@ -72,19 +74,20 @@ public class SyncUpOperation extends Operation {
 	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			File multiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-			RemoteFile remoteFile = new RemoteFile(multiChunkFile.getName());
+			File localMultiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName());
 			
-			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+multiChunkFile+" to "+remoteFile+" ...");
-			transferManager.upload(multiChunkFile, remoteFile);
+			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
+			transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
+			
+			logger.log(Level.INFO, "  + Removing "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			localMultiChunkFile.delete();
 		}
 		
 		return true; // FIXME
 	}
 
-	private boolean uploadLocalDatabase(File localDatabaseFile, long newestLocalDatabaseVersion) throws InterruptedException, StorageException {
-		RemoteFile remoteDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
-
+	private boolean uploadLocalDatabase(File localDatabaseFile, RemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {		
 		logger.log(Level.INFO, "- Uploading "+localDatabaseFile+" to "+remoteDatabaseFile+" ..."); 		
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
 		

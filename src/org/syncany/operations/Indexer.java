@@ -2,6 +2,9 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,12 +28,12 @@ import org.syncany.util.StringUtil;
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
 	
-	private Config profile;
+	private Config config;
 	private Deduper deduper;
 	private Database database;
 	
-	public Indexer(Config profile, Deduper deduper, Database database) {
-		this.profile = profile;
+	public Indexer(Config config, Deduper deduper, Database database) {
+		this.config = config;
 		this.deduper = deduper;
 		this.database = database;
 	}
@@ -44,16 +47,170 @@ public class Indexer {
 
 	private class IndexerDeduperListener implements DeduperListener {
 		private DatabaseVersion newDatabaseVersion;
-		private PartialFileHistory fileHistory;
-		private FileVersion fileVersion;
 		private ChunkEntry chunkEntry;		
 		private MultiChunkEntry multiChunkEntry;	
-		private FileContent content;
+		private FileContent fileContent;
 		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 			this.newDatabaseVersion = newDatabaseVersion;
+		}				
+
+		@Override
+		public void onStart() {
+			// Go fish.
+		}		
+
+		@Override
+		public void onFinish() {
+			// Go fish.
 		}
 		
+		@Override
+		public void onFileStart(File file) {
+			logger.log(Level.FINER, "- +File {0}", file); 
+			
+			// Content
+			if (file.isFile()) {
+				logger.log(Level.FINER, "- +FileContent: {0}", file);			
+				fileContent = new FileContent();
+				fileContent.setSize((int) file.length()); 
+			}			
+			
+		}
+
+		@Override
+		public void onFileEnd(File file, byte[] checksum) {
+			if (checksum != null) {
+				logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] { file, StringUtil.toHex(checksum) });
+			}
+			else {
+				logger.log(Level.FINER, "- /File: {0} (directory)", file);
+			}
+			
+			// 1. Determine if file already exists in database 
+			PartialFileHistory lastFileHistory = guessLastFileHistory(file, checksum);						
+			FileVersion lastFileVersion = (lastFileHistory != null) ? lastFileHistory.getLastVersion() : null;
+			
+			// 2. Add new file version
+			PartialFileHistory fileHistory = null;
+			FileVersion fileVersion = null;			
+			
+			if (lastFileVersion == null) {
+				fileHistory = new PartialFileHistory();
+				
+				fileVersion = new FileVersion();
+				fileVersion.setVersion(1L);
+			} 
+			else {
+				fileHistory = new PartialFileHistory(lastFileHistory.getFileId());
+				
+				fileVersion = (FileVersion) lastFileVersion.clone();
+				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
+			}			
+
+			fileVersion.setPath(FileUtil.getRelativePath(config.getLocalDir(), file.getParentFile()));
+			fileVersion.setName(file.getName());
+			fileVersion.setChecksum(checksum);
+			fileVersion.setLastModified(new Date(file.lastModified()));
+			fileVersion.setUpdated(new Date());
+			fileVersion.setCreatedBy(config.getMachineName());
+			
+			// Only add if not identical
+			boolean isIdenticalToLastVersion = lastFileVersion != null && Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
+					&& lastFileVersion.getName().equals(fileVersion.getName()) && lastFileVersion.getPath().equals(fileVersion.getPath());
+			
+			if (!isIdenticalToLastVersion) {
+				newDatabaseVersion.addFileHistory(fileHistory);
+				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), fileVersion);
+			}
+			
+			// 3. Add file content (if not a directory)			
+			if (fileContent != null) {
+				fileContent.setChecksum(checksum);
+
+				// Check if content already exists, throw gathered content away if it does!
+				FileContent existingContent = database.getContent(checksum);
+				
+				if (existingContent == null) { 
+					newDatabaseVersion.addFileContent(fileContent);
+				}
+			}			
+			
+			// Reset
+			fileContent = null;					
+		}
+
+		private PartialFileHistory guessLastFileHistory(File file, byte[] checksum) {
+			PartialFileHistory lastFileHistory = null;
+			
+			// 1a. by file name
+			if (checksum != null) {
+				String relativeFilePath = FileUtil.getRelativePath(config.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName(); 
+				lastFileHistory = database.getFileHistory(relativeFilePath);
+	
+				if (lastFileHistory == null) {
+					// 1b. by checksum
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(checksum);
+					
+					if (fileHistoriesWithSameChecksum != null) {
+						// check if they do not exist anymore --> assume it has moved!
+						// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
+						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
+							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+fileHistoryWithSameChecksum.getLastVersion().getFullName());
+							
+							if (!lastVersionOnLocalDisk.exists()) {
+								lastFileHistory = fileHistoryWithSameChecksum;
+								break;
+							}
+						}
+					}
+					
+					if (lastFileHistory == null) {
+						logger.log(Level.FINER, "   * No old file history found, starting new history.");
+					}
+					else {
+						logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(checksum)+"), appending new version.");
+					}
+				}
+				else {
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+relativeFilePath+"), appending new version.");
+				}
+			}
+			
+			return lastFileHistory;
+		}
+		
+		@Override
+		public void onOpenMultiChunk(MultiChunk multiChunk) {
+			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
+			multiChunkEntry = new MultiChunkEntry(chunkEntry.getChecksum());
+		}
+
+		@Override
+		public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk) {
+			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
+			multiChunkEntry.addChunk(chunkEntry);				
+		}
+		
+		@Override
+		public void onCloseMultiChunk(MultiChunk multiChunk) {
+			logger.log(Level.FINER, "- /MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
+			
+			newDatabaseVersion.addMultiChunk(multiChunkEntry);
+			multiChunkEntry = null;
+		}
+
+		@Override
+		public File getMultiChunkFile(byte[] multiChunkId) {
+			return config.getCache().getEncryptedMultiChunkFile(multiChunkId);
+		}
+
+		@Override
+		public void onFileAddChunk(File file, Chunk chunk) {			
+			logger.log(Level.FINER, "- Chunk > FileContent: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), file });
+			fileContent.addChunk(chunkEntry);				
+		}		
+
 		/*
 		 * Checks if chunk already exists in all database versions (db)
 		 * Afterwards checks if chunk exists in new introduced databaseversion. 
@@ -80,112 +237,5 @@ public class Indexer {
 			logger.log(Level.FINER, "- Chunk exists: {0}", StringUtil.toHex(chunk.getChecksum()));
 			return false;
 		}
-		
-		@Override
-		public void onFileStart(File file) {
-			logger.log(Level.FINER, "- +File {0}", file); 
-			
-			// Check if file exists in full database stock, or create new onFileStart is only called once for each file,
-			// thereby new dbv is not aware of incoming file   
-			String relativeFilePath = FileUtil.getRelativePath(profile.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName(); 
-			fileHistory = database.getFileHistory(relativeFilePath);
-
-			if (fileHistory == null) {
-				fileHistory = new PartialFileHistory();
-			}
-
-			// Check for versions
-			fileVersion = fileHistory.getLastVersion();
-			FileVersion newFileVersion;
-			
-			if (fileVersion == null) {
-				newFileVersion = new FileVersion();
-				newFileVersion.setVersion(1L);
-			} 
-			else {
-				newFileVersion = (FileVersion) fileVersion.clone();
-				fileVersion.setVersion(fileVersion.getVersion()+1);	
-			}
-			
-			newFileVersion.setPath(FileUtil.getRelativePath(profile.getLocalDir(), file.getParentFile()));
-			newFileVersion.setName(file.getName());
-			
-			newDatabaseVersion.addFileHistory(fileHistory);
-			newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(),newFileVersion);
-			
-			// Required for other events
-			fileVersion = newFileVersion;
-		}
-
-
-		@Override
-		public void onOpenMultiChunk(MultiChunk multiChunk) {
-			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
-			multiChunkEntry = new MultiChunkEntry(chunkEntry.getChecksum());
-		}
-
-		@Override
-		public void onCloseMultiChunk(MultiChunk multiChunk) {
-			logger.log(Level.FINER, "- /MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
-			
-			newDatabaseVersion.addMultiChunk(multiChunkEntry);
-			multiChunkEntry = null;
-		}
-
-		@Override
-		public File getMultiChunkFile(byte[] multiChunkId) {
-				return profile.getCache().getEncryptedMultiChunkFile(multiChunkId);
-		}
-
-		@Override
-		public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk) {
-			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
-			multiChunkEntry.addChunk(chunkEntry);				
-		}
-
-		@Override
-		public void onFileAddChunk(File file, Chunk chunk) {
-			if (content == null) {
-				logger.log(Level.FINER, "- +FileContent: {0}", file);			
-				content = new FileContent();
-			}
-			
-			logger.log(Level.FINER, "- Chunk > FileContent: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), file });
-			content.addChunk(chunkEntry);				
-		}
-
-		@Override
-		public void onFileEnd(File file, byte[] checksum) {
-			if (checksum != null) {
-				logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] { file, StringUtil.toHex(checksum) });
-			}
-			else {
-				logger.log(Level.FINER, "- /File: {0} (directory)", file);
-			}
-			
-			
-			if (content != null) {
-				content.setChecksum(checksum);
-
-				fileVersion.setContent(content);
-				newDatabaseVersion.addFileContent(content);
-			}
-			
-			content = null;		
-			
-
-			// fileHistory.addVersion(fileVersion);
-			newDatabaseVersion.addFileHistory(fileHistory);				
-		}
-
-		@Override
-		public void onFinish() {
-			// Go fish.
-		}
-
-		@Override
-		public void onStart() {
-			// Go fish.
-		}		
 	}	
 }

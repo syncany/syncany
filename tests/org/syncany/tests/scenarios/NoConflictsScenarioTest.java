@@ -32,7 +32,7 @@ public class NoConflictsScenarioTest {
 	}
 		 
 	@Test
-	public void testEvilC() throws Exception {
+	public void testNoConflicts() throws Exception {
 		clientA.createNewFile("1");
 		clientA.up();
 		
@@ -40,12 +40,13 @@ public class NoConflictsScenarioTest {
 		
 		clientA.moveFile("1", "2");
 		clientA.up();
+		clientA.up();
 		
 		clientB.down();
 		
 		clientC.down();
 		clientC.createNewFile("3");
-		//clientC.changeFile("2");
+		clientC.changeFile("2");
 		clientC.up();
 		
 		clientA.down();

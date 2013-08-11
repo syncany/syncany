@@ -54,8 +54,8 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  *   - When db-b-1 is not applied, it is re-downloaded every time by clients A and C
  *     until B uploads a consolidated version
  */
-public class DatabaseVersionUpdateDetector {
-	private static final Logger logger = Logger.getLogger(DatabaseVersionUpdateDetector.class.getSimpleName());
+public class DatabaseReconciliator {
+	private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
 
 	@Deprecated
 	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,

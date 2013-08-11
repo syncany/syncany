@@ -11,18 +11,25 @@ public class DatabaseVersion {
     private DatabaseVersionHeader header; 
     
     // Full DB in RAM
-    private Map<ByteArray, ChunkEntry> chunkCache;
-    private Map<ByteArray, MultiChunkEntry> multiChunkCache;
-    private Map<ByteArray, FileContent> contentCache;
-    private Map<Long, PartialFileHistory> historyCache;
-    
+    private Map<ByteArray, ChunkEntry> chunks;
+    private Map<ByteArray, MultiChunkEntry> multiChunks;
+    private Map<ByteArray, FileContent> fileContents;
+    private Map<Long, PartialFileHistory> fileHistories;
+
+    // Quick access cache
+    private Map<ChunkEntry, MultiChunkEntry> chunkMultiChunkCache;    
+
     public DatabaseVersion() {
     	header = new DatabaseVersionHeader();
-    	
-        chunkCache = new HashMap<ByteArray, ChunkEntry>();
-        multiChunkCache = new HashMap<ByteArray, MultiChunkEntry>();
-        contentCache = new HashMap<ByteArray, FileContent>();
-        historyCache = new HashMap<Long, PartialFileHistory>();  
+
+        // Full DB in RAM
+        chunks = new HashMap<ByteArray, ChunkEntry>();
+        multiChunks = new HashMap<ByteArray, MultiChunkEntry>();
+        fileContents = new HashMap<ByteArray, FileContent>();
+        fileHistories = new HashMap<Long, PartialFileHistory>();          
+
+        // Quick access cache
+        chunkMultiChunkCache = new HashMap<ChunkEntry, MultiChunkEntry>();
     }
     
 	public DatabaseVersionHeader getHeader() {
@@ -68,62 +75,76 @@ public class DatabaseVersion {
     // Chunk
     
     public ChunkEntry getChunk(byte[] checksum) {
-        return chunkCache.get(new ByteArray(checksum));
+        return chunks.get(new ByteArray(checksum));
     }    
     
     public void addChunk(ChunkEntry chunk) {
-        chunkCache.put(new ByteArray(chunk.getChecksum()), chunk);        
+        chunks.put(new ByteArray(chunk.getChecksum()), chunk);        
     }
     
     public Collection<ChunkEntry> getChunks() {
-        return chunkCache.values();
+        return chunks.values();
     }
     
     // Multichunk    
     
     public void addMultiChunk(MultiChunkEntry multiChunk) {
-        multiChunkCache.put(new ByteArray(multiChunk.getId()), multiChunk);                
+        multiChunks.put(new ByteArray(multiChunk.getId()), multiChunk);
+        
+        // Populate cache
+        for (ChunkEntry chunk : multiChunk.getChunks()) {
+        	chunkMultiChunkCache.put(chunk, multiChunk);
+        }
     }
     
     public MultiChunkEntry getMultiChunk(byte[] multiChunkId) {
-    	return multiChunkCache.get(new ByteArray(multiChunkId));
+    	return multiChunks.get(new ByteArray(multiChunkId));
     }
     
-    public Collection<MultiChunkEntry> getMultiChunks() {
-        return multiChunkCache.values();
+    /**
+     * Get a multichunk that this chunk is contained in.
+     */
+    public MultiChunkEntry getMultiChunk(ChunkEntry chunk) {
+    	return chunkMultiChunkCache.get(chunk);
     }
-
+    
+    /**
+     * Get all multichunks in this database version.
+     */
+    public Collection<MultiChunkEntry> getMultiChunks() {
+        return multiChunks.values();
+    }
 	
 	// Content
 
 	public FileContent getFileContent(byte[] checksum) {
-		return contentCache.get(new ByteArray(checksum));
+		return fileContents.get(new ByteArray(checksum));
 	}
 
 	public void addFileContent(FileContent content) {
-		contentCache.put(new ByteArray(content.getChecksum()), content);
+		fileContents.put(new ByteArray(content.getChecksum()), content);
 	}
 
 	public Collection<FileContent> getFileContents() {
-		return contentCache.values();
+		return fileContents.values();
 	}
 	
     // History
     
     public void addFileHistory(PartialFileHistory history) {
-        historyCache.put(history.getFileId(), history);
+        fileHistories.put(history.getFileId(), history);
     }
     
     public PartialFileHistory getFileHistory(long fileId) {
-        return historyCache.get(fileId);
+        return fileHistories.get(fileId);
     }
         
     public Collection<PartialFileHistory> getFileHistories() {
-        return historyCache.values();
+        return fileHistories.values();
     }  
     
     public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
-    	historyCache.get(fileHistoryID).addFileVersion(fileVersion);
+    	fileHistories.get(fileHistoryID).addFileVersion(fileVersion);
     }  
     
     @Override

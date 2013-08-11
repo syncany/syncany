@@ -68,43 +68,52 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			out.write("\t\t\t</vectorClock>\n");
 			
 			// Chunks
-			out.print("\t\t\t<chunks>\n");
 			Collection<ChunkEntry> chunks = databaseVersion.getChunks();
-			for (ChunkEntry chunk : chunks) {
-				out.print("\t\t\t\t<chunk checksum=\""+StringUtil.toHex(chunk.getChecksum())+"\" size=\""+chunk.getSize()+"\" />\n");
-			}			
-			out.print("\t\t\t</chunks>\n");
-
-			// Multichunks
-			out.print("\t\t\t<multiChunks>\n");
-			Collection<MultiChunkEntry> multiChunks = databaseVersion.getMultiChunks();
-			for (MultiChunkEntry multiChunk : multiChunks) {
-				out.print("\t\t\t\t<multiChunk id=\""+StringUtil.toHex(multiChunk.getId())+"\">\n");
-				out.print("\t\t\t\t\t<chunkRefs>\n");
-				Collection<ChunkEntry> multiChunkChunks = multiChunk.getChunks();
-				for (ChunkEntry chunk : multiChunkChunks) {
-					out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunk.getChecksum())+"\" />\n");
+			
+			if (chunks.size() > 0) {
+				out.print("\t\t\t<chunks>\n");
+				for (ChunkEntry chunk : chunks) {
+					out.print("\t\t\t\t<chunk checksum=\""+StringUtil.toHex(chunk.getChecksum())+"\" size=\""+chunk.getSize()+"\" />\n");
 				}			
-				out.print("\t\t\t\t\t</chunkRefs>\n");				
-				out.print("\t\t\t\t</multiChunk>\n");				
-			}			
-			out.print("\t\t\t</multiChunks>\n");
+				out.print("\t\t\t</chunks>\n");
+			}
+			
+			// Multichunks
+			Collection<MultiChunkEntry> multiChunks = databaseVersion.getMultiChunks();
+
+			if (multiChunks.size() > 0) {
+				out.print("\t\t\t<multiChunks>\n");
+				for (MultiChunkEntry multiChunk : multiChunks) {
+					out.print("\t\t\t\t<multiChunk id=\""+StringUtil.toHex(multiChunk.getId())+"\">\n");
+					out.print("\t\t\t\t\t<chunkRefs>\n");
+					Collection<ChunkEntry> multiChunkChunks = multiChunk.getChunks();
+					for (ChunkEntry chunk : multiChunkChunks) {
+						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunk.getChecksum())+"\" />\n");
+					}			
+					out.print("\t\t\t\t\t</chunkRefs>\n");				
+					out.print("\t\t\t\t</multiChunk>\n");				
+				}			
+				out.print("\t\t\t</multiChunks>\n");
+			}
 			
 			// File contents
-			out.print("\t\t\t<fileContents>\n");
 			Collection<FileContent> fileContents = databaseVersion.getFileContents();
-			for (FileContent fileContent : fileContents) {
-				out.print("\t\t\t\t<fileContent checksum=\""+StringUtil.toHex(fileContent.getChecksum())+"\" size=\""+fileContent.getContentSize()+"\">\n");
-				out.print("\t\t\t\t\t<chunkRefs>\n");
-				Collection<ChunkEntry> fileContentChunkChunks = fileContent.getChunks();
-				for (ChunkEntry chunk : fileContentChunkChunks) {
-					out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunk.getChecksum())+"\" />\n");
-				}			
-				out.print("\t\t\t\t\t</chunkRefs>\n");				
-				out.print("\t\t\t\t</fileContent>\n");				
-			}						
-			out.print("\t\t\t</fileContents>\n");
 
+			if (fileContents.size() > 0) {
+				out.print("\t\t\t<fileContents>\n");
+				for (FileContent fileContent : fileContents) {
+					out.print("\t\t\t\t<fileContent checksum=\""+StringUtil.toHex(fileContent.getChecksum())+"\" size=\""+fileContent.getSize()+"\">\n");
+					out.print("\t\t\t\t\t<chunkRefs>\n");
+					Collection<ChunkEntry> fileContentChunkChunks = fileContent.getChunks();
+					for (ChunkEntry chunk : fileContentChunkChunks) {
+						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunk.getChecksum())+"\" />\n");
+					}			
+					out.print("\t\t\t\t\t</chunkRefs>\n");				
+					out.print("\t\t\t\t</fileContent>\n");				
+				}						
+				out.print("\t\t\t</fileContents>\n");
+			}
+			
 			// File histories
 			out.print("\t\t\t<fileHistories>\n");
 			Collection<PartialFileHistory> fileHistories = databaseVersion.getFileHistories();
@@ -124,8 +133,8 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 							out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
 						}
 						
-						if (fileVersion.getContent() != null) {
-							out.print(" fileContentRef=\""+StringUtil.toHex(fileVersion.getContent().getChecksum())+"\"");
+						if (fileVersion.getChecksum() != null) {
+							out.print(" checksum=\""+StringUtil.toHex(fileVersion.getChecksum())+"\"");
 						}
 						
 						out.print(" path=\""+fileVersion.getPath()+"\"");
@@ -230,7 +239,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 
 				fileContent = new FileContent();
 				fileContent.setChecksum(checksum);
-				fileContent.setContentSize(size);							
+				fileContent.setSize(size);							
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRefs/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");
@@ -283,11 +292,11 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			}	
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
-				String lastModifiedStr = attributes.getValue("lastModifiedStr");				
+				String lastModifiedStr = attributes.getValue("lastModified");				
 				String createdBy = attributes.getValue("createdBy");
 				String path = attributes.getValue("path");
 				String name = attributes.getValue("name");
-				String fileContentRefStr = attributes.getValue("fileContentRef");
+				String checksumStr = attributes.getValue("checksum");
 				
 				if (fileVersionStr == null || name == null || path == null) {
 					throw new SAXException("FileVersion: Attributes missing: version, name and path are mandatory");
@@ -307,19 +316,8 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					fileVersion.setCreatedBy(createdBy);
 				}
 				
-				// Ref. to content
-				if (fileContentRefStr != null) {
-					byte[] fileContentRef = StringUtil.fromHex(fileContentRefStr);
-							
-					FileContent aFileContent = database.getContent(fileContentRef);
-	
-					if (aFileContent == null) {
-						aFileContent = databaseVersion.getFileContent(fileContentRef);
-						
-						if (aFileContent == null) {
-							throw new SAXException("File content with checksum " + fileContentRefStr + " does not exist.");
-						}
-					}
+				if (checksumStr != null) {
+					fileVersion.setChecksum(StringUtil.fromHex(checksumStr));							
 				}
 
 				fileHistory.addFileVersion(fileVersion);

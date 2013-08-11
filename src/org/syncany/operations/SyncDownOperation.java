@@ -1,29 +1,47 @@
 package org.syncany.operations;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.MultiChunker;
+import org.syncany.config.Cache;
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Branch;
 import org.syncany.database.Branches;
+import org.syncany.database.ChunkEntry;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.FileContent;
+import org.syncany.database.FileVersion;
+import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 
 public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
@@ -38,13 +56,13 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");		
 		
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
-		Database db = loadLocalDatabase(localDatabaseFile);
+		Database database = loadLocalDatabase(localDatabaseFile);
 		
 		// 0. Create TM
 		TransferManager transferManager = profile.getConnection().createTransferManager();
 
 		// 1. Check which remote databases to download based on the last local vector clock		
-		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(db, transferManager);
+		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(database, transferManager);
 		
 		// 2. Download the remote databases to the local cache folder
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
@@ -55,20 +73,20 @@ public class SyncDownOperation extends Operation {
 		// 4. Determine winner branch
 		logger.log(Level.INFO, "Detect updates and conflicts ...");
 		logger.log(Level.INFO, "- DatabaseVersionUpdateDetector results:");
-		DatabaseVersionUpdateDetector databaseVersionUpdateDetector = new DatabaseVersionUpdateDetector();
+		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
 		
-		Branch localBranch = db.getBranch();	
-		Branches stitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(unknownRemoteBranches, profile.getMachineName(), localBranch);
+		Branch localBranch = database.getBranch();	
+		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unknownRemoteBranches, profile.getMachineName(), localBranch);
 		//  TODO FIXME IMPORTANT Does this stitching make all the other algorithms obsolete?
 		//  TODO FIXME IMPORTANT --> Couldn't findWinnersWinnersLastDatabaseVersionHeader algorithm (walk forward, compare) be used instead?                       
 
 		Branches allStitchedBranches = stitchedRemoteBranches.clone();
 		allStitchedBranches.add(profile.getMachineName(), localBranch);
 		
-		DatabaseVersionHeader lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);		
-		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);		
-		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
-		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
+		DatabaseVersionHeader lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);		
+		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);		
+		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
+		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
 		
 		logger.log(Level.FINER, "   + localBranch: "+localBranch);
 		logger.log(Level.FINER, "   + fullRemoteBranches: "+allStitchedBranches);
@@ -95,7 +113,7 @@ public class SyncDownOperation extends Operation {
 		else {
 			logger.log(Level.INFO, "- Someone else won, now determine what to do ...");
 			
-			Branch localPruneBranch = databaseVersionUpdateDetector.findLosersPruneBranch(localBranch, winnersBranch);
+			Branch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
 			logger.log(Level.INFO, "- Database versions to REMOVE locally: "+localPruneBranch);
 			
 			if (localPruneBranch.size() == 0) {
@@ -106,14 +124,14 @@ public class SyncDownOperation extends Operation {
 				
 				for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 					logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
-					db.removeDatabaseVersion(db.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
+					database.removeDatabaseVersion(database.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
 				}
 					
 				// TODO Do something on filesystem!!
 				logger.log(Level.WARNING, "  + TODO Prune on file system!");
 			}
 			
-			Branch winnersApplyBranch = databaseVersionUpdateDetector.findWinnersApplyBranch(localBranch, winnersBranch);
+			Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
 			logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
 			
 			if (winnersApplyBranch.size() == 0) {
@@ -127,21 +145,133 @@ public class SyncDownOperation extends Operation {
 					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
 					
 					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
-					db.addDatabaseVersion(applyDatabaseVersion);
-					
-					// TODO Do something with this dbv
-					logger.log(Level.WARNING, "  + TODO Apply on file system!");
-				}
+					database.addDatabaseVersion(applyDatabaseVersion);										
+				}	
+
+				// Now download and extract multichunks
+				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(database, winnersDatabase, profile.getCache());
+				downloadAndExtractMultiChunks(unknownMultiChunks);
 				
+				reconstructFiles(database, winnersDatabase);
+				// TODO Do something with this dbv
 				// TODO Do something on the file system!
+				
+				logger.log(Level.WARNING, "   + TODO Apply on file system!");
+					
+				
+
 				logger.log(Level.INFO, "- Saving local database to "+localDatabaseFile+" ...");
-				saveLocalDatabase(db, localDatabaseFile);
+				saveLocalDatabase(database, localDatabaseFile);
 			}
 			
 		}		
 		
 		//throw new Exception("Not yet fully implemented.");
 	}	
+
+	private void reconstructFiles(Database database, Database winnersDatabase) throws Exception {
+		logger.log(Level.INFO, "- Reconstructing files ...");
+		
+		for (PartialFileHistory fileHistory : winnersDatabase.getFileHistories()) {
+			// File
+			if (!fileHistory.getLastVersion().isFolder()) {
+				FileVersion reconstructedFileVersion = fileHistory.getLastVersion(); 
+				File reconstructedFileInCache = profile.getCache().createTempFile("file-"+fileHistory.getFileId()+"-"+reconstructedFileVersion.getVersion());
+				FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
+
+				logger.log(Level.INFO, "  + Reconstructing file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
+
+				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
+				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
+				
+				for (ChunkEntry chunk : fileChunks) {
+					File chunkFile = profile.getCache().getChunkFile(chunk.getChecksum());
+					FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
+				}
+				
+				reconstructedFileOutputStream.close();
+				
+				FileContent reconstructedFileContent = database.getContent(reconstructedFileVersion.getChecksum());				
+				if (reconstructedFileInCache.length() != reconstructedFileContent.getSize()) {
+					throw new Exception("Reconstructed file size does not match: "+reconstructedFileInCache.getName()+" is "+reconstructedFileInCache.length()+", should be: "+reconstructedFileContent.getSize());
+				}
+				
+				// Okay. Now move to real place
+				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
+				logger.log(Level.INFO, "    * Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
+				
+				FileUtil.renameVia(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
+			}
+			
+			// Folder
+			else {
+				FileVersion reconstructedFileVersion = fileHistory.getLastVersion(); 
+				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
+				
+				logger.log(Level.INFO, "  + Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
+				FileUtil.mkdirsVia(reconstructedFilesAtFinalLocation);
+			}						
+		}		
+	}
+
+	private void downloadAndExtractMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
+		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
+		TransferManager transferManager = profile.getConnection().createTransferManager();
+		
+		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
+			File localMultiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName()); // TODO Make MultiChunkRemoteFile class, or something like that
+			
+			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			transferManager.download(remoteMultiChunkFile, localMultiChunkFile);
+			
+			logger.log(Level.INFO, "  + Extracting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			MultiChunk multiChunkInCache = profile.getMultiChunker().createMultiChunk(
+					profile.getTransformer().transform(new FileInputStream(localMultiChunkFile)));
+			Chunk extractedChunk = null;
+			
+			while (null != (extractedChunk = multiChunkInCache.read())) {
+				File localChunkFile = profile.getCache().getChunkFile(extractedChunk.getChecksum());
+				
+				logger.log(Level.INFO, "    * Unpacking chunk "+StringUtil.toHex(extractedChunk.getChecksum())+" ...");
+				FileUtil.writeToFile(extractedChunk.getContent(), localChunkFile);
+			}
+			
+			logger.log(Level.INFO, "  + Removing multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			localMultiChunkFile.delete();
+		}
+		
+		transferManager.disconnect();
+	}
+
+	private Set<MultiChunkEntry> determineUnknownMultiChunks(Database database, Database winnersDatabase, Cache cache) {
+		logger.log(Level.INFO, "- Determine new multichunks to download ...");
+		
+		Collection<PartialFileHistory> newOrChangedFileHistories = winnersDatabase.getFileHistories();
+		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();		
+		
+		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
+			if (!fileHistory.getLastVersion().isFolder()) {
+				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
+				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
+				
+				for (ChunkEntry chunk : fileChunks) {
+					File chunkFileInCache = cache.getChunkFile(chunk.getChecksum());
+					
+					if (!chunkFileInCache.exists()) {
+						MultiChunkEntry multiChunkForChunk = database.getMultiChunk(chunk);
+						
+						if (!multiChunksToDownload.contains(multiChunkForChunk)) {
+							logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");
+							multiChunksToDownload.add(multiChunkForChunk);
+						}
+					}
+				}
+			}
+		}
+		
+		return multiChunksToDownload;
+	}
 
 	private Database readWinnersDatabase(Branch winnersApplyBranch, List<File> remoteDatabases) throws IOException {
 		// Make map 'short filename' -> 'full filename'
