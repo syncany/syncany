@@ -40,7 +40,7 @@ public class Syncany {
 			readCommandLineArgumentsWithoutConfigFile(args);			
 		}
 		else {
-			throw new Exception("Invalid command line argument syntax.");
+			showUsageAndExit("Invalid syntax.");
 		}
 	}
 	
@@ -54,7 +54,7 @@ public class Syncany {
 	private void readCommandLineArgumentsWithSpecificConfigFile(String[] args) throws Exception {
 		// -c config.json
 		if (!"-c".equals(args[0])) {
-			throw new Exception("Invalid command line syntax.");
+			showUsageAndExit();
 		}
 		
 		readCommandLineArgumentConfigFile(args[1]);
@@ -65,7 +65,7 @@ public class Syncany {
 		configFile = new File(configFileArgument);
 		
 		if (!configFile.exists()) {
-			throw new Exception("Given config file does not exist.");
+			showUsageAndExit("Given config file does not exist.");
 		}		
 	}
 	
@@ -77,8 +77,24 @@ public class Syncany {
 			this.operationArgument = CommandArgument.SYNC_DOWN;
 		}
 		else {
-			throw new Exception("Given operation is unknown.");
+			showUsageAndExit("Given command is unknown.");
 		}		
+	}
+	
+	private void showUsageAndExit() {
+		showUsageAndExit(null);
+	}
+
+	private void showUsageAndExit(String errorMessage) {
+		if (errorMessage != null) {
+			System.out.println("ERROR: "+errorMessage);
+			System.out.println();
+		}
+		
+		System.out.println("Usage: syncany [-c config.json] up    -  Sync up");
+		System.out.println("       syncany [-c config.json] down  -  Sync down");
+		
+		System.exit(1);
 	}
 
 	private void initClient(File configFile) throws Exception {
@@ -99,7 +115,7 @@ public class Syncany {
 			client.down();
 		}
 		else {
-			throw new Exception("Unknown operation.");
+			showUsageAndExit("Unknown operation.");
 		}
 	}			
 }

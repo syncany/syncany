@@ -1,0 +1,14 @@
+Build
+---------------------------------------------------------
+1. Install Ant and Ivy: $ apt-get install ant ivy   
+2. Compile: $ ant   
+
+Configure
+---------------------------------------------------------
+1. Edit config.json
+2. Done
+
+Run
+---------------------------------------------------------
+1. Sync up: $ java -jar SyncanyCore.jar up   
+2. Sync down: $ java -jar SyncanyCore.jar down

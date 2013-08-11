@@ -18,6 +18,10 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CustomMultiChunker;
@@ -48,7 +52,33 @@ public class Config {
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
-        
+      
+    static {    	    	
+        // Dynamically load logging config from logging.properties instead of having to provide the
+    	// Java property at runtime: -Djava.util.logging.config.file=logging.properties
+    	
+        // This code is HERE because the Config class is used almost everywhere
+        // and initialized in the beginning.
+
+    	try {
+    		// If JAR
+    		InputStream inputStream = Config.class.getResourceAsStream("/logging.properties");
+    		
+    		// Otherwise
+    		if (inputStream == null) {
+    			inputStream = new FileInputStream(new File("logging.properties"));
+    		}
+    		
+    	    LogManager.getLogManager().readConfiguration(inputStream);
+    	}
+    	catch (Exception e) {
+    	    Logger.getAnonymousLogger().severe("Could not load default logging.properties file");
+    	    Logger.getAnonymousLogger().severe(e.getMessage());
+    	    
+    	    e.printStackTrace();
+    	}
+    }
+    
 	public Config(ConfigTO configTO) throws Exception {		
 		machineName = configTO.getMachineName();
 		

@@ -24,7 +24,6 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.VectorClock;
-import org.syncany.database.VectorClock.VectorClockComparison;
 
 public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
@@ -196,25 +195,6 @@ public class SyncDownOperation extends Operation {
 		return winnerBranchDatabase;		
 	}
 
-	@Deprecated
-	private Database readClientDatabase(String clientName, List<File> remoteDatabases) throws IOException {
-		// Sort files (db-a-1 must be before db-a-2 !)
-		Collections.sort(remoteDatabases);
-		
-		DatabaseDAO databaseDAO = new DatabaseXmlDAO();
-		Database clientDatabase = new Database(); // Database cannot be reused, since these might be different clients
-		
-		for (File remoteDatabaseInCache : remoteDatabases) {
-			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
-			
-			if (clientName.equals(rdf.getClientName())) {
-				databaseDAO.load(clientDatabase, rdf);	
-			}
-		}
-		
-		return clientDatabase;
-	}
-
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 		// Sort files (db-a-1 must be before db-a-2 !)
@@ -301,57 +281,5 @@ public class SyncDownOperation extends Operation {
 		
 		return unknownRemoteDatabasesInCache;
 	}		
-
-	private void detectUpdates(Database db, List<File> remoteDatabasesInCache) throws Exception {
-		Database newLocalDatabase = db; // TODO shouldn't we clone this in case this goes wrong?
-		VectorClock localVectorClock = newLocalDatabase.getLastDatabaseVersion().getVectorClock();
-
-		logger.log(Level.INFO, "Reconciling local database with remote databases ...");
-		logger.log(Level.INFO, "- Local database version: {0}", localVectorClock.toString());
-		
-		VectorClock latestRemoteVectorClock = null;
-		File latestRemoteDatabase = null;
-		List<File> conflictRemoteDatabases = new ArrayList<File>(); 
-		
-		for (File remoteDatabaseInCache : remoteDatabasesInCache) {
-			logger.log(Level.INFO, "- Processing remote database. Reading from {0} ...", remoteDatabaseInCache);
-			
-			Database remoteDatabase = new Database();
-			DatabaseDAO dbDAO = new DatabaseXmlDAO();
-			
-			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
-			dbDAO.load(remoteDatabase, rdf);		
-			
-			VectorClock remoteVectorClock = remoteDatabase.getLastDatabaseVersion().getVectorClock();
-			VectorClockComparison localDatabaseIs = VectorClock.compare(localVectorClock, remoteVectorClock);
-									
-			logger.log(Level.INFO, "  + Success. Remote database version: {0}", remoteVectorClock.toString());
-
-			if (localDatabaseIs == VectorClockComparison.EQUAL) {
-				logger.log(Level.INFO, "  + Database versions are equal. Nothing to do.");
-			}
-			else if (localDatabaseIs == VectorClockComparison.GREATER) {
-				logger.log(Level.INFO, "  + Local database is greater. Nothing to do.");
-			}
-			else if (localDatabaseIs == VectorClockComparison.SMALLER) {
-				logger.log(Level.INFO, "  + Local database is SMALLER. Local update needed!");
-				
-				if (latestRemoteVectorClock != null) {
-					VectorClockComparison latestRemoteDatabaseIs = VectorClock.compare(latestRemoteVectorClock, remoteVectorClock);
-					
-					if (latestRemoteDatabaseIs == VectorClockComparison.SMALLER) {
-						latestRemoteDatabase = remoteDatabaseInCache;
-						latestRemoteVectorClock = remoteVectorClock;
-					}
-				}
-				//updateLocalDatabase
-			}
-			else if (localDatabaseIs == VectorClockComparison.SIMULTANEOUS) {
-				logger.log(Level.INFO, "  + Databases are SIMULATANEOUS. Reconciliation needed!");
-			}
-		}
-		
-		throw new Exception("This is nowhere near done.");
-	}	
 
 }

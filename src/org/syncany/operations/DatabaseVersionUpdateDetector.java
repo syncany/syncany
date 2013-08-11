@@ -4,7 +4,6 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,10 +12,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.database.Branch;
+import org.syncany.database.Branch.BranchIterator;
 import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
-import org.syncany.database.Branch.BranchIterator;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
 /*
@@ -552,17 +551,18 @@ public class DatabaseVersionUpdateDetector {
 			Branch branch = allBranches.getBranch(remoteClientName);
 			logger.log(Level.INFO, "- Current branch is: "+branch);
 			
+			// Interweave deltas
 			for (int i=branch.size()-1; i>=0; i--) {
 				DatabaseVersionHeader databaseVersionHeader = branch.get(i);				
 
-				logger.log(Level.INFO, "- Adding "+databaseVersionHeader+" (mine)");
+				logger.log(Level.INFO, "- Adding "+databaseVersionHeader+" (from "+remoteClientName+"'s delta branch)");
 				reverseStitchedBranch.add(databaseVersionHeader);
 				
 				while (databaseVersionHeader.getPreviousClient() != null && !remoteClientName.equals(databaseVersionHeader.getPreviousClient())) {
 					Branch previousClientBranch = allBranches.getBranch(databaseVersionHeader.getPreviousClient());
 
 					if (previousClientBranch == null) {
-						throw new RuntimeException("Unable to find previous client branch of '"+databaseVersionHeader.getPreviousClient());
+						break; // The rest must be in the local branch
 					}
 					
 					DatabaseVersionHeader previousDatabaseVersionHeader = previousClientBranch.get(databaseVersionHeader.getPreviousVectorClock());
@@ -575,6 +575,37 @@ public class DatabaseVersionUpdateDetector {
 					reverseStitchedBranch.add(previousDatabaseVersionHeader);
 					
 					databaseVersionHeader = previousDatabaseVersionHeader;
+				}
+			}
+			
+			// Attach local version's part (if necessary)
+			boolean firstRemoteHeadersPreviousVectorClockEmpty = reverseStitchedBranch.size() > 0
+					&& reverseStitchedBranch.get(reverseStitchedBranch.size()-1).getPreviousVectorClock().size() > 0;
+			
+			boolean localBranchNotEmpty = localBranch.size() > 0;
+			
+			if (firstRemoteHeadersPreviousVectorClockEmpty && localBranchNotEmpty) {
+				DatabaseVersionHeader remoteFirstDatabaseVersionHeader = reverseStitchedBranch.get(reverseStitchedBranch.size()-1);
+				VectorClock remotePossiblyOverlappingVectorClock = remoteFirstDatabaseVersionHeader.getPreviousVectorClock();
+				
+				DatabaseVersionHeader localLastDatabaseVersionHeader = localBranch.getLast();
+				VectorClock localLastVectorClock = localLastDatabaseVersionHeader.getVectorClock();
+				
+				// They overlap! Attach!
+				if (VectorClock.compare(localLastVectorClock, remotePossiblyOverlappingVectorClock) == VectorClockComparison.EQUAL) {					
+					for (int i=localBranch.size()-1; i>=0; i--) {						
+						DatabaseVersionHeader localDatabaseVersionHeader = localBranch.get(i);
+						
+						logger.log(Level.INFO, "- Adding "+localDatabaseVersionHeader+" (from local branch, i.e. from "+localClientName+")");						
+						reverseStitchedBranch.add(localDatabaseVersionHeader);
+					} 
+				}	
+				else {
+					logger.log(Level.INFO, "- Last local header does not overlap with first remote clock: local = "+localLastDatabaseVersionHeader+", remote = "+remoteFirstDatabaseVersionHeader);
+					logger.log(Level.INFO, "  -> Disconnected branch -- due to previous conflict. Emptying branch contents. Irrelevant!");
+					reverseStitchedBranch.clear();
+					
+					// TODO Is this right?
 				}
 			}
 			

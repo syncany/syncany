@@ -42,7 +42,7 @@ public class DatabaseVersionHeader {
 			previousVectorClock.remove(client);
 			
 			if (previousVectorClock.size() == 0) {
-				return null;
+				return new VectorClock();
 			}
 			else {
 				return previousVectorClock;

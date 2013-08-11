@@ -2,62 +2,160 @@
 <database>
 	<version>1</version>
 	<databaseVersions>
-		<databaseVersion>
-			<time>1375577454674</time>
+		<databaseVersion time="1376178298093" client="A">
 			<vectorClock>
-				<client name="C" value="1" />
+				<client name="A" value="1" />
 			</vectorClock>
 			<chunks>
-				<chunk checksum="bec886b4540bfb37c2849e3b102b8118011dff98" size="16384" />
-				<chunk checksum="6eed8d64da76b887d2757ff93c65efdacd16bb46" size="16384" />
-				<chunk checksum="8bac8a80b484c761c87f2d9af78f8b357302859d" size="16384" />
-				<chunk checksum="7ece21d83736cee087b015cdf0e2bc24db4565a8" size="2048" />
-				<chunk checksum="16af585ce7f48d70b1fc68a82943587c0fbe8871" size="16384" />
-				<chunk checksum="286b8d1331b19b3ffec67dd2e220dee711b7e3eb" size="16384" />
-				<chunk checksum="3d4339f18f16ae9d27b38fff429056d0e9977981" size="16384" />
-				<chunk checksum="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" size="2048" />
+				<chunk checksum="b0956eac2b4d00d18121eb3d0141a577376c7d30" size="16384" />
+				<chunk checksum="71b6f7eec6625fd3e4ca29c46425c282377d8d2f" size="16384" />
+				<chunk checksum="89869925c62af7d30fd8e8984a4c669ce14b2922" size="16384" />
+				<chunk checksum="644cc07b542a82f327c74dcc4e30de64c1715a5c" size="2048" />
 			</chunks>
 			<multiChunks>
-				<multiChunk id="bec886b4540bfb37c2849e3b102b8118011dff98">
+				<multiChunk id="89869925c62af7d30fd8e8984a4c669ce14b2922">
 					<chunkRefs>
-						<chunkRef ref="bec886b4540bfb37c2849e3b102b8118011dff98" />
-						<chunkRef ref="8bac8a80b484c761c87f2d9af78f8b357302859d" />
-						<chunkRef ref="286b8d1331b19b3ffec67dd2e220dee711b7e3eb" />
-						<chunkRef ref="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" />
-						<chunkRef ref="3d4339f18f16ae9d27b38fff429056d0e9977981" />
-						<chunkRef ref="16af585ce7f48d70b1fc68a82943587c0fbe8871" />
-						<chunkRef ref="6eed8d64da76b887d2757ff93c65efdacd16bb46" />
-						<chunkRef ref="7ece21d83736cee087b015cdf0e2bc24db4565a8" />
+						<chunkRef ref="89869925c62af7d30fd8e8984a4c669ce14b2922" />
+						<chunkRef ref="b0956eac2b4d00d18121eb3d0141a577376c7d30" />
+						<chunkRef ref="71b6f7eec6625fd3e4ca29c46425c282377d8d2f" />
+						<chunkRef ref="644cc07b542a82f327c74dcc4e30de64c1715a5c" />
 					</chunkRefs>
 				</multiChunk>
 			</multiChunks>
 			<fileContents>
-				<fileContent checksum="7ece21d83736cee087b015cdf0e2bc24db4565a8" size="0">
+				<fileContent checksum="644cc07b542a82f327c74dcc4e30de64c1715a5c" size="0">
 					<chunkRefs>
-						<chunkRef ref="3d4339f18f16ae9d27b38fff429056d0e9977981" />
-						<chunkRef ref="16af585ce7f48d70b1fc68a82943587c0fbe8871" />
-						<chunkRef ref="6eed8d64da76b887d2757ff93c65efdacd16bb46" />
-						<chunkRef ref="7ece21d83736cee087b015cdf0e2bc24db4565a8" />
-					</chunkRefs>
-				</fileContent>
-				<fileContent checksum="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" size="0">
-					<chunkRefs>
-						<chunkRef ref="bec886b4540bfb37c2849e3b102b8118011dff98" />
-						<chunkRef ref="8bac8a80b484c761c87f2d9af78f8b357302859d" />
-						<chunkRef ref="286b8d1331b19b3ffec67dd2e220dee711b7e3eb" />
-						<chunkRef ref="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" />
+						<chunkRef ref="89869925c62af7d30fd8e8984a4c669ce14b2922" />
+						<chunkRef ref="b0956eac2b4d00d18121eb3d0141a577376c7d30" />
+						<chunkRef ref="71b6f7eec6625fd3e4ca29c46425c282377d8d2f" />
+						<chunkRef ref="644cc07b542a82f327c74dcc4e30de64c1715a5c" />
 					</chunkRefs>
 				</fileContent>
 			</fileContents>
 			<fileHistories>
-				<fileHistory id="-4572714700516206377">
+				<fileHistory id="2026308335590460968">
 					<fileVersions>
-						<fileVersion version="1" fileContentRef="7ece21d83736cee087b015cdf0e2bc24db4565a8" path="" name="newC2" />
+						<fileVersion version="1" path="" name="newA-somefile.txt" />
 					</fileVersions>
 				</fileHistory>
-				<fileHistory id="-4141209304244515005">
+			</fileHistories>
+		</databaseVersion>
+		<databaseVersion time="1376178298144" client="A" previousClient="A">
+			<vectorClock>
+				<client name="A" value="2" />
+			</vectorClock>
+			<chunks>
+				<chunk checksum="b745b4a939be1c78e7df12793d873060dbd943cd" size="16384" />
+				<chunk checksum="ea9eaf3f6d7e1a3cfc298eb7a5dbe0895ff7c751" size="16384" />
+				<chunk checksum="6181bae6106a6d3e83c097d1d3e9f76c0582e09d" size="16384" />
+				<chunk checksum="b4f16f88ddf5309dbb19015c25138cc83b5e578e" size="2048" />
+			</chunks>
+			<multiChunks>
+				<multiChunk id="6181bae6106a6d3e83c097d1d3e9f76c0582e09d">
+					<chunkRefs>
+						<chunkRef ref="6181bae6106a6d3e83c097d1d3e9f76c0582e09d" />
+						<chunkRef ref="b745b4a939be1c78e7df12793d873060dbd943cd" />
+						<chunkRef ref="ea9eaf3f6d7e1a3cfc298eb7a5dbe0895ff7c751" />
+						<chunkRef ref="b4f16f88ddf5309dbb19015c25138cc83b5e578e" />
+					</chunkRefs>
+				</multiChunk>
+			</multiChunks>
+			<fileContents>
+				<fileContent checksum="b4f16f88ddf5309dbb19015c25138cc83b5e578e" size="0">
+					<chunkRefs>
+						<chunkRef ref="6181bae6106a6d3e83c097d1d3e9f76c0582e09d" />
+						<chunkRef ref="b745b4a939be1c78e7df12793d873060dbd943cd" />
+						<chunkRef ref="ea9eaf3f6d7e1a3cfc298eb7a5dbe0895ff7c751" />
+						<chunkRef ref="b4f16f88ddf5309dbb19015c25138cc83b5e578e" />
+					</chunkRefs>
+				</fileContent>
+			</fileContents>
+			<fileHistories>
+				<fileHistory id="5347820023240920660">
 					<fileVersions>
-						<fileVersion version="1" fileContentRef="005a2d6b37831b3c4b935a2d015dd7e97b47aed8" path="" name="newC1" />
+						<fileVersion version="1" path="" name="newA-moved-somefile.txt" />
+					</fileVersions>
+				</fileHistory>
+			</fileHistories>
+		</databaseVersion>
+		<databaseVersion time="1376178298182" client="A" previousClient="A">
+			<vectorClock>
+				<client name="A" value="3" />
+			</vectorClock>
+			<chunks>
+				<chunk checksum="4787b481585dd63cf72987b2337f51b772542ae7" size="16384" />
+				<chunk checksum="ffe45a69910fa217f0c9ed3082f7876354056dd2" size="2048" />
+				<chunk checksum="93e4f8e7f7161af78720c45a446eb66199016524" size="16384" />
+				<chunk checksum="cacbb2be10ba0acf6c16f4d50ec0300f20d64ffd" size="16384" />
+			</chunks>
+			<multiChunks>
+				<multiChunk id="cacbb2be10ba0acf6c16f4d50ec0300f20d64ffd">
+					<chunkRefs>
+						<chunkRef ref="cacbb2be10ba0acf6c16f4d50ec0300f20d64ffd" />
+						<chunkRef ref="4787b481585dd63cf72987b2337f51b772542ae7" />
+						<chunkRef ref="93e4f8e7f7161af78720c45a446eb66199016524" />
+						<chunkRef ref="ffe45a69910fa217f0c9ed3082f7876354056dd2" />
+					</chunkRefs>
+				</multiChunk>
+			</multiChunks>
+			<fileContents>
+				<fileContent checksum="ffe45a69910fa217f0c9ed3082f7876354056dd2" size="0">
+					<chunkRefs>
+						<chunkRef ref="cacbb2be10ba0acf6c16f4d50ec0300f20d64ffd" />
+						<chunkRef ref="4787b481585dd63cf72987b2337f51b772542ae7" />
+						<chunkRef ref="93e4f8e7f7161af78720c45a446eb66199016524" />
+						<chunkRef ref="ffe45a69910fa217f0c9ed3082f7876354056dd2" />
+					</chunkRefs>
+				</fileContent>
+			</fileContents>
+			<fileHistories>
+				<fileHistory id="-5792443972456969688">
+					<fileVersions>
+						<fileVersion version="1" path="" name="newA-moved-somefile.txt" />
+					</fileVersions>
+				</fileHistory>
+				<fileHistory id="8805795069017436039">
+					<fileVersions>
+						<fileVersion version="1" path="" name="newA-otherfile.txt" />
+					</fileVersions>
+				</fileHistory>
+			</fileHistories>
+		</databaseVersion>
+		<databaseVersion time="1376178298252" client="B" previousClient="A">
+			<vectorClock>
+				<client name="A" value="3" />
+				<client name="B" value="1" />
+			</vectorClock>
+			<chunks>
+				<chunk checksum="a1b199ffbc77503d7f5c3415ef1dc98d468aca77" size="16384" />
+				<chunk checksum="39682b247e3c84289b492b76123404bc263bee1d" size="16384" />
+				<chunk checksum="49f8f6044259dd95eda9db996869e936f6410f38" size="2048" />
+				<chunk checksum="3e00ed1d25e4d3df68a8045337f16fe2e51f85a8" size="16384" />
+			</chunks>
+			<multiChunks>
+				<multiChunk id="a1b199ffbc77503d7f5c3415ef1dc98d468aca77">
+					<chunkRefs>
+						<chunkRef ref="a1b199ffbc77503d7f5c3415ef1dc98d468aca77" />
+						<chunkRef ref="39682b247e3c84289b492b76123404bc263bee1d" />
+						<chunkRef ref="3e00ed1d25e4d3df68a8045337f16fe2e51f85a8" />
+						<chunkRef ref="49f8f6044259dd95eda9db996869e936f6410f38" />
+					</chunkRefs>
+				</multiChunk>
+			</multiChunks>
+			<fileContents>
+				<fileContent checksum="49f8f6044259dd95eda9db996869e936f6410f38" size="0">
+					<chunkRefs>
+						<chunkRef ref="a1b199ffbc77503d7f5c3415ef1dc98d468aca77" />
+						<chunkRef ref="39682b247e3c84289b492b76123404bc263bee1d" />
+						<chunkRef ref="3e00ed1d25e4d3df68a8045337f16fe2e51f85a8" />
+						<chunkRef ref="49f8f6044259dd95eda9db996869e936f6410f38" />
+					</chunkRefs>
+				</fileContent>
+			</fileContents>
+			<fileHistories>
+				<fileHistory id="2638630760344055454">
+					<fileVersions>
+						<fileVersion version="1" path="" name="newB-a-file.txt" />
 					</fileVersions>
 				</fileHistory>
 			</fileHistories>

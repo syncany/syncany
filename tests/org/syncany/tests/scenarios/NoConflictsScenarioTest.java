@@ -9,11 +9,11 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class EvilCScenarioTest {
+public class NoConflictsScenarioTest {
 	private TestClient clientA;
 	private TestClient clientB;
 	private TestClient clientC;
-	 
+	
 	@Before
 	public void setUp() throws Exception {
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();
@@ -21,9 +21,9 @@ public class EvilCScenarioTest {
 		clientA = new TestClient("A", testConnection);
 		clientB = new TestClient("B", testConnection);
 		clientC = new TestClient("C", testConnection);
-	} 
+	}
 	
-	@After 
+	@After
 	public void tearDown() {
 		/*
 		clientA.cleanup();
@@ -33,28 +33,25 @@ public class EvilCScenarioTest {
 		 
 	@Test
 	public void testEvilC() throws Exception {
-		clientA.createNewFile("newA-somefile.txt");
-		clientA.up();
-		clientA.moveFile("newA-somefile.txt", "newA-moved-somefile.txt");
-		clientA.changeFile("newA-moved-somefile.txt");
-		clientA.up();
-		clientA.createNewFile("newA-otherfile.txt");
+		clientA.createNewFile("1");
 		clientA.up();
 		
 		clientB.down();
-		clientB.createNewFile("newB-a-file.txt");
-		clientB.up();
 		
-		clientC.createNewFile("newC");
-		clientC.changeFile("newC");
-		clientC.up();
-		clientC.changeFile("newC");
-		clientC.up();
-		clientC.changeFile("newC");
+		clientA.moveFile("1", "2");
+		clientA.up();
+		
+		clientB.down();
+		
+		clientC.down();
+		clientC.createNewFile("3");
+		//clientC.changeFile("2");
 		clientC.up();
 		
 		clientA.down();
+		
 		clientB.down();
+		
 		clientC.down();
 		
 		fail("No asserts yet.");

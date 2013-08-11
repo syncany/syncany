@@ -16,7 +16,6 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
 import org.syncany.util.FileUtil;
@@ -63,7 +62,7 @@ public class SyncUpOperation extends Operation {
 			
 			logger.log(Level.INFO, "Uploading local delta database file ...");
 			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
-			boolean uploadLocalDatabaseSuccess = uploadLocalDatabase(localDeltaDatabaseFile, newestLocalDatabaseVersion);			
+			uploadLocalDatabase(localDeltaDatabaseFile, newestLocalDatabaseVersion);			
 		}
 		else {
 			throw new Exception("aa");
