@@ -179,6 +179,8 @@ public class Encryption {
         }
     }
     
+    // TODO [medium] Use appropriate key derivation function (PBKDF2)
+    // see http://stackoverflow.com/questions/8674018/pbkdf2-with-bouncycastle-in-java
     private SecretKeySpec createKeySpec(byte[] salt) 
             throws NoSuchAlgorithmException, UnsupportedEncodingException, EncryptionException {
         

@@ -170,6 +170,16 @@ public class SyncDownOperation extends Operation {
 	}	
 
 	private void reconstructFiles(Database database, Database winnersDatabase) throws Exception {
+		// TODO Strategy should be the following:
+		//  for each winning file history
+		//     find last local version
+		//     find version to apply
+		//     compare them
+		//     from the result, decide what to do:
+		//       - rename
+		//       - delete
+		//       - download & reconstruct
+		
 		logger.log(Level.INFO, "- Reconstructing files ...");
 		
 		for (PartialFileHistory fileHistory : winnersDatabase.getFileHistories()) {
