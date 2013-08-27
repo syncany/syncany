@@ -22,6 +22,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -41,6 +42,18 @@ public class Indexer {
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
 		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion));			
+		
+		
+		// TODO handle deleted files // IMPLEMENT THIS
+		/*for (PartialFileHistory fileHistory : database.getFileHistories()) {
+			if (!FileUtil.get...fileHistory.getLastVersion().getFullName().exists()) {
+				FileVersion deletedVersion = (FileVersion) fileHistory.getLastVersion().clone();
+				deletedVersion.setStatus(FileStatus.DELETED);
+				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion()+1);
+				
+				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), deletedVersion);
+			}
+		}*/
 		
 		return newDatabaseVersion;
 	}

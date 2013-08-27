@@ -168,7 +168,48 @@ public class SyncDownOperation extends Operation {
 		
 		//throw new Exception("Not yet fully implemented.");
 	}	
+	
+	private interface FileSystemAction {
+		public void execute();
+	}
+	
+	private class RenameFileSystemAction implements FileSystemAction {
+		private FileVersion from;
+		private FileVersion to;
+		
+		public RenameFileSystemAction(FileVersion from, FileVersion to) {
+			this.from = from;
+			this.to = to;
+		}
 
+		@Override
+		public void execute() {
+			//File fileOnFilesystem = config. 
+			//FileUtil.renameVia(from, to);			
+		}				
+	}
+	
+	//private class Delete
+	
+	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
+
+		logger.log(Level.INFO, "- Reconstructing files ...");
+		
+		for (PartialFileHistory fileHistory : winnersDatabase.getFileHistories()) {
+			
+		}
+		
+		
+		return null;
+	}
+	
+	private void applyFileSystemActions() {
+		// ...
+		// compare last local database version with filesystem file
+		// if identical, apply newest remote version
+		// if not, error
+	}
+	
 	private void reconstructFiles(Database database, Database winnersDatabase) throws Exception {
 		// TODO Strategy should be the following:
 		//  for each winning file history
@@ -179,7 +220,15 @@ public class SyncDownOperation extends Operation {
 		//       - rename
 		//       - delete
 		//       - download & reconstruct
-		
+		/**
+		 * id name    vers
+		 * 1 porn.txt 1 <
+		 * 1 porn.txt 2
+		 * 1 porn.txt 3 <
+		 * 
+		 * 
+		 * 
+		 */
 		logger.log(Level.INFO, "- Reconstructing files ...");
 		
 		for (PartialFileHistory fileHistory : winnersDatabase.getFileHistories()) {
