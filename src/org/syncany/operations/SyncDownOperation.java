@@ -127,7 +127,7 @@ public class SyncDownOperation extends Operation {
 					localDatabase.removeDatabaseVersion(localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
 				}
 					
-				// TODO Do something on filesystem!!
+				// TODO What to do with the prune branch?? Do something on filesystem!!
 				logger.log(Level.WARNING, "  + TODO Prune on file system!");
 			}
 			
@@ -141,12 +141,6 @@ public class SyncDownOperation extends Operation {
 				logger.log(Level.INFO, "- Loading winners database ...");				
 				Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache); //readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
 				
-				for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
-					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
-					
-					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
-					localDatabase.addDatabaseVersion(applyDatabaseVersion);										
-				}	
 
 				// Now download and extract multichunks
 				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, profile.getCache());
@@ -154,12 +148,15 @@ public class SyncDownOperation extends Operation {
 				
 				List<FileSystemAction> actions = determineFileSystemActions(localDatabase, winnersDatabase);
 				applyFileSystemActions(actions);
-				//reconstructFiles(localDatabase, winnersDatabase);
-				// TODO Do something with this dbv
-				// TODO Do something on the file system!
-				
-				logger.log(Level.WARNING, "   + TODO Apply on file system!");
+								
+				// Add winners database to local database
+				// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database! 
+				for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
+					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
 					
+					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
+					localDatabase.addDatabaseVersion(applyDatabaseVersion);										
+				}	
 				
 
 				logger.log(Level.INFO, "- Saving local database to "+localDatabaseFile+" ...");
@@ -172,89 +169,206 @@ public class SyncDownOperation extends Operation {
 	}	
 	
 	private abstract class FileSystemAction {
+		protected Database localDatabase;
 		protected Database winningDatabase;
 		
-		public FileSystemAction(Database winningDatabase) {
+		public FileSystemAction(Database localDatabase, Database winningDatabase) {
+			this.localDatabase = localDatabase;
 			this.winningDatabase = winningDatabase;
 		}
 		
-		public abstract void execute();
+		protected void reconstructFile(FileVersion reconstructedFileVersion) throws Exception {
+			if (!reconstructedFileVersion.isFolder()) {
+				File reconstructedFileInCache = profile.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
+				FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
+
+				logger.log(Level.INFO, "  + Reconstructing file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
+
+				FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
+				
+				if (fileContent == null) {
+					fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
+				}
+				
+				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
+				
+				for (ChunkEntry chunk : fileChunks) {
+					File chunkFile = profile.getCache().getChunkFile(chunk.getChecksum());
+					FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
+				}
+				
+				reconstructedFileOutputStream.close();		
+				
+				// Set timestamp
+				reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());
+				
+				// Okay. Now move to real place
+				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
+				logger.log(Level.INFO, "    * Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
+				
+				FileUtil.renameVia(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
+			}
+			
+			// Folder
+			else {
+				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
+				
+				logger.log(Level.INFO, "  + Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
+				FileUtil.mkdirsVia(reconstructedFilesAtFinalLocation);
+			}									
+		}
+		
+		protected void createConflictFile(FileVersion conflictingLocalVersion) {
+			File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getFullName());
+			
+			String newConflictExtension = FileUtil.getExtension(conflictingLocalFile);
+			String newConflictBasename = FileUtil.getBasename(conflictingLocalFile)
+					+ " ("+conflictingLocalVersion.getCreatedBy()+"'s conflict version, "+conflictingLocalVersion.getLastModified()+")";
+			
+			String newFullName = ("".equals(newConflictExtension)) ? newConflictBasename : newConflictBasename+"."+newConflictExtension;			
+			File newConflictFile = new File(
+					  FileUtil.getAbsoluteParentDirectory(conflictingLocalFile)
+					+ File.separator
+					+ newFullName);
+			
+			FileUtil.renameVia(conflictingLocalFile, newConflictFile);
+		}
+		
+		protected boolean isExpectedFile(FileVersion expectedLocalFileVersion) {
+			File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());
+			
+			boolean fileExists = actualLocalFile.exists();
+			
+			if (expectedLocalFileVersion.getStatus() == FileStatus.DELETED) {
+				// Check existance
+				if (fileExists) {
+					return false;
+				}
+				else {
+					return true;
+				}
+			}
+			else {
+				// Check existance
+				if (!fileExists) {
+					return false;
+				}
+				
+				// Check modified date
+				boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
+				
+				if (!modifiedEquals) {
+					return false;
+				}
+				
+				// Check size				
+				FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
+				
+				if (expectedFileContent == null) {
+					expectedFileContent = winningDatabase.getContent(expectedLocalFileVersion.getChecksum());
+				}
+				
+				boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
+				
+				if (isSizeEqual) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+		}
+		
+		public abstract void execute() throws Exception;
 	}
 	
-	private class RenameFileSystemAction extends FileSystemAction {
-		private FileVersion from;
-		private FileVersion to;
+	private class NewFileSystemAction extends FileSystemAction {
+		private FileVersion newFileVersion;
 		
-		public RenameFileSystemAction(FileVersion from, FileVersion to, Database winningDatabase) {
-			super(winningDatabase);
-			this.from = from;
-			this.to = to;
+		public NewFileSystemAction(FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
+			super(localDatabase, winningDatabase);
+			this.newFileVersion = newFileVersion;
+		}
+		
+		@Override
+		public void execute() throws Exception {
+			if (!isExpectedFile(newFileVersion)) {
+				createConflictFile(newFileVersion);
+			}
+			
+			reconstructFile(newFileVersion);			
+		}
+	}
+	
+	
+	private class RenameFileSystemAction extends FileSystemAction {
+		private FileVersion fromFileVersion;
+		private FileVersion toFileVersion;
+		
+		public RenameFileSystemAction(FileVersion from, FileVersion to, Database localDatabase, Database winningDatabase) {
+			super(localDatabase, winningDatabase);
+			this.fromFileVersion = from;
+			this.toFileVersion = to;
 		}
 
 		@Override
-		public void execute() {
-			File fromOnHDD = getAbsolutePathFile(from.getFullName());
-			File toOnHDD = getAbsolutePathFile(to.getFullName());
-			
-			if(!fromOnHDD.exists()) {
-				//TODO reconstruct to-File
-				return;
+		public void execute() throws Exception {
+			if (!isExpectedFile(fromFileVersion)) {
+				createConflictFile(fromFileVersion);
+				reconstructFile(toFileVersion);
 			}
-			boolean isModifiedEquals = to.getLastModified().equals(new Date(fromOnHDD.lastModified()));			
-			if(!isModifiedEquals) {
-				File conflictFile = new File(fromOnHDD.getName() + ".conflict");
-				FileUtil.renameVia(fromOnHDD, conflictFile);
-				//TODO reconstruct to-file
-				return;
-			}
-			boolean isSameSize = winningDatabase.getContent(to.getChecksum()).getSize() == fromOnHDD.length();
-			if(!isSameSize) {
-				File conflictFile = new File(fromOnHDD.getName() + ".conflict");
-				FileUtil.renameVia(fromOnHDD, conflictFile);
-				//TODO reconstruct to-File
-				return;
-			}
-			
-			FileUtil.renameVia(fromOnHDD, toOnHDD);			
+			else {
+				File fromFileOnDisk = getAbsolutePathFile(fromFileVersion.getFullName());
+				File toFileOnDisk = getAbsolutePathFile(toFileVersion.getFullName());			
+				
+				FileUtil.renameVia(fromFileOnDisk, toFileOnDisk);						
+			}			
 		}				
 	}
 	
-	private class DeleteFileSystemAction extends FileSystemAction {
-		private FileVersion to;
+	private class ChangeFileSystemAction extends FileSystemAction {
+		private FileVersion fromFileVersion;
+		private FileVersion toFileVersion;
 		
-		public DeleteFileSystemAction(FileVersion to, Database winningDatabase) {
-			super(winningDatabase);
-			this.to = to;
+		public ChangeFileSystemAction(FileVersion fromFileVersion, FileVersion toFileVersion, Database localDatabase, Database winningDatabase) {
+			super(localDatabase, winningDatabase);
+			this.fromFileVersion = fromFileVersion;
+			this.toFileVersion = toFileVersion;
+		}
+
+		@Override
+		public void execute() throws Exception {
+			if (!isExpectedFile(fromFileVersion)) {
+				createConflictFile(fromFileVersion);
+				reconstructFile(toFileVersion);
+			}
+			else {
+				File fromFileOnDisk = getAbsolutePathFile(fromFileVersion.getFullName());
+				fromFileOnDisk.delete();
+				
+				reconstructFile(toFileVersion);				
+			}			
+		}				
+	}	
+	
+	private class DeleteFileSystemAction extends FileSystemAction {
+		private FileVersion fromFileVersion;
+		private FileVersion toDeleteFileVersion;
+		
+		public DeleteFileSystemAction(FileVersion fromFileVersion, FileVersion toDeleteFileVersion, Database localDatabase, Database winningDatabase) {
+			super(localDatabase, winningDatabase);
+			this.fromFileVersion = fromFileVersion;
+			this.toDeleteFileVersion = toDeleteFileVersion;
 		}
 		
 		@Override
 		public void execute() {
-			File toDelete = getAbsolutePathFile(to.getFullName());
-			boolean exists = toDelete.exists();
-			if(!exists) {
-				return;
+			if (!isExpectedFile(fromFileVersion)) {
+				createConflictFile(fromFileVersion);				
 			}
 			
-			boolean isModifiedEquals = to.getLastModified().equals(new Date(toDelete.lastModified()));			
-			if(!isModifiedEquals) {
-				File conflictFile = new File(toDelete.getName() + ".conflict");
-				FileUtil.renameVia(toDelete, conflictFile);
-				return;
-			} 
-			if(to.isFolder()) {
-				if(!toDelete.delete()) {
-					//TODO Delete Folder!
-				}
-				return;
-			} 
-			boolean isSameSize = winningDatabase.getContent(to.getChecksum()).getSize() == toDelete.length();
-			if(!isSameSize) {
-				File conflictFile = new File(toDelete.getName() + ".conflict");
-				FileUtil.renameVia(toDelete, conflictFile);
-				return;
-			}
-			
-			toDelete.delete();
+			File toDeleteFileOnDisk = getAbsolutePathFile(toDeleteFileVersion.getFullName());
+			toDeleteFileOnDisk.delete();			
 		}
 	}
 	
@@ -283,24 +397,24 @@ public class SyncDownOperation extends Operation {
 			boolean isChecksumEqual = isInSamePlace && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());
 			
 			boolean isChangedFile = !isNewFile && isInSamePlace && !isChecksumEqual;
-			boolean isIdenticalFile = !isNewFile && isInSamePlace && isChecksumEqual && localLastVersion.getFullName().equals(winningLastVersion.getFullName());
+			boolean isIdenticalFile = !isNewFile && isInSamePlace && isChecksumEqual;
 			boolean isRenamedFile = !isNewFile && !isInSamePlace && isChecksumEqual;
 			boolean isDeletedFile = !isNewFile && isInSamePlace && winningLastVersion.getStatus() == FileStatus.DELETED;
 			
 			if (isNewFile) {
-				//fileSystemActions.add(new NewFileSystemAction(winningLastVersion));
+				fileSystemActions.add(new NewFileSystemAction(winningLastVersion, localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      NEW FILE");
 			}
 			else if (isChangedFile) {			
-				//fileSystemActions.add(new ChangedFileSystemAction(localLastVersion, winningLastVersion));
+				fileSystemActions.add(new ChangeFileSystemAction(localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      CHANGED FILE");
 			}
 			else if (isRenamedFile) {
-				//fileSystemActions.add(new RenamedFileSystemAction(localLastVersion, winningLastVersion));
+				fileSystemActions.add(new RenameFileSystemAction(localLastVersion, winningLastVersion,localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      RENAMED FILE");
 			}
 			else if (isDeletedFile) {
-				//fileSystemActions.add(new DeleteFileSystemAction(localLastVersion, winningLastVersion));
+				fileSystemActions.add(new DeleteFileSystemAction(localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      DELETED FILE");
 			}
 			else if (isIdenticalFile) {
@@ -314,75 +428,12 @@ public class SyncDownOperation extends Operation {
 		return fileSystemActions;
 	}
 	
-	private void applyFileSystemActions(List<FileSystemAction> actions) {
+	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
 		for (FileSystemAction action : actions) {
 			action.execute();
 		}
 	}
 	
-	private void reconstructFiles(Database database, Database winnersDatabase) throws Exception {
-		// TODO Strategy should be the following:
-		//  for each winning file history
-		//     find last local version
-		//     find version to apply
-		//     compare them
-		//     from the result, decide what to do:
-		//       - rename
-		//       - delete
-		//       - download & reconstruct
-		/**
-		 * id name    vers
-		 * 1 porn.txt 1 <
-		 * 1 porn.txt 2
-		 * 1 porn.txt 3 <
-		 * 
-		 * 
-		 * 
-		 */
-		logger.log(Level.INFO, "- Reconstructing files ...");
-		
-		for (PartialFileHistory fileHistory : winnersDatabase.getFileHistories()) {
-			// File
-			if (!fileHistory.getLastVersion().isFolder()) {
-				FileVersion reconstructedFileVersion = fileHistory.getLastVersion(); 
-				File reconstructedFileInCache = profile.getCache().createTempFile("file-"+fileHistory.getFileId()+"-"+reconstructedFileVersion.getVersion());
-				FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
-
-				logger.log(Level.INFO, "  + Reconstructing file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
-
-				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
-				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
-				
-				for (ChunkEntry chunk : fileChunks) {
-					File chunkFile = profile.getCache().getChunkFile(chunk.getChecksum());
-					FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
-				}
-				
-				reconstructedFileOutputStream.close();
-				
-				FileContent reconstructedFileContent = database.getContent(reconstructedFileVersion.getChecksum());				
-				if (reconstructedFileInCache.length() != reconstructedFileContent.getSize()) {
-					throw new Exception("Reconstructed file size does not match: "+reconstructedFileInCache.getName()+" is "+reconstructedFileInCache.length()+", should be: "+reconstructedFileContent.getSize());
-				}
-				
-				// Okay. Now move to real place
-				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
-				logger.log(Level.INFO, "    * Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
-				
-				FileUtil.renameVia(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
-			}
-			
-			// Folder
-			else {
-				FileVersion reconstructedFileVersion = fileHistory.getLastVersion(); 
-				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
-				
-				logger.log(Level.INFO, "  + Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
-				FileUtil.mkdirsVia(reconstructedFilesAtFinalLocation);
-			}						
-		}		
-	}
-
 	private void downloadAndExtractMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
 		TransferManager transferManager = profile.getConnection().createTransferManager();
@@ -422,6 +473,11 @@ public class SyncDownOperation extends Operation {
 		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
 			if (!fileHistory.getLastVersion().isFolder()) {
 				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
+				
+				if (fileContent == null) {
+					fileContent = winnersDatabase.getContent(fileHistory.getLastVersion().getChecksum());
+				}
+				
 				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
 				
 				for (ChunkEntry chunk : fileChunks) {
@@ -429,6 +485,10 @@ public class SyncDownOperation extends Operation {
 					
 					if (!chunkFileInCache.exists()) {
 						MultiChunkEntry multiChunkForChunk = database.getMultiChunk(chunk);
+						
+						if (multiChunkForChunk == null) {
+							multiChunkForChunk = winnersDatabase.getMultiChunk(chunk);
+						}
 						
 						if (!multiChunksToDownload.contains(multiChunkForChunk)) {
 							logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");

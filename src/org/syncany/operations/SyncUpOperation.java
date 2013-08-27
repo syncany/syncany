@@ -44,31 +44,36 @@ public class SyncUpOperation extends Operation {
 		List<File> localFiles = FileUtil.getRecursiveFileList(profile.getLocalDir());
 		DatabaseVersion lastDirtyDatabaseVersion = index(localFiles, db);
 		
-		logger.log(Level.INFO, "Adding newest database version "+lastDirtyDatabaseVersion.getHeader()+" to local database ...");
-		db.addDatabaseVersion(lastDirtyDatabaseVersion);
-
-		logger.log(Level.INFO, "Saving local database to file "+localDatabaseFile+" ...");
-		saveLocalDatabase(db, localDatabaseFile);
-		
-		logger.log(Level.INFO, "Uploading new multichunks ...");
-		boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
-		
-		if (uploadMultiChunksSuccess) {
-			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
-
-			RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
-			File localDeltaDatabaseFile = profile.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
-
-			logger.log(Level.INFO, "Saving local delta database file ...");
-			logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
-			saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
-			
-			logger.log(Level.INFO, "- Uploading local delta database file ...");
-			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);			
+		if (lastDirtyDatabaseVersion.getFileHistories().size() == 0) {
+			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 		}
 		else {
-			throw new Exception("aa");
-		}		
+			logger.log(Level.INFO, "Adding newest database version "+lastDirtyDatabaseVersion.getHeader()+" to local database ...");
+			db.addDatabaseVersion(lastDirtyDatabaseVersion);
+	
+			logger.log(Level.INFO, "Saving local database to file "+localDatabaseFile+" ...");
+			saveLocalDatabase(db, localDatabaseFile);
+			
+			logger.log(Level.INFO, "Uploading new multichunks ...");
+			boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
+			
+			if (uploadMultiChunksSuccess) {
+				long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
+	
+				RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
+				File localDeltaDatabaseFile = profile.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
+	
+				logger.log(Level.INFO, "Saving local delta database file ...");
+				logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
+				saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
+				
+				logger.log(Level.INFO, "- Uploading local delta database file ...");
+				uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);			
+			}
+			else {
+				throw new Exception("aa");
+			}
+		}
 	}	
 	
 	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
@@ -80,7 +85,7 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
 			transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
 			
-			logger.log(Level.INFO, "  + Removing "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			logger.log(Level.INFO, "  + Removing "+StringUtil.toHex(multiChunkEntry.getId())+" locally ...");
 			localMultiChunkFile.delete();
 		}
 		

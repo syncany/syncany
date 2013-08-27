@@ -66,6 +66,14 @@ public class PartialFileHistory {
     /* package */ void addFileVersion(FileVersion fileVersion) {
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
+    
+    @Override
+    public PartialFileHistory clone() {
+    	PartialFileHistory clone = new PartialFileHistory(fileId);
+    	clone.versions.putAll(versions);
+
+    	return clone;
+    }
 
     @Override
     public String toString() {

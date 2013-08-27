@@ -2,43 +2,30 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.fail;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class EvilCScenarioTest {
-	private TestClient clientA;
-	private TestClient clientB;
-	private TestClient clientC;
-	 
-	@Before
-	public void setUp() throws Exception {
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
-		
-		clientA = new TestClient("A", testConnection);
-		clientB = new TestClient("B", testConnection);
-		clientC = new TestClient("C", testConnection);
-	} 
-	
-	@After 
-	public void tearDown() {
-		/*
-		clientA.cleanup();
-		clientB.cleanup();
-		clientC.cleanup();*/
-	}
-		 
+public class EvilCScenarioTest {	
 	@Test
 	public void testEvilC() throws Exception {
+		// Setup 
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		TestClient clientC = new TestClient("C", testConnection);
+		
+		// Run 
 		clientA.createNewFile("newA-somefile.txt");
 		clientA.up();
 		clientA.moveFile("newA-somefile.txt", "newA-moved-somefile.txt");
+		clientA.up();		
 		clientA.changeFile("newA-moved-somefile.txt");
-		clientA.up();
 		clientA.createNewFile("newA-otherfile.txt");
+		clientA.up();
+		clientA.deleteFile("newA-otherfile.txt");
 		clientA.up();
 		
 		clientB.down();
@@ -52,12 +39,16 @@ public class EvilCScenarioTest {
 		clientC.up();
 		clientC.changeFile("newC");
 		clientC.up();
-		clientC.deleteFile("newC");
 		
 		clientA.down();
 		clientB.down();
 		clientC.down();
 		
 		fail("No asserts yet.");
+		
+		// Tear down
+		clientA.cleanup();
+		clientB.cleanup();
+		clientC.cleanup();
 	}
 }

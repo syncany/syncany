@@ -41,21 +41,40 @@ public class Indexer {
 	
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
+		
+		// Find and index new files
 		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion));			
 		
+		// Find and remove deleted files
+		removeDeletedFiles(newDatabaseVersion);
 		
-		// TODO handle deleted files // IMPLEMENT THIS
-		/*for (PartialFileHistory fileHistory : database.getFileHistories()) {
-			if (!FileUtil.get...fileHistory.getLastVersion().getFullName().exists()) {
-				FileVersion deletedVersion = (FileVersion) fileHistory.getLastVersion().clone();
+		return newDatabaseVersion;
+	}
+	
+	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
+		logger.log(Level.FINER, "- Looking for deleted files ...");		
+
+		for (PartialFileHistory fileHistory : database.getFileHistories()) {
+			// Ignore this file history if it has been update in this database version before (file probably renamed!)
+			if (newDatabaseVersion.getFileHistory(fileHistory.getFileId()) != null) {
+				continue;
+			}
+			
+			// Check if file exists, remove if it doesn't
+			FileVersion lastLocalVersion = fileHistory.getLastVersion();
+			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getFullName());
+			
+			if (!lastLocalVersionOnDisk.exists()) {
+				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileId());
+				FileVersion deletedVersion = (FileVersion) lastLocalVersion.clone();
 				deletedVersion.setStatus(FileStatus.DELETED);
 				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion()+1);
 				
+				logger.log(Level.FINER, "  + Deleted: {0}, adding deleted version {1}", new Object[] { lastLocalVersion, deletedVersion });
+				newDatabaseVersion.addFileHistory(deletedFileHistory);
 				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), deletedVersion);
 			}
-		}*/
-		
-		return newDatabaseVersion;
+		}				
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
@@ -113,12 +132,13 @@ public class Indexer {
 				
 				fileVersion = new FileVersion();
 				fileVersion.setVersion(1L);
+				fileVersion.setStatus(FileStatus.NEW);
 			} 
 			else {
 				fileHistory = new PartialFileHistory(lastFileHistory.getFileId());
 				
 				fileVersion = (FileVersion) lastFileVersion.clone();
-				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
+				fileVersion.setVersion(lastFileVersion.getVersion()+1);									
 			}			
 
 			fileVersion.setPath(FileUtil.getRelativePath(config.getLocalDir(), file.getParentFile()));
@@ -127,6 +147,19 @@ public class Indexer {
 			fileVersion.setLastModified(new Date(file.lastModified()));
 			fileVersion.setUpdated(new Date());
 			fileVersion.setCreatedBy(config.getMachineName());
+			
+			// Determine status
+			if (lastFileVersion != null) {
+				if (!fileVersion.isFolder() && !Arrays.equals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
+					fileVersion.setStatus(FileStatus.CHANGED);
+				}
+				else if (!fileVersion.getFullName().equals(lastFileVersion.getFullName())) {
+					fileVersion.setStatus(FileStatus.RENAMED);
+				}
+				else {
+					fileVersion.setStatus(FileStatus.UNKNOWN);
+				}						
+			}
 			
 			// Only add if not identical
 			boolean isIdenticalToLastVersion = lastFileVersion != null && Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
@@ -158,7 +191,7 @@ public class Indexer {
 			
 			// 1a. by file name
 			if (checksum != null) {
-				String relativeFilePath = FileUtil.getRelativePath(config.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName(); 
+				String relativeFilePath = FileUtil.getRelativeParentDirectory(config.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName();
 				lastFileHistory = database.getFileHistory(relativeFilePath);
 	
 				if (lastFileHistory == null) {
@@ -179,7 +212,7 @@ public class Indexer {
 					}
 					
 					if (lastFileHistory == null) {
-						logger.log(Level.FINER, "   * No old file history found, starting new history.");
+						logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+relativeFilePath+", checksum: "+StringUtil.toHex(checksum)+")");
 					}
 					else {
 						logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(checksum)+"), appending new version.");

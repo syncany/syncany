@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.VectorClock.VectorClockComparison;
 import org.syncany.operations.DatabaseFile;
 import org.syncany.util.StringUtil;
@@ -37,8 +38,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 		PrintWriter out = new PrintWriter(fileWriter);
 		
 		out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-		out.print("<database>\n");
-		out.print("\t<version>"+XML_FORMAT_VERSION+"</version>\n");
+		out.print("<database version=\""+XML_FORMAT_VERSION+"\">\n");
 		out.print("\t<databaseVersions>\n");
 		
 		for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
@@ -48,24 +48,23 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				continue;
 			}		
 			
-			// Database version, client name and timestamp 
-			out.print("\t\t<databaseVersion"
-				+ " time=\""+databaseVersion.getTimestamp().getTime()+"\""
-				+ " client=\""+databaseVersion.getClient()+"\"");
-			
-			if (databaseVersion.getPreviousClient() != null) {
-				out.print(" previousClient=\""+databaseVersion.getPreviousClient()+"\"");
-			}
-			
-			out.print(">\n");
-			
-			// Vector clock
-			out.print("\t\t\t<vectorClock>\n");			
+			// Database version 
+			out.print("\t\t<databaseVersion>\n");
+		
+			// Header
+			out.print("\t\t\t<header>\n");	
+			out.print("\t\t\t\t<time value=\""+databaseVersion.getTimestamp().getTime()+"\" />\n");
+			out.print("\t\t\t\t<client name=\""+databaseVersion.getClient()+"\" />\n");			
+			if (databaseVersion.getPreviousClient() != null && !"".equals(databaseVersion.getPreviousClient())) {
+				out.print("\t\t\t\t<previousClient name=\""+databaseVersion.getPreviousClient()+"\" />\n");
+			}			
+			out.print("\t\t\t\t<vectorClock>\n");			
 			VectorClock vectorClock = databaseVersion.getVectorClock();			
 			for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
-				out.print("\t\t\t\t<client name=\""+vectorClockEntry.getKey()+"\" value=\""+vectorClockEntry.getValue()+"\" />\n");
+				out.print("\t\t\t\t\t<client name=\""+vectorClockEntry.getKey()+"\" value=\""+vectorClockEntry.getValue()+"\" />\n");
 			}
-			out.write("\t\t\t</vectorClock>\n");
+			out.write("\t\t\t\t</vectorClock>\n");			
+			out.write("\t\t\t</header>\n");				
 			
 			// Chunks
 			Collection<ChunkEntry> chunks = databaseVersion.getChunks();
@@ -123,22 +122,23 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				Collection<FileVersion> fileVersions = fileHistory.getFileVersions().values();
 				for (FileVersion fileVersion : fileVersions) {
 					out.print("\t\t\t\t\t\t<fileVersion");
-						out.print(" version=\""+fileVersion.getVersion()+"\"");
-						
-						if (fileVersion.getCreatedBy() != null) {
-							out.print(" createdBy=\""+fileVersion.getCreatedBy()+"\"");
-						}
-						
-						if (fileVersion.getLastModified() != null) {
-							out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
-						}
-						
-						if (fileVersion.getChecksum() != null) {
-							out.print(" checksum=\""+StringUtil.toHex(fileVersion.getChecksum())+"\"");
-						}
-						
-						out.print(" path=\""+fileVersion.getPath()+"\"");
-						out.print(" name=\""+fileVersion.getName()+"\"");
+					out.print(" version=\""+fileVersion.getVersion()+"\"");
+					out.print(" status=\""+fileVersion.getStatus()+"\"");					
+					
+					if (fileVersion.getCreatedBy() != null) {
+						out.print(" createdBy=\""+fileVersion.getCreatedBy()+"\"");
+					}
+					
+					if (fileVersion.getLastModified() != null) {
+						out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
+					}
+					
+					if (fileVersion.getChecksum() != null) {
+						out.print(" checksum=\""+StringUtil.toHex(fileVersion.getChecksum())+"\"");
+					}
+					
+					out.print(" path=\""+fileVersion.getPath()+"\"");
+					out.print(" name=\""+fileVersion.getName()+"\"");
 					out.print(" />\n");
 				}			
 				out.print("\t\t\t\t\t</fileVersions>\n");				
@@ -187,7 +187,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 		private String elementPath;
 		private DatabaseVersion databaseVersion;
 		private VectorClock vectorClock;
-		private boolean vectorClockInRange;
+		private boolean vectorClockInLoadRange;
 		private FileContent fileContent;
 		private MultiChunkEntry multiChunk;
 		private PartialFileHistory fileHistory;
@@ -206,19 +206,24 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			//System.out.println(elementPath+" (start) ");
 			
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {				
-				Long time = Long.parseLong(attributes.getValue("time"));
-				String client = attributes.getValue("client");
-				String previousClient = attributes.getValue("previousClient");
-				
-				databaseVersion = new DatabaseVersion();
-				databaseVersion.setTimestamp(new Date(time));
-				databaseVersion.setClient(client);
-				databaseVersion.setPreviousClient(previousClient);
+				databaseVersion = new DatabaseVersion();				
 			}			
-			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/time")) {
+				Date timeValue = new Date(Long.parseLong(attributes.getValue("value")));
+				databaseVersion.setTimestamp(timeValue);
+			}
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/client")) {
+				String clientName = attributes.getValue("name");
+				databaseVersion.setClient(clientName);
+			}
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/previousClient")) {
+				String previousClientName = attributes.getValue("name");
+				databaseVersion.setPreviousClient(previousClientName);
+			}
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock")) {
 				vectorClock = new VectorClock();
 			}
-			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock/client")) {
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock/client")) {
 				String clientName = attributes.getValue("name");
 				Long clientValue = Long.parseLong(attributes.getValue("value"));
 				
@@ -292,19 +297,21 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			}	
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
+				String statusStr = attributes.getValue("status");
 				String lastModifiedStr = attributes.getValue("lastModified");				
 				String createdBy = attributes.getValue("createdBy");
 				String path = attributes.getValue("path");
 				String name = attributes.getValue("name");
 				String checksumStr = attributes.getValue("checksum");
 				
-				if (fileVersionStr == null || name == null || path == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, name and path are mandatory");
+				if (fileVersionStr == null || statusStr == null || name == null || path == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, status, name and path are mandatory");
 				}
 				
 				FileVersion fileVersion = new FileVersion();
-				
+				 
 				fileVersion.setVersion(Long.parseLong(fileVersionStr));
+				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				fileVersion.setPath(path);
 				fileVersion.setName(name);
 				
@@ -320,7 +327,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					fileVersion.setChecksum(StringUtil.fromHex(checksumStr));							
 				}
 
-				fileHistory.addFileVersion(fileVersion);
+				fileHistory.addFileVersion(fileVersion);							
 			}
 			else {
 				//System.out.println("NO MATCH");
@@ -332,7 +339,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			//System.out.println(elementPath+" (end ) ");
 			
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
-				if (vectorClockInRange) {
+				if (vectorClockInLoadRange) {
 					database.addDatabaseVersion(databaseVersion);
 					logger.log(Level.INFO, "   + Added database version "+databaseVersion.getHeader());
 				}
@@ -342,14 +349,14 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 
 				databaseVersion = null;
 			}	
-			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/vectorClock")) {
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock")) {
 				if ((versionFrom != null && VectorClock.compare(versionFrom, vectorClock) == VectorClockComparison.GREATER)
 						|| (versionTo != null && VectorClock.compare(vectorClock, versionTo) == VectorClockComparison.SMALLER)) {
 					
-					vectorClockInRange = false;
+					vectorClockInLoadRange = false;
 				}	
 				else {
-					vectorClockInRange = true;
+					vectorClockInLoadRange = true;
 				}
 				
 				databaseVersion.setVectorClock(vectorClock);
@@ -376,7 +383,11 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 		@Override
 		public void characters(char[] ch, int start, int length) throws SAXException {
-			// No <x>..</x> element yet, ref. with : new String(ch, start, length));			
+			/*String textContent = new String(ch, start, length);
+			
+			if (elementPath.equalsIgnoreCase("/database/databaseVersions/...")) {
+				...
+			}*/			
 		}		
 	}
 }

@@ -27,7 +27,23 @@ import org.syncany.config.Constants;
  * @author pheckel
  */
 public class FileVersion implements Cloneable {
-    public enum FileStatus { NEW, CHANGED, RENAMED, DELETED, MERGED };
+	public enum FileStatus {
+		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED"), MERGED ("MERGED");
+		
+		private String name;       
+		
+		private FileStatus(String name) {
+			this.name = name;
+		}
+		
+		public boolean equalsName(String otherName){
+			return (otherName == null) ? false : name.equals(otherName);
+		}
+		
+		public String toString() {
+			return name;
+		}	
+	}
         
     private Long version;   
     private String createdBy;

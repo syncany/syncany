@@ -14,7 +14,7 @@ public class DatabaseVersionHeader {
     	this.date = new Date();
     	this.vectorClock = new VectorClock();
     	this.client = "UnknownMachine";
-    	this.previousClient = "UnknownMachine";
+    	this.previousClient = "";
     }    
 
 	public Date getDate() {

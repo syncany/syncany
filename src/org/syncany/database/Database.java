@@ -219,7 +219,7 @@ public class Database {
 			PartialFileHistory targetFileHistory = fullDatabaseVersionCache.getFileHistory(sourceFileHistory.getFileId());
 			
 			if (targetFileHistory == null) {
-				fullDatabaseVersionCache.addFileHistory(sourceFileHistory);
+				fullDatabaseVersionCache.addFileHistory((PartialFileHistory) sourceFileHistory.clone());
 			}
 			else {
 				for (FileVersion sourceFileVersion : sourceFileHistory.getFileVersions().values()) {
