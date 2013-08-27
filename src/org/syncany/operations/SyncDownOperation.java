@@ -2,13 +2,13 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,10 +21,8 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
-import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Cache;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
@@ -58,13 +56,13 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");		
 		
 		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
-		Database database = loadLocalDatabase(localDatabaseFile);
+		Database localDatabase = loadLocalDatabase(localDatabaseFile);
 		
 		// 0. Create TM
 		TransferManager transferManager = profile.getConnection().createTransferManager();
 
 		// 1. Check which remote databases to download based on the last local vector clock		
-		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(database, transferManager);
+		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
 		
 		// 2. Download the remote databases to the local cache folder
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
@@ -77,7 +75,7 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "- DatabaseVersionUpdateDetector results:");
 		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
 		
-		Branch localBranch = database.getBranch();	
+		Branch localBranch = localDatabase.getBranch();	
 		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unknownRemoteBranches, profile.getMachineName(), localBranch);
 		//  TODO FIXME IMPORTANT Does this stitching make all the other algorithms obsolete?
 		//  TODO FIXME IMPORTANT --> Couldn't findWinnersWinnersLastDatabaseVersionHeader algorithm (walk forward, compare) be used instead?                       
@@ -126,7 +124,7 @@ public class SyncDownOperation extends Operation {
 				
 				for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 					logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
-					database.removeDatabaseVersion(database.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
+					localDatabase.removeDatabaseVersion(localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
 				}
 					
 				// TODO Do something on filesystem!!
@@ -147,14 +145,16 @@ public class SyncDownOperation extends Operation {
 					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
 					
 					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
-					database.addDatabaseVersion(applyDatabaseVersion);										
+					localDatabase.addDatabaseVersion(applyDatabaseVersion);										
 				}	
 
 				// Now download and extract multichunks
-				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(database, winnersDatabase, profile.getCache());
+				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, profile.getCache());
 				downloadAndExtractMultiChunks(unknownMultiChunks);
 				
-				reconstructFiles(database, winnersDatabase);
+				List<FileSystemAction> actions = determineFileSystemActions(localDatabase, winnersDatabase);
+				applyFileSystemActions(actions);
+				//reconstructFiles(localDatabase, winnersDatabase);
 				// TODO Do something with this dbv
 				// TODO Do something on the file system!
 				
@@ -163,7 +163,7 @@ public class SyncDownOperation extends Operation {
 				
 
 				logger.log(Level.INFO, "- Saving local database to "+localDatabaseFile+" ...");
-				saveLocalDatabase(database, localDatabaseFile);
+				saveLocalDatabase(localDatabase, localDatabaseFile);
 			}
 			
 		}		
@@ -171,27 +171,77 @@ public class SyncDownOperation extends Operation {
 		//throw new Exception("Not yet fully implemented.");
 	}	
 	
-	private interface FileSystemAction {
-		public void execute();
+	private abstract class FileSystemAction {
+		protected Database winningDatabase;
+		
+		public FileSystemAction(Database winningDatabase) {
+			this.winningDatabase = winningDatabase;
+		}
+		
+		public abstract void execute();
 	}
 	
-	private class RenameFileSystemAction implements FileSystemAction {
+	private class RenameFileSystemAction extends FileSystemAction {
 		private FileVersion from;
 		private FileVersion to;
 		
-		public RenameFileSystemAction(FileVersion from, FileVersion to) {
+		public RenameFileSystemAction(FileVersion from, FileVersion to, Database winningDatabase) {
+			super(winningDatabase);
 			this.from = from;
 			this.to = to;
 		}
 
 		@Override
 		public void execute() {
-			//File fileOnFilesystem = config. 
+			File fromOnHDD = getAbsolutePathFile(from.getFullName());
+			
+			
 			//FileUtil.renameVia(from, to);			
 		}				
 	}
 	
-	//private class Delete
+	private class DeleteFileSystemAction extends FileSystemAction {
+		private FileVersion to;
+		
+		public DeleteFileSystemAction(FileVersion to, Database winningDatabase) {
+			super(winningDatabase);
+			this.to = to;
+		}
+		
+		@Override
+		public void execute() {
+			File toDelete = getAbsolutePathFile(to.getFullName());
+			boolean exists = toDelete.exists();
+			if(!exists) {
+				return;
+			}
+			
+			boolean isModifiedEquals = to.getLastModified().equals(new Date(toDelete.lastModified()));			
+			if(!isModifiedEquals) {
+				File conflictFile = new File(toDelete.getName() + ".conflict");
+				FileUtil.renameVia(toDelete, conflictFile);
+				return;
+			} 
+			if(to.isFolder()) {
+				if(!toDelete.delete()) {
+					//TODO Delete Folder!
+				}
+				return;
+			} 
+			boolean isSameSize = winningDatabase.getContent(to.getChecksum()).getSize() == toDelete.length();
+			if(!isSameSize) {
+				File conflictFile = new File(toDelete.getName() + ".conflict");
+				FileUtil.renameVia(toDelete, conflictFile);
+				return;
+			}
+			
+			toDelete.delete();
+		}
+	}
+	
+	private File getAbsolutePathFile(String relativePath) {
+		return new File(profile.getLocalDir()+File.separator+relativePath);
+	}
 	
 	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
@@ -245,11 +295,10 @@ public class SyncDownOperation extends Operation {
 		return fileSystemActions;
 	}
 	
-	private void applyFileSystemActions() {
-		// ...
-		// compare last local database version with filesystem file
-		// if identical, apply newest remote version
-		// if not, error
+	private void applyFileSystemActions(List<FileSystemAction> actions) {
+		for (FileSystemAction action : actions) {
+			action.execute();
+		}
 	}
 	
 	private void reconstructFiles(Database database, Database winnersDatabase) throws Exception {
