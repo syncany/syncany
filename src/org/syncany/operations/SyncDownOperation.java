@@ -194,9 +194,28 @@ public class SyncDownOperation extends Operation {
 		@Override
 		public void execute() {
 			File fromOnHDD = getAbsolutePathFile(from.getFullName());
+			File toOnHDD = getAbsolutePathFile(to.getFullName());
 			
+			if(!fromOnHDD.exists()) {
+				//TODO reconstruct to-File
+				return;
+			}
+			boolean isModifiedEquals = to.getLastModified().equals(new Date(fromOnHDD.lastModified()));			
+			if(!isModifiedEquals) {
+				File conflictFile = new File(fromOnHDD.getName() + ".conflict");
+				FileUtil.renameVia(fromOnHDD, conflictFile);
+				//TODO reconstruct to-file
+				return;
+			}
+			boolean isSameSize = winningDatabase.getContent(to.getChecksum()).getSize() == fromOnHDD.length();
+			if(!isSameSize) {
+				File conflictFile = new File(fromOnHDD.getName() + ".conflict");
+				FileUtil.renameVia(fromOnHDD, conflictFile);
+				//TODO reconstruct to-File
+				return;
+			}
 			
-			//FileUtil.renameVia(from, to);			
+			FileUtil.renameVia(fromOnHDD, toOnHDD);			
 		}				
 	}
 	
