@@ -52,6 +52,7 @@ public class EvilCScenarioTest {
 		clientC.up();
 		clientC.changeFile("newC");
 		clientC.up();
+		clientC.deleteFile("newC");
 		
 		clientA.down();
 		clientB.down();

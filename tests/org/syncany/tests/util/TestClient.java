@@ -45,6 +45,10 @@ public class TestClient extends Client {
 		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name), 0.5, 1*1024);		
 	}	
 	
+	public void deleteFile(String name) {
+		getLocalFile(name).delete();		
+	}	
+	
 	public void cleanup() {
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}

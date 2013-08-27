@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
@@ -192,15 +194,55 @@ public class SyncDownOperation extends Operation {
 	//private class Delete
 	
 	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
-
-		logger.log(Level.INFO, "- Reconstructing files ...");
+		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
-		for (PartialFileHistory fileHistory : winnersDatabase.getFileHistories()) {
+		logger.log(Level.INFO, "- Determine filesystem actions ...");
+		
+		for (PartialFileHistory winningFileHistory : winnersDatabase.getFileHistories()) {
+			// Get remote file version and content
+			FileVersion winningLastVersion = winningFileHistory.getLastVersion();			
 			
+			// Get local file version and content
+			PartialFileHistory localFileHistory = localDatabase.getFileHistory(winningFileHistory.getFileId());			
+			FileVersion localLastVersion = (localFileHistory != null) ? localFileHistory.getLastVersion() : null;
+			
+			logger.log(Level.INFO, "   + Comparing local version "+localLastVersion+" with winning version  "+winningLastVersion);			
+			
+			// Cases
+			boolean isNewFile = localLastVersion == null;
+			boolean isInSamePlace = !isNewFile && winningLastVersion != null && localLastVersion.getFullName().equals(winningLastVersion.getFullName());
+			boolean isChecksumEqual = isInSamePlace && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());
+			
+			boolean isChangedFile = !isNewFile && isInSamePlace && !isChecksumEqual;
+			boolean isIdenticalFile = !isNewFile && isInSamePlace && isChecksumEqual && localLastVersion.getFullName().equals(winningLastVersion.getFullName());
+			boolean isRenamedFile = !isNewFile && !isInSamePlace && isChecksumEqual;
+			boolean isDeletedFile = !isNewFile && isInSamePlace && winningLastVersion.getStatus() == FileStatus.DELETED;
+			
+			if (isNewFile) {
+				//fileSystemActions.add(new NewFileSystemAction(winningLastVersion));
+				logger.log(Level.INFO, "      NEW FILE");
+			}
+			else if (isChangedFile) {			
+				//fileSystemActions.add(new ChangedFileSystemAction(localLastVersion, winningLastVersion));
+				logger.log(Level.INFO, "      CHANGED FILE");
+			}
+			else if (isRenamedFile) {
+				//fileSystemActions.add(new RenamedFileSystemAction(localLastVersion, winningLastVersion));
+				logger.log(Level.INFO, "      RENAMED FILE");
+			}
+			else if (isDeletedFile) {
+				//fileSystemActions.add(new DeleteFileSystemAction(localLastVersion, winningLastVersion));
+				logger.log(Level.INFO, "      DELETED FILE");
+			}
+			else if (isIdenticalFile) {
+				logger.log(Level.INFO, "      IDENTICAL FILE, nothing to do!");
+			}
+			else {
+				logger.log(Level.INFO, "      THIS SHOULD NOT HAPPEN"); // TODO
+			}
 		}
-		
-		
-		return null;
+				
+		return fileSystemActions;
 	}
 	
 	private void applyFileSystemActions() {
