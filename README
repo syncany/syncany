@@ -3,12 +3,17 @@ Build
 1. Install Ant and Ivy: $ apt-get install ant ivy   
 2. Compile: $ ant   
 
-Configure
+Configure & Run
 ---------------------------------------------------------
-1. Edit config.json
-2. Done
+The 'sandbox' folder contains a few tiny scripts to test
+the Syncany up and down operations. The 'run.sh' script
+can be used to run Syncany on different machines ("A" 
+and "B"). 
 
-Run
----------------------------------------------------------
-1. Sync up: $ java -jar SyncanyCore.jar up   
-2. Sync down: $ java -jar SyncanyCore.jar down
+cd sandbox
+vi configA.json (optional)
+vi configB.json (optional)
+./reset.sh
+./run A up
+./run B down
+

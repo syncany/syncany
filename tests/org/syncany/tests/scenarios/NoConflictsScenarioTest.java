@@ -31,6 +31,25 @@ public class NoConflictsScenarioTest {
 	}
 	
 	@Test
+	public void testNewSingleFileNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFile("file");		
+		clientA.up();
+		
+		clientB.down();
+		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));		
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
+	
+	@Test
 	public void testMoveSingleFileNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
@@ -56,6 +75,32 @@ public class NoConflictsScenarioTest {
 		clientA.cleanup();
 		clientB.cleanup();
 	}	
+	
+	@Test
+	public void testDeleteSingleFileNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFile("file");		
+		clientA.up();
+		
+		clientB.down();
+		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
+		
+		clientB.deleteFile("file");
+		clientB.up();
+		
+		clientA.down();
+		assertFalse("Deleted file should not exist.", clientA.getLocalFile("file").exists());
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
 	
 	@Test
 	public void testChangeSingleFileNoConflicts() throws Exception {
@@ -84,7 +129,26 @@ public class NoConflictsScenarioTest {
 	}		
 	
 	@Test
-	public void testNoConflicts() throws Exception {
+	public void testNewSingleFolderNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFolder("folder");		
+		clientA.up();
+		
+		clientB.down();
+		assertFileEquals(clientA.getLocalFile("folder"), clientB.getLocalFile("folder"));		
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
+	
+	@Test
+	public void testComplexNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();
 		

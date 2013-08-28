@@ -1,0 +1,19 @@
+{
+	"machineName":		"A",
+
+	"localDir": 		"clientA/local",
+	"appDir": 		"clientA/app",
+	"cacheDir": 		"clientA/app/cache",
+	"databaseDir":		"clientA/app/db",
+
+	"connection":
+	{
+		"type"		: "local",
+		"settings"	: {"path" : "repo"}
+	},
+
+	"encryption"	: 
+	{
+		"pass"	: "password"
+	}
+}

@@ -30,6 +30,10 @@ public class TestClient extends Client {
 		TestFileUtil.generateRandomBinaryFile(localFile, 50*1024);
 	}
 	
+	public void createNewFolder(String name) {
+		getLocalFile(name).mkdirs();		
+	}	
+	
 	public void moveFile(String fileFrom, String fileTo) throws Exception {
 		File fromLocalFile = getLocalFile(fileFrom);
 		File toLocalFile = getLocalFile(fileTo);

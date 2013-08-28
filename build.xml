@@ -26,6 +26,8 @@
 		</path>
 		<javac srcdir="src" destdir="build" classpathref="project.class.path" includeantruntime="true" />
 		<javac srcdir="tests" destdir="build" classpathref="project.class.path" />
+		
+		<copy file="logging.properties" todir="build" />
 	</target>
 
 	<target name="dist" depends="compile" description="generate the distribution">

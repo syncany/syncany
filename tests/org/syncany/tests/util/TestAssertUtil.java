@@ -62,6 +62,14 @@ public class TestAssertUtil {
 			fail(message+": Actual file "+actualFile+" does not exist.");
 		}
 
+		if (actualFile.isDirectory() != expectedFile.isDirectory()) {
+			fail(message+" Comparing a directory with a file (actual is dir = "+actualFile.isDirectory()+", expected is dir = "+expectedFile.isDirectory()+")");
+		}
+		
+		if (actualFile.isDirectory() && expectedFile.isDirectory()) {
+			return;
+		}
+		
 		if (actualFile.length() != expectedFile.length()) {
 			fail(message+": Actual file size ("+actualFile.length()+") does not match expected file size ("+expectedFile.length()+")");
 		}

@@ -41,7 +41,7 @@ public class SyncUpOperation extends Operation {
 		Database db = loadLocalDatabase(localDatabaseFile);
 		
 		logger.log(Level.INFO, "Starting index process ...");
-		List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir());
+		List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir(), true);
 		DatabaseVersion lastDirtyDatabaseVersion = index(localFiles, db);
 		
 		if (lastDirtyDatabaseVersion.getFileHistories().size() == 0) {

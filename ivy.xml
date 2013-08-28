@@ -36,17 +36,7 @@
 		<!-- Jars are pulled from http://mvnrepository.com/ -->
     	
     	<!-- Other Stuff needed in Syncany -->    
-    		<!-- Syncany.java --> 
-    			<!-- <dependency org="commons-cli" name="commons-cli" rev="1.0"  conf="cc-impl->default"/>-->
-
-		    <!-- FTP PLugin -->
-		    	<!-- <dependency org="commons-net" name="commons-net" rev="2.0"  conf="cc-impl->default"/>-->
-		    
-			
-			<!-- Indexer -->
-    			<!-- <dependency org="commons-codec" name="commons-codec" rev="1.5"  conf="cc-impl->default"/>
-    			<dependency org="org.apache.commons" name="commons-compress" rev="1.3"  conf="cc-impl->default"/>-->
-    			    			
+    	
     		<!-- JUNIT DEPENDENCIES -->
     			<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>
     			

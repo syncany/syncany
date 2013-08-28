@@ -62,6 +62,11 @@ public class SyncDownOperation extends Operation {
 		// 1. Check which remote databases to download based on the last local vector clock		
 		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
 		
+		if (unknownRemoteDatabases.isEmpty()) {
+			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
+			return;
+		}
+		
 		// 2. Download the remote databases to the local cache folder
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 		
