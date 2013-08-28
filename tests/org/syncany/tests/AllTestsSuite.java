@@ -10,7 +10,6 @@ import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.database.DatabaseWriteReadIndividualObjectsTest;
-import org.syncany.tests.database.DatabaseWriteReadRandomCombinationTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
@@ -32,7 +31,6 @@ import org.syncany.tests.scenarios.EvilCScenarioTest;
 	
 	// Database
 	DatabaseWriteReadIndividualObjectsTest.class,
-	DatabaseWriteReadRandomCombinationTest.class,
 	VectorClockTest.class,
 	
 	// Operations

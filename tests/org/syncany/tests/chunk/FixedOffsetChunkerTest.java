@@ -102,7 +102,7 @@ public class FixedOffsetChunkerTest {
 		Enumeration<Chunk> chunkEnumeration = chunker.createChunks(inputFile);
 		
 		while (chunkEnumeration.hasMoreElements()) {
-			Chunk chunk = chunkEnumeration.nextElement();
+			chunkEnumeration.nextElement();
 		}
 		
 		// This should lead to an IOException

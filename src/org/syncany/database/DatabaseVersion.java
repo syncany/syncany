@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.util.ByteArray;
 
 public class DatabaseVersion {
@@ -17,7 +18,7 @@ public class DatabaseVersion {
     private Map<Long, PartialFileHistory> fileHistories;
 
     // Quick access cache
-    private Map<ChunkEntry, MultiChunkEntry> chunkMultiChunkCache;    
+    private Map<ChunkEntryId, MultiChunkEntry> chunkMultiChunkCache;    
 
     public DatabaseVersion() {
     	header = new DatabaseVersionHeader();
@@ -29,7 +30,7 @@ public class DatabaseVersion {
         fileHistories = new HashMap<Long, PartialFileHistory>();          
 
         // Quick access cache
-        chunkMultiChunkCache = new HashMap<ChunkEntry, MultiChunkEntry>();
+        chunkMultiChunkCache = new HashMap<ChunkEntryId, MultiChunkEntry>();
     }
     
 	public DatabaseVersionHeader getHeader() {
@@ -92,8 +93,8 @@ public class DatabaseVersion {
         multiChunks.put(new ByteArray(multiChunk.getId()), multiChunk);
         
         // Populate cache
-        for (ChunkEntry chunk : multiChunk.getChunks()) {
-        	chunkMultiChunkCache.put(chunk, multiChunk);
+        for (ChunkEntryId chunkChecksum : multiChunk.getChunks()) {
+        	chunkMultiChunkCache.put(chunkChecksum, multiChunk);
         }
     }
     
@@ -104,7 +105,7 @@ public class DatabaseVersion {
     /**
      * Get a multichunk that this chunk is contained in.
      */
-    public MultiChunkEntry getMultiChunk(ChunkEntry chunk) {
+    public MultiChunkEntry getMultiChunk(ChunkEntryId chunk) {
     	return chunkMultiChunkCache.get(chunk);
     }
     
@@ -165,10 +166,16 @@ public class DatabaseVersion {
   			return false;
   		DatabaseVersion other = (DatabaseVersion) obj;
   		if (header == null) {
-  			if (other.header != null)
+  			if (other.header != null) 
   				return false;
   		} else if (!header.equals(other.header))
   			return false;
   		return true;
-  	}    
+  	}
+
+	@Override
+	public String toString() {
+		return "DatabaseVersion [header=" + header + ", chunks=" + chunks + ", multiChunks=" + multiChunks + ", fileContents=" + fileContents
+				+ ", fileHistories=" + fileHistories + ", chunkMultiChunkCache=" + chunkMultiChunkCache + "]";
+	}    
 }

@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeMap;
 
+import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.util.StringUtil;
+
 /**
  *
  * @author pheckel
@@ -30,13 +33,13 @@ public class FileContent {
     private byte[] checksum;
     private int contentSize;
     
-    private TreeMap<Integer, ChunkEntry> chunks;
+    private TreeMap<Integer, ChunkEntryId> chunks;
     
     public FileContent() {
-        this.chunks = new TreeMap<Integer, ChunkEntry>();
+        this.chunks = new TreeMap<Integer, ChunkEntryId>();
     }
        
-    public void addChunk(ChunkEntry chunk) {
+    public void addChunk(ChunkEntryId chunk) {
         chunks.put(chunks.size(), chunk);        
     }    
 
@@ -56,7 +59,7 @@ public class FileContent {
         this.contentSize = contentSize;
     }
 
-    public Collection<ChunkEntry> getChunks() {
+    public Collection<ChunkEntryId> getChunks() {
     	return Collections.unmodifiableCollection(chunks.values());
     }
 
@@ -77,7 +80,7 @@ public class FileContent {
 		if (obj == null)
 			return false;
 		if (getClass() != obj.getClass())
-			return false;
+			return false; 
 		FileContent other = (FileContent) obj;
 		if (!Arrays.equals(checksum, other.checksum))
 			return false;
@@ -89,6 +92,11 @@ public class FileContent {
 		if (contentSize != other.contentSize)
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "FileContent [checksum=" + StringUtil.toHex(checksum) + ", contentSize=" + contentSize + ", chunks=" + chunks + "]";
 	}
             
 }

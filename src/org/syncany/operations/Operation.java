@@ -13,10 +13,10 @@ import org.syncany.database.DatabaseXmlDAO;
 
 public abstract class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
-	protected Config profile;
+	protected Config config;
 	
 	public Operation(Config profile) {
-		this.profile = profile;
+		this.config = profile;
 	}	
 
 	protected Database loadLocalDatabase(File localDatabaseFile) throws IOException {

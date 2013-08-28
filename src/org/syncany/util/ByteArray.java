@@ -17,10 +17,6 @@
  */
 package org.syncany.util;
 
-/**
- *
- * @author pheckel
- */
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -35,8 +31,7 @@ byte[] directly uses reference equality.
 This class also allows the trio of array, offset and length
 to be carried around as a single object.
  */
-public final class ByteArray {
-
+public class ByteArray {
     private byte[] array;
     private int offset;
     private int length;
@@ -164,4 +159,9 @@ public final class ByteArray {
         }
         return true;
     }
+
+	@Override
+	public String toString() {
+		return StringUtil.toHex(array); // TODO [low] take offset and length into consideration
+	}
 }

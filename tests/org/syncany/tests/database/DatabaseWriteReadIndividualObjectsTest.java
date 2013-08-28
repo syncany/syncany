@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -17,6 +16,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.database.ChunkEntry;
+import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
@@ -99,15 +99,15 @@ public class DatabaseWriteReadIndividualObjectsTest {
         
         // Distribute chunks to multichunks
         MultiChunkEntry multiChunkA = new MultiChunkEntry(new byte[] {6,6,6,6,6,6,6,6,6});
-        multiChunkA.addChunk(chunkA1); 
-        multiChunkA.addChunk(chunkA2); 
-        multiChunkA.addChunk(chunkA3); 
+        multiChunkA.addChunk(new ChunkEntryId(chunkA1.getChecksum())); 
+        multiChunkA.addChunk(new ChunkEntryId(chunkA2.getChecksum())); 
+        multiChunkA.addChunk(new ChunkEntryId(chunkA3.getChecksum()));
         newDatabaseVersion.addMultiChunk(multiChunkA);
         
         MultiChunkEntry multiChunkB = new MultiChunkEntry(new byte[] {7,7,7,7,7,7,7,7,7});
-        multiChunkB.addChunk(chunkA4); 
-        multiChunkB.addChunk(chunkB1); 
-        multiChunkB.addChunk(chunkB2); 
+        multiChunkB.addChunk(new ChunkEntryId(chunkA4.getChecksum()));
+        multiChunkB.addChunk(new ChunkEntryId(chunkB1.getChecksum()));
+        multiChunkB.addChunk(new ChunkEntryId(chunkB2.getChecksum()));
         newDatabaseVersion.addMultiChunk(multiChunkB);        
         		
         // Add database version
@@ -160,16 +160,16 @@ public class DatabaseWriteReadIndividualObjectsTest {
         
         // Distribute chunks to file contents    	
         FileContent contentA = new FileContent();        
-        contentA.addChunk(chunkA1);
-        contentA.addChunk(chunkA2);
-        contentA.addChunk(chunkA3);
-        contentA.addChunk(chunkA4);
+        contentA.addChunk(new ChunkEntryId(chunkA1.getChecksum()));
+        contentA.addChunk(new ChunkEntryId(chunkA2.getChecksum()));
+        contentA.addChunk(new ChunkEntryId(chunkA3.getChecksum()));
+        contentA.addChunk(new ChunkEntryId(chunkA4.getChecksum()));
         contentA.setChecksum(new byte[]{5,5,5,4,4,5,5,5,5});              
         newDatabaseVersion.addFileContent(contentA);
                 
         FileContent contentB = new FileContent();
-        contentB.addChunk(chunkB1);
-        contentB.addChunk(chunkB2);   
+        contentB.addChunk(new ChunkEntryId(chunkB1.getChecksum()));
+        contentB.addChunk(new ChunkEntryId(chunkB2.getChecksum())); 
         contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
         newDatabaseVersion.addFileContent(contentB);
         		

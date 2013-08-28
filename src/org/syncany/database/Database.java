@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.util.ByteArray;
 
 public class Database {
@@ -86,7 +87,7 @@ public class Database {
 	/**
      * Get a multichunk that this chunk is contained in.
      */
-	public MultiChunkEntry getMultiChunk(ChunkEntry chunk) {
+	public MultiChunkEntry getMultiChunkForChunk(ChunkEntryId chunk) {
 		return fullDatabaseVersionCache.getMultiChunk(chunk);
 	}	
 	

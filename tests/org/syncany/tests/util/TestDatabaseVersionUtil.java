@@ -1,7 +1,6 @@
 package org.syncany.tests.util;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

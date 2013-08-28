@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 import org.syncany.config.Constants;
+import org.syncany.util.StringUtil;
 
 /**
  *
@@ -132,7 +133,7 @@ public class FileVersion implements Cloneable {
 
 	@Override
 	public String toString() {
-		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", checksum=" + checksum + ", path=" + path
+		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", checksum=" + StringUtil.toHex(checksum) + ", path=" + path
 				+ ", name=" + name + ", lastModified=" + lastModified + ", updated=" + updated + ", status=" + status + ")";
 	}
 
@@ -144,6 +145,7 @@ public class FileVersion implements Cloneable {
             clone.setChecksum(getChecksum());
             clone.setCreatedBy(getCreatedBy());
             clone.setLastModified(getLastModified());
+            clone.setUpdated(getUpdated());
             clone.setName(getName());
             clone.setPath(getPath());
             clone.setVersion(getVersion());

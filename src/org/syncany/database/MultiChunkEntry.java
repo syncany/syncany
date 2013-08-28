@@ -21,20 +21,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.util.StringUtil;
+
 /**
  *
  * @author pheckel
  */
 public class MultiChunkEntry  {
     private byte[] id;    
-    private List<ChunkEntry> chunks;
+    private List<ChunkEntryId> chunks;
         
     public MultiChunkEntry(byte[] id) {
-        this.chunks = new ArrayList<ChunkEntry>();
+        this.chunks = new ArrayList<ChunkEntryId>();
         this.id = id;
     }
     
-    public void addChunk(ChunkEntry chunk) {
+    public void addChunk(ChunkEntryId chunk) {
         chunks.add(chunk);
     }    
 
@@ -46,7 +49,7 @@ public class MultiChunkEntry  {
         this.id = id;
     }
 
-    public List<ChunkEntry> getChunks() {
+    public List<ChunkEntryId> getChunks() {
         return chunks;
     }
 
@@ -76,6 +79,11 @@ public class MultiChunkEntry  {
 		} else if (!chunks.equals(other.chunks))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "MultiChunkEntry [id=" + StringUtil.toHex(id) + ", chunks=" + chunks + "]";
 	}
 
 }

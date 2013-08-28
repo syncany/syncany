@@ -72,7 +72,7 @@ public class Deduper {
 			}
 
 			if (chunk != null) {			
-				listener.onFileEnd(file, chunk.getChecksum());
+				listener.onFileEnd(file, chunk.getFileChecksum());
 			}
 			else {
 				listener.onFileEnd(file, null);

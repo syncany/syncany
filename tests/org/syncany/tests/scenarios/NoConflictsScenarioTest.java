@@ -1,5 +1,6 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -28,6 +29,59 @@ public class NoConflictsScenarioTest {
 		clientA1.cleanup();
 		clientA2.cleanup();
 	}
+	
+	@Test
+	public void testMoveSingleFileNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFile("file");		
+		clientA.up();
+		
+		clientB.down();
+		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
+		
+		clientB.moveFile("file", "moved");
+		clientB.up();
+		
+		clientA.down();
+		assertFalse("Originally moved file should not exist.", clientA.getLocalFile("file").exists());
+		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}	
+	
+	@Test
+	public void testChangeSingleFileNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFile("file");		
+		clientA.up();
+		
+		clientB.down();
+		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
+		
+		clientB.changeFile("file");
+		clientB.up();
+		
+		clientA.down();
+		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());		
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
 	
 	@Test
 	public void testNoConflicts() throws Exception {

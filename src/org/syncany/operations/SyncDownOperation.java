@@ -2,13 +2,11 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +26,7 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Branch;
 import org.syncany.database.Branches;
-import org.syncany.database.ChunkEntry;
+import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
@@ -52,14 +50,14 @@ public class SyncDownOperation extends Operation {
 	
 	public void execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Sync down' at client "+profile.getMachineName()+" ...");
+		logger.log(Level.INFO, "Running 'Sync down' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");		
 		
-		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
+		File localDatabaseFile = new File(config.getAppDatabaseDir()+"/local.db");		
 		Database localDatabase = loadLocalDatabase(localDatabaseFile);
 		
 		// 0. Create TM
-		TransferManager transferManager = profile.getConnection().createTransferManager();
+		TransferManager transferManager = config.getConnection().createTransferManager();
 
 		// 1. Check which remote databases to download based on the last local vector clock		
 		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
@@ -76,12 +74,12 @@ public class SyncDownOperation extends Operation {
 		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
 		
 		Branch localBranch = localDatabase.getBranch();	
-		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unknownRemoteBranches, profile.getMachineName(), localBranch);
+		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 		//  TODO FIXME IMPORTANT Does this stitching make all the other algorithms obsolete?
 		//  TODO FIXME IMPORTANT --> Couldn't findWinnersWinnersLastDatabaseVersionHeader algorithm (walk forward, compare) be used instead?                       
 
 		Branches allStitchedBranches = stitchedRemoteBranches.clone();
-		allStitchedBranches.add(profile.getMachineName(), localBranch);
+		allStitchedBranches.add(config.getMachineName(), localBranch);
 		
 		DatabaseVersionHeader lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);		
 		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);		
@@ -103,7 +101,7 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "- Compared branches: "+allStitchedBranches);
 		logger.log(Level.INFO, "- Winner is "+winnersName+" with branch "+winnersBranch);
 				
-		if (profile.getMachineName().equals(winnersName)) {
+		if (config.getMachineName().equals(winnersName)) {
 			if (winnersBranch.size() > localBranch.size()) {
 				throw new RuntimeException("TODO implement use case 'restore remote backup'");
 			}
@@ -143,7 +141,7 @@ public class SyncDownOperation extends Operation {
 				
 
 				// Now download and extract multichunks
-				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, profile.getCache());
+				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, config.getCache());
 				downloadAndExtractMultiChunks(unknownMultiChunks);
 				
 				List<FileSystemAction> actions = determineFileSystemActions(localDatabase, winnersDatabase);
@@ -168,213 +166,13 @@ public class SyncDownOperation extends Operation {
 		//throw new Exception("Not yet fully implemented.");
 	}	
 	
-	private abstract class FileSystemAction {
-		protected Database localDatabase;
-		protected Database winningDatabase;
-		
-		public FileSystemAction(Database localDatabase, Database winningDatabase) {
-			this.localDatabase = localDatabase;
-			this.winningDatabase = winningDatabase;
-		}
-		
-		protected void reconstructFile(FileVersion reconstructedFileVersion) throws Exception {
-			if (!reconstructedFileVersion.isFolder()) {
-				File reconstructedFileInCache = profile.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
-				FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
-
-				logger.log(Level.INFO, "  + Reconstructing file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
-
-				FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
-				
-				if (fileContent == null) {
-					fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
-				}
-				
-				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
-				
-				for (ChunkEntry chunk : fileChunks) {
-					File chunkFile = profile.getCache().getChunkFile(chunk.getChecksum());
-					FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
-				}
-				
-				reconstructedFileOutputStream.close();		
-				
-				// Set timestamp
-				reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());
-				
-				// Okay. Now move to real place
-				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
-				logger.log(Level.INFO, "    * Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
-				
-				FileUtil.renameVia(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
-			}
-			
-			// Folder
-			else {
-				File reconstructedFilesAtFinalLocation = new File(profile.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
-				
-				logger.log(Level.INFO, "  + Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
-				FileUtil.mkdirsVia(reconstructedFilesAtFinalLocation);
-			}									
-		}
-		
-		protected void createConflictFile(FileVersion conflictingLocalVersion) {
-			File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getFullName());
-			
-			String newConflictExtension = FileUtil.getExtension(conflictingLocalFile);
-			String newConflictBasename = FileUtil.getBasename(conflictingLocalFile)
-					+ " ("+conflictingLocalVersion.getCreatedBy()+"'s conflict version, "+conflictingLocalVersion.getLastModified()+")";
-			
-			String newFullName = ("".equals(newConflictExtension)) ? newConflictBasename : newConflictBasename+"."+newConflictExtension;			
-			File newConflictFile = new File(
-					  FileUtil.getAbsoluteParentDirectory(conflictingLocalFile)
-					+ File.separator
-					+ newFullName);
-			
-			FileUtil.renameVia(conflictingLocalFile, newConflictFile);
-		}
-		
-		protected boolean isExpectedFile(FileVersion expectedLocalFileVersion) {
-			File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());
-			
-			boolean fileExists = actualLocalFile.exists();
-			
-			if (expectedLocalFileVersion.getStatus() == FileStatus.DELETED) {
-				// Check existance
-				if (fileExists) {
-					return false;
-				}
-				else {
-					return true;
-				}
-			}
-			else {
-				// Check existance
-				if (!fileExists) {
-					return false;
-				}
-				
-				// Check modified date
-				boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
-				
-				if (!modifiedEquals) {
-					return false;
-				}
-				
-				// Check size				
-				FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
-				
-				if (expectedFileContent == null) {
-					expectedFileContent = winningDatabase.getContent(expectedLocalFileVersion.getChecksum());
-				}
-				
-				boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
-				
-				if (isSizeEqual) {
-					return true;
-				}
-				else {
-					return false;
-				}
-			}
-		}
-		
-		public abstract void execute() throws Exception;
-	}
-	
-	private class NewFileSystemAction extends FileSystemAction {
-		private FileVersion newFileVersion;
-		
-		public NewFileSystemAction(FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
-			super(localDatabase, winningDatabase);
-			this.newFileVersion = newFileVersion;
-		}
-		
-		@Override
-		public void execute() throws Exception {
-			if (!isExpectedFile(newFileVersion)) {
-				createConflictFile(newFileVersion);
-			}
-			
-			reconstructFile(newFileVersion);			
-		}
-	}
 	
 	
-	private class RenameFileSystemAction extends FileSystemAction {
-		private FileVersion fromFileVersion;
-		private FileVersion toFileVersion;
-		
-		public RenameFileSystemAction(FileVersion from, FileVersion to, Database localDatabase, Database winningDatabase) {
-			super(localDatabase, winningDatabase);
-			this.fromFileVersion = from;
-			this.toFileVersion = to;
-		}
-
-		@Override
-		public void execute() throws Exception {
-			if (!isExpectedFile(fromFileVersion)) {
-				createConflictFile(fromFileVersion);
-				reconstructFile(toFileVersion);
-			}
-			else {
-				File fromFileOnDisk = getAbsolutePathFile(fromFileVersion.getFullName());
-				File toFileOnDisk = getAbsolutePathFile(toFileVersion.getFullName());			
-				
-				FileUtil.renameVia(fromFileOnDisk, toFileOnDisk);						
-			}			
-		}				
-	}
 	
-	private class ChangeFileSystemAction extends FileSystemAction {
-		private FileVersion fromFileVersion;
-		private FileVersion toFileVersion;
-		
-		public ChangeFileSystemAction(FileVersion fromFileVersion, FileVersion toFileVersion, Database localDatabase, Database winningDatabase) {
-			super(localDatabase, winningDatabase);
-			this.fromFileVersion = fromFileVersion;
-			this.toFileVersion = toFileVersion;
-		}
-
-		@Override
-		public void execute() throws Exception {
-			if (!isExpectedFile(fromFileVersion)) {
-				createConflictFile(fromFileVersion);
-				reconstructFile(toFileVersion);
-			}
-			else {
-				File fromFileOnDisk = getAbsolutePathFile(fromFileVersion.getFullName());
-				fromFileOnDisk.delete();
-				
-				reconstructFile(toFileVersion);				
-			}			
-		}				
-	}	
 	
-	private class DeleteFileSystemAction extends FileSystemAction {
-		private FileVersion fromFileVersion;
-		private FileVersion toDeleteFileVersion;
-		
-		public DeleteFileSystemAction(FileVersion fromFileVersion, FileVersion toDeleteFileVersion, Database localDatabase, Database winningDatabase) {
-			super(localDatabase, winningDatabase);
-			this.fromFileVersion = fromFileVersion;
-			this.toDeleteFileVersion = toDeleteFileVersion;
-		}
-		
-		@Override
-		public void execute() {
-			if (!isExpectedFile(fromFileVersion)) {
-				createConflictFile(fromFileVersion);				
-			}
-			
-			File toDeleteFileOnDisk = getAbsolutePathFile(toDeleteFileVersion.getFullName());
-			toDeleteFileOnDisk.delete();			
-		}
-	}
 	
-	private File getAbsolutePathFile(String relativePath) {
-		return new File(profile.getLocalDir()+File.separator+relativePath);
-	}
+	
+	
 	
 	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
@@ -394,34 +192,40 @@ public class SyncDownOperation extends Operation {
 			// Cases
 			boolean isNewFile = localLastVersion == null;
 			boolean isInSamePlace = !isNewFile && winningLastVersion != null && localLastVersion.getFullName().equals(winningLastVersion.getFullName());
-			boolean isChecksumEqual = isInSamePlace && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());
+			boolean isChecksumEqual = !isNewFile && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());
 			
 			boolean isChangedFile = !isNewFile && isInSamePlace && !isChecksumEqual;
 			boolean isIdenticalFile = !isNewFile && isInSamePlace && isChecksumEqual;
 			boolean isRenamedFile = !isNewFile && !isInSamePlace && isChecksumEqual;
 			boolean isDeletedFile = !isNewFile && isInSamePlace && winningLastVersion.getStatus() == FileStatus.DELETED;
 			
+			if (logger.isLoggable(Level.FINER)) {
+				logger.log(Level.FINER, "      + isNewFile: "+isNewFile+", isInSamePlace:"+isInSamePlace+", isChecksumEqual: "+isChecksumEqual
+						+", isChangedFile: "+isChangedFile+", isIdenticalFile: "+isIdenticalFile+", isRenamedFile: "+isRenamedFile+", isDeletedFile: "+isDeletedFile);
+			}
+			
 			if (isNewFile) {
-				fileSystemActions.add(new NewFileSystemAction(winningLastVersion, localDatabase, winnersDatabase));
+				fileSystemActions.add(new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      NEW FILE");
 			}
 			else if (isChangedFile) {			
-				fileSystemActions.add(new ChangeFileSystemAction(localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
+				fileSystemActions.add(new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      CHANGED FILE");
 			}
 			else if (isRenamedFile) {
-				fileSystemActions.add(new RenameFileSystemAction(localLastVersion, winningLastVersion,localDatabase, winnersDatabase));
+				fileSystemActions.add(new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      RENAMED FILE");
 			}
 			else if (isDeletedFile) {
-				fileSystemActions.add(new DeleteFileSystemAction(localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
+				fileSystemActions.add(new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
 				logger.log(Level.INFO, "      DELETED FILE");
 			}
 			else if (isIdenticalFile) {
 				logger.log(Level.INFO, "      IDENTICAL FILE, nothing to do!");
 			}
 			else {
-				logger.log(Level.INFO, "      THIS SHOULD NOT HAPPEN"); // TODO
+				logger.log(Level.WARNING, "      THIS SHOULD NOT HAPPEN"); // TODO
+				throw new Exception("Cannot determine file system action!");
 			}
 		}
 				
@@ -436,22 +240,22 @@ public class SyncDownOperation extends Operation {
 	
 	private void downloadAndExtractMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
-		TransferManager transferManager = profile.getConnection().createTransferManager();
+		TransferManager transferManager = config.getConnection().createTransferManager();
 		
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
-			File localMultiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName()); // TODO Make MultiChunkRemoteFile class, or something like that
 			
 			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			transferManager.download(remoteMultiChunkFile, localMultiChunkFile);
 			
 			logger.log(Level.INFO, "  + Extracting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
-			MultiChunk multiChunkInCache = profile.getMultiChunker().createMultiChunk(
-					profile.getTransformer().transform(new FileInputStream(localMultiChunkFile)));
+			MultiChunk multiChunkInCache = config.getMultiChunker().createMultiChunk(
+					config.getTransformer().transform(new FileInputStream(localMultiChunkFile)));
 			Chunk extractedChunk = null;
 			
 			while (null != (extractedChunk = multiChunkInCache.read())) {
-				File localChunkFile = profile.getCache().getChunkFile(extractedChunk.getChecksum());
+				File localChunkFile = config.getCache().getChunkFile(extractedChunk.getChecksum());
 				
 				logger.log(Level.INFO, "    * Unpacking chunk "+StringUtil.toHex(extractedChunk.getChecksum())+" ...");
 				FileUtil.writeToFile(extractedChunk.getContent(), localChunkFile);
@@ -478,16 +282,16 @@ public class SyncDownOperation extends Operation {
 					fileContent = winnersDatabase.getContent(fileHistory.getLastVersion().getChecksum());
 				}
 				
-				Collection<ChunkEntry> fileChunks = fileContent.getChunks();
+				Collection<ChunkEntryId> fileChunks = fileContent.getChunks(); // TODO [high] change this to getChunkRefs, solves cross referencing in database versions
 				
-				for (ChunkEntry chunk : fileChunks) {
-					File chunkFileInCache = cache.getChunkFile(chunk.getChecksum());
+				for (ChunkEntryId chunkChecksum : fileChunks) {
+					File chunkFileInCache = cache.getChunkFile(chunkChecksum.getArray());
 					
 					if (!chunkFileInCache.exists()) {
-						MultiChunkEntry multiChunkForChunk = database.getMultiChunk(chunk);
+						MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
 						
 						if (multiChunkForChunk == null) {
-							multiChunkForChunk = winnersDatabase.getMultiChunk(chunk);
+							multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum); 
 						}
 						
 						if (!multiChunksToDownload.contains(multiChunkForChunk)) {
@@ -565,9 +369,9 @@ public class SyncDownOperation extends Operation {
 		
 		for (File remoteDatabaseInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
-			
+		
 			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
-			dbDAO.load(remoteDatabase, rdf);		// FIXME This is very, very, very inefficient, DB is loaded and then discarded	
+			dbDAO.load(remoteDatabase, rdf);		// FIXME [medium] This is very, very, very inefficient, DB is loaded and then discarded	
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			// Pupulate branches
@@ -630,7 +434,7 @@ public class SyncDownOperation extends Operation {
 		List<File> unknownRemoteDatabasesInCache = new ArrayList<File>();
 		
 		for (RemoteFile remoteFile : unknownRemoteDatabases) {
-			File unknownRemoteDatabaseFileInCache = profile.getCache().getDatabaseFile(remoteFile.getName());
+			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
 			transferManager.download(remoteFile, unknownRemoteDatabaseFileInCache);

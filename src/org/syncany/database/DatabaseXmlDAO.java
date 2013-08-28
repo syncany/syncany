@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.VectorClock.VectorClockComparison;
 import org.syncany.operations.DatabaseFile;
@@ -85,9 +86,9 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				for (MultiChunkEntry multiChunk : multiChunks) {
 					out.print("\t\t\t\t<multiChunk id=\""+StringUtil.toHex(multiChunk.getId())+"\">\n");
 					out.print("\t\t\t\t\t<chunkRefs>\n");
-					Collection<ChunkEntry> multiChunkChunks = multiChunk.getChunks();
-					for (ChunkEntry chunk : multiChunkChunks) {
-						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunk.getChecksum())+"\" />\n");
+					Collection<ChunkEntryId> multiChunkChunks = multiChunk.getChunks();
+					for (ChunkEntryId chunkChecksum : multiChunkChunks) {
+						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunkChecksum.getArray())+"\" />\n");
 					}			
 					out.print("\t\t\t\t\t</chunkRefs>\n");				
 					out.print("\t\t\t\t</multiChunk>\n");				
@@ -103,9 +104,9 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				for (FileContent fileContent : fileContents) {
 					out.print("\t\t\t\t<fileContent checksum=\""+StringUtil.toHex(fileContent.getChecksum())+"\" size=\""+fileContent.getSize()+"\">\n");
 					out.print("\t\t\t\t\t<chunkRefs>\n");
-					Collection<ChunkEntry> fileContentChunkChunks = fileContent.getChunks();
-					for (ChunkEntry chunk : fileContentChunkChunks) {
-						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunk.getChecksum())+"\" />\n");
+					Collection<ChunkEntryId> fileContentChunkChunks = fileContent.getChunks();
+					for (ChunkEntryId chunkChecksum : fileContentChunkChunks) {
+						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunkChecksum.getArray())+"\" />\n");
 					}			
 					out.print("\t\t\t\t\t</chunkRefs>\n");				
 					out.print("\t\t\t\t</fileContent>\n");				
@@ -131,6 +132,10 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					
 					if (fileVersion.getLastModified() != null) {
 						out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
+					}
+					
+					if (fileVersion.getUpdated() != null) {
+						out.print(" updated=\""+fileVersion.getUpdated().getTime()+"\"");
 					}
 					
 					if (fileVersion.getChecksum() != null) {
@@ -249,18 +254,8 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRefs/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");
 				byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
-						
-				ChunkEntry chunkEntry = database.getChunk(chunkChecksum);
 
-				if (chunkEntry == null) {
-					chunkEntry = databaseVersion.getChunk(chunkChecksum);
-					
-					if (chunkEntry == null) {
-						throw new SAXException("Chunk with checksum " + chunkChecksumStr + " does not exist.");
-					}
-				}  
-
-				fileContent.addChunk(chunkEntry);
+				fileContent.addChunk(new ChunkEntryId(chunkChecksum));
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk")) {
 				String multChunkIdStr = attributes.getValue("id");
@@ -275,18 +270,8 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRefs/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");
 				byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
-						
-				ChunkEntry chunkEntry = database.getChunk(chunkChecksum);
 
-				if (chunkEntry == null) {
-					chunkEntry = databaseVersion.getChunk(chunkChecksum);
-					
-					if (chunkEntry == null) {
-						throw new SAXException("Chunk with checksum " + chunkChecksumStr + " does not exist.");
-					}
-				}
-
-				multiChunk.addChunk(chunkEntry);
+				multiChunk.addChunk(new ChunkEntryId(chunkChecksum));
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
 				String fileHistoryIdStr = attributes.getValue("id");
@@ -298,7 +283,8 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
 				String statusStr = attributes.getValue("status");
-				String lastModifiedStr = attributes.getValue("lastModified");				
+				String lastModifiedStr = attributes.getValue("lastModified");
+				String updatedStr = attributes.getValue("updated");
 				String createdBy = attributes.getValue("createdBy");
 				String path = attributes.getValue("path");
 				String name = attributes.getValue("name");
@@ -317,6 +303,10 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 				if (lastModifiedStr != null) {
 					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
+				}
+				
+				if (updatedStr != null) {
+					fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
 				}
 				
 				if (createdBy != null) {

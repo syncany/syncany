@@ -33,15 +33,15 @@ public class SyncUpOperation extends Operation {
 	
 	public void execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Sync up' at client "+profile.getMachineName()+" ...");
+		logger.log(Level.INFO, "Running 'Sync up' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
 		logger.log(Level.INFO, "Loading local database ...");
-		File localDatabaseFile = new File(profile.getAppDatabaseDir()+"/local.db");		
+		File localDatabaseFile = new File(config.getAppDatabaseDir()+"/local.db");		
 		Database db = loadLocalDatabase(localDatabaseFile);
 		
 		logger.log(Level.INFO, "Starting index process ...");
-		List<File> localFiles = FileUtil.getRecursiveFileList(profile.getLocalDir());
+		List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir());
 		DatabaseVersion lastDirtyDatabaseVersion = index(localFiles, db);
 		
 		if (lastDirtyDatabaseVersion.getFileHistories().size() == 0) {
@@ -58,10 +58,10 @@ public class SyncUpOperation extends Operation {
 			boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 			
 			if (uploadMultiChunksSuccess) {
-				long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(profile.getMachineName());
+				long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(config.getMachineName());
 	
-				RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+profile.getMachineName()+"-"+newestLocalDatabaseVersion);
-				File localDeltaDatabaseFile = profile.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
+				RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
+				File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
 	
 				logger.log(Level.INFO, "Saving local delta database file ...");
 				logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
@@ -79,7 +79,7 @@ public class SyncUpOperation extends Operation {
 	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			File localMultiChunkFile = profile.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName());
 			
 			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
@@ -116,20 +116,20 @@ public class SyncUpOperation extends Operation {
 		// New vector clock
 		VectorClock newVectorClock = lastVectorClock.clone();
 
-		Long lastLocalValue = lastVectorClock.getClock(profile.getMachineName());
+		Long lastLocalValue = lastVectorClock.getClock(config.getMachineName());
 		Long newLocalValue = (lastLocalValue == null) ? 1 : lastLocalValue+1;
 		
-		newVectorClock.setClock(profile.getMachineName(), newLocalValue);		
+		newVectorClock.setClock(config.getMachineName(), newLocalValue);		
 
 		// Index
-		Deduper deduper = new Deduper(profile.getChunker(), profile.getMultiChunker(), profile.getTransformer());
-		Indexer indexer = new Indexer(profile, deduper, db);
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
+		Indexer indexer = new Indexer(config, deduper, db);
 		
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);	
 	
 		newDatabaseVersion.setVectorClock(newVectorClock);
 		newDatabaseVersion.setTimestamp(new Date());	
-		newDatabaseVersion.setClient(profile.getMachineName());
+		newDatabaseVersion.setClient(config.getMachineName());
 		newDatabaseVersion.setPreviousClient(previousClient);
 						
 		return newDatabaseVersion;

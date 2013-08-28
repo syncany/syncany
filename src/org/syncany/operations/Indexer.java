@@ -13,16 +13,17 @@ import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Deduper;
 import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
-import org.syncany.config.Constants;
 import org.syncany.config.Config;
+import org.syncany.config.Constants;
 import org.syncany.database.ChunkEntry;
+import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -169,6 +170,9 @@ public class Indexer {
 				newDatabaseVersion.addFileHistory(fileHistory);
 				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), fileVersion);
 			}
+			else {
+				logger.log(Level.INFO, "   * NOT ADDING file version "+fileVersion+", identical to existing previous version "+lastFileVersion);
+			}
 			
 			// 3. Add file content (if not a directory)			
 			if (fileContent != null) {
@@ -235,7 +239,7 @@ public class Indexer {
 		@Override
 		public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk) {
 			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
-			multiChunkEntry.addChunk(chunkEntry);				
+			multiChunkEntry.addChunk(new ChunkEntryId(chunkEntry.getChecksum()));				
 		}
 		
 		@Override
@@ -254,7 +258,7 @@ public class Indexer {
 		@Override
 		public void onFileAddChunk(File file, Chunk chunk) {			
 			logger.log(Level.FINER, "- Chunk > FileContent: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), file });
-			fileContent.addChunk(chunkEntry);				
+			fileContent.addChunk(new ChunkEntryId(chunk.getChecksum()));				
 		}		
 
 		/*

@@ -19,6 +19,9 @@ package org.syncany.database;
 
 import java.util.Arrays;
 
+import org.syncany.util.ByteArray;
+import org.syncany.util.StringUtil;
+
 
 /**
  *
@@ -50,6 +53,11 @@ public class ChunkEntry {
     }
 
 	@Override
+	public String toString() {
+		return "ChunkEntry [checksum=" + StringUtil.toHex(checksum) + ", size=" + size + "]";
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -72,5 +80,22 @@ public class ChunkEntry {
 		if (size != other.size)
 			return false;
 		return true;
-	}    
+	}   
+	
+	/**
+	 * Identifies a chunk entry (= chunk checksum)
+	 */
+	public static class ChunkEntryId extends ByteArray {
+		public ChunkEntryId() {
+			super();
+		}
+
+		public ChunkEntryId(byte[] array, int offset, int length) {
+			super(array, offset, length);
+		}
+
+		public ChunkEntryId(byte[] array) {
+			super(array);
+		}
+	}
 }

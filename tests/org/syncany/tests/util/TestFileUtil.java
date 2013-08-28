@@ -136,6 +136,10 @@ public class TestFileUtil {
 			raf.write(arr);
 		}
 		
+		// TODO [low] This is to prevent this function from not altering the file at all
+		raf.seek(0);
+		raf.write(new String("CHANGE"+Math.random()).getBytes());
+		
 		// write last one
 		byte[] arr = createRandomArray((int)(percentagedSize % minSizeOfBlock));
 		long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
