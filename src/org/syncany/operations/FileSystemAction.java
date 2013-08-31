@@ -16,18 +16,35 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.FileUtil;
 
 public abstract class FileSystemAction {
-	private static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName());
+	public static enum FileSystemActionType { FILE, FOLDER }; 
+	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName());
 	
 	protected Config config;
 	protected Database localDatabase;
 	protected Database winningDatabase;
+	protected FileVersion file1;
+	protected FileVersion file2;
 	
-	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase) {
+	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
 		this.localDatabase = localDatabase;
 		this.winningDatabase = winningDatabase;
+		this.file1 = file1;
+		this.file2 = file2;
 	}
 	
+	public FileVersion getFile1() {
+		return file1;
+	}
+
+	public FileVersion getFile2() {
+		return file2;
+	}
+	
+	public FileSystemActionType getType() {
+		return file1.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+	}
+
 	protected void reconstructFile(FileVersion reconstructedFileVersion) throws Exception {
 		if (!reconstructedFileVersion.isFolder()) {
 			File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
@@ -105,6 +122,16 @@ public abstract class FileSystemAction {
 				return false;
 			}
 			
+			// Check file type (folder/file)
+			if (actualLocalFile.isDirectory() != expectedLocalFileVersion.isFolder()) {
+				return false;
+			}
+			
+			// Check folder
+			if (actualLocalFile.isDirectory()) {
+				return true;
+			}
+			
 			// Check modified date
 			boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
 			
@@ -112,7 +139,7 @@ public abstract class FileSystemAction {
 				return false;
 			}
 			
-			// Check size				
+			// Check size	
 			FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
 			
 			if (expectedFileContent == null) {

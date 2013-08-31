@@ -9,11 +9,12 @@ import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
-import org.syncany.tests.database.DatabaseWriteReadIndividualObjectsTest;
+import org.syncany.tests.database.DatabaseXmlDAOTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.scenarios.EvilCScenarioTest;
+import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -30,7 +31,7 @@ import org.syncany.tests.scenarios.EvilCScenarioTest;
 	LocalConnectionPluginTest.class,
 	
 	// Database
-	DatabaseWriteReadIndividualObjectsTest.class,
+	DatabaseXmlDAOTest.class,
 	VectorClockTest.class,
 	
 	// Operations
@@ -38,7 +39,8 @@ import org.syncany.tests.scenarios.EvilCScenarioTest;
 	SyncUpOperationTest.class,
 	
 	// Scenarios
-	EvilCScenarioTest.class
+	EvilCScenarioTest.class,
+	NoConflictsScenarioTest.class
 })
 public class AllTestsSuite {
 	// This class executes all tests

@@ -31,7 +31,7 @@ public class NoConflictsScenarioTest {
 	}
 	
 	@Test
-	public void testNewSingleFileNoConflicts() throws Exception {
+	public void testSingleFileNewNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -50,7 +50,7 @@ public class NoConflictsScenarioTest {
 	}		
 	
 	@Test
-	public void testMoveSingleFileNoConflicts() throws Exception {
+	public void testSingleFileMoveNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -77,7 +77,7 @@ public class NoConflictsScenarioTest {
 	}	
 	
 	@Test
-	public void testDeleteSingleFileNoConflicts() throws Exception {
+	public void testSingleFileDeleteNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -103,7 +103,7 @@ public class NoConflictsScenarioTest {
 	}		
 	
 	@Test
-	public void testChangeSingleFileNoConflicts() throws Exception {
+	public void testSingleFileChangeNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -129,7 +129,7 @@ public class NoConflictsScenarioTest {
 	}		
 	
 	@Test
-	public void testNewSingleFolderNoConflicts() throws Exception {
+	public void testFolderEmptyNewNoConflicts() throws Exception {
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -141,6 +141,134 @@ public class NoConflictsScenarioTest {
 		
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("folder"), clientB.getLocalFile("folder"));		
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
+	
+	@Test
+	public void testFolderEmptyMoveNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFolder("folder");		
+		clientA.up();
+		
+		clientB.down();
+		clientB.moveFile("folder", "moved");
+		clientB.up();
+		
+		clientA.down();
+		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));	
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}			
+	
+	@Test
+	public void testFolderEmptyDeleteNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFolder("folder");		
+		clientA.up();
+		
+		clientB.down();
+		clientB.deleteFile("folder");
+		clientB.up();
+		
+		clientA.down();	
+		assertFalse("Deleted folder should not exist.", clientA.getLocalFile("folder").exists());		
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}	
+	
+	@Test
+	public void testFolderNonEmptyNewNoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFolder("folder");		
+		clientA.createNewFile("folder/file");
+		clientA.up();
+		
+		clientB.down();
+		assertFileEquals(clientA.getLocalFile("folder"), clientB.getLocalFile("folder"));
+		assertFileEquals(clientA.getLocalFile("folder/file"), clientB.getLocalFile("folder/file"));
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
+	
+	@Test
+	public void testFolderNonEmptyMove1NoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFolder("folder");		
+		clientA.createNewFile("folder/file");
+		clientA.up();
+		
+		clientB.down();
+		clientB.moveFile("folder", "moved");
+		clientB.up();
+		  
+		clientA.down();
+		assertFalse("Deleted folder should not exist.", clientA.getLocalFile("folder").exists());
+		assertFalse("Deleted file should not exist.", clientA.getLocalFile("folder/file").exists());
+		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));
+		assertFileEquals(clientA.getLocalFile("moved/file"), clientB.getLocalFile("moved/file"));
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// Cleanup
+		clientA.cleanup();
+		clientB.cleanup();
+	}		
+	
+	@Test
+	public void testFolderNonEmptyMove2NoConflicts() throws Exception {
+		// Setup
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection); 
+
+		// Create files and upload
+		clientA.createNewFolder("folder");		
+		clientA.createNewFile("folder/file");
+		clientA.createNewFolder("folder/folder2");
+		clientA.createNewFile("folder/folder2/file2");
+		clientA.up();
+		
+		clientB.down();
+		clientB.moveFile("folder", "moved");
+		clientB.up();
+		  
+		clientA.down();
+		assertFalse("Deleted folder should not exist.", clientA.getLocalFile("folder").exists());
+		assertFalse("Deleted file should not exist.", clientA.getLocalFile("folder/file").exists());
+		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));
+		assertFileEquals(clientA.getLocalFile("moved/file"), clientB.getLocalFile("moved/file"));
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		
 		// Cleanup
 		clientA.cleanup();

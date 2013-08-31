@@ -8,26 +8,27 @@ import org.syncany.database.FileVersion;
 import org.syncany.util.FileUtil;
 
 public class RenameFileSystemAction extends FileSystemAction {
-	private FileVersion fromFileVersion;
-	private FileVersion toFileVersion;
-	
 	public RenameFileSystemAction(Config config, FileVersion from, FileVersion to, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase);
-		this.fromFileVersion = from;
-		this.toFileVersion = to;
+		super(config, localDatabase, winningDatabase, from, to);
 	}
 
 	@Override
 	public void execute() throws Exception {
-		if (!isExpectedFile(fromFileVersion)) {
-			createConflictFile(fromFileVersion);
-			reconstructFile(toFileVersion);
+		if (!isExpectedFile(file1)) {
+			createConflictFile(file1);
+			reconstructFile(file2);
 		}
 		else {
-			File fromFileOnDisk = getAbsolutePathFile(fromFileVersion.getFullName());
-			File toFileOnDisk = getAbsolutePathFile(toFileVersion.getFullName());			
+			File fromFileOnDisk = getAbsolutePathFile(file1.getFullName());
+			File toFileOnDisk = getAbsolutePathFile(file2.getFullName());			
 			
 			FileUtil.renameVia(fromFileOnDisk, toFileOnDisk);						
 		}			
-	}				
+	}
+
+	@Override
+	public String toString() {
+		return "RenameFileSystemAction [file1=" + file1 + ", file2=" + file2 + "]";
+	}		
+	
 }

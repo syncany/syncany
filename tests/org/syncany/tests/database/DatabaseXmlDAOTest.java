@@ -23,6 +23,7 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
@@ -30,19 +31,17 @@ import org.syncany.operations.RemoteDatabaseFile;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class DatabaseWriteReadIndividualObjectsTest {
+public class DatabaseXmlDAOTest {
 	private File tempDir;
-	Random generator;
 	
 	@Before
 	public void setUp() throws Exception {
 		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();		
-		generator = new Random();
 	}
 	
 	@After
 	public void tearDown() {
-		//TestFileUtil.deleteDirectory(tempDir);
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 	 
 	@Test
@@ -215,12 +214,14 @@ public class DatabaseWriteReadIndividualObjectsTest {
         versionA1.setVersion(1L);
         versionA1.setPath("Pictures/2013");
         versionA1.setName("New York Folder");
+        versionA1.setStatus(FileStatus.NEW);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA1);
         
         FileVersion versionA2 = new FileVersion();
         versionA2.setVersion(2L);
         versionA2.setPath("Pictures/2013");
-        versionA2.setName("New York");        
+        versionA2.setName("New York");  
+        versionA2.setStatus(FileStatus.RENAMED);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
 		       
         // File B
@@ -231,12 +232,14 @@ public class DatabaseWriteReadIndividualObjectsTest {
         versionB1.setVersion(1L);
         versionB1.setPath("Pictures/2013");
         versionB1.setName("Egypt Folder");
+        versionB1.setStatus(FileStatus.NEW);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB1);
         
         FileVersion versionB2 = new FileVersion();
         versionB2.setVersion(2L);
         versionB2.setPath("Pictures/2013");
         versionB2.setName("Egypt");        
+        versionB2.setStatus(FileStatus.RENAMED);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB2);	        	
         		
         // Add database version
@@ -260,7 +263,6 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	}		
 	
 	@Test
-	@Ignore
 	public void testWriteAndReadVectorClock() throws IOException {
 		// Prepare
 		Database newDatabase = new Database();
@@ -282,17 +284,23 @@ public class DatabaseWriteReadIndividualObjectsTest {
 		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		
 		// Check VC
-		//loadedDatabase.getV
+		DatabaseVersion loadedDatabaseVersionSelectedByVectorClock = loadedDatabase.getDatabaseVersion(vc);
+		DatabaseVersion loadedDatabaseVersionSelectedFirst = loadedDatabase.getDatabaseVersions().get(0);
+				
+		assertEquals("Vector clocks do not match (selected by vector clock)", vc, loadedDatabaseVersionSelectedByVectorClock.getVectorClock());
+		assertEquals("Vector clocks do not match (selected first)", vc, loadedDatabaseVersionSelectedFirst.getVectorClock());
+		assertEquals("Database versions do not match.", loadedDatabaseVersionSelectedByVectorClock, loadedDatabaseVersionSelectedFirst);		
 	}
 		
 	@Test
 	@Ignore
+	@SuppressWarnings("unused")
 	public void testWriteAndReadMultipleDatabaseVersions() {
 		Database newDatabase = new Database();
 		DatabaseVersion firstDatabaseVersion = new DatabaseVersion();
 		DatabaseVersion secondDatabaseVersion = new DatabaseVersion();
 
-		// TODO testWriteAndReadMultipleDatabaseVersions
+		// TODO [low] testWriteAndReadMultipleDatabaseVersions
 	}
 	
 	private Database writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
@@ -305,7 +313,7 @@ public class DatabaseWriteReadIndividualObjectsTest {
 	}		
 
 	private File writeDatabaseFileToDisk(Database db) throws IOException {
-		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + generator.nextInt(Integer.MAX_VALUE));
+		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + new Random().nextInt(Integer.MAX_VALUE));
 		
 		DatabaseDAO dao = new DatabaseXmlDAO();
 		dao.save(db, writtenDatabaseFile);

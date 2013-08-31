@@ -34,21 +34,6 @@ public abstract class AbstractTransferManager implements TransferManager {
 
     public Connection getConnection() {
         return connection;
-    }
-    
-    @Override
-    public Map<String, RemoteFile> list(String namePrefix) throws StorageException {
-        Map<String, RemoteFile> result = new HashMap<String, RemoteFile>();
-
-        for (Map.Entry<String, RemoteFile> entry : list().entrySet()) {
-            if (!entry.getKey().startsWith(namePrefix)) {
-                continue;
-            }
-
-            result.put(entry.getKey(), entry.getValue());
-        }
-
-        return result;
     }    
     
     @Override

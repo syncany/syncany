@@ -65,8 +65,7 @@ public class Deduper {
 						listener.onWriteMultiChunk(multiChunk, chunk);						
 					}
 
-					listener.onFileAddChunk(file, chunk);					
-					
+					listener.onFileAddChunk(file, chunk);										
 				}
 
 			}
@@ -77,6 +76,9 @@ public class Deduper {
 			else {
 				listener.onFileEnd(file, null);
 			}
+			
+			// Reset chunk (if folder after chunk, the folder would have a checksum b/c of chunk.getFileChecksum())
+			chunk = null;
 		}
 
 		// Close and add last multichunk

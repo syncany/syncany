@@ -56,24 +56,6 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  */
 public class DatabaseReconciliator {
 	private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
-
-	@Deprecated
-	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,
-			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
-		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;
-
-		for (Long currentLocalDatabaseKey = localDatabaseVersionHeaders.lastKey(); currentLocalDatabaseKey != null
-				&& lastCommonDatabaseVersionHeader == null; currentLocalDatabaseKey = localDatabaseVersionHeaders.lowerKey(currentLocalDatabaseKey)) {
-			DatabaseVersionHeader currentLocalDatabaseVersionHeader = localDatabaseVersionHeaders.get(currentLocalDatabaseKey);
-			VectorClock currentVectorClock = currentLocalDatabaseVersionHeader.getVectorClock();
-
-			if (isKeyInAllRemoteDatabasesGreaterOrEqual(currentVectorClock, remoteDatabaseVersionHeaders)) {
-				lastCommonDatabaseVersionHeader = currentLocalDatabaseVersionHeader;
-			}
-		}
-
-		return lastCommonDatabaseVersionHeader;
-	}
 	
 	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(Branch localBranch, Branches remoteBranches) {
 		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;
@@ -106,40 +88,13 @@ public class DatabaseReconciliator {
 				}
 			}
 
-			if (foundInClientMatrix.get(currentRemoteClient) == false) {
+			if (foundInClientMatrix.get(currentRemoteClient) == false) { 
 				return false;
 			}
 		}
 
 		return isFoundInClientMatrixFullyTrue(foundInClientMatrix);
 	}	
-
-	@Deprecated
-	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock,
-			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
-		Set<String> clients = remoteDatabaseVersionHeaders.keySet();
-		Map<String, Boolean> foundInClientMatrix = initializeFoundInClientMatrix(clients);
-
-		for (Map.Entry<String, TreeMap<Long, DatabaseVersionHeader>> remoteClientDatabaseVersionsSet : remoteDatabaseVersionHeaders.entrySet()) {
-			String currentRemoteClient = remoteClientDatabaseVersionsSet.getKey();
-			TreeMap<Long, DatabaseVersionHeader> remoteClientDatabaseVersions = remoteClientDatabaseVersionsSet.getValue();
-
-			for (DatabaseVersionHeader remoteDatabaseVersionHeader : remoteClientDatabaseVersions.values()) {
-				VectorClock remoteVectorClock = remoteDatabaseVersionHeader.getVectorClock();
-				VectorClockComparison result = VectorClock.compare(remoteVectorClock, currentVectorClock);
-				if (result == VectorClockComparison.GREATER || result == VectorClockComparison.EQUAL) {
-					foundInClientMatrix.put(currentRemoteClient, true);
-					break;
-				}
-			}
-
-			if (foundInClientMatrix.get(currentRemoteClient) == false) {
-				return false;
-			}
-		}
-
-		return isFoundInClientMatrixFullyTrue(foundInClientMatrix);
-	}
 
 	private Map<String, Boolean> initializeFoundInClientMatrix(Set<String> clients) {
 		Map<String, Boolean> foundInClientMatrix = new HashMap<String, Boolean>();
@@ -190,80 +145,6 @@ public class DatabaseReconciliator {
 		return firstConflictingDatabaseVersionHeaders;
 	}
 	
-	@Deprecated
-	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName,
-			Branch localDatabaseVersionHeaders, Branches remoteDatabaseVersionHeaders) {
-		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
-
-		boolean next = false;
-		for (DatabaseVersionHeader databaseVersionHeader : localDatabaseVersionHeaders.getAll()) {
-			if (next) {
-				firstConflictingDatabaseVersionHeaders.put(localName, databaseVersionHeader);
-				break;
-			} else if (databaseVersionHeader.equals(lastCommonHeader)) {
-				next = true;
-			}
-		}
-
-		for (String remoteMachineName : remoteDatabaseVersionHeaders.getClients()) {
-			Branch remoteBranch = remoteDatabaseVersionHeaders.getBranch(remoteMachineName);
-
-			boolean next2 = false;
-			for (DatabaseVersionHeader databaseVersionHeader : remoteBranch.getAll()) {
-				if (next2) {
-					firstConflictingDatabaseVersionHeaders.put(remoteMachineName, databaseVersionHeader);
-					break;
-				} else if (databaseVersionHeader.equals(lastCommonHeader)) {
-					next2 = true;
-				}
-			}
-
-			if (next2 == false) { // Nothing found. Add first as conflict
-				firstConflictingDatabaseVersionHeaders.put(remoteMachineName, remoteBranch.getFirst());
-			}
-		}
-
-		return firstConflictingDatabaseVersionHeaders;
-	}
-
-	@Deprecated
-	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, String localName,
-			TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,
-			Map<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
-		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
-
-		boolean next = false;
-		for (DatabaseVersionHeader databaseVersionHeader : localDatabaseVersionHeaders.values()) {
-			if (next) {
-				firstConflictingDatabaseVersionHeaders.put(localName, databaseVersionHeader);
-				break;
-			} else if (databaseVersionHeader.equals(lastCommonHeader)) {
-				next = true;
-			}
-		}
-
-		for (Map.Entry<String, TreeMap<Long, DatabaseVersionHeader>> entry : remoteDatabaseVersionHeaders.entrySet()) {
-			String thisRemoteMachineName = entry.getKey();
-			TreeMap<Long, DatabaseVersionHeader> thisRemoteDatabaseVersionHeaders = entry.getValue();
-
-			boolean next2 = false;
-			for (DatabaseVersionHeader databaseVersionHeader : thisRemoteDatabaseVersionHeaders.values()) {
-				if (next2) {
-					firstConflictingDatabaseVersionHeaders.put(thisRemoteMachineName, databaseVersionHeader);
-					break;
-				} else if (databaseVersionHeader.equals(lastCommonHeader)) {
-					next2 = true;
-				}
-			}
-
-			if (next2 == false) { // Nothing found. Add first as conflict
-				firstConflictingDatabaseVersionHeaders.put(thisRemoteMachineName, thisRemoteDatabaseVersionHeaders.firstEntry().getValue());
-			}
-		}
-
-		return firstConflictingDatabaseVersionHeaders;
-	}
-
 	public TreeMap<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(
 			TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
 		// TODO this method curently does not catch the scenario in which two
@@ -435,110 +316,6 @@ public class DatabaseReconciliator {
 		return null;
 	}
 	
-	@Deprecated
-	public Map.Entry<String, DatabaseVersionHeader> findWinnersWinnersLastDatabaseVersionHeader(
-			TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders,
-			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders) throws Exception {
-
-		if (winningFirstConflictingDatabaseVersionHeaders.size() == 1) {
-			String winningMachineName = winningFirstConflictingDatabaseVersionHeaders.firstKey();
-			DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.get(winningMachineName).lastEntry().getValue();
-
-			return new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(winningMachineName, winnersWinnersLastDatabaseVersionHeader);
-		}
-
-		// Algorithm:
-		// Iterate over all machines' branches forward, find conflicts and
-		// decide who wins
-
-		// 1. Find winners winners positions in branch
-		Map<String, Long> machineBranchPositionIterator = new HashMap<String, Long>();
-
-		for (String machineName : winningFirstConflictingDatabaseVersionHeaders.keySet()) {
-			DatabaseVersionHeader machineWinnersWinner = winningFirstConflictingDatabaseVersionHeaders.get(machineName);
-			TreeMap<Long, DatabaseVersionHeader> machineDatabaseVersionHeaders = allDatabaseVersionHeaders.get(machineName);
-
-			for (Map.Entry<Long, DatabaseVersionHeader> e = machineDatabaseVersionHeaders.firstEntry(); e != null; e = machineDatabaseVersionHeaders
-					.higherEntry(e.getKey())) {
-				if (machineWinnersWinner.equals(e.getValue())) {
-					machineBranchPositionIterator.put(machineName, e.getKey());
-					break;
-				}
-			}
-		}
-
-		// 2. Compare all, go forward if all are identical
-		int machineInRaceCount = winningFirstConflictingDatabaseVersionHeaders.size();
-
-		while (machineInRaceCount > 1) {
-			String currentComparisonMachineName = null;
-			DatabaseVersionHeader currentComparisonDatabaseVersionHeader = null;
-
-			for (Map.Entry<String, Long> machineBranchPosition : machineBranchPositionIterator.entrySet()) {
-				String machineName = machineBranchPosition.getKey();
-				TreeMap<Long, DatabaseVersionHeader> machineDatabaseVersionHeaders = allDatabaseVersionHeaders.get(machineName);
-				Long machinePosition = machineBranchPosition.getValue();
-
-				if (machinePosition == null) {
-					continue;
-				}
-
-				DatabaseVersionHeader currentMachineDatabaseVersionHeader = machineDatabaseVersionHeaders.get(machinePosition);
-
-				if (currentComparisonDatabaseVersionHeader == null) {
-					currentComparisonMachineName = machineName;
-					currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
-				} else {
-					VectorClockComparison comparison = VectorClock.compare(currentComparisonDatabaseVersionHeader.getVectorClock(),
-							currentMachineDatabaseVersionHeader.getVectorClock());
-
-					if (comparison != VectorClockComparison.EQUAL) {
-						if (currentComparisonDatabaseVersionHeader.getDate().before(currentMachineDatabaseVersionHeader.getDate())) {
-							// Eliminate machine in current loop
-
-							machineBranchPositionIterator.put(machineName, null);
-							machineInRaceCount--;
-						} else if (currentMachineDatabaseVersionHeader.getDate().before(
-								currentComparisonDatabaseVersionHeader.getDate())) {
-							// Eliminate comparison machine
-
-							machineBranchPositionIterator.put(currentComparisonMachineName, null);
-							machineInRaceCount--;
-
-							currentComparisonMachineName = machineName;
-							currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
-						} else {
-							throw new Exception("This should not happen."); // FIXME
-						}
-					}
-				}
-			}
-
-			if (machineInRaceCount > 1) {
-				for (String machineName : machineBranchPositionIterator.keySet()) {
-					Long machineCurrentKey = machineBranchPositionIterator.get(machineName);
-
-					if (machineCurrentKey != null) {
-						Long machineHigherKey = allDatabaseVersionHeaders.get(machineName).higherKey(machineCurrentKey);
-						machineBranchPositionIterator.put(machineName, machineHigherKey);
-					}
-				}
-			}
-		}
-
-		for (String machineName : machineBranchPositionIterator.keySet()) {
-			Long machineCurrentKey = machineBranchPositionIterator.get(machineName);
-
-			if (machineCurrentKey != null) {
-				DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.get(machineName).lastEntry().getValue();
-				return new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(machineName, winnersWinnersLastDatabaseVersionHeader);
-			}
-		}
-
-		return null;
-	}
-	
-	
 	public Branches stitchRemoteBranches(Branches unstitchedRemoteBranches, String localClientName, Branch localBranch) {
 		Branches allBranches = unstitchedRemoteBranches.clone();
 		allBranches.add(localClientName, localBranch);
@@ -564,7 +341,7 @@ public class DatabaseReconciliator {
 					if (previousClientBranch == null) {
 						break; // The rest must be in the local branch
 					}
-					
+					 
 					DatabaseVersionHeader previousDatabaseVersionHeader = previousClientBranch.get(databaseVersionHeader.getPreviousVectorClock());
 
 					if (previousDatabaseVersionHeader == null) {
@@ -624,70 +401,6 @@ public class DatabaseReconciliator {
 		return stitchedRemoteBranches;
 	}
 	
-
-	@Deprecated
-	public Branches fillRemoteBranches(Branch localBranch, Branches remoteBranches) {
-		Branches filledRemoteBranches = new Branches();
-
-		for (String remoteClientName : remoteBranches.getClients()) {
-			Branch remoteBranch = remoteBranches.getBranch(remoteClientName);
-			Branch filledRemoteBranch = filledRemoteBranches.getBranch(remoteClientName, true);
-			
-			DatabaseVersionHeader firstRemoteDatabaseVersionHeader = remoteBranch.getFirst();
-			if (firstRemoteDatabaseVersionHeader == null) {
-				// Client in sync with local; why we have him listed as remote
-				// new dbv?
-				throw new RuntimeException("Client " + remoteClientName + " listed without any new DBV.");
-			}
-
-			VectorClock firstRemoteVectorClock = firstRemoteDatabaseVersionHeader.getVectorClock();
-
-			for (DatabaseVersionHeader localDatabaseVersion : localBranch.getAll()) {
-				VectorClock currentLocalVectorClock = localDatabaseVersion.getVectorClock();
-				if (VectorClock.compare(firstRemoteVectorClock, currentLocalVectorClock) == VectorClockComparison.GREATER) {
-					filledRemoteBranch.add(localDatabaseVersion);
-				} 
-			}
-			
-			filledRemoteBranch.addAll(remoteBranch.getAll());
-		}
-
-		return filledRemoteBranches;
-	}
-	
-	@Deprecated
-	public TreeMap<String, List<DatabaseVersionHeader>> orchestrateBranch(TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders,
-			TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders) {
-		TreeMap<String, List<DatabaseVersionHeader>> orchestratedBranch = new TreeMap<String, List<DatabaseVersionHeader>>();
-
-		for (Map.Entry<String, TreeMap<Long, DatabaseVersionHeader>> remoteClient : remoteDatabaseVersionHeaders.entrySet()) {
-			String remoteClientName = remoteClient.getKey();
-			TreeMap<Long, DatabaseVersionHeader> currentRemoteDatabaseVersions = remoteClient.getValue();
-			List<DatabaseVersionHeader> currentDatabaseVersions = new ArrayList<DatabaseVersionHeader>(currentRemoteDatabaseVersions.values());
-			List<DatabaseVersionHeader> orchestratedClientBranch = new ArrayList<DatabaseVersionHeader>();
-
-			DatabaseVersionHeader firstRemoteDatabaseVersionHeader = currentDatabaseVersions.get(0);
-			VectorClock firstRemoteVectorClock = firstRemoteDatabaseVersionHeader.getVectorClock();
-			if (firstRemoteDatabaseVersionHeader == null) {
-				// Client in sync with local; why we have him listed as remote
-				// new dbv?
-				throw new RuntimeException("Client " + remoteClientName + " listed without any new DBV.");
-			}
-
-			for (DatabaseVersionHeader localDatabaseVersion : localDatabaseVersionHeaders.values()) {
-				VectorClock currentLocalVectorClock = localDatabaseVersion.getVectorClock();
-				if (VectorClock.compare(firstRemoteVectorClock, currentLocalVectorClock) == VectorClockComparison.GREATER) {
-					orchestratedClientBranch.add(localDatabaseVersion);
-				} 
-			}
-			
-			orchestratedClientBranch.addAll(currentDatabaseVersions);
-			orchestratedBranch.put(remoteClientName, orchestratedClientBranch);
-		}
-
-		return orchestratedBranch;
-	}
-
 	public Branch findLosersPruneBranch(Branch losersBranch, Branch winnersBranch) {
 		Branch losersPruneBranch = new Branch();
 		

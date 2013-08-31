@@ -61,7 +61,7 @@ public class TTTDChunkerTest {
 			// Checksum
 			assertNotNull("Chunk checksum should not be null.", lastChunk.getChecksum());
 			
-			outputCopyOfRandom5MBFileOutputStream.write(lastChunk.getContent());
+			outputCopyOfRandom5MBFileOutputStream.write(lastChunk.getContent(), 0, lastChunk.getSize());
 		}
 		
 		outputCopyOfRandom5MBFileOutputStream.close();

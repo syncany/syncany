@@ -7,23 +7,23 @@ import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 
 public class DeleteFileSystemAction extends FileSystemAction {
-	private FileVersion fromFileVersion;
-	private FileVersion toDeleteFileVersion;
-	
 	public DeleteFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toDeleteFileVersion, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase);
-		this.fromFileVersion = fromFileVersion;
-		this.toDeleteFileVersion = toDeleteFileVersion;
+		super(config, localDatabase, winningDatabase, fromFileVersion, toDeleteFileVersion);
 	}
 	
 	@Override
 	public void execute() {
-		if (!isExpectedFile(fromFileVersion)) {
-			createConflictFile(fromFileVersion);				
+		if (!isExpectedFile(file1)) {
+			createConflictFile(file2);				
 		}
 		
-		File toDeleteFileOnDisk = getAbsolutePathFile(toDeleteFileVersion.getFullName());
+		File toDeleteFileOnDisk = getAbsolutePathFile(file2.getFullName());
 		toDeleteFileOnDisk.delete();			
+	}
+
+	@Override
+	public String toString() {
+		return "DeleteFileSystemAction [file1=" + file1 + ", file2=" + file2 + "]";
 	}
 }
 

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.operations.FileSystemAction.FileSystemActionType;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -168,16 +170,8 @@ public class SyncDownOperation extends Operation {
 			
 		}		
 		
-		//throw new Exception("Not yet fully implemented.");
-	}	
-	
-	
-	
-	
-	
-	
-	
-	
+		logger.log(Level.INFO, "Sync down done.");
+	}		
 	
 	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
@@ -238,6 +232,21 @@ public class SyncDownOperation extends Operation {
 	}
 	
 	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
+		logger.log(Level.FINER, "- applyFileSystemActions, before sorting: ");
+		for (FileSystemAction a : actions) { 
+			logger.log(Level.FINER, "   + "+a);
+		}
+		
+		// Sort
+		Collections.sort(actions, new FileSystemActionComparator());
+		
+		logger.log(Level.FINER, "- applyFileSystemActions, AFTER sorting: ");
+		for (FileSystemAction a : actions) { 
+			logger.log(Level.FINER, "   + "+a);
+		}
+		
+		
+		// Apply
 		for (FileSystemAction action : actions) {
 			action.execute();
 		}
@@ -449,5 +458,69 @@ public class SyncDownOperation extends Operation {
 		
 		return unknownRemoteDatabasesInCache;
 	}		
+	
+	/**
+	 * delete files - order irrelevant
+	 * delete folders - order long to short fullpath
+	 * create folders - order short to long fullpath
+	 * move folders - order long to short fullpath
+	 * create files - order irrelevant
+	 * move files - order irrelevant
+	 */
+	public static class FileSystemActionComparator implements Comparator<FileSystemAction> {
+		private static final Object[][] TARGET_ORDER =  new Object[][] {
+			new Object[] { DeleteFileSystemAction.class, FileSystemActionType.FILE}, 
+			new Object[] { NewFileSystemAction.class, FileSystemActionType.FOLDER },
+			new Object[] { RenameFileSystemAction.class, FileSystemActionType.FOLDER },
+			new Object[] { NewFileSystemAction.class, FileSystemActionType.FILE },
+			new Object[] { RenameFileSystemAction.class, FileSystemActionType.FILE },
+			new Object[] { ChangeFileSystemAction.class, FileSystemActionType.FOLDER },
+			new Object[] { ChangeFileSystemAction.class, FileSystemActionType.FILE },
+			new Object[] { DeleteFileSystemAction.class, FileSystemActionType.FOLDER },
+		};
+				
+		@Override
+		public int compare(FileSystemAction a1, FileSystemAction a2) {
+			int a1Position = determinePosition(a1);
+			int a2Position = determinePosition(a2);
+			
+			if (a1Position > a2Position) {
+				return 1;
+			}
+			else if (a1Position < a2Position) {
+				return -1;
+			}
+			
+			return compareByFullName(a1, a2);
+		}
+				
+		private int compareByFullName(FileSystemAction a1, FileSystemAction a2) {
+			// For renamed/deleted, do the longest path first
+			if (a1.getClass().equals(DeleteFileSystemAction.class) || a1.getClass().equals(RenameFileSystemAction.class)) {
+				return -1 * a1.getFile2().getFullName().compareTo(a2.getFile2().getFullName());
+			}
+			
+			// For the rest, do the shortest path first
+			else if (a1.getClass().equals(NewFileSystemAction.class) || a1.getClass().equals(ChangeFileSystemAction.class)) {
+				return a1.getFile1().getFullName().compareTo(a2.getFile1().getFullName());
+			}
+			
+			return 0;
+		}
+
+		@SuppressWarnings("rawtypes")
+		private int determinePosition(FileSystemAction a) {
+			for (int i=0; i<TARGET_ORDER.length; i++) {
+				Class targetClass = (Class) TARGET_ORDER[i][0];
+				FileSystemActionType targetFileType = (FileSystemActionType) TARGET_ORDER[i][1];
+				
+				if (a.getClass().equals(targetClass) && a.getType() == targetFileType) {					
+					return i;
+				}
+			}
+			
+			return -1;
+		}
+	}
 
 }

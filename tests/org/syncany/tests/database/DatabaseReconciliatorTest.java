@@ -2,9 +2,6 @@ package org.syncany.tests.database;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -13,7 +10,6 @@ import org.syncany.database.Branch;
 import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.operations.DatabaseReconciliator;
-import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseVersionUtil;
 
 /*
@@ -361,7 +357,7 @@ import org.syncany.tests.util.TestDatabaseVersionUtil;
  *     --> Local must merge local version (A3,  ,C8) in (A6,  ,C4)
  *     --> Local result is then (A6,  ,C9)	        
  */		
-public class DatabaseVersionUpdateDetectorTest {	
+public class DatabaseReconciliatorTest {	
 	@Test
 	public void testUpdateDetectorConflict1AtMachineB() throws Exception {	
 		System.out.println("CONFLICT 1");
@@ -369,28 +365,27 @@ public class DatabaseVersionUpdateDetectorTest {
 		
 		/// Input data ///
 		String localMachineName = "B";
-		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
-		
+		Branches allBranches = new Branches();
+		 
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
-			"A/(A1,C4)/T=8",
-			"A/(A2,C4)/T=9",
-			"A/(A3,C4)/T=10"								
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
+			"A/(A1,C4)/T=8/C",
+			"A/(A2,C4)/T=9/A",
+			"A/(A3,C4)/T=10/A"								
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
-			"C/(C2)/T=2",
-			"C/(C3)/T=3",				
-			"B/(B1,C3)/T=7"								
+			"C/(C2)/T=2/C",
+			"C/(C3)/T=3/C",				
+			"B/(B1,C3)/T=7/C"								
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
-			"C/(C4)/T=5"
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
+			"C/(C4)/T=5/C"
 		}));		
 				
 		/// Expected results ///
@@ -398,19 +393,19 @@ public class DatabaseVersionUpdateDetectorTest {
 		
 		expectedTestResult.lastCommonHeader = TestDatabaseVersionUtil.createFromString("C/(C3)/T=3");
 		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1,C4)/T=8",
-			"B", "B/(B1,C3)/T=7",
-			"C", "C/(C4)/T=5"			
+			"A", "A/(A1,C4)/T=8/C",
+			"B", "B/(B1,C3)/T=7/C",
+			"C", "C/(C4)/T=5/C"			
 		});		
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1,C4)/T=8"
+			"A", "A/(A1,C4)/T=8/C"
 		});
 		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseVersionUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A3,C4)/T=10"
+			"A", "A/(A3,C4)/T=10/C"
 		}).firstEntry();
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}			
 	
 	@Test
@@ -422,21 +417,21 @@ public class DatabaseVersionUpdateDetectorTest {
 		String localMachineName = "A";
 		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
-			"C/(C2)/T=2",
-			"C/(C3)/T=3",
-			"C/(C4)/T=5",
-			"A/(A1,C4)/T=8",
-			"A/(A2,C4)/T=9",
-			"A/(A3,C4)/T=10"								
+			"C/(C2)/T=2/C",
+			"C/(C3)/T=3/C",
+			"C/(C4)/T=5/C",
+			"A/(A1,C4)/T=8/C",
+			"A/(A2,C4)/T=9/A",
+			"A/(A3,C4)/T=10/A"								
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
 			"B/(B1,C3)/T=7"								
 		}));
 				
@@ -456,7 +451,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}	
 	
 	@Test
@@ -468,22 +463,22 @@ public class DatabaseVersionUpdateDetectorTest {
 		String localMachineName = "C";
 		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"A/(A1,C4)/T=8",
 			"A/(A2,C4)/T=9",
 			"A/(A3,C4)/T=10"								
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {			
 			"B/(B1,C3)/T=7"								
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -507,7 +502,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}			
 	
 	@Test
@@ -519,17 +514,17 @@ public class DatabaseVersionUpdateDetectorTest {
 		String localMachineName = "B";
 		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"A/(A4,C4)/T=11",
 			"A/(A5,C4)/T=12", // db-a-5
 			"A/(A6,C4)/T=19", // db-a-6
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {			
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -544,7 +539,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(A3,C5)/T=13", // db-c-5
 			"C/(A3,C6)/T=14",
 			"C/(A3,C7)/T=15", // db-c-7
@@ -568,7 +563,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}			
 	
 	@Test
@@ -580,10 +575,10 @@ public class DatabaseVersionUpdateDetectorTest {
 		String localMachineName = "A";
 		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -597,7 +592,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {			
 			"B/(A3,B2,C4)/T=16",
 			"B/(A3,B3,C4)/T=17",
 			"B/(A3,B4,C4)/T=18", // db-b-4
@@ -605,7 +600,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(A3,C5)/T=13", // db-c-5
 			"C/(A3,C6)/T=14",
 			"C/(A3,C7)/T=15", // db-c-7
@@ -629,7 +624,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();		
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}				
 	
 	@Test
@@ -641,17 +636,17 @@ public class DatabaseVersionUpdateDetectorTest {
 		String localMachineName = "C";
 		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"A/(A4,C4)/T=11",
 			"A/(A5,C4)/T=12", // db-a-5
 			"A/(A6,C4)/T=19", // db-a-6
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {			
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {			
 			"B/(A3,B2,C4)/T=16",
 			"B/(A3,B3,C4)/T=17",
 			"B/(A3,B4,C4)/T=18", // db-b-4
@@ -659,7 +654,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -690,7 +685,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();		
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}				
 	
 	@Test
@@ -703,10 +698,10 @@ public class DatabaseVersionUpdateDetectorTest {
 		//FIXME
 		DatabaseVersionHeader currentLocalVersion = null;
 
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
 			// TODO Fix pruning of machine histories
 			// Explanation: Note, this is the full 'B' history, but it does not include
 			// the 'pruned' histories or invalid parts of pruned histories.
@@ -728,7 +723,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -758,7 +753,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();		
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}				
 	
 	@Test
@@ -769,10 +764,10 @@ public class DatabaseVersionUpdateDetectorTest {
 		/// Input data ///
 		String localMachineName = "B";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseVersionUtil.createFromString("A/(A1,C4)/T=8");
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -785,7 +780,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",	
@@ -798,7 +793,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",	
@@ -825,7 +820,7 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}			
 	
 	@Test
@@ -836,10 +831,10 @@ public class DatabaseVersionUpdateDetectorTest {
 		/// Input data ///
 		String localMachineName = "D";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseVersionUtil.createFromString("A/(A1,C4)/T=8");
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders = new TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>();
+		Branches allBranches = new Branches();
 		
 		// A
-		allDatabaseVersionHeaders.put("A", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"A/(A2,C4)/T=9",     // first conflicting, wins
 			
 			"A/(A3,C4)/T=10",    // same as in B
@@ -848,17 +843,17 @@ public class DatabaseVersionUpdateDetectorTest {
 		}));
 		
 		// B
-		allDatabaseVersionHeaders.put("B", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {
+		allBranches.add("B", TestDatabaseVersionUtil.createBranch(new String[] {
 			"B/(A4,B1,C4)/T=12", // second conflict, loses = winners loser
 			"B/(A4,B2,C4)/T=15"		
 		}));
 		
 		// C
-		allDatabaseVersionHeaders.put("C", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {	
+		allBranches.add("C", TestDatabaseVersionUtil.createBranch(new String[] {	
 			"C/(A1,C5)/T=10", // first conflicting, loses
 		}));		
 		
-		allDatabaseVersionHeaders.put("D", TestDatabaseVersionUtil.createDatabaseVersionHeaderMapWithTimeKey(new String[] {	
+		allBranches.add("D", TestDatabaseVersionUtil.createBranch(new String[] {	
 				"C/(C1)/T=1",
 				"C/(C2)/T=2",
 				"C/(C3)/T=3",	
@@ -889,12 +884,12 @@ public class DatabaseVersionUpdateDetectorTest {
 		}).firstEntry();
 				
 		/// Perform test ///
-		testFromMachinePerspective(localMachineName, currentLocalVersion, allDatabaseVersionHeaders, expectedTestResult);
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}			
 
 	@Test
 	public void testStitchBranches() throws Exception {
-		Branches allBranches = new Branches();
+		Branches allBranches = new Branches(); 
 		
 		allBranches.add("A", TestDatabaseVersionUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
@@ -995,43 +990,46 @@ public class DatabaseVersionUpdateDetectorTest {
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
 	}	
 
-	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> allDatabaseVersionHeaders, TestResult expectedTestResult) throws Exception {
+	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, Branches allBranches, TestResult expectedTestResult) throws Exception {
 		// Print them all
 		System.out.println("testFromMachinePerspective('"+localMachineName+"') with database version headers:");
 		
-		for (String machineName : allDatabaseVersionHeaders.keySet()) {
-			System.out.println(machineName+":");
-			printMap(allDatabaseVersionHeaders.get(machineName));
-		}
+		printBranches(allBranches);
 			
-		// Get 'local' branch
-		TreeMap<Long, DatabaseVersionHeader> localDatabaseVersionHeaders = allDatabaseVersionHeaders.get(localMachineName);
-		
-		// Get all the other ones (clone 'all', and remove local)
-		TreeMap<String, TreeMap<Long, DatabaseVersionHeader>> remoteDatabaseVersionHeaders = (TreeMap<String, TreeMap<Long, DatabaseVersionHeader>>) allDatabaseVersionHeaders.clone();
-		remoteDatabaseVersionHeaders.remove(localMachineName);
 	
 		System.out.println("----------");
 		
-		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
+		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
 		TestResult actualTestResult = new TestResult();
 		
-		actualTestResult.lastCommonHeader = databaseVersionUpdateDetector.findLastCommonDatabaseVersionHeader(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);
-		TreeMap<String, List<DatabaseVersionHeader>> orchestratedMap = databaseVersionUpdateDetector.orchestrateBranch(localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);
+		// Get 'local' branch
+		Branch localBranch = allBranches.getBranch(localMachineName);
+		
+		// Get all the other ones (clone 'all', and remove local)
+		Branches unstitchedRemoteBranches = allBranches.clone();
+		unstitchedRemoteBranches.remove(localMachineName);
+
+
+		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unstitchedRemoteBranches, localMachineName, localBranch);
+
+		Branches allStitchedBranches = stitchedRemoteBranches.clone();
+		allStitchedBranches.add(localMachineName, localBranch);
+		
 		System.out.println("Before Orchestration : Remote");
-		printMap(remoteDatabaseVersionHeaders);
+		printBranches(unstitchedRemoteBranches);
 		System.out.println("Before Orchestration : Local");
-		printMap(localDatabaseVersionHeaders);
+		printBranch(localBranch);
 		System.out.println("BEGIN Branch Orchestration!! ----------");
-		printMap(orchestratedMap);
+		printBranches(stitchedRemoteBranches);				
 		System.out.println("END Branch Orchestration ----------");
-		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseVersionUpdateDetector.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, localMachineName, localDatabaseVersionHeaders, remoteDatabaseVersionHeaders);
-		actualTestResult.winningFirstConflictingDatabaseVersionHeaders = databaseVersionUpdateDetector.findWinningFirstConflictingDatabaseVersionHeaders(actualTestResult.firstConflictingDatabaseVersionHeaders);
-		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseVersionUpdateDetector.findWinnersWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, allDatabaseVersionHeaders);
+				
+		actualTestResult.lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);
+		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, allStitchedBranches);
+		actualTestResult.winningFirstConflictingDatabaseVersionHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(actualTestResult.firstConflictingDatabaseVersionHeaders);
+		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, allStitchedBranches);
 		
 		System.out.println("Actual lastCommonDatabaseVersionHeader = " +actualTestResult.lastCommonHeader);
 		System.out.println("Expect lastCommonDatabaseVersionHeader = " +expectedTestResult.lastCommonHeader);
-
 
 		System.out.println("Actual firstConflictingDatabaseVersionHeaders = "); printMap(actualTestResult.firstConflictingDatabaseVersionHeaders);
 		System.out.println("Expect firstConflictingDatabaseVersionHeaders = "); printMap(expectedTestResult.firstConflictingDatabaseVersionHeaders);
@@ -1048,11 +1046,24 @@ public class DatabaseVersionUpdateDetectorTest {
 		assertEquals("Different winners winners last version expected", expectedTestResult.winnersWinnersLastDatabaseVersionHeader, actualTestResult.winnersWinnersLastDatabaseVersionHeader);
 	}
 
+	private void printBranches(Branches branches) {
+		for (String machineName : branches.getClients()) {
+			System.out.println(machineName+":");
+			printBranch(branches.getBranch(machineName));
+		}
+	}
+	
+	private void printBranch(Branch branch) {
+		for (DatabaseVersionHeader databaseVersionHeader : branch.getAll()) {
+			System.out.println("- "+databaseVersionHeader);
+		}
+	}
+
 	private void printMap(Map<?, ?> someMap) {
 		for (Map.Entry<?, ?> entry : someMap.entrySet()) {
 			System.out.println("- "+entry.getKey()+": "+entry.getValue());
 		}
-	}	
+	}		
 	
 	private class TestResult {
 		DatabaseVersionHeader lastCommonHeader;		

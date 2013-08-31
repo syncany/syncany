@@ -73,7 +73,7 @@ public class Database {
 	}	
 
 	public FileContent getContent(byte[] checksum) {
-		return fullDatabaseVersionCache.getFileContent(checksum);
+		return (checksum != null) ? fullDatabaseVersionCache.getFileContent(checksum) : null;
 	}
 	
 	public ChunkEntry getChunk(byte[] checksum) {

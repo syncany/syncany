@@ -31,7 +31,11 @@ public class Branches {
 
 	public void add(String machineName, Branch branch) {
 		branches.put(machineName, branch);		
-	}
+	}	
+
+	public void remove(String machineName) {
+		branches.remove(machineName);
+	}	
 	
 	@Override
 	public String toString() {

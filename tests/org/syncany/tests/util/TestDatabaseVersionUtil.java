@@ -55,17 +55,6 @@ public class TestDatabaseVersionUtil {
 		return newDatabaseVersionHeader;
 	}
 	
-	public static TreeMap<Long, DatabaseVersionHeader> createDatabaseVersionHeaderMapWithTimeKey(String[] databaseVersionHeaderStrings) throws Exception {
-		TreeMap<Long, DatabaseVersionHeader> databaseVersionHeaderMap = new TreeMap<Long, DatabaseVersionHeader>();
-		
-		for (String databaseVersionHeaderString : databaseVersionHeaderStrings) {
-			DatabaseVersionHeader databaseVersionHeader = createFromString(databaseVersionHeaderString);
-			databaseVersionHeaderMap.put(databaseVersionHeader.getDate().getTime(), databaseVersionHeader);
-		}
-
-		return databaseVersionHeaderMap;
-	}
-	
 	public static TreeMap<String, DatabaseVersionHeader> createMapWithMachineKey(String[] keysAndDatabaseVersionHeaderStrings) throws Exception {
 		TreeMap<String, DatabaseVersionHeader> databaseVersionHeaderMap = new TreeMap<String, DatabaseVersionHeader>();
 		
