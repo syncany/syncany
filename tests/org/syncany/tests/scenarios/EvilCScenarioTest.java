@@ -1,6 +1,6 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.fail;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -44,7 +44,16 @@ public class EvilCScenarioTest {
 		clientB.down();
 		clientC.down();
 		
-		fail("No asserts yet.");
+		clientA.up();
+		clientB.up();
+		clientC.up();
+		
+		clientA.down();
+		clientB.down();
+		clientC.down();		
+		
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());		
 		
 		// Tear down
 		clientA.cleanup();

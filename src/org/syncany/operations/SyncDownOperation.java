@@ -130,10 +130,19 @@ public class SyncDownOperation extends Operation {
 				for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 					logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
 					localDatabase.removeDatabaseVersion(localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
-				}
 					
-				// TODO What to do with the prune branch?? Do something on filesystem!!
+					RemoteFile remoteFileToPrune = new RemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
+					logger.log(Level.INFO, "    * Deleting remote database file "+remoteFileToPrune+" ...");
+					transferManager.delete(remoteFileToPrune);
+					
+					// TODO [high] Also delete multichunks from this database version (OR better yet: reuse multichunks somehow!) 
+				}
+				
+				// TODO [high] What to do with the prune branch?? Do something on filesystem!!
+				// TODO [medium] currently the loser deletes all its databases. It would be nicer if the old database versions could be marked as "old" so the branch is not forever lost, but it can be recreated later 
+				//XXXXXXXXXXXXXXXXXXXXXXXXX
 				logger.log(Level.WARNING, "  + TODO Prune on file system!");
+				logger.log(Level.WARNING, "  + TODO Prune on remote storage!");
 			}
 			
 			Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);

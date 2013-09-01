@@ -22,9 +22,10 @@ import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.TarMultiChunker;
 import org.syncany.tests.util.TestFileUtil;
 
-public class CustomMultiChunkerTest {
+public class MultiChunkerTest {
 
 	private File tempDir;
 
@@ -42,6 +43,24 @@ public class CustomMultiChunkerTest {
 	public void testChunkFileIntoMultiChunks() throws IOException {
 		int minMultiChunkSize = 512 * 1024;
 		int chunkSizeB = 16000;
+
+		Chunker[] chunkers = new Chunker[] { 
+			new FixedOffsetChunker(chunkSizeB)
+		};
+		
+		MultiChunker[] multiChunkers = new MultiChunker[] { 
+			new CustomMultiChunker(minMultiChunkSize),
+			new TarMultiChunker(minMultiChunkSize) 
+		};
+		
+		for (Chunker chunker : chunkers) {
+			for (MultiChunker multiChunker : multiChunkers) {
+				testChunkFileIntoMultiChunks(chunker, multiChunker, minMultiChunkSize);
+			}
+		}
+	}
+	
+	public void testChunkFileIntoMultiChunks(Chunker chunker, MultiChunker multiChunker, int minMultiChunkSize) throws IOException {
 		int fileSizeBig = 4560000;
 		int fileSizeSmall = 1230;
 		int fileAmountSizeSmall = 2;
@@ -50,10 +69,7 @@ public class CustomMultiChunkerTest {
 		List<File> files = TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
 		files.addAll(TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
-		FixedOffsetChunker foc = new FixedOffsetChunker(chunkSizeB);
-		MultiChunker customMultiChunker = new CustomMultiChunker(minMultiChunkSize);
-
-		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, foc, customMultiChunker);
+		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, chunker, multiChunker);
 
 		long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall);
 		assertEquals((totalFilesSize / (minMultiChunkSize)), resultMultiChunks.size());

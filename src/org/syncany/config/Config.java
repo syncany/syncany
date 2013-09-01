@@ -24,10 +24,10 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
 import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.TarMultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
@@ -92,13 +92,11 @@ public class Config {
 	}
 	
 	public Config(String password) throws Exception {
-		chunker = new FixedOffsetChunker(16 * 1024); // FIXME Duplicate code
-		multiChunker = new CustomMultiChunker(512 * 1024);  // FIXME Duplicate code
-		transformer = new GzipCompressor();	 // FIXME Duplicate code	        
+		initChunkingFrameworkDefaults();		        
 		
-    	encryption = new Encryption();	 // FIXME Duplicate code	
-    	encryption.setPassword(password); // FIXME Duplicate code
-    	encryption.setSalt("SALT"); // TODO: What to use as salt?      // FIXME Duplicate code			
+    	encryption = new Encryption();	 	
+    	encryption.setPassword(password); 
+    	encryption.setSalt("SALT"); // TODO [medium] Use salt!			
 	}
 	
 	private void initDirectories(ConfigTO configTO) {
@@ -111,9 +109,14 @@ public class Config {
 	}
 
 	private void initChunkingFramework(ConfigTO configTO) {
+		// TODO [low] make chunking options configurable
+		initChunkingFrameworkDefaults();
+	}
+	
+	private void initChunkingFrameworkDefaults() {
 		chunker = new FixedOffsetChunker(16 * 1024);
-		multiChunker = new CustomMultiChunker(512 * 1024);
-		transformer = new GzipCompressor();		        		
+		multiChunker = new TarMultiChunker(512 * 1024);//new CustomMultiChunker(512 * 1024);
+		transformer = new GzipCompressor(); // TODO [high] Use encryption!    
 	}
 	
 	private void initEncryption(ConfigTO configTO) throws EncryptionException {

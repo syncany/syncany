@@ -232,6 +232,7 @@ public class Indexer {
 		
 		@Override
 		public void onOpenMultiChunk(MultiChunk multiChunk) {
+			// TODO [high] Multichunk IDs should be generated randomly. There might be significant issues if the first chunk checksum is used, e.g. when re-indexing the same file at a later point in time! 
 			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
 			multiChunkEntry = new MultiChunkEntry(chunkEntry.getChecksum());
 		}

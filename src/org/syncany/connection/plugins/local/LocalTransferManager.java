@@ -94,8 +94,8 @@ public class LocalTransferManager extends AbstractTransferManager {
         File repoFile = getRepoFile(remoteFile);
         File tempRepoFile = new File(getAbsoluteParentDirectory(repoFile)+File.separator+".temp-"+repoFile.getName());
 
-        // Do not overwrite files!
-        if (repoFile.exists()) {
+        // Do not overwrite files with same size!
+        if (repoFile.exists() && repoFile.length() == localFile.length()) {
             return;
         }
 

@@ -41,7 +41,7 @@ public interface TransferManager {
      * Establish a connection with the remote storage and initialize the repository
      * if necessary (e.g. create folders).
      *
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc.
      */
     public void connect() throws StorageException;
@@ -49,7 +49,7 @@ public interface TransferManager {
     /**
      * Disconnect from the remote storage.
      * 
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc.
      */
     public void disconnect() throws StorageException;
@@ -67,7 +67,7 @@ public interface TransferManager {
      *        The only required property of the remote file is the name.
      * @param localFile Not existing local file to which the remote file is
      *        going to be downloaded.
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc.
      */
     public void download(RemoteFile remoteFile, File localFile) throws StorageException;
@@ -80,11 +80,14 @@ public interface TransferManager {
      * 
      * <p>Implementations must make sure that if a file matches the specified name
      * schema, it must be complete and consistent.
+     * 
+     * <p>Implementations must NOT upload a file if it already exists and has
+     * the same file size as the local file.
      *
      * @param localFile Existing local file that is going to be uploaded.
      * @param remoteFile Not existing destination file on the remote storage.
      *        The only required property of the remote file is the name.
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc.
      */
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException;
@@ -98,7 +101,7 @@ public interface TransferManager {
      *
      * @param remoteFile Existing remote file to be deleted.
      *        The only required property of the remote file is the name.
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc
      */
     public boolean delete(RemoteFile remoteFile) throws StorageException;
@@ -108,7 +111,7 @@ public interface TransferManager {
      *
      * @return Returns a list of remote files. In the map, the key is the file name,
      *         the value the entire {@link RemoteFile} object.
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc
      */
     public Map<String, RemoteFile> list() throws StorageException;
@@ -121,7 +124,7 @@ public interface TransferManager {
      *        for updates, chunks, etc.
      * @return Returns a list of remote files. In the map, the key is the file name,
      *         the value the entire {@link RemoteFile} object.
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc
      */
     public Map<String, RemoteFile> list(String namePrefix) throws StorageException;
@@ -129,7 +132,7 @@ public interface TransferManager {
     /**
      * Deletes unused old files from the remote storage, especially temporary files.
      *
-     * @throws StorageException If the connection fails due to no internet connection,
+     * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc
      */
     public void clean() throws StorageException;

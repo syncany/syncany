@@ -315,7 +315,7 @@ public class DatabaseReconciliator {
 
 		return null;
 	}
-	
+
 	public Branches stitchRemoteBranches(Branches unstitchedRemoteBranches, String localClientName, Branch localBranch) {
 		Branches allBranches = unstitchedRemoteBranches.clone();
 		allBranches.add(localClientName, localBranch);
@@ -345,7 +345,8 @@ public class DatabaseReconciliator {
 					DatabaseVersionHeader previousDatabaseVersionHeader = previousClientBranch.get(databaseVersionHeader.getPreviousVectorClock());
 
 					if (previousDatabaseVersionHeader == null) {
-						throw new RuntimeException("Unable to find previous database version header in branch of '"+databaseVersionHeader.getPreviousClient()+"' using vector clock "+databaseVersionHeader.getPreviousVectorClock());
+						//throw new RuntimeException("Unable to find previous database version header in branch of '"+databaseVersionHeader.getPreviousClient()+"' using vector clock "+databaseVersionHeader.getPreviousVectorClock());
+						break; // The rest must be in the local branch
 					}
 					
 					logger.log(Level.INFO, "- Adding "+previousDatabaseVersionHeader+" (from "+databaseVersionHeader.getPreviousClient()+")");					
@@ -353,7 +354,7 @@ public class DatabaseReconciliator {
 					
 					databaseVersionHeader = previousDatabaseVersionHeader;
 				}
-			}
+			}			
 			
 			// Attach local version's part (if necessary)
 			boolean firstRemoteHeadersPreviousVectorClockEmpty = reverseStitchedBranch.size() > 0
@@ -361,25 +362,33 @@ public class DatabaseReconciliator {
 			
 			boolean localBranchNotEmpty = localBranch.size() > 0;
 			
-			if (firstRemoteHeadersPreviousVectorClockEmpty && localBranchNotEmpty) {
+			if (firstRemoteHeadersPreviousVectorClockEmpty && localBranchNotEmpty) {				
 				DatabaseVersionHeader remoteFirstDatabaseVersionHeader = reverseStitchedBranch.get(reverseStitchedBranch.size()-1);
 				VectorClock remotePossiblyOverlappingVectorClock = remoteFirstDatabaseVersionHeader.getPreviousVectorClock();
 				
-				DatabaseVersionHeader localLastDatabaseVersionHeader = localBranch.getLast();
-				VectorClock localLastVectorClock = localLastDatabaseVersionHeader.getVectorClock();
+				boolean foundLocalOverlap = false;
 				
-				// They overlap! Attach!
-				if (VectorClock.compare(localLastVectorClock, remotePossiblyOverlappingVectorClock) == VectorClockComparison.EQUAL) {					
-					for (int i=localBranch.size()-1; i>=0; i--) {						
-						DatabaseVersionHeader localDatabaseVersionHeader = localBranch.get(i);
+				for (int localBranchPos=localBranch.size()-1; localBranchPos>=0; localBranchPos--) {				
+					DatabaseVersionHeader localLastDatabaseVersionHeader = localBranch.get(localBranchPos);
+					VectorClock localLastVectorClock = localLastDatabaseVersionHeader.getVectorClock();
+					
+					// They overlap! Attach!
+					if (VectorClock.compare(localLastVectorClock, remotePossiblyOverlappingVectorClock) == VectorClockComparison.EQUAL) {					
+						for (int i=localBranchPos; i>=0; i--) {						
+							DatabaseVersionHeader localDatabaseVersionHeader = localBranch.get(i);
+							
+							logger.log(Level.INFO, "- Adding "+localDatabaseVersionHeader+" (from local branch, i.e. from "+localClientName+")");						
+							reverseStitchedBranch.add(localDatabaseVersionHeader);
+						} 
 						
-						logger.log(Level.INFO, "- Adding "+localDatabaseVersionHeader+" (from local branch, i.e. from "+localClientName+")");						
-						reverseStitchedBranch.add(localDatabaseVersionHeader);
-					} 
-				}	
-				else {
-					logger.log(Level.INFO, "- Last local header does not overlap with first remote clock: local = "+localLastDatabaseVersionHeader+", remote = "+remoteFirstDatabaseVersionHeader);
-					logger.log(Level.INFO, "  -> Disconnected branch -- due to previous conflict. Emptying branch contents. Irrelevant!");
+						foundLocalOverlap = true;
+						break;
+					}	
+				}
+				
+				if (!foundLocalOverlap) {
+					logger.log(Level.INFO, "- Found NO OVERLAP with local branch for first remote version "+remoteFirstDatabaseVersionHeader);
+					logger.log(Level.INFO, "  --> Disconnected branch -- due to previous conflict. Emptying branch contents. SEEMS IRRELEVANT!");
 					reverseStitchedBranch.clear();
 					
 					// TODO Is this right?
@@ -400,6 +409,7 @@ public class DatabaseReconciliator {
 		
 		return stitchedRemoteBranches;
 	}
+		
 	
 	public Branch findLosersPruneBranch(Branch losersBranch, Branch winnersBranch) {
 		Branch losersPruneBranch = new Branch();
@@ -407,13 +417,10 @@ public class DatabaseReconciliator {
 		boolean pruneBranchStarted = false;
 		
 		for (int i=0; i<losersBranch.size(); i++) {
-			if (i == winnersBranch.size()) {
-				break;
-			}
-			else if (pruneBranchStarted) {
+			if (pruneBranchStarted) {
 				losersPruneBranch.add(losersBranch.get(i));
 			}
-			else if (!losersBranch.get(i).equals(winnersBranch.get(i))) {
+			else if (i < winnersBranch.size() && !losersBranch.get(i).equals(winnersBranch.get(i))) {
 				pruneBranchStarted = true;
 				losersPruneBranch.add(losersBranch.get(i));
 			}

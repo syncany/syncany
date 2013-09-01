@@ -1,5 +1,5 @@
 /*
- * Syncany, www.syncany.org
+ * Syncany
  * Copyright (C) 2011 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,27 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.chunk;
 
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author pheckel
  */
-public abstract class AbstractTransferManager implements TransferManager {
-    private Connection connection;
-
-    public AbstractTransferManager(Connection connection) {
-        this.connection = connection;
+public class TarMultiChunker extends MultiChunker {
+    public TarMultiChunker(int minMultiChunkSize) {
+        super(minMultiChunkSize);
     }
 
-    public Connection getConnection() {
-        return connection;
-    }    
+    @Override
+    public MultiChunk createMultiChunk(InputStream is) {
+        return new TarMultiChunk(is);
+    }
+
+    @Override
+    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
+        return new TarMultiChunk(id, minMultiChunkSize, os);
+    }
     
     @Override
-    public void clean() throws StorageException {
-        throw new UnsupportedOperationException("clean() not implemented yet.");
-    }    
+    public String toString() {
+        return "Tar-"+minMultiChunkSize;
+    }
+    
 }

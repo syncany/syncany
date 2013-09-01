@@ -3,7 +3,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.chunk.CustomMultiChunkerTest;
+import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
@@ -14,6 +14,7 @@ import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.scenarios.EvilCScenarioTest;
+import org.syncany.tests.scenarios.MixedScenario1Test;
 import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 
 @RunWith(Suite.class)
@@ -22,7 +23,7 @@ import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 	EncryptionTest.class,
 	
 	// Chunking Framework
-	CustomMultiChunkerTest.class,
+	MultiChunkerTest.class,
 	FixedOffsetChunkerTest.class,
 	TTTDChunkerTest.class,
 	FrameworkCombinationTest.class,
@@ -40,6 +41,7 @@ import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 	
 	// Scenarios
 	EvilCScenarioTest.class,
+	MixedScenario1Test.class,
 	NoConflictsScenarioTest.class
 })
 public class AllTestsSuite {

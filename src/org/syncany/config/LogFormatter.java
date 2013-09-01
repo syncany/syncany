@@ -31,7 +31,7 @@ public class LogFormatter extends Formatter {
     private DateFormat dateFormat;
 
     public LogFormatter() {
-        dateFormat = new SimpleDateFormat("d-MM-y H:mm:ss");
+        dateFormat = new SimpleDateFormat("d-M-Y H:mm:ss");
     }
 
     @Override

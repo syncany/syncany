@@ -35,13 +35,9 @@
 	<dependencies>
 		<!-- Jars are pulled from http://mvnrepository.com/ -->
     	
-    	<!-- Other Stuff needed in Syncany -->    
-    	
-    		<!-- JUNIT DEPENDENCIES -->
-    			<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>
-    			
-    		<!-- GSON - Google JSON Parser -->
-    			<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
+		<dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
+		<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>		
+		<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
   	</dependencies>
 	
 </ivy-module>
