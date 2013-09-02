@@ -65,6 +65,12 @@ public class Indexer {
 			FileVersion lastLocalVersion = fileHistory.getLastVersion();
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getFullName());
 			
+			// Ignore this file history if the last version is marked "DELETED"
+			if (lastLocalVersion.getStatus() == FileStatus.DELETED) {
+				continue;
+			}
+			
+			// If file has VANISHED, mark as DELETED 
 			if (!lastLocalVersionOnDisk.exists()) {
 				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileId());
 				FileVersion deletedVersion = (FileVersion) lastLocalVersion.clone();

@@ -1,5 +1,6 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -352,7 +353,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *     --> Local must merge local version (A3,  ,C8) in (A6,  ,C4)
  *     --> Local result is then (A6,  ,C9)	        
  */		
-public class MixedScenario1Test {
+public class Scenario1Test {
 	@Test
 	public void testMixedScenario1() throws Exception {
 		// Setup 
@@ -441,6 +442,8 @@ public class MixedScenario1Test {
 		
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());
+		
+		assertEquals("File list count does not match.", 19, clientA.getLocalFiles().size());
 		
 		// Tear down
 		clientA.cleanup();

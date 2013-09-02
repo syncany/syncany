@@ -13,8 +13,8 @@ import org.syncany.tests.database.DatabaseXmlDAOTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.scenarios.EvilCScenarioTest;
-import org.syncany.tests.scenarios.MixedScenario1Test;
+import org.syncany.tests.scenarios.Scenario2Test;
+import org.syncany.tests.scenarios.Scenario1Test;
 import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 
 @RunWith(Suite.class)
@@ -40,8 +40,8 @@ import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 	SyncUpOperationTest.class,
 	
 	// Scenarios
-	EvilCScenarioTest.class,
-	MixedScenario1Test.class,
+	Scenario2Test.class,
+	Scenario1Test.class,
 	NoConflictsScenarioTest.class
 })
 public class AllTestsSuite {

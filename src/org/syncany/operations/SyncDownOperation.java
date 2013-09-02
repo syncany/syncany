@@ -388,7 +388,7 @@ public class SyncDownOperation extends Operation {
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 		// Sort files (db-a-1 must be before db-a-2 !)
-		Collections.sort(remoteDatabases);
+		Collections.sort(remoteDatabases, new DatabaseFileComparator()); // TODO [medium] natural sort is a workaround, database file names should be centrally managed, db-name-0000000009 avoids natural sort  
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
@@ -532,6 +532,24 @@ public class SyncDownOperation extends Operation {
 			
 			return -1;
 		}
+	}
+	
+	public static class DatabaseFileComparator implements Comparator<File> {
+		@Override
+		public int compare(File f1, File f2) {
+			RemoteDatabaseFile r1 = new RemoteDatabaseFile(f1);
+			RemoteDatabaseFile r2 = new RemoteDatabaseFile(f2);
+			
+			int clientNameCompare = r1.getClientName().compareTo(r2.getClientName());
+			
+			if (clientNameCompare != 0) {
+				return clientNameCompare;
+			}
+			else {
+				return (int) (r1.getClientVersion() - r2.getClientVersion());
+			}
+		}
+		
 	}
 
 }

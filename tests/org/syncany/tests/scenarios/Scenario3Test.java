@@ -11,7 +11,7 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class EvilCScenarioTest {	
+public class Scenario3Test {	
 	@Test
 	public void testEvilC() throws Exception {
 		// Setup 
