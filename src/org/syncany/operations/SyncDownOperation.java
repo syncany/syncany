@@ -205,7 +205,11 @@ public class SyncDownOperation extends Operation {
 			boolean isChangedFile = !isNewFile && isInSamePlace && !isChecksumEqual;
 			boolean isIdenticalFile = !isNewFile && isInSamePlace && isChecksumEqual;
 			boolean isRenamedFile = !isNewFile && !isInSamePlace && isChecksumEqual;
-			boolean isDeletedFile = !isNewFile && isInSamePlace && winningLastVersion.getStatus() == FileStatus.DELETED;
+			boolean isDeletedFile = winningLastVersion.getStatus() == FileStatus.DELETED;
+			
+			if (isNewFile && isDeletedFile) {
+				isNewFile = false; // TODO [lowest] This is ugly. Do in original 'isNewFile = ...'-statement
+			}
 			
 			if (logger.isLoggable(Level.FINER)) {
 				logger.log(Level.FINER, "      + isNewFile: "+isNewFile+", isInSamePlace:"+isInSamePlace+", isChecksumEqual: "+isChecksumEqual
@@ -469,12 +473,10 @@ public class SyncDownOperation extends Operation {
 	}		
 	
 	/**
-	 * delete files - order irrelevant
-	 * delete folders - order long to short fullpath
-	 * create folders - order short to long fullpath
-	 * move folders - order long to short fullpath
-	 * create files - order irrelevant
-	 * move files - order irrelevant
+	 * Sorts file system actions according to their natural order to prevent scenarios 
+	 * in which a non-empty directory is deleted, ...
+	 * 
+	 * TODO [low] write unit test for FileSystemActionComparator, maybe move it in own class
 	 */
 	public static class FileSystemActionComparator implements Comparator<FileSystemAction> {
 		private static final Object[][] TARGET_ORDER =  new Object[][] {

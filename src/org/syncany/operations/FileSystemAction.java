@@ -14,6 +14,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 
 public abstract class FileSystemAction {
 	public static enum FileSystemActionType { FILE, FOLDER }; 
@@ -42,7 +43,12 @@ public abstract class FileSystemAction {
 	}
 	
 	public FileSystemActionType getType() {
-		return file1.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+		if (file1 != null) {
+			return file1.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+		}
+		else {
+			return file2.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+		}
 	}
 
 	protected void reconstructFile(FileVersion reconstructedFileVersion) throws Exception {
@@ -99,6 +105,7 @@ public abstract class FileSystemAction {
 				+ File.separator
 				+ newFullName);
 		
+		logger.log(Level.INFO, "  + Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
 		FileUtil.renameVia(conflictingLocalFile, newConflictFile);
 	}
 	
@@ -110,6 +117,7 @@ public abstract class FileSystemAction {
 		if (expectedLocalFileVersion.getStatus() == FileStatus.DELETED) {
 			// Check existance
 			if (fileExists) {
+				logger.log(Level.INFO, "  + UNexpected file detected, is expected to be NON-EXISTANT: "+actualLocalFile);
 				return false;
 			}
 			else {
@@ -119,11 +127,19 @@ public abstract class FileSystemAction {
 		else {
 			// Check existance
 			if (!fileExists) {
+				logger.log(Level.INFO, "  + UNexpected file detected, is expected to EXIST: "+actualLocalFile);
 				return false;
 			}
 			
 			// Check file type (folder/file)
 			if (actualLocalFile.isDirectory() != expectedLocalFileVersion.isFolder()) {
+				if (logger.isLoggable(Level.INFO)) {
+					String actualFileType = (actualLocalFile.isDirectory()) ? "DIRECTORY" : "FILE";
+					String expectedFileType = (expectedLocalFileVersion.isFolder()) ? "DIRECTORY" : "FILE";
+					
+					logger.log(Level.INFO, "  + UNexpected file detected, is expected to be the same file type: "+actualLocalFile+" is "+actualFileType+", expected for "+expectedLocalFileVersion+" is "+expectedFileType);
+				}
+				
 				return false;
 			}
 			
@@ -136,6 +152,7 @@ public abstract class FileSystemAction {
 			boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
 			
 			if (!modifiedEquals) {
+				logger.log(Level.INFO, "  + UNexpected file detected, modified date differs: "+actualLocalFile+" was modified "+new Date(actualLocalFile.lastModified())+", expected for "+expectedLocalFileVersion+" is "+expectedLocalFileVersion.getLastModified());
 				return false;
 			}
 			
@@ -144,6 +161,12 @@ public abstract class FileSystemAction {
 			
 			if (expectedFileContent == null) {
 				expectedFileContent = winningDatabase.getContent(expectedLocalFileVersion.getChecksum());
+				
+				if (expectedFileContent == null) {
+					// TODO [low] This should be an Exception instead of an error message. 
+					logger.log(Level.SEVERE, "WARNING: Content for "+expectedLocalFileVersion+" not found using checksum "+StringUtil.toHex(expectedLocalFileVersion.getChecksum()));
+					return false;
+				}
 			}
 			
 			boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
@@ -152,6 +175,7 @@ public abstract class FileSystemAction {
 				return true;
 			}
 			else {
+				logger.log(Level.INFO, "  + UNexpected file detected, size differs: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is "+expectedFileContent.getSize());
 				return false;
 			}
 		}
