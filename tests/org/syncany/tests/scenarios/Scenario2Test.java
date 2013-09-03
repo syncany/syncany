@@ -1,10 +1,6 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
-
-import java.io.File;
-import java.util.Map;
+import static org.syncany.tests.util.TestAssertUtil.*;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -19,23 +15,60 @@ public class Scenario2Test {
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
-		fail("Not done yet");
-		// Run 
-		clientA.createNewFile("A1");
-		clientA.up();
-		clientA.moveFile("A1", "A2");
-		clientA.up();		
-		clientA.changeFile("A2");
-		clientA.createNewFile("A3");
-		clientA.up();
-		clientA.deleteFile("A3");
+		
+		// A new/up
+		clientA.createNewFile("A-original");
 		clientA.up();
 		
+		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
 		
-		clientB.createNewFile("A4,B1");
+		clientB.moveFile("A-original", "B-moved");
 		clientB.up();
+		
+		// A down/move/up
+		clientA.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		
+		clientA.moveFile("B-moved", "A-moved");
+		clientA.up();
+		
+		// B down only
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		
+		// A down/move/up
+		clientA.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		
+		clientA.moveFile("A-moved", "A-moved-again");
+		clientA.up();
+		
+		// B down/move/up
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		
+		clientB.moveFile("A-moved-again", "B-moved"); // same filename as above!
+		clientB.up();
+		
+		// A down/move/up
+		clientA.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		
+		clientA.moveFile("B-moved", "A-moved");  // same filename as above!
+		clientA.up();
+		
+		// B down only
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
 		
 		// Tear down
 		clientA.cleanup();

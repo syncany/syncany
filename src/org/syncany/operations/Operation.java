@@ -26,7 +26,7 @@ public abstract class Operation {
 		Database db = new Database();
 
 		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
-			dao.load(db, new LocalDatabaseFile(localDatabaseFile));
+			dao.load(db, localDatabaseFile);
 		}
 		
 		return db;

@@ -19,8 +19,6 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.LocalDatabaseFile;
-import org.syncany.operations.RemoteDatabaseFile;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -63,8 +61,8 @@ public class SyncUpOperationTest {
 		DatabaseDAO dDAO = new DatabaseXmlDAO();
 		Database localDatabase = new Database();
 		Database remoteDatabase = new Database();
-		dDAO.load(localDatabase, new LocalDatabaseFile(localDatabaseFile));
-		dDAO.load(remoteDatabase, new RemoteDatabaseFile(remoteDatabaseFile));
+		dDAO.load(localDatabase, localDatabaseFile);
+		dDAO.load(remoteDatabase, remoteDatabaseFile);
 		
 		DatabaseVersion localDatabaseVersion = localDatabase.getLastDatabaseVersion();
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();

@@ -149,7 +149,7 @@ public class TTTDChunker extends Chunker {
                 while (bufpos < buf.length-1) {
                     if (cpos == -1 || cpos == clen-1) {
                         cpos = -1;
-                        clen = in.read(c);
+                        clen = readFromInputStreamFixed(c, in);//in.read(c);
                         
                         if (clen == -1) {
                             break;
@@ -225,6 +225,27 @@ public class TTTDChunker extends Chunker {
                 logger.log(Level.SEVERE, "Error while retrieving next chunk.", ex);
                 return null;
             }
-        }        
+        }     
+        
+        /**
+         * Fixes the read errors occurring with Cipher streams in the standard
+         * Java read implementation.
+         */
+        private int readFromInputStreamFixed(byte[] readToBuffer, InputStream inputStream) throws IOException {    		
+    		int bytesRead = 0;
+    		
+    		while (bytesRead < readToBuffer.length) {
+    			int byteRead = inputStream.read();
+    			
+    			if (byteRead == -1) {
+    				return (bytesRead != 0) ? bytesRead : -1;
+    			}
+    			
+    			readToBuffer[bytesRead] = (byte) byteRead;
+    			bytesRead++;
+    		}
+    		
+    		return (bytesRead != 0) ? bytesRead : -1;
+    	}
     }    
 }

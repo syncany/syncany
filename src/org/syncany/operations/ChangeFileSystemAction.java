@@ -13,20 +13,20 @@ public class ChangeFileSystemAction extends FileSystemAction {
 	
 	@Override
 	public void execute() throws Exception {
-		if (!isExpectedFile(file1)) {
-			createConflictFile(file1);
-			reconstructFile(file2);
+		if (!fileAsExpected(fileVersion1)) {
+			createConflictFile(fileVersion1);
+			createFile(fileVersion2);
 		}
 		else {
-			File fromFileOnDisk = getAbsolutePathFile(file1.getFullName());
+			File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getFullName());
 			fromFileOnDisk.delete();
 			
-			reconstructFile(file2);				
+			createFile(fileVersion2);				
 		}			
 	}
 
 	@Override
 	public String toString() {
-		return "ChangeFileSystemAction [file1=" + file1 + ", file2=" + file2 + "]";
+		return "ChangeFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}				
 }	

@@ -12,7 +12,6 @@ import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -23,40 +22,40 @@ public abstract class FileSystemAction {
 	protected Config config;
 	protected Database localDatabase;
 	protected Database winningDatabase;
-	protected FileVersion file1;
-	protected FileVersion file2;
+	protected FileVersion fileVersion1;
+	protected FileVersion fileVersion2;
 	
 	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
 		this.localDatabase = localDatabase;
 		this.winningDatabase = winningDatabase;
-		this.file1 = file1;
-		this.file2 = file2;
+		this.fileVersion1 = file1;
+		this.fileVersion2 = file2;
 	}
 	
 	public FileVersion getFile1() {
-		return file1;
+		return fileVersion1;
 	}
 
 	public FileVersion getFile2() {
-		return file2;
+		return fileVersion2;
 	}
 	
 	public FileSystemActionType getType() {
-		if (file1 != null) {
-			return file1.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+		if (fileVersion1 != null) {
+			return fileVersion1.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
 		}
 		else {
-			return file2.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+			return fileVersion2.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
 		}
 	}
 
-	protected void reconstructFile(FileVersion reconstructedFileVersion) throws Exception {
+	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
 		if (!reconstructedFileVersion.isFolder()) {
 			File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
 			FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
 
-			logger.log(Level.INFO, "  + Reconstructing file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
+			logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
 
 			FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
 			
@@ -78,7 +77,7 @@ public abstract class FileSystemAction {
 			
 			// Okay. Now move to real place
 			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
-			logger.log(Level.INFO, "    * Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
+			logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
 			
 			FileUtil.renameVia(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
 		}
@@ -87,7 +86,7 @@ public abstract class FileSystemAction {
 		else {
 			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
 			
-			logger.log(Level.INFO, "  + Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
+			logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
 			FileUtil.mkdirsVia(reconstructedFilesAtFinalLocation);
 		}									
 	}
@@ -105,81 +104,82 @@ public abstract class FileSystemAction {
 				+ File.separator
 				+ newFullName);
 		
-		logger.log(Level.INFO, "  + Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
+		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
 		FileUtil.renameVia(conflictingLocalFile, newConflictFile);
 	}
 	
-	protected boolean isExpectedFile(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());
+	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());		
+		boolean actualLocalFileExists = actualLocalFile.exists();
 		
-		boolean fileExists = actualLocalFile.exists();
-		
-		if (expectedLocalFileVersion.getStatus() == FileStatus.DELETED) {
-			// Check existance
-			if (fileExists) {
-				logger.log(Level.INFO, "  + UNexpected file detected, is expected to be NON-EXISTANT: "+actualLocalFile);
-				return false;
-			}
-			else {
-				return true;
-			}
+		// Check existance
+		if (!actualLocalFileExists) {
+			logger.log(Level.INFO, "     - Unexpected file detected, is expected to EXIST, but does not: "+actualLocalFile);
+			return false;
 		}
-		else {
-			// Check existance
-			if (!fileExists) {
-				logger.log(Level.INFO, "  + UNexpected file detected, is expected to EXIST: "+actualLocalFile);
-				return false;
-			}
-			
-			// Check file type (folder/file)
-			if (actualLocalFile.isDirectory() != expectedLocalFileVersion.isFolder()) {
-				if (logger.isLoggable(Level.INFO)) {
-					String actualFileType = (actualLocalFile.isDirectory()) ? "DIRECTORY" : "FILE";
-					String expectedFileType = (expectedLocalFileVersion.isFolder()) ? "DIRECTORY" : "FILE";
-					
-					logger.log(Level.INFO, "  + UNexpected file detected, is expected to be the same file type: "+actualLocalFile+" is "+actualFileType+", expected for "+expectedLocalFileVersion+" is "+expectedFileType);
-				}
+		
+		// Check file type (folder/file)
+		if (actualLocalFile.isDirectory() != expectedLocalFileVersion.isFolder()) {
+			if (logger.isLoggable(Level.INFO)) {
+				String actualFileType = (actualLocalFile.isDirectory()) ? "DIRECTORY" : "FILE";
+				String expectedFileType = (expectedLocalFileVersion.isFolder()) ? "DIRECTORY" : "FILE";
 				
-				return false;
+				logger.log(Level.INFO, "     - Unexpected file detected, is expected to be the same file type: "+actualLocalFile+" is "+actualFileType+", expected for "+expectedLocalFileVersion+" is "+expectedFileType);
 			}
 			
-			// Check folder
-			if (actualLocalFile.isDirectory()) {
-				return true;
-			}
-			
-			// Check modified date
-			boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
-			
-			if (!modifiedEquals) {
-				logger.log(Level.INFO, "  + UNexpected file detected, modified date differs: "+actualLocalFile+" was modified "+new Date(actualLocalFile.lastModified())+", expected for "+expectedLocalFileVersion+" is "+expectedLocalFileVersion.getLastModified());
-				return false;
-			}
-			
-			// Check size	
-			FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
+			return false;
+		}
+		
+		// Check folder
+		if (actualLocalFile.isDirectory()) {
+			return true;
+		}
+		
+		// Check modified date
+		boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
+		
+		if (!modifiedEquals) {
+			logger.log(Level.INFO, "     - Unexpected file detected, modified date differs: "+actualLocalFile+" was modified "+new Date(actualLocalFile.lastModified())+", expected for "+expectedLocalFileVersion+" is "+expectedLocalFileVersion.getLastModified());
+			return false;
+		}
+		
+		// Check size	
+		FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
+		
+		if (expectedFileContent == null) {
+			expectedFileContent = winningDatabase.getContent(expectedLocalFileVersion.getChecksum());
 			
 			if (expectedFileContent == null) {
-				expectedFileContent = winningDatabase.getContent(expectedLocalFileVersion.getChecksum());
-				
-				if (expectedFileContent == null) {
-					// TODO [low] This should be an Exception instead of an error message. 
-					logger.log(Level.SEVERE, "WARNING: Content for "+expectedLocalFileVersion+" not found using checksum "+StringUtil.toHex(expectedLocalFileVersion.getChecksum()));
-					return false;
-				}
-			}
-			
-			boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
-			
-			if (isSizeEqual) {
-				return true;
-			}
-			else {
-				logger.log(Level.INFO, "  + UNexpected file detected, size differs: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is "+expectedFileContent.getSize());
+				// TODO [low] This should be an Exception instead of an error message. 
+				logger.log(Level.SEVERE, "WARNING: Content for "+expectedLocalFileVersion+" not found using checksum "+StringUtil.toHex(expectedLocalFileVersion.getChecksum()));
 				return false;
 			}
 		}
+		
+		boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
+		
+		if (isSizeEqual) {
+			return true;
+		}
+		else {
+			logger.log(Level.INFO, "     - Unexpected file detected, size differs: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is "+expectedFileContent.getSize());
+			return false;
+		}		
 	}
+	
+	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());
+		boolean actualLocalFileExists = actualLocalFile.exists();
+		
+		// Check existance
+		if (actualLocalFileExists) {
+			logger.log(Level.INFO, "     - Unexpected file detected, is expected to be NON-EXISTANT, but exists: "+actualLocalFile);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}	
 	
 	protected File getAbsolutePathFile(String relativePath) {
 		return new File(config.getLocalDir()+File.separator+relativePath);

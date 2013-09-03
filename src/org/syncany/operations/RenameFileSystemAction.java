@@ -1,6 +1,7 @@
 package org.syncany.operations;
 
 import java.io.File;
+import java.util.logging.Level;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;
@@ -14,21 +15,23 @@ public class RenameFileSystemAction extends FileSystemAction {
 
 	@Override
 	public void execute() throws Exception {
-		if (!isExpectedFile(file1)) {
-			createConflictFile(file1);
-			reconstructFile(file2);
+		if (!fileAsExpected(fileVersion1)) {
+			createConflictFile(fileVersion1);
+			createFile(fileVersion2);
 		}
 		else {
-			File fromFileOnDisk = getAbsolutePathFile(file1.getFullName());
-			File toFileOnDisk = getAbsolutePathFile(file2.getFullName());			
+			File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getFullName());
+			File toFileOnDisk = getAbsolutePathFile(fileVersion2.getFullName());			
 			
+			logger.log(Level.INFO, "     - Renaming file "+fromFileOnDisk+" to "+toFileOnDisk+" ...");				
 			FileUtil.renameVia(fromFileOnDisk, toFileOnDisk);						
 		}			
-	}
-
+	}	
+	
 	@Override
 	public String toString() {
-		return "RenameFileSystemAction [file1=" + file1 + ", file2=" + file2 + "]";
-	}		
+		return "RenameFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
+	}
+
 	
 }

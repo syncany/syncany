@@ -138,7 +138,7 @@ public class FileVersion implements Cloneable {
 	}
 
 	@Override
-    public Object clone() {
+    public FileVersion clone() {
         try {
             FileVersion clone = (FileVersion) super.clone();
             

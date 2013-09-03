@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.ByteArray;
 
 public class Database {
@@ -120,32 +121,52 @@ public class Database {
 	public void addDatabaseVersion(DatabaseVersion databaseVersion) {		
 		databaseVersions.add(databaseVersion);
 		
-		// Populate caches, do not reorder, order important!!
+		// Populate caches
+		// WARNING: Do NOT reorder, order important!!
 		updateDatabaseVersionIdCache(databaseVersion);
 		updateFullDatabaseVersionCache(databaseVersion);
 		updateFilenameHistoryCache();
-		updateContentChecksumCache(databaseVersion);
+		updateContentChecksumCache();
 	} 	
 
 	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {
 		databaseVersions.remove(databaseVersion);
 		
-		// Populate caches, do not reorder, order important!!
+		// Populate caches
+		// WARNING: Do NOT reorder, order important!!
 		updateFullDatabaseVersionCache();
 		updateDatabaseVersionIdCache();
 		updateFilenameHistoryCache();
 		updateContentChecksumCache();
 	}
 
+	// TODO [medium] Very inefficient. Always updates whole cache
 	private void updateContentChecksumCache() {
 		contentChecksumFileHistoriesCache.clear();
 		
-		for (DatabaseVersion databaseVersion : databaseVersions) {
-			updateContentChecksumCache(databaseVersion);
+		for (PartialFileHistory fullFileHistory : fullDatabaseVersionCache.getFileHistories()) {
+			byte[] lastVersionChecksum = fullFileHistory.getLastVersion().getChecksum();
+			
+			if (lastVersionChecksum != null) {
+				ByteArray lastVersionChecksumByteArray = new ByteArray(lastVersionChecksum);
+				List<PartialFileHistory> historiesWithVersionsWithSameChecksum = contentChecksumFileHistoriesCache.get(lastVersionChecksumByteArray);
+				
+				// Create if it does not exist
+				if (historiesWithVersionsWithSameChecksum == null) {
+					historiesWithVersionsWithSameChecksum = new ArrayList<PartialFileHistory>();
+				}
+				
+				// Add to cache
+				historiesWithVersionsWithSameChecksum.add(fullFileHistory);
+				contentChecksumFileHistoriesCache.put(lastVersionChecksumByteArray, historiesWithVersionsWithSameChecksum);
+			}
 		}
+				
 	}
 	
-	private void updateContentChecksumCache(DatabaseVersion databaseVersion) {
+	/*private void updateContentChecksumCache(DatabaseVersion databaseVersion) {
+		int i=1;
+		
 		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
 			byte[] lastVersionChecksum = fileHistory.getLastVersion().getChecksum();
 			
@@ -153,24 +174,37 @@ public class Database {
 				ByteArray lastVersionChecksumByteArray = new ByteArray(lastVersionChecksum);
 				List<PartialFileHistory> historiesWithVersionsWithSameChecksum = contentChecksumFileHistoriesCache.get(lastVersionChecksumByteArray);
 				
+				// Create if it does not exist
 				if (historiesWithVersionsWithSameChecksum == null) {
 					historiesWithVersionsWithSameChecksum = new ArrayList<PartialFileHistory>();
-					contentChecksumFileHistoriesCache.put(lastVersionChecksumByteArray, historiesWithVersionsWithSameChecksum);
 				}
 				
+				// TODO [low] Throw out old file histories
+				XXXXXXXXX
+				
+				// Add to cache
 				historiesWithVersionsWithSameChecksum.add(fileHistory);
+				contentChecksumFileHistoriesCache.put(lastVersionChecksumByteArray, historiesWithVersionsWithSameChecksum);
 			}
 		}
-	}	
+		
+		return; // for breakpoint
+	}	*/
 		
 	private void updateFilenameHistoryCache() {
-		// Cache all file paths + names to fileHistories
-		// TODO [high] file a deleted, file b same path/name => chaos
+		// TODO [medium] Performance: This throws away the unchanged entries. It should only update new database version
+		filenameHistoryCache.clear(); 
+		
 		for (PartialFileHistory cacheFileHistory : fullDatabaseVersionCache.getFileHistories()) {
-			String fileName = cacheFileHistory.getLastVersion().getFullName();
+			FileVersion lastVersion = cacheFileHistory.getLastVersion();
 			
-			filenameHistoryCache.put(fileName, cacheFileHistory);
+			if (lastVersion.getStatus() != FileStatus.DELETED) {
+				String fileName = lastVersion.getFullName();			
+				filenameHistoryCache.put(fileName, cacheFileHistory);
+			}
 		}
+		
+		return;
 	}
 	
 	private void updateDatabaseVersionIdCache(DatabaseVersion newDatabaseVersion) {

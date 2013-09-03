@@ -14,26 +14,26 @@ public class DeleteFileSystemAction extends FileSystemAction {
 	@Override
 	public void execute() {
 		// Special case: locally unknown file to be deleted (= nothing to do!)
-		if (file1 == null) {
-			if (!isExpectedFile(file2)) {
-				createConflictFile(file2);				
+		if (fileVersion1 == null) {
+			if (fileExists(fileVersion2)) {
+				createConflictFile(fileVersion2);				
 			}
 		}
 		
 		// Normal case: locally known file to be deleted
 		else {
-			if (!isExpectedFile(file1)) {
-				createConflictFile(file2);				
+			if (!fileAsExpected(fileVersion1)) {
+				createConflictFile(fileVersion2);				
 			}
 		}
 			
-		File toDeleteFileOnDisk = getAbsolutePathFile(file2.getFullName());
+		File toDeleteFileOnDisk = getAbsolutePathFile(fileVersion2.getFullName());
 		toDeleteFileOnDisk.delete();
 	}
 
 	@Override
 	public String toString() {
-		return "DeleteFileSystemAction [file1=" + file1 + ", file2=" + file2 + "]";
+		return "DeleteFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}
 }
 

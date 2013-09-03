@@ -144,8 +144,8 @@ public class Indexer {
 			else {
 				fileHistory = new PartialFileHistory(lastFileHistory.getFileId());
 				
-				fileVersion = (FileVersion) lastFileVersion.clone();
-				fileVersion.setVersion(lastFileVersion.getVersion()+1);									
+				fileVersion = lastFileVersion.clone();
+				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
 			}			
 
 			fileVersion.setPath(FileUtil.getRelativePath(config.getLocalDir(), file.getParentFile()));
@@ -175,6 +175,9 @@ public class Indexer {
 			if (!isIdenticalToLastVersion) {
 				newDatabaseVersion.addFileHistory(fileHistory);
 				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), fileVersion);
+				
+				logger.log(Level.INFO, "   * Added file version:    "+fileVersion);
+				logger.log(Level.INFO, "     based on file version: "+lastFileVersion);
 			}
 			else {
 				logger.log(Level.INFO, "   * NOT ADDING file version "+fileVersion+", identical to existing previous version "+lastFileVersion);

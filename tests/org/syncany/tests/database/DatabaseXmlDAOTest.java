@@ -2,13 +2,9 @@ package org.syncany.tests.database;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 import org.junit.After;
@@ -18,17 +14,15 @@ import org.junit.Test;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.operations.RemoteDatabaseFile;
 import org.syncany.tests.util.TestAssertUtil;
+import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseXmlDAOTest {
@@ -304,86 +298,13 @@ public class DatabaseXmlDAOTest {
 	}
 	
 	private Database writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
-		File writtenDatabaseFile = writeDatabaseFileToDisk(writtenDatabase);
-		Database readDatabase = readDatabaseFileFromDisk(writtenDatabaseFile);
+		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + new Random().nextInt(Integer.MAX_VALUE));
+		TestDatabaseUtil.writeDatabaseFileToDisk(writtenDatabase, writtenDatabaseFile);
+		Database readDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(writtenDatabaseFile);
 		
-		compareDatabases(writtenDatabase, readDatabase);
+		TestAssertUtil.assertDatabaseEquals(writtenDatabase, readDatabase);
 		
 		return readDatabase;
 	}		
-
-	private File writeDatabaseFileToDisk(Database db) throws IOException {
-		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + new Random().nextInt(Integer.MAX_VALUE));
-		
-		DatabaseDAO dao = new DatabaseXmlDAO();
-		dao.save(db, writtenDatabaseFile);
-		
-		return writtenDatabaseFile;
-	}
 	
-	private Database readDatabaseFileFromDisk(File databaseFile) throws IOException {
-		Database db = new Database();
-		
-		DatabaseDAO dao = new DatabaseXmlDAO();
-		RemoteDatabaseFile rdbf = new RemoteDatabaseFile(databaseFile);
-		dao.load(db, rdbf);
-		
-		return db;
-	}
-	
-	private void compareDatabases(Database writtenDatabase, Database readDatabase) {
-		List<DatabaseVersion> writtenDatabaseVersions = writtenDatabase.getDatabaseVersions();
-		List<DatabaseVersion> readDatabaseVersions = readDatabase.getDatabaseVersions();
-		
-		assertEquals("Different number of database versions.", writtenDatabaseVersions.size(), readDatabaseVersions.size());
-			
-		for (DatabaseVersion writtenDatabaseVersion : writtenDatabaseVersions) {
-			DatabaseVersion readDatabaseVersion = null;
-			
-			for (DatabaseVersion aReadDatabaseVersion : readDatabaseVersions) {
-				if (aReadDatabaseVersion.equals(writtenDatabaseVersion)) {
-					readDatabaseVersion = aReadDatabaseVersion;
-					break;
-				}
-			}
-			
-			assertNotNull("Database version "+writtenDatabaseVersion+" does not exist in read database.", readDatabaseVersion);
-			
-			compareDatabaseVersions(writtenDatabaseVersion, readDatabaseVersion);
-		}
-	}	
-	
-	private void compareDatabaseVersions(DatabaseVersion writtenDatabaseVersion, DatabaseVersion readDatabaseVersion) {
-		compareDatabaseVersionVectorClocks(writtenDatabaseVersion.getVectorClock(), readDatabaseVersion.getVectorClock());
-		compareDatabaseVersionChunks(writtenDatabaseVersion.getChunks(), readDatabaseVersion.getChunks());
-		compareDatabaseVersionMultiChunks(writtenDatabaseVersion.getMultiChunks(), readDatabaseVersion.getMultiChunks());
-		compareDatabaseVersionFileContents(writtenDatabaseVersion.getFileContents(), readDatabaseVersion.getFileContents());
-		compareDatabaseVersionFileHistories(writtenDatabaseVersion.getFileHistories(), readDatabaseVersion.getFileHistories());	
-	}		
-
-	private void compareDatabaseVersionVectorClocks(VectorClock writtenVectorClock, VectorClock readVectorClock) {
-		assertEquals("Vector clocks differ.", writtenVectorClock, readVectorClock);		
-	}
-
-	private void compareDatabaseVersionChunks(Collection<ChunkEntry> writtenChunks, Collection<ChunkEntry> readChunks) {	
-		assertEquals("Different amount of Chunk objects.", writtenChunks.size(), readChunks.size());
-		assertTrue("Chunk objects in written/read database version different.", writtenChunks.containsAll(readChunks));
-		//assertCollectionEquals("Chunk objects in written/read database version different.", writtenChunks, readChunks);
-	}
-	
-	private void compareDatabaseVersionMultiChunks(Collection<MultiChunkEntry> writtenMultiChunks, Collection<MultiChunkEntry> readMultiChunks) {
-		assertEquals("Different amount of MultiChunk objects.", writtenMultiChunks.size(), readMultiChunks.size());
-		assertTrue("MultiChunk objects in written/read database version different.", writtenMultiChunks.containsAll(readMultiChunks));
-		//assertCollectionEquals("MultiChunk objects in written/read database version different.", writtenMultiChunks, readMultiChunks);
-	}	
-	
-	private void compareDatabaseVersionFileContents(Collection<FileContent> writtenFileContents, Collection<FileContent> readFileContents) {
-		assertEquals("Different amount of FileContent objects.", writtenFileContents.size(), readFileContents.size());
-		assertTrue("FileContent objects in written/read database version different.", writtenFileContents.containsAll(readFileContents));
-		//assertCollectionEquals("FileContent objects in written/read database version different.", writtenFileContents, readFileContents);
-	}	
-
-	private void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
-		TestAssertUtil.assertCollectionEquals("FileHistory objects in written/read database version different.", writtenFileHistories, readFileHistories);
-	}	
 }

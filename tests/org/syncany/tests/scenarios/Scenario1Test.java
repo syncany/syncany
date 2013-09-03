@@ -372,11 +372,14 @@ public class Scenario1Test {
 		clientC.up();
 		
 		clientB.down(); // NO CONFLICT
+		assertFileListEquals("Client B and C should be on the same versions.", clientB.getLocalFiles(), clientC.getLocalFiles());		
 
-		clientC.createNewFile("C4");
+		clientC.createNewFile("C4"); // up without down! Evil!
 		clientC.up();
 		
 		clientA.down(); // NO CONFLICT
+		assertFileListEquals("Client A and C should be on the same versions.", clientA.getLocalFiles(), clientC.getLocalFiles());
+		assertEquals("Client A should have C4, client B should not", clientA.getLocalFiles().size()-1, clientB.getLocalFiles().size());
 		
 		clientB.createNewFile("B1,C3");
 		clientB.up();
@@ -389,8 +392,13 @@ public class Scenario1Test {
 		clientA.up();
 		
 		clientB.down(); // CONFLICT 1
+		fail("Add some asserts");
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
 		clientA.down(); // CONFLICT 2
 		clientC.down(); // CONFLICT 3
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());
 		
 		clientA.createNewFile("A4,C4");
 		clientA.up();

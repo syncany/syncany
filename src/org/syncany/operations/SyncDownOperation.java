@@ -138,11 +138,8 @@ public class SyncDownOperation extends Operation {
 					// TODO [high] Also delete multichunks from this database version (OR better yet: reuse multichunks somehow!) 
 				}
 				
-				// TODO [high] What to do with the prune branch?? Do something on filesystem!!
 				// TODO [medium] currently the loser deletes all its databases. It would be nicer if the old database versions could be marked as "old" so the branch is not forever lost, but it can be recreated later 
 				//XXXXXXXXXXXXXXXXXXXXXXXXX
-				logger.log(Level.WARNING, "  + TODO Prune on file system!");
-				logger.log(Level.WARNING, "  + TODO Prune on remote storage!");
 			}
 			
 			Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
@@ -217,26 +214,33 @@ public class SyncDownOperation extends Operation {
 			}
 			
 			if (isNewFile) {
-				fileSystemActions.add(new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase));
-				logger.log(Level.INFO, "      NEW FILE");
+				FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
+				fileSystemActions.add(action);
+				
+				logger.log(Level.INFO, "      + Added: "+action);
 			}
-			else if (isChangedFile) {			
-				fileSystemActions.add(new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
-				logger.log(Level.INFO, "      CHANGED FILE");
+			else if (isChangedFile) {	
+				FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
+				fileSystemActions.add(action);
+				
+				logger.log(Level.INFO, "      + Changed: "+action);
 			}
 			else if (isRenamedFile) {
-				fileSystemActions.add(new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase));
-				logger.log(Level.INFO, "      RENAMED FILE");
+				FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase);
+				fileSystemActions.add(action);
+				
+				logger.log(Level.INFO, "      + Renamed: "+action);
 			}
 			else if (isDeletedFile) {
-				fileSystemActions.add(new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase));
-				logger.log(Level.INFO, "      DELETED FILE");
+				FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
+				fileSystemActions.add(action);
+				
+				logger.log(Level.INFO, "      + Deleted: "+action);
 			}
 			else if (isIdenticalFile) {
-				logger.log(Level.INFO, "      IDENTICAL FILE, nothing to do!");
-			}
+				logger.log(Level.INFO, "      + Identical file. Nothing to do.");			}
 			else {
-				logger.log(Level.WARNING, "      THIS SHOULD NOT HAPPEN"); // TODO
+				logger.log(Level.WARNING, "      + THIS SHOULD NOT HAPPEN"); // TODO
 				throw new Exception("Cannot determine file system action!");
 			}
 		}
@@ -245,22 +249,14 @@ public class SyncDownOperation extends Operation {
 	}
 	
 	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
-		logger.log(Level.FINER, "- applyFileSystemActions, before sorting: ");
-		for (FileSystemAction a : actions) { 
-			logger.log(Level.FINER, "   + "+a);
-		}
-		
 		// Sort
 		Collections.sort(actions, new FileSystemActionComparator());
 		
-		logger.log(Level.FINER, "- applyFileSystemActions, AFTER sorting: ");
-		for (FileSystemAction a : actions) { 
-			logger.log(Level.FINER, "   + "+a);
-		}
-		
+		logger.log(Level.FINER, "- Applying file system actions (sorted!) ...");		
 		
 		// Apply
 		for (FileSystemAction action : actions) {
+			logger.log(Level.FINER, "   + "+action);
 			action.execute();
 		}
 	}
@@ -368,7 +364,7 @@ public class SyncDownOperation extends Operation {
 			if (databaseFileForRange != null) {
 				// Load database
 				logger.log(Level.INFO, "- Loading "+databaseFileForRange+" (from "+clientVersionFrom+", to "+clientVersionTo+") ...");
-				databaseDAO.load(winnerBranchDatabase, new RemoteDatabaseFile(databaseFileForRange), clientVersionFrom, clientVersionTo);
+				databaseDAO.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo);
 						
 				// Reset range
 				clientName = null;
@@ -394,15 +390,15 @@ public class SyncDownOperation extends Operation {
 		Branches unknownRemoteBranches = new Branches();
 		DatabaseDAO dbDAO = new DatabaseXmlDAO();
 		
-		for (File remoteDatabaseInCache : remoteDatabases) {
+		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
 		
-			RemoteDatabaseFile rdf = new RemoteDatabaseFile(remoteDatabaseInCache);
-			dbDAO.load(remoteDatabase, rdf);		// FIXME [medium] This is very, very, very inefficient, DB is loaded and then discarded	
+			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteDatabaseFileInCache);
+			dbDAO.load(remoteDatabase, remoteDatabaseFile.getFile());		// FIXME [medium] This is very, very, very inefficient, DB is loaded and then discarded	
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			// Pupulate branches
-			Branch remoteClientBranch = unknownRemoteBranches.getBranch(rdf.getClientName(), true);
+			Branch remoteClientBranch = unknownRemoteBranches.getBranch(remoteDatabaseFile.getClientName(), true);
 			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
@@ -513,7 +509,7 @@ public class SyncDownOperation extends Operation {
 			
 			// For the rest, do the shortest path first
 			else if (a1.getClass().equals(NewFileSystemAction.class) || a1.getClass().equals(ChangeFileSystemAction.class)) {
-				return a1.getFile1().getFullName().compareTo(a2.getFile1().getFullName());
+				return a1.getFile2().getFullName().compareTo(a2.getFile2().getFullName());
 			}
 			
 			return 0;

@@ -71,4 +71,8 @@ public class TestClient extends Client {
 		
 		return fileMap;
 	}
+
+	public File getLocalDatabaseFile() {
+		return new File(config.getAppDatabaseDir()+File.separator+"local.db");
+	}
 }

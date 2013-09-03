@@ -18,7 +18,6 @@ import javax.xml.parsers.SAXParserFactory;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.VectorClock.VectorClockComparison;
-import org.syncany.operations.DatabaseFile;
 import org.syncany.util.StringUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -163,16 +162,16 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 	}
 	
 	@Override
-	public void load(Database db, DatabaseFile databaseFile) throws IOException {
+	public void load(Database db, File databaseFile) throws IOException {
         load(db, databaseFile, null, null);
 	}
 	
 	@Override
-	public void load(Database db, DatabaseFile databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
-        InputStream is = new FileInputStream(databaseFile.getFile());
+	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
+        InputStream is = new FileInputStream(databaseFile);
         
         try {
-			logger.log(Level.INFO, "- Loading database from "+databaseFile.getFile()+" ...");
+			logger.log(Level.INFO, "- Loading database from "+databaseFile+" ...");
 
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();

@@ -1,15 +1,20 @@
 package org.syncany.tests.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.database.Branch;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.VectorClock;
 
-public class TestDatabaseVersionUtil {
+public class TestDatabaseUtil {
 	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)(?:/([^/]+))?");
 	private static Pattern vectorClockElementPattern = Pattern.compile("([^\\d]+)(\\d+)");
 	
@@ -77,6 +82,20 @@ public class TestDatabaseVersionUtil {
 		}
 
 		return branch;
+	}
+	
+	public static Database readDatabaseFileFromDisk(File databaseFile) throws IOException {
+		Database db = new Database();
+		
+		DatabaseDAO dao = new DatabaseXmlDAO();
+		dao.load(db, databaseFile);
+		
+		return db;
+	}
+	
+	public static void writeDatabaseFileToDisk(Database db, File writtenDatabaseFile) throws IOException {
+		DatabaseDAO dao = new DatabaseXmlDAO();
+		dao.save(db, writtenDatabaseFile);
 	}
 	
 }
