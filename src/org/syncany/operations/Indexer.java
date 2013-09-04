@@ -200,40 +200,62 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistory(File file, byte[] checksum) {
+			if (checksum != null) {
+				return guessLastFileHistoryForFile(file, checksum);
+			}
+			else {
+				return guessLastFileHistoryForFolder(file);
+			}
+		}
+		
+		private PartialFileHistory guessLastFileHistoryForFolder(File file) {
 			PartialFileHistory lastFileHistory = null;
 			
-			// 1a. by file name
-			if (checksum != null) {
-				String relativeFilePath = FileUtil.getRelativeParentDirectory(config.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName();
-				lastFileHistory = database.getFileHistory(relativeFilePath);
-	
-				if (lastFileHistory == null) {
-					// 1b. by checksum
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(checksum);
-					
-					if (fileHistoriesWithSameChecksum != null) {
-						// check if they do not exist anymore --> assume it has moved!
-						// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
-						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
-							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+fileHistoryWithSameChecksum.getLastVersion().getFullName());
-							
-							if (!lastVersionOnLocalDisk.exists()) {
-								lastFileHistory = fileHistoryWithSameChecksum;
-								break;
-							}
+			String relativeFilePath = FileUtil.getRelativeParentDirectory(config.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName();
+			lastFileHistory = database.getFileHistory(relativeFilePath);
+
+			if (lastFileHistory == null) {
+				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+relativeFilePath+", FOLDER)");
+			}
+			else {
+				logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+relativeFilePath+"), appending new version.");
+			}
+			
+			return lastFileHistory;
+		}
+		
+		private PartialFileHistory guessLastFileHistoryForFile(File file, byte[] checksum) {
+			PartialFileHistory lastFileHistory = null;
+			
+			String relativeFilePath = FileUtil.getRelativeParentDirectory(config.getLocalDir(), file) + Constants.DATABASE_FILE_SEPARATOR + file.getName();
+			lastFileHistory = database.getFileHistory(relativeFilePath);
+
+			if (lastFileHistory == null) {
+				// 1b. by checksum
+				Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(checksum);
+				
+				if (fileHistoriesWithSameChecksum != null) {
+					// check if they do not exist anymore --> assume it has moved!
+					// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
+					for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
+						File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+fileHistoryWithSameChecksum.getLastVersion().getFullName());
+						
+						if (!lastVersionOnLocalDisk.exists()) {
+							lastFileHistory = fileHistoryWithSameChecksum;
+							break;
 						}
 					}
-					
-					if (lastFileHistory == null) {
-						logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+relativeFilePath+", checksum: "+StringUtil.toHex(checksum)+")");
-					}
-					else {
-						logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(checksum)+"), appending new version.");
-					}
+				}
+				
+				if (lastFileHistory == null) {
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+relativeFilePath+", checksum: "+StringUtil.toHex(checksum)+")");
 				}
 				else {
-					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+relativeFilePath+"), appending new version.");
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(checksum)+"), appending new version.");
 				}
+			}
+			else {
+				logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+relativeFilePath+"), appending new version.");
 			}
 			
 			return lastFileHistory;

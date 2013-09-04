@@ -28,13 +28,11 @@ public class TestFileUtil {
 	
 	private static Random rnd = new Random(); 
 	
-	private static void copyFileToDirectory(File from, File toDirectory)
-			throws IOException {
-		// if file, then copy it
-		// Use bytes stream to support all file types
+	private static File copyFileToDirectory(File from, File toDirectory) throws IOException {
+		File outFile = new File(toDirectory, from.getName());
+		
 		InputStream in = new FileInputStream(from);
-		OutputStream out = new FileOutputStream(new File(toDirectory,
-				from.getName()));
+		OutputStream out = new FileOutputStream(outFile);
 
 		byte[] buffer = new byte[1024];
 
@@ -46,6 +44,8 @@ public class TestFileUtil {
 
 		in.close();
 		out.close();
+		
+		return outFile;
 	}
 
 	/**
@@ -55,9 +55,9 @@ public class TestFileUtil {
 	 * @return 
 	 * @throws IOException
 	 */
-	public static void copyIntoDirectory(File from, File toDirectory) throws IOException{
+	public static File copyIntoDirectory(File from, File toDirectory) throws IOException{
 		if(from.isFile()){
-			copyFileToDirectory(from, toDirectory);
+			return copyFileToDirectory(from, toDirectory);
 		}else{
 			if(!toDirectory.exists()){
 				toDirectory.mkdir();
@@ -69,6 +69,8 @@ public class TestFileUtil {
 				
 				copyIntoDirectory(srcFile, destFile);
 			}
+			
+			return new File(toDirectory, from.getName());
 		}
 	}
 	

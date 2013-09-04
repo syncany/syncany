@@ -84,7 +84,7 @@ public class TestAssertUtil {
 		}
 		
 		if (actualFile.length() != expectedFile.length()) {
-			fail(message+": Actual file size ("+actualFile.length()+") does not match expected file size ("+expectedFile.length()+")");
+			fail(message+": Actual file size ("+actualFile+" = "+actualFile.length()+") does not match expected file size ("+expectedFile+" = "+expectedFile.length()+")");
 		}
 		
 		byte[] expectedFileChecksum = TestFileUtil.createChecksum(expectedFile);
@@ -153,6 +153,6 @@ public class TestAssertUtil {
 	}	
 
 	private static void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
-		assertCollectionEquals("FileHistory objects in written/read database version different.", writtenFileHistories, readFileHistories);
+		assertTrue("FileHistory objects in written/read database version different.", writtenFileHistories.containsAll(readFileHistories));
 	}		
 }

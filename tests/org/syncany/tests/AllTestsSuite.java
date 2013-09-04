@@ -16,6 +16,8 @@ import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.scenarios.Scenario2Test;
 import org.syncany.tests.scenarios.Scenario1Test;
 import org.syncany.tests.scenarios.NoConflictsScenarioTest;
+import org.syncany.tests.scenarios.Scenario3Test;
+import org.syncany.tests.scenarios.Scenario4Test;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -40,8 +42,10 @@ import org.syncany.tests.scenarios.NoConflictsScenarioTest;
 	SyncUpOperationTest.class,
 	
 	// Scenarios
-	Scenario2Test.class,
 	Scenario1Test.class,
+	Scenario2Test.class,
+	Scenario3Test.class,
+	Scenario4Test.class,
 	NoConflictsScenarioTest.class
 })
 public class AllTestsSuite {
