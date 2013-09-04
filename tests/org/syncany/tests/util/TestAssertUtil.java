@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.internal.ArrayComparisonFailure;
+import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
@@ -93,9 +94,9 @@ public class TestAssertUtil {
 		assertArrayEquals(message+": Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);		
 	}
 	
-	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException {
-		Database expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile);
-		Database actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile);
+	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {
+		Database expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
+		Database actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
 		
 		assertDatabaseEquals(expectedDatabase, actualDatabase);
 	}

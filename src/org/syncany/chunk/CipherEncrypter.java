@@ -38,11 +38,11 @@ public class CipherEncrypter extends Transformer {
         this(encryptCipher, decryptCipher, null);
     }
     
-    public CipherEncrypter(Cipher cipher, Cipher cipherDec, Transformer nextTransformer) {
+    public CipherEncrypter(Cipher encryptCipher, Cipher decryptCipher, Transformer nextTransformer) {
         super(nextTransformer);
         
-        this.encryptCipher = cipher;
-        this.decryptCipher = cipherDec;
+        this.encryptCipher = encryptCipher;
+        this.decryptCipher = decryptCipher;
     }
 
     public Cipher getEncryptCipher() {

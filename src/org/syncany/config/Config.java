@@ -23,7 +23,11 @@ import java.io.InputStream;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import javax.crypto.Cipher;
+
 import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CipherEncrypter;
+import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
 import org.syncany.chunk.MultiChunker;
@@ -92,7 +96,7 @@ public class Config {
 	}
 	
 	public Config(String password) throws Exception {
-		initChunkingFrameworkDefaults();		        
+		initChunkingFrameworkDefaults(password);		        
 		
     	encryption = new Encryption();	 	
     	encryption.setPassword(password); 
@@ -108,15 +112,21 @@ public class Config {
 		cache = new Cache(appCacheDir);
 	}
 
-	private void initChunkingFramework(ConfigTO configTO) {
+	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
 		// TODO [low] make chunking options configurable
-		initChunkingFrameworkDefaults();
+		initChunkingFrameworkDefaults(configTO.getEncryption().getPass());
 	}
 	
-	private void initChunkingFrameworkDefaults() {
+	private void initChunkingFrameworkDefaults(String password) throws EncryptionException {
+		// Create ciphers
+		Encryption encryption = new Encryption();
+		Cipher encCipher = encryption.createEncCipher(password);
+		Cipher decCipher = encryption.createDecCipher(password);
+		
+		// Chunking framework		
 		chunker = new FixedOffsetChunker(16 * 1024);
-		multiChunker = new TarMultiChunker(512 * 1024);//new CustomMultiChunker(512 * 1024);
-		transformer = new GzipCompressor(); // TODO [high] Use encryption!    
+		multiChunker = new CustomMultiChunker(512 * 1024);//new TarMultiChunker(512 * 1024);
+		transformer = new GzipCompressor(new CipherEncrypter(encCipher, decCipher));//new GzipCompressor(); // TODO [high] Use encryption!    
 	}
 	
 	private void initEncryption(ConfigTO configTO) throws EncryptionException {

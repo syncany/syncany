@@ -19,7 +19,6 @@ package org.syncany.util;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,20 +27,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import org.syncany.config.Encryption;
-import org.syncany.config.EncryptionException;
 
 /**
  *
@@ -361,54 +352,6 @@ public class FileUtil {
 
         success = success && file.delete();
         return success;
-    }
-
-    public static byte[] gzip(byte[] content) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
-        gzipOutputStream.write(content);
-        gzipOutputStream.close();
-
-        return byteArrayOutputStream.toByteArray();
-    }
-
-    public static byte[] gunzip(byte[] contentBytes) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        copy(new GZIPInputStream(new ByteArrayInputStream(contentBytes)), out);
-
-        return out.toByteArray();
-    }
-
-    public static byte[] unpack(byte[] packed, Encryption enc)
-            throws IOException, EncryptionException {
-
-        byte[] decrypted = enc.decrypt(packed);
-        return FileUtil.gunzip(decrypted);
-    }
-
-    public static byte[] pack(byte[] raw, Encryption enc)
-            throws IOException, EncryptionException {
-
-        byte[] gzipped = FileUtil.gzip(raw);
-        return enc.encrypt(gzipped);
-    }
-
-    public static boolean checkForWriteLock(File file){
-    	try {
-			FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
-			FileLock lock = channel.tryLock();
-			if(lock == null)
-				return false;
-			
-			lock.release();
-			
-			return true;
-		} catch (FileNotFoundException e) {
-			return false;
-		} catch (IOException e) {
-			return false;
-		}
     }
 }
 

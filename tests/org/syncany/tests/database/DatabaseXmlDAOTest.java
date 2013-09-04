@@ -299,8 +299,8 @@ public class DatabaseXmlDAOTest {
 	
 	private Database writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + new Random().nextInt(Integer.MAX_VALUE));
-		TestDatabaseUtil.writeDatabaseFileToDisk(writtenDatabase, writtenDatabaseFile);
-		Database readDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(writtenDatabaseFile);
+		TestDatabaseUtil.writeDatabaseFileToDisk(writtenDatabase, writtenDatabaseFile, null);
+		Database readDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(writtenDatabaseFile, null);
 		
 		TestAssertUtil.assertDatabaseEquals(writtenDatabase, readDatabase);
 		

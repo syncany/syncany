@@ -2,6 +2,7 @@ package org.syncany.database;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +16,8 @@ import java.util.logging.Logger;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.syncany.chunk.Transformer;
+import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.VectorClock.VectorClockComparison;
@@ -27,6 +30,16 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 	private static final int XML_FORMAT_VERSION = 1;
 	private static final Logger logger = Logger.getLogger(DatabaseXmlDAO.class.getSimpleName());
 
+	private Transformer transformer;
+	
+	public DatabaseXmlDAO() {
+		this(null);
+	}
+	
+	public DatabaseXmlDAO(Transformer transformer) {
+		this.transformer = transformer;
+	}
+	
 	@Override
 	public void save(Database db, File destinationFile) throws IOException {
 		save(db, null, null, destinationFile);
@@ -34,8 +47,14 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 
 	@Override
 	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {
-		FileWriter fileWriter = new FileWriter(destinationFile);
-		PrintWriter out = new PrintWriter(fileWriter);
+		PrintWriter out;
+		
+		if (transformer == null) {
+			out = new PrintWriter(new FileWriter(destinationFile));
+		}
+		else {
+			out = new PrintWriter(transformer.transform(new FileOutputStream(destinationFile)));
+		}
 		
 		out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		out.print("<database version=\""+XML_FORMAT_VERSION+"\">\n");
@@ -168,7 +187,14 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 	
 	@Override
 	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
-        InputStream is = new FileInputStream(databaseFile);
+        InputStream is;
+        
+		if (transformer == null) {
+			is = new FileInputStream(databaseFile);
+		}
+		else {
+			is = transformer.transform(new FileInputStream(databaseFile));
+		}
         
         try {
 			logger.log(Level.INFO, "- Loading database from "+databaseFile+" ...");

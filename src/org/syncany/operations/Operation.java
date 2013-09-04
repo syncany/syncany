@@ -22,7 +22,7 @@ public abstract class Operation {
 	protected Database loadLocalDatabase(File localDatabaseFile) throws IOException {
 		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
 		
-		DatabaseDAO dao = new DatabaseXmlDAO();
+		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
 		Database db = new Database();
 
 		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
@@ -37,7 +37,7 @@ public abstract class Operation {
 	}	
 	
 	protected void saveLocalDatabase(Database db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
-		DatabaseDAO dao = new DatabaseXmlDAO();
+		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}	
 	

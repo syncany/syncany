@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 
 
 public class ConfigTO {
+	private Boolean encryptionEnabled;
 	//Directory which contains all files which shall be synced with remote repo 
 	private String localDir;
 	//Home / Config directory of syncany 
@@ -31,6 +32,10 @@ public class ConfigTO {
 			throw new ConfigException("Config file does not exist or is invalid: "+file, ex);
 		}
 	}	
+	
+	public Boolean isEncryptionEnabled() {
+		return (encryptionEnabled != null) ? encryptionEnabled : true;
+	}
 	
 	public String getLocalDir() {
 		return localDir;

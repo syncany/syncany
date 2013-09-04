@@ -22,12 +22,12 @@ public class TestClient extends Client {
 	}
 	
 	public void createNewFiles() throws IOException {
-		TestFileUtil.generateRandomBinaryFilesInDirectory(config.getLocalDir(), 25*1024, 20);		
+		TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 25*1024, 20);		
 	}
 	
 	public void createNewFile(String name) throws IOException {
 		File localFile = getLocalFile(name);		
-		TestFileUtil.generateRandomBinaryFile(localFile, 50*1024);
+		TestFileUtil.createRandomFile(localFile, 50*1024);
 	}
 	
 	public void createNewFolder(String name) {

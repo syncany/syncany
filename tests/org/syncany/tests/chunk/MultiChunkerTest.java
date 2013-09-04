@@ -66,8 +66,8 @@ public class MultiChunkerTest {
 		int fileAmountSizeSmall = 2;
 		int fileAmountSizeBig = 3;
 
-		List<File> files = TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
-		files.addAll(TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
+		List<File> files = TestFileUtil.createRandomFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
+		files.addAll(TestFileUtil.createRandomFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
 		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, chunker, multiChunker);
 

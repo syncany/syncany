@@ -41,7 +41,7 @@ public class SyncUpOperationTest {
 		int fileSize = 1230 * 1024;
 		int fileAmount = 3;
 
-		List<File> originalFiles = TestFileUtil.generateRandomBinaryFilesInDirectory(testConfig.getLocalDir(), fileSize,
+		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(testConfig.getLocalDir(), fileSize,
 				fileAmount);
 		
 		// Run!
@@ -58,7 +58,7 @@ public class SyncUpOperationTest {
 		assertTrue(remoteDatabaseFile.exists());
 		assertEquals(TestFileUtil.getMD5Checksum(localDatabaseFile), TestFileUtil.getMD5Checksum(remoteDatabaseFile));
 		
-		DatabaseDAO dDAO = new DatabaseXmlDAO();
+		DatabaseDAO dDAO = new DatabaseXmlDAO(testConfig.getTransformer());
 		Database localDatabase = new Database();
 		Database remoteDatabase = new Database();
 		dDAO.load(localDatabase, localDatabaseFile);

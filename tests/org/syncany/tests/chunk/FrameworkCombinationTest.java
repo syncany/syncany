@@ -52,7 +52,7 @@ public class FrameworkCombinationTest {
 		setup();
 		
 		// Test
-		List<File> inputFiles = TestFileUtil.generateRandomBinaryFilesInDirectory(tempDir, 10*1024, 5);
+		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempDir, 10*1024, 5);
 		Map<File, ByteArray> inputFilesWithChecksums = TestFileUtil.createChecksums(inputFiles);
 		
 		for(FrameworkCombination combination : combinations) {

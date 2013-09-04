@@ -23,7 +23,7 @@ public class Scenario2Test {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientB.moveFile("A-original", "B-moved");
 		clientB.up();
@@ -31,7 +31,7 @@ public class Scenario2Test {
 		// A down/move/up
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientA.moveFile("B-moved", "A-moved");
 		clientA.up();
@@ -39,12 +39,12 @@ public class Scenario2Test {
 		// B down only
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// A down/move/up
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientA.moveFile("A-moved", "A-moved-again");
 		clientA.up();
@@ -52,7 +52,7 @@ public class Scenario2Test {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientB.moveFile("A-moved-again", "B-moved"); // same filename as above!
 		clientB.up();
@@ -60,7 +60,7 @@ public class Scenario2Test {
 		// A down/move/up
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientA.moveFile("B-moved", "A-moved");  // same filename as above!
 		clientA.up();
@@ -68,7 +68,7 @@ public class Scenario2Test {
 		// B down only
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// Tear down
 		clientA.cleanup();

@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.chunk.Transformer;
 import org.syncany.database.Branch;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
@@ -84,17 +85,17 @@ public class TestDatabaseUtil {
 		return branch;
 	}
 	
-	public static Database readDatabaseFileFromDisk(File databaseFile) throws IOException {
+	public static Database readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
 		Database db = new Database();
 		
-		DatabaseDAO dao = new DatabaseXmlDAO();
+		DatabaseDAO dao = new DatabaseXmlDAO(transformer);
 		dao.load(db, databaseFile);
 		
 		return db;
 	}
 	
-	public static void writeDatabaseFileToDisk(Database db, File writtenDatabaseFile) throws IOException {
-		DatabaseDAO dao = new DatabaseXmlDAO();
+	public static void writeDatabaseFileToDisk(Database db, File writtenDatabaseFile, Transformer transformer) throws IOException {
+		DatabaseDAO dao = new DatabaseXmlDAO(transformer);
 		dao.save(db, writtenDatabaseFile);
 	}
 	

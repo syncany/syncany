@@ -44,7 +44,7 @@ public class TTTDChunkerTest {
 		final int AVG_CHUNK_SIZE = 512*1024;
 		
 		// Setup				
-		File inputRandom5MBFile = TestFileUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);
+		File inputRandom5MBFile = TestFileUtil.createRandomFileInDirectory(tempDir, TOTAL_FILE_SIZE);
 		
 		File outputCopyOfRandom5MBFile = TestFileUtil.createRandomFileInDirectory(tempDir);
 		FileOutputStream outputCopyOfRandom5MBFileOutputStream = new FileOutputStream(outputCopyOfRandom5MBFile);
@@ -90,7 +90,7 @@ public class TTTDChunkerTest {
 		final int CHUNK_SIZE = 512*1024;
 		
 		// Setup				
-		File inputFile = TestFileUtil.generateRandomBinaryFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
+		File inputFile = TestFileUtil.createRandomFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
 		Chunker chunker = new TTTDChunker(CHUNK_SIZE);
 		
 		// Create chunks

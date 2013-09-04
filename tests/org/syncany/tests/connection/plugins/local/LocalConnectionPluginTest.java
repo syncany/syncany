@@ -168,7 +168,7 @@ public class LocalConnectionPluginTest {
 		});
 		
 		for (File remoteFileToCreate : remoteFiles) {
-			TestFileUtil.generateRandomBinaryFile(remoteFileToCreate, 10*1024);
+			TestFileUtil.createRandomFile(remoteFileToCreate, 10*1024);
 		}
 		
 		// Connect and list
@@ -181,7 +181,7 @@ public class LocalConnectionPluginTest {
 
 	private Map<String, File> generateTestInputFile() throws IOException {
 		Map<String, File> inputFilesMap = new HashMap<String, File>();
-		List<File> inputFiles = TestFileUtil.generateRandomBinaryFilesInDirectory(tempLocalSourceDir, 50*1024, 10);
+		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempLocalSourceDir, 50*1024, 10);
 		
 		for (File file : inputFiles) {
 			inputFilesMap.put(file.getName(), file);

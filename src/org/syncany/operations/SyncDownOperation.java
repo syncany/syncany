@@ -338,7 +338,7 @@ public class SyncDownOperation extends Operation {
 		}
 		
 		// Load individual databases for branch ranges
-		DatabaseDAO databaseDAO = new DatabaseXmlDAO();
+		DatabaseDAO databaseDAO = new DatabaseXmlDAO(config.getTransformer());
 		Database winnerBranchDatabase = new Database(); // Database cannot be reused, since these might be different clients
 		
 		String clientName = null;
@@ -388,7 +388,7 @@ public class SyncDownOperation extends Operation {
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
-		DatabaseDAO dbDAO = new DatabaseXmlDAO();
+		DatabaseDAO dbDAO = new DatabaseXmlDAO(config.getTransformer());
 		
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients

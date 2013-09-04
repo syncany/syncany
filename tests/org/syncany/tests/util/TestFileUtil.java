@@ -172,7 +172,7 @@ public class TestFileUtil {
 				File newFile = new File(currentDir+"/file"+i);
 				int newFileSize = (int) Math.round(1000.0+Math.random()*500000.0);
 				
-				generateRandomBinaryFile(newFile, newFileSize);				
+				createRandomFile(newFile, newFileSize);				
 				randomFiles.add(newFile);
 			}
 			else {
@@ -214,24 +214,24 @@ public class TestFileUtil {
 		return randomFiles;
 	}	
 	
-	public static List<File> generateRandomBinaryFilesInDirectory(File rootFolder, long sizeInBytes, int numOfFiles) throws IOException{
+	public static List<File> createRandomFilesInDirectory(File rootFolder, long sizeInBytes, int numOfFiles) throws IOException{
 		List<File> newRandomFiles = new ArrayList<File>();
 		
 		for(int i = 0; i <numOfFiles; i++){
-			newRandomFiles.add(generateRandomBinaryFileInDirectory(rootFolder, sizeInBytes));
+			newRandomFiles.add(createRandomFileInDirectory(rootFolder, sizeInBytes));
 		}
 		
 		return newRandomFiles;
 	}
 	
-	public static File generateRandomBinaryFileInDirectory(File rootFolder, long sizeInBytes) throws IOException{		
+	public static File createRandomFileInDirectory(File rootFolder, long sizeInBytes) throws IOException{		
 		File newRandomFile = createRandomFileInDirectory(rootFolder);		
-		generateRandomBinaryFile(newRandomFile, sizeInBytes);
+		createRandomFile(newRandomFile, sizeInBytes);
 		
 		return newRandomFile;
 	}
 	
-	public static void generateRandomBinaryFile(File fileToCreate, long sizeInBytes) throws IOException{
+	public static void createRandomFile(File fileToCreate, long sizeInBytes) throws IOException{
 		if(fileToCreate!=null && fileToCreate.exists()){
 			throw new IOException("File already exists");
 		}
@@ -253,7 +253,7 @@ public class TestFileUtil {
 		fos.close();
 	}
 	
-	public static void generateBinaryFile(File fileToCreate, byte[] repeatFileContents, long sizeInBytes) throws IOException {
+	public static void createFile(File fileToCreate, byte[] repeatFileContents, long sizeInBytes) throws IOException {
 		if(fileToCreate!=null && fileToCreate.exists()){
 			throw new IOException("File already exists");
 		}

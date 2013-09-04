@@ -1,11 +1,8 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
-
-import java.io.File;
-import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -13,9 +10,9 @@ import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class Scenario4Test {
+public class Scenario5Test {
 	@Test
-	public void testEmptyFolderCreateAndSync() throws Exception {
+	public void testCreateFileTreeAndMoveSubfolder() throws Exception {
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();
 		
@@ -24,29 +21,23 @@ public class Scenario4Test {
 		
 		// Run 
 		clientA.createNewFolder("A-folder1");
-		clientA.createNewFolder("A-folder2");
-		clientA.createNewFolder("A-folder3");
+		clientA.createNewFolder("A-folder1/A-subfolder1");
+		clientA.createNewFolder("A-folder1/A-subfolder2");
+		clientA.createNewFolder("A-folder1/A-subfolder2/A-subsubfolder1");
+		clientA.createNewFolder("A-folder1/A-subfolder2/A-subsubfolder2");
+		TestFileUtil.createRandomFilesInDirectory(clientA.getLocalFile("A-folder1/A-subfolder1"), 500*1024, 15);
 		clientA.up();		
 		
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
-		clientB.createNewFolder("B-folder4");
-		clientB.createNewFolder("B-folder5");
+		clientB.moveFile("A-folder1/A-subfolder1", "A-folder1/A-subfolder2/B-subsubfolder1");
 		clientB.up();
-		
-		File beforeUpDatabaseFile = TestFileUtil.copyIntoDirectory(clientB.getLocalDatabaseFile(), clientB.getConfig().getAppCacheDir()); 
-		clientB.up(); // double-up, has caused problems
-		assertFileEquals("Nothing changed. Local database file should not change.", beforeUpDatabaseFile, clientB.getLocalDatabaseFile());
 		
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
-		
-		Map<String, File> beforeSyncDownFileList = clientB.getLocalFiles();
-		clientA.down(); // double-down, has caused problems		
-		assertFileListEquals("No change in file lists expected. Nothing changed", beforeSyncDownFileList, clientA.getLocalFiles()); 				
 		
 		// Tear down
 		clientA.cleanup();

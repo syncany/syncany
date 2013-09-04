@@ -22,10 +22,16 @@ package org.syncany.config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 import java.io.UnsupportedEncodingException;
+import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -55,7 +61,7 @@ public class Encryption {
  
     public Cipher createEncCipher(byte[] salt) throws EncryptionException {
         try {        
-            SecretKeySpec keySpec = createKeySpec(salt);
+            Key keySpec = createKeySpec(salt);
 
             Cipher cipher = Cipher.getInstance(cipherStr);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec);        
@@ -78,7 +84,7 @@ public class Encryption {
     
     public Cipher createDecCipher(byte[] salt) throws EncryptionException {
         try {
-            SecretKeySpec keySpec = createKeySpec(salt);
+            Key keySpec = createKeySpec(salt);
 
             Cipher cipher = Cipher.getInstance(cipherStr);
             cipher.init(Cipher.DECRYPT_MODE, keySpec);        
@@ -179,11 +185,22 @@ public class Encryption {
         }
     }
     
+    private Key createKeySpec_NOT_YET_ACTIVE(byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    	SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        KeySpec keyspec = new PBEKeySpec(password.toCharArray(), salt, 1000, 128);
+        Key key = factory.generateSecret(keyspec);
+        System.out.println(key.getClass().getName());
+        System.out.println(Arrays.toString(key.getEncoded()));
+        
+        return key;
+    }
+    
     // TODO [medium] Use appropriate key derivation function (PBKDF2)
     // TODO [medium] Use different key for every multichunk
     // TODO [high] encrypt database files
     // see http://stackoverflow.com/questions/8674018/pbkdf2-with-bouncycastle-in-java
-    private SecretKeySpec createKeySpec(byte[] salt) 
+    @Deprecated
+    private Key createKeySpec(byte[] salt) 
             throws NoSuchAlgorithmException, UnsupportedEncodingException, EncryptionException {
         
         if (keylength % 8 != 0) {
