@@ -316,7 +316,101 @@ public class DatabaseReconciliator {
 		return null;
 	}
 
-	public Branches stitchRemoteBranches(Branches unstitchedRemoteBranches, String localClientName, Branch localBranch) {
+	public Branches stitchBranches(Branches unstitchedUnknownBranches, String localClientName, Branch localBranch) {
+		Branches allBranches = unstitchedUnknownBranches.clone();
+		
+		Branches stitchedUnknownBranches = new Branches();
+		
+		for (String remoteClientName : allBranches.getClients()) {
+			logger.log(Level.INFO, "  + Stitching {0}, going backwards ..", remoteClientName);	
+			List<DatabaseVersionHeader> reverseStitchedBranch = new ArrayList<DatabaseVersionHeader>();
+			Branch branch = allBranches.getBranch(remoteClientName);
+			logger.log(Level.INFO, "    - Current branch is: "+branch);
+			
+			// Interweave deltas
+			for (int i=branch.size()-1; i>=0; i--) {
+				DatabaseVersionHeader databaseVersionHeader = branch.get(i);				
+
+				logger.log(Level.INFO, "    - Adding "+databaseVersionHeader+" (from "+remoteClientName+"'s delta branch)");
+				reverseStitchedBranch.add(databaseVersionHeader);
+				
+				while (databaseVersionHeader.getPreviousClient() != null && !remoteClientName.equals(databaseVersionHeader.getPreviousClient())) {
+					Branch previousClientBranch = allBranches.getBranch(databaseVersionHeader.getPreviousClient());
+
+					if (previousClientBranch == null) {
+						break; // The rest must be in the local branch
+					}
+					 
+					DatabaseVersionHeader previousDatabaseVersionHeader = previousClientBranch.get(databaseVersionHeader.getPreviousVectorClock());
+
+					if (previousDatabaseVersionHeader == null) {
+						//throw new RuntimeException("Unable to find previous database version header in branch of '"+databaseVersionHeader.getPreviousClient()+"' using vector clock "+databaseVersionHeader.getPreviousVectorClock());
+						break; // The rest must be in the local branch
+					}
+					
+					logger.log(Level.INFO, "    - Adding "+previousDatabaseVersionHeader+" (from "+databaseVersionHeader.getPreviousClient()+")");					
+					reverseStitchedBranch.add(previousDatabaseVersionHeader);
+					
+					databaseVersionHeader = previousDatabaseVersionHeader;
+				}
+			}			
+			
+			// Attach local version's part (if necessary)
+			boolean firstRemoteHeadersPreviousVectorClockEmpty = reverseStitchedBranch.size() > 0
+					&& reverseStitchedBranch.get(reverseStitchedBranch.size()-1).getPreviousVectorClock().size() > 0;
+			
+			boolean localBranchNotEmpty = localBranch.size() > 0;
+			
+			if (firstRemoteHeadersPreviousVectorClockEmpty && localBranchNotEmpty) {				
+				DatabaseVersionHeader remoteFirstDatabaseVersionHeader = reverseStitchedBranch.get(reverseStitchedBranch.size()-1);
+				VectorClock remotePossiblyOverlappingVectorClock = remoteFirstDatabaseVersionHeader.getPreviousVectorClock();
+				
+				boolean foundLocalOverlap = false;
+				
+				for (int localBranchPos=localBranch.size()-1; localBranchPos>=0; localBranchPos--) {				
+					DatabaseVersionHeader localLastDatabaseVersionHeader = localBranch.get(localBranchPos);
+					VectorClock localLastVectorClock = localLastDatabaseVersionHeader.getVectorClock();
+					
+					// They overlap! Attach!
+					if (VectorClock.compare(localLastVectorClock, remotePossiblyOverlappingVectorClock) == VectorClockComparison.EQUAL) {					
+						for (int i=localBranchPos; i>=0; i--) {						
+							DatabaseVersionHeader localDatabaseVersionHeader = localBranch.get(i);
+							
+							logger.log(Level.INFO, "    - Adding "+localDatabaseVersionHeader+" (from local branch, i.e. from "+localClientName+")");						
+							reverseStitchedBranch.add(localDatabaseVersionHeader);
+						} 
+						
+						foundLocalOverlap = true;
+						break;
+					}	
+				}
+				
+				if (!foundLocalOverlap) {
+					logger.log(Level.INFO, "    - Found NO OVERLAP with local branch for first remote version "+remoteFirstDatabaseVersionHeader);
+					logger.log(Level.INFO, "      --> Disconnected branch -- due to previous conflict. Emptying branch contents. SEEMS IRRELEVANT!");
+					reverseStitchedBranch.clear();
+					
+					// TODO Is this right?
+				}
+			}
+			
+			// Now reverse again
+			Branch stitchedBranch = new Branch();
+			
+			for (int i=reverseStitchedBranch.size()-1; i>=0; i--) {
+				stitchedBranch.add(reverseStitchedBranch.get(i));
+			}
+			
+			logger.log(Level.INFO, "    - Stitched branch is: "+stitchedBranch);
+			
+			stitchedUnknownBranches.add(remoteClientName, stitchedBranch);
+		}
+		
+		return stitchedUnknownBranches;
+	}
+	
+	@Deprecated
+	public Branches stitchRemoteBranchesOLD_REMOTE_ONLY(Branches unstitchedRemoteBranches, String localClientName, Branch localBranch) {
 		Branches allBranches = unstitchedRemoteBranches.clone();
 		allBranches.add(localClientName, localBranch);
 		

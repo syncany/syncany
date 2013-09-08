@@ -54,7 +54,7 @@ public class Deduper {
 						if (multiChunk == null) {
 							File multiChunkFile = listener.getMultiChunkFile(chunk.getChecksum());
 							multiChunk = multiChunker.createMultiChunk(chunk.getChecksum(), 
-								transformer.transform(new FileOutputStream(multiChunkFile)));
+								transformer.createOutputStream(new FileOutputStream(multiChunkFile)));
 
 							listener.onOpenMultiChunk(multiChunk);
 						}

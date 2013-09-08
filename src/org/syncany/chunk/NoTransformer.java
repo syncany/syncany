@@ -28,22 +28,22 @@ import java.io.OutputStream;
 public class NoTransformer extends Transformer {
 
     @Override
-    public OutputStream transform(OutputStream out) throws IOException {
+    public OutputStream createOutputStream(OutputStream out) throws IOException {
         if (nextTransformer == null) {
             return out;
         }
         else {
-            return nextTransformer.transform(out);
+            return nextTransformer.createOutputStream(out);
         }
     }
 
     @Override
-    public InputStream transform(InputStream in) throws IOException {
+    public InputStream createInputStream(InputStream in) throws IOException {
         if (nextTransformer == null) {
             return in;
         }
         else {
-            return nextTransformer.transform(in);
+            return nextTransformer.createInputStream(in);
         }
     }
 

@@ -34,7 +34,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-
+// TODO [high] The encryption class needs major refactoring: implement salt/IV, and configurable encryption parameters 
 public class Encryption {	
 	
 	private String password;
@@ -45,18 +45,18 @@ public class Encryption {
     private Cipher encCipher;
     private Cipher decCipher;
 
-    public Encryption() {
+    public Encryption() throws EncryptionException {
         this("", Constants.DEFAULT_ENCRYPTION_CIPHER, Constants.DEFAULT_ENCRYPTION_KEYLENGTH); // default.
     }
 
-    public Encryption(String password, String cipherStr, int keylength) {
+    public Encryption(String password, String cipherStr, int keylength) throws EncryptionException {
         // All set by init()
         this.password = password;
         this.cipherStr = cipherStr;
         this.keylength = keylength;
 
-        encCipher = null;
-        decCipher = null;
+    	this.encCipher = createEncCipher((byte[]) null); // TODO [high] Refactor salting/IVs
+    	this.decCipher = createDecCipher((byte[]) null); // TODO [high] Refactor salting/IVs
     }
  
     public Cipher createEncCipher(byte[] salt) throws EncryptionException {
@@ -145,13 +145,14 @@ public class Encryption {
         this.password = password;
     }
     
+    @Deprecated
     public String getSalt() {
         return salt;
     }
 
+    @Deprecated
     public void setSalt(String salt) throws EncryptionException {
-    	encCipher = createEncCipher(salt);
-    	decCipher = createDecCipher(salt);
+
         this.salt = salt;
     }
 

@@ -62,12 +62,12 @@ public class CipherEncrypter extends Transformer {
 	}
 
 	@Override
-    public OutputStream transform(OutputStream out) throws IOException {
+    public OutputStream createOutputStream(OutputStream out) throws IOException {
         return new CipherOutputStream(out, encryptCipher);
     }
 
     @Override
-    public InputStream transform(InputStream in) throws IOException {
+    public InputStream createInputStream(InputStream in) throws IOException {
         return new CipherInputStream(in, decryptCipher);
     }
     

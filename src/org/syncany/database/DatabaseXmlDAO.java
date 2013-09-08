@@ -53,7 +53,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			out = new PrintWriter(new FileWriter(destinationFile));
 		}
 		else {
-			out = new PrintWriter(transformer.transform(new FileOutputStream(destinationFile)));
+			out = new PrintWriter(transformer.createOutputStream(new FileOutputStream(destinationFile)));
 		}
 		
 		out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -193,7 +193,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			is = new FileInputStream(databaseFile);
 		}
 		else {
-			is = transformer.transform(new FileInputStream(databaseFile));
+			is = transformer.createInputStream(new FileInputStream(databaseFile));
 		}
         
         try {

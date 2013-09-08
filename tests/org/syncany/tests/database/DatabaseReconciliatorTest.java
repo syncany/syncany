@@ -563,7 +563,7 @@ public class DatabaseReconciliatorTest {
 		}));		
 		
 		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
-		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(allBranches, "D", new Branch());
+		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchBranches(allBranches, "D", new Branch());
 		
 		Branches expectedStitchedBranches = new Branches();
 		
@@ -619,7 +619,7 @@ public class DatabaseReconciliatorTest {
 		}));		
 		
 		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
-		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchRemoteBranches(allBranches, "D", new Branch());
+		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchBranches(allBranches, "D", new Branch());
 		
 		Branches expectedStitchedBranches = new Branches();
 		
@@ -665,7 +665,7 @@ public class DatabaseReconciliatorTest {
 		unstitchedRemoteBranches.remove(localMachineName);
 
 
-		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unstitchedRemoteBranches, localMachineName, localBranch);
+		Branches stitchedRemoteBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
 
 		Branches allStitchedBranches = stitchedRemoteBranches.clone();
 		allStitchedBranches.add(localMachineName, localBranch);

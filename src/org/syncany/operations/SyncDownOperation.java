@@ -46,6 +46,11 @@ import org.syncany.util.StringUtil;
 public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
 	
+	private Database localDatabase;
+	private Branch localBranch;
+	private TransferManager transferManager;
+	private DatabaseReconciliator databaseReconciliator;
+	
 	public SyncDownOperation(Config config) {
 		super(config);
 	}	
@@ -54,12 +59,9 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync down' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");		
-		
-		File localDatabaseFile = new File(config.getAppDatabaseDir()+"/local.db");		
-		Database localDatabase = loadLocalDatabase(localDatabaseFile);
-		
-		// 0. Create TM
-		TransferManager transferManager = config.getConnection().createTransferManager();
+				
+		// 0. Load database and create TM
+		initOperationVariables();
 
 		// 1. Check which remote databases to download based on the last local vector clock		
 		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
@@ -76,109 +78,118 @@ public class SyncDownOperation extends Operation {
 		Branches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		
 		// 4. Determine winner branch
-		logger.log(Level.INFO, "Detect updates and conflicts ...");
-		logger.log(Level.INFO, "- DatabaseVersionUpdateDetector results:");
-		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
-		
-		Branch localBranch = localDatabase.getBranch();	
-		Branches stitchedRemoteBranches = databaseReconciliator.stitchRemoteBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
-		//  TODO FIXME IMPORTANT Does this stitching make all the other algorithms obsolete?
-		//  TODO FIXME IMPORTANT --> Couldn't findWinnersWinnersLastDatabaseVersionHeader algorithm (walk forward, compare) be used instead?                       
+		Branch winnersBranch = determineWinnerBranch(localDatabase, unknownRemoteBranches);		
+		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
 
-		Branches allStitchedBranches = stitchedRemoteBranches.clone();
-		allStitchedBranches.add(config.getMachineName(), localBranch);
+		// 5. Prune local stuff (if local conflicts exist)
+		pruneConflictingLocalBranch(winnersBranch);
+		
+		// 6. Apply winner's branch 
+		appyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
+		
+		logger.log(Level.INFO, "Sync down done.");
+	}		
+	
+	private void appyWinnersBranch(Branch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
+		Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
+		logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
+		
+		if (winnersApplyBranch.size() == 0) {
+			logger.log(Level.WARNING, "   ++++ NOTHING TO UPDATE FROM WINNER. This should not happen.");
+		}
+		else {
+			logger.log(Level.INFO, "- Loading winners database ...");				
+			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache); //readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
+			
+
+			// Now download and extract multichunks
+			Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, config.getCache());
+			downloadAndExtractMultiChunks(unknownMultiChunks);
+			
+			List<FileSystemAction> actions = determineFileSystemActions(localDatabase, winnersDatabase);
+			applyFileSystemActions(actions);
+							
+			// Add winners database to local database
+			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database! 
+			for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
+				logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
+				
+				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
+				localDatabase.addDatabaseVersion(applyDatabaseVersion);										
+			}	
+			
+
+			logger.log(Level.INFO, "- Saving local database to "+config.getAppDatabaseFile()+" ...");
+			saveLocalDatabase(localDatabase, config.getAppDatabaseFile());
+		}		
+	}
+
+	private void initOperationVariables() throws IOException {		
+		localDatabase = loadLocalDatabase(config.getAppDatabaseFile());
+		localBranch = localDatabase.getBranch();	
+
+		transferManager = config.getConnection().createTransferManager();		
+		databaseReconciliator = new DatabaseReconciliator();
+	}
+
+	private void pruneConflictingLocalBranch(Branch winnersBranch) throws StorageException {		
+		Branch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
+		logger.log(Level.INFO, "- Database versions to REMOVE locally: "+localPruneBranch);
+		
+		if (localPruneBranch.size() == 0) {
+			logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
+		}
+		else {
+			logger.log(Level.INFO, "  + Pruning databases locally ...");
+			
+			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
+				logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
+				localDatabase.removeDatabaseVersion(localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
+				
+				RemoteFile remoteFileToPrune = new RemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
+				logger.log(Level.INFO, "    * Deleting remote database file "+remoteFileToPrune+" ...");
+				transferManager.delete(remoteFileToPrune);
+				
+				// TODO [high] Also delete multichunks from this database version (OR better yet: reuse multichunks somehow!) 
+			}
+			
+			// TODO [medium] currently the loser deletes all its databases. It would be nicer if the old database versions could be marked as "old" so the branch is not forever lost, but it can be recreated later 
+			//XXXXXXXXXXXXXXXXXXXXXXXXX
+		}
+		
+	}
+
+	private Branch determineWinnerBranch(Database localDatabase, Branches unknownRemoteBranches) throws Exception {
+		logger.log(Level.INFO, "Detect updates and conflicts ...");
+		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
+				
+		logger.log(Level.INFO, "- Stitching branches ...");
+		Branches allStitchedBranches = databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 		
 		DatabaseVersionHeader lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);		
 		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);		
 		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
 		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
 		
-		logger.log(Level.FINER, "   + localBranch: "+localBranch);
-		logger.log(Level.FINER, "   + fullRemoteBranches: "+allStitchedBranches);
-		logger.log(Level.FINER, "   + unknownRemoteBranches: "+unknownRemoteBranches);
-		logger.log(Level.FINER, "   + allStitchedBranches: "+allStitchedBranches);
-		logger.log(Level.FINER, "   + lastCommonHeader: "+lastCommonHeader);
-		logger.log(Level.FINER, "   + firstConflictingHeaders: "+firstConflictingHeaders);
-		logger.log(Level.FINER, "   + winningFirstConflictingHeaders: "+winningFirstConflictingHeaders);
-		logger.log(Level.FINER, "   + winnersWinnersLastDatabaseVersionHeader: "+winnersWinnersLastDatabaseVersionHeader);
+		logger.log(Level.FINER, "- Database reconciliation results:");
+		logger.log(Level.FINER, "  + localBranch: "+localBranch);
+		logger.log(Level.FINER, "  + allStitchedBranches: "+allStitchedBranches);
+		logger.log(Level.FINER, "  + unknownRemoteBranches: "+unknownRemoteBranches);
+		logger.log(Level.FINER, "  + allStitchedBranches: "+allStitchedBranches);
+		logger.log(Level.FINER, "  + lastCommonHeader: "+lastCommonHeader);
+		logger.log(Level.FINER, "  + firstConflictingHeaders: "+firstConflictingHeaders);
+		logger.log(Level.FINER, "  + winningFirstConflictingHeaders: "+winningFirstConflictingHeaders);
+		logger.log(Level.FINER, "  + winnersWinnersLastDatabaseVersionHeader: "+winnersWinnersLastDatabaseVersionHeader);
 
 		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
 		Branch winnersBranch = allStitchedBranches.getBranch(winnersName);
 		
 		logger.log(Level.INFO, "- Compared branches: "+allStitchedBranches);
 		logger.log(Level.INFO, "- Winner is "+winnersName+" with branch "+winnersBranch);
-				
-		if (config.getMachineName().equals(winnersName)) {
-			if (winnersBranch.size() > localBranch.size()) {
-				throw new RuntimeException("TODO implement use case 'restore remote backup'");
-			}
-			
-			logger.log(Level.INFO, "- I won, nothing to do locally");
-		}
-		else {
-			logger.log(Level.INFO, "- Someone else won, now determine what to do ...");
-			
-			Branch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
-			logger.log(Level.INFO, "- Database versions to REMOVE locally: "+localPruneBranch);
-			
-			if (localPruneBranch.size() == 0) {
-				logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
-			}
-			else {
-				logger.log(Level.INFO, "  + Pruning databases locally ...");
-				
-				for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
-					logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
-					localDatabase.removeDatabaseVersion(localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
-					
-					RemoteFile remoteFileToPrune = new RemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
-					logger.log(Level.INFO, "    * Deleting remote database file "+remoteFileToPrune+" ...");
-					transferManager.delete(remoteFileToPrune);
-					
-					// TODO [high] Also delete multichunks from this database version (OR better yet: reuse multichunks somehow!) 
-				}
-				
-				// TODO [medium] currently the loser deletes all its databases. It would be nicer if the old database versions could be marked as "old" so the branch is not forever lost, but it can be recreated later 
-				//XXXXXXXXXXXXXXXXXXXXXXXXX
-			}
-			
-			Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
-			logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
-			
-			if (winnersApplyBranch.size() == 0) {
-				logger.log(Level.WARNING, "   ++++ NOTHING TO UPDATE FROM WINNER. This should not happen.");
-			}
-			else {
-				logger.log(Level.INFO, "- Loading winners database ...");				
-				Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache); //readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
-				
-
-				// Now download and extract multichunks
-				Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, config.getCache());
-				downloadAndExtractMultiChunks(unknownMultiChunks);
-				
-				List<FileSystemAction> actions = determineFileSystemActions(localDatabase, winnersDatabase);
-				applyFileSystemActions(actions);
-								
-				// Add winners database to local database
-				// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database! 
-				for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
-					logger.log(Level.INFO, "   + Applying database version "+applyDatabaseVersionHeader.getVectorClock());
-					
-					DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());									
-					localDatabase.addDatabaseVersion(applyDatabaseVersion);										
-				}	
-				
-
-				logger.log(Level.INFO, "- Saving local database to "+localDatabaseFile+" ...");
-				saveLocalDatabase(localDatabase, localDatabaseFile);
-			}
-			
-		}		
 		
-		logger.log(Level.INFO, "Sync down done.");
-	}		
-	
+		return winnersBranch;
+	}
+
 	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
@@ -274,7 +285,7 @@ public class SyncDownOperation extends Operation {
 			
 			logger.log(Level.INFO, "  + Extracting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			MultiChunk multiChunkInCache = config.getMultiChunker().createMultiChunk(
-					config.getTransformer().transform(new FileInputStream(localMultiChunkFile)));
+					config.getTransformer().createInputStream(new FileInputStream(localMultiChunkFile)));
 			Chunk extractedChunk = null;
 			
 			while (null != (extractedChunk = multiChunkInCache.read())) {

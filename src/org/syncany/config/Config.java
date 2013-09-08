@@ -31,7 +31,6 @@ import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
 import org.syncany.chunk.MultiChunker;
-import org.syncany.chunk.TarMultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
@@ -99,8 +98,8 @@ public class Config {
 		initChunkingFrameworkDefaults(password);		        
 		
     	encryption = new Encryption();	 	
-    	encryption.setPassword(password); 
-    	encryption.setSalt("SALT"); // TODO [medium] Use salt!			
+    	encryption.setPassword(password);  
+    	encryption.setSalt("SALT"); 			
 	}
 	
 	private void initDirectories(ConfigTO configTO) {
@@ -183,16 +182,8 @@ public class Config {
         this.connection = connection;
     }
 
-    public Encryption getEncryption() {
-        return encryption;
-    }
-
     public void setChunkSize(int chunkSize) {
         this.chunkSize = chunkSize;
-    }
-
-    public void setEncryption(Encryption encryption) {
-        this.encryption = encryption;
     }
 
     public Chunker getChunker() {
@@ -237,6 +228,10 @@ public class Config {
 
 	public File getAppDatabaseDir() {
 		return appDatabaseDir;
+	}
+	
+	public File getAppDatabaseFile() {
+		return new File(appDatabaseDir+File.separator+"local.db");	
 	}
 
 	public void setAppDatabaseDir(File appDatabaseDir) {

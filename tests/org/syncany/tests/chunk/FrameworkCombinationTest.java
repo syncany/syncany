@@ -214,7 +214,7 @@ public class FrameworkCombinationTest {
 			logger.log(Level.INFO, "- Extracting multichunk "+outputMultiChunkFile+" ...");
 			
 			MultiChunk outputMultiChunk = combination.multiChunker.createMultiChunk(
-					combination.transformer.transform(new FileInputStream(outputMultiChunkFile)));
+					combination.transformer.createInputStream(new FileInputStream(outputMultiChunkFile)));
 			
 			Chunk outputChunkInMultiChunk = null;
 			

@@ -49,22 +49,22 @@ public class GzipCompressor extends Transformer {
     }
         
     @Override
-    public OutputStream transform(OutputStream out) throws IOException {
+    public OutputStream createOutputStream(OutputStream out) throws IOException {
         if (nextTransformer == null) {
             return new GZIPOutputStreamEx(out, level);
         }
         else {
-            return new GZIPOutputStreamEx(nextTransformer.transform(out), level);
+            return new GZIPOutputStreamEx(nextTransformer.createOutputStream(out), level);
         }
     }
 
     @Override
-    public InputStream transform(InputStream in) throws IOException {
+    public InputStream createInputStream(InputStream in) throws IOException {
         if (nextTransformer == null) {
             return new GZIPInputStream(in);
         }
         else {
-            return new GZIPInputStream(nextTransformer.transform(in));
+            return new GZIPInputStream(nextTransformer.createInputStream(in));
         }
     }
     

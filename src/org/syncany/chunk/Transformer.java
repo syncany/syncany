@@ -36,8 +36,8 @@ public abstract class Transformer {
         this.nextTransformer = nextTransformer;
     }
     
-    public abstract OutputStream transform(OutputStream out) throws IOException;
-    public abstract InputStream transform(InputStream in) throws IOException;
+    public abstract OutputStream createOutputStream(OutputStream out) throws IOException;
+    public abstract InputStream createInputStream(InputStream in) throws IOException;
     
     @Override
     public abstract String toString();

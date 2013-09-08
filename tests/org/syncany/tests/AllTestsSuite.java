@@ -13,12 +13,13 @@ import org.syncany.tests.database.DatabaseXmlDAOTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.scenarios.Scenario2Test;
-import org.syncany.tests.scenarios.Scenario1Test;
-import org.syncany.tests.scenarios.NoConflictsScenarioTest;
-import org.syncany.tests.scenarios.Scenario3Test;
-import org.syncany.tests.scenarios.Scenario4Test;
-import org.syncany.tests.scenarios.Scenario5Test;
+import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
+import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
+import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
+import org.syncany.tests.scenarios.EvilCUpWithoutDownScenarioTest;
+import org.syncany.tests.scenarios.EmptyFolderScenarioTest;
+import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
+import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -43,12 +44,13 @@ import org.syncany.tests.scenarios.Scenario5Test;
 	SyncUpOperationTest.class,
 	
 	// Scenarios
-	Scenario1Test.class,
-	Scenario2Test.class,
-	Scenario3Test.class,
-	Scenario4Test.class,
-	Scenario5Test.class,
-	NoConflictsScenarioTest.class
+	MixedUpDownScenarioTest.class,
+	ManyRenamesScenarioTest.class,
+	EvilCUpWithoutDownScenarioTest.class,
+	EmptyFolderScenarioTest.class,
+	FileTreeMoveToSubfolderScenarioTest.class,
+	SingleFileNoConflictsScenarioTest.class,
+	SingleFolderNoConflictsScenarioTest.class
 })
 public class AllTestsSuite {
 	// This class executes all tests
