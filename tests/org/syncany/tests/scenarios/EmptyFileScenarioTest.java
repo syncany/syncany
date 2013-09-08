@@ -1,6 +1,5 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
@@ -24,7 +23,7 @@ public class EmptyFileScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		
 		// Run 
-		clientA.createNewFile("A-file1", 0);
+		clientA.createNewFile("A-file1.jpg", 0);
 		clientA.up();		
 		
 		clientB.down();
@@ -32,6 +31,7 @@ public class EmptyFileScenarioTest {
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientB.createNewFile("B-file2", 0);
+		clientB.moveFile("A-file1.jpg", "B-file1-moved");
 		clientB.up();
 		
 		File beforeUpDatabaseFile = TestFileUtil.copyIntoDirectory(clientB.getLocalDatabaseFile(), clientB.getConfig().getCacheDir()); 
@@ -40,7 +40,7 @@ public class EmptyFileScenarioTest {
 		
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
 		
 		Map<String, File> beforeSyncDownFileList = clientB.getLocalFiles();
 		clientA.down(); // double-down, has caused problems		

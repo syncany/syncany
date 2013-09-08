@@ -32,10 +32,5 @@ public abstract class AbstractTransferManager implements TransferManager {
 
     public Connection getConnection() {
         return connection;
-    }    
-    
-    @Override
-    public void clean() throws StorageException {
-        throw new UnsupportedOperationException("clean() not implemented yet.");
-    }    
+    }        
 }

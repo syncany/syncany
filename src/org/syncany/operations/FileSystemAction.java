@@ -2,6 +2,7 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
@@ -17,7 +18,7 @@ import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public abstract class FileSystemAction {
-	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName());
+	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName()); 
 	
 	protected Config config;
 	protected Database localDatabase;
@@ -98,15 +99,39 @@ public abstract class FileSystemAction {
 	protected void createConflictFile(FileVersion conflictingLocalVersion) {
 		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getFullName());
 		
-		String newConflictExtension = FileUtil.getExtension(conflictingLocalFile);
-		String newConflictBasename = FileUtil.getBasename(conflictingLocalFile)
-				+ " ("+conflictingLocalVersion.getCreatedBy()+"'s conflict version, "+conflictingLocalVersion.getLastModified()+")";
+		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictingLocalFile);
+		String conflictBasename = FileUtil.getBasename(conflictingLocalFile);
+		String conflictFileExtension = FileUtil.getExtension(conflictingLocalFile);		
+		String conflictCreatedBy = conflictingLocalVersion.getCreatedBy();
+		String conflictDate = new SimpleDateFormat("d MMM yyyy, h.mm a").format(conflictingLocalVersion.getLastModified()); 
+				
+		boolean conflictCreatedByEndsWithS = conflictingLocalVersion.getCreatedBy().endsWith("s");
+		boolean conflictFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
 		
-		String newFullName = ("".equals(newConflictExtension)) ? newConflictBasename : newConflictBasename+"."+newConflictExtension;			
-		File newConflictFile = new File(
-				  FileUtil.getAbsoluteParentDirectory(conflictingLocalFile)
-				+ File.separator
-				+ newFullName);
+		String newFullName;
+		
+		if (conflictFileHasExtension) {
+			if (conflictCreatedByEndsWithS) {
+				newFullName = String.format("%s (%s' conflicted copy, %s).%s", 
+						conflictBasename, conflictCreatedBy, conflictDate, conflictFileExtension);
+			}
+			else {
+				newFullName = String.format("%s (%s's conflicted copy, %s).%s", 
+						conflictBasename, conflictCreatedBy, conflictDate, conflictFileExtension);				
+			}
+		}
+		else {
+			if (conflictCreatedByEndsWithS) {
+				newFullName = String.format("%s (%s' conflicted copy, %s)", 
+						conflictBasename, conflictCreatedBy, conflictDate);
+			}
+			else {
+				newFullName = String.format("%s (%s's conflicted copy, %s)", 
+						conflictBasename, conflictCreatedBy, conflictDate);				
+			}
+		}
+					
+		File newConflictFile = new File(conflictDirectory+File.separator+newFullName);
 		
 		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
 		FileUtil.renameVia(conflictingLocalFile, newConflictFile);
@@ -150,6 +175,16 @@ public abstract class FileSystemAction {
 		}
 		
 		// Check size	
+		if (expectedLocalFileVersion.getChecksum() == null) { // File can be empty!
+			if (actualLocalFile.length() == 0) {
+				return true;
+			}
+			else {
+				logger.log(Level.INFO, "     - Unexpected file detected, empty file expected: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is 0");
+				return false;
+			}			
+		}
+		
 		FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
 		
 		if (expectedFileContent == null) {

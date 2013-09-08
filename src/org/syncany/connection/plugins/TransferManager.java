@@ -128,12 +128,4 @@ public interface TransferManager {
      *         authentication errors, etc
      */
     public Map<String, RemoteFile> list(String namePrefix) throws StorageException;
-
-    /**
-     * Deletes unused old files from the remote storage, especially temporary files.
-     *
-     * @throws StorageException If the connection fails due to no Internet connection,
-     *         authentication errors, etc
-     */
-    public void clean() throws StorageException;
 }

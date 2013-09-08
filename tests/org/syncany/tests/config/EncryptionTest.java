@@ -25,7 +25,7 @@ public class EncryptionTest {
 	private String salt = "saltsalt";
 	private String text = "lorem ipsum dolor sit amet";
 	
-	@Test()
+	@Test
 	public void testUnsaltedEncryption() throws Exception {
 		Encryption enc = new Encryption();
 		enc.setPassword(pw);
