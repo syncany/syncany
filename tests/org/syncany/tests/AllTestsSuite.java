@@ -13,6 +13,7 @@ import org.syncany.tests.database.DatabaseXmlDAOTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
+import org.syncany.tests.scenarios.EmptyFileScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
@@ -48,6 +49,7 @@ import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 	ManyRenamesScenarioTest.class,
 	EvilCUpWithoutDownScenarioTest.class,
 	EmptyFolderScenarioTest.class,
+	EmptyFileScenarioTest.class,
 	FileTreeMoveToSubfolderScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class

@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.Database;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -16,7 +17,6 @@ import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public abstract class FileSystemAction {
-	public static enum FileSystemActionType { FILE, FOLDER }; 
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName());
 	
 	protected Config config;
@@ -41,19 +41,18 @@ public abstract class FileSystemAction {
 		return fileVersion2;
 	}
 	
-	public FileSystemActionType getType() {
+	public FileType getType() {
 		if (fileVersion1 != null) {
-			return fileVersion1.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+			return fileVersion1.getType();
 		}
 		else {
-			return fileVersion2.isFolder() ? FileSystemActionType.FOLDER : FileSystemActionType.FILE;
+			return fileVersion2.getType();
 		}
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
-		if (!reconstructedFileVersion.isFolder()) {
+		if (reconstructedFileVersion.getType() == FileType.FILE) {
 			File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
-			FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
 
 			logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
 
@@ -63,11 +62,16 @@ public abstract class FileSystemAction {
 				fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
 			}
 			
-			Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
-			
-			for (ChunkEntryId chunkChecksum : fileChunks) {
-				File chunkFile = config.getCache().getChunkFile(chunkChecksum.getArray());
-				FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
+			// Create file
+			FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
+
+			if (fileContent != null) { // File can be empty!
+				Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
+				
+				for (ChunkEntryId chunkChecksum : fileChunks) {
+					File chunkFile = config.getCache().getChunkFile(chunkChecksum.getArray());
+					FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
+				}
 			}
 			
 			reconstructedFileOutputStream.close();		
@@ -119,10 +123,12 @@ public abstract class FileSystemAction {
 		}
 		
 		// Check file type (folder/file)
-		if (actualLocalFile.isDirectory() != expectedLocalFileVersion.isFolder()) {
+		if ((actualLocalFile.isDirectory() && expectedLocalFileVersion.getType() != FileType.FOLDER)
+				|| (actualLocalFile.isFile() && expectedLocalFileVersion.getType() != FileType.FILE)) {
+			
 			if (logger.isLoggable(Level.INFO)) {
 				String actualFileType = (actualLocalFile.isDirectory()) ? "DIRECTORY" : "FILE";
-				String expectedFileType = (expectedLocalFileVersion.isFolder()) ? "DIRECTORY" : "FILE";
+				String expectedFileType = expectedLocalFileVersion.getType().toString();
 				
 				logger.log(Level.INFO, "     - Unexpected file detected, is expected to be the same file type: "+actualLocalFile+" is "+actualFileType+", expected for "+expectedLocalFileVersion+" is "+expectedFileType);
 			}

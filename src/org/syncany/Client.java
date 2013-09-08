@@ -27,8 +27,8 @@ public class Client {
 		logger.log(Level.INFO, "Creating profile directories ...");
 		
 		config.getAppDir().mkdirs();
-		config.getAppCacheDir().mkdirs();
-		config.getAppDatabaseDir().mkdirs();
+		config.getCacheDir().mkdirs();
+		config.getDatabaseDir().mkdirs();
 	}		
 	
 	public void up() throws Exception {

@@ -37,7 +37,7 @@ public class SyncUpOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 		
 		logger.log(Level.INFO, "Loading local database ...");		
-		Database db = loadLocalDatabase(config.getAppDatabaseFile());
+		Database db = loadLocalDatabase(config.getDatabaseFile());
 		
 		logger.log(Level.INFO, "Starting index process ...");
 		List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir(), true);
@@ -50,8 +50,8 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "Adding newest database version "+lastDirtyDatabaseVersion.getHeader()+" to local database ...");
 			db.addDatabaseVersion(lastDirtyDatabaseVersion);
 	
-			logger.log(Level.INFO, "Saving local database to file "+config.getAppDatabaseFile()+" ...");
-			saveLocalDatabase(db, config.getAppDatabaseFile());
+			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ...");
+			saveLocalDatabase(db, config.getDatabaseFile());
 			
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());

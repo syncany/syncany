@@ -26,8 +26,12 @@ public class TestClient extends Client {
 	}
 	
 	public void createNewFile(String name) throws IOException {
+		createNewFile(name, 50*1024);
+	}
+	
+	public void createNewFile(String name, int size) throws IOException {
 		File localFile = getLocalFile(name);		
-		TestFileUtil.createRandomFile(localFile, 50*1024);
+		TestFileUtil.createRandomFile(localFile, size);
 	}
 	
 	public void createNewFolder(String name) {
@@ -73,6 +77,6 @@ public class TestClient extends Client {
 	}
 
 	public File getLocalDatabaseFile() {
-		return new File(config.getAppDatabaseDir()+File.separator+"local.db");
+		return new File(config.getDatabaseDir()+File.separator+"local.db");
 	}
 }

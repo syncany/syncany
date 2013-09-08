@@ -36,10 +36,10 @@ import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.operations.FileSystemAction.FileSystemActionType;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -119,13 +119,13 @@ public class SyncDownOperation extends Operation {
 			}	
 			
 
-			logger.log(Level.INFO, "- Saving local database to "+config.getAppDatabaseFile()+" ...");
-			saveLocalDatabase(localDatabase, config.getAppDatabaseFile());
+			logger.log(Level.INFO, "- Saving local database to "+config.getDatabaseFile()+" ...");
+			saveLocalDatabase(localDatabase, config.getDatabaseFile());
 		}		
 	}
 
 	private void initOperationVariables() throws IOException {		
-		localDatabase = loadLocalDatabase(config.getAppDatabaseFile());
+		localDatabase = loadLocalDatabase(config.getDatabaseFile());
 		localBranch = localDatabase.getBranch();	
 
 		transferManager = config.getConnection().createTransferManager();		
@@ -309,28 +309,30 @@ public class SyncDownOperation extends Operation {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();		
 		
 		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
-			if (!fileHistory.getLastVersion().isFolder()) {
+			if (fileHistory.getLastVersion().getType() == FileType.FILE) {
 				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
 				
 				if (fileContent == null) {
 					fileContent = winnersDatabase.getContent(fileHistory.getLastVersion().getChecksum());
 				}
 				
-				Collection<ChunkEntryId> fileChunks = fileContent.getChunks(); // TODO [high] change this to getChunkRefs, solves cross referencing in database versions
-				
-				for (ChunkEntryId chunkChecksum : fileChunks) {
-					File chunkFileInCache = cache.getChunkFile(chunkChecksum.getArray());
+				if (fileContent != null) { // File can be empty!					
+					Collection<ChunkEntryId> fileChunks = fileContent.getChunks(); // TODO [high] change this to getChunkRefs, solves cross referencing in database versions
 					
-					if (!chunkFileInCache.exists()) {
-						MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
+					for (ChunkEntryId chunkChecksum : fileChunks) {
+						File chunkFileInCache = cache.getChunkFile(chunkChecksum.getArray());
 						
-						if (multiChunkForChunk == null) {
-							multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum); 
-						}
-						
-						if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-							logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");
-							multiChunksToDownload.add(multiChunkForChunk);
+						if (!chunkFileInCache.exists()) {
+							MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
+							
+							if (multiChunkForChunk == null) {
+								multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum); 
+							}
+							
+							if (!multiChunksToDownload.contains(multiChunkForChunk)) {
+								logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");
+								multiChunksToDownload.add(multiChunkForChunk);
+							}
 						}
 					}
 				}
@@ -487,14 +489,14 @@ public class SyncDownOperation extends Operation {
 	 */
 	public static class FileSystemActionComparator implements Comparator<FileSystemAction> {
 		private static final Object[][] TARGET_ORDER =  new Object[][] {
-			new Object[] { DeleteFileSystemAction.class, FileSystemActionType.FILE}, 
-			new Object[] { NewFileSystemAction.class, FileSystemActionType.FOLDER },
-			new Object[] { RenameFileSystemAction.class, FileSystemActionType.FOLDER },
-			new Object[] { NewFileSystemAction.class, FileSystemActionType.FILE },
-			new Object[] { RenameFileSystemAction.class, FileSystemActionType.FILE },
-			new Object[] { ChangeFileSystemAction.class, FileSystemActionType.FOLDER },
-			new Object[] { ChangeFileSystemAction.class, FileSystemActionType.FILE },
-			new Object[] { DeleteFileSystemAction.class, FileSystemActionType.FOLDER },
+			new Object[] { DeleteFileSystemAction.class, FileType.FILE}, 
+			new Object[] { NewFileSystemAction.class, FileType.FOLDER },
+			new Object[] { RenameFileSystemAction.class, FileType.FOLDER },
+			new Object[] { NewFileSystemAction.class, FileType.FILE },
+			new Object[] { RenameFileSystemAction.class, FileType.FILE },
+			new Object[] { ChangeFileSystemAction.class, FileType.FOLDER },
+			new Object[] { ChangeFileSystemAction.class, FileType.FILE },
+			new Object[] { DeleteFileSystemAction.class, FileType.FOLDER },
 		};
 				
 		@Override
@@ -530,7 +532,7 @@ public class SyncDownOperation extends Operation {
 		private int determinePosition(FileSystemAction a) {
 			for (int i=0; i<TARGET_ORDER.length; i++) {
 				Class targetClass = (Class) TARGET_ORDER[i][0];
-				FileSystemActionType targetFileType = (FileSystemActionType) TARGET_ORDER[i][1];
+				FileType targetFileType = (FileType) TARGET_ORDER[i][1];
 				
 				if (a.getClass().equals(targetClass) && a.getType() == targetFileType) {					
 					return i;

@@ -1,5 +1,6 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
@@ -13,9 +14,9 @@ import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class EmptyFolderScenarioTest {
+public class EmptyFileScenarioTest {
 	@Test
-	public void testEmptyFolderCreateAndSync() throws Exception {
+	public void testEmptyFileCreateAndSync() throws Exception {
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();
 		
@@ -23,17 +24,14 @@ public class EmptyFolderScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		
 		// Run 
-		clientA.createNewFolder("A-folder1");
-		clientA.createNewFolder("A-folder2");
-		clientA.createNewFolder("A-folder3");
+		clientA.createNewFile("A-file1", 0);
 		clientA.up();		
 		
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
-		clientB.createNewFolder("B-folder4");
-		clientB.createNewFolder("B-folder5");
+		clientB.createNewFile("B-file2", 0);
 		clientB.up();
 		
 		File beforeUpDatabaseFile = TestFileUtil.copyIntoDirectory(clientB.getLocalDatabaseFile(), clientB.getConfig().getCacheDir()); 

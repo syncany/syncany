@@ -18,6 +18,7 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
@@ -206,6 +207,7 @@ public class DatabaseXmlDAOTest {
 		
         FileVersion versionA1 = new FileVersion();
         versionA1.setVersion(1L);
+        versionA1.setType(FileType.FOLDER);
         versionA1.setPath("Pictures/2013");
         versionA1.setName("New York Folder");
         versionA1.setStatus(FileStatus.NEW);
@@ -213,6 +215,7 @@ public class DatabaseXmlDAOTest {
         
         FileVersion versionA2 = new FileVersion();
         versionA2.setVersion(2L);
+        versionA2.setType(FileType.FOLDER);
         versionA2.setPath("Pictures/2013");
         versionA2.setName("New York");  
         versionA2.setStatus(FileStatus.RENAMED);
@@ -224,6 +227,7 @@ public class DatabaseXmlDAOTest {
 		
         FileVersion versionB1 = new FileVersion();
         versionB1.setVersion(1L);
+        versionB1.setType(FileType.FOLDER);
         versionB1.setPath("Pictures/2013");
         versionB1.setName("Egypt Folder");
         versionB1.setStatus(FileStatus.NEW);
@@ -231,6 +235,7 @@ public class DatabaseXmlDAOTest {
         
         FileVersion versionB2 = new FileVersion();
         versionB2.setVersion(2L);
+        versionB2.setType(FileType.FOLDER);
         versionB2.setPath("Pictures/2013");
         versionB2.setName("Egypt");        
         versionB2.setStatus(FileStatus.RENAMED);

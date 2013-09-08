@@ -9,7 +9,6 @@ import com.google.gson.Gson;
 
 
 public class ConfigTO {
-	private Boolean encryptionEnabled;
 	//Directory which contains all files which shall be synced with remote repo 
 	private String localDir;
 	//Home / Config directory of syncany 
@@ -32,11 +31,7 @@ public class ConfigTO {
 			throw new ConfigException("Config file does not exist or is invalid: "+file, ex);
 		}
 	}	
-	
-	public Boolean isEncryptionEnabled() {
-		return (encryptionEnabled != null) ? encryptionEnabled : true;
-	}
-	
+		
 	public String getLocalDir() {
 		return localDir;
 	}
@@ -80,22 +75,53 @@ public class ConfigTO {
 	}
 	
 	public static class EncryptionSettings {
+		private Boolean enabled;
 	    private String pass;
 	    
-		public EncryptionSettings(String pass) {
-			super();
+		public EncryptionSettings(Boolean enabled, String pass) {
+			this.enabled = enabled;
 			this.pass = pass;
 		}
 
+		public boolean isEnabled() {
+			return enabled != null && enabled;
+		}
+		
 		public String getPass() {
 			return pass;
-		}
+		}		
 	}
 
 	public String getDatabaseDir() {
 		return databaseDir;
 	}
 
-	
+	public void setLocalDir(String localDir) {
+		this.localDir = localDir;
+	}
+
+	public void setAppDir(String appDir) {
+		this.appDir = appDir;
+	}
+
+	public void setDatabaseDir(String databaseDir) {
+		this.databaseDir = databaseDir;
+	}
+
+	public void setCacheDir(String cacheDir) {
+		this.cacheDir = cacheDir;
+	}
+
+	public void setMachineName(String machineName) {
+		this.machineName = machineName;
+	}
+
+	public void setConnection(ConnectionSettings connection) {
+		this.connection = connection;
+	}
+
+	public void setEncryption(EncryptionSettings encryption) {
+		this.encryption = encryption;
+	}
 }
 

@@ -31,6 +31,7 @@ import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipCompressor;
 import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
@@ -41,15 +42,13 @@ import org.syncany.connection.plugins.Plugins;
  * @author Philipp C. Heckel
  */
 public class Config {
+	private String machineName;	
 	private File localDir;
 	private File appDir;
-	private File appCacheDir;
-	private File appDatabaseDir;
-	private String machineName;	
-    private int chunkSize;
+	private File cacheDir;
+	private File databaseDir;
 
-	private Cache cache;
-	
+	private Cache cache;	
 	private Connection connection;
     private Encryption encryption;
     private Chunker chunker;
@@ -62,87 +61,67 @@ public class Config {
     	
         // This code is HERE because the Config class is used almost everywhere
         // and initialized in the beginning.
-
-    	try {
-    		// Use file if exists, else use file embedded in JAR
-    		File logConfig = new File("logging.properties");
-    		InputStream logConfigInputStream;
-    		
-    		if (logConfig.exists() && logConfig.canRead()) {
-    			logConfigInputStream = new FileInputStream(new File("logging.properties"));
-    		}
-    		else {
-    			logConfigInputStream = Config.class.getResourceAsStream("/logging.properties");
-    		}
-    		
-    	    LogManager.getLogManager().readConfiguration(logConfigInputStream);
-    	}
-    	catch (Exception e) {
-    	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");
-    	    Logger.getAnonymousLogger().severe(e.getMessage());
-    	    
-    	    e.printStackTrace();
-    	}
+    	
+    	initLogging();
     }
     
 	public Config(ConfigTO configTO) throws Exception {		
 		machineName = configTO.getMachineName();
 		
 		initDirectories(configTO);
-		initChunkingFramework(configTO);
+		initCache();
     	initEncryption(configTO);
+		initChunkingFramework(configTO);
     	initConnectionPlugin(configTO);    
-	}
-	
-	public Config(String password) throws Exception {
-		initChunkingFrameworkDefaults(password);		        
-		
-    	encryption = new Encryption();	 	
-    	encryption.setPassword(password);  
-    	encryption.setSalt("SALT"); 			
-	}
-	
+	}		
+
 	private void initDirectories(ConfigTO configTO) {
 		localDir = new File(configTO.getLocalDir());
 		appDir = new File(configTO.getAppDir());
-		appCacheDir = new File(configTO.getCacheDir());
-		appDatabaseDir = new File(configTO.getDatabaseDir());
-		
-		cache = new Cache(appCacheDir);
-	}
-
-	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
-		// TODO [low] make chunking options configurable
-		initChunkingFrameworkDefaults(configTO.getEncryption().getPass());
+		cacheDir = new File(configTO.getCacheDir());
+		databaseDir = new File(configTO.getDatabaseDir());				
 	}
 	
-	private void initChunkingFrameworkDefaults(String password) throws EncryptionException {
-		// Create ciphers
-		Encryption encryption = new Encryption();
-		Cipher encCipher = encryption.createEncCipher(password);
-		Cipher decCipher = encryption.createDecCipher(password);
-		
-		// Chunking framework		
+
+	private void initCache() {
+		cache = new Cache(cacheDir);
+	}	
+
+	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
+		// TODO [low] make chunking options configurable			
 		chunker = new FixedOffsetChunker(16 * 1024);
 		multiChunker = new CustomMultiChunker(512 * 1024);//new TarMultiChunker(512 * 1024);
-		transformer = new GzipCompressor(new CipherEncrypter(encCipher, decCipher));//new GzipCompressor(); // TODO [high] Use encryption!    
+		
+		if (encryption != null) {
+			Cipher encCipher = encryption.createEncCipher(configTO.getEncryption().getPass());
+			Cipher decCipher = encryption.createDecCipher(configTO.getEncryption().getPass());
+
+			transformer = new GzipCompressor(new CipherEncrypter(encCipher, decCipher));
+		}
+		else {
+			transformer = new NoTransformer();
+		}
 	}
 	
 	private void initEncryption(ConfigTO configTO) throws EncryptionException {
-    	encryption = new Encryption();		
-    	encryption.setPassword(configTO.getEncryption().getPass());
-    	encryption.setSalt("SALT"); // TODO: What to use as salt?    			
+		if (configTO.getEncryption() != null && configTO.getEncryption().isEnabled()) {
+	    	encryption = new Encryption();		
+	    	encryption.setPassword(configTO.getEncryption().getPass());
+	    	encryption.setSalt("SALT"); // TODO: What to use as salt?
+		}
 	}
 	
 	private void initConnectionPlugin(ConfigTO configTO) throws Exception {
-		Plugin plugin = Plugins.get(configTO.getConnection().getType());
-    	
-    	if (plugin == null) {
-    		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());
-    	}
-    	
-    	connection = plugin.createConnection();
-    	connection.init(configTO.getConnection().getSettings());    	
+		if (configTO.getConnection() != null) {
+			Plugin plugin = Plugins.get(configTO.getConnection().getType());
+	    	
+	    	if (plugin == null) {
+	    		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());
+	    	}
+	    	
+	    	connection = plugin.createConnection();
+	    	connection.init(configTO.getConnection().getSettings());
+		}
 	}
 
 	public File getAppDir() {
@@ -153,13 +132,13 @@ public class Config {
 		this.appDir = appDir;
 	}
 	
-	public void setAppCacheDir(File file) {
-		appCacheDir = file;
-		cache = new Cache(appCacheDir);
+	public void setCacheDir(File file) {
+		cacheDir = file;
+		cache = new Cache(cacheDir);
 	}
 
-	public File getAppCacheDir() {
-		return appCacheDir;
+	public File getCacheDir() {
+		return cacheDir;
 	}
 	
 	public String getMachineName() {
@@ -168,11 +147,7 @@ public class Config {
 
 	public void setMachineName(String machineName) {
 		this.machineName = machineName;
-	}	
-	
-    public int getChunkSize() {
-        return chunkSize;
-    }
+	}		
 
     public Connection getConnection() {
         return connection;
@@ -180,10 +155,6 @@ public class Config {
 
     public void setConnection(Connection connection) {
         this.connection = connection;
-    }
-
-    public void setChunkSize(int chunkSize) {
-        this.chunkSize = chunkSize;
     }
 
     public Chunker getChunker() {
@@ -226,15 +197,39 @@ public class Config {
 		this.localDir = localDir;
 	}
 
-	public File getAppDatabaseDir() {
-		return appDatabaseDir;
+	public File getDatabaseDir() {
+		return databaseDir;
 	}
 	
-	public File getAppDatabaseFile() {
-		return new File(appDatabaseDir+File.separator+"local.db");	
+	public File getDatabaseFile() {
+		return new File(databaseDir+File.separator+"local.db");	
 	}
 
-	public void setAppDatabaseDir(File appDatabaseDir) {
-		this.appDatabaseDir = appDatabaseDir;
+	public void setDatabaseDir(File databaseDir) {
+		this.databaseDir = databaseDir;
 	}
+	
+	private static void initLogging() {
+    	try {
+    		// Use file if exists, else use file embedded in JAR
+    		File logConfig = new File("logging.properties");
+    		InputStream logConfigInputStream;
+    		
+    		if (logConfig.exists() && logConfig.canRead()) {
+    			logConfigInputStream = new FileInputStream(new File("logging.properties"));
+    		}
+    		else {
+    			logConfigInputStream = Config.class.getResourceAsStream("/logging.properties");
+    		}
+    		
+    	    LogManager.getLogManager().readConfiguration(logConfigInputStream);
+    	}
+    	catch (Exception e) {
+    	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");
+    	    Logger.getAnonymousLogger().severe(e.getMessage());
+    	    
+    	    e.printStackTrace();
+    	}
+		
+	}	
 }

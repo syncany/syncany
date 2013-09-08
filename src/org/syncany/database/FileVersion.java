@@ -45,15 +45,38 @@ public class FileVersion implements Cloneable {
 			return name;
 		}	
 	}
-        
+	
+	public enum FileType {
+		FILE ("FILE"), 
+		FOLDER ("FOLDER");
+		
+		private String name;       
+		
+		private FileType(String name) {
+			this.name = name;
+		}
+		
+		public boolean equalsName(String otherName){
+			return (otherName == null) ? false : name.equals(otherName);
+		}
+		
+		public String toString() {
+			return name;
+		}	
+	}	
+    
+	// Mandatory
     private Long version;   
-    private String createdBy;
-    private byte[] checksum;
     private String path;
     private String name;   
+    private FileType type; 
+    private FileStatus status;    
+
+    // Optional
+    private String createdBy;
+    private byte[] checksum;
     private Date lastModified;
     private Date updated;
-    private FileStatus status;    
     
     public FileVersion() {
         // Fressen.
@@ -83,7 +106,15 @@ public class FileVersion implements Cloneable {
         this.name = name;
     }
 
-    public String getPath() {
+    public FileType getType() {
+		return type;
+	}
+
+	public void setType(FileType type) {
+		this.type = type;
+	}
+
+	public String getPath() {
         return path;
     }
 
@@ -91,10 +122,6 @@ public class FileVersion implements Cloneable {
         this.path = path;
     }
     
-    public boolean isFolder() {
-        return checksum == null;
-    }
-
     public Date getLastModified() {
         return lastModified;
     }
@@ -148,6 +175,7 @@ public class FileVersion implements Cloneable {
             clone.setUpdated(getUpdated());
             clone.setName(getName());
             clone.setPath(getPath());
+            clone.setType(getType());
             clone.setVersion(getVersion());
             
             return clone;

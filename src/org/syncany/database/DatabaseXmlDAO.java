@@ -17,9 +17,9 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.syncany.chunk.Transformer;
-import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.VectorClock.VectorClockComparison;
 import org.syncany.util.StringUtil;
 import org.xml.sax.Attributes;
@@ -140,9 +140,18 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				out.print("\t\t\t\t\t<fileVersions>\n");
 				Collection<FileVersion> fileVersions = fileHistory.getFileVersions().values();
 				for (FileVersion fileVersion : fileVersions) {
+					if (fileVersion.getVersion() == null || fileVersion.getType() == null || fileVersion.getPath() == null
+							|| fileVersion.getName() == null || fileVersion.getStatus() == null) {
+						
+						throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status): "+fileVersion);
+					}
+					
 					out.print("\t\t\t\t\t\t<fileVersion");
 					out.print(" version=\""+fileVersion.getVersion()+"\"");
+					out.print(" type=\""+fileVersion.getType()+"\"");
 					out.print(" status=\""+fileVersion.getStatus()+"\"");					
+					out.print(" path=\""+fileVersion.getPath()+"\"");
+					out.print(" name=\""+fileVersion.getName()+"\"");
 					
 					if (fileVersion.getCreatedBy() != null) {
 						out.print(" createdBy=\""+fileVersion.getCreatedBy()+"\"");
@@ -160,8 +169,6 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 						out.print(" checksum=\""+StringUtil.toHex(fileVersion.getChecksum())+"\"");
 					}
 					
-					out.print(" path=\""+fileVersion.getPath()+"\"");
-					out.print(" name=\""+fileVersion.getName()+"\"");
 					out.print(" />\n");
 				}			
 				out.print("\t\t\t\t\t</fileVersions>\n");				
@@ -307,24 +314,26 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			}	
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
+				String path = attributes.getValue("path");
+				String name = attributes.getValue("name");
+				String typeStr = attributes.getValue("type");
 				String statusStr = attributes.getValue("status");
 				String lastModifiedStr = attributes.getValue("lastModified");
 				String updatedStr = attributes.getValue("updated");
 				String createdBy = attributes.getValue("createdBy");
-				String path = attributes.getValue("path");
-				String name = attributes.getValue("name");
 				String checksumStr = attributes.getValue("checksum");
 				
-				if (fileVersionStr == null || statusStr == null || name == null || path == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, status, name and path are mandatory");
+				if (fileVersionStr == null || name == null || path == null || typeStr == null || statusStr == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, name, path, type, and status are mandatory");
 				}
 				
 				FileVersion fileVersion = new FileVersion();
 				 
 				fileVersion.setVersion(Long.parseLong(fileVersionStr));
-				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				fileVersion.setPath(path);
 				fileVersion.setName(name);
+				fileVersion.setType(FileType.valueOf(typeStr));
+				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				
 				if (lastModifiedStr != null) {
 					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
