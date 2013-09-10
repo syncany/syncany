@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
@@ -71,15 +72,8 @@ public class LocalTransferManager extends AbstractTransferManager {
 
             copyLocalFile(repoFile, tempLocalFile);
 
-            // SNM 6/01/11 windows doesn't support rename *onto* another file
-            if (localFile.exists()){
-                localFile.delete();
-            }
-            
-            if (!tempLocalFile.renameTo(localFile)) {
-                throw new StorageException("Unable to move temp local file "+tempLocalFile+" to "+localFile);
-            }
-            
+            localFile.delete();            
+            FileUtils.moveFile(tempLocalFile, localFile);            
             tempLocalFile.delete();
         }
         catch (IOException ex) {
@@ -106,7 +100,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 
         try {
             copyLocalFile(localFile, tempRepoFile);
-            tempRepoFile.renameTo(repoFile);
+            FileUtils.moveFile(tempRepoFile, repoFile);            
         }
         catch (IOException ex) {
             throw new StorageException("Unable to copy file "+localFile+" to local repository "+repoFile, ex);

@@ -12,9 +12,14 @@
 	<dependencies>
 		<!-- Jars are pulled from http://mvnrepository.com/ -->
     	
+		<dependency org="commons-io" name="commons-io" rev="2.4"/>            
 		<dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
 		<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>		
 		<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
+		
+		<!-- For FTP plugin -->
+		<!-- TODO [low] This dependency needs to be removed once the FTP plugin is its own module-->
+		<dependency org="commons-net" name="commons-net" rev="2.2"/>         		
   	</dependencies>
 	
 </ivy-module>

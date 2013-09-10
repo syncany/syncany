@@ -278,7 +278,7 @@ public class TestFileUtil {
 		subDir.mkdir();
 		for(File file : folder.listFiles()){
 			if(file.isFile())
-				file.renameTo(new File(subDir, file.getName()));
+				file.renameTo(new File(subDir, file.getName())); // TODO [low] renameTo() does not work when the two files are on different file systems. Use FileUtils.move() instead (Commons IO)
 		}
 	}
 	

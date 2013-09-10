@@ -68,6 +68,8 @@ public class Config {
 	public Config(ConfigTO configTO) throws Exception {		
 		machineName = configTO.getMachineName();
 		
+		// Initialize config
+		// WARNING: Do not move around without knowing what you are doing!
 		initDirectories(configTO);
 		initCache();
     	initEncryption(configTO);

@@ -54,24 +54,21 @@ public class SyncUpOperation extends Operation {
 			saveLocalDatabase(db, config.getDatabaseFile());
 			
 			logger.log(Level.INFO, "Uploading new multichunks ...");
-			boolean uploadMultiChunksSuccess = uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
+			uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
 			
-			if (uploadMultiChunksSuccess) {
-				long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(config.getMachineName());
-	
-				RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
-				File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
-	
-				logger.log(Level.INFO, "Saving local delta database file ...");
-				logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
-				saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
-				
-				logger.log(Level.INFO, "- Uploading local delta database file ...");
-				uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);			
-			}
-			else {
-				throw new Exception("aa");
-			}
+			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(config.getMachineName());
+
+			RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
+			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
+
+			logger.log(Level.INFO, "Saving local delta database file ...");
+			logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
+			saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
+			
+			logger.log(Level.INFO, "- Uploading local delta database file ...");
+			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+			
+			logger.log(Level.INFO, "Sync up done.");
 		}
 	}	
 	
