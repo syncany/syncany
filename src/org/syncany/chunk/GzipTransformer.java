@@ -28,22 +28,22 @@ import java.util.zip.GZIPOutputStream;
  *
  * @author pheckel
  */
-public class GzipCompressor extends Transformer {
+public class GzipTransformer extends Transformer {
     private int level;
     
-    public GzipCompressor() {
+    public GzipTransformer() {
         this(Deflater.DEFAULT_COMPRESSION, null);
     }
 
-    public GzipCompressor(int level) {
+    public GzipTransformer(int level) {
         this(level, null);
     }
     
-    public GzipCompressor(Transformer nextTransformer) {
+    public GzipTransformer(Transformer nextTransformer) {
         this(Deflater.DEFAULT_COMPRESSION, nextTransformer);
     }
     
-    public GzipCompressor(int level, Transformer nextTransformer) {
+    public GzipTransformer(int level, Transformer nextTransformer) {
         super(nextTransformer);
         this.level = level;
     }

@@ -23,13 +23,11 @@ import java.io.InputStream;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import javax.crypto.Cipher;
-
 import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CipherEncrypter;
+import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
-import org.syncany.chunk.GzipCompressor;
+import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
@@ -42,6 +40,8 @@ import org.syncany.connection.plugins.Plugins;
  * @author Philipp C. Heckel
  */
 public class Config {
+	private static boolean loggingInitialized = false;
+	
 	private String machineName;	
 	private File localDir;
 	private File appDir;
@@ -95,10 +95,7 @@ public class Config {
 		multiChunker = new CustomMultiChunker(512 * 1024);//new TarMultiChunker(512 * 1024);
 		
 		if (encryption != null) {
-			Cipher encCipher = encryption.createEncCipher(configTO.getEncryption().getPass());
-			Cipher decCipher = encryption.createDecCipher(configTO.getEncryption().getPass());
-
-			transformer = new GzipCompressor(new CipherEncrypter(encCipher, decCipher));
+			transformer = new GzipTransformer(new CipherTransformer(encryption));
 		}
 		else {
 			transformer = new NoTransformer();
@@ -109,7 +106,6 @@ public class Config {
 		if (configTO.getEncryption() != null && configTO.getEncryption().isEnabled()) {
 	    	encryption = new Encryption();		
 	    	encryption.setPassword(configTO.getEncryption().getPass());
-	    	encryption.setSalt("SALT"); // TODO: What to use as salt?
 		}
 	}
 	
@@ -211,7 +207,11 @@ public class Config {
 		this.databaseDir = databaseDir;
 	}
 	
-	private static void initLogging() {
+	public synchronized static void initLogging() {
+		if (loggingInitialized) {
+			return;
+		}
+		
     	try {
     		// Use file if exists, else use file embedded in JAR
     		File logConfig = new File("logging.properties");
@@ -225,6 +225,7 @@ public class Config {
     		}
     		
     	    LogManager.getLogManager().readConfiguration(logConfigInputStream);
+    	    loggingInitialized = true;
     	}
     	catch (Exception e) {
     	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");

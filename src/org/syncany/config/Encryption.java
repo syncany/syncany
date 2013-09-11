@@ -20,106 +20,24 @@ package org.syncany.config;
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
-import java.io.UnsupportedEncodingException;
-import java.security.Key;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.util.Arrays;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
-// TODO [high] The encryption class needs major refactoring: implement salt/IV, and configurable encryption parameters 
+ */ 
 public class Encryption {	
-	
+    public static final String DEFAULT_CIPHER = "AES/CBC/PKCS5Padding";
+    public static final int DEFAULT_KEYLENGTH = 128;
+
 	private String password;
     private String cipherStr;
-    private String salt;
-    private Integer keylength;
-
-    private Cipher encCipher;
-    private Cipher decCipher;
-
-    public Encryption() throws EncryptionException {
-        this("", Constants.DEFAULT_ENCRYPTION_CIPHER, Constants.DEFAULT_ENCRYPTION_KEYLENGTH); // default.
+    private Integer keySize;
+    
+    public Encryption() {
+        this("", DEFAULT_CIPHER, DEFAULT_KEYLENGTH); 
     }
 
-    public Encryption(String password, String cipherStr, int keylength) throws EncryptionException {
-        // All set by init()
+    public Encryption(String password, String cipherStr, int keySize) {
         this.password = password;
         this.cipherStr = cipherStr;
-        this.keylength = keylength;
-
-    	this.encCipher = createEncCipher((byte[]) null); // TODO [high] Refactor salting/IVs
-    	this.decCipher = createDecCipher((byte[]) null); // TODO [high] Refactor salting/IVs
-    }
- 
-    public Cipher createEncCipher(byte[] salt) throws EncryptionException {
-        try {        
-            Key keySpec = createKeySpec(salt);
-
-            Cipher cipher = Cipher.getInstance(cipherStr);
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec);        
-
-            return cipher;
-        }
-        catch (Exception e) {
-            throw new EncryptionException(e);
-        }
-    }    
-    
-    public Cipher createEncCipher(String salt) throws EncryptionException {
-        try {
-            return createEncCipher(salt.getBytes("UTF-8"));
-        } 
-        catch (UnsupportedEncodingException ex) {
-            throw new EncryptionException(ex);
-        }
-    }    
-    
-    public Cipher createDecCipher(byte[] salt) throws EncryptionException {
-        try {
-            Key keySpec = createKeySpec(salt);
-
-            Cipher cipher = Cipher.getInstance(cipherStr);
-            cipher.init(Cipher.DECRYPT_MODE, keySpec);        
-
-            return cipher;
-        }
-        catch (Exception e) {
-            throw new EncryptionException(e);
-        }
-    }    
-    
-    public Cipher createDecCipher(String salt) throws EncryptionException {
-        try {
-            return createDecCipher(salt.getBytes("UTF-8"));
-        } 
-        catch (UnsupportedEncodingException ex) {
-            throw new EncryptionException(ex);
-        }
-    }    
-
-    /**
-     * unsalted.
-     * @return 
-     */
-    public Cipher getEncCipher() {
-        return encCipher;
-    }
-    
-    /**
-     * unsalted.
-     * @return 
-     */
-    public Cipher getDecCipher() {
-        return decCipher;
-    }                
+        this.keySize = keySize;
+    } 
 
     public String getCipherStr() {
         return cipherStr;
@@ -129,12 +47,12 @@ public class Encryption {
         this.cipherStr = cipherStr;
     }
 
-    public Integer getKeylength() {
-        return keylength;
+    public Integer getKeySize() {
+        return keySize;
     }
 
-    public void setKeylength(Integer keylength) {
-        this.keylength = keylength;
+    public void setKeySize(Integer keySize) {
+        this.keySize = keySize;
     }
 
     public String getPassword() {
@@ -143,107 +61,5 @@ public class Encryption {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-    
-    @Deprecated
-    public String getSalt() {
-        return salt;
-    }
-
-    @Deprecated
-    public void setSalt(String salt) throws EncryptionException {
-
-        this.salt = salt;
-    }
-
-    /**
-     * unsalted.
-     */
-    public synchronized byte[] encrypt(byte[] data) throws EncryptionException {
-        if (encCipher == null) {
-            encCipher = createEncCipher((byte[]) null); // unsalted.
-        }
-        try {
-            return encCipher.doFinal(data);
-        }
-        catch (Exception ex) {
-            throw new EncryptionException(ex);
-        }
-    }
-
-    /**
-     * unsalted.
-     */
-    public synchronized byte[] decrypt(byte[] data) throws EncryptionException {
-        if (decCipher == null) {
-            decCipher = createDecCipher((byte[]) null); // unsalted.
-        }
-        try {
-            return decCipher.doFinal(data);
-        }
-        catch (Exception ex) {
-            throw new EncryptionException(ex);
-        }
-    }
-    
-    private Key createKeySpec_NOT_YET_ACTIVE(byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
-    	SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        KeySpec keyspec = new PBEKeySpec(password.toCharArray(), salt, 1000, 128);
-        Key key = factory.generateSecret(keyspec);
-        System.out.println(key.getClass().getName());
-        System.out.println(Arrays.toString(key.getEncoded()));
-        
-        return key;
-    }
-    
-    // TODO [medium] Use appropriate key derivation function (PBKDF2)
-    // TODO [medium] Use different key for every multichunk
-    // TODO [high] encrypt database files
-    // see http://stackoverflow.com/questions/8674018/pbkdf2-with-bouncycastle-in-java
-    @Deprecated
-    private Key createKeySpec(byte[] salt) 
-            throws NoSuchAlgorithmException, UnsupportedEncodingException, EncryptionException {
-        
-        if (keylength % 8 != 0) {
-            throw new EncryptionException("Invalid keylength. Must be divisible by 8.");
-        }
-        
-        // Created salted password        
-        byte[] saltedpass;
-        
-        if (salt == null) {
-            saltedpass =  password.getBytes("UTF-8");
-        }
-        else {
-            byte[] pass = password.getBytes("UTF-8");
-            saltedpass = new byte[pass.length+salt.length];
-            
-            System.arraycopy(salt, 0, saltedpass, 0, salt.length);
-            System.arraycopy(pass, 0, saltedpass, salt.length, pass.length);
-        }
-                
-        // Create key by hashing the password (+ the salt)
-        byte[] key = new byte[keylength/8];
-
-        MessageDigest msgDigest = MessageDigest.getInstance("SHA-256");
-        msgDigest.reset();
-
-        byte[] longkey = msgDigest.digest(saltedpass);
-
-        if (longkey.length == key.length) {
-            key = longkey;
-        }
-
-        else if (longkey.length > key.length) {
-            System.arraycopy(longkey, 0, key, 0, key.length);
-        }
-
-        else if (longkey.length < key.length) {
-            throw new RuntimeException("Invalid key length '"+keylength+"' bit; max 256 bit supported.");
-        }
-
-        //System.out.println("key = "+Arrays.toString(key));
-        return new SecretKeySpec(key, cipherStr); // AES -> 128/192 bit
-        //return new SecretKeySpec(key, "AES"); // AES -> 128/192 bit
     }    
 }

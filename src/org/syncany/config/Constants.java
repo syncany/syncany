@@ -25,17 +25,6 @@ import java.util.regex.Pattern;
  * @author Philipp C. Heckel
  */
 public abstract class Constants {
-    /**
-     * Default cipher to encrypt the chunks.
-     */
-    public static final String DEFAULT_ENCRYPTION_CIPHER = "AES";
-
-    /**
-     * Default keylength for the given cipher in bit.
-     */
-    public static final int DEFAULT_ENCRYPTION_KEYLENGTH = 128;
-    
-
     public static final Pattern PLUGIN_NAME_REGEX_PLUGIN_INFO = Pattern.compile("org\\.syncany\\.connection\\.plugins\\.([^.]+)\\.[\\w\\d]+Plugin");
     public static final String PLUGIN_FQCN_PREFIX = "org.syncany.connection.plugins.";
     public static final String PLUGIN_FQCN_SUFFIX = "Plugin";

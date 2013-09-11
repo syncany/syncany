@@ -115,40 +115,36 @@ public class TestFileUtil {
 	}
 	
 	
-	public static void changeRandomPartOfBinaryFile(File path, double percentage, int minSizeOfBlock) throws IOException{
-		if (path!=null && !path.exists()){
+	public static void changeRandomPartOfBinaryFile(File file, double percentage, int minSizeOfBlock) throws IOException{
+		if (file!=null && !file.exists()){
 			throw new IOException("File does not exist!");
 		}
 		
 		if (percentage < 0.01 || percentage > 0.99){
 			throw new IllegalArgumentException("percentage value must be between 1 and 99");
 		}
-		
-		long fileSize = path.length();
+				
+		long fileSize = file.length();
 		long maxPositions = fileSize / minSizeOfBlock;
 		long percentagedSize = (long)((float) fileSize * percentage);
 		long cycles = percentagedSize / minSizeOfBlock;
 		
-		RandomAccessFile raf = new RandomAccessFile(path, "rw");
-		
-		for(int i = 0; i < cycles; i++){
-			long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
-			raf.seek(pos);
-			byte[] arr = createRandomArray(minSizeOfBlock);
-			raf.write(arr);
+		if (fileSize > 0) {		
+			RandomAccessFile raf = new RandomAccessFile(file, "rw");
+			
+			for(int i = 0; i < cycles; i++){
+				long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
+				raf.seek(pos);
+				byte[] arr = createRandomArray(minSizeOfBlock);
+				raf.write(arr);
+			}
+			
+			// TODO [low] This is to prevent this function from not altering the file at all
+			raf.seek(0);
+			raf.write(new String("CHANGE"+Math.random()).getBytes());			
+			
+			raf.close();
 		}
-		
-		// TODO [low] This is to prevent this function from not altering the file at all
-		raf.seek(0);
-		raf.write(new String("CHANGE"+Math.random()).getBytes());
-		
-		// write last one
-		byte[] arr = createRandomArray((int)(percentagedSize % minSizeOfBlock));
-		long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
-		raf.seek(pos);
-		raf.write(arr);
-		
-		raf.close();
 	}
 		
 	public static File createRandomFileInDirectory(File rootFolder) {

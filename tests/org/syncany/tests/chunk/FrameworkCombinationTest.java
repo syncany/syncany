@@ -16,18 +16,16 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CipherEncrypter;
+import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.Deduper;
 import org.syncany.chunk.DeduperAdapter;
-import org.syncany.chunk.GzipCompressor;
+import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
@@ -35,6 +33,7 @@ import org.syncany.chunk.TTTDChunker;
 import org.syncany.chunk.TarMultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
+import org.syncany.config.Encryption;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
@@ -104,20 +103,15 @@ public class FrameworkCombinationTest {
 		}
 
 		// Compression/Encryption
-		Cipher encryptCipher = Cipher.getInstance("AES");
-		encryptCipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(
-				new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }, "AES"));
-
-		Cipher decryptCipher = Cipher.getInstance("AES");
-		decryptCipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(
-				new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }, "AES"));
+		Encryption encryption = new Encryption();
+		encryption.setPassword("Password");
 
 		List<Transformer> transformerChains = new LinkedList<Transformer>();
 
 		transformerChains.add(new NoTransformer());
-		transformerChains.add(new GzipCompressor());
-		transformerChains.add(new CipherEncrypter(encryptCipher, decryptCipher));
-		transformerChains.add(new GzipCompressor(new CipherEncrypter(encryptCipher, decryptCipher)));
+		transformerChains.add(new GzipTransformer());
+		transformerChains.add(new CipherTransformer(encryption));
+		transformerChains.add(new GzipTransformer(new CipherTransformer(encryption)));
 
 		for (MultiChunker multiChunker : multiChunkers) {
 			for (Transformer transformer : transformerChains) {

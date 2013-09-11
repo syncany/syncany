@@ -54,6 +54,6 @@ import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class
 })
-public class AllTestsSuite {
+public class AllShortTestsSuite {
 	// This class executes all tests
 }

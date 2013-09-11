@@ -20,7 +20,6 @@ package org.syncany.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.Collection;
 
 /**
@@ -95,8 +94,16 @@ public class StringUtil {
     		return "";
     	}
     	else {
-	        BigInteger bi = new BigInteger(1, bytes);
-	        return String.format("%0" + (bytes.length << 1) + "x", bi);
+    		// Note: The BigInteger variant is more elegant, but struggles
+    		// with extremely long byte arrays (~500 KB)
+    		
+    		StringBuilder str = new StringBuilder();
+    		
+    		for(int i = 0; i < bytes.length; i++) {
+    			str.append(String.format("%02x", bytes[i]));
+    		}
+    		
+    		return str.toString();
     	}
     }
     
