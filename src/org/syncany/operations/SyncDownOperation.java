@@ -216,7 +216,7 @@ public class SyncDownOperation extends Operation {
 			boolean isDeletedFile = winningLastVersion.getStatus() == FileStatus.DELETED;
 			
 			if (isNewFile && isDeletedFile) {
-				isNewFile = false; // TODO [lowest] This is ugly. Do in original 'isNewFile = ...'-statement
+				isNewFile = false; // TODO [low] This is ugly. Do in original 'isNewFile = ...'-statement
 			}
 			
 			if (logger.isLoggable(Level.FINER)) {
@@ -385,7 +385,7 @@ public class SyncDownOperation extends Operation {
 				clientVersionTo = null;
 			}
 			
-			// TODO FIXME WARNING: This currently does not work for this situation:
+			// TODO FIXME [high] This currently does not work for this situation:
 			logger.log(Level.WARNING, "TODO WARNING: This currently does not work for this situation: db-A-500  and branch A1-A5, because db-A-5 does NOT exist!!");
 			//   - db-A-500  and branch A1-A5, because db-A-5 does NOT exist!!
 			//   - To IMPLEMENT: if end of client range is reached (here: A5), load from next highest db-file of A (here: db-A-500)
@@ -407,7 +407,7 @@ public class SyncDownOperation extends Operation {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
 		
 			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteDatabaseFileInCache);
-			dbDAO.load(remoteDatabase, remoteDatabaseFile.getFile());		// FIXME [medium] This is very, very, very inefficient, DB is loaded and then discarded	
+			dbDAO.load(remoteDatabase, remoteDatabaseFile.getFile());		// TODO [medium] Performance: This is very, very, very inefficient, DB is loaded and then discarded	
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			// Pupulate branches

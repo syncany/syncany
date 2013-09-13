@@ -198,8 +198,8 @@ import org.syncany.tests.util.TestConfigUtil;
  *  - Local:     (  ,  ,C1)/T=01
  *               (  ,  ,C2)/T=02
  *               (  ,  ,C3)/T=03
- *               (  ,B1,C3)/T=07                            TODO This should be the first conflict, right?
- *               (A3,B2,C4)/T=16 (first conflict B)         TODO FIXME THIS IS WRONG, RIGHT?
+ *               (  ,B1,C3)/T=07                            TODO [low] This should be the first conflict, right?
+ *               (A3,B2,C4)/T=16 (first conflict B)         TODO [low] THIS IS WRONG, RIGHT?
  *               (A3,B3,C4)/T=17
  *               (A3,B4,C4)/T=18
  *               (A3,B5,C4)/T=20 (last B)
@@ -213,7 +213,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *               
  *  - Last versions conflicts:                (A3,B5,C4)/T=20 || (A6,  ,C4)/T=19
  *                                            (A3,B5,C4)/T=20 || (A3,  ,C8)/T=21
- *                                            (A6,  ,C4)/T=19 || (A3,  ,C8)/T=21 (TODO Do I care about the conflicts of other clients?)
+ *                                            (A6,  ,C4)/T=19 || (A3,  ,C8)/T=21
  *  - Last common version between clients:    (empty)
  *  - First conflicting version per client:   (A4,  ,C4)/T=11 (first conflicting A)
  *                                            (A3,B2,C4)/T=16 (first conflicting B)
@@ -251,7 +251,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *  - db-c-8:    (A3,  ,C8)/T=21 (last C)
  *               
  *  - Last versions conflicts:                (A3,B5,C4)/T=20 || (A6,  ,C4)/T=19
- *                                            (A3,B5,C4)/T=20 || (A3,  ,C8)/T=21 (TODO Do I care about the conflicts of other clients?)
+ *                                            (A3,B5,C4)/T=20 || (A3,  ,C8)/T=21 
  *                                            (A6,  ,C4)/T=19 || (A3,  ,C8)/T=21 
  *  - Last common version between clients:    (empty)
  *  - First conflicting version per client:   (A4,  ,C4)/T=11 (first conflicting A)
@@ -287,7 +287,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *               (A3,B4,C4)/T=18
  *  - db-b-5:    (A3,B5,C4)/T=20 (last B)
  *               
- *  - Last versions conflicts:                (A3,B5,C4)/T=20 || (A6,  ,C4)/T=19 (TODO Do I care about the conflicts of other clients?)
+ *  - Last versions conflicts:                (A3,B5,C4)/T=20 || (A6,  ,C4)/T=19 
  *                                            (A3,B5,C4)/T=20 || (A3,  ,C8)/T=21 
  *                                            (A6,  ,C4)/T=19 || (A3,  ,C8)/T=21 
  *  - Last common version between clients:    (empty)

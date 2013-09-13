@@ -2,6 +2,16 @@
 <ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
           
+    <!-- 
+    	TODO [medium] Redo the ivy modulization and packaging. 
+    	Here are some links:
+    	
+    	- http://ant.apache.org/ivy/history/latest-milestone/tutorial/multiproject.html
+    	- Source files: https://svn.apache.org/repos/asf/ant/ivy/core/trunk/src/example/multi-project/
+    	
+     -->
+    
+    
     <info organisation="org.syncany" module="SyncanyCore" status="integration" />
 	
 	<configurations>

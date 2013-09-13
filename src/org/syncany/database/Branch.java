@@ -33,7 +33,7 @@ public class Branch {
 		}
 	}
 	
-	// FIXME inefficient! Map?
+	// TODO [medium] Performance: Use map instead of list
 	public DatabaseVersionHeader get(VectorClock vectorClock) {
 		for (DatabaseVersionHeader databaseVersionHeader : branch) {
 			if (databaseVersionHeader.getVectorClock().equals(vectorClock)) {
