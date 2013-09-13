@@ -46,7 +46,7 @@ public class FrameworkCombinationTest {
 	private List<FrameworkCombination> combinations;
 
 	@Test
-	public void testBlackBoxCombinationsWith50KBInputFile() throws Exception {
+	public void testBlackBoxCombinationsWith50KBInputFile() throws Exception {		
 		// Setup
 		setup();
 		
@@ -70,6 +70,7 @@ public class FrameworkCombinationTest {
 		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		combinations = new ArrayList<FrameworkCombination>();
 
+		Encryption.init();
 		fillCombinations();
 	}
 

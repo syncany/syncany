@@ -17,20 +17,61 @@
  */
 package org.syncany.config;
 
+import java.lang.reflect.Field;
+import java.security.Security;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */ 
 public class Encryption {	
-    public static final String DEFAULT_CIPHER = "AES/CBC/PKCS5Padding";
+    public static final String PROVIDER = "BC";
+    public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1";
+	    
+	public static final String DEFAULT_CIPHER_ALGORITHM = "AES";
+	public static final String DEFAULT_CIPHER_STRING = "AES/GCM/NoPadding";
     public static final int DEFAULT_KEYLENGTH = 128;
-
+    
 	private String password;
     private String cipherStr;
     private Integer keySize;
     
+    static {
+    	try {
+			init();
+		}
+    	catch (EncryptionException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    public static synchronized void init() throws EncryptionException {
+    	if (!isInitialized()) {
+    		Security.addProvider(new BouncyCastleProvider()); 
+    		setUnlimitedCrypto(true); // TODO [high] Check legal (!) consequences of this
+    	}
+    }
+    
+    public static synchronized boolean isInitialized() {
+    	return Security.getProvider("BC") != null;
+    }
+    
+    public static void setUnlimitedCrypto(boolean enable) throws EncryptionException {
+		try {
+			Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
+
+			field.setAccessible(true);
+			field.set(null, Boolean.valueOf(!enable));		
+		}
+		catch (Exception e) {
+			throw new EncryptionException(e);
+		}
+    }
+    
     public Encryption() {
-        this("", DEFAULT_CIPHER, DEFAULT_KEYLENGTH); 
+        this("", DEFAULT_CIPHER_STRING, DEFAULT_KEYLENGTH); 
     }
 
     public Encryption(String password, String cipherStr, int keySize) {

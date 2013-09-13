@@ -73,7 +73,7 @@ public class CipherTransformer extends Transformer {
 			out.write(sessionWriteSalt);
 			
 			// Create and write random IV to unencrypted stream
-			byte[] streamIV = new byte[16]; 
+			byte[] streamIV = new byte[encryption.getKeySize()/8]; 
 			new SecureRandom().nextBytes(streamIV);
 			
 			out.write(streamIV);
@@ -95,11 +95,11 @@ public class CipherTransformer extends Transformer {
     public InputStream createInputStream(InputStream in) throws IOException {
     	try {
 	    	// Read salt from unencrypted stream
-	    	byte[] streamSalt = new byte[encryption.getKeySize()/8]; // TODO [low] duplicate code
+	    	byte[] streamSalt = new byte[encryption.getKeySize()/8]; 
 	    	in.read(streamSalt);
 	    	
 			// Read IV from unencrypted stream
-			byte[] streamIV = new byte[16];		
+			byte[] streamIV = new byte[encryption.getKeySize()/8];		
 			in.read(streamIV);
 			
 			// Create key
@@ -137,7 +137,7 @@ public class CipherTransformer extends Transformer {
     
     private SecretKey createSecretKey(byte[] keySalt) throws InvalidKeySpecException, NoSuchAlgorithmException {
     	// Derive secret key from password 
-    	SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+    	SecretKeyFactory factory = SecretKeyFactory.getInstance(Encryption.KEY_DERIVATION_FUNCTION);
         KeySpec pbeKeySpec = new PBEKeySpec(encryption.getPassword().toCharArray(), keySalt, 1000, encryption.getKeySize());
         SecretKey secretKey = factory.generateSecret(pbeKeySpec);
         
@@ -150,7 +150,7 @@ public class CipherTransformer extends Transformer {
     
 	private Cipher createCipher(int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
 		try {
-            Cipher cipher = Cipher.getInstance(encryption.getCipherStr());
+            Cipher cipher = Cipher.getInstance(encryption.getCipherStr(), Encryption.PROVIDER);
             cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));        
 
             return cipher;
