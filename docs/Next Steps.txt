@@ -1,0 +1,17 @@
+Console version 0.1
+
+- Process remaining tasks/ToDos/FixMes
+- Refactor Ivy build to enable plugin injection
+- Create ongoing (Long running) test scenarios
+- Apply other plugins (s3, flickr, etc) 
+- General refactoring (Sync-Down / Reconsiliator(--> Reconciler))
+- HMAC integrity check 
+- Encryption code review  
+
+Daemon console version
+- Create syncany Daemon
+
+GUI Daemon version 
+- Create GUI
+	- Prio 1: Installation GUI 
+	- Prio 2: Daemon monitor GUI 
