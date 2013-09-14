@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.internal.ArrayComparisonFailure;
 import org.syncany.chunk.Transformer;
@@ -22,6 +24,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class TestAssertUtil {
@@ -54,6 +57,24 @@ public class TestAssertUtil {
 			
 			assertFileEquals(message+": File not equal", expectedFile, actualFile);
 		}		
+	}
+	
+	public static void assertConflictingFileExists(String originalFile, Map<String, File> actualFiles) {
+		String fileNameWithoutExtention = FileUtil.getBasename(originalFile);
+		Pattern conflictFilePattern = Pattern.compile(fileNameWithoutExtention + ".*conflicted.*");
+		
+		boolean conflictingFileFound = false;
+
+		for (Map.Entry<String, File> actualFileEntry : actualFiles.entrySet()) {
+			File actualFile = actualFileEntry.getValue();
+			Matcher matcher = conflictFilePattern.matcher(actualFile.getName());
+
+			if(matcher.matches()) {
+				conflictingFileFound = true;
+				break;
+			}
+		}		
+		assertTrue("Pattern " + conflictFilePattern + " could not be found.",conflictingFileFound);
 	}
 	
 	public static void assertFileEquals(File expectedFile, File actualFile) throws ArrayComparisonFailure, Exception {
