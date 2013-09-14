@@ -2,7 +2,10 @@ package org.syncany.operations;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -314,7 +317,8 @@ public class DatabaseReconciliator {
 		return null;
 	}
 
-	public Branches stitchBranches(Branches unstitchedUnknownBranches, String localClientName, Branch localBranch) {
+	@Deprecated
+	public Branches stitchBranches2(Branches unstitchedUnknownBranches, String localClientName, Branch localBranch) {
 		Branches allStitchedBranches = new Branches();
 		
 		// First stitch unknown remote branches 
@@ -410,6 +414,101 @@ public class DatabaseReconciliator {
 		
 		return allStitchedBranches;
 	}	
+	
+	public Branches stitchBranches(Branches unstitchedUnknownBranches, String localClientName, Branch localBranch) {
+		Branches allBranches = unstitchedUnknownBranches.clone();
+		
+		mergeLocalBranchInRemoteBranches(localClientName, allBranches, localBranch);
+		
+		Set<DatabaseVersionHeader> allHeaders = gatherAllDatabaseVersionHeaders(allBranches);
+		
+		completeBranchesWithDatabaseVersionHeaders(allBranches, allHeaders);
+		
+		return allBranches;
+	}
+
+	private void mergeLocalBranchInRemoteBranches(String localClientName, Branches allBranches, Branch localBranch) {
+		if(allBranches.getClients().contains(localClientName)) {
+			Branch unknownLocalClientBranch = allBranches.getBranch(localClientName);
+			
+			for (DatabaseVersionHeader dbvh : localBranch.getAll()) {
+				if(unknownLocalClientBranch.get(dbvh.getVectorClock()) == null) {
+					unknownLocalClientBranch.add(dbvh);
+				}
+			}
+			
+			Branch sortedClientBranch = sortBranch(unknownLocalClientBranch);
+			allBranches.add(localClientName, sortedClientBranch);
+		} else if(localBranch.size() > 0)	{
+			allBranches.add(localClientName, localBranch);
+		}
+	}
+	
+	private Set<DatabaseVersionHeader> gatherAllDatabaseVersionHeaders(Branches allBranches) {
+		Set<DatabaseVersionHeader> allHeaders = new HashSet<DatabaseVersionHeader>();
+		
+		for (String client : allBranches.getClients()) {
+			Branch clientBranch = allBranches.getBranch(client);
+			
+			for (DatabaseVersionHeader databaseVersionHeader : clientBranch.getAll()) {
+				allHeaders.add(databaseVersionHeader);
+			}
+		}
+		
+		return allHeaders;
+	}
+
+	private void completeBranchesWithDatabaseVersionHeaders(Branches allBranches, Set<DatabaseVersionHeader> allHeaders) {
+		for (String client : allBranches.getClients()) {
+			Branch clientBranch = allBranches.getBranch(client);
+			if(clientBranch.size() > 0) {
+				VectorClock lastVectorClock = clientBranch.getLast().getVectorClock();
+				
+				for (DatabaseVersionHeader databaseVersionHeader : allHeaders) {
+					VectorClock currentVectorClock = databaseVersionHeader.getVectorClock();
+					boolean isCurrentVectorClockSmaller = VectorClock.compare(currentVectorClock, lastVectorClock) == VectorClockComparison.SMALLER;
+					boolean currentVectorClockExistsInBranch = clientBranch.get(currentVectorClock) != null;
+					
+					if(!currentVectorClockExistsInBranch && isCurrentVectorClockSmaller) {
+						clientBranch.add(databaseVersionHeader);
+					}
+				}
+				
+				Branch sortedBranch = sortBranch(clientBranch);
+		        allBranches.add(client, sortedBranch);
+			}
+		}
+	}
+
+	private Branch sortBranch(Branch clientBranch) {
+		List<DatabaseVersionHeader> branchCopy = new ArrayList<DatabaseVersionHeader>(clientBranch.getAll());
+		Collections.sort(branchCopy, new DatabaseVersionHeaderComparator());
+		Branch sortedBranch = new Branch();
+		sortedBranch.addAll(branchCopy);
+		return sortedBranch;
+	}
+	
+    private class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
+
+        @Override
+        public int compare(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
+            VectorClockComparison vectorClockComparison = VectorClock.compare(o1.getVectorClock(), o2.getVectorClock());
+           
+            if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
+                throw new RuntimeException("There must not be a conflict within a branch.");
+            }
+           
+            if (vectorClockComparison == VectorClockComparison.EQUAL) {
+                return 0;
+            }
+            else if(vectorClockComparison == VectorClockComparison.SMALLER){
+            	return -1;
+            } 
+            else {
+            	return 1;
+            }
+        }
+    }
 	
 	public Branch findLosersPruneBranch(Branch losersBranch, Branch winnersBranch) {
 		Branch losersPruneBranch = new Branch();
