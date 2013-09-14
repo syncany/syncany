@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.operations.StatusOperation;
 import org.syncany.operations.SyncDownOperation;
 import org.syncany.operations.SyncUpOperation;
 
@@ -37,5 +38,9 @@ public class Client {
 	
 	public void down() throws Exception {
 		new SyncDownOperation(config).execute();
+	}
+
+	public void status() throws Exception {
+		new StatusOperation(config).execute();		
 	}
 }

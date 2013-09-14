@@ -41,5 +41,9 @@ public abstract class Operation {
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}	
 	
-	public abstract void execute() throws Exception;
+	public abstract OperationResult execute() throws Exception;
+	
+	public interface OperationResult {
+		// Marker interface for type safety
+	}
 }

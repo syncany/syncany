@@ -1,7 +1,10 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertTrue;
-import static org.syncany.tests.util.TestAssertUtil.*;
+import static org.junit.Assert.assertEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
+import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -17,29 +20,32 @@ public class CreateSimilarFileParallelScenarioTest {
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 		
-		String similarFileName = "A-file1.jpg";
-		
-		int fileLengthA = 100;
-		int fileLengthB = 150;
-		
-		// Run 
-		clientA.createNewFile(similarFileName, fileLengthA);
-		clientB.createNewFile(similarFileName, fileLengthB);
-
+		// A
+		clientA.createNewFile("A-file1.jpg", 100);
 		clientA.up();		
+
+		// B
+		clientB.createNewFile("A-file1.jpg", 150);
 		clientB.up();
 		
+		// A, A should win
 		clientA.down();
-		
-		//A should win
-		assertTrue(clientA.getLocalFile(similarFileName).length() == fileLengthA);
+		assertEquals(clientA.getLocalFile("A-file1.jpg").length(), 100);
 
+		// B, B should have conflicting file and updated on A's file
 		clientB.down();
+		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFiles());
+		assertFileEquals(clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
+		assertEquals(clientB.getLocalFile("A-file1.jpg").length(), 100);
 		
-		//B should have conflicting file and updated on A's file
-		assertConflictingFileExists(similarFileName, clientB.getLocalFiles());
+		// B
+		clientB.up();
+				
+		// A, should retrieve B's conflicting copy
+		clientA.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
 		
-	
 		// Tear down
 		clientA.cleanup();
 		clientB.cleanup();

@@ -160,7 +160,21 @@ public class EncryptionTest {
 		
 		// NOTE: If this fails, it might be because 'unlimited crypto' not available.
 		// Download policy files at: http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html		
-	}		
+	}	
+	
+	@Test
+	public void testEncryptionWithTwofish256GcmNoPadding() throws Exception {
+		Encryption encryptionSettings = new Encryption();
+		
+		encryptionSettings.setCipherStr("Twofish/GCM/NoPadding");
+		encryptionSettings.setKeySize(256);
+		encryptionSettings.setPassword("some password");
+		
+		doTestEncryption(encryptionSettings);
+		
+		// NOTE: If this fails, it might be because 'unlimited crypto' not available.
+		// Download policy files at: http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html		
+	}	
 	
 	private void doTestEncryption(Encryption encryptionSettings) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {
 		CipherTransformer encryptCipherTransformer = new CipherTransformer(encryptionSettings);

@@ -55,7 +55,7 @@ public class SyncDownOperation extends Operation {
 		super(config);
 	}	
 	
-	public void execute() throws Exception {
+	public OperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync down' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");		
@@ -68,7 +68,7 @@ public class SyncDownOperation extends Operation {
 		
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
-			return;
+			return new SyncDownOperationResult(); // TODO [low] Return something here
 		}
 		
 		// 2. Download the remote databases to the local cache folder
@@ -87,7 +87,8 @@ public class SyncDownOperation extends Operation {
 		// 6. Apply winner's branch 
 		appyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 		
-		logger.log(Level.INFO, "Sync down done.");
+		logger.log(Level.INFO, "Sync down done.");		
+		return new SyncDownOperationResult(); // TOOD [low] return something meaningful here		
 	}		
 	
 	private void appyWinnersBranch(Branch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
@@ -121,7 +122,7 @@ public class SyncDownOperation extends Operation {
 
 			logger.log(Level.INFO, "- Saving local database to "+config.getDatabaseFile()+" ...");
 			saveLocalDatabase(localDatabase, config.getDatabaseFile());
-		}		
+		}
 	}
 
 	private void initOperationVariables() throws IOException {		
@@ -173,7 +174,6 @@ public class SyncDownOperation extends Operation {
 		
 		logger.log(Level.FINER, "- Database reconciliation results:");
 		logger.log(Level.FINER, "  + localBranch: "+localBranch);
-		logger.log(Level.FINER, "  + allStitchedBranches: "+allStitchedBranches);
 		logger.log(Level.FINER, "  + unknownRemoteBranches: "+unknownRemoteBranches);
 		logger.log(Level.FINER, "  + allStitchedBranches: "+allStitchedBranches);
 		logger.log(Level.FINER, "  + lastCommonHeader: "+lastCommonHeader);
@@ -559,6 +559,9 @@ public class SyncDownOperation extends Operation {
 			}
 		}
 		
-	}
+	}	
 
+	public class SyncDownOperationResult implements OperationResult {
+		// TODO [low] Return something for 'down' operation
+	}
 }

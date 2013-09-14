@@ -71,6 +71,7 @@ public class FileVersion implements Cloneable {
     private String name;   
     private FileType type; 
     private FileStatus status;    
+    private Long size; 
 
     // Optional
     private String createdBy;
@@ -158,6 +159,14 @@ public class FileVersion implements Cloneable {
 		this.checksum = checksum;
 	}
 
+	public Long getSize() {
+		return size;
+	}
+
+	public void setSize(Long size) {
+		this.size = size;
+	}
+
 	@Override
 	public String toString() {
 		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", checksum=" + StringUtil.toHex(checksum) + ", path=" + path
@@ -177,6 +186,7 @@ public class FileVersion implements Cloneable {
             clone.setPath(getPath());
             clone.setType(getType());
             clone.setVersion(getVersion());
+            clone.setSize(getSize());
             
             return clone;
         }

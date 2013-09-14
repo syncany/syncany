@@ -141,9 +141,9 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				Collection<FileVersion> fileVersions = fileHistory.getFileVersions().values();
 				for (FileVersion fileVersion : fileVersions) {
 					if (fileVersion.getVersion() == null || fileVersion.getType() == null || fileVersion.getPath() == null
-							|| fileVersion.getName() == null || fileVersion.getStatus() == null) {
+							|| fileVersion.getName() == null || fileVersion.getStatus() == null || fileVersion.getSize() == null) {
 						
-						throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status): "+fileVersion);
+						throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status, size): "+fileVersion);
 					}
 					
 					out.print("\t\t\t\t\t\t<fileVersion");
@@ -152,6 +152,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					out.print(" status=\""+fileVersion.getStatus()+"\"");					
 					out.print(" path=\""+fileVersion.getPath()+"\"");
 					out.print(" name=\""+fileVersion.getName()+"\"");
+					out.print(" size=\""+fileVersion.getSize()+"\"");
 					
 					if (fileVersion.getCreatedBy() != null) {
 						out.print(" createdBy=\""+fileVersion.getCreatedBy()+"\"");
@@ -316,6 +317,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				String fileVersionStr = attributes.getValue("version");
 				String path = attributes.getValue("path");
 				String name = attributes.getValue("name");
+				String sizeStr = attributes.getValue("size");
 				String typeStr = attributes.getValue("type");
 				String statusStr = attributes.getValue("status");
 				String lastModifiedStr = attributes.getValue("lastModified");
@@ -323,8 +325,8 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				String createdBy = attributes.getValue("createdBy");
 				String checksumStr = attributes.getValue("checksum");
 				
-				if (fileVersionStr == null || name == null || path == null || typeStr == null || statusStr == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, name, path, type, and status are mandatory");
+				if (fileVersionStr == null || name == null || path == null || typeStr == null || statusStr == null || sizeStr == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, name, path, type, status, and size are mandatory");
 				}
 				
 				FileVersion fileVersion = new FileVersion();
@@ -334,6 +336,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				fileVersion.setName(name);
 				fileVersion.setType(FileType.valueOf(typeStr));
 				fileVersion.setStatus(FileStatus.valueOf(statusStr));
+				fileVersion.setSize(Long.parseLong(sizeStr));				
 				
 				if (lastModifiedStr != null) {
 					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));

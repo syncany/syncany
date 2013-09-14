@@ -315,14 +315,13 @@ public class DatabaseReconciliator {
 	}
 
 	public Branches stitchBranches(Branches unstitchedUnknownBranches, String localClientName, Branch localBranch) {
-		Branches allBranches = unstitchedUnknownBranches.clone();
+		Branches allStitchedBranches = new Branches();
 		
-		Branches stitchedUnknownBranches = new Branches();
-		
-		for (String remoteClientName : allBranches.getClients()) {
+		// First stitch unknown remote branches 
+		for (String remoteClientName : unstitchedUnknownBranches.getClients()) {
 			logger.log(Level.INFO, "  + Stitching {0}, going backwards ..", remoteClientName);	
 			List<DatabaseVersionHeader> reverseStitchedBranch = new ArrayList<DatabaseVersionHeader>();
-			Branch branch = allBranches.getBranch(remoteClientName);
+			Branch branch = unstitchedUnknownBranches.getBranch(remoteClientName);
 			logger.log(Level.INFO, "    - Current branch is: "+branch);
 			
 			// Interweave deltas
@@ -333,7 +332,7 @@ public class DatabaseReconciliator {
 				reverseStitchedBranch.add(databaseVersionHeader);
 				
 				while (databaseVersionHeader.getPreviousClient() != null && !remoteClientName.equals(databaseVersionHeader.getPreviousClient())) {
-					Branch previousClientBranch = allBranches.getBranch(databaseVersionHeader.getPreviousClient());
+					Branch previousClientBranch = unstitchedUnknownBranches.getBranch(databaseVersionHeader.getPreviousClient());
 
 					if (previousClientBranch == null) {
 						break; // The rest must be in the local branch
@@ -401,10 +400,15 @@ public class DatabaseReconciliator {
 			
 			logger.log(Level.INFO, "    - Stitched branch is: "+stitchedBranch);
 			
-			stitchedUnknownBranches.add(remoteClientName, stitchedBranch);
+			allStitchedBranches.add(remoteClientName, stitchedBranch);
 		}
 		
-		return stitchedUnknownBranches;
+		// Add full local branch (if it does not exist in allBranches)
+		if (allStitchedBranches.getBranch(localClientName) == null) {
+			allStitchedBranches.add(localClientName, localBranch);
+		}
+		
+		return allStitchedBranches;
 	}	
 	
 	public Branch findLosersPruneBranch(Branch losersBranch, Branch winnersBranch) {

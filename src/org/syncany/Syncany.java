@@ -9,7 +9,7 @@ import org.syncany.config.ConfigTO;
 
 public class Syncany {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
-	public enum CommandArgument { SYNC_UP, SYNC_DOWN };
+	public enum CommandArgument { SYNC_UP, SYNC_DOWN, STATUS };
 	
 	private String[] args;
 	private Client client;
@@ -33,7 +33,7 @@ public class Syncany {
 	}	
 
 	private void readCommandLineArguments(String[] args) throws Exception {
-		if (args.length == 3) { // -c config.json up
+		if (args.length == 3) { // -c config.json up/down/status
 			readCommandLineArgumentsWithSpecificConfigFile(args);
 		}
 		else if (args.length == 1) { // up
@@ -76,6 +76,9 @@ public class Syncany {
 		else if ("down".equals(commandArgument)) {
 			this.operationArgument = CommandArgument.SYNC_DOWN;
 		}
+		else if ("status".equals(commandArgument)) {
+			this.operationArgument = CommandArgument.STATUS;
+		}
 		else {
 			showUsageAndExit("Given command is unknown.");
 		}		
@@ -91,8 +94,9 @@ public class Syncany {
 			System.out.println();
 		}
 		
-		System.out.println("Usage: syncany [-c config.json] up    -  Sync up");
-		System.out.println("       syncany [-c config.json] down  -  Sync down");
+		System.out.println("Usage: syncany [-c config.json] up     -  Sync up");
+		System.out.println("       syncany [-c config.json] down   -  Sync down");
+		System.out.println("       syncany [-c config.json] status -  Get status");
 		
 		System.exit(1);
 	}
@@ -113,6 +117,9 @@ public class Syncany {
 		}
 		else if (operationArgument == CommandArgument.SYNC_DOWN) {
 			client.down();
+		}
+		else if (operationArgument == CommandArgument.STATUS) {
+			client.status();
 		}
 		else {
 			showUsageAndExit("Unknown operation.");

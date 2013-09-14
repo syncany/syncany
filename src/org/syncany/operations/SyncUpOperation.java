@@ -31,7 +31,7 @@ public class SyncUpOperation extends Operation {
 		transferManager = config.getConnection().createTransferManager();
 	}	
 	
-	public void execute() throws Exception {
+	public OperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -70,10 +70,11 @@ public class SyncUpOperation extends Operation {
 			
 			logger.log(Level.INFO, "Sync up done.");
 		}
+		
+		return new SyncUpOperationResult();
 	}	
 	
-	private boolean uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
-
+	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName());
@@ -83,16 +84,12 @@ public class SyncUpOperation extends Operation {
 			
 			logger.log(Level.INFO, "  + Removing "+StringUtil.toHex(multiChunkEntry.getId())+" locally ...");
 			localMultiChunkFile.delete();
-		}
-		
-		return true; // FIXME
+		}		
 	}
 
-	private boolean uploadLocalDatabase(File localDatabaseFile, RemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {		
+	private void uploadLocalDatabase(File localDatabaseFile, RemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {		
 		logger.log(Level.INFO, "- Uploading "+localDatabaseFile+" to "+remoteDatabaseFile+" ..."); 		
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
-		
-		return true;
 	}
 
 	private DatabaseVersion index(List<File> localFiles, Database db) throws FileNotFoundException, IOException {			
@@ -129,5 +126,9 @@ public class SyncUpOperation extends Operation {
 		newDatabaseVersion.setPreviousClient(previousClient);
 						
 		return newDatabaseVersion;
+	}
+	
+	public class SyncUpOperationResult implements OperationResult {
+		// TODO [low] Return something for 'up' operation
 	}
 }

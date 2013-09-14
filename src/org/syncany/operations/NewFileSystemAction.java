@@ -15,6 +15,7 @@ public class NewFileSystemAction extends FileSystemAction {
 		if (fileExists(fileVersion2)) {
 			if (!fileAsExpected(fileVersion2)) {
 				createConflictFile(fileVersion2);
+				createFile(fileVersion2);
 			}
 		}
 		else {		

@@ -211,6 +211,7 @@ public class DatabaseXmlDAOTest {
         versionA1.setPath("Pictures/2013");
         versionA1.setName("New York Folder");
         versionA1.setStatus(FileStatus.NEW);
+        versionA1.setSize(0L);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA1);
         
         FileVersion versionA2 = new FileVersion();
@@ -219,6 +220,7 @@ public class DatabaseXmlDAOTest {
         versionA2.setPath("Pictures/2013");
         versionA2.setName("New York");  
         versionA2.setStatus(FileStatus.RENAMED);
+        versionA2.setSize(0L);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
 		       
         // File B
@@ -231,6 +233,7 @@ public class DatabaseXmlDAOTest {
         versionB1.setPath("Pictures/2013");
         versionB1.setName("Egypt Folder");
         versionB1.setStatus(FileStatus.NEW);
+        versionB1.setSize(0L);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB1);
         
         FileVersion versionB2 = new FileVersion();
@@ -239,6 +242,7 @@ public class DatabaseXmlDAOTest {
         versionB2.setPath("Pictures/2013");
         versionB2.setName("Egypt");        
         versionB2.setStatus(FileStatus.RENAMED);
+        versionB2.setSize(0L);
         newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB2);	        	
         		
         // Add database version

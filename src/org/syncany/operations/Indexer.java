@@ -172,6 +172,7 @@ public class Indexer {
 			fileVersion.setPath(fileProperties.path);
 			fileVersion.setName(fileProperties.name);
 			fileVersion.setType(fileProperties.type);
+			fileVersion.setSize(fileProperties.size);
 			fileVersion.setChecksum(fileProperties.checksum);
 			fileVersion.setLastModified(new Date(fileProperties.lastModified));
 			fileVersion.setUpdated(new Date());
@@ -224,6 +225,7 @@ public class Indexer {
 			fileProperties.lastModified = file.lastModified();
 			fileProperties.type = (file.isDirectory()) ? FileType.FOLDER : FileType.FILE;
 			fileProperties.name = file.getName();
+			fileProperties.size = file.length();
 			fileProperties.path = FileUtil.getRelativePath(config.getLocalDir(), file.getParentFile());
 			fileProperties.relativePath = FileUtil.getRelativeParentDirectory(config.getLocalDir(), file) + File.separator + file.getName();
 			fileProperties.checksum = checksum;
@@ -364,6 +366,7 @@ public class Indexer {
 	private class FileProperties {
 		boolean exists;		
 		long lastModified;
+		long size;
 		FileType type;
 		String path;
 		String name;

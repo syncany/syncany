@@ -41,6 +41,7 @@ public class Database {
     	databaseVersions = new ArrayList<DatabaseVersion>();    	
         
     	// Caches
+    	// TODO [high] Write test for database caches!
     	fullDatabaseVersionCache = new DatabaseVersion();    	
     	filenameHistoryCache = new HashMap<String, PartialFileHistory>();
     	databaseVersionIdCache = new HashMap<VectorClock, DatabaseVersion>();
