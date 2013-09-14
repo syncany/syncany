@@ -47,8 +47,19 @@ public class FileUtil {
             return "";
         }
 
-        //System.err.println("aaa"+file.getAbsolutePath().substring(base.getAbsolutePath().length() + 1));
-        return file.getAbsolutePath().substring(base.getAbsolutePath().length() + 1);
+        String relativeFilePath = file.getAbsolutePath().substring(base.getAbsolutePath().length() + 1);
+        
+        // Remove trailing slashes
+        while (relativeFilePath.endsWith(File.separator)) {
+        	relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length()-1);
+        }
+
+        // Remove leading slashes
+        while (relativeFilePath.startsWith(File.separator)) {
+        	relativeFilePath = relativeFilePath.substring(1);
+        }
+        
+        return relativeFilePath;
     }
 
     public static String getAbsoluteParentDirectory(File file) {

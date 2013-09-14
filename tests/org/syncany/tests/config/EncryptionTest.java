@@ -95,6 +95,7 @@ public class EncryptionTest {
 	}		
 	
 	@Test
+	@Ignore
 	public void testEncryptionWith3Des112CbcPkcs5() throws Exception {
 		Encryption encryptionSettings = new Encryption();
 		
@@ -108,6 +109,7 @@ public class EncryptionTest {
 	}		
 	
 	@Test
+	@Ignore
 	public void testEncryptionWithAes128EcbPkcs5() throws Exception {
 		Encryption encryptionSettings = new Encryption();
 		

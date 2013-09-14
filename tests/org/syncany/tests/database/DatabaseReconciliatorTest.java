@@ -70,7 +70,7 @@ public class DatabaseReconciliatorTest {
 		
 		/// Input data ///
 		String localMachineName = "A";
-		//FIXME
+
 		DatabaseVersionHeader currentLocalVersion = null;
 		Branches allBranches = new Branches();
 		
@@ -116,7 +116,7 @@ public class DatabaseReconciliatorTest {
 		
 		/// Input data ///
 		String localMachineName = "C";
-		//FIXME
+
 		DatabaseVersionHeader currentLocalVersion = null;
 		Branches allBranches = new Branches();
 		
@@ -167,7 +167,7 @@ public class DatabaseReconciliatorTest {
 		
 		/// Input data ///
 		String localMachineName = "B";
-		//FIXME
+
 		DatabaseVersionHeader currentLocalVersion = null;
 		Branches allBranches = new Branches();
 		
@@ -228,7 +228,7 @@ public class DatabaseReconciliatorTest {
 		
 		/// Input data ///
 		String localMachineName = "A";
-		//FIXME
+
 		DatabaseVersionHeader currentLocalVersion = null;
 		Branches allBranches = new Branches();
 		
@@ -289,7 +289,7 @@ public class DatabaseReconciliatorTest {
 		
 		/// Input data ///
 		String localMachineName = "C";
-		//FIXME
+
 		DatabaseVersionHeader currentLocalVersion = null;
 		Branches allBranches = new Branches();
 		
@@ -350,7 +350,7 @@ public class DatabaseReconciliatorTest {
 		
 		/// Input data ///
 		String localMachineName = "C";
-		//FIXME
+		
 		DatabaseVersionHeader currentLocalVersion = null;
 
 		Branches allBranches = new Branches();

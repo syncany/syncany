@@ -23,9 +23,13 @@ import org.syncany.tests.scenarios.EvilCUpWithoutDownScenarioTest;
 import org.syncany.tests.scenarios.EmptyFolderScenarioTest;
 import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
+import org.syncany.tests.util.FileUtilTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+	// Util
+	FileUtilTests.class,
+	
 	// Config	
 	EncryptionTest.class,
 	

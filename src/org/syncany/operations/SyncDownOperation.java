@@ -251,7 +251,7 @@ public class SyncDownOperation extends Operation {
 			else if (isIdenticalFile) {
 				logger.log(Level.INFO, "      + Identical file. Nothing to do.");			}
 			else {
-				logger.log(Level.WARNING, "      + THIS SHOULD NOT HAPPEN"); // TODO
+				logger.log(Level.WARNING, "      + THIS SHOULD NOT HAPPEN"); 
 				throw new Exception("Cannot determine file system action!");
 			}
 		}

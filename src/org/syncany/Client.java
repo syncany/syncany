@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.operations.StatusOperation;
+import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.SyncDownOperation;
 import org.syncany.operations.SyncUpOperation;
 
@@ -40,7 +42,7 @@ public class Client {
 		new SyncDownOperation(config).execute();
 	}
 
-	public void status() throws Exception {
-		new StatusOperation(config).execute();		
+	public ChangeSet status() throws Exception {
+		return ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();		
 	}
 }

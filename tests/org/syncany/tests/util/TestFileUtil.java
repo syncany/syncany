@@ -115,36 +115,40 @@ public class TestFileUtil {
 	}
 	
 	
-	public static void changeRandomPartOfBinaryFile(File file, double percentage, int minSizeOfBlock) throws IOException{
-		if (file!=null && !file.exists()){
-			throw new IOException("File does not exist!");
+	public static void changeRandomPartOfBinaryFile(File file) throws IOException{
+		if (file != null && !file.exists()) {
+			throw new IOException("File does not exist: "+file);
 		}
+
+		if (file.isDirectory()) {
+			throw new IOException("Cannot change directory: "+file);
+		}
+
+		// Prepare: random bytes at random position
+		Random randomEngine = new Random();
 		
-		if (percentage < 0.01 || percentage > 0.99){
-			throw new IllegalArgumentException("percentage value must be between 1 and 99");
-		}
-				
-		long fileSize = file.length();
-		long maxPositions = fileSize / minSizeOfBlock;
-		long percentagedSize = (long)((float) fileSize * percentage);
-		long cycles = percentagedSize / minSizeOfBlock;
+		long randomPositionInFile = nextLong(randomEngine, file.length()-1);		
+
+		byte[] randomBytes = new byte[20];
+		randomEngine.nextBytes(randomBytes);
+
+		// Write to file
+		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+
+		randomAccessFile.seek(randomPositionInFile);		
+		randomAccessFile.write(randomBytes);
 		
-		if (fileSize > 0) {		
-			RandomAccessFile raf = new RandomAccessFile(file, "rw");
-			
-			for(int i = 0; i < cycles; i++){
-				long pos = (Math.abs(rnd.nextLong()) % maxPositions) * minSizeOfBlock;
-				raf.seek(pos);
-				byte[] arr = createRandomArray(minSizeOfBlock);
-				raf.write(arr);
-			}
-			
-			// TODO [low] This is to prevent this function from not altering the file at all
-			raf.seek(0);
-			raf.write(new String("CHANGE"+Math.random()).getBytes());			
-			
-			raf.close();
-		}
+		randomAccessFile.close();
+	}
+	
+	private static long nextLong(Random rng, long n) {
+		// error checking and 2^x checking removed for simplicity.
+		long bits, val;
+		do {
+			bits = (rng.nextLong() << 1) >>> 1;
+			val = bits % n;
+		} while (bits - val + (n - 1) < 0L);
+		return val;
 	}
 		
 	public static File createRandomFileInDirectory(File rootFolder) {
@@ -194,7 +198,7 @@ public class TestFileUtil {
 				File destFile = new File(destDir+"/file"+i+"-almost-the-same-as-"+srcFile.getName());
 				FileUtil.copy(srcFile, destFile);
 				
-				changeRandomPartOfBinaryFile(destFile, 0.1, 500);				
+				changeRandomPartOfBinaryFile(destFile);				
 				randomFiles.add(destFile);
 			}
 			

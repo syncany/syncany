@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -21,11 +20,8 @@ import org.syncany.util.FileUtil;
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());
 	
-	private TransferManager transferManager; 
-	
 	public StatusOperation(Config config) {
 		super(config);
-		transferManager = config.getConnection().createTransferManager();
 	}	
 	
 	public OperationResult execute() throws Exception {
@@ -39,14 +35,8 @@ public class StatusOperation extends Operation {
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
 		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir(), db);
 		
-		if (changeSet.changedFiles.size() > 0 || changeSet.newFiles.size() > 0) {
-			for (File changedFile : changeSet.newFiles) {
-				System.out.println("? "+FileUtil.getRelativePath(config.getLocalDir(), changedFile));
-			}
-
-			for (File changedFile : changeSet.changedFiles) {
-				System.out.println("M "+FileUtil.getRelativePath(config.getLocalDir(), changedFile));
-			}
+		if (changeSet.changedFiles.size() > 0 || changeSet.newFiles.size() > 0 || changeSet.deletedFiles.size() > 0) {
+					
 		}
 		else {
 			logger.log(Level.INFO, "- No changes to local database");
@@ -99,6 +89,23 @@ public class StatusOperation extends Operation {
 		});
 		
 		fileLister.start();
+		
+		// Find deleted files
+		for (PartialFileHistory fileHistory : db.getFileHistories()) {
+			// Check if file exists, remove if it doesn't
+			FileVersion lastLocalVersion = fileHistory.getLastVersion();
+			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getFullName());
+			
+			// Ignore this file history if the last version is marked "DELETED"
+			if (lastLocalVersion.getStatus() == FileStatus.DELETED) {
+				continue;
+			}
+			
+			// If file has VANISHED, mark as DELETED 
+			if (!lastLocalVersionOnDisk.exists()) {
+				changeSet.deletedFiles.add(lastLocalVersionOnDisk);
+			}
+		}						
 		
 		return changeSet;
 	}

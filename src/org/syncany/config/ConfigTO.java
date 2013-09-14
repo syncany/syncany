@@ -3,10 +3,10 @@ package org.syncany.config;
 import java.io.File;
 import java.util.Map;
 
+import org.syncany.config.Config.ConfigException;
 import org.syncany.util.FileUtil;
 
 import com.google.gson.Gson;
-
 
 public class ConfigTO {
 	//Directory which contains all files which shall be synced with remote repo 

@@ -66,16 +66,23 @@ public class Config {
     }
     
 	public Config(ConfigTO configTO) throws Exception {		
-		machineName = configTO.getMachineName();
-		
 		// Initialize config
 		// WARNING: Do not move around without knowing what you are doing!
+		initMachineName(configTO);
 		initDirectories(configTO);
 		initCache();
     	initEncryption(configTO);
 		initChunkingFramework(configTO);
     	initConnectionPlugin(configTO);    
 	}		
+
+	private void initMachineName(ConfigTO configTO) throws ConfigException {
+		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
+			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
+		}
+		
+		machineName = configTO.getMachineName();
+	}
 
 	private void initDirectories(ConfigTO configTO) {
 		localDir = new File(configTO.getLocalDir());
@@ -235,4 +242,23 @@ public class Config {
     	}
 		
 	}	
+	
+	public static class ConfigException extends Exception {
+		private static final long serialVersionUID = 4414807565457521855L;
+
+		public ConfigException(Throwable cause) {
+	        super(cause);
+	    }
+
+	    public ConfigException(String message, Throwable cause) {
+	        super(message, cause);
+	    }
+
+	    public ConfigException(String message) {
+	        super(message);
+	    }
+
+	    public ConfigException() {
+	    }    
+	}
 }

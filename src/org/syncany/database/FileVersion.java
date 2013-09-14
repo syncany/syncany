@@ -17,10 +17,10 @@
  */
 package org.syncany.database;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.syncany.config.Constants;
 import org.syncany.util.StringUtil;
 
 /**
@@ -148,7 +148,12 @@ public class FileVersion implements Cloneable {
     }
     
     public String getFullName() {
-    	return this.path + Constants.DATABASE_FILE_SEPARATOR + this.name;
+    	if (path == null || "".equals(path)) {
+    		return name;
+    	}
+    	else {
+    		return path+File.separator+name; 
+    	}    	
     }
     
     public byte[] getChecksum() {

@@ -1,26 +1,15 @@
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
-import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseXmlDAO;
-import org.syncany.database.FileVersion;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.StatusOperation;
+import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -32,14 +21,54 @@ public class StatusOperationTest {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
 		
-		// Run
+		// Add new files 
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 500*1024, 3);
 		
-		StatusOperation op = new StatusOperation(config);		
-		op.execute();
+		// Status
+		StatusOperation statusOperation = new StatusOperation(config);		
+		ChangeSet changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();				
 		
-		fail("Some asserts here.");
+		assertEquals(changeSet.getNewFiles().size(), originalFiles.size());
+		assertEquals(changeSet.getChangedFiles().size(), 0);
+		assertEquals(changeSet.getDeletedFiles().size(), 0);
+				
+		// Up
+		new SyncUpOperation(config).execute();		
+				
+		// Status
+		changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();		
 		
+		assertEquals(changeSet.getNewFiles().size(), 0);
+		assertEquals(changeSet.getChangedFiles().size(), 0);
+		assertEquals(changeSet.getDeletedFiles().size(), 0);
+
+		// Change all files, run 'status'
+		Thread.sleep(1000); // TODO [low] StatusOperation relies on file modified time and size, any other methods?
+
+		for (File file : originalFiles) {
+			TestFileUtil.changeRandomPartOfBinaryFile(file);
+		}		
+		
+		changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();
+		
+		assertEquals(changeSet.getNewFiles().size(), 0);
+		assertEquals(changeSet.getChangedFiles().size(), originalFiles.size());
+		assertEquals(changeSet.getDeletedFiles().size(), 0);
+		
+		// Up
+		new SyncUpOperation(config).execute();
+				
+		// Delete all files, run 'status' again
+		for (File file : originalFiles) {
+			TestFileUtil.deleteFile(file);
+		}
+				
+		changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();
+		
+		assertEquals(changeSet.getNewFiles().size(), 0);
+		assertEquals(changeSet.getChangedFiles().size(), 0);
+		assertEquals(changeSet.getDeletedFiles().size(), originalFiles.size());
+				
 		// Cleanup
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}

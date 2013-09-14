@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigTO;
+import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.util.FileUtil;
 
 public class Syncany {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
@@ -119,7 +121,19 @@ public class Syncany {
 			client.down();
 		}
 		else if (operationArgument == CommandArgument.STATUS) {
-			client.status();
+			ChangeSet changeSet = client.status();
+			
+			for (File newFile : changeSet.getNewFiles()) {
+				System.out.println("A "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), newFile));
+			}
+
+			for (File changedFile : changeSet.getChangedFiles()) {
+				System.out.println("M "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), changedFile));
+			}
+			
+			for (File deletedFile : changeSet.getDeletedFiles()) {
+				System.out.println("D "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), deletedFile));
+			}	
 		}
 		else {
 			showUsageAndExit("Unknown operation.");

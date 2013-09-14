@@ -227,7 +227,7 @@ public class Indexer {
 			fileProperties.name = file.getName();
 			fileProperties.size = file.length();
 			fileProperties.path = FileUtil.getRelativePath(config.getLocalDir(), file.getParentFile());
-			fileProperties.relativePath = FileUtil.getRelativeParentDirectory(config.getLocalDir(), file) + File.separator + file.getName();
+			fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
 			fileProperties.checksum = checksum;
 
 			// Must be last (!), used for vanish-test later

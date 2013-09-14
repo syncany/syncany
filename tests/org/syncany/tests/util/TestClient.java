@@ -50,7 +50,7 @@ public class TestClient extends Client {
 	}	
 
 	public void changeFile(String name) throws IOException {
-		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name), 0.5, 1*1024);		
+		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name));		
 	}	
 	
 	public void deleteFile(String name) {
