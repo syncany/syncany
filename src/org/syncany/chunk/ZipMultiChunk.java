@@ -18,10 +18,13 @@
 package org.syncany.chunk;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -36,20 +39,26 @@ import org.syncany.util.StringUtil;
 public class ZipMultiChunk extends MultiChunk {
     private ZipOutputStream zipOut;
     private ZipInputStream zipIn;
+    private ZipFile zipFile;
 
     public ZipMultiChunk(InputStream is) {
         super(0);
         this.zipIn = new ZipInputStream(is);
     }
     
+    public ZipMultiChunk(File file) throws ZipException, IOException {
+		super(0);
+		this.zipFile = new ZipFile(file);
+	}    
+    
     public ZipMultiChunk(byte[] id, int minSize, OutputStream os) throws IOException {
         super(id, minSize);        
         
         this.zipOut = new ZipOutputStream(os);
         this.zipOut.setLevel(ZipOutputStream.STORED); // No compression        
-    }            
-    
-    @Override
+    }                
+
+	@Override
     public boolean isFull() {
         return size >= minSize;
     }
@@ -65,7 +74,15 @@ public class ZipMultiChunk extends MultiChunk {
         zipOut.putNextEntry(entry);
         zipOut.write(chunk.getContent(), 0, chunk.getSize());
         zipOut.closeEntry();
-    }        
+    }    
+    
+    @Override
+    public InputStream getChunkInputStream(byte[] checksum) throws IOException {
+    	ZipEntry chunkEntry = zipFile.getEntry(StringUtil.toHex(checksum));
+    	InputStream chunkInputStream = zipFile.getInputStream(chunkEntry);
+    	
+    	return chunkInputStream;
+    }
     
     @Override
     public Chunk read() throws IOException {

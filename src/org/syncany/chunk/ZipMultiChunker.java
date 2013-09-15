@@ -17,6 +17,7 @@
  */
 package org.syncany.chunk;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,7 +34,17 @@ public class ZipMultiChunker extends MultiChunker {
     @Override
     public MultiChunk createMultiChunk(InputStream is) {
         return new ZipMultiChunk(is);
-    }
+    }    
+
+	@Override
+	public MultiChunk createMultiChunk(File file) throws IOException {
+		try {
+			return new ZipMultiChunk(file);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
 
     @Override
     public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {

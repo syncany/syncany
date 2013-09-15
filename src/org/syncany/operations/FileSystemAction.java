@@ -2,18 +2,22 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.chunk.MultiChunk;
+import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
-import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.Database;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -64,14 +68,35 @@ public abstract class FileSystemAction {
 			}
 			
 			// Create file
+			MultiChunker multiChunker = config.getMultiChunker();
 			FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
 
 			if (fileContent != null) { // File can be empty!
 				Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
 				
 				for (ChunkEntryId chunkChecksum : fileChunks) {
-					File chunkFile = config.getCache().getChunkFile(chunkChecksum.getArray());
-					FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
+					MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
+					
+					if (multiChunkForChunk == null) {
+						multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
+					}
+					
+					File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId());
+
+					// TODO [low] Make more sensible API for multichunking
+					MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
+					InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getArray());
+					
+					FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
+
+					/*ZipFile zipFile = new ZipFile(decryptedMultiChunkFile);
+					ZipEntry zipEntry = zipFile.getEntry(StringUtil.toHex(chunkChecksum.getArray()));
+					InputStream zipEntryInputStream = zipFile.getInputStream(zipEntry);
+					
+					FileUtil.appendToOutputStream(zipEntryInputStream, reconstructedFileOutputStream);*/
+					
+					//File chunkFile = config.getCache().getChunkFile(chunkChecksum.getArray());
+					//FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
 				}
 			}
 			

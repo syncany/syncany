@@ -7,40 +7,32 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
-import org.syncany.chunk.TarMultiChunker;
+import org.syncany.chunk.NoTransformer;
+import org.syncany.chunk.Transformer;
+import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.tests.util.TestFileUtil;
 
 public class MultiChunkerTest {
-
-	private File tempDir;
-
-	@Before
-	public void setUp() throws Exception {
-		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		TestFileUtil.deleteDirectory(tempDir);
-	}
-
 	@Test
-	public void testChunkFileIntoMultiChunks() throws IOException {
+	public void testChunkFileIntoMultiChunks() throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
 		int minMultiChunkSize = 512 * 1024;
 		int chunkSizeB = 16000;
 
@@ -49,18 +41,71 @@ public class MultiChunkerTest {
 		};
 		
 		MultiChunker[] multiChunkers = new MultiChunker[] { 
-			new CustomMultiChunker(minMultiChunkSize),
-			new TarMultiChunker(minMultiChunkSize) 
+			//new CustomMultiChunker(minMultiChunkSize),
+			new ZipMultiChunker(minMultiChunkSize) 
 		};
 		
 		for (Chunker chunker : chunkers) {
 			for (MultiChunker multiChunker : multiChunkers) {
-				testChunkFileIntoMultiChunks(chunker, multiChunker, minMultiChunkSize);
+				chunkFileIntoMultiChunks(chunker, multiChunker, minMultiChunkSize);
 			}
 		}
+		
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 	
-	public void testChunkFileIntoMultiChunks(Chunker chunker, MultiChunker multiChunker, int minMultiChunkSize) throws IOException {
+	@Test
+	public void testZipRandomAccess() throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		File testArchive = new File(tempDir+"/testfile.zip");
+		File testOutputfile = new File(tempDir+"/testoutfile.jpg");
+		
+		// Write test file
+		ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(testArchive));
+		zipOutputStream.setLevel(ZipOutputStream.STORED);
+		
+		for (int i=0; i<100; i++) {
+			byte[] randomArray = TestFileUtil.createRandomArray(32*1024);
+			
+			ZipEntry zipEntry = new ZipEntry(""+i);
+			zipEntry.setSize(randomArray.length);
+						
+			zipOutputStream.putNextEntry(zipEntry);
+			zipOutputStream.write(randomArray);
+			zipOutputStream.closeEntry();
+		}
+		
+		zipOutputStream.close();
+		
+		// Read it randomly
+		FileOutputStream testOutFileStream = new FileOutputStream(testOutputfile);
+		ZipFile zipFile = new ZipFile(testArchive);
+		Random random = new Random();
+		
+		for (int i=0; i<100; i++) {
+			int randomEntryName = random.nextInt(100);
+			ZipEntry zipEntry = zipFile.getEntry(""+randomEntryName);
+			
+			InputStream inputStream = zipFile.getInputStream(zipEntry);
+			
+			byte[] buffer = new byte[4096];
+			int read = -1;
+			
+			while (-1 != (read = inputStream.read(buffer))) {
+				testOutFileStream.write(buffer, 0, read);
+			}
+			
+			inputStream.close();			
+		}
+		
+		zipFile.close();
+		
+		TestFileUtil.deleteDirectory(tempDir);
+	}	
+	
+	public void chunkFileIntoMultiChunks(Chunker chunker, MultiChunker multiChunker, int minMultiChunkSize) throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
 		int fileSizeBig = 4560000;
 		int fileSizeSmall = 1230;
 		int fileAmountSizeSmall = 2;
@@ -69,18 +114,20 @@ public class MultiChunkerTest {
 		List<File> files = TestFileUtil.createRandomFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
 		files.addAll(TestFileUtil.createRandomFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
-		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(files, chunker, multiChunker);
+		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(tempDir, files, chunker, multiChunker, new NoTransformer());
 
 		long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall);
 		assertEquals((totalFilesSize / (minMultiChunkSize)), resultMultiChunks.size());
+		
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 
-	private Set<MultiChunk> chunkFileIntoMultiChunks(List<File> files, Chunker foc, MultiChunker customMultiChunker)
+	private Set<MultiChunk> chunkFileIntoMultiChunks(File tempDir, List<File> files, Chunker foc, MultiChunker customMultiChunker, Transformer transformer)
 			throws IOException {
 
 		Set<MultiChunk> resultMultiChunks = new HashSet<MultiChunk>();
 
-		MultiChunk customMultiChunk = createNewMultiChunk(customMultiChunker);
+		MultiChunk customMultiChunk = createNewMultiChunk(tempDir, customMultiChunker, transformer);
 
 		for (File file : files) {
 			Enumeration<Chunk> chunks = foc.createChunks(file);
@@ -91,7 +138,7 @@ public class MultiChunkerTest {
 				if (customMultiChunk.isFull()) {
 					customMultiChunk.close();
 					resultMultiChunks.add(customMultiChunk);
-					customMultiChunk = createNewMultiChunk(customMultiChunker);
+					customMultiChunk = createNewMultiChunk(tempDir, customMultiChunker, transformer);
 				}
 			}
 		}
@@ -101,14 +148,15 @@ public class MultiChunkerTest {
 		return resultMultiChunks;
 	}
 
-	private MultiChunk createNewMultiChunk(MultiChunker customMultiChunker) {
+	private MultiChunk createNewMultiChunk(File tempDir, MultiChunker customMultiChunker, Transformer transformer) {
 		FileOutputStream fos;
 		String multiChunkName = String.valueOf(new Random().nextInt());
 
 		MultiChunk customChunk = null;
 		try {
 			fos = new FileOutputStream(tempDir.getAbsolutePath() + "/MultiChunk" + multiChunkName);
-			customChunk = customMultiChunker.createMultiChunk(multiChunkName.getBytes(), fos);
+			customChunk = customMultiChunker.createMultiChunk(multiChunkName.getBytes(), 
+					transformer.createOutputStream(fos));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

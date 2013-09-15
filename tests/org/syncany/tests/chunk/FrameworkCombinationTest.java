@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.Deduper;
 import org.syncany.chunk.DeduperAdapter;
 import org.syncany.chunk.GzipTransformer;
@@ -30,7 +29,6 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.TTTDChunker;
-import org.syncany.chunk.TarMultiChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.Encryption;
@@ -81,8 +79,7 @@ public class FrameworkCombinationTest {
 		int[] multiChunkSizes = new int[] { 250000, 500000 };
 
 		for (int i = 0; i < multiChunkSizes.length; i++) {
-			multiChunkers.add(new CustomMultiChunker(multiChunkSizes[i]));
-			multiChunkers.add(new TarMultiChunker(multiChunkSizes[i]));
+			//multiChunkers.add(new CustomMultiChunker(multiChunkSizes[i]));
 			multiChunkers.add(new ZipMultiChunker(multiChunkSizes[i]));
 		}
 

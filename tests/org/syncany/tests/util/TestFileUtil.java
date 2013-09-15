@@ -129,7 +129,7 @@ public class TestFileUtil {
 		int maxChangeBytesLen = 20;
 		int maxChangeBytesStartPos = (fileSize-maxChangeBytesLen-1 >= 0) ? fileSize-maxChangeBytesLen-1 : 0;
 		
-		int changeBytesStartPos = randomEngine.nextInt(maxChangeBytesStartPos);
+		int changeBytesStartPos = (maxChangeBytesStartPos > 0) ? randomEngine.nextInt(maxChangeBytesStartPos) : 0;
 		int changeBytesLen = (fileSize-changeBytesStartPos < maxChangeBytesLen) ? fileSize-changeBytesStartPos-1 : maxChangeBytesLen; 
 
 		byte[] changeBytes = new byte[changeBytesLen];

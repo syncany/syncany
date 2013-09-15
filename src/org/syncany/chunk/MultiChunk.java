@@ -18,6 +18,7 @@
 package org.syncany.chunk;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -61,6 +62,7 @@ public abstract class MultiChunk {
         this.id = id;
     }
 
+    public abstract InputStream getChunkInputStream(byte[] checksum) throws IOException;
     public abstract Chunk read() throws IOException;
     public abstract void write(Chunk chunk) throws IOException;
     public abstract void close() throws IOException;

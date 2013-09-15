@@ -17,6 +17,7 @@
  */
 package org.syncany.chunk;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -50,6 +51,8 @@ public abstract class MultiChunker {
      * @return
      */
     public abstract MultiChunk createMultiChunk(InputStream is);
+    
+    public abstract MultiChunk createMultiChunk(File file) throws IOException;
     
     /**
      * 

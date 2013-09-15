@@ -2,7 +2,10 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -290,6 +293,35 @@ public class SyncDownOperation extends Operation {
 		TransferManager transferManager = config.getConnection().createTransferManager();
 		
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId());
+			RemoteFile remoteMultiChunkFile = new RemoteFile(localEncryptedMultiChunkFile.getName()); // TODO [low] Make MultiChunkRemoteFile class, or something like that
+			
+			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
+			
+			logger.log(Level.INFO, "  + Extracting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));			
+			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile); 			
+
+			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
+			
+			decryptedMultiChunkOutputStream.close();
+			multiChunkInputStream.close();
+			
+			logger.log(Level.FINE, "  + Locally deleting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			localEncryptedMultiChunkFile.delete();
+		}
+		
+		transferManager.disconnect();
+	}
+
+	@Deprecated
+	private void downloadAndExtractMultiChunks_WORKS(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
+		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
+		TransferManager transferManager = config.getConnection().createTransferManager();
+		
+		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
 			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName()); // TODO Make MultiChunkRemoteFile class, or something like that
 			
@@ -317,7 +349,8 @@ public class SyncDownOperation extends Operation {
 		
 		transferManager.disconnect();
 	}
-
+	
+	
 	private Set<MultiChunkEntry> determineUnknownMultiChunks(Database database, Database winnersDatabase, Cache cache) {
 		logger.log(Level.INFO, "- Determine new multichunks to download ...");
 		
@@ -333,10 +366,10 @@ public class SyncDownOperation extends Operation {
 				}
 				
 				if (fileContent != null) { // File can be empty!					
-					Collection<ChunkEntryId> fileChunks = fileContent.getChunks(); // TODO [high] change this to getChunkRefs, solves cross referencing in database versions
+					Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
 					
 					for (ChunkEntryId chunkChecksum : fileChunks) {
-						File chunkFileInCache = cache.getChunkFile(chunkChecksum.getArray());
+						File chunkFileInCache = cache.getChunkFile(chunkChecksum.getArray()); // TODO [medium] Chunk files do not exist anymore. Remove this
 						
 						if (!chunkFileInCache.exists()) {
 							MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);

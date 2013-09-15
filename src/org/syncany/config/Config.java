@@ -21,12 +21,12 @@ import java.io.File;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.CustomMultiChunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
+import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -92,8 +92,8 @@ public class Config {
 
 	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
 		// TODO [low] make chunking options configurable			
-		chunker = new FixedOffsetChunker(16 * 1024);
-		multiChunker = new CustomMultiChunker(1024 * 1024);//new TarMultiChunker(512 * 1024);
+		chunker = new FixedOffsetChunker(16*1024); //new TTTDChunker(16*1024);// 
+		multiChunker = new ZipMultiChunker(2048*1024);
 		
 		if (encryption != null) {
 			transformer = new GzipTransformer(new CipherTransformer(encryption));
