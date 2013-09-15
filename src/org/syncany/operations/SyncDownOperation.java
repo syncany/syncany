@@ -126,7 +126,7 @@ public class SyncDownOperation extends Operation {
 	}
 
 	private void initOperationVariables() throws IOException {		
-		localDatabase = loadLocalDatabase(config.getDatabaseFile());
+		localDatabase = loadLocalDatabase(config.getDatabaseFile()); // TODO [high] Use LoadDatabaseOperation instead
 		localBranch = localDatabase.getBranch();	
 
 		transferManager = config.getConnection().createTransferManager();		
@@ -228,28 +228,38 @@ public class SyncDownOperation extends Operation {
 				FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				logger.log(Level.INFO, "      + Added: "+action);
+				if (logger.isLoggable(Level.FINER)) {
+					logger.log(Level.FINER, "      + Added: "+action);
+				}
 			}
 			else if (isChangedFile) {	
 				FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				logger.log(Level.INFO, "      + Changed: "+action);
+				if (logger.isLoggable(Level.FINER)) {
+					logger.log(Level.FINER, "      + Changed: "+action);
+				}
 			}
 			else if (isRenamedFile) {
 				FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				logger.log(Level.INFO, "      + Renamed: "+action);
+				if (logger.isLoggable(Level.FINER)) {
+					logger.log(Level.FINER, "      + Renamed: "+action);
+				}
 			}
 			else if (isDeletedFile) {
 				FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				logger.log(Level.INFO, "      + Deleted: "+action);
+				if (logger.isLoggable(Level.FINER)) {
+					logger.log(Level.FINER, "      + Deleted: {0}", action);
+				}
 			}
 			else if (isIdenticalFile) {
-				logger.log(Level.INFO, "      + Identical file. Nothing to do.");			}
+				if (logger.isLoggable(Level.FINER)) {
+					logger.log(Level.FINER, "      + Identical file. Nothing to do.");			}
+				}
 			else {
 				logger.log(Level.WARNING, "      + THIS SHOULD NOT HAPPEN"); 
 				throw new Exception("Cannot determine file system action!");
@@ -266,8 +276,11 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.FINER, "- Applying file system actions (sorted!) ...");		
 		
 		// Apply
-		for (FileSystemAction action : actions) {
-			logger.log(Level.FINER, "   + "+action);
+		for (FileSystemAction action : actions) {			
+			if (logger.isLoggable(Level.FINER)) {
+				logger.log(Level.FINER, "   +  {0}", action);
+			}
+			
 			action.execute();
 		}
 	}
@@ -288,14 +301,17 @@ public class SyncDownOperation extends Operation {
 					config.getTransformer().createInputStream(new FileInputStream(localMultiChunkFile)));
 			Chunk extractedChunk = null;
 			
-			while (null != (extractedChunk = multiChunkInCache.read())) {
+			while (null != (extractedChunk = multiChunkInCache.read())) { // TODO [high] IMPORTANT This is incredibly SLOW (800 MB 'down' takes > 10 minutes) 
 				File localChunkFile = config.getCache().getChunkFile(extractedChunk.getChecksum());
 				
-				logger.log(Level.INFO, "    * Unpacking chunk "+StringUtil.toHex(extractedChunk.getChecksum())+" ...");
+				if (logger.isLoggable(Level.FINEST)) {
+					logger.log(Level.FINEST, "    * Unpacking chunk {0} ...", StringUtil.toHex(extractedChunk.getChecksum()));
+				}
+				
 				FileUtil.writeToFile(extractedChunk.getContent(), localChunkFile);
 			}
 			
-			logger.log(Level.INFO, "  + Removing multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			logger.log(Level.FINE, "  + Locally deleting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			localMultiChunkFile.delete();
 		}
 		

@@ -34,16 +34,16 @@ import javax.crypto.spec.SecretKeySpec;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.config.Config;
 import org.syncany.config.Encryption;
 import org.syncany.config.EncryptionException;
+import org.syncany.config.Logging;
 import org.syncany.util.StringUtil;
 
 public class EncryptionTest {
 	private static final Logger logger = Logger.getLogger(EncryptionTest.class.getSimpleName());		
 	
 	static {
-		Config.initLogging();
+		Logging.init();
 	}
 		
 	@Test

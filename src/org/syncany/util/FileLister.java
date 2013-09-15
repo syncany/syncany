@@ -93,7 +93,7 @@ public class FileLister {
             listener.outDirectory(file);
         } // File
         else if (file.isFile() && listener.fileFilter(file)) {
-            listener.proceedFile(file);
+            listener.processFile(file);
         }
     }
 
@@ -135,7 +135,7 @@ public class FileLister {
          * @param f
          *          file found.
          */
-        public void proceedFile(File f);
+        public void processFile(File f);
 
         /**
          * called when entering in the given directory
@@ -178,7 +178,7 @@ public class FileLister {
         }
 
         @Override
-        public void proceedFile(File f) {
+        public void processFile(File f) {
             // Nothing.
         }
 

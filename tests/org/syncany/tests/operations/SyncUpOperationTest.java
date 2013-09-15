@@ -1,7 +1,6 @@
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,6 +21,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 
 public class SyncUpOperationTest {
 	private Config testConfig;	
@@ -56,7 +56,7 @@ public class SyncUpOperationTest {
 		
 		assertTrue(localDatabaseFile.exists());
 		assertTrue(remoteDatabaseFile.exists());
-		assertEquals(TestFileUtil.getMD5Checksum(localDatabaseFile), TestFileUtil.getMD5Checksum(remoteDatabaseFile));
+		assertArrayEquals(FileUtil.createChecksum(localDatabaseFile), FileUtil.createChecksum(remoteDatabaseFile));
 		
 		DatabaseDAO dDAO = new DatabaseXmlDAO(testConfig.getTransformer());
 		Database localDatabase = new Database();

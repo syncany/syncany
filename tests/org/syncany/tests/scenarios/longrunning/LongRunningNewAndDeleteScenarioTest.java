@@ -1,4 +1,4 @@
-package org.syncany.tests.scenarios;
+package org.syncany.tests.scenarios.longrunning;
 
 import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
+import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -27,9 +28,7 @@ public class LongRunningNewAndDeleteScenarioTest {
 		logger.log(Level.INFO, "NOTE: This test can take several minutes!");
 		logger.log(Level.INFO, "Disabling console logging for this test; Too much output/overhead.");
 		
-		while (Logger.getLogger("").getHandlers().length > 0) {
-			Logger.getLogger("").removeHandler(Logger.getLogger("").getHandlers()[0]);
-		}
+		Logging.disableLogging();
 		
 		// Run 
 		for (int round=1; round<30; round++) {

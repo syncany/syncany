@@ -3,6 +3,7 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -18,7 +19,9 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
-import org.syncany.util.FileUtil;
+import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
+import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.util.StringUtil;
 
 public class SyncUpOperation extends Operation {
@@ -27,8 +30,8 @@ public class SyncUpOperation extends Operation {
 	private TransferManager transferManager; 
 	
 	public SyncUpOperation(Config config) {
-		super(config);
-		transferManager = config.getConnection().createTransferManager();
+		super(config);		
+		this.transferManager = config.getConnection().createTransferManager();
 	}	
 	
 	public OperationResult execute() throws Exception {
@@ -36,25 +39,42 @@ public class SyncUpOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Sync up' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		logger.log(Level.INFO, "Loading local database ...");		
-		Database db = loadLocalDatabase(config.getDatabaseFile());
+		// logger.log(Level.INFO, "Loading local database ...");		
+		// Database db = loadLocalDatabase(config.getDatabaseFile());
+
+		// logger.log(Level.INFO, "Starting index process ...");
+		// List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir(), true);
 		
-		logger.log(Level.INFO, "Starting index process ...");
-		List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir(), true);
-		DatabaseVersion lastDirtyDatabaseVersion = index(localFiles, db);
+		// Load database
+		Database database = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
+		
+		// Find local changes
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, database).execute()).getChangeSet();
+
+		if (!changeSet.hasChanges()) {
+			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
+			return new SyncUpOperationResult();
+		}
+		
+		List<File> locallyUpdatedFiles = new ArrayList<File>();
+		locallyUpdatedFiles.addAll(changeSet.getNewFiles());
+		locallyUpdatedFiles.addAll(changeSet.getChangedFiles());
+		
+		// Index
+		DatabaseVersion lastDirtyDatabaseVersion = index(locallyUpdatedFiles, database);
 		
 		if (lastDirtyDatabaseVersion.getFileHistories().size() == 0) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 		}
 		else {
 			logger.log(Level.INFO, "Adding newest database version "+lastDirtyDatabaseVersion.getHeader()+" to local database ...");
-			db.addDatabaseVersion(lastDirtyDatabaseVersion);
+			database.addDatabaseVersion(lastDirtyDatabaseVersion);
 	
 			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ...");
-			saveLocalDatabase(db, config.getDatabaseFile());
+			saveLocalDatabase(database, config.getDatabaseFile());
 			
 			logger.log(Level.INFO, "Uploading new multichunks ...");
-			uploadMultiChunks(db.getLastDatabaseVersion().getMultiChunks());
+			uploadMultiChunks(database.getLastDatabaseVersion().getMultiChunks());
 			
 			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(config.getMachineName());
 
@@ -63,7 +83,7 @@ public class SyncUpOperation extends Operation {
 
 			logger.log(Level.INFO, "Saving local delta database file ...");
 			logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
-			saveLocalDatabase(db, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
+			saveLocalDatabase(database, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
 			
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
 			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);

@@ -15,6 +15,7 @@ import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.FixedOffsetChunker;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 
 public class FixedOffsetChunkerTest {
 	private File tempDir;
@@ -75,8 +76,8 @@ public class FixedOffsetChunkerTest {
 		assertEquals("Unexpected number of chunks when chunking", EXPECTED_NUMBER_OF_CHUNKS, actualChunkCount);
 
 		// Checksums
-		byte[] inputFileChecksum = TestFileUtil.createChecksum(inputRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
-		byte[] outputFileChecksum = TestFileUtil.createChecksum(outputCopyOfRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
+		byte[] inputFileChecksum = FileUtil.createChecksum(inputRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
+		byte[] outputFileChecksum = FileUtil.createChecksum(outputCopyOfRandom5MBFile, FixedOffsetChunker.DEFAULT_DIGEST_ALG);
 		
 		assertArrayEquals("Checksums of input and output file do not match.", inputFileChecksum, outputFileChecksum);
 		assertArrayEquals("Last chunk's getFileChecksum() should be the file checksum.", inputFileChecksum, lastChunk.getFileChecksum());
@@ -110,9 +111,18 @@ public class FixedOffsetChunkerTest {
 		assertFalse("hasElements() should return 'false' if no chunk available.", chunkEnumeration.hasMoreElements());
 	}
 	
-	@Test(expected=Exception.class)
+	@Test
 	public void testExceptionInvalidDigestAlgorithm() {
-		new FixedOffsetChunker(1337, "does-not-exist");
+		boolean exceptionThrown = false;
+		
+		try {
+			new FixedOffsetChunker(1337, "does-not-exist");
+		}
+		catch (Exception e) {
+			exceptionThrown = true;
+		}
+		
+		assertTrue("Exception expected.", exceptionThrown);
 	}
 
 }

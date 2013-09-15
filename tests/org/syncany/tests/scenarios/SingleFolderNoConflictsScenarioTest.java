@@ -1,6 +1,6 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -16,7 +16,7 @@ public class SingleFolderNoConflictsScenarioTest {
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection); 
-
+		
 		// Create files and upload
 		clientA.createNewFolder("folder");		
 		clientA.up();

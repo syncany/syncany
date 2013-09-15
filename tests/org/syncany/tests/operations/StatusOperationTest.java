@@ -25,8 +25,7 @@ public class StatusOperationTest {
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 500*1024, 3);
 		
 		// Status
-		StatusOperation statusOperation = new StatusOperation(config);		
-		ChangeSet changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();				
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();				
 		
 		assertEquals(changeSet.getNewFiles().size(), originalFiles.size());
 		assertEquals(changeSet.getChangedFiles().size(), 0);
@@ -36,7 +35,7 @@ public class StatusOperationTest {
 		new SyncUpOperation(config).execute();		
 				
 		// Status
-		changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();		
+		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();		
 		
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
@@ -49,7 +48,7 @@ public class StatusOperationTest {
 			TestFileUtil.changeRandomPartOfBinaryFile(file);
 		}		
 		
-		changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();
+		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();
 		
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), originalFiles.size());
@@ -63,7 +62,7 @@ public class StatusOperationTest {
 			TestFileUtil.deleteFile(file);
 		}
 				
-		changeSet = ((StatusOperationResult) statusOperation.execute()).getChangeSet();
+		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();
 		
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
@@ -73,4 +72,42 @@ public class StatusOperationTest {
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
 	
+	@Test
+	public void testVeryRecentFileModificationWithoutSizeOrModifiedDateChange() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();		
+		File testFile = TestFileUtil.createRandomFileInDirectory(config.getLocalDir(), 40);
+		
+		// Perform 'up' and immediately change test file
+		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
+		new SyncUpOperation(config).execute();		
+		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
+		
+		// Run 'status', this should run a checksum-based file comparison
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		assertEquals(changeSet.getChangedFiles().size(), 1);
+				
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
+	
+	@Test
+	public void testNotSoRecentFileModificationWithoutSizeOrModifiedDateChange() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();
+		File testFile = TestFileUtil.createRandomFileInDirectory(config.getLocalDir(), 40);
+		
+		// Perform 'up', wait a second and then change test file
+		// IMPORTANT: Sleep to prevent detailed checksum-based update check in 'status' operation
+		new SyncUpOperation(config).execute();				
+		Thread.sleep(1500);
+		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
+		
+		// Run 'status', this should NOT run a checksum-based file comparison
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		assertEquals(changeSet.getChangedFiles().size(), 1);
+				
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
 }

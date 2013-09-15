@@ -11,13 +11,13 @@ import org.syncany.tests.util.TestFileUtil;
 
 public class FileTreeMoveToSubfolderScenarioTest {
 	@Test
-	public void testCreateFileTreeAndMoveSubfolder() throws Exception {
+	public void testCreateFileTreeAndMoveSubfolder() throws Exception {		
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
-		
+				
 		// Run 
 		clientA.createNewFolder("A-folder1");
 		clientA.createNewFolder("A-folder1/A-subfolder1");

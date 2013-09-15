@@ -71,7 +71,7 @@ public class CustomMultiChunk extends MultiChunk {
         
         os.write(chunk.getChecksum());
 
-        os.writeShort(chunk.getSize());
+        os.writeInt(chunk.getSize());
         os.write(chunk.getContent(), 0, chunk.getSize());  
     }
         
@@ -95,7 +95,7 @@ public class CustomMultiChunk extends MultiChunk {
 	        byte[] checksum = new byte[checksumLength];
 	        readFromInputStreamFixed(checksum, 0, checksumLength, is);
 
-	        int chunkSize = is.readShort();	        
+	        int chunkSize = is.readInt();	        
 	        byte[] contents = new byte[chunkSize];        
 	        readFromInputStreamFixed(contents, 0, chunkSize, is);
 	        

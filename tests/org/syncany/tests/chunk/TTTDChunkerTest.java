@@ -15,6 +15,7 @@ import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.TTTDChunker;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 
 public class TTTDChunkerTest {
 	private File tempDir;
@@ -70,8 +71,8 @@ public class TTTDChunkerTest {
 		// TODO How to test the number of chunks?
 
 		// Checksums
-		byte[] inputFileChecksum = TestFileUtil.createChecksum(inputRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
-		byte[] outputFileChecksum = TestFileUtil.createChecksum(outputCopyOfRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
+		byte[] inputFileChecksum = FileUtil.createChecksum(inputRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
+		byte[] outputFileChecksum = FileUtil.createChecksum(outputCopyOfRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
 		
 		assertArrayEquals("Checksums of input and output file do not match.", inputFileChecksum, outputFileChecksum);
 		assertArrayEquals("Last chunk's getFileChecksum() should be the file checksum.", inputFileChecksum, lastChunk.getFileChecksum());

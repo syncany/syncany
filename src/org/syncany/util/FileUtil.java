@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -364,5 +365,29 @@ public class FileUtil {
         success = success && file.delete();
         return success;
     }
+    
+
+	public static byte[] createChecksum(File file) throws Exception {
+		return createChecksum(file, "SHA1");
+	}
+	
+	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {
+		FileInputStream fis =  new FileInputStream(filename);
+
+		byte[] buffer = new byte[1024];
+		MessageDigest complete = MessageDigest.getInstance(digestAlgorithm);
+		int numRead;
+
+		do {
+			numRead = fis.read(buffer);
+			if (numRead > 0) {
+				complete.update(buffer, 0, numRead);
+			}
+		} while (numRead != -1);
+
+		fis.close();
+		return complete.digest();
+	}
+
 }
 

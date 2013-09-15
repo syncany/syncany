@@ -45,16 +45,5 @@ public abstract class Chunker {
     public abstract Enumeration<Chunk> createChunks(InputStream is) throws IOException;
     
     @Override
-    public abstract String toString();
-    
-    public synchronized byte[] createChecksum(File file) throws IOException {
-        Enumeration<Chunk> chunks = createChunks(new FileInputStream(file));
-        Chunk chunk = null;
-        
-        while (chunks.hasMoreElements()) {            
-            chunk = chunks.nextElement(); 
-        }
-        
-        return (chunk == null) ? null : chunk.getFileChecksum();        
-    }        
+    public abstract String toString();    
 }

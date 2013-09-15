@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -114,8 +113,7 @@ public class TestFileUtil {
 		} else return false;
 	}
 	
-	
-	public static void changeRandomPartOfBinaryFile(File file) throws IOException{
+	public static void changeRandomPartOfBinaryFile(File file) throws IOException {	
 		if (file != null && !file.exists()) {
 			throw new IOException("File does not exist: "+file);
 		}
@@ -126,30 +124,25 @@ public class TestFileUtil {
 
 		// Prepare: random bytes at random position
 		Random randomEngine = new Random();
-		
-		long randomPositionInFile = nextLong(randomEngine, file.length()-1);		
 
-		byte[] randomBytes = new byte[20];
-		randomEngine.nextBytes(randomBytes);
+		int fileSize = (int) file.length();
+		int maxChangeBytesLen = 20;
+		int maxChangeBytesStartPos = (fileSize-maxChangeBytesLen-1 >= 0) ? fileSize-maxChangeBytesLen-1 : 0;
+		
+		int changeBytesStartPos = randomEngine.nextInt(maxChangeBytesStartPos);
+		int changeBytesLen = (fileSize-changeBytesStartPos < maxChangeBytesLen) ? fileSize-changeBytesStartPos-1 : maxChangeBytesLen; 
+
+		byte[] changeBytes = new byte[changeBytesLen];
+		randomEngine.nextBytes(changeBytes);
 
 		// Write to file
 		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
 
-		randomAccessFile.seek(randomPositionInFile);		
-		randomAccessFile.write(randomBytes);
+		randomAccessFile.seek(changeBytesStartPos);		
+		randomAccessFile.write(changeBytes);
 		
 		randomAccessFile.close();
-	}
-	
-	private static long nextLong(Random rng, long n) {
-		// error checking and 2^x checking removed for simplicity.
-		long bits, val;
-		do {
-			bits = (rng.nextLong() << 1) >>> 1;
-			val = bits % n;
-		} while (bits - val + (n - 1) < 0L);
-		return val;
-	}
+	}	
 		
 	public static File createRandomFileInDirectory(File rootFolder) {
 		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(rnd.nextInt()) + ".dat";
@@ -286,48 +279,13 @@ public class TestFileUtil {
 		byte[] ret = new byte[size];
 		rnd.nextBytes(ret);
 		return ret;
-	}
+	}		
 	
-	
-	public static String getMD5Checksum(File file) throws Exception {
-		if(file==null) throw new Exception("File is null!");
-		
-		byte[] b = createChecksum(file);
-		String result = "";
-
-		for (int i=0; i < b.length; i++) {
-			result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
-		}
-		return result;
-	}
-	
-	public static byte[] createChecksum(File filename) throws Exception {
-		return createChecksum(filename, "MD5");
-	}
-	
-	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {
-		FileInputStream fis =  new FileInputStream(filename);
-
-		byte[] buffer = new byte[1024];
-		MessageDigest complete = MessageDigest.getInstance(digestAlgorithm);
-		int numRead;
-
-		do {
-			numRead = fis.read(buffer);
-			if (numRead > 0) {
-				complete.update(buffer, 0, numRead);
-			}
-		} while (numRead != -1);
-
-		fis.close();
-		return complete.digest();
-	}
-
 	public static Map<File, ByteArray> createChecksums(List<File> inputFiles) throws Exception {
 		Map<File, ByteArray> inputFilesWithChecksums = new HashMap<File, ByteArray>();
 		
 		for (File inputFile : inputFiles) {
-			inputFilesWithChecksums.put(inputFile, new ByteArray(createChecksum(inputFile)));
+			inputFilesWithChecksums.put(inputFile, new ByteArray(FileUtil.createChecksum(inputFile)));
 		}
 		
 		return inputFilesWithChecksums;

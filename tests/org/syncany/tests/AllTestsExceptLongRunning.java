@@ -3,13 +3,12 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.scenarios.LongRunningNewAndDeleteScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({	
-	// Scenarios
-	LongRunningNewAndDeleteScenarioTest.class
+	ScenarioTests.class,
+	OtherShortTests.class
 })
-public class AllLongTestsSuite {
+public class AllTestsExceptLongRunning {
 	// This class executes all tests
 }

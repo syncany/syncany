@@ -27,6 +27,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.connection.plugins.local.LocalPlugin;
 import org.syncany.connection.plugins.local.LocalTransferManager;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 
 public class LocalConnectionPluginTest {
 	private File tempLocalSourceDir;
@@ -126,9 +127,9 @@ public class LocalConnectionPluginTest {
 			assertNotNull("Cannot be null.", uploadedFile);
 			assertNotNull("Cannot be null.", downloadedLocalFile);
 			
-			byte[] checksumOriginalFile = TestFileUtil.createChecksum(inputFile);
-			byte[] checksumUploadedFile = TestFileUtil.createChecksum(uploadedFileOnRemoteStorage);
-			byte[] checksumDownloadedFile = TestFileUtil.createChecksum(downloadedLocalFile);
+			byte[] checksumOriginalFile = FileUtil.createChecksum(inputFile);
+			byte[] checksumUploadedFile = FileUtil.createChecksum(uploadedFileOnRemoteStorage);
+			byte[] checksumDownloadedFile = FileUtil.createChecksum(downloadedLocalFile);
 			
 			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumUploadedFile);
 			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumDownloadedFile);			

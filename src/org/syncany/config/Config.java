@@ -18,10 +18,6 @@
 package org.syncany.config;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
@@ -40,8 +36,6 @@ import org.syncany.connection.plugins.Plugins;
  * @author Philipp C. Heckel
  */
 public class Config {
-	private static boolean loggingInitialized = false;
-	
 	private String machineName;	
 	private File localDir;
 	private File appDir;
@@ -62,7 +56,7 @@ public class Config {
         // This code is HERE because the Config class is used almost everywhere
         // and initialized in the beginning.
     	
-    	initLogging();
+    	Logging.init();
     }
     
 	public Config(ConfigTO configTO) throws Exception {		
@@ -99,7 +93,7 @@ public class Config {
 	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
 		// TODO [low] make chunking options configurable			
 		chunker = new FixedOffsetChunker(16 * 1024);
-		multiChunker = new CustomMultiChunker(512 * 1024);//new TarMultiChunker(512 * 1024);
+		multiChunker = new CustomMultiChunker(1024 * 1024);//new TarMultiChunker(512 * 1024);
 		
 		if (encryption != null) {
 			transformer = new GzipTransformer(new CipherTransformer(encryption));
@@ -213,35 +207,6 @@ public class Config {
 	public void setDatabaseDir(File databaseDir) {
 		this.databaseDir = databaseDir;
 	}
-	
-	public synchronized static void initLogging() {
-		if (loggingInitialized) {
-			return;
-		}
-		
-    	try {
-    		// Use file if exists, else use file embedded in JAR
-    		File logConfig = new File("logging.properties");
-    		InputStream logConfigInputStream;
-    		
-    		if (logConfig.exists() && logConfig.canRead()) {
-    			logConfigInputStream = new FileInputStream(new File("logging.properties"));
-    		}
-    		else {
-    			logConfigInputStream = Config.class.getResourceAsStream("/logging.properties");
-    		}
-    		
-    	    LogManager.getLogManager().readConfiguration(logConfigInputStream);
-    	    loggingInitialized = true;
-    	}
-    	catch (Exception e) {
-    	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");
-    	    Logger.getAnonymousLogger().severe(e.getMessage());
-    	    
-    	    e.printStackTrace();
-    	}
-		
-	}	
 	
 	public static class ConfigException extends Exception {
 		private static final long serialVersionUID = 4414807565457521855L;
