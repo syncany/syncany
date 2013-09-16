@@ -1,6 +1,5 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -28,7 +27,7 @@ public class ManySyncUpsAndOtherClientSyncDownTest {
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());		
-		fail("x");
+		
 		// Tear down
 		clientA.cleanup();
 		clientB.cleanup();
