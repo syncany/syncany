@@ -99,7 +99,7 @@ public class SyncDownOperation extends Operation {
 		logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
 		
 		if (winnersApplyBranch.size() == 0) {
-			logger.log(Level.WARNING, "   ++++ NOTHING TO UPDATE FROM WINNER. This should not happen.");
+			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
 		}
 		else {
 			logger.log(Level.INFO, "- Loading winners database ...");				
@@ -592,7 +592,8 @@ public class SyncDownOperation extends Operation {
 		}
 	}
 	
-	public static class DatabaseFileComparator implements Comparator<File> {
+	// TODO [medium] Duplicate code in SyncUpOperation
+	public static class DatabaseFileComparator implements Comparator<File> { // TODO [low] Database file structure and natural sort are a workaround
 		@Override
 		public int compare(File f1, File f2) {
 			RemoteDatabaseFile r1 = new RemoteDatabaseFile(f1);

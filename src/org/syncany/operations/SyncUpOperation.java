@@ -5,8 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +19,9 @@ import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
@@ -26,6 +31,9 @@ import org.syncany.util.StringUtil;
 
 public class SyncUpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncUpOperation.class.getSimpleName());
+
+	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
+	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
 	private TransferManager transferManager; 
 	
@@ -88,6 +96,8 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
 			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
 			
+			cleanupOldDatabases(database, newestLocalDatabaseVersion);
+			
 			logger.log(Level.INFO, "Sync up done.");
 		}
 		
@@ -148,6 +158,92 @@ public class SyncUpOperation extends Operation {
 		return newDatabaseVersion;
 	}
 	
+	private void cleanupOldDatabases(Database database, long newestLocalDatabaseVersion) throws Exception {
+		// Retrieve and sort machine's database versions
+		Map<String, RemoteFile> ownRemoteDatabaseFiles = transferManager.list("db-"+config.getMachineName()+"-");
+		List<RemoteDatabaseFile> ownDatabaseFiles = new ArrayList<RemoteDatabaseFile>();	
+		
+		for (RemoteFile ownRemoteDatabaseFile : ownRemoteDatabaseFiles.values()) {
+			ownDatabaseFiles.add(new RemoteDatabaseFile(ownRemoteDatabaseFile.getName()));
+		}
+		
+		Collections.sort(ownDatabaseFiles, new RemoteDatabaseFileComparator());
+	
+		// Now merge
+		if (ownDatabaseFiles.size() <= MAX_KEEP_DATABASE_VERSIONS) {
+			logger.log(Level.INFO, "- No cleanup necessary ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS);
+			return;
+		}
+		
+		logger.log(Level.INFO, "- Cleanup necessary ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS);
+		
+		RemoteDatabaseFile firstMergeDatabaseFile = ownDatabaseFiles.get(0);
+		RemoteDatabaseFile lastMergeDatabaseFile = ownDatabaseFiles.get(ownDatabaseFiles.size()-MIN_KEEP_DATABASE_VERSIONS-1);
+		
+		DatabaseVersion firstMergeDatabaseVersion = null;
+		DatabaseVersion lastMergeDatabaseVersion = null;
+		
+		List<RemoteFile> toDeleteDatabaseFiles = new ArrayList<RemoteFile>();
+		
+		for (DatabaseVersion databaseVersion : database.getDatabaseVersions()) {
+			Long localVersion = databaseVersion.getVectorClock().get(config.getMachineName());
+
+			if (localVersion != null) {				
+				if (firstMergeDatabaseVersion == null && localVersion == firstMergeDatabaseFile.getClientVersion()) {
+					firstMergeDatabaseVersion = databaseVersion;
+				}
+			
+				if (lastMergeDatabaseVersion == null && localVersion == lastMergeDatabaseFile.getClientVersion()) {
+					lastMergeDatabaseVersion = databaseVersion;
+					break;
+				}
+				
+				if (localVersion >= firstMergeDatabaseFile.getClientVersion() && localVersion < lastMergeDatabaseFile.getClientVersion()) {
+					toDeleteDatabaseFiles.add(new RemoteFile("db-"+config.getMachineName()+"-"+localVersion));
+				}
+			}
+		}
+		
+		if (firstMergeDatabaseVersion == null || lastMergeDatabaseVersion == null) {
+			throw new Exception("Cannot cleanup: unable to find first/last database version: first = "+firstMergeDatabaseFile+"/"+firstMergeDatabaseVersion+", last = "+lastMergeDatabaseFile+"/"+lastMergeDatabaseVersion);
+		}
+		
+		// Now write merge file
+		File localMergeDatabaseVersionFile = config.getCache().getDatabaseFile("db-"+config.getMachineName()+"-"+lastMergeDatabaseFile.getClientVersion());
+		RemoteFile remoteMergeDatabaseVersionFile = new RemoteFile(localMergeDatabaseVersionFile.getName());
+		
+		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion+", to "+lastMergeDatabaseVersion+") to file "+localMergeDatabaseVersionFile+" ...");
+
+		DatabaseDAO databaseDAO = new DatabaseXmlDAO(); 			
+		databaseDAO.save(database, firstMergeDatabaseVersion, lastMergeDatabaseVersion, localMergeDatabaseVersionFile);
+		
+		logger.log(Level.INFO, "   + Uploading new file "+remoteMergeDatabaseVersionFile+" from local file "+localMergeDatabaseVersionFile+" ...");
+		transferManager.delete(remoteMergeDatabaseVersionFile); // TODO [high] TM cannot overwrite, might lead to chaos if operation does not finish uploading the new merge file, this might happen often if new file is bigger!
+		transferManager.upload(localMergeDatabaseVersionFile, remoteMergeDatabaseVersionFile);
+
+		// And delete others	
+		for (RemoteFile toDeleteRemoteFile : toDeleteDatabaseFiles) {
+			logger.log(Level.INFO, "   + Deleting remote file "+toDeleteRemoteFile+" ...");
+			transferManager.delete(toDeleteRemoteFile);
+		}
+	}
+
+	// TODO [medium] Duplicate code in SyncDownOperation
+	public static class RemoteDatabaseFileComparator implements Comparator<RemoteDatabaseFile> {
+		@Override
+		public int compare(RemoteDatabaseFile r1, RemoteDatabaseFile r2) {
+			int clientNameCompare = r1.getClientName().compareTo(r2.getClientName());
+			
+			if (clientNameCompare != 0) {
+				return clientNameCompare;
+			}
+			else {
+				return (int) (r1.getClientVersion() - r2.getClientVersion());
+			}
+		}
+		
+	}	
+
 	public class SyncUpOperationResult implements OperationResult {
 		// TODO [low] Return something for 'up' operation
 	}
