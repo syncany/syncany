@@ -171,11 +171,11 @@ public class SyncUpOperation extends Operation {
 	
 		// Now merge
 		if (ownDatabaseFiles.size() <= MAX_KEEP_DATABASE_VERSIONS) {
-			logger.log(Level.INFO, "- No cleanup necessary ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS);
+			logger.log(Level.INFO, "- No cleanup necessary ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS+")");
 			return;
 		}
 		
-		logger.log(Level.INFO, "- Cleanup necessary ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS);
+		logger.log(Level.INFO, "- Performing cleanup ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS+") ...");
 		
 		RemoteDatabaseFile firstMergeDatabaseFile = ownDatabaseFiles.get(0);
 		RemoteDatabaseFile lastMergeDatabaseFile = ownDatabaseFiles.get(ownDatabaseFiles.size()-MIN_KEEP_DATABASE_VERSIONS-1);
@@ -189,7 +189,7 @@ public class SyncUpOperation extends Operation {
 			Long localVersion = databaseVersion.getVectorClock().get(config.getMachineName());
 
 			if (localVersion != null) {				
-				if (firstMergeDatabaseVersion == null && localVersion == firstMergeDatabaseFile.getClientVersion()) {
+				if (firstMergeDatabaseVersion == null) {
 					firstMergeDatabaseVersion = databaseVersion;
 				}
 			
@@ -198,7 +198,7 @@ public class SyncUpOperation extends Operation {
 					break;
 				}
 				
-				if (localVersion >= firstMergeDatabaseFile.getClientVersion() && localVersion < lastMergeDatabaseFile.getClientVersion()) {
+				if (localVersion < lastMergeDatabaseFile.getClientVersion()) {
 					toDeleteDatabaseFiles.add(new RemoteFile("db-"+config.getMachineName()+"-"+localVersion));
 				}
 			}
@@ -212,10 +212,10 @@ public class SyncUpOperation extends Operation {
 		File localMergeDatabaseVersionFile = config.getCache().getDatabaseFile("db-"+config.getMachineName()+"-"+lastMergeDatabaseFile.getClientVersion());
 		RemoteFile remoteMergeDatabaseVersionFile = new RemoteFile(localMergeDatabaseVersionFile.getName());
 		
-		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion+", to "+lastMergeDatabaseVersion+") to file "+localMergeDatabaseVersionFile+" ...");
+		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion.getHeader()+", to "+lastMergeDatabaseVersion.getHeader()+") to file "+localMergeDatabaseVersionFile+" ...");
 
 		DatabaseDAO databaseDAO = new DatabaseXmlDAO(); 			
-		databaseDAO.save(database, firstMergeDatabaseVersion, lastMergeDatabaseVersion, localMergeDatabaseVersionFile);
+		databaseDAO.save(database, null/*firstMergeDatabaseVersion*/, lastMergeDatabaseVersion, localMergeDatabaseVersionFile);
 		
 		logger.log(Level.INFO, "   + Uploading new file "+remoteMergeDatabaseVersionFile+" from local file "+localMergeDatabaseVersionFile+" ...");
 		transferManager.delete(remoteMergeDatabaseVersionFile); // TODO [high] TM cannot overwrite, might lead to chaos if operation does not finish uploading the new merge file, this might happen often if new file is bigger!

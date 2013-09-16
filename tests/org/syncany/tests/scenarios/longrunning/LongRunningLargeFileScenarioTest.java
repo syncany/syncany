@@ -36,7 +36,7 @@ public class LongRunningLargeFileScenarioTest {
 		clientA.up();		
 
 		// B
-		clientB.down(); // TODO [high] Performance: This takes 20min ! 
+		clientB.down(); 
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		

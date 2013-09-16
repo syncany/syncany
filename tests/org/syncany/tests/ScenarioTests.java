@@ -10,6 +10,7 @@ import org.syncany.tests.scenarios.EvilCUpWithoutDownScenarioTest;
 import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupTest;
+import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
@@ -25,7 +26,8 @@ import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,
 	CreateSimilarFileParallelScenarioTest.class,
-	ManySyncUpsAndDatabaseFileCleanupTest.class
+	ManySyncUpsAndDatabaseFileCleanupTest.class,
+	ManySyncUpsAndOtherClientSyncDownTest.class
 })
 public class ScenarioTests {
 	// This class executes all tests

@@ -2,19 +2,25 @@ package org.syncany.tests.database;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.syncany.tests.util.TestAssertUtil.assertDatabaseVersionEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -28,6 +34,10 @@ import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseXmlDAOTest {
 	private File tempDir;
+	
+	static {
+		Logging.init();
+	}
 	
 	@Before
 	public void setUp() throws Exception {
@@ -43,7 +53,7 @@ public class DatabaseXmlDAOTest {
 	public void testWriteAndReadChunks() throws IOException {
 		// Prepare
 		Database newDatabase = new Database();
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
         ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
@@ -69,11 +79,28 @@ public class DatabaseXmlDAOTest {
 		assertEquals("Chunk not found in database loaded.", chunkA4, loadedDatabase.getChunk(chunkA4.getChecksum()));
 	}
 		
+	private DatabaseVersion createDatabaseVersion() {
+		return createDatabaseVersion(null);
+	}
+	
+	private DatabaseVersion createDatabaseVersion(DatabaseVersion basedOnDatabaseVersion) {
+		VectorClock vectorClock = (basedOnDatabaseVersion != null) ? basedOnDatabaseVersion.getVectorClock().clone() : new VectorClock();
+		vectorClock.incrementClock("someclient");
+		
+		DatabaseVersion databaseVersion = new DatabaseVersion();
+		
+		databaseVersion.setClient("someclient");
+		databaseVersion.setTimestamp(new Date());
+		databaseVersion.setVectorClock(vectorClock);
+		
+		return databaseVersion;
+	}
+
 	@Test
 	public void testWriteAndReadChunksWithMultiChunks() throws IOException {
 		// Prepare
 		Database newDatabase = new Database();
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
         ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
@@ -134,7 +161,7 @@ public class DatabaseXmlDAOTest {
 	public void testWriteAndReadChunksWithFileContents() throws IOException {
 		// Prepare
 		Database newDatabase = new Database();
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
         ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
@@ -197,7 +224,7 @@ public class DatabaseXmlDAOTest {
 	public void testWriteAndReadFileHistoryAndFileVersion() throws IOException {
 		// Prepare
 		Database newDatabase = new Database();
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 	
 		// Create directories (no content!)
 
@@ -269,7 +296,7 @@ public class DatabaseXmlDAOTest {
 	public void testWriteAndReadVectorClock() throws IOException {
 		// Prepare
 		Database newDatabase = new Database();
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 
 		// Create new vector clock
 		VectorClock vc = new VectorClock();
@@ -296,18 +323,76 @@ public class DatabaseXmlDAOTest {
 	}
 		
 	@Test
-	@Ignore
-	@SuppressWarnings("unused")
-	public void testWriteAndReadMultipleDatabaseVersions() {
-		Database newDatabase = new Database();
-		DatabaseVersion firstDatabaseVersion = new DatabaseVersion();
-		DatabaseVersion secondDatabaseVersion = new DatabaseVersion();
-
-		// TODO [low] testWriteAndReadMultipleDatabaseVersions
+	public void testWriteAndReadMultipleDatabaseVersions() throws IOException {
+		Database writtenDatabase = new Database();
+		List<DatabaseVersion> writtenDatabaseVersions = new ArrayList<DatabaseVersion>();
+		
+		for (int i=0; i<10; i++) {
+			DatabaseVersion basedOnDatabaseVersion = (i > 0) ? writtenDatabaseVersions.get(i-1) : null; 
+			DatabaseVersion newDatabaseVersion = createDatabaseVersion(basedOnDatabaseVersion);
+			
+			// Some random chunks
+			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			
+			// Add to database
+			writtenDatabase.addDatabaseVersion(newDatabaseVersion);
+			
+			// Add to test array
+			writtenDatabaseVersions.add(newDatabaseVersion);
+		}		
+		
+		// Write database to disk, read it again, and compare them
+		writeReadAndCompareDatabase(writtenDatabase);
 	}
 	
+	@Test
+	public void testWritePartialDatabaseOneToFive() throws IOException {
+		Database writtenDatabase = new Database();
+		List<DatabaseVersion> writtenDatabaseVersions = new ArrayList<DatabaseVersion>();
+		
+		for (int i=0; i<10; i++) {
+			DatabaseVersion basedOnDatabaseVersion = (i > 0) ? writtenDatabaseVersions.get(i-1) : null; 
+			DatabaseVersion newDatabaseVersion = createDatabaseVersion(basedOnDatabaseVersion);
+			
+			// Some random chunks
+			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			
+			// Add to database
+			writtenDatabase.addDatabaseVersion(newDatabaseVersion);
+			
+			// Add to test array
+			writtenDatabaseVersions.add(newDatabaseVersion);
+		}		
+		
+		// Write database to disk, read it again, and compare them
+		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
+		
+		DatabaseXmlDAO writeDAO = new DatabaseXmlDAO();
+		writeDAO.save(writtenDatabase, writtenDatabaseVersions.get(0), writtenDatabaseVersions.get(4), writtenDatabaseFile);
+		
+		// Read again
+		Database readDatabase = new Database();
+		
+		DatabaseXmlDAO readDAO = new DatabaseXmlDAO();
+		readDAO.load(readDatabase, writtenDatabaseFile);
+		
+		for (int i=0; i<=4; i++) {
+			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersions.get(i);
+			DatabaseVersion readDatabaseVersion = readDatabase.getDatabaseVersion(writtenDatabaseVersion.getVectorClock());
+			
+			assertNotNull(readDatabaseVersion);
+			assertDatabaseVersionEquals(writtenDatabaseVersion, readDatabaseVersion);
+		}
+		
+		assertEquals(5, readDatabase.getDatabaseVersions().size());
+	}	
+	
 	private Database writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
-		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + new Random().nextInt(Integer.MAX_VALUE));
+		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		TestDatabaseUtil.writeDatabaseFileToDisk(writtenDatabase, writtenDatabaseFile, null);
 		Database readDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(writtenDatabaseFile, null);
 		

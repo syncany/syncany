@@ -315,41 +315,6 @@ public class SyncDownOperation extends Operation {
 		
 		transferManager.disconnect();
 	}
-
-	@Deprecated
-	private void downloadAndExtractMultiChunks_WORKS(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
-		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
-		TransferManager transferManager = config.getConnection().createTransferManager();
-		
-		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
-			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName()); // TODO Make MultiChunkRemoteFile class, or something like that
-			
-			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
-			transferManager.download(remoteMultiChunkFile, localMultiChunkFile);
-			
-			logger.log(Level.INFO, "  + Extracting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
-			MultiChunk multiChunkInCache = config.getMultiChunker().createMultiChunk(
-					config.getTransformer().createInputStream(new FileInputStream(localMultiChunkFile)));
-			Chunk extractedChunk = null;
-			
-			while (null != (extractedChunk = multiChunkInCache.read())) { // TODO [high] IMPORTANT This is incredibly SLOW (800 MB 'down' takes > 10 minutes) 
-				File localChunkFile = config.getCache().getChunkFile(extractedChunk.getChecksum());
-				
-				if (logger.isLoggable(Level.FINEST)) {
-					logger.log(Level.FINEST, "    * Unpacking chunk {0} ...", StringUtil.toHex(extractedChunk.getChecksum()));
-				}
-				
-				FileUtil.writeToFile(extractedChunk.getContent(), localChunkFile);
-			}
-			
-			logger.log(Level.FINE, "  + Locally deleting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
-			localMultiChunkFile.delete();
-		}
-		
-		transferManager.disconnect();
-	}
-	
 	
 	private Set<MultiChunkEntry> determineUnknownMultiChunks(Database database, Database winnersDatabase, Cache cache) {
 		logger.log(Level.INFO, "- Determine new multichunks to download ...");
