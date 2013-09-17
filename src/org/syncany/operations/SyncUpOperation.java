@@ -35,12 +35,19 @@ public class SyncUpOperation extends Operation {
 	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
+	private SyncUpOperationOptions options;
 	private TransferManager transferManager; 
 	
 	public SyncUpOperation(Config config) {
-		super(config);		
-		this.transferManager = config.getConnection().createTransferManager();
+		this(config, new SyncUpOperationOptions());
 	}	
+	
+	public SyncUpOperation(Config config, SyncUpOperationOptions options) {
+		super(config);		
+		
+		this.options = options;
+		this.transferManager = config.getConnection().createTransferManager();
+	}
 	
 	public OperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
@@ -96,7 +103,9 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
 			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
 			
-			cleanupOldDatabases(database, newestLocalDatabaseVersion);
+			if (options.cleanupEnabled()) {
+				cleanupOldDatabases(database, newestLocalDatabaseVersion);
+			}
 			
 			logger.log(Level.INFO, "Sync up done.");
 		}
@@ -244,7 +253,19 @@ public class SyncUpOperation extends Operation {
 		
 	}	
 
-	public class SyncUpOperationResult implements OperationResult {
+	public static class SyncUpOperationOptions implements OperationOptions {
+		private boolean cleanupEnabled = true;
+
+		public boolean cleanupEnabled() {
+			return cleanupEnabled;
+		}
+
+		public void setCleanupEnabled(boolean cleanupEnabled) {
+			this.cleanupEnabled = cleanupEnabled;
+		}
+	}
+	
+	public static class SyncUpOperationResult implements OperationResult {
 		// TODO [low] Return something for 'up' operation
 	}
 }

@@ -41,7 +41,7 @@ public class Logging {
 	}	
 	
 	public static void setGlobalLogLevel(Level targetLoglevel) {
-		for(Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements();){
+		for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
 	        String name = loggerNames.nextElement();
 	        Logger nextLogger = LogManager.getLogManager().getLogger(name);
 	        

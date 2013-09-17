@@ -9,6 +9,7 @@ import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.SyncDownOperation;
 import org.syncany.operations.SyncUpOperation;
+import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 
 public class Client {
 	protected static final Logger logger = Logger.getLogger(Client.class.getSimpleName());	
@@ -36,6 +37,10 @@ public class Client {
 	
 	public void up() throws Exception {
 		new SyncUpOperation(config).execute();
+	}
+	
+	public void up(SyncUpOperationOptions options) throws Exception {
+		new SyncUpOperation(config, options).execute();
 	}
 	
 	public void down() throws Exception {

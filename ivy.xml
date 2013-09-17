@@ -22,8 +22,10 @@
 	<dependencies>
 		<!-- Jars are pulled from http://mvnrepository.com/ -->
     	
+		<dependency org="log4j" name="log4j" rev="1.2.16"/>
 		<dependency org="commons-io" name="commons-io" rev="2.4"/>            
 		<dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
+		<dependency org="net.sf.jopt-simple" name="jopt-simple" rev="4.5"/>            
 		<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>		
 		<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
 		<dependency org="org.bouncycastle" name="bcprov-jdk16" rev="1.46"/>

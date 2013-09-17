@@ -43,6 +43,10 @@ public abstract class Operation {
 	
 	public abstract OperationResult execute() throws Exception;
 	
+	public interface OperationOptions {
+		// Marker interface for type safety
+	}
+	
 	public interface OperationResult {
 		// Marker interface for type safety
 	}

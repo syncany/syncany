@@ -1,0 +1,20 @@
+{
+	"machineName":		"$machineName",
+
+	"localDir": 		"$localDir",
+	"appDir": 			"$appDir",
+	"cacheDir": 		"$cacheDir",
+	"databaseDir":		"$databaseDir",
+
+	"connection":
+	{
+		"type"		: "local",
+		"settings"	: {"path" : "$repoPath"}
+	},
+
+	"encryption"	: 
+	{
+		"enabled"	: false,
+		"pass"		: "password"
+	}
+}

@@ -3,6 +3,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.app.SyncanyCommandLineTest;
 import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.MultiChunkerTest;
@@ -18,6 +19,9 @@ import org.syncany.tests.util.FileUtilTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+	// App
+	SyncanyCommandLineTest.class,
+	
 	// Util
 	FileUtilTests.class,
 	

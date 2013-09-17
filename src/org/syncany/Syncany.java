@@ -1,12 +1,27 @@
 package org.syncany;
 
+import static java.util.Arrays.asList;
+
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigTO;
+import org.syncany.config.Logging;
+import org.syncany.operations.Operation.OperationOptions;
 import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 import org.syncany.util.FileUtil;
 
 public class Syncany {
@@ -15,9 +30,16 @@ public class Syncany {
 	
 	private String[] args;
 	private Client client;
+
 	private CommandArgument operationArgument;
+	private OperationOptions operationOptions;
+	
 	private File configFile;
 		
+	static {
+		Logging.init();
+	}
+	
 	public static void main(String[] args) throws Exception {
 		new Syncany(args).start();
 	}
@@ -35,56 +57,133 @@ public class Syncany {
 	}	
 
 	private void readCommandLineArguments(String[] args) throws Exception {
-		if (args.length == 3) { // -c config.json up/down/status
-			readCommandLineArgumentsWithSpecificConfigFile(args);
-		}
-		else if (args.length == 1) { // up
-			readCommandLineArgumentsWithoutConfigFile(args);			
-		}
-		else {
-			showUsageAndExit("Invalid syntax.");
-		}
-	}
-	
-	private void readCommandLineArgumentsWithoutConfigFile(String[] args2) throws Exception {
-		String defaultConfigFileArgument = "config.json";
+		OptionParser parser = new OptionParser();
+		parser.allowsUnrecognizedOptions();
 		
-		readCommandLineArgumentConfigFile(defaultConfigFileArgument);
-		readCommandLineArgumentCommand(args[0]);		
-	}
+		OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
+		OptionSpec<File> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg().ofType(File.class);
+		OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
+		OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));		
+		
+		OptionSet options = parser.parse(args);
+		
+		initConfigOption(options, optionConfig);
+		initLogFileOption(options, optionLog);
+		initLogLevelOption(options, optionLogLevel, optionDebug);
 
-	private void readCommandLineArgumentsWithSpecificConfigFile(String[] args) throws Exception {
-		// -c config.json
-		if (!"-c".equals(args[0])) {
+		initOperation(options, options.nonOptionArguments());
+	}	
+
+	private void initOperation(OptionSet options, List<?> nonOptions) {
+		if (nonOptions.size() == 0) {
 			showUsageAndExit();
 		}
 		
-		readCommandLineArgumentConfigFile(args[1]);
-		readCommandLineArgumentCommand(args[2]);		
-	}
-	
-	private void readCommandLineArgumentConfigFile(String configFileArgument) throws Exception {
-		configFile = new File(configFileArgument);
+		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
+		String operationArgument = (String) nonOptionsCopy.remove(0); 
+		String[] operationArgs = nonOptions.toArray(new String[nonOptions.size()]);
 		
-		if (!configFile.exists()) {
-			showUsageAndExit("Given config file does not exist.");
-		}		
-	}
-	
-	private void readCommandLineArgumentCommand(String commandArgument) throws Exception {
-		if ("up".equals(commandArgument)) {
-			this.operationArgument = CommandArgument.SYNC_UP;
+		if ("up".equals(operationArgument)) {
+			initSyncUpOperation(operationArgs);
 		}
-		else if ("down".equals(commandArgument)) {
+		else if ("down".equals(operationArgument)) {
 			this.operationArgument = CommandArgument.SYNC_DOWN;
 		}
-		else if ("status".equals(commandArgument)) {
+		else if ("status".equals(operationArgument)) {
 			this.operationArgument = CommandArgument.STATUS;
 		}
 		else {
 			showUsageAndExit("Given command is unknown.");
 		}		
 	}
+
+	private void initSyncUpOperation(String[] operationArgs) {
+		SyncUpOperationOptions aOperationOptions = new SyncUpOperationOptions();
+
+		OptionParser parser = new OptionParser();		
+		OptionSpec<Void> optionNoCleanup = parser.acceptsAll(asList("c", "no-cleanup"));
+		
+		OptionSet options = parser.parse(operationArgs);
+		
+		if (options.has(optionNoCleanup)) {
+			aOperationOptions.setCleanupEnabled(false);
+		}
+		
+		operationArgument = CommandArgument.SYNC_UP;
+		operationOptions = aOperationOptions;
+	}
+
+	private void initLogFileOption(OptionSet options, OptionSpec<File> optionLog) throws SecurityException, IOException {
+		if (options.has(optionLog)) {
+			File logFile = options.valueOf(optionLog);
+			FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath());
+			
+			// TODO [low] Logging: Is this the right way to set logging properties
+
+			// Add handler to existing loggers
+			for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
+		        String loggerName = loggerNames.nextElement();
+		        Logger theLogger = LogManager.getLogManager().getLogger(loggerName);
+		        
+		        if (theLogger != null) {
+		            theLogger.addHandler(fileHandler);
+		        }
+		    }		
+
+			// And to future loggers
+			Logger.getLogger("").addHandler(fileHandler);
+			//Logger.getGlobal().addHandler(fileHandler);
+		}
+	}
+
+	private void initLogLevelOption(OptionSet options, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionDebug) {
+		Level currentLogLevel = Logger.getLogger("").getLevel();
+		Level newLogLevel = null;
+		
+		if (options.has(optionDebug)) {
+			newLogLevel = Level.ALL;
+		}
+		else if (options.has(optionLogLevel)) {
+			String newLogLevelStr = options.valueOf(optionLogLevel);
+
+			try {
+				newLogLevel = Level.parse(newLogLevelStr);
+			}
+			catch (IllegalArgumentException e) {
+				showUsageAndExit("Invalid log level given "+newLogLevelStr+"'");
+			}
+		}		
+		
+		if (newLogLevel != currentLogLevel) {
+			// TODO [low] Logging: Is this the right way to set logging properties
+
+			// Add handler to existing loggers
+			for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
+		        String loggerName = loggerNames.nextElement();
+		        Logger theLogger = LogManager.getLogManager().getLogger(loggerName);
+		        
+		        if (theLogger != null) {
+		            theLogger.setLevel(newLogLevel);
+		        }
+		    }		
+
+			// And to future loggers
+			Logger.getLogger("").setLevel(newLogLevel);
+		}
+	}
+
+	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) {
+		if (options.has(optionConfig)) {
+			configFile = options.valueOf(optionConfig);
+		}
+		else {
+			configFile = new File("config.json");
+		}
+		
+		if (!configFile.exists()) {
+			showUsageAndExit("Cannot find config file '"+configFile+"'");
+		}
+	}		
 	
 	private void showUsageAndExit() {
 		showUsageAndExit(null);
@@ -98,7 +197,7 @@ public class Syncany {
 		
 		System.out.println("Usage: syncany [-c config.json] up     -  Sync up");
 		System.out.println("       syncany [-c config.json] down   -  Sync down");
-		System.out.println("       syncany [-c config.json] status -  Get status");
+		System.out.println("       syncany [-c config.json] status -  List local changes");
 		
 		System.exit(1);
 	}
@@ -115,7 +214,7 @@ public class Syncany {
 	
 	private void runOperation() throws Exception {
 		if (operationArgument == CommandArgument.SYNC_UP) {
-			client.up();
+			client.up((SyncUpOperationOptions) operationOptions); // TODO [medium] ugly
 		}
 		else if (operationArgument == CommandArgument.SYNC_DOWN) {
 			client.down();
