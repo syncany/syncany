@@ -37,14 +37,9 @@ public class StatusOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		Database database;
-		
-		if (loadedDatabase != null) {
-			database = loadedDatabase;
-		}		
-		else {
-			database = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
-		}
+		Database database = (loadedDatabase != null) 
+				? loadedDatabase
+				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();		
 		
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
 		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir(), database);
@@ -80,6 +75,12 @@ public class StatusOperation extends Operation {
 						return;
 					}
 					
+					// Don't do anything if file is folder
+					if (file.isDirectory()) {
+						changeSet.unchangedFiles.add(file);
+						return;
+					}
+					
 					// Simple check by last modified date and size
 					boolean sizeAndModifiedDateMatches = 
 						   file.lastModified() == potentiallyMatchingLastFileVersion.getLastModified().getTime()
@@ -88,6 +89,14 @@ public class StatusOperation extends Operation {
 					if (!sizeAndModifiedDateMatches) {
 						changeSet.changedFiles.add(file);
 						logger.log(Level.FINEST, "- Changed file (mod. date/size): {0}", relativeFilePath);
+						
+						return;
+					}
+					
+					// Zero-size has not checksum
+					if (file.length() == 0) {
+						changeSet.unchangedFiles.add(file);
+						logger.log(Level.FINEST, "- Unchanged file (zero-size!): {0}", relativeFilePath);
 						
 						return;
 					}
@@ -130,7 +139,11 @@ public class StatusOperation extends Operation {
 			
 			@Override
 			public boolean directoryFilter(File directory) {
-				return true;
+				boolean isAppRelatedDir = directory.equals(config.getAppDir())
+					|| directory.equals(config.getCache())
+					|| directory.equals(config.getDatabaseDir());
+				
+				return !isAppRelatedDir;
 			}
 		});
 		

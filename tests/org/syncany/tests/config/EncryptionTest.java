@@ -30,6 +30,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,6 +40,7 @@ import org.syncany.config.Encryption;
 import org.syncany.config.EncryptionException;
 import org.syncany.config.Logging;
 import org.syncany.util.StringUtil;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class EncryptionTest {
 	private static final Logger logger = Logger.getLogger(EncryptionTest.class.getSimpleName());		
@@ -176,6 +179,52 @@ public class EncryptionTest {
 		
 		// NOTE: If this fails, it might be because 'unlimited crypto' not available.
 		// Download policy files at: http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html		
+	}	
+	
+	@Test
+	public void testSaxParserWithCipherTransformerWithAesGcm() throws Exception {
+		testSaxParserWithCipherTransformer("AES/GCM/NoPadding", 128);
+	}
+	
+	@Test
+	public void testSaxParserWithCipherTransformerWithAesCbcPkcs5() throws Exception {
+		testSaxParserWithCipherTransformer("AES/CBC/PKCS5Padding", 128);
+	}
+	
+	public void testSaxParserWithCipherTransformer(String cipherStr, int keySize) throws Exception {
+		String xmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+			+ "<database version=\"1\">\n"
+			+ "	<databaseVersions>\n"
+			+ "		<databaseVersion>\n"
+			+ "		</databaseVersion>\n"
+			+ "	</databaseVersions>\n"
+			+ "</database>";
+		
+		Encryption encryptionSettings = new Encryption();	
+		encryptionSettings.setCipherStr(cipherStr);
+		encryptionSettings.setKeySize(keySize);		
+		encryptionSettings.setPassword("some password");
+		
+		CipherTransformer cipherTransformer = new CipherTransformer(encryptionSettings);
+		
+		// Test encrypt
+		byte[] encryptedData = doEncrypt(xmlStr.getBytes(), cipherTransformer);
+
+		// Test decrypt with SAX parser	
+		InputStream is = cipherTransformer.createInputStream(new ByteArrayInputStream(encryptedData));
+		
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser saxParser = factory.newSAXParser();
+		
+		saxParser.parse(is, new DefaultHandler());	
+		
+		// Success if it does not throw an exception
+
+		// Regular CipherInputStream does NOT work with GCM mode
+		// GcmCompatibleCipherInputStream fixes this!
+		
+		// See http://bouncy-castle.1462172.n4.nabble.com/Using-AES-GCM-NoPadding-with-javax-crypto-CipherInputStream-td4655271.html
+		// and http://bouncy-castle.1462172.n4.nabble.com/using-GCMBlockCipher-with-CipherInputStream-td4655147.html
 	}	
 	
 	private void doTestEncryption(Encryption encryptionSettings) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {

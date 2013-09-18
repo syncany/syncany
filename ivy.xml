@@ -22,9 +22,7 @@
 	<dependencies>
 		<!-- Jars are pulled from http://mvnrepository.com/ -->
     	
-		<dependency org="log4j" name="log4j" rev="1.2.16"/>
 		<dependency org="commons-io" name="commons-io" rev="2.4"/>            
-		<dependency org="org.apache.commons" name="commons-compress" rev="1.5"/>
 		<dependency org="net.sf.jopt-simple" name="jopt-simple" rev="4.5"/>            
 		<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>		
 		<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
@@ -32,7 +30,10 @@
             
 		<!-- For FTP plugin -->
 		<!-- TODO [low] This dependency needs to be removed once the FTP plugin is its own module-->
-		<dependency org="commons-net" name="commons-net" rev="2.2"/>         		
+		<dependency org="commons-net" name="commons-net" rev="2.2"/>      
+		
+		<!-- For S3 plugin -->
+		<dependency org="net.java.dev.jets3t" name="jets3t" rev="0.9.0"/>            	
   	</dependencies>
 	
 </ivy-module>

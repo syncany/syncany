@@ -10,6 +10,7 @@ import java.util.Random;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigTO;
+import org.syncany.config.ConfigTO.EncryptionSettings;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -86,12 +87,10 @@ public class TestConfigUtil {
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
 		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));
 		File tempLocalDir = new File(tempClientDir+"/local");
-		File tempAppDir = new File(tempClientDir+"/app"); // Warning: check delete method below if this is changed!
-		File tempCacheDir = new File(tempAppDir+"/cache");
-		File tempDatabaseDir = new File(tempAppDir+"/db");
+		File tempCacheDir = new File(tempClientDir+"/app/cache");
+		File tempDatabaseDir = new File(tempClientDir+"/app/db");
 		
 		tempLocalDir.mkdirs();
-		tempAppDir.mkdirs();
 		tempCacheDir.mkdirs();
 		tempDatabaseDir.mkdirs();
 		
@@ -99,12 +98,12 @@ public class TestConfigUtil {
 		ConfigTO configTO = new ConfigTO();
 		
 		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
-		configTO.setAppDir(tempAppDir.getAbsolutePath());
 		configTO.setCacheDir(tempCacheDir.getAbsolutePath());
 		configTO.setDatabaseDir(tempDatabaseDir.getAbsolutePath());
 		configTO.setLocalDir(tempLocalDir.getAbsolutePath());
 		
-		configTO.setEncryption(null);//new EncryptionSettings("PASSWORD"));
+		configTO.setEncryption(new EncryptionSettings(true, "any password"));
+		//configTO.setEncryption(new EncryptionSettings(false, "disabled"));
 		
 		// Skip configTO.setConnection()		
 		
@@ -130,12 +129,11 @@ public class TestConfigUtil {
 
 	public static void deleteTestLocalConfigAndData(Config config) {
 		TestFileUtil.deleteDirectory(config.getLocalDir());
-		TestFileUtil.deleteDirectory(config.getAppDir());
 		TestFileUtil.deleteDirectory(config.getCacheDir());
 		TestFileUtil.deleteDirectory(config.getDatabaseDir());
 		
 		// TODO [low] workaround: delete empty parent folder of getAppDir() --> ROOT/app/.. --> ROOT/
-		config.getAppDir().getParentFile().delete(); // if empty!
+		config.getLocalDir().getParentFile().delete(); // if empty!
 		
 		deleteTestLocalConnection(config);
 	}

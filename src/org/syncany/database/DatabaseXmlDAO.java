@@ -424,14 +424,6 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				databaseVersion = null;
 			}	
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock")) {				
-				/*if ((versionFrom != null && VectorClock.compare(versionFrom, vectorClock) == VectorClockComparison.GREATER)
-						|| (versionTo != null && VectorClock.compare(vectorClock, versionTo) == VectorClockComparison.SMALLER)) {
-					
-					vectorClockInLoadRange = false;
-				}	
-				else {
-					vectorClockInLoadRange = true;
-				}*/
 				vectorClockInLoadRange = vectorClockInRange(vectorClock, versionFrom, versionTo);
 				
 				databaseVersion.setVectorClock(vectorClock);

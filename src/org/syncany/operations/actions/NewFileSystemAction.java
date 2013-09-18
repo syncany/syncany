@@ -1,4 +1,4 @@
-package org.syncany.operations;
+package org.syncany.operations.actions;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;

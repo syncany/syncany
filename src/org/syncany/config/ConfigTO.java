@@ -9,35 +9,37 @@ import org.syncany.util.FileUtil;
 import com.google.gson.Gson;
 
 public class ConfigTO {
-	//Directory which contains all files which shall be synced with remote repo 
-	private String localDir;
-	//Home / Config directory of syncany 
-	private String appDir;
-	//Synched db-versions 
-	private String databaseDir;
-	//Local cache for chunks/multichunks/dbversions
-	private String cacheDir;
-	//local identifier for user
 	private String machineName;
+	private String configFile;
+	private String localDir;
+	private String appDir;
+	private String databaseDir;
+	private String cacheDir;
 	private ConnectionSettings connection;
 	private EncryptionSettings encryption;
 	
 	public static ConfigTO load(File file) throws ConfigException {
 		try {
-			Gson gson = new Gson();		
-			return gson.fromJson(FileUtil.readFileToString(file), ConfigTO.class);
+			ConfigTO configTO = new Gson().fromJson(FileUtil.readFileToString(file), ConfigTO.class);
+			configTO.configFile = file.getAbsolutePath();
+			
+			return configTO;
 		}
 		catch (Exception ex) {
 			throw new ConfigException("Config file does not exist or is invalid: "+file, ex);
 		}
 	}	
 		
-	public String getLocalDir() {
-		return localDir;
+	public String getConfigFile() {
+		return configFile;
 	}
 	
 	public String getAppDir() {
 		return appDir;
+	}
+
+	public String getLocalDir() {
+		return localDir;
 	}
 	
 	public String getCacheDir() {
@@ -98,10 +100,6 @@ public class ConfigTO {
 
 	public void setLocalDir(String localDir) {
 		this.localDir = localDir;
-	}
-
-	public void setAppDir(String appDir) {
-		this.appDir = appDir;
 	}
 
 	public void setDatabaseDir(String databaseDir) {

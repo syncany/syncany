@@ -1,4 +1,4 @@
-SIMPLE SETUP GUIDE, as of 2 Sep 2013
+SIMPLE SETUP GUIDE, as of 18 Sep 2013
 For branch: https://code.launchpad.net/~syncany-team/syncany/core2
 
 Setup Eclipse and build
@@ -37,31 +37,44 @@ Build on command line
 1. Install Ant and Ivy: $ apt-get install ant ivy   
 2. Compile: $ ant   
 
-
-Run Syncany
+Install/run on your system (Linux only so far)
 --------------------------------------------------------------------------------
-$ java -jar SyncanyCore.jar up
-  Performs up operation (deduplicate, index, and upload)
-  
-$ java -jar SyncanyCore.jar down
-  Performs down operation (retrieve and apply changes, resolve conflicts)
-    
+1. Install in /usr/local/bin and /usr/local/lib/syncany
+   $ sudo ant install 
+2. Run it
+   $ syncany --help
+    or 
+   $ sy --help
+ 
+Install/run on your system (for the development-time)
+--------------------------------------------------------------------------------
+Instead of copying the JAR file and libs to /usr/local/lib/syncany, you can
+create a symlink to your current working directory using the "fakeinstall"
+target.
+
+1. Install it (symlink to workspace)
+   $ sudo ant fakeinstall
+2. Run it
+   $ syncany --help
+    or 
+   $ sy --help
 
 Run in "sandbox"
 --------------------------------------------------------------------------------
-The 'sandbox' folder contains a few tiny scripts to test
-the Syncany up and down operations. The 'run.sh' script
-can be used to run Syncany on different machines ("A" 
-and "B"). 
+The 'sandbox' folder contains a tiny script to test the Syncany up and down
+operations. The 'sandbox' script can init test folders, run Syncany and
+run the 'sync' operation in a loop.
 
-cd sandbox
-vi configA.json (optional)
-vi configB.json (optional)
-./reset.sh
-./run.sh A up
-./run.sh B down
+Example:
+ $ cd sandbox
+ $ ./sandbox init A B              Set up two clients "A" and "B" in 'results'
+ $ ./sandbox run A up              Push changes for "A"
+ $ ./sandbox run B down            Pull changes from repo for "B"
+ $ ./sandbox run B status          Show uncommited changes for "B"
+ $ ./sandbox run B up              Push uncommited changed for "B"
+ $ ./sandbox run A ls-remote       Show new remote changes for "A"
+ $ ./sandbox clean                 Remote 'results' folder
 
 or to run down/up every 5 seconds (for test):
-
-./loop.sh A
-./loop.sh B (in another terminal window)
+ $ ./sandbox loop A
+ $ ./sandbox loop B (in another terminal window)

@@ -28,7 +28,6 @@ import java.security.spec.KeySpec;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -119,7 +118,7 @@ public class CipherTransformer extends Transformer {
 			Cipher streamDecryptCipher = createDecCipher(streamKey, streamIV);
 	
 			// Now create cipher stream and write to encrypted stream
-			CipherInputStream cipherInputStream = new CipherInputStream(in, streamDecryptCipher);		
+			GcmCompatibleCipherInputStream cipherInputStream = new GcmCompatibleCipherInputStream(in, streamDecryptCipher);		
 	        
 	        return cipherInputStream;
     	}

@@ -36,6 +36,10 @@ import org.syncany.connection.plugins.Plugins;
  * @author Philipp C. Heckel
  */
 public class Config {
+	public static final String DEFAULT_DIR_APPLICATION = ".syncany";
+	public static final String DEFAULT_DIR_CACHE = "cache";
+	public static final String DEFAULT_DIR_DATABASE = "db";
+	
 	private String machineName;	
 	private File localDir;
 	private File appDir;
@@ -78,11 +82,58 @@ public class Config {
 		machineName = configTO.getMachineName();
 	}
 
-	private void initDirectories(ConfigTO configTO) {
-		localDir = new File(configTO.getLocalDir());
-		appDir = new File(configTO.getAppDir());
-		cacheDir = new File(configTO.getCacheDir());
-		databaseDir = new File(configTO.getDatabaseDir());				
+	private void initDirectories(ConfigTO configTO) throws ConfigException {
+		// App folder
+		if (configTO.getAppDir() != null) {			
+			appDir = new File(configTO.getAppDir());
+			
+			if (!appDir.exists()) {
+				throw new ConfigException("Directory 'appDir' must exist if it is explicitly specified: "+appDir);
+			}			
+		}
+		else if (configTO.getConfigFile() != null) {
+			appDir = new File(configTO.getConfigFile()).getParentFile();
+			
+			if (!DEFAULT_DIR_APPLICATION.equals(appDir.getName())) {
+				throw new ConfigException("Directory 'appDir' must exist either be explicitly specified, or folder of config file must be named '.syncany' to derive it.");
+			}
+		}
+					
+		// Local folder
+		if (configTO.getLocalDir() != null) {
+			localDir = new File(configTO.getLocalDir());
+			
+			if (!localDir.exists()) {
+				throw new ConfigException("Directory 'localDir' must exist if it is explicitly specified: "+localDir);
+			}
+		}
+		else {
+			localDir = appDir.getParentFile();
+		}
+		
+		// Cache folder
+		if (configTO.getCacheDir() != null) {
+			cacheDir = new File(configTO.getCacheDir());
+			
+			if (!cacheDir.exists()) {
+				throw new ConfigException("Directory 'cacheDir' must exist if it is explicitly specified: "+cacheDir);
+			}
+		}
+		else {
+			cacheDir = new File(appDir+File.separator+DEFAULT_DIR_CACHE);
+		}
+		
+		// Database folder
+		if (configTO.getDatabaseDir() != null) {
+			databaseDir = new File(configTO.getDatabaseDir());
+			
+			if (!databaseDir.exists()) {
+				throw new ConfigException("Directory 'databaseDir' must exist if it is explicitly specified: "+databaseDir);
+			}
+		}
+		else {
+			databaseDir = new File(appDir+File.separator+DEFAULT_DIR_DATABASE);
+		}	
 	}
 	
 
@@ -122,14 +173,6 @@ public class Config {
 	    	connection.init(configTO.getConnection().getSettings());
 		}
 	}
-
-	public File getAppDir() {
-		return appDir;
-	}
-
-	public void setAppDir(File appDir) {
-		this.appDir = appDir;
-	}
 	
 	public void setCacheDir(File file) {
 		cacheDir = file;
@@ -138,8 +181,16 @@ public class Config {
 
 	public File getCacheDir() {
 		return cacheDir;
-	}
+	}	
 	
+	public File getAppDir() {
+		return appDir;
+	}
+
+	public void setAppDir(File appDir) {
+		this.appDir = appDir;
+	}
+
 	public String getMachineName() {
 		return machineName;
 	}

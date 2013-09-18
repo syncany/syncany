@@ -43,6 +43,41 @@
 			</manifest>
 		</jar>
 	</target>
+	
+	<target name="fakeinstall" depends="fakeuninstall" description="install symbolic links 'sy' and 'syncany' to /usr/local/bin.">
+		<symlink resource="${user.dir}/syncany" link="/usr/local/bin/syncany" />
+		<symlink resource="${user.dir}/syncany" link="/usr/local/bin/sy" />
+	</target>
+	
+	<target name="fakeuninstall" description="remove symbolic links 'sy' and 'syncany' from /usr/local/bin.">
+		<delete file="/usr/local/bin/syncany" />				
+		<delete file="/usr/local/bin/sy" />
+	</target>
+	
+	<target name="install" depends="uninstall" description="install to /usr/local">
+		<mkdir dir="/usr/local/lib/syncany" />
+		<mkdir dir="/usr/local/lib/syncany/lib" />
+		
+		<copy file="syncany" tofile="/usr/local/lib/syncany/syncany" />
+		<chmod file="/usr/local/lib/syncany/syncany" perm="+x" />		
+
+		<copy file="SyncanyCore.jar" todir="/usr/local/lib/syncany" />
+				
+		<copy todir="/usr/local/lib/syncany/lib">
+			<fileset dir="./lib">
+				<include name="**/*.jar" />
+			</fileset>		   		    
+		</copy>
+		
+		<symlink resource="/usr/local/lib/syncany/syncany" link="/usr/local/bin/syncany"  />
+		<symlink resource="/usr/local/lib/syncany/syncany" link="/usr/local/bin/sy"  />
+	</target>
+	
+	<target name="uninstall" description="remove all resources from /usr/local">
+		<delete file="/usr/local/bin/syncany" />				
+		<delete file="/usr/local/bin/sy" />		
+		<delete dir="/usr/local/lib/syncany" />
+	</target>		
 
 	<target name="clean" description="clean up">
 		<!-- Delete the ${build} and ${dist} directory trees -->

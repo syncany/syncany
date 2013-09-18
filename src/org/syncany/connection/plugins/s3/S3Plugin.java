@@ -15,31 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.connection.plugins.s3;
 
-import java.io.File;
-import java.io.IOException;
-
-
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class AbstractTransferManager implements TransferManager {
-    private Connection connection;
+public class S3Plugin extends Plugin {
+    public static final String ID = "s3";
+    
+    @Override
+    public String getId() {
+        return ID;
+    }    
 
-    public AbstractTransferManager(Connection connection) {
-        this.connection = connection;
+    @Override
+    public String getName() {
+        return "Amazon S3";
     }
 
-    public Connection getConnection() {
-        return connection;
-    }      
-    
-    // TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
-    protected File createTempFile(String name) throws IOException {
-        return File.createTempFile(String.format("temp-%s-", name), ".tmp");
-    }   
-    
+    @Override
+    public Integer[] getVersion() {
+        return new Integer[] { 0, 1 };
+    }
+
+    @Override
+    public Connection createConnection() {
+        return new S3Connection();
+    }
 }

@@ -23,6 +23,7 @@ import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
@@ -223,7 +224,7 @@ public class SyncUpOperation extends Operation {
 		
 		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion.getHeader()+", to "+lastMergeDatabaseVersion.getHeader()+") to file "+localMergeDatabaseVersionFile+" ...");
 
-		DatabaseDAO databaseDAO = new DatabaseXmlDAO(); 			
+		DatabaseDAO databaseDAO = new DatabaseXmlDAO(config.getTransformer()); 			
 		databaseDAO.save(database, null/*firstMergeDatabaseVersion*/, lastMergeDatabaseVersion, localMergeDatabaseVersionFile);
 		
 		logger.log(Level.INFO, "   + Uploading new file "+remoteMergeDatabaseVersionFile+" from local file "+localMergeDatabaseVersionFile+" ...");

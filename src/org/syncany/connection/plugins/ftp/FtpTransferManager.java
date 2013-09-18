@@ -186,7 +186,7 @@ public class FtpTransferManager extends AbstractTransferManager {
             FTPFile[] ftpFiles = ftp.listFiles(getConnection().getPath()+"/");
 
             for (FTPFile f : ftpFiles) {
-                files.put(f.getName(), new RemoteFile(f.getName(), f.getSize(), f));
+                files.put(f.getName(), new RemoteFile(f.getName(), f));
             }
 
             return files;
@@ -211,7 +211,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 			});
 
             for (FTPFile f : ftpFiles) {
-                files.put(f.getName(), new RemoteFile(f.getName(), f.getSize(), f));
+                files.put(f.getName(), new RemoteFile(f.getName(), f));
             }
 
             return files;
@@ -234,10 +234,4 @@ public class FtpTransferManager extends AbstractTransferManager {
             throw new StorageException(ex);
         }
     }
-    
-    // TODO [low] This should be in AbstractTransferManager (or any other central place)
-    // TODO [low] This should use the Syncany cache folder
-    public File createTempFile(String name) throws IOException {
-        return File.createTempFile(String.format("temp-%s-", name), ".tmp");
-    }   
 }

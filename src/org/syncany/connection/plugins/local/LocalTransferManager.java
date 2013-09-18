@@ -148,7 +148,7 @@ public class LocalTransferManager extends AbstractTransferManager {
         Map<String, RemoteFile> remoteFiles = new HashMap<String, RemoteFile>();
 
         for (File file : files) {
-            remoteFiles.put(file.getName(), new RemoteFile(file.getName(), file.length(), file));
+            remoteFiles.put(file.getName(), new RemoteFile(file.getName(), file));
         }
 
         return remoteFiles;

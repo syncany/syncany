@@ -15,18 +15,22 @@ public abstract class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
 	protected Config config;
 	
-	public Operation(Config profile) {
-		this.config = profile;
+	public Operation(Config config) {
+		this.config = config;
 	}	
 
 	protected Database loadLocalDatabase(File localDatabaseFile) throws IOException {
 		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
 		
-		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
 		Database db = new Database();
 
-		if (localDatabaseFile.exists() && localDatabaseFile.isFile() && localDatabaseFile.canRead()) {
+		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
+		
+		if (localDatabaseFile.exists()) {
 			dao.load(db, localDatabaseFile);
+		}
+		else {
+			logger.log(Level.INFO, "- NOT loading. File does not exist.");
 		}
 		
 		return db;

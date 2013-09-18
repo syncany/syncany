@@ -1,0 +1,18 @@
+{
+	"machineName":		"$MACHINENAME",
+
+	"connection":
+	{
+		"type"		: "local",
+		"settings"	: 
+		{
+			"path"	: "$LOCALREPO"
+		}
+	},
+
+	"encryption"	: 
+	{
+		"enabled"	: false,
+		"pass"		: "password"
+	}
+}

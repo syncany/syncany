@@ -1,0 +1,156 @@
+#!/bin/bash
+
+PLAY="results"
+
+cmd_clean() {
+	rm -rf $PLAY
+}
+
+cmd_init() {
+	# Playground
+	echo "Creating playground $PLAY ..."
+	mkdir $PLAY 
+
+	# Local Repo
+	LOCALREPO=$(readlink -m $PLAY/repo)
+
+	echo "Creating local repo $LOCALREPO ..."
+	mkdir $LOCALREPO
+
+	# Clients
+	if [ -z "${ARGS[0]}" ]; then
+		CLIENTS=("A" "B")
+	else
+		CLIENTS=${ARGS[@]}
+	fi
+	
+	for MACHINENAME in ${CLIENTS[@]}; do
+		initmachine	
+	done
+}
+
+initmachine() {
+	MACHINELOCALDIR="$PLAY/client$MACHINENAME"
+	MACHINEAPPDIR="$MACHINELOCALDIR/.syncany"
+	MACHINECONFIGFILE="$PLAY/client$MACHINENAME/.syncany/config.json"
+
+	RANDFILES=(/etc/hosts /etc/profile /etc/motd /etc/bash.bashrc /etc/wgetrc)
+	RANDFILESMAX=2
+	
+	echo "Creating client $MACHINENAME ..."
+	echo "- Local directory at $MACHINELOCALDIR ..."
+	mkdir "$MACHINELOCALDIR"
+
+	echo "- Application directory at $MACHINEAPPDIR ..."
+	mkdir "$MACHINEAPPDIR"
+
+	echo "- Config file at $MACHINECONFIGFILE ..."
+	cat config-local.json.skel \
+		| sed -e "s!\$MACHINENAME!$MACHINENAME!" \
+		| sed -e "s!\$LOCALREPO!$LOCALREPO!" \
+		> $MACHINECONFIGFILE
+
+	echo "- Copy up to 2 random files to directory ..."
+
+	for i in `shuf --input-range=0-$(( ${#RANDFILES[*]} - 1 )) | head -${RANDFILESMAX}`; do
+		RANDFILE=${RANDFILES[$i]}
+		cp $RANDFILE $MACHINELOCALDIR/ 2> /dev/null
+	done	
+}
+
+cmd_run() {
+	if [ -z "${ARGS[0]}" ]; then
+		echo "Usage: ./sandbox run <client>"
+		echo "       e.g. ./sandbox run A"
+		exit 1
+	fi
+	
+	CLIENT=${ARGS[0]}
+
+	CLIENTLOG=$PLAY/log.log
+	CLIENTCONFIG="$PLAY/client$CLIENT/.syncany/config.json"
+	CLIENTARGS=(${ARGS[@]:1})
+
+	# Delete previous logs
+	rm $LOGFILE 2> /dev/null
+
+	echo "Running: " ../syncany -c "$CLIENTCONFIG" -l "$CLIENTLOG" ${CLIENTARGS[@]}	
+	../syncany -c "$CLIENTCONFIG" -l "$CLIENTLOG" ${CLIENTARGS[@]}
+}
+
+cmd_loop() {
+	ARGS=(${ARGS[0]} "--quiet" "sync")
+
+	echo "Starting down/up-loop every 5 seconds:"
+	while true; do 
+		cmd_run
+		sleep 5
+	done
+}
+
+cmd_log() {
+	if [ -z "${ARGS[0]}" ]; then
+		echo "Usage: ./sandbox run <client>"
+		echo "       e.g. ./sandbox run A"
+		exit 1
+	fi
+	
+	CLIENT=${ARGS[0]}
+	CLIENTLOG=$PLAY/log.log
+	
+	tail -f "$CLIENTLOG"
+}
+
+case $1 in
+  clean)
+	cmd_clean
+    ;;
+  init)
+  	shift
+  	ARGS=($@)  	
+  	cmd_clean
+	cmd_init
+    ;;
+  run)
+  	shift
+  	ARGS=($@)
+	cmd_run
+    ;;    
+  loop)
+  	shift
+  	ARGS=($@)
+	cmd_loop
+	;;
+  log)
+  	shift
+  	ARGS=($@)
+	cmd_log	
+    ;;        
+  *)
+	echo "Usage: ./sandbox <command>"
+	echo "Syncany sandbox script, copyright (c) 2011-2013, Philipp C. Heckel"
+	echo ""
+	echo "Commands:"
+	echo "   init [<client> ...]"       
+	echo "     Initialize config data for the given clients and a local repository. If no clients are"
+	echo "     given, two clients A and B are created."
+	echo ""
+	echo "   clean"
+	echo "     Remove client and repo data"
+	echo ""
+	echo "   run <client> [<args>]"
+	echo "     Run the client with the previously created configuration (-c <config> is attached)."
+	echo "     Additional attributes can be added and are passed to the application."
+	echo ""
+	echo "   loop <client>"
+	echo "     Runs the 'sync' command every 5 seconds."
+	echo ""
+	echo "   log <client>"
+	echo "     Display the log for <client> while looping. Alias"
+	echo "     for 'tail -f results/client<client>/log.log'."
+	echo ""
+	
+    ;;
+esac
+
+

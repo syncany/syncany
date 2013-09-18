@@ -15,43 +15,51 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.local;
+package org.syncany.connection.plugins.s3;
 
-import java.io.File;
 import java.util.Map;
 
-import org.syncany.connection.plugins.Connection;
+import org.jets3t.service.security.AWSCredentials;
+import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.rest.RestConnection;
 
 /**
  *
- * @author Philipp C. Heckel
+ * @author oubou68, pheckel
  */
-public class LocalConnection implements Connection {
-	private File repositoryPath;
+public class S3Connection extends RestConnection {   
+    // cp. http://jets3t.s3.amazonaws.com/api/constant-values.html#org.jets3t.service.model.S3Bucket.LOCATION_ASIA_PACIFIC
+    private String location;
 
-	@Override
+    @Override
 	public void init(Map<String, String> map) throws StorageException {
-		String path = map.get("path");
+    	super.init(map);
+    	
+    	// Additional S3 settings
+		location = map.get("location");
 		
-		if (path == null) {
-			throw new StorageException("Config does not contain 'path' setting.");
+		if (location == null) {
+			throw new StorageException("Config does not contain 'location' setting.");
 		}
-		
-		setRepositoryPath(new File(path));
 	}
 
     @Override
     public TransferManager createTransferManager() {
-        return new LocalTransferManager(this);
+        return new S3TransferManager(this);
     }
 
-    public File getRepositoryPath() {
-        return repositoryPath;
+    @Override
+    protected ProviderCredentials createCredentials() {       
+        return new AWSCredentials(getAccessKey(), getSecretKey());
+    }    
+
+    public String getLocation() {
+        return location;
     }
 
-    public void setRepositoryPath(File repositoryPath) {
-        this.repositoryPath = repositoryPath;
+    public void setLocation(String location) {
+        this.location = location;
     }
 }

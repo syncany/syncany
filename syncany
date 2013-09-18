@@ -1,0 +1,19 @@
+#!/bin/bash
+
+findjar() {
+	SCRIPTPATH=$(readlink -f "$0")
+	APPROOT=$(dirname "$SCRIPTPATH")
+	
+	# Try script location
+	JARFILE="$APPROOT/SyncanyCore.jar"
+	LIBPATH="$APPROOT/lib"
+	
+	# If no success, try /usr/local/bin and /usr/local/lib/syncany
+	if [ ! -e "$JARFILE" ]; then
+		echo "Cannot find jar file in app root $APPROOT"
+		exit 1
+	fi
+}
+
+findjar
+java -jar "$JARFILE" $@

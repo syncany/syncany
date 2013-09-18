@@ -1,4 +1,4 @@
-package org.syncany.operations;
+package org.syncany.operations.actions;
 
 import java.io.File;
 

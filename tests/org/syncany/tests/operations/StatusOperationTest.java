@@ -110,4 +110,31 @@ public class StatusOperationTest {
 		// Cleanup 
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
+	
+	@Test
+	public void testCreateFolderAndRunStatus() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();
+		new File(config.getLocalDir()+"/somefolder").mkdir();
+				
+		// Run 'status', this SHOULD list the folder
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		assertEquals(changeSet.getNewFiles().size(), 1);
+		assertEquals(changeSet.getChangedFiles().size(), 0);
+		assertEquals(changeSet.getDeletedFiles().size(), 0);
+		assertEquals(changeSet.getUnchangedFiles().size(), 0);	
+		
+		// Run 'up' to check in the folder
+		new SyncUpOperation(config).execute();
+		
+		// Run 'status', this SHOULD NOT list the folder in the changed/new files
+		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		assertEquals(changeSet.getNewFiles().size(), 0);
+		assertEquals(changeSet.getChangedFiles().size(), 0);
+		assertEquals(changeSet.getDeletedFiles().size(), 0);
+		assertEquals(changeSet.getUnchangedFiles().size(), 1);		
+				
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
 }

@@ -21,8 +21,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.chunk.Chunk;
-import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Cache;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
@@ -38,11 +36,18 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
+import org.syncany.operations.actions.ChangeFileSystemAction;
+import org.syncany.operations.actions.DeleteFileSystemAction;
+import org.syncany.operations.actions.FileSystemAction;
+import org.syncany.operations.actions.NewFileSystemAction;
+import org.syncany.operations.actions.RenameFileSystemAction;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -436,47 +441,8 @@ public class SyncDownOperation extends Operation {
 		return unknownRemoteBranches;
 	}
 
-	private List<RemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager) throws StorageException {
-		logger.log(Level.INFO, "Retrieving remote database list.");
-		
-		List<RemoteFile> unknownRemoteDatabasesList = new ArrayList<RemoteFile>();
-
-		Map<String, RemoteFile> remoteDatabaseFiles = transferManager.list("db-");
-		
-		// No local database yet
-		if (db.getLastDatabaseVersion() == null) {
-			return new ArrayList<RemoteFile>(remoteDatabaseFiles.values());
-		}
-		
-		// At least one local database version exists
-		else {
-			VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
-			
-			for (RemoteFile remoteFile : remoteDatabaseFiles.values()) {
-				RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteFile.getName());
-				
-				String clientName = remoteDatabaseFile.getClientName();
-				Long knownClientVersion = knownDatabaseVersions.get(clientName);
-						
-				if (knownClientVersion != null) {
-					if (remoteDatabaseFile.getClientVersion() > knownClientVersion) {
-						logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
-						unknownRemoteDatabasesList.add(remoteFile);
-					}
-					else {
-						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteFile.getName());
-						// Do nothing. We know this database.
-					}
-				}
-				
-				else {
-					logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
-					unknownRemoteDatabasesList.add(remoteFile);
-				}				
-			}
-			
-			return unknownRemoteDatabasesList;			
-		}
+	private List<RemoteFile> listUnknownRemoteDatabases(Database database, TransferManager transferManager) throws Exception {
+		return ((RemoteStatusOperationResult) new RemoteStatusOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 	}
 	
 	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<RemoteFile> unknownRemoteDatabases) throws StorageException {

@@ -1,4 +1,4 @@
-package org.syncany.operations;
+package org.syncany.database;
 
 import java.io.File;
 import java.util.regex.Matcher;

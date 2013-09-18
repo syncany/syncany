@@ -1,4 +1,4 @@
-package org.syncany.operations;
+package org.syncany.operations.actions;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -88,15 +88,6 @@ public abstract class FileSystemAction {
 					InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getArray());
 					
 					FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
-
-					/*ZipFile zipFile = new ZipFile(decryptedMultiChunkFile);
-					ZipEntry zipEntry = zipFile.getEntry(StringUtil.toHex(chunkChecksum.getArray()));
-					InputStream zipEntryInputStream = zipFile.getInputStream(zipEntry);
-					
-					FileUtil.appendToOutputStream(zipEntryInputStream, reconstructedFileOutputStream);*/
-					
-					//File chunkFile = config.getCache().getChunkFile(chunkChecksum.getArray());
-					//FileUtil.appendToOutputStream(chunkFile, reconstructedFileOutputStream);
 				}
 			}
 			
@@ -127,8 +118,8 @@ public abstract class FileSystemAction {
 		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictingLocalFile);
 		String conflictBasename = FileUtil.getBasename(conflictingLocalFile);
 		String conflictFileExtension = FileUtil.getExtension(conflictingLocalFile);		
-		String conflictCreatedBy = conflictingLocalVersion.getCreatedBy();
-		String conflictDate = new SimpleDateFormat("d MMM yyyy, h.mm a").format(conflictingLocalVersion.getLastModified()); 
+		String conflictMachineName = config.getMachineName();
+		String conflictDate = new SimpleDateFormat("d MMM yy, h-mm a").format(conflictingLocalVersion.getLastModified()); 
 				
 		boolean conflictCreatedByEndsWithS = conflictingLocalVersion.getCreatedBy().endsWith("s");
 		boolean conflictFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
@@ -138,21 +129,21 @@ public abstract class FileSystemAction {
 		if (conflictFileHasExtension) {
 			if (conflictCreatedByEndsWithS) {
 				newFullName = String.format("%s (%s' conflicted copy, %s).%s", 
-						conflictBasename, conflictCreatedBy, conflictDate, conflictFileExtension);
+						conflictBasename, conflictMachineName, conflictDate, conflictFileExtension);
 			}
 			else {
 				newFullName = String.format("%s (%s's conflicted copy, %s).%s", 
-						conflictBasename, conflictCreatedBy, conflictDate, conflictFileExtension);				
+						conflictBasename, conflictMachineName, conflictDate, conflictFileExtension);				
 			}
 		}
 		else {
 			if (conflictCreatedByEndsWithS) {
 				newFullName = String.format("%s (%s' conflicted copy, %s)", 
-						conflictBasename, conflictCreatedBy, conflictDate);
+						conflictBasename, conflictMachineName, conflictDate);
 			}
 			else {
 				newFullName = String.format("%s (%s's conflicted copy, %s)", 
-						conflictBasename, conflictCreatedBy, conflictDate);				
+						conflictBasename, conflictMachineName, conflictDate);				
 			}
 		}
 					

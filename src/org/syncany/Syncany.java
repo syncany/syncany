@@ -19,6 +19,8 @@ import joptsimple.OptionSpec;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigTO;
 import org.syncany.config.Logging;
+import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.operations.InitOperation;
 import org.syncany.operations.Operation.OperationOptions;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
@@ -26,12 +28,12 @@ import org.syncany.util.FileUtil;
 
 public class Syncany {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
-	public enum CommandArgument { SYNC_UP, SYNC_DOWN, STATUS };
+	public enum OperationType { SYNC_UP, SYNC_DOWN, SYNC, STATUS, REMOTE_STATUS, INIT };
 	
 	private String[] args;
 	private Client client;
 
-	private CommandArgument operationArgument;
+	private OperationType operationType;
 	private OperationOptions operationOptions;
 	
 	private File configFile;
@@ -51,28 +53,38 @@ public class Syncany {
 	
 	public void start() throws Exception {
 		readCommandLineArguments(args);		
-		initClient(configFile);
-		
 		runOperation();
 	}	
 
 	private void readCommandLineArguments(String[] args) throws Exception {
+		// Define global options
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 		
+		OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
 		OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
 		OptionSpec<File> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg().ofType(File.class);
 		OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
-		OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));		
+		OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
+		OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));
 		
+		// Parse global options and operation name
 		OptionSet options = parser.parse(args);
 		
+		// Evaluate options
+		initHelpOption(options, optionHelp);
 		initConfigOption(options, optionConfig);
 		initLogFileOption(options, optionLog);
-		initLogLevelOption(options, optionLogLevel, optionDebug);
+		initLogLevelOption(options, optionLogLevel, optionQuiet, optionDebug);
 
 		initOperation(options, options.nonOptionArguments());
 	}	
+
+	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp) {
+		if (options.has(optionHelp)) {
+			showUsageAndExit();
+		}
+	}
 
 	private void initOperation(OptionSet options, List<?> nonOptions) {
 		if (nonOptions.size() == 0) {
@@ -80,20 +92,29 @@ public class Syncany {
 		}
 		
 		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String operationArgument = (String) nonOptionsCopy.remove(0); 
-		String[] operationArgs = nonOptions.toArray(new String[nonOptions.size()]);
+		String aOperationType = (String) nonOptionsCopy.remove(0); 
+		String[] aOperationArguments = nonOptions.toArray(new String[nonOptions.size()]);
 		
-		if ("up".equals(operationArgument)) {
-			initSyncUpOperation(operationArgs);
+		if ("up".equals(aOperationType)) {
+			initSyncUpOperation(aOperationArguments);
 		}
-		else if ("down".equals(operationArgument)) {
-			this.operationArgument = CommandArgument.SYNC_DOWN;
+		else if ("down".equals(aOperationType)) {
+			this.operationType = OperationType.SYNC_DOWN;
 		}
-		else if ("status".equals(operationArgument)) {
-			this.operationArgument = CommandArgument.STATUS;
+		else if ("sync".equals(aOperationType)) {
+			this.operationType = OperationType.SYNC;
+		}
+		else if ("status".equals(aOperationType)) {
+			this.operationType = OperationType.STATUS;
+		}
+		else if ("ls-remote".equals(aOperationType)) {
+			this.operationType = OperationType.REMOTE_STATUS;
+		}
+		else if ("init".equals(aOperationType)) {
+			this.operationType = OperationType.INIT;
 		}
 		else {
-			showUsageAndExit("Given command is unknown.");
+			showErrorAndExit("Given command is unknown.");
 		}		
 	}
 
@@ -109,7 +130,7 @@ public class Syncany {
 			aOperationOptions.setCleanupEnabled(false);
 		}
 		
-		operationArgument = CommandArgument.SYNC_UP;
+		operationType = OperationType.SYNC_UP;
 		operationOptions = aOperationOptions;
 	}
 
@@ -136,12 +157,15 @@ public class Syncany {
 		}
 	}
 
-	private void initLogLevelOption(OptionSet options, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionDebug) {
+	private void initLogLevelOption(OptionSet options, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) {
 		Level currentLogLevel = Logger.getLogger("").getLevel();
 		Level newLogLevel = null;
 		
 		if (options.has(optionDebug)) {
 			newLogLevel = Level.ALL;
+		}
+		else if (options.has(optionQuiet)) {
+			newLogLevel = Level.OFF;
 		}
 		else if (options.has(optionLogLevel)) {
 			String newLogLevelStr = options.valueOf(optionLogLevel);
@@ -150,7 +174,7 @@ public class Syncany {
 				newLogLevel = Level.parse(newLogLevelStr);
 			}
 			catch (IllegalArgumentException e) {
-				showUsageAndExit("Invalid log level given "+newLogLevelStr+"'");
+				showErrorAndExit("Invalid log level given "+newLogLevelStr+"'");
 			}
 		}		
 		
@@ -172,37 +196,36 @@ public class Syncany {
 		}
 	}
 
-	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) {
+	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) throws IOException {
 		if (options.has(optionConfig)) {
 			configFile = options.valueOf(optionConfig);
 		}
 		else {
-			configFile = new File("config.json");
-		}
-		
-		if (!configFile.exists()) {
-			showUsageAndExit("Cannot find config file '"+configFile+"'");
-		}
+			configFile = findConfigFileInPath();
+		}		
 	}		
 	
-	private void showUsageAndExit() {
-		showUsageAndExit(null);
+	private File findConfigFileInPath() throws IOException {
+		File currentSearchFolder = new File(".").getCanonicalFile();
+		
+		while (currentSearchFolder != null) {
+			File possibleConfigFile = new File(currentSearchFolder+"/.syncany/config.json");
+			
+			if (possibleConfigFile.exists()) {
+				return possibleConfigFile.getCanonicalFile();
+			}
+			
+			currentSearchFolder = currentSearchFolder.getParentFile();
+		}
+		 
+		return null; 
 	}
-
-	private void showUsageAndExit(String errorMessage) {
-		if (errorMessage != null) {
-			System.out.println("ERROR: "+errorMessage);
-			System.out.println();
+		
+	private void initClient(File configFile) throws Exception {
+		if (configFile == null) {
+			showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
 		}
 		
-		System.out.println("Usage: syncany [-c config.json] up     -  Sync up");
-		System.out.println("       syncany [-c config.json] down   -  Sync down");
-		System.out.println("       syncany [-c config.json] status -  List local changes");
-		
-		System.exit(1);
-	}
-
-	private void initClient(File configFile) throws Exception {
 		logger.log(Level.INFO, "Loading config from {0} ...", configFile);
 		
 		ConfigTO configTO = ConfigTO.load(configFile);
@@ -213,29 +236,111 @@ public class Syncany {
 	}
 	
 	private void runOperation() throws Exception {
-		if (operationArgument == CommandArgument.SYNC_UP) {
-			client.up((SyncUpOperationOptions) operationOptions); // TODO [medium] ugly
-		}
-		else if (operationArgument == CommandArgument.SYNC_DOWN) {
-			client.down();
-		}
-		else if (operationArgument == CommandArgument.STATUS) {
-			ChangeSet changeSet = client.status();
-			
-			for (File newFile : changeSet.getNewFiles()) {
-				System.out.println("A "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), newFile));
-			}
-
-			for (File changedFile : changeSet.getChangedFiles()) {
-				System.out.println("M "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), changedFile));
-			}
-			
-			for (File deletedFile : changeSet.getDeletedFiles()) {
-				System.out.println("D "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), deletedFile));
-			}	
+		if (operationType == OperationType.INIT) {
+			new InitOperation().execute();
 		}
 		else {
-			showUsageAndExit("Unknown operation.");
+			// Create client object (necessary for these operations)
+			initClient(configFile);
+			
+			// Run operation
+			if (operationType == OperationType.SYNC_UP) {
+				client.up((SyncUpOperationOptions) operationOptions); // TODO [medium] ugly
+			}
+			else if (operationType == OperationType.SYNC_DOWN) {
+				client.down();
+			}
+			else if (operationType == OperationType.SYNC) {
+				client.sync();
+			}
+			else if (operationType == OperationType.STATUS) {
+				ChangeSet changeSet = client.status();
+				
+				for (File newFile : changeSet.getNewFiles()) {
+					System.out.println("A "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), newFile));
+				}
+	
+				for (File changedFile : changeSet.getChangedFiles()) {
+					System.out.println("M "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), changedFile));
+				}
+				
+				for (File deletedFile : changeSet.getDeletedFiles()) {
+					System.out.println("D "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), deletedFile));
+				}	
+			}
+			else if (operationType == OperationType.REMOTE_STATUS) {
+				List<RemoteFile> remoteStatus = client.remoteStatus();
+				
+				for (RemoteFile unknownRemoteFile : remoteStatus) {
+					System.out.println("+ "+unknownRemoteFile.getName());
+				}
+			}
+			else {
+				showErrorAndExit("Unknown operation '"+operationType+"'.");
+			}
 		}
-	}			
+	}	
+	
+	private void showUsageAndExit() {
+		System.out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
+		System.out.println("Usage: sy [-c|--config=<path>] [-l|--log=<path>]");
+		System.out.println("          [-v|--loglevel=OFF|SEVERE|..] [-q|--quiet]");
+		System.out.println("          [-d|--debug] [-h|--help] <command> [<args>]");
+		System.out.println();
+		System.out.println("Global options:");
+		System.out.println("  -c, --config=<path>");
+		System.out.println("      Load config file from <path>. If <path> is in a '.syncany'-folder");
+		System.out.println("      'localDir' is assumed to be the parent directory. If the -c option");
+		System.out.println("      is not given, Syncany searches for a '.syncany'-folder in all parent");
+		System.out.println("      directories.");
+		System.out.println();
+		System.out.println("  -l, --log=<path>");
+		System.out.println("      Log output to the file given by <path>. If - is given, the");
+		System.out.println("      output will be logged to STDOUT (default).");
+		System.out.println();
+		System.out.println("  -v, --loglevel=<level>");
+		System.out.println("      Change log level to <level>. Level can be either of the");
+		System.out.println("      following: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL");
+		System.out.println();
+		System.out.println("  -q, --quiet");
+		System.out.println("      Alias to --loglevel=OFF");
+		System.out.println();
+		System.out.println("  -d, --debug");
+		System.out.println("      Alias to --loglevel=ALL");
+		System.out.println();
+		System.out.println("  -h, --help");
+		System.out.println("      Print this help screen");
+		System.out.println();
+		System.out.println("Commands:");
+		System.out.println("  up");
+		System.out.println("      Detect local changes and upload to repo (commit)");
+		System.out.println();
+		System.out.println("      Arguments:");
+		System.out.println("      --no-cleanup    Do not merge own databases in repo.");
+		System.out.println();
+		System.out.println("  down");
+		System.out.println("      Detect remote changes and apply locally (update)");
+		System.out.println();
+		System.out.println("  sync");
+		System.out.println("      Perform down- and up-command.");		
+		System.out.println();
+		System.out.println("  status");
+		System.out.println("      Detect local changes and print to STDOUT.");
+		System.out.println();
+		System.out.println("  ls-remote");
+		System.out.println("      Detect remote changes and print to STDOUT.");
+		System.out.println();
+		
+		System.exit(1);
+	}
+
+	private void showErrorAndExit(String errorMessage) {
+		System.out.println("Syncany: "+errorMessage);
+		System.out.println("         Refer to help page using '--help'.");
+		System.out.println();
+
+		System.exit(1);		
+		
+	}
+	
 }

@@ -20,8 +20,6 @@ package org.syncany.connection.plugins.ftp;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -36,11 +34,6 @@ public class FtpConnection implements Connection {
     private String password;
     private String path;
     private int port;
-
-	@Override
-	public Plugin getPlugin() {
-		return Plugins.get(FtpPlugin.ID);
-	}
 
     @Override
     public TransferManager createTransferManager() {

@@ -23,28 +23,18 @@ package org.syncany.connection.plugins;
  */
 public class RemoteFile {
     private String name;
-    private long size;
     private Object source;
 
     protected RemoteFile() {
         // Fressen.
     }
 
-    public RemoteFile(RemoteFile remoteFile) {
-        this(remoteFile.getName(), remoteFile.getSize(), remoteFile.getSource());
-    }
-
     public RemoteFile(String name) {
-        this(name, 0, null);
+        this(name, null);
     }
 
-    public RemoteFile(String name, long size) {
-        this(name, size, null);
-    }
-
-    public RemoteFile(String name, long size, Object source) {
+    public RemoteFile(String name, Object source) {
         this.name = name;
-        this.size = size;
         this.source = source;
     }
     
@@ -55,15 +45,7 @@ public class RemoteFile {
     public void setName(String name) {
         this.name = name;
     }
-
-    public long getSize() {
-        return size;
-    }
-
-    public void setSize(long size) {
-        this.size = size;
-    }
-
+    
     public Object getSource() {
         return source;
     }
