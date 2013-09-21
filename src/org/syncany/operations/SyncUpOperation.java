@@ -15,6 +15,8 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
@@ -94,7 +96,7 @@ public class SyncUpOperation extends Operation {
 			
 			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(config.getMachineName());
 
-			RemoteFile remoteDeltaDatabaseFile = new RemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
+			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
 			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
 
 			logger.log(Level.INFO, "Saving local delta database file ...");
@@ -117,7 +119,7 @@ public class SyncUpOperation extends Operation {
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-			RemoteFile remoteMultiChunkFile = new RemoteFile(localMultiChunkFile.getName());
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localMultiChunkFile.getName());
 			
 			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
 			transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
@@ -127,7 +129,7 @@ public class SyncUpOperation extends Operation {
 		}		
 	}
 
-	private void uploadLocalDatabase(File localDatabaseFile, RemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {		
+	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {		
 		logger.log(Level.INFO, "- Uploading "+localDatabaseFile+" to "+remoteDatabaseFile+" ..."); 		
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
 	}
@@ -220,7 +222,7 @@ public class SyncUpOperation extends Operation {
 		
 		// Now write merge file
 		File localMergeDatabaseVersionFile = config.getCache().getDatabaseFile("db-"+config.getMachineName()+"-"+lastMergeDatabaseFile.getClientVersion());
-		RemoteFile remoteMergeDatabaseVersionFile = new RemoteFile(localMergeDatabaseVersionFile.getName());
+		DatabaseRemoteFile remoteMergeDatabaseVersionFile = new DatabaseRemoteFile(localMergeDatabaseVersionFile.getName());
 		
 		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion.getHeader()+", to "+lastMergeDatabaseVersion.getHeader()+") to file "+localMergeDatabaseVersionFile+" ...");
 
