@@ -52,8 +52,10 @@ public class Deduper {
 
 						// - Open new multichunk if non-existent
 						if (multiChunk == null) {
-							File multiChunkFile = listener.getMultiChunkFile(chunk.getChecksum());
-							multiChunk = multiChunker.createMultiChunk(chunk.getChecksum(), 
+							byte[] newMultiChunkId = listener.createNewMultiChunkId(chunk);
+							File multiChunkFile = listener.getMultiChunkFile(newMultiChunkId);
+							
+							multiChunk = multiChunker.createMultiChunk(newMultiChunkId, 
 								transformer.createOutputStream(new FileOutputStream(multiChunkFile)));
 
 							listener.onOpenMultiChunk(multiChunk);

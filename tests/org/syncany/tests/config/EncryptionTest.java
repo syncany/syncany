@@ -59,7 +59,9 @@ public class EncryptionTest {
 	}		
 	
 	@Test
-	public void testDefaultCryptoSuiteAvailable() throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+	public void testDefaultCryptoSuiteAvailable() throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, EncryptionException {
+		testInitEncryptionAndLoadProviders(); // Must be executed before this test
+		
 		byte[] testKeyBytes = new byte[Encryption.DEFAULT_KEYLENGTH/8];
 		byte[] testIvBytes = new byte[Encryption.DEFAULT_KEYLENGTH/8];
 		

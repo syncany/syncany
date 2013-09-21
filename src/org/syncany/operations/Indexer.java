@@ -2,6 +2,7 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -85,12 +86,14 @@ public class Indexer {
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
+		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
 		private ChunkEntry chunkEntry;		
 		private MultiChunkEntry multiChunkEntry;	
 		private FileContent fileContent;
 		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
+			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 		}				
 
@@ -305,9 +308,8 @@ public class Indexer {
 		
 		@Override
 		public void onOpenMultiChunk(MultiChunk multiChunk) {
-			// TODO [high] Multichunk IDs should be generated randomly. There might be significant issues if the first chunk checksum is used, e.g. when re-indexing the same file at a later point in time! 
 			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
-			multiChunkEntry = new MultiChunkEntry(chunkEntry.getChecksum());
+			multiChunkEntry = new MultiChunkEntry(multiChunk.getId());
 		}
 
 		@Override
@@ -327,6 +329,14 @@ public class Indexer {
 		@Override
 		public File getMultiChunkFile(byte[] multiChunkId) {
 			return config.getCache().getEncryptedMultiChunkFile(multiChunkId);
+		}
+		
+		@Override
+		public byte[] createNewMultiChunkId(Chunk firstChunk) {
+			byte[] newMultiChunkId = new byte[firstChunk.getChecksum().length];
+			secureRandom.nextBytes(newMultiChunkId);
+			
+			return newMultiChunkId;
 		}
 
 		@Override

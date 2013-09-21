@@ -193,6 +193,12 @@ public class FrameworkCombinationTest {
 				
 				return outputMultiChunk;
 			}
+
+			@Override
+			public byte[] createNewMultiChunkId(Chunk firstChunk) {
+				// Note: In the real implementation, this should be random
+				return firstChunk.getChecksum();
+			}
 		});
 		
 		return chunkIndex;

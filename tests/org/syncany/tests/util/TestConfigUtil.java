@@ -102,8 +102,8 @@ public class TestConfigUtil {
 		configTO.setDatabaseDir(tempDatabaseDir.getAbsolutePath());
 		configTO.setLocalDir(tempLocalDir.getAbsolutePath());
 		
-		configTO.setEncryption(new EncryptionSettings(true, "any password"));
-		//configTO.setEncryption(new EncryptionSettings(false, "disabled"));
+		//configTO.setEncryption(new EncryptionSettings(true, "any password"));
+		configTO.setEncryption(new EncryptionSettings(false, "disabled"));
 		
 		// Skip configTO.setConnection()		
 		

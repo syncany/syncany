@@ -16,4 +16,5 @@ public interface DeduperListener {
 	public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk);
 	public void onCloseMultiChunk(MultiChunk multiChunk);		
 	public File getMultiChunkFile(byte[] multiChunkId);
+	public byte[] createNewMultiChunkId(Chunk firstChunk);
 }
