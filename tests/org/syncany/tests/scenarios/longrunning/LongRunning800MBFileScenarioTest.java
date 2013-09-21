@@ -12,8 +12,8 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class LongRunningLargeFileScenarioTest {
-	private static final Logger logger = Logger.getLogger(LongRunningLargeFileScenarioTest.class.getSimpleName());
+public class LongRunning800MBFileScenarioTest {
+	private static final Logger logger = Logger.getLogger(LongRunning800MBFileScenarioTest.class.getSimpleName());
 	private static final int SIZE_800_MB = 800*1024*1024;
 
 	@Test
@@ -33,10 +33,15 @@ public class LongRunningLargeFileScenarioTest {
 
 		Logging.disableLogging();
 		
+		logger.log(Level.INFO, "clientA.up() started.");
 		clientA.up();		
+		logger.log(Level.INFO, "clientA.up() completed.");
 
 		// B
+		logger.log(Level.INFO, "clientB.down(); started.");
 		clientB.down(); 
+		logger.log(Level.INFO, "clientB.down(); completed.");
+
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
