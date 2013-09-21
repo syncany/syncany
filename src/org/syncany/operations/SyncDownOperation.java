@@ -44,6 +44,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
@@ -135,8 +136,8 @@ public class SyncDownOperation extends Operation {
 		}
 	}
 
-	private void initOperationVariables() throws IOException {		
-		localDatabase = loadLocalDatabase(config.getDatabaseFile()); // TODO [high] Use LoadDatabaseOperation instead
+	private void initOperationVariables() throws Exception {		
+		localDatabase = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
 		localBranch = localDatabase.getBranch();	
 
 		transferManager = config.getConnection().createTransferManager();		
@@ -298,6 +299,10 @@ public class SyncDownOperation extends Operation {
 	private void downloadAndExtractMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
 		TransferManager transferManager = config.getConnection().createTransferManager();
+		
+		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them 
+		// TODO [medium] In case of a RENAME, multichunks are downloaded, but never used!
+		// TODO [medium] In case of a DELETE, multichunks are downloaded, but never used!
 		
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());

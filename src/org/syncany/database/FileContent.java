@@ -31,7 +31,7 @@ import org.syncany.util.StringUtil;
  */
 public class FileContent {
     private byte[] checksum;
-    private int contentSize;
+    private long contentSize;
     
     private TreeMap<Integer, ChunkEntryId> chunks;
     
@@ -51,11 +51,11 @@ public class FileContent {
         this.checksum = checksum;
     }
 
-    public int getSize() {
+    public long getSize() {
         return contentSize;
     }
 
-    public void setSize(int contentSize) {
+    public void setSize(long contentSize) {
         this.contentSize = contentSize;
     }
 
@@ -69,7 +69,7 @@ public class FileContent {
 		int result = 1;
 		result = prime * result + Arrays.hashCode(checksum);
 		result = prime * result + ((chunks == null) ? 0 : chunks.hashCode());
-		result = prime * result + contentSize;
+		result = prime * result + (int) (contentSize ^ (contentSize >>> 32));
 		return result;
 	}
 
@@ -80,7 +80,7 @@ public class FileContent {
 		if (obj == null)
 			return false;
 		if (getClass() != obj.getClass())
-			return false; 
+			return false;
 		FileContent other = (FileContent) obj;
 		if (!Arrays.equals(checksum, other.checksum))
 			return false;

@@ -208,12 +208,12 @@ public class Syncany {
 
 		OptionParser parser = new OptionParser();		
 		OptionSpec<Void> optionNoCleanup = parser.acceptsAll(asList("c", "no-cleanup"));
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
 		
 		OptionSet options = parser.parse(operationArgs);
 		
-		if (options.has(optionNoCleanup)) {
-			aOperationOptions.setCleanupEnabled(false);
-		}
+		aOperationOptions.setCleanupEnabled(!options.has(optionNoCleanup));
+		aOperationOptions.setForceEnabled(options.has(optionForce));
 		
 		operationType = OperationType.SYNC_UP;
 		operationOptions = aOperationOptions;

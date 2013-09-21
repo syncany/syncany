@@ -28,6 +28,7 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
+import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.util.StringUtil;
@@ -57,12 +58,6 @@ public class SyncUpOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Sync up' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		// logger.log(Level.INFO, "Loading local database ...");		
-		// Database db = loadLocalDatabase(config.getDatabaseFile());
-
-		// logger.log(Level.INFO, "Starting index process ...");
-		// List<File> localFiles = FileUtil.getRecursiveFileList(config.getLocalDir(), true);
-		
 		// Load database
 		Database database = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
 		
@@ -72,6 +67,22 @@ public class SyncUpOperation extends Operation {
 		if (!changeSet.hasChanges()) {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
 			return new SyncUpOperationResult();
+		}
+		
+		// Find remote changes (unless --force is enabled)
+		if (!options.forceEnabled()) {
+			List<RemoteFile> unknownRemoteDatabases = ((RemoteStatusOperationResult) new RemoteStatusOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+			
+			if (unknownRemoteDatabases.size() > 0) {
+				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");
+				return new SyncUpOperationResult();
+			}
+			else {
+				logger.log(Level.INFO, "No remote changes, ready to upload.");
+			}
+		}
+		else {
+			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
 		}
 		
 		List<File> locallyUpdatedFiles = new ArrayList<File>();
@@ -257,7 +268,16 @@ public class SyncUpOperation extends Operation {
 	}	
 
 	public static class SyncUpOperationOptions implements OperationOptions {
+		private boolean forceEnabled = false;
 		private boolean cleanupEnabled = true;
+
+		public boolean forceEnabled() {
+			return forceEnabled;
+		}
+
+		public void setForceEnabled(boolean forceEnabled) {
+			this.forceEnabled = forceEnabled;
+		}
 
 		public boolean cleanupEnabled() {
 			return cleanupEnabled;

@@ -3,6 +3,7 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
@@ -355,6 +356,7 @@ import org.syncany.tests.util.TestConfigUtil;
  */		
 public class MixedUpDownScenarioTest {
 	@Test
+	@Ignore
 	public void testMixedScenario1() throws Exception {
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();
