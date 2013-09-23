@@ -1,5 +1,6 @@
 package org.syncany;
 
+import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -7,6 +8,9 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
+import org.syncany.operations.InitOperation;
+import org.syncany.operations.InitOperation.InitOperationOptions;
+import org.syncany.operations.InitOperation.InitOperationResult;
 import org.syncany.operations.RemoteStatusOperation;
 import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
 import org.syncany.operations.RestoreOperation;
@@ -79,5 +83,9 @@ public class Client {
 
 	public void daemon(DaemonOperationOptions options) throws Exception {
 		new DaemonOperation(config, options).execute();		
+	}	
+
+	public File init(InitOperationOptions options) throws Exception {
+		return ((InitOperationResult) new InitOperation(options).execute()).getSkelConfigFile();		
 	}
 }

@@ -26,5 +26,7 @@ import java.util.Map;
 public interface Connection {
     public TransferManager createTransferManager();
     public void init(Map<String, String> map) throws StorageException;
+    public String[] getMandatorySettings();
+    public String[] getOptionalSettings();
 }
 

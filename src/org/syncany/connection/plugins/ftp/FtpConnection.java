@@ -113,6 +113,17 @@ public class FtpConnection implements Connection {
 		}
 	}
 
+
+	@Override
+	public String[] getMandatorySettings() {
+		return new String[] { "hostname", "username", "password", "path" };
+	}
+
+	@Override
+	public String[] getOptionalSettings() {
+		return new String[] { "port" };
+	}
+	
     @Override
     public String toString() {
         return FtpConnection.class.getSimpleName()

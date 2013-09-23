@@ -1,12 +1,14 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import org.syncany.config.Config.ConfigException;
 import org.syncany.util.FileUtil;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class ConfigTO {
 	private String machineName;
@@ -30,6 +32,13 @@ public class ConfigTO {
 			throw new ConfigException("Config file does not exist or is invalid: "+file, ex);
 		}
 	}	
+	
+	public static void save(ConfigTO configTO, File file) throws IOException {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		String configFileStr = gson.toJson(configTO);
+		
+		FileUtil.writeToFile(configFileStr.getBytes(), file);
+	}
 		
 	public String getConfigFile() {
 		return configFile;
@@ -68,7 +77,6 @@ public class ConfigTO {
 	    private Map<String, String> settings;
 	    
 	    public ConnectionSettings(String type, Map<String, String> settings) {
-			super();
 			this.type = type;
 			this.settings = settings;
 		}

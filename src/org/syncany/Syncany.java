@@ -7,13 +7,17 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -23,28 +27,22 @@ import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigTO;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
-import org.syncany.operations.InitOperation;
-import org.syncany.operations.Operation.OperationOptions;
+import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 import org.syncany.util.FileUtil;
 
-public class Syncany {
+public class Syncany extends Client {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
-	public enum OperationType { SYNC_UP, SYNC_DOWN, SYNC, STATUS, REMOTE_STATUS, INIT, RESTORE, DAEMON };
 	
-	private String[] args;
-	private Client client;
-
-	private OperationType operationType;
-	private OperationOptions operationOptions;
-	
+	private String[] args;	
 	private File configFile;
-	private Config config;
 		
 	static {
 		Logging.init();
@@ -52,40 +50,40 @@ public class Syncany {
 	
 	public static void main(String[] args) throws Exception {
 		new Syncany(args).start();
-	}
+	}	
 	
 	public Syncany(String[] args) {
 		this.args = args;
-		this.client = null;
 	}
 	
 	public void start() throws Exception {
-		readCommandLineArguments(args);		
-		runOperation();
-	}	
-
-	private void readCommandLineArguments(String[] args) throws Exception {
-		// Define global options
-		OptionParser parser = new OptionParser();
-		parser.allowsUnrecognizedOptions();
-		
-		OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
-		OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
-		OptionSpec<String> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg();
-		OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
-		OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
-		OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));
-		
-		// Parse global options and operation name
-		OptionSet options = parser.parse(args);
-		
-		// Evaluate options
-		// WARNING: Do not re-order unless you know what you are doing!
-		initHelpOption(options, optionHelp);
-		initConfigOption(options, optionConfig);
-		initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
-
-		initOperation(options, options.nonOptionArguments());
+		try {
+			// Define global options
+			OptionParser parser = new OptionParser();
+			parser.allowsUnrecognizedOptions();
+			
+			OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
+			OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
+			OptionSpec<String> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg();
+			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
+			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
+			OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));		
+			
+			// Parse global options and operation name
+			OptionSet options = parser.parse(args);
+			
+			// Evaluate options
+			// WARNING: Do not re-order unless you know what you are doing!
+			initHelpOption(options, optionHelp);
+			initConfigOption(options, optionConfig);
+			initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
+	
+			// Run!
+			runOperation(options, options.nonOptionArguments());
+		}
+		catch (OptionException e) {
+			showErrorAndExit(e.getMessage());
+		}
 	}	
 
 	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp) {
@@ -94,53 +92,188 @@ public class Syncany {
 		}
 	}
 
-	private void initOperation(OptionSet options, List<?> nonOptions) throws Exception {
+	private void runOperation(OptionSet options, List<?> nonOptions) throws Exception {
 		if (nonOptions.size() == 0) {
 			showUsageAndExit();
 		}
 		
 		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String aOperationType = (String) nonOptionsCopy.remove(0); 
-		String[] aOperationArguments = nonOptions.toArray(new String[nonOptions.size()]);
+		String operationName = (String) nonOptionsCopy.remove(0); 
+		String[] operationArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
 		
-		if ("up".equals(aOperationType)) {
-			initSyncUpOperation(aOperationArguments);
-		}
-		else if ("down".equals(aOperationType)) {
-			this.operationType = OperationType.SYNC_DOWN;
-		}
-		else if ("sync".equals(aOperationType)) {
-			this.operationType = OperationType.SYNC;
-		}
-		else if ("status".equals(aOperationType)) {			
-			initStatusOperation(aOperationArguments);
-		}
-		else if ("ls-remote".equals(aOperationType)) {
-			this.operationType = OperationType.REMOTE_STATUS;
-		}
-		else if ("init".equals(aOperationType)) {
-			this.operationType = OperationType.INIT;
-		}
-		else if ("restore".equals(aOperationType)) {
-			this.operationType = OperationType.RESTORE;
-			/*
-			Operation operation = OperationFactory.getInstance(aOperationType);
+		// Pre-init operations
+		if ("init".equals(operationName)) {
+			// Check config (NOT allowed for these operations)
+			if (configFile != null) {
+				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
+			}
 			
-			operation.setConfig(config);
-			operation.setOptions(aOperationArguments);	
-			
-			operation.execute();*/
-		}
-		else if ("daemon".equals(aOperationType)) {
-			initDaemonOperation(aOperationArguments);			
+			runInitOperation(operationArgs);
 		}
 		else {
-			showErrorAndExit("Given command is unknown.");
-		}		
+			// Check config (required for these operations)
+			if (configFile == null) {
+				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
+			}
+			
+			logger.log(Level.INFO, "Creating directories from {0} ...", configFile);				
+			createDirectories();
+			
+			// Run commands
+			if ("up".equals(operationName)) {
+				runSyncUpOperation(operationArgs);
+			}
+			else if ("down".equals(operationName)) {
+				runSyncDownOperation(operationArgs);
+			}
+			else if ("sync".equals(operationName)) {
+				runSyncOperation(operationArgs);
+			}
+			else if ("status".equals(operationName)) {			
+				runStatusOperation(operationArgs);
+			}
+			else if ("ls-remote".equals(operationName)) {
+				runRemoteStatusOperation(operationArgs);
+			}			
+			else if ("restore".equals(operationName)) {
+				runRestoreOperation(operationArgs);
+			}
+			else if ("daemon".equals(operationName)) {
+				runDaemonOperation(operationArgs);			
+			}
+			else {
+				showErrorAndExit("Given command is unknown: "+operationName);
+			}
+		}
 	}
 
-	private void initStatusOperation(String[] operationArgs) {
-		StatusOperationOptions aOperationOptions = new StatusOperationOptions();
+	private void runRestoreOperation(String[] operationArguments) throws Exception {
+		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
+
+		OptionParser parser = new OptionParser();	
+		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("d", "date")).withRequiredArg().required();
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
+		
+		OptionSet options = parser.parse(operationArguments);	
+		
+		// --date
+		String dateStr = options.valueOf(optionDateStr);
+		
+		Pattern relativeDatePattern = Pattern.compile("^(\\d+)([smhDWMY])$");
+		Pattern absoluteDatePattern = Pattern.compile("^(\\d{2})-(\\d{2})-(\\d{4})$");
+		
+		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
+		
+		if (relativeDateMatcher.matches()) {
+			int time = Integer.parseInt(relativeDateMatcher.group(1));
+			String unitStr = relativeDateMatcher.group(2);
+			int unitMultiplier = 0;
+			
+			if ("s".equals(unitStr)) { unitMultiplier = 1; }
+			else if ("m".equals(unitStr)) { unitMultiplier = 60; }
+			else if ("h".equals(unitStr)) { unitMultiplier = 60*60; }
+			else if ("D".equals(unitStr)) { unitMultiplier = 24*60*60; }
+			else if ("W".equals(unitStr)) { unitMultiplier = 7*24*60*60; }
+			else if ("M".equals(unitStr)) { unitMultiplier = 30*24*60*60; }
+			else if ("Y".equals(unitStr)) { unitMultiplier = 365*24*60*60; }
+			
+			long restoreDateMillies = time*unitMultiplier;
+			Date restoreDate = new Date(restoreDateMillies);
+			
+			logger.log(Level.FINE, "Restore date: "+restoreDate);
+			operationOptions.setRestoreTime(restoreDate);
+		}
+		else {
+			Matcher absoluteDateMatcher = absoluteDatePattern.matcher(dateStr);
+			
+			if (absoluteDateMatcher.matches()) {
+				int date = Integer.parseInt(absoluteDateMatcher.group(1));
+				int month = Integer.parseInt(absoluteDateMatcher.group(2));
+				int year = Integer.parseInt(absoluteDateMatcher.group(3));
+				
+				GregorianCalendar calendar = new GregorianCalendar();
+				calendar.set(year, month-1, date);
+				
+				Date restoreDate = calendar.getTime();
+				
+				logger.log(Level.FINE, "Restore date: "+restoreDate);
+				operationOptions.setRestoreTime(restoreDate);
+			}
+			else {
+				throw new Exception("Invalid '--date' argument: "+dateStr);
+			}
+		}
+		
+		// --force
+		if (options.has(optionForce)) {
+			operationOptions.setForce(true);
+		}
+		else {
+			operationOptions.setForce(false);
+		}
+		
+		// Files
+		List<?> nonOptionArgs = options.nonOptionArguments();
+		List<String> restoreFilePaths = new ArrayList<String>();
+		
+		for (Object nonOptionArg : nonOptionArgs) {
+			restoreFilePaths.add(nonOptionArg.toString());
+		}
+
+		operationOptions.setRestoreFilePaths(restoreFilePaths);	
+		
+		// Run!
+		restore(operationOptions);
+	}
+
+	private void runInitOperation(String[] operationArguments) throws OptionException, Exception {
+		InitOperationOptions operationOptions = new InitOperationOptions();
+		
+		if (operationArguments.length == 0) {
+			showErrorAndExit("Argument <plugin> is required.");
+		}
+		
+		// <plugin>
+		String pluginStr = operationArguments[0];		
+		operationOptions.setPlugin(pluginStr);
+		
+		// <location>
+		File location = null;
+		
+		if (operationArguments.length > 1) {
+			location = new File(operationArguments[1]).getCanonicalFile(); 
+		}
+		else {
+			location = new File(".").getCanonicalFile(); 			
+		}
+		
+		operationOptions.setLocation(location);
+				
+		// Run!
+		File skelConfigFile = init(operationOptions);
+		
+		System.out.println("Repository initialized, skeleton config at "+skelConfigFile);
+		System.out.println("Please edit the config now, then use '--help' option.");
+	}
+
+	private void runRemoteStatusOperation(String[] operationArguments) throws Exception {
+		List<RemoteFile> remoteStatus = remoteStatus();
+		
+		for (RemoteFile unknownRemoteFile : remoteStatus) {
+			System.out.println("? "+unknownRemoteFile.getName());
+		}
+	}
+
+	private void runSyncOperation(String[] operationArguments) throws Exception {
+		sync();		
+	}
+
+	private void runSyncDownOperation(String[] operationArguments) throws Exception {
+		down();		
+	}
+
+	private void runStatusOperation(String[] operationArgs) throws Exception {
+		StatusOperationOptions operationOptions = new StatusOperationOptions();
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
@@ -148,14 +281,27 @@ public class Syncany {
 		OptionSet options = parser.parse(operationArgs);	
 		
 		// --force-checksum
-		aOperationOptions.setForceChecksum(options.has(optionForceChecksum));
+		operationOptions.setForceChecksum(options.has(optionForceChecksum));
 		
-		operationType = OperationType.STATUS;
-		operationOptions = aOperationOptions;		
+		// Run!
+		ChangeSet changeSet = status(operationOptions);
+				
+		// Output
+		for (File newFile : changeSet.getNewFiles()) {
+			System.out.println("? "+FileUtil.getRelativePath(config.getLocalDir(), newFile));
+		}
+
+		for (File changedFile : changeSet.getChangedFiles()) {
+			System.out.println("M "+FileUtil.getRelativePath(config.getLocalDir(), changedFile));
+		}
+		
+		for (File deletedFile : changeSet.getDeletedFiles()) {
+			System.out.println("D "+FileUtil.getRelativePath(config.getLocalDir(), deletedFile));
+		}	
 	}
 
-	private void initDaemonOperation(String[] operationArgs) {
-		DaemonOperationOptions aOperationOptions = new DaemonOperationOptions();
+	private void runDaemonOperation(String[] operationArgs) throws Exception {
+		DaemonOperationOptions operationOptions = new DaemonOperationOptions();
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Integer> optionInterval = parser.acceptsAll(asList("i", "interval")).withRequiredArg().ofType(Integer.class);
@@ -164,16 +310,15 @@ public class Syncany {
 		
 		// --interval
 		if (options.has(optionInterval)) {
-			aOperationOptions.setInterval(options.valueOf(optionInterval)*1000);
+			operationOptions.setInterval(options.valueOf(optionInterval)*1000);
 		}
 		
-		operationType = OperationType.DAEMON;
-		operationOptions = aOperationOptions;		
+		// Run!
+		daemon(operationOptions);
 	}
 
-
-	private void initSyncUpOperation(String[] operationArgs) {
-		SyncUpOperationOptions aOperationOptions = new SyncUpOperationOptions();
+	private void runSyncUpOperation(String[] operationArgs) throws Exception {
+		SyncUpOperationOptions operationOptions = new SyncUpOperationOptions();
 
 		OptionParser parser = new OptionParser();		
 		OptionSpec<Void> optionNoCleanup = parser.acceptsAll(asList("c", "no-cleanup"));
@@ -181,11 +326,14 @@ public class Syncany {
 		
 		OptionSet options = parser.parse(operationArgs);
 		
-		aOperationOptions.setCleanupEnabled(!options.has(optionNoCleanup));
-		aOperationOptions.setForceEnabled(options.has(optionForce));
+		// --no-cleanup
+		operationOptions.setCleanupEnabled(!options.has(optionNoCleanup));
 		
-		operationType = OperationType.SYNC_UP;
-		operationOptions = aOperationOptions;
+		// --force
+		operationOptions.setForceEnabled(options.has(optionForce));
+		
+		// Run!
+		up(operationOptions);		
 	}
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
@@ -201,6 +349,7 @@ public class Syncany {
 
 		// --debug
 		if (options.has(optionDebug)) {
+			System.out.println("debug");
 			newLogLevel = Level.ALL;			
 		}
 		
@@ -237,7 +386,7 @@ public class Syncany {
 				logFilePattern = options.valueOf(optionLog);
 			}			
 		}
-		else if (config.getLogDir().exists()) {
+		else if (config != null && config.getLogDir().exists()) {
 			logFilePattern = config.getLogDir()+File.separator+new SimpleDateFormat("yyMMdd").format(new Date())+".log";
 		}
 		
@@ -265,7 +414,7 @@ public class Syncany {
 			configFile = findConfigFileInPath();
 		}		
 		
-		config = new Config(ConfigTO.load(configFile));
+		config = (configFile != null) ? new Config(ConfigTO.load(configFile)) : null;
 	}		
 	
 	private File findConfigFileInPath() throws IOException {
@@ -282,71 +431,7 @@ public class Syncany {
 		}
 		 
 		return null; 
-	}
-		
-	private void initClient(File configFile) throws Exception {
-		if (configFile == null) {
-			showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
-		}
-		
-		logger.log(Level.INFO, "Loading config from {0} ...", configFile);
-				
-		client = new Client();
-		client.setConfig(config);
-		client.createDirectories();
-	}
-	
-	private void runOperation() throws Exception {
-		if (operationType == OperationType.INIT) {
-			new InitOperation().execute();
-		}
-		else {
-			// Create client object (necessary for these operations)
-			initClient(configFile);
-			
-			// Run operation
-			if (operationType == OperationType.SYNC_UP) {
-				client.up((SyncUpOperationOptions) operationOptions); // TODO [medium] ugly
-			}
-			else if (operationType == OperationType.SYNC_DOWN) {
-				client.down();
-			}
-			else if (operationType == OperationType.SYNC) {
-				client.sync();
-			}
-			else if (operationType == OperationType.STATUS) {
-				ChangeSet changeSet = client.status((StatusOperationOptions) operationOptions);
-				
-				for (File newFile : changeSet.getNewFiles()) {
-					System.out.println("A "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), newFile));
-				}
-	
-				for (File changedFile : changeSet.getChangedFiles()) {
-					System.out.println("M "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), changedFile));
-				}
-				
-				for (File deletedFile : changeSet.getDeletedFiles()) {
-					System.out.println("D "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), deletedFile));
-				}	
-			}
-			else if (operationType == OperationType.REMOTE_STATUS) {
-				List<RemoteFile> remoteStatus = client.remoteStatus();
-				
-				for (RemoteFile unknownRemoteFile : remoteStatus) {
-					System.out.println("+ "+unknownRemoteFile.getName());
-				}
-			}
-			else if (operationType == OperationType.RESTORE) {
-				client.restore((RestoreOperationOptions) operationOptions);
-			}
-			else if (operationType == OperationType.DAEMON) {
-				client.daemon((DaemonOperationOptions) operationOptions);
-			}
-			else {
-				showErrorAndExit("Unknown operation '"+operationType+"'.");
-			}
-		}
-	}	
+	}			
 	
 	private void showUsageAndExit() {
 		System.out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
@@ -379,6 +464,22 @@ public class Syncany {
 		System.out.println("      Print this help screen");
 		System.out.println();
 		System.out.println("Commands:");
+		System.out.println("  init <plugin> [<location>]");
+		System.out.println("      Initialize <location> as a repository (default is current folder). This command");
+		System.out.println("      creates and initializes a skeleton config file for the plugin <plugin>.");
+		System.out.println();
+		System.out.println("      The <plugin> attribute can be any of the loaded plugins.");		
+		System.out.print  ("      Currently loaded are: ");
+		
+		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
+		
+		for (int i=0; i<plugins.size(); i++) {
+			System.out.print(plugins.get(i).getId());
+			if (i < plugins.size()-1) { System.out.print(", "); }			
+		}
+		
+		System.out.println();
+		System.out.println();
 		System.out.println("  up [<args>]");
 		System.out.println("      Detect local changes and upload to repo (commit)");
 		System.out.println();

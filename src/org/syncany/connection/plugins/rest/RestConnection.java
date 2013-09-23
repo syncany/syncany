@@ -42,7 +42,15 @@ public abstract class RestConnection implements Connection {
 		if (accessKey == null || secretKey == null || bucket == null) {
 			throw new StorageException("Config does not contain 'accessKey', 'secretKey' or 'bucket' setting.");
 		}
-	}    
+	}   
+    
+    public String[] getMandatorySettings() {    	
+    	return new String[] { "accessKey", "secretKey", "bucket" };
+    }
+    
+    public String[] getOptionalSettings() {    	
+    	return new String[] { };
+    }
     
     public String getAccessKey() {
         return accessKey;

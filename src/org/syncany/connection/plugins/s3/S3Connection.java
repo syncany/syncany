@@ -25,10 +25,6 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.rest.RestConnection;
 
-/**
- *
- * @author oubou68, pheckel
- */
 public class S3Connection extends RestConnection {   
     // cp. http://jets3t.s3.amazonaws.com/api/constant-values.html#org.jets3t.service.model.S3Bucket.LOCATION_ASIA_PACIFIC
     private String location;
@@ -62,4 +58,19 @@ public class S3Connection extends RestConnection {
     public void setLocation(String location) {
         this.location = location;
     }
+    
+    public String[] getMandatorySettings() {
+    	String[] superOptions = super.getMandatorySettings();
+    	String[] allOptions = new String[superOptions.length+1];
+    	
+    	System.arraycopy(superOptions, 0, allOptions, 0, superOptions.length);
+    	allOptions[allOptions.length-1] = "location";
+    	
+    	return allOptions;
+    }
+
+	@Override
+	public String[] getOptionalSettings() {
+		return super.getOptionalSettings();
+	}
 }

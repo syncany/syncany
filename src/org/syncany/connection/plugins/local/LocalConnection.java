@@ -54,4 +54,14 @@ public class LocalConnection implements Connection {
     public void setRepositoryPath(File repositoryPath) {
         this.repositoryPath = repositoryPath;
     }
+
+	@Override
+	public String[] getMandatorySettings() {
+		return new String[] { "path" };
+	}
+
+	@Override
+	public String[] getOptionalSettings() {
+		return new String[] { };
+	}
 }

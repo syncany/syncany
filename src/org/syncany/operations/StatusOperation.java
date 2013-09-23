@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,18 +80,28 @@ public class StatusOperation extends Operation {
 					
 					// Don't do anything if file is folder
 					if (file.isDirectory()) {
+						logger.log(Level.FINEST, "- Unchanged file (directory): {0}", relativeFilePath);						
 						changeSet.unchangedFiles.add(file);
+						
 						return;
 					}
 					
-					// Simple check by last modified date and size
-					boolean sizeAndModifiedDateMatches = 
-						   file.lastModified() == potentiallyMatchingLastFileVersion.getLastModified().getTime()
-						&& file.length() == potentiallyMatchingLastFileVersion.getSize();
+					// Simple check by size
+					boolean sizeMatches = file.length() == potentiallyMatchingLastFileVersion.getSize();
 					
-					if (!sizeAndModifiedDateMatches) {
+					if (!sizeMatches) {
 						changeSet.changedFiles.add(file);
-						logger.log(Level.FINEST, "- Changed file (mod. date/size): {0}", relativeFilePath);
+						logger.log(Level.FINEST, "- Changed file (size, db: {0}, disk: {1}): {2}", new Object[] { potentiallyMatchingLastFileVersion.getSize(), file.length(), relativeFilePath });
+						
+						return;
+					}
+					
+					// Simple check by modified date
+					boolean modifiedDateMatches = file.lastModified() == potentiallyMatchingLastFileVersion.getLastModified().getTime();
+
+					if (!modifiedDateMatches) {
+						changeSet.changedFiles.add(file);
+						logger.log(Level.FINEST, "- Changed file (mod. date, db: {0}, disk: {1}): {2}", new Object[] { potentiallyMatchingLastFileVersion.getLastModified(), new Date(file.lastModified()), relativeFilePath });
 						
 						return;
 					}
