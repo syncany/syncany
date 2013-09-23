@@ -29,7 +29,7 @@ import org.syncany.util.StringUtil;
  */
 public class FileVersion implements Cloneable {
 	public enum FileStatus {
-		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED"), MERGED ("MERGED");
+		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED");
 		
 		private String name;       
 		

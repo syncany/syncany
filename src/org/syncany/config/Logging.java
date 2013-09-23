@@ -3,7 +3,7 @@ package org.syncany.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Enumeration;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -40,17 +40,14 @@ public class Logging {
 		
 	}	
 	
-	public static void setGlobalLogLevel(Level targetLoglevel) {
-		for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
-	        String name = loggerNames.nextElement();
-	        Logger nextLogger = LogManager.getLogManager().getLogger(name);
-	        
-	        if (nextLogger != null) {
-	            nextLogger.setLevel(targetLoglevel);
-	        }
-	    }		
+	public static void setGlobalLogLevel(Level targetLogLevel) {
+		Logger.getLogger("").setLevel(targetLogLevel);
 	}
 	
+	public static void addGlobalHandler(Handler targetHandler) {
+		Logger.getLogger("").addHandler(targetHandler);
+	}
+		
 	public static void disableLogging() {
 		setGlobalLogLevel(Level.OFF);
 		

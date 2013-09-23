@@ -34,15 +34,22 @@ public class Indexer {
 	private Config config;
 	private Deduper deduper;
 	private Database database;
+	private Database dirtyDatabase;
 	
-	public Indexer(Config config, Deduper deduper, Database database) {
+	public Indexer(Config config, Deduper deduper, Database database, Database dirtyDatabase) {
 		this.config = config;
 		this.deduper = deduper;
 		this.database = database;
+		this.dirtyDatabase = dirtyDatabase;
 	}
 	
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
+		
+		// Add dirty database's chunks/multichunks/file contents
+		if (dirtyDatabase != null) {
+			addDirtyChunkData(newDatabaseVersion);
+		}
 		
 		// Find and index new files
 		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion));			
@@ -53,6 +60,27 @@ public class Indexer {
 		return newDatabaseVersion;
 	}
 	
+	private void addDirtyChunkData(DatabaseVersion newDatabaseVersion) {
+		logger.log(Level.INFO, "- Adding dirty chunks/multichunks/file contents (from dirty databasefor ()) ...");
+		// TODO [high] Is this correct? write test for dirty.db
+		for (DatabaseVersion dirtyDatabaseVersion : dirtyDatabase.getDatabaseVersions()) {
+			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getChunks().size()+" chunks ...");
+			for (ChunkEntry dirtyChunk : dirtyDatabaseVersion.getChunks()) {
+				newDatabaseVersion.addChunk(dirtyChunk);
+			}
+			
+			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getMultiChunks().size()+" multichunks ...");
+			for (MultiChunkEntry dirtyMultiChunk : dirtyDatabaseVersion.getMultiChunks()) {
+				newDatabaseVersion.addMultiChunk(dirtyMultiChunk);
+			}
+			
+			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getFileContents().size()+" file contents ...");
+			for (FileContent dirtyFileContent : dirtyDatabaseVersion.getFileContents()) {
+				newDatabaseVersion.addFileContent(dirtyFileContent);
+			}
+		}
+	}
+
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
@@ -206,7 +234,7 @@ public class Indexer {
 				logger.log(Level.INFO, "     based on file version: "+lastFileVersion);
 			}
 			else {
-				logger.log(Level.INFO, "   * NOT ADDING file version "+fileVersion+", identical to existing previous version "+lastFileVersion);
+				logger.log(Level.INFO, "   * NOT ADDING file version (identical to previous!): "+fileVersion+" IDENTICAL TO "+lastFileVersion);
 			}
 			
 			// 3. Add file content (if not a directory)			
@@ -253,15 +281,20 @@ public class Indexer {
 		}
 		
 		private PartialFileHistory guessLastFileHistoryForFolder(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = null;
-			
-			lastFileHistory = database.getFileHistory(fileProperties.relativePath);
+			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.relativePath);
 
 			if (lastFileHistory == null) {
 				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.relativePath+", FOLDER)");
 			}
 			else {
-				logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.relativePath+"), appending new version.");
+				FileVersion lastFileVersion = lastFileHistory.getLastVersion();
+				
+				if (lastFileVersion.getStatus() != FileStatus.DELETED) {
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.relativePath+"), appending new version.");					
+				}
+				else {
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.relativePath+", FOLDER)");
+				}
 			}
 			
 			return lastFileHistory;
@@ -282,9 +315,10 @@ public class Indexer {
 						// check if they do not exist anymore --> assume it has moved!
 						// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
 						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
-							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+fileHistoryWithSameChecksum.getLastVersion().getFullName());
+							FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
+							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getFullName());
 							
-							if (!lastVersionOnLocalDisk.exists()) {
+							if (lastVersion.getStatus() != FileStatus.DELETED && !lastVersionOnLocalDisk.exists()) {
 								lastFileHistory = fileHistoryWithSameChecksum;
 								break;
 							}

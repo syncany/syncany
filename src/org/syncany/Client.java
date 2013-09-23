@@ -6,13 +6,16 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
 import org.syncany.operations.RemoteStatusOperation;
 import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
 import org.syncany.operations.RestoreOperation;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.DaemonOperation;
 import org.syncany.operations.SyncDownOperation;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
@@ -38,6 +41,7 @@ public class Client {
 		
 		config.getCacheDir().mkdirs();
 		config.getDatabaseDir().mkdirs();
+		config.getLogDir().mkdirs();
 	}		
 	
 	public void up() throws Exception {
@@ -45,7 +49,7 @@ public class Client {
 	}
 	
 	public void up(SyncUpOperationOptions options) throws Exception {
-		new SyncUpOperation(config, options).execute();
+		new SyncUpOperation(config, null, options).execute();
 	}
 	
 	public void down() throws Exception {
@@ -57,6 +61,10 @@ public class Client {
 		up();
 	}
 
+	public ChangeSet status(StatusOperationOptions options) throws Exception {
+		return ((StatusOperationResult) new StatusOperation(config, null, options).execute()).getChangeSet();		
+	}
+	
 	public ChangeSet status() throws Exception {
 		return ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();		
 	}
@@ -67,5 +75,9 @@ public class Client {
 
 	public void restore(RestoreOperationOptions options) throws Exception {
 		new RestoreOperation(config, options).execute();		
+	}
+
+	public void daemon(DaemonOperationOptions options) throws Exception {
+		new DaemonOperation(config, options).execute();		
 	}
 }

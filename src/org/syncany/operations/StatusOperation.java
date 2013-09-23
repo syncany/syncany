@@ -22,14 +22,16 @@ import org.syncany.util.FileUtil;
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	private Database loadedDatabase;
+	private StatusOperationOptions options;
 	
 	public StatusOperation(Config config) {
-		this(config, null);
+		this(config, null, new StatusOperationOptions());
 	}	
 	
-	public StatusOperation(Config config, Database database) {
+	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
 		super(config);		
 		this.loadedDatabase = database;
+		this.options = options;
 	}	
 	
 	public OperationResult execute() throws Exception {
@@ -98,6 +100,13 @@ public class StatusOperation extends Operation {
 						changeSet.unchangedFiles.add(file);
 						logger.log(Level.FINEST, "- Unchanged file (zero-size!): {0}", relativeFilePath);
 						
+						return;
+					}
+					
+					if (!options.isForceChecksum()) {
+						changeSet.unchangedFiles.add(file);
+						logger.log(Level.FINEST, "- Unchanged file (assuming, --force-checksum disabled): {0}", relativeFilePath);
+
 						return;
 					}
 					
@@ -203,6 +212,18 @@ public class StatusOperation extends Operation {
 		public List<File> getUnchangedFiles() {
 			return unchangedFiles;
 		}	
+	}
+	
+	public static class StatusOperationOptions implements OperationOptions {
+		private boolean forceChecksum = false;
+
+		public boolean isForceChecksum() {
+			return forceChecksum;
+		}
+
+		public void setForceChecksum(boolean forceChecksum) {
+			this.forceChecksum = forceChecksum;
+		}				
 	}
 	
 	public class StatusOperationResult implements OperationResult {

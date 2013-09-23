@@ -4,36 +4,38 @@ import static java.util.Arrays.asList;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.config.Config;
+import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigTO;
+import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.Operation.OperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 import org.syncany.util.FileUtil;
 
 public class Syncany {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
-	public enum OperationType { SYNC_UP, SYNC_DOWN, SYNC, STATUS, REMOTE_STATUS, INIT, RESTORE };
+	public enum OperationType { SYNC_UP, SYNC_DOWN, SYNC, STATUS, REMOTE_STATUS, INIT, RESTORE, DAEMON };
 	
 	private String[] args;
 	private Client client;
@@ -42,6 +44,7 @@ public class Syncany {
 	private OperationOptions operationOptions;
 	
 	private File configFile;
+	private Config config;
 		
 	static {
 		Logging.init();
@@ -68,7 +71,7 @@ public class Syncany {
 		
 		OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
 		OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
-		OptionSpec<File> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg().ofType(File.class);
+		OptionSpec<String> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg();
 		OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
 		OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
 		OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));
@@ -77,10 +80,10 @@ public class Syncany {
 		OptionSet options = parser.parse(args);
 		
 		// Evaluate options
+		// WARNING: Do not re-order unless you know what you are doing!
 		initHelpOption(options, optionHelp);
 		initConfigOption(options, optionConfig);
-		initLogFileOption(options, optionLog);
-		initLogLevelOption(options, optionLogLevel, optionQuiet, optionDebug);
+		initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
 
 		initOperation(options, options.nonOptionArguments());
 	}	
@@ -109,8 +112,8 @@ public class Syncany {
 		else if ("sync".equals(aOperationType)) {
 			this.operationType = OperationType.SYNC;
 		}
-		else if ("status".equals(aOperationType)) {
-			this.operationType = OperationType.STATUS;
+		else if ("status".equals(aOperationType)) {			
+			initStatusOperation(aOperationArguments);
 		}
 		else if ("ls-remote".equals(aOperationType)) {
 			this.operationType = OperationType.REMOTE_STATUS;
@@ -119,89 +122,55 @@ public class Syncany {
 			this.operationType = OperationType.INIT;
 		}
 		else if ("restore".equals(aOperationType)) {
-			initRestoreOperation(aOperationArguments);			
+			this.operationType = OperationType.RESTORE;
+			/*
+			Operation operation = OperationFactory.getInstance(aOperationType);
+			
+			operation.setConfig(config);
+			operation.setOptions(aOperationArguments);	
+			
+			operation.execute();*/
+		}
+		else if ("daemon".equals(aOperationType)) {
+			initDaemonOperation(aOperationArguments);			
 		}
 		else {
 			showErrorAndExit("Given command is unknown.");
 		}		
 	}
 
-	private void initRestoreOperation(String[] operationArgs) throws Exception {
-		RestoreOperationOptions aOperationOptions = new RestoreOperationOptions();
+	private void initStatusOperation(String[] operationArgs) {
+		StatusOperationOptions aOperationOptions = new StatusOperationOptions();
 
 		OptionParser parser = new OptionParser();	
-		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("d", "date")).withRequiredArg().required();
-		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
+		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
-		// --date
-		String dateStr = options.valueOf(optionDateStr);
+		// --force-checksum
+		aOperationOptions.setForceChecksum(options.has(optionForceChecksum));
 		
-		Pattern relativeDatePattern = Pattern.compile("^(\\d+)([smhDWMY])$");
-		Pattern absoluteDatePattern = Pattern.compile("^(\\d{2})-(\\d{2})-(\\d{4})$");
-		
-		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
-		
-		if (relativeDateMatcher.matches()) {
-			int time = Integer.parseInt(relativeDateMatcher.group(1));
-			String unitStr = relativeDateMatcher.group(2);
-			int unitMultiplier = 0;
-			
-			if ("s".equals(unitStr)) { unitMultiplier = 1; }
-			else if ("m".equals(unitStr)) { unitMultiplier = 60; }
-			else if ("h".equals(unitStr)) { unitMultiplier = 60*60; }
-			else if ("D".equals(unitStr)) { unitMultiplier = 24*60*60; }
-			else if ("W".equals(unitStr)) { unitMultiplier = 7*24*60*60; }
-			else if ("M".equals(unitStr)) { unitMultiplier = 30*24*60*60; }
-			else if ("Y".equals(unitStr)) { unitMultiplier = 365*24*60*60; }
-			
-			long restoreDateMillies = time*unitMultiplier;
-			Date restoreDate = new Date(restoreDateMillies);
-			
-			aOperationOptions.setRestoreTime(restoreDate);
-		}
-		else {
-			Matcher absoluteDateMatcher = absoluteDatePattern.matcher(dateStr);
-			
-			if (absoluteDateMatcher.matches()) {
-				int date = Integer.parseInt(absoluteDateMatcher.group(1));
-				int month = Integer.parseInt(absoluteDateMatcher.group(2));
-				int year = Integer.parseInt(absoluteDateMatcher.group(3));
-				
-				GregorianCalendar calendar = new GregorianCalendar();
-				calendar.set(year, month-1, date);
-				
-				Date restoreDate = calendar.getTime();
-				aOperationOptions.setRestoreTime(restoreDate);
-			}
-			else {
-				throw new Exception("Invalid '--date' argument: "+dateStr);
-			}
-		}
-		
-		// --force
-		if (options.has(optionForce)) {
-			aOperationOptions.setForce(true);
-		}
-		else {
-			aOperationOptions.setForce(false);
-		}
-		
-		// Files
-		List<?> nonOptionArgs = options.nonOptionArguments();
-		List<String> restoreFilePaths = new ArrayList<String>();
-		
-		for (Object nonOptionArg : nonOptionArgs) {
-			restoreFilePaths.add(nonOptionArg.toString());
-		}
-
-		aOperationOptions.setRestoreFilePaths(restoreFilePaths);
-		
-		// Arguments for call
-		operationType = OperationType.RESTORE;
-		operationOptions = aOperationOptions;
+		operationType = OperationType.STATUS;
+		operationOptions = aOperationOptions;		
 	}
+
+	private void initDaemonOperation(String[] operationArgs) {
+		DaemonOperationOptions aOperationOptions = new DaemonOperationOptions();
+
+		OptionParser parser = new OptionParser();	
+		OptionSpec<Integer> optionInterval = parser.acceptsAll(asList("i", "interval")).withRequiredArg().ofType(Integer.class);
+		
+		OptionSet options = parser.parse(operationArgs);	
+		
+		// --interval
+		if (options.has(optionInterval)) {
+			aOperationOptions.setInterval(options.valueOf(optionInterval)*1000);
+		}
+		
+		operationType = OperationType.DAEMON;
+		operationOptions = aOperationOptions;		
+	}
+
 
 	private void initSyncUpOperation(String[] operationArgs) {
 		SyncUpOperationOptions aOperationOptions = new SyncUpOperationOptions();
@@ -219,39 +188,28 @@ public class Syncany {
 		operationOptions = aOperationOptions;
 	}
 
-	private void initLogFileOption(OptionSet options, OptionSpec<File> optionLog) throws SecurityException, IOException {
-		if (options.has(optionLog)) {
-			File logFile = options.valueOf(optionLog);
-			FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath());
-			
-			// TODO [low] Logging: Is this the right way to set logging properties
-
-			// Add handler to existing loggers
-			for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
-		        String loggerName = loggerNames.nextElement();
-		        Logger theLogger = LogManager.getLogManager().getLogger(loggerName);
-		        
-		        if (theLogger != null) {
-		            theLogger.addHandler(fileHandler);
-		        }
-		    }		
-
-			// And to future loggers
-			Logger.getLogger("").addHandler(fileHandler);
-			//Logger.getGlobal().addHandler(fileHandler);
-		}
+	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
+		// Reset logging
+		Logging.disableLogging();
+		
+		initLogHandlers(options, optionLog, optionDebug);		
+		initLogLevel(options, optionDebug, optionQuiet, optionLogLevel);		
 	}
 
-	private void initLogLevelOption(OptionSet options, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) {
-		Level currentLogLevel = Logger.getLogger("").getLevel();
+	private void initLogLevel(OptionSet options, OptionSpec<Void> optionDebug, OptionSpec<Void> optionQuiet, OptionSpec<String> optionLogLevel) {
 		Level newLogLevel = null;
-		
+
+		// --debug
 		if (options.has(optionDebug)) {
-			newLogLevel = Level.ALL;
+			newLogLevel = Level.ALL;			
 		}
+		
+		// --quiet
 		else if (options.has(optionQuiet)) {
 			newLogLevel = Level.OFF;
 		}
+		
+		// --loglevel=<level>
 		else if (options.has(optionLogLevel)) {
 			String newLogLevelStr = options.valueOf(optionLogLevel);
 
@@ -262,32 +220,52 @@ public class Syncany {
 				showErrorAndExit("Invalid log level given "+newLogLevelStr+"'");
 			}
 		}		
-		
-		if (newLogLevel != currentLogLevel) {
-			// TODO [low] Logging: Is this the right way to set logging properties
-
-			// Add handler to existing loggers
-			for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
-		        String loggerName = loggerNames.nextElement();
-		        Logger theLogger = LogManager.getLogManager().getLogger(loggerName);
-		        
-		        if (theLogger != null) {
-		            theLogger.setLevel(newLogLevel);
-		        }
-		    }		
-
-			// And to future loggers
-			Logger.getLogger("").setLevel(newLogLevel);
+		else {
+			newLogLevel = Level.INFO;
 		}
+		
+		// Add handler to existing loggers, and future ones
+		Logging.setGlobalLogLevel(newLogLevel);	
 	}
 
-	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) throws IOException {
+	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
+		// --log=<file>
+		String logFilePattern = null;
+				
+		if (options.has(optionLog)) {
+			if (!"-".equals(options.valueOf(optionLog))) {
+				logFilePattern = options.valueOf(optionLog);
+			}			
+		}
+		else if (config.getLogDir().exists()) {
+			logFilePattern = config.getLogDir()+File.separator+new SimpleDateFormat("yyMMdd").format(new Date())+".log";
+		}
+		
+		if (logFilePattern != null) {	
+			Handler fileLogHandler = new FileHandler(logFilePattern, true);			
+			fileLogHandler.setFormatter(new LogFormatter());
+	
+			Logging.addGlobalHandler(fileLogHandler);
+		}
+				
+		// --debug, add console handler
+		if (options.has(optionDebug) || (options.has(optionLog) && "-".equals(options.valueOf(optionLog)))) {
+			Handler consoleLogHandler = new ConsoleHandler();
+			consoleLogHandler.setFormatter(new LogFormatter());
+			
+			Logging.addGlobalHandler(consoleLogHandler);								
+		}		
+	}
+
+	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) throws ConfigException, Exception {
 		if (options.has(optionConfig)) {
 			configFile = options.valueOf(optionConfig);
 		}
 		else {
 			configFile = findConfigFileInPath();
 		}		
+		
+		config = new Config(ConfigTO.load(configFile));
 	}		
 	
 	private File findConfigFileInPath() throws IOException {
@@ -312,11 +290,9 @@ public class Syncany {
 		}
 		
 		logger.log(Level.INFO, "Loading config from {0} ...", configFile);
-		
-		ConfigTO configTO = ConfigTO.load(configFile);
-		
+				
 		client = new Client();
-		client.setConfig(new Config(configTO));
+		client.setConfig(config);
 		client.createDirectories();
 	}
 	
@@ -339,7 +315,7 @@ public class Syncany {
 				client.sync();
 			}
 			else if (operationType == OperationType.STATUS) {
-				ChangeSet changeSet = client.status();
+				ChangeSet changeSet = client.status((StatusOperationOptions) operationOptions);
 				
 				for (File newFile : changeSet.getNewFiles()) {
 					System.out.println("A "+FileUtil.getRelativePath(client.getConfig().getLocalDir(), newFile));
@@ -362,6 +338,9 @@ public class Syncany {
 			}
 			else if (operationType == OperationType.RESTORE) {
 				client.restore((RestoreOperationOptions) operationOptions);
+			}
+			else if (operationType == OperationType.DAEMON) {
+				client.daemon((DaemonOperationOptions) operationOptions);
 			}
 			else {
 				showErrorAndExit("Unknown operation '"+operationType+"'.");
@@ -394,26 +373,37 @@ public class Syncany {
 		System.out.println("      Alias to --loglevel=OFF");
 		System.out.println();
 		System.out.println("  -d, --debug");
-		System.out.println("      Alias to --loglevel=ALL");
+		System.out.println("      Sets the log level to ALL, and print the log to the console.");
 		System.out.println();
 		System.out.println("  -h, --help");
 		System.out.println("      Print this help screen");
 		System.out.println();
 		System.out.println("Commands:");
-		System.out.println("  up");
+		System.out.println("  up [<args>]");
 		System.out.println("      Detect local changes and upload to repo (commit)");
 		System.out.println();
 		System.out.println("      Arguments:");
-		System.out.println("      --no-cleanup    Do not merge own databases in repo.");
+		System.out.println("      -f, --force             Force upload even if remote changes exist (will conflict!).");
+		System.out.println("      -c, --no-cleanup        Do not merge own databases in repo.");
 		System.out.println();
 		System.out.println("  down");
 		System.out.println("      Detect remote changes and apply locally (update)");
 		System.out.println();
-		System.out.println("  sync");
+		System.out.println("  sync [<args>]");
 		System.out.println("      Perform down- and up-command.");		
 		System.out.println();
-		System.out.println("  status");
+		System.out.println("  daemon [<args>]");
+		System.out.println("      Performs the sync-command in a loop. In furture releases, this command will");
+		System.out.println("      watch the file system.");
+		System.out.println();
+		System.out.println("      Arguments:");
+		System.out.println("      -i, --interval=<sec>    Repeat sync every <sec> seconds (default is 30).");
+		System.out.println();
+		System.out.println("  status [<args>]");
 		System.out.println("      Detect local changes and print to STDOUT.");
+		System.out.println();
+		System.out.println("      Arguments:");
+		System.out.println("      -f, --force-checksum    Force checksum comparison, if not enabled mod. date/size is used.");
 		System.out.println();
 		System.out.println("  ls-remote");
 		System.out.println("      Detect remote changes and print to STDOUT.");

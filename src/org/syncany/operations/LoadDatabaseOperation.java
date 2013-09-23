@@ -21,7 +21,6 @@ public class LoadDatabaseOperation extends Operation {
 		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
 		
 		Database db = new Database();
-
 		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
 		
 		if (localDatabaseFile.exists()) {

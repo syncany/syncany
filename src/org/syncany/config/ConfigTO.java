@@ -15,6 +15,7 @@ public class ConfigTO {
 	private String appDir;
 	private String databaseDir;
 	private String cacheDir;
+	private String logDir;	
 	private ConnectionSettings connection;
 	private EncryptionSettings encryption;
 	
@@ -44,6 +45,10 @@ public class ConfigTO {
 	
 	public String getCacheDir() {
 		return cacheDir;
+	}
+	
+	public String getLogDir() {
+		return logDir;
 	}
 
 	public ConnectionSettings getConnection() {

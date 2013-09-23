@@ -12,6 +12,10 @@ import org.syncany.database.DatabaseXmlDAO;
 public abstract class Operation {
 	protected Config config;
 	
+	/*public Operation() {
+		
+	}*/
+	
 	public Operation(Config config) {
 		this.config = config;
 	}	
@@ -25,6 +29,8 @@ public abstract class Operation {
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}	
 	
+	/*public abstract void init(String[] operationArgs) throws Exception;
+	public abstract void init(OperationOptions operationOptions) throws Exception;*/
 	public abstract OperationResult execute() throws Exception;
 	
 	public interface OperationOptions {

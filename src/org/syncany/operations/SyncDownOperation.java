@@ -63,7 +63,12 @@ public class SyncDownOperation extends Operation {
 	private DatabaseReconciliator databaseReconciliator;
 	
 	public SyncDownOperation(Config config) {
+		this(config, null);
+	}	
+	
+	public SyncDownOperation(Config config, Database database) {
 		super(config);
+		this.localDatabase = database;
 	}	
 	
 	public OperationResult execute() throws Exception {
@@ -137,14 +142,17 @@ public class SyncDownOperation extends Operation {
 	}
 
 	private void initOperationVariables() throws Exception {		
-		localDatabase = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
+		localDatabase = (localDatabase != null) 
+			? localDatabase
+			: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
+		
 		localBranch = localDatabase.getBranch();	
 
 		transferManager = config.getConnection().createTransferManager();		
 		databaseReconciliator = new DatabaseReconciliator();
 	}
 
-	private void pruneConflictingLocalBranch(Branch winnersBranch) throws StorageException {		
+	private void pruneConflictingLocalBranch(Branch winnersBranch) throws StorageException, IOException {		
 		Branch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
 		logger.log(Level.INFO, "- Database versions to REMOVE locally: "+localPruneBranch);
 		
@@ -153,10 +161,16 @@ public class SyncDownOperation extends Operation {
 		}
 		else {
 			logger.log(Level.INFO, "  + Pruning databases locally ...");
+			Database dirtyDatabase = new Database();			
 			
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
+				// Database version
+				DatabaseVersion databaseVersion = localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock());
+				dirtyDatabase.addDatabaseVersion(databaseVersion);
+				
+				// Remove database version locally
 				logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
-				localDatabase.removeDatabaseVersion(localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock()));
+				localDatabase.removeDatabaseVersion(databaseVersion);
 				
 				RemoteFile remoteFileToPrune = new RemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
 				logger.log(Level.INFO, "    * Deleting remote database file "+remoteFileToPrune+" ...");
@@ -164,6 +178,9 @@ public class SyncDownOperation extends Operation {
 				
 				// TODO [high] Also delete multichunks from this database version (OR better yet: reuse multichunks somehow!) 
 			}
+			
+			logger.log(Level.INFO, "    * Saving dirty database to "+config.getDirtyDatabaseFile()+" ...");
+			saveLocalDatabase(dirtyDatabase, config.getDirtyDatabaseFile());
 			
 			// TODO [medium] currently the loser deletes all its databases. It would be nicer if the old database versions could be marked as "old" so the branch is not forever lost, but it can be recreated later 
 			//XXXXXXXXXXXXXXXXXXXXXXXXX

@@ -39,12 +39,14 @@ public class Config {
 	public static final String DEFAULT_DIR_APPLICATION = ".syncany";
 	public static final String DEFAULT_DIR_CACHE = "cache";
 	public static final String DEFAULT_DIR_DATABASE = "db";
+	public static final String DEFAULT_DIR_LOG = "logs";
 	
 	private String machineName;	
 	private File localDir;
 	private File appDir;
 	private File cacheDir;
 	private File databaseDir;
+	private File logDir;
 
 	private Cache cache;	
 	private Connection connection;
@@ -134,9 +136,20 @@ public class Config {
 		else {
 			databaseDir = new File(appDir+File.separator+DEFAULT_DIR_DATABASE);
 		}	
+		
+		// Log folder
+		if (configTO.getLogDir() != null) {
+			logDir = new File(configTO.getLogDir());
+			
+			if (!logDir.exists()) {
+				throw new ConfigException("Directory 'logDir' must exist if it is explicitly specified: "+logDir);
+			}
+		}
+		else {
+			logDir = new File(appDir+File.separator+DEFAULT_DIR_LOG);
+		}	
 	}
 	
-
 	private void initCache() {
 		cache = new Cache(cacheDir);
 	}	
@@ -254,9 +267,21 @@ public class Config {
 	public File getDatabaseFile() {
 		return new File(databaseDir+File.separator+"local.db");	
 	}
+	
+	public File getDirtyDatabaseFile() {
+		return new File(databaseDir+File.separator+"dirty.db");	
+	}
 
 	public void setDatabaseDir(File databaseDir) {
 		this.databaseDir = databaseDir;
+	}	
+
+	public File getLogDir() {
+		return logDir;
+	}
+	
+	public void setLogDir(File logDir) {
+		this.logDir = logDir;
 	}
 	
 	public static class ConfigException extends Exception {

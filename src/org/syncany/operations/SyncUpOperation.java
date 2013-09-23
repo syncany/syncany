@@ -30,6 +30,7 @@ import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.util.StringUtil;
 
@@ -41,16 +42,23 @@ public class SyncUpOperation extends Operation {
 	
 	private SyncUpOperationOptions options;
 	private TransferManager transferManager; 
+	private Database loadedDatabase;
+	private Database dirtyDatabase;
 	
 	public SyncUpOperation(Config config) {
-		this(config, new SyncUpOperationOptions());
+		this(config, null, new SyncUpOperationOptions());
 	}	
 	
-	public SyncUpOperation(Config config, SyncUpOperationOptions options) {
+	public SyncUpOperation(Config config, Database database) {
+		this(config, database, new SyncUpOperationOptions());
+	}	
+	
+	public SyncUpOperation(Config config, Database database, SyncUpOperationOptions options) {
 		super(config);		
 		
 		this.options = options;
 		this.transferManager = config.getConnection().createTransferManager();
+		this.loadedDatabase = database;
 	}
 	
 	public OperationResult execute() throws Exception {
@@ -59,10 +67,17 @@ public class SyncUpOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 		
 		// Load database
-		Database database = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
+		Database database = (loadedDatabase != null) 
+				? loadedDatabase
+				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
+		
+		// TODO [low] this is ugly. Add to LoadDatabaseOperation somehow
+		if (config.getDirtyDatabaseFile().exists()) {
+			dirtyDatabase = loadDirtyDatabase();
+		}
 		
 		// Find local changes
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, database).execute()).getChangeSet();
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, database, new StatusOperationOptions()).execute()).getChangeSet();
 
 		if (!changeSet.hasChanges()) {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
@@ -124,9 +139,22 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "Sync up done.");
 		}
 		
+		if (config.getDirtyDatabaseFile().exists()) {
+			config.getDirtyDatabaseFile().delete(); // TODO [low] is this correct?
+		}
+		
 		return new SyncUpOperationResult();
 	}	
 	
+	private Database loadDirtyDatabase() throws IOException {
+		Database aDirtyDatabase = new Database();
+		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
+		
+		dao.load(aDirtyDatabase, config.getDirtyDatabaseFile());
+		
+		return aDirtyDatabase;
+	}
+
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
@@ -169,7 +197,7 @@ public class SyncUpOperation extends Operation {
 
 		// Index
 		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		Indexer indexer = new Indexer(config, deduper, db);
+		Indexer indexer = new Indexer(config, deduper, db, dirtyDatabase);
 		
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);	
 	

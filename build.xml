@@ -6,7 +6,14 @@
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
-
+	
+	<condition property="online">
+        <or>
+            <http url="http://www.google.com/" />
+            <http url="http://www.amazon.com/" />
+        </or>
+	</condition>
+		
 	<target name="init" depends="init-ivy">
 		<!-- Create the time stamp -->
 		<tstamp />
@@ -27,7 +34,7 @@
 		<javac srcdir="src" destdir="build" classpathref="project.class.path" includeantruntime="true" />
 		<javac srcdir="tests" destdir="build" classpathref="project.class.path" />
 		
-		<copy file="logging.properties" todir="build" />
+		<copy file="logging.properties" todir="build" /> 
 	</target>
 
 	<target name="dist" depends="compile" description="generate the distribution">
@@ -96,9 +103,8 @@
 	<property name="ivy.jar.dir" value="${ivy.home}/lib" />
 	<property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
 
-	<target name="download-ivy" unless="offline">
+	<target name="download-ivy" if="online">
 		<mkdir dir="${ivy.jar.dir}" />
-		<!-- download Ivy from web site so that it can be used even without any special installation -->
 		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true" />
 	</target>
 

@@ -75,7 +75,7 @@ public class StringUtil {
         return result.toString();
     }
 
-    public static String toCamelCase(String str){
+    public static String toCamelCase(String str) {
         StringBuilder sb = new StringBuilder();
 
         for (String s : str.split("_")) {

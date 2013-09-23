@@ -1,33 +1,37 @@
 package org.syncany.operations;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
-import org.syncany.operations.Operation.OperationOptions;
-import org.syncany.util.FileLister;
-import org.syncany.util.FileLister.FileListerAdapter;
-import org.syncany.util.FileUtil;
 
 public class RestoreOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());	
 	private RestoreOperationOptions options;
 	
+	public RestoreOperation() {
+		super(null);
+		this.options = new RestoreOperationOptions();
+	}	
+
 	public RestoreOperation(Config config) {
 		this(config, null);
 	}	
@@ -37,6 +41,82 @@ public class RestoreOperation extends Operation {
 		this.options = options;
 	}	
 	
+	public void init(String[] operationArgs) throws Exception {
+		options = new RestoreOperationOptions();
+
+		OptionParser parser = new OptionParser();	
+		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("d", "date")).withRequiredArg().required();
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
+		
+		OptionSet optionSet = parser.parse(operationArgs);	
+		
+		// --date
+		String dateStr = optionSet.valueOf(optionDateStr);
+		
+		Pattern relativeDatePattern = Pattern.compile("^(\\d+)([smhDWMY])$");
+		Pattern absoluteDatePattern = Pattern.compile("^(\\d{2})-(\\d{2})-(\\d{4})$");
+		
+		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
+		
+		if (relativeDateMatcher.matches()) {
+			int time = Integer.parseInt(relativeDateMatcher.group(1));
+			String unitStr = relativeDateMatcher.group(2);
+			int unitMultiplier = 0;
+			
+			if ("s".equals(unitStr)) { unitMultiplier = 1; }
+			else if ("m".equals(unitStr)) { unitMultiplier = 60; }
+			else if ("h".equals(unitStr)) { unitMultiplier = 60*60; }
+			else if ("D".equals(unitStr)) { unitMultiplier = 24*60*60; }
+			else if ("W".equals(unitStr)) { unitMultiplier = 7*24*60*60; }
+			else if ("M".equals(unitStr)) { unitMultiplier = 30*24*60*60; }
+			else if ("Y".equals(unitStr)) { unitMultiplier = 365*24*60*60; }
+			
+			long restoreDateMillies = time*unitMultiplier;
+			Date restoreDate = new Date(restoreDateMillies);
+			
+			logger.log(Level.FINE, "Restore date: "+restoreDate);
+			options.setRestoreTime(restoreDate);
+		}
+		else {
+			Matcher absoluteDateMatcher = absoluteDatePattern.matcher(dateStr);
+			
+			if (absoluteDateMatcher.matches()) {
+				int date = Integer.parseInt(absoluteDateMatcher.group(1));
+				int month = Integer.parseInt(absoluteDateMatcher.group(2));
+				int year = Integer.parseInt(absoluteDateMatcher.group(3));
+				
+				GregorianCalendar calendar = new GregorianCalendar();
+				calendar.set(year, month-1, date);
+				
+				Date restoreDate = calendar.getTime();
+				
+				logger.log(Level.FINE, "Restore date: "+restoreDate);
+				options.setRestoreTime(restoreDate);
+			}
+			else {
+				throw new Exception("Invalid '--date' argument: "+dateStr);
+			}
+		}
+		
+		// --force
+		if (optionSet.has(optionForce)) {
+			options.setForce(true);
+		}
+		else {
+			options.setForce(false);
+		}
+		
+		// Files
+		List<?> nonOptionArgs = optionSet.nonOptionArguments();
+		List<String> restoreFilePaths = new ArrayList<String>();
+		
+		for (Object nonOptionArg : nonOptionArgs) {
+			restoreFilePaths.add(nonOptionArg.toString());
+		}
+
+		options.setRestoreFilePaths(restoreFilePaths);		
+	}
+		
 	public OperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Restore' at client "+config.getMachineName()+" ...");
