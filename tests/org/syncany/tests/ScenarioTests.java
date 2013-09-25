@@ -3,6 +3,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.scenarios.ChangedModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.CreateSimilarFileParallelScenarioTest;
 import org.syncany.tests.scenarios.EmptyFileScenarioTest;
 import org.syncany.tests.scenarios.EmptyFolderScenarioTest;
@@ -27,7 +28,8 @@ import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 	SingleFolderNoConflictsScenarioTest.class,
 	CreateSimilarFileParallelScenarioTest.class,
 	ManySyncUpsAndDatabaseFileCleanupTest.class,
-	ManySyncUpsAndOtherClientSyncDownTest.class
+	ManySyncUpsAndOtherClientSyncDownTest.class,
+	ChangedModifiedDateScenarioTest.class
 })
 public class ScenarioTests {
 	// This class executes all tests

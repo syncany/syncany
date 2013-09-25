@@ -20,6 +20,8 @@ package org.syncany.config;
 import java.lang.reflect.Field;
 import java.security.Security;
 
+import javax.crypto.Cipher;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
@@ -33,51 +35,63 @@ public class Encryption {
 	public static final String DEFAULT_CIPHER_ALGORITHM = "AES";
 	public static final String DEFAULT_CIPHER_STRING = "AES/GCM/NoPadding";
     public static final int DEFAULT_KEYLENGTH = 128;
+    public static final boolean DEFAULT_IV_NEEDED = true;
+    public static final boolean DEFAULT_UNLIMITED_CRYPTO_NEEDED = false;
     
 	private String password;
     private String cipherStr;
-    private Integer keySize;
+    private int keySize;
+    private boolean ivNeeded;
+    private boolean unlimitedCryptoNeeded;
     
     static {
     	try {
 			init();
 		}
     	catch (EncryptionException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
     }
     
     public static synchronized void init() throws EncryptionException {
-    	if (!isInitialized()) {
+    	if (Security.getProvider("BC") == null) {
     		Security.addProvider(new BouncyCastleProvider()); 
-    		setUnlimitedCrypto(true); // TODO [high] Check legal (!) consequences of this
     	}
     }
     
-    public static synchronized boolean isInitialized() {
-    	return Security.getProvider("BC") != null;
+    public static synchronized boolean isUnlimitedCrypto() {
+    	try {
+    		return Cipher.getMaxAllowedKeyLength("AES") > 128;
+    	}
+    	catch (Exception e) {
+    		return false;
+    	}
     }
     
-    public static void setUnlimitedCrypto(boolean enable) throws EncryptionException {
-		try {
-			Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
-
-			field.setAccessible(true);
-			field.set(null, Boolean.valueOf(!enable));		
-		}
-		catch (Exception e) {
-			throw new EncryptionException(e);
-		}
+    public static void enableUnlimitedCrypto() throws EncryptionException {
+    	if (!isUnlimitedCrypto()) {
+			try {
+				Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
+	
+				field.setAccessible(true);
+				field.set(null, false);		
+			}
+			catch (Exception e) {
+				throw new EncryptionException(e);
+			}
+    	}
     }
     
     public Encryption() {
-        this("", DEFAULT_CIPHER_STRING, DEFAULT_KEYLENGTH); 
+        this("", DEFAULT_CIPHER_STRING, DEFAULT_KEYLENGTH, DEFAULT_IV_NEEDED, DEFAULT_UNLIMITED_CRYPTO_NEEDED); 
     }
 
-    public Encryption(String password, String cipherStr, int keySize) {
+    public Encryption(String password, String cipherStr, int keySize, boolean ivNeeded, boolean unlimitedNeeded) {
         this.password = password;
         this.cipherStr = cipherStr;
         this.keySize = keySize;
+        this.ivNeeded = ivNeeded;
+        this.unlimitedCryptoNeeded = unlimitedNeeded;
     } 
 
     public String getCipherStr() {
@@ -103,4 +117,20 @@ public class Encryption {
     public void setPassword(String password) {
         this.password = password;
     }    
+    
+    public boolean isIvNeeded() {
+		return ivNeeded;
+	}
+    
+    public void setIvNeeded(boolean ivNeeded) {
+		this.ivNeeded = ivNeeded;
+	}
+    
+    public boolean isUnlimitedNeeded() {
+		return unlimitedCryptoNeeded;
+	}
+    
+    public void setUnlimitedCryptoNeeded(boolean unlimitedNeeded) {
+		this.unlimitedCryptoNeeded = unlimitedNeeded;
+	}
 }

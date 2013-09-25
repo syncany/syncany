@@ -10,6 +10,9 @@ import java.util.Map;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseDAO;
+import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.util.FileUtil;
 
 public class TestClient extends Client {
@@ -19,7 +22,7 @@ public class TestClient extends Client {
 		
 		this.setConfig(testConfig);
 		this.createDirectories();
-	}
+	}	
 	
 	public void createNewFiles() throws IOException {
 		TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 25*1024, 20);		
@@ -48,6 +51,10 @@ public class TestClient extends Client {
 			throw new Exception("Move failed: "+fileFrom+" --> "+fileTo);
 		}		
 	}	
+	
+	public void copyFile(String fileFrom, String fileTo) throws IOException {
+		FileUtil.copy(getLocalFile(fileFrom), getLocalFile(fileTo));		
+	}
 
 	public void changeFile(String name) throws IOException {
 		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name));		
@@ -75,8 +82,18 @@ public class TestClient extends Client {
 		
 		return fileMap;
 	}
-
+ 
 	public File getLocalDatabaseFile() {
 		return new File(config.getDatabaseDir()+File.separator+"local.db");
 	}
+
+	public Database loadLocalDatabase() throws IOException {
+		Database db = new Database();
+		
+		DatabaseDAO dao = new DatabaseXmlDAO();
+		dao.load(db, getLocalDatabaseFile());
+		
+		return db;
+		
+	}	
 }

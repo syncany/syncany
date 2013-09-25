@@ -31,72 +31,66 @@ public class InitOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 				
 		// Create config transfer object
-		ConfigTO configTO = new ConfigTO();
-		
-		configTO.setMachineName(createMachineName());
-		configTO.setConnection(createConnectionSettings());
-		configTO.setEncryption(createEncryptionSettings());
-		
-		// Save skeleton config
-		File skelConfigFile = new File(options.getLocation()+"/.syncany/config.json"); // TODO [low] duplicate code
+		initMachineName();
+		initConnectionSettings();
+		initEncryptionSettings();
+				
+		// Create local .syncany directory
+		File skelConfigFile = new File(options.getLocalDir()+"/.syncany/config.json"); // TODO [low] duplicate code
 		File appDir = skelConfigFile.getParentFile();
 		
 		if (!appDir.exists()) {
 			appDir.mkdir();
 		}
 		
-		ConfigTO.save(configTO, skelConfigFile);
+		// Unset 'localDir' (we don't want to save it!)
+		options.setLocalDir(null);
+		
+		// Save skeleton config
+		ConfigTO.save(options, skelConfigFile);
 		
 		return new InitOperationResult(skelConfigFile);
 	}		
 	
-	private String createMachineName() throws UnknownHostException {
+	private void initMachineName() throws UnknownHostException {
 		SecureRandom random = new SecureRandom();
-		return InetAddress.getLocalHost().getHostName()+System.getProperty("user.name")+Math.abs(random.nextInt());
+		options.setMachineName(InetAddress.getLocalHost().getHostName()+System.getProperty("user.name")+Math.abs(random.nextInt()));
 	}
 
-	private ConnectionSettings createConnectionSettings() {
-		String connectionType = options.getPlugin();
-		Map<String, String> connectionSettingsMap = new HashMap<String, String>();
+	private void initConnectionSettings() {
+		Map<String, String> connectionSettings = options.getConnection().getSettings();
 		
-		Plugin plugin = Plugins.get(options.getPlugin());		
-		Connection connection = plugin.createConnection();
-		
-		for (String settingKey : connection.getMandatorySettings()) {
-			connectionSettingsMap.put(settingKey, "(mandatory)");
-		}
-		
-		for (String settingKey : connection.getOptionalSettings()) {
-			connectionSettingsMap.put(settingKey, "(optional)");
-		}
-		
-		return new ConnectionSettings(connectionType, connectionSettingsMap);				
+		if (connectionSettings == null) {
+			connectionSettings = new HashMap<String, String>();
+			
+			Plugin plugin = Plugins.get(options.getConnection().getType());		
+			Connection connection = plugin.createConnection();
+
+			for (String settingKey : connection.getMandatorySettings()) {
+				if (!connectionSettings.containsKey(settingKey)) {
+					connectionSettings.put(settingKey, "(mandatory)");
+				}
+			}
+			
+			for (String settingKey : connection.getOptionalSettings()) {
+				connectionSettings.put(settingKey, "(optional)");
+			}
+			
+			options.setConnection(new ConnectionSettings(options.getConnection().getType(), connectionSettings));
+		}						
 	}
 	
-	private EncryptionSettings createEncryptionSettings() {
-		SecureRandom random = new SecureRandom();
-		return new EncryptionSettings(true, "(change this, "+Math.abs(random.nextInt())+")");
+	private void initEncryptionSettings() {
+		EncryptionSettings encryptionSettings = options.getEncryption();
+		
+		if (encryptionSettings == null) {
+			SecureRandom random = new SecureRandom();
+			options.setEncryption(new EncryptionSettings(true, "(this is the password, CHANGE IT! "+Math.abs(random.nextInt())+")"));
+		}
 	}
 
-	public static class InitOperationOptions implements OperationOptions {
-		private String plugin;
-		private File location;
-
-		public String getPlugin() {
-			return plugin;
-		}
-
-		public void setPlugin(String plugin) {
-			this.plugin = plugin;
-		}
-		
-		public File getLocation() {
-			return location;
-		}
-
-		public void setLocation(File location) {
-			this.location = location;
-		}		
+	public static class InitOperationOptions extends ConfigTO implements OperationOptions {
+		// Inherited ConfigTO
 	}
 	
 	public class InitOperationResult implements OperationResult {

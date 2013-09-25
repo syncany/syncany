@@ -72,10 +72,14 @@ public class CipherTransformer extends Transformer {
 			out.write(sessionWriteSalt);
 			
 			// Create and write random IV to unencrypted stream
-			byte[] streamIV = new byte[encryption.getKeySize()/8]; 
-			new SecureRandom().nextBytes(streamIV);
+			byte[] streamIV = null;
 			
-			out.write(streamIV);
+			if (encryption.isIvNeeded()) {
+				streamIV = new byte[encryption.getKeySize()/8]; 
+				new SecureRandom().nextBytes(streamIV);
+			
+				out.write(streamIV);
+			}
 			
 			// Initialize cipher
 			Cipher streamEncryptCipher = createEncCipher(sessionWriteSecretKey, streamIV);
@@ -98,8 +102,12 @@ public class CipherTransformer extends Transformer {
 	    	in.read(streamSalt);
 	    	
 			// Read IV from unencrypted stream
-			byte[] streamIV = new byte[encryption.getKeySize()/8];		
-			in.read(streamIV);
+			byte[] streamIV = null;
+			
+			if (encryption.isIvNeeded()) {
+				streamIV = new byte[encryption.getKeySize()/8];		
+				in.read(streamIV);
+			}
 			
 			// Create key
 			SecretKey streamKey = null;
@@ -150,7 +158,13 @@ public class CipherTransformer extends Transformer {
 	private Cipher createCipher(int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
 		try {
             Cipher cipher = Cipher.getInstance(encryption.getCipherStr(), Encryption.PROVIDER);
-            cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));        
+            
+            if (encryption.isIvNeeded()) {
+            	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
+            }
+            else {
+            	cipher.init(cipherInitMode, secretKey);
+            }
 
             return cipher;
         }

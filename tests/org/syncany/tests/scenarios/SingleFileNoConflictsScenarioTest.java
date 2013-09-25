@@ -1,6 +1,6 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -104,6 +104,8 @@ public class SingleFileNoConflictsScenarioTest {
 	
 	@Test
 	public void testSingleFileChangeNoConflicts() throws Exception {
+		// TODO [high] Test fails because StatusOperation is called without --force-checksum, allow in up()
+		
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);

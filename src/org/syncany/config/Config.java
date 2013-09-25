@@ -27,6 +27,7 @@ import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
+import org.syncany.config.ConfigTO.EncryptionSettings;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -168,9 +169,31 @@ public class Config {
 	}
 	
 	private void initEncryption(ConfigTO configTO) throws EncryptionException {
-		if (configTO.getEncryption() != null && configTO.getEncryption().isEnabled()) {
-	    	encryption = new Encryption();		
-	    	encryption.setPassword(configTO.getEncryption().getPass());
+		EncryptionSettings toEncSettings = configTO.getEncryption();
+		
+		if (toEncSettings != null && toEncSettings.isEnabled() != null && toEncSettings.isEnabled()) {	    	
+	    	if (toEncSettings.isEnabled() == null || toEncSettings.getPass() == null) {
+	    		throw new EncryptionException("Parameters 'enabled' and 'pass' are required.'");
+	    	}
+
+	    	encryption = new Encryption();			    	
+	    	encryption.setPassword(toEncSettings.getPass());
+	    	
+	    	if (toEncSettings.getCipherStr() != null) {
+	    		encryption.setCipherStr(toEncSettings.getCipherStr());
+	    	}
+	    	
+	    	if (toEncSettings.getKeySize() != null) {
+	    		encryption.setKeySize(toEncSettings.getKeySize());
+	    	}
+	    	
+	    	if (toEncSettings.isIvNeeded() != null) {
+	    		encryption.setIvNeeded(toEncSettings.isIvNeeded());
+	    	}
+	    	
+	    	if (toEncSettings.isUnlimitedCryptoNeeded() != null) {
+	    		encryption.setUnlimitedCryptoNeeded(toEncSettings.isUnlimitedCryptoNeeded());
+	    	}
 		}
 	}
 	

@@ -2,13 +2,19 @@ package org.syncany;
 
 import static java.util.Arrays.asList;
 
+import java.io.BufferedReader;
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -25,8 +31,12 @@ import joptsimple.OptionSpec;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigTO;
+import org.syncany.config.ConfigTO.ConnectionSettings;
+import org.syncany.config.ConfigTO.EncryptionSettings;
+import org.syncany.config.Encryption;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
@@ -228,32 +238,242 @@ public class Syncany extends Client {
 
 	private void runInitOperation(String[] operationArguments) throws OptionException, Exception {
 		InitOperationOptions operationOptions = new InitOperationOptions();
+
+		OptionParser parser = new OptionParser();	
+		OptionSpec<Void> optionInteractive = parser.acceptsAll(asList("i", "interactive"));
 		
-		if (operationArguments.length == 0) {
-			showErrorAndExit("Argument <plugin> is required.");
+		OptionSet options = parser.parse(operationArguments);	
+		List<?> nonOptionArgs = options.nonOptionArguments();
+		
+		// --interactive
+		if (options.has(optionInteractive)) {
+			runInitInteractive(operationOptions);
 		}
 		
-		// <plugin>
-		String pluginStr = operationArguments[0];		
-		operationOptions.setPlugin(pluginStr);
-		
-		// <location>
-		File location = null;
-		
-		if (operationArguments.length > 1) {
-			location = new File(operationArguments[1]).getCanonicalFile(); 
+		// not --interactive
+		else {			
+			if (nonOptionArgs.size() == 0) {
+				showErrorAndExit("Argument <plugin> is required.");
+			}
+			
+			// <plugin>
+			String pluginStr = (String) nonOptionArgs.get(0);		
+			operationOptions.setConnection(new ConnectionSettings(pluginStr, null));
+			
+			// <location>
+			File localDir = null;
+			
+			if (nonOptionArgs.size() > 1) {
+				String locationStr = (String) nonOptionArgs.get(1);
+				localDir = new File(locationStr).getCanonicalFile(); 
+			}
+			else {
+				localDir = new File(".").getCanonicalFile(); 			
+			}
+			
+			operationOptions.setLocalDir(localDir.getAbsolutePath());
 		}
-		else {
-			location = new File(".").getCanonicalFile(); 			
-		}
-		
-		operationOptions.setLocation(location);
-				
+						
 		// Run!
 		File skelConfigFile = init(operationOptions);
 		
 		System.out.println("Repository initialized, skeleton config at "+skelConfigFile);
 		System.out.println("Please edit the config now, then use '--help' option.");
+	}
+
+	private void runInitInteractive(InitOperationOptions operationOptions) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+		Console console = System.console();
+		
+		// <location>
+		File localDir = null;		
+		File defaultLocalDir = new File(".").getCanonicalFile();
+		
+		System.out.println("Interactive repository initialization started.");
+		System.out.println("Default options are in brackets.");
+		System.out.println();
+		
+		while (localDir == null) {
+			System.out.println("Choose the sync folder. Files in this folder will be synchronized.");
+			System.out.print("Syncany folder ["+defaultLocalDir+"]: ");
+			String localDirStr = in.readLine();
+			
+			if ("".equals(localDirStr)) {
+				localDir = defaultLocalDir;
+			}
+			else {
+				localDir = new File(localDirStr);
+				
+				if (!localDir.exists()) {
+					System.out.println("ERROR: "+localDir+" does not exist.");
+					System.out.println();
+					
+					localDir = null;
+				}
+			}
+		}
+		
+		operationOptions.setLocalDir(localDir.getAbsolutePath());
+		
+		// <plugin>
+		String pluginStr = null;
+		
+		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
+		String pluginsList = "";
+		
+		for (int i=0; i<plugins.size(); i++) {
+			pluginsList += plugins.get(i).getId();
+			if (i < plugins.size()-1) { pluginsList += ", "; }			
+		}
+		
+		System.out.println();
+		
+		while (pluginStr == null) {
+			System.out.println("Choose a storage plugin. Available plugins are: "+pluginsList);
+			System.out.print("Plugin: ");
+			pluginStr = in.readLine();
+			
+			if (Plugins.get(pluginStr) == null) {
+				System.out.println("ERROR: Plugin '"+pluginStr+"' does not exist.");
+				System.out.println();
+				
+				pluginStr = null;
+			}
+		}
+					
+		// Mandatory plugin fields
+		Connection connection = Plugins.get(pluginStr).createConnection();
+
+		Map<String, String>  pluginSettings = new HashMap<String, String>();
+		String[] mandatorySettings = connection.getMandatorySettings();
+		String[] optionalSettings = connection.getOptionalSettings();
+		
+		System.out.println();
+		System.out.println("This plugin has the following settings.");
+		
+		for (String settingKey : mandatorySettings) {
+			String settingValue = null;
+			
+			while (settingValue == null) {
+				System.out.print("- "+settingKey+": ");
+				settingValue = in.readLine();
+				
+				if ("".equals(settingValue)) {
+					System.out.println("ERROR: This setting is mandatory.");
+					System.out.println();
+					
+					settingValue = null;
+				}
+			}
+			
+			pluginSettings.put(settingKey, settingValue);			
+		}
+
+		for (String settingKey : optionalSettings) {
+			System.out.print("- "+settingKey+" (optional): ");
+			String settingValue = in.readLine();
+			
+			if (!"".equals(settingValue)) {
+				pluginSettings.put(settingKey, settingValue);
+			}
+		}
+
+		operationOptions.setConnection(new ConnectionSettings(pluginStr, pluginSettings));
+		
+		// Encryption
+		System.out.println();
+		System.out.println("The password is used to encrypt data on the remote storage.");
+		System.out.println("Please choose it wisely.");
+		System.out.println();
+		
+		String password = null;
+		
+		while (password == null) {
+			char[] passwordChars = console.readPassword("Password: ");
+			char[] confirmPasswordChars = console.readPassword("Confirm: ");
+			
+			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
+				System.out.println("ERROR: Passwords do not match.");
+				System.out.println();
+				
+				continue;
+			}
+			
+			password = new String(passwordChars);
+			
+			if (passwordChars.length < 12) {
+				System.out.println("WARNING: The password is a bit short. Less than 12 chars are not future-proof!");
+				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
+				
+				if (!yesno.toLowerCase().startsWith("y")) {
+					System.out.println();
+					password = null;
+				}
+			}
+		}		
+		
+		System.out.println();
+		System.out.println("The cipher defines the encryption parameters and key size. There are a ");
+		System.out.println("few predefined crypto settings. To choose your own, please edit the config file.");
+		System.out.println();
+		System.out.println("Options:");
+		System.out.println("  'aes128'      AES/GCM/NoPadding, 128 bit (weak, but no country restrictions)");
+		System.out.println("  'aes256'      AES/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
+		System.out.println("  'twofish256'  Twofish/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
+		System.out.println();
+		
+		String cipherStr = null;
+		int keySize = 0;
+		boolean unlimitedCryptoNeeded = false;
+		
+		while (cipherStr == null) {
+			cipherStr = console.readLine("Cipher: ");
+			
+			if ("aes128".equals(cipherStr)) {
+				cipherStr = "AES/GCM/NoPadding";
+				keySize = 128;
+				unlimitedCryptoNeeded = false;
+			}
+			else if ("aes256".equals(cipherStr) || "twofish256".equals(cipherStr)) {
+				System.out.println();
+				System.out.println("This cipher/keysize might not be allowed in your country.");
+				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
+				
+				if (yesno.toLowerCase().startsWith("y")) {
+					if ("aes256".equals(cipherStr)) {
+						cipherStr = "AES/GCM/NoPadding";
+						keySize = 256;
+					}
+					else {
+						cipherStr = "Twofish/GCM/NoPadding";
+						keySize = 256;
+					}
+
+					// Try enabling unlimited crypto
+					unlimitedCryptoNeeded = true;
+				
+					try {
+						Encryption.enableUnlimitedCrypto();
+					}
+					catch (Exception e) {
+						showErrorAndExit("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
+					}
+				}
+				else {
+					System.out.println();
+					cipherStr = null;
+				}
+			}
+			else {
+				System.out.println("ERROR: Please choose a valid option.");
+				System.out.println();
+				
+				cipherStr = null;
+			}
+		}
+		
+		operationOptions.setEncryption(new EncryptionSettings(true, password, cipherStr, keySize, true, unlimitedCryptoNeeded));
+		
 	}
 
 	private void runRemoteStatusOperation(String[] operationArguments) throws Exception {
@@ -407,6 +627,7 @@ public class Syncany extends Client {
 	}
 
 	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) throws ConfigException, Exception {
+		// Find config or use --config option
 		if (options.has(optionConfig)) {
 			configFile = options.valueOf(optionConfig);
 		}
@@ -414,7 +635,24 @@ public class Syncany extends Client {
 			configFile = findConfigFileInPath();
 		}		
 		
-		config = (configFile != null) ? new Config(ConfigTO.load(configFile)) : null;
+		// Load config
+		if (configFile != null) {
+			ConfigTO configTO = ConfigTO.load(configFile);
+			config = new Config(configTO);
+			
+			// Enable unlimited crypto if necessary
+			boolean isUnlimitedCryptoNeeded = configTO.getEncryption() != null 
+					&& configTO.getEncryption().isUnlimitedCryptoNeeded() != null && configTO.getEncryption().isUnlimitedCryptoNeeded();
+			
+			if (isUnlimitedCryptoNeeded) {
+				try {
+					Encryption.enableUnlimitedCrypto();
+				}
+				catch (Exception e) {
+					showErrorAndExit("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
+				}
+			}
+		}				
 	}		
 	
 	private File findConfigFileInPath() throws IOException {
@@ -464,9 +702,9 @@ public class Syncany extends Client {
 		System.out.println("      Print this help screen");
 		System.out.println();
 		System.out.println("Commands:");
-		System.out.println("  init <plugin> [<location>]");
-		System.out.println("      Initialize <location> as a repository (default is current folder). This command");
-		System.out.println("      creates and initializes a skeleton config file for the plugin <plugin>.");
+		System.out.println("  init [<args>] <plugin> [<folder>]");
+		System.out.println("      Initialize <folder> as a Syncany folder (default is current folder). This");
+		System.out.println("      command creates and initializes a skeleton config file for the plugin <plugin>.");
 		System.out.println();
 		System.out.println("      The <plugin> attribute can be any of the loaded plugins.");		
 		System.out.print  ("      Currently loaded are: ");
@@ -479,6 +717,9 @@ public class Syncany extends Client {
 		}
 		
 		System.out.println();
+		System.out.println();
+		System.out.println("      Arguments:");
+		System.out.println("      -i, --interactive       Run interactive mode to init Syncany folder.");
 		System.out.println();
 		System.out.println("  up [<args>]");
 		System.out.println("      Detect local changes and upload to repo (commit)");

@@ -228,7 +228,7 @@ public abstract class FileSystemAction {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());
 		boolean actualLocalFileExists = actualLocalFile.exists();
 		
-		// Check existance
+		// Check existence
 		if (actualLocalFileExists) {
 			logger.log(Level.INFO, "     - Unexpected file detected, is expected to be NON-EXISTANT, but exists: "+actualLocalFile);
 			return true;

@@ -79,11 +79,13 @@ public class StringUtil {
         StringBuilder sb = new StringBuilder();
 
         for (String s : str.split("_")) {
-            sb.append(Character.toUpperCase(s.charAt(0)));
-
-            if (s.length() > 1) {
-                sb.append(s.substring(1, s.length()).toLowerCase());
-            }
+        	if (s.length() > 0) {
+	            sb.append(Character.toUpperCase(s.charAt(0)));
+	
+	            if (s.length() > 1) {
+	                sb.append(s.substring(1, s.length()).toLowerCase());
+	            }
+        	}
         }
 
         return sb.toString();

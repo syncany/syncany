@@ -33,6 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.chunk.CipherTransformer;
@@ -49,19 +50,14 @@ public class EncryptionTest {
 		Logging.init();
 	}
 		
-	@Test
-	public void testInitEncryptionAndLoadProviders() throws EncryptionException {
+	@Before
+	public void initAndLoadProviders() throws EncryptionException {
 		Encryption.init();
-		
-		if (!Encryption.isInitialized()) {
-			fail("Encryption could not be initialized.");
-		}
+		Encryption.enableUnlimitedCrypto();
 	}		
 	
 	@Test
 	public void testDefaultCryptoSuiteAvailable() throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, EncryptionException {
-		testInitEncryptionAndLoadProviders(); // Must be executed before this test
-		
 		byte[] testKeyBytes = new byte[Encryption.DEFAULT_KEYLENGTH/8];
 		byte[] testIvBytes = new byte[Encryption.DEFAULT_KEYLENGTH/8];
 		
@@ -107,6 +103,7 @@ public class EncryptionTest {
 		encryptionSettings.setCipherStr("DESede/CBC/PKCS5Padding");
 		encryptionSettings.setKeySize(112);
 		encryptionSettings.setPassword("some password");
+		encryptionSettings.setIvNeeded(true);
 		
 		doTestEncryption(encryptionSettings);
 
@@ -114,17 +111,15 @@ public class EncryptionTest {
 	}		
 	
 	@Test
-	@Ignore
 	public void testEncryptionWithAes128EcbPkcs5() throws Exception {
 		Encryption encryptionSettings = new Encryption();
 		
 		encryptionSettings.setCipherStr("AES/ECB/PKCS5Padding");
 		encryptionSettings.setKeySize(128);
 		encryptionSettings.setPassword("some password");
+		encryptionSettings.setIvNeeded(false);
 		
 		doTestEncryption(encryptionSettings);
-
-		// TODO [low] Test fails: Non-IV modes like ECB are not supported yet
 	}		
 	
 	@Test
@@ -247,10 +242,10 @@ public class EncryptionTest {
 		byte[] decryptedData2 = doDecrypt(encryptedData2, decryptCipherTransformer);
 		
 		logger.log(Level.INFO, "Source Data:              "+StringUtil.toHex(srcData));
-		logger.log(Level.INFO, "Encrypted Data (Round 1): "+StringUtil.toHex(encryptedData1));
 		logger.log(Level.INFO, "Decrypted Data (Round 1): "+StringUtil.toHex(decryptedData1));		
-		logger.log(Level.INFO, "Encrypted Data (Round 2): "+StringUtil.toHex(encryptedData2));
 		logger.log(Level.INFO, "Decrypted Data (Round 2): "+StringUtil.toHex(decryptedData2));
+		logger.log(Level.INFO, "Encrypted Data (Round 1): "+StringUtil.toHex(encryptedData1));
+		logger.log(Level.INFO, "Encrypted Data (Round 2): "+StringUtil.toHex(encryptedData2));
 		
 		assertEquals("Encrypted and decrypted Data is different (round 1)", StringUtil.toHex(srcData), StringUtil.toHex(decryptedData1));
 		assertEquals("Encrypted and decrypted Data is different (round 2)", StringUtil.toHex(srcData), StringUtil.toHex(decryptedData2));

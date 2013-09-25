@@ -385,7 +385,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				fileVersion.setSize(Long.parseLong(sizeStr));				
 				
-				if (lastModifiedStr != null) {
+				if (lastModifiedStr != null) { // TODO [low] This field should be mandatory
 					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
 				}
 				

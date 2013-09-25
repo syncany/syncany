@@ -316,6 +316,11 @@ public class Indexer {
 						// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
 						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
 							FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
+							
+							if (fileProperties.lastModified != lastVersion.getLastModified().getTime() || fileProperties.size != lastVersion.getSize()) {
+								continue;
+							}
+							
 							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getFullName());
 							
 							if (lastVersion.getStatus() != FileStatus.DELETED && !lastVersionOnLocalDisk.exists()) {

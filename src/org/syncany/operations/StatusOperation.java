@@ -84,7 +84,7 @@ public class StatusOperation extends Operation {
 						changeSet.unchangedFiles.add(file);
 						
 						return;
-					}
+					}					
 					
 					// Simple check by size
 					boolean sizeMatches = file.length() == potentiallyMatchingLastFileVersion.getSize();

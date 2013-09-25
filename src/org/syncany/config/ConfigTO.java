@@ -92,19 +92,47 @@ public class ConfigTO {
 	public static class EncryptionSettings {
 		private Boolean enabled;
 	    private String pass;
+	    private String cipherStr;
+	    private Integer keySize;
+	    private Boolean ivNeeded;
+	    private Boolean unlimitedNeeded;
 	    
-		public EncryptionSettings(Boolean enabled, String pass) {
+	    public EncryptionSettings(Boolean enabled, String pass) {
+	    	this(enabled, pass, null, null, null, null);
+	    }
+	    
+	    public EncryptionSettings(Boolean enabled, String pass, String cipherStr, Integer keySize, Boolean ivNeeded, Boolean unlimitedNeeded) {
 			this.enabled = enabled;
 			this.pass = pass;
+			this.cipherStr = cipherStr;
+			this.keySize = keySize;
+			this.ivNeeded = ivNeeded;
+			this.unlimitedNeeded = unlimitedNeeded;
 		}
 
-		public boolean isEnabled() {
-			return enabled != null && enabled;
+		public Boolean isEnabled() {
+			return enabled;
 		}
 		
 		public String getPass() {
 			return pass;
+		}
+
+		public String getCipherStr() {
+			return cipherStr;
+		}
+
+		public Integer getKeySize() {
+			return keySize;
+		}
+
+		public Boolean isIvNeeded() {
+			return ivNeeded;
 		}		
+		
+		public Boolean isUnlimitedCryptoNeeded() {
+			return unlimitedNeeded;
+		}
 	}
 
 	public String getDatabaseDir() {
