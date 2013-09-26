@@ -318,8 +318,6 @@ public class SyncDownOperation extends Operation {
 		TransferManager transferManager = config.getConnection().createTransferManager();
 		
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them 
-		// TODO [medium] In case of a RENAME, multichunks are downloaded, but never used!
-		// TODO [medium] In case of a DELETE, multichunks are downloaded, but never used!
 		
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
@@ -353,6 +351,15 @@ public class SyncDownOperation extends Operation {
 		
 		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
 			if (fileHistory.getLastVersion().getType() == FileType.FILE) {
+				
+				switch(fileHistory.getLastVersion().getStatus()) {
+					case DELETED:
+					case RENAMED:
+						continue;
+					default:
+							break;
+				}
+				
 				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
 				
 				if (fileContent == null) {
