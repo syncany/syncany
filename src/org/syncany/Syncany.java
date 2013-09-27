@@ -485,11 +485,17 @@ public class Syncany extends Client {
 	}
 
 	private void runSyncOperation(String[] operationArguments) throws Exception {
-		sync();		
+		// TODO [high] Process up-options and status options
+
+		sync();
+		
+		// TODO [high] Print outcome of uploaded/downloaded files
 	}
 
 	private void runSyncDownOperation(String[] operationArguments) throws Exception {
 		down();		
+		
+		// TODO [high] Print outcome of downloaded files		
 	}
 
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
@@ -571,7 +577,9 @@ public class Syncany extends Client {
 	private void runSyncUpOperation(String[] operationArgs) throws Exception {
 		// Run!
 		SyncUpOperationOptions operationOptions = parseSyncUpOptions(operationArgs);
-		up(operationOptions);		
+		up(operationOptions);	
+		
+		// TODO [high] Print outcome of uploaded files, or print error message if sync up fails (e.g. if --force-checksum is not enabled)
 	}
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
