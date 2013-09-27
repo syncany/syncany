@@ -77,7 +77,7 @@ public class SyncUpOperation extends Operation {
 		}
 		
 		// Find local changes
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, database, new StatusOperationOptions()).execute()).getChangeSet();
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, database, options.getStatusOptions()).execute()).getChangeSet();
 
 		if (!changeSet.hasChanges()) {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
@@ -85,7 +85,7 @@ public class SyncUpOperation extends Operation {
 		}
 		
 		// Find remote changes (unless --force is enabled)
-		if (!options.forceEnabled()) {
+		if (!options.forceUploadEnabled()) {
 			List<RemoteFile> unknownRemoteDatabases = ((RemoteStatusOperationResult) new RemoteStatusOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 			
 			if (unknownRemoteDatabases.size() > 0) {
@@ -157,14 +157,19 @@ public class SyncUpOperation extends Operation {
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localMultiChunkFile.getName());
-			
-			logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
-			transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
-			
-			logger.log(Level.INFO, "  + Removing "+StringUtil.toHex(multiChunkEntry.getId())+" locally ...");
-			localMultiChunkFile.delete();
+			if (dirtyDatabase != null && dirtyDatabase.getMultiChunk(multiChunkEntry.getId()) != null) {
+				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), "+StringUtil.toHex(multiChunkEntry.getId())+" ...");	
+			}
+			else {
+				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localMultiChunkFile.getName());
+				
+				logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
+				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
+				
+				logger.log(Level.INFO, "  + Removing "+StringUtil.toHex(multiChunkEntry.getId())+" locally ...");
+				localMultiChunkFile.delete();
+			}
 		}		
 	}
 
@@ -211,7 +216,7 @@ public class SyncUpOperation extends Operation {
 	
 	private void cleanupOldDatabases(Database database, long newestLocalDatabaseVersion) throws Exception {
 		// Retrieve and sort machine's database versions
-		Map<String, RemoteFile> ownRemoteDatabaseFiles = transferManager.list("db-"+config.getMachineName()+"-");
+		Map<String, RemoteFile> ownRemoteDatabaseFiles = transferManager.list("db-"+config.getMachineName()+"-"); // TODO [low] Use file prefix or other method
 		List<RemoteDatabaseFile> ownDatabaseFiles = new ArrayList<RemoteDatabaseFile>();	
 		
 		for (RemoteFile ownRemoteDatabaseFile : ownRemoteDatabaseFiles.values()) {
@@ -250,7 +255,7 @@ public class SyncUpOperation extends Operation {
 				}
 				
 				if (localVersion < lastMergeDatabaseFile.getClientVersion()) {
-					toDeleteDatabaseFiles.add(new RemoteFile("db-"+config.getMachineName()+"-"+localVersion));
+					toDeleteDatabaseFiles.add(new RemoteFile("db-"+config.getMachineName()+"-"+localVersion)); // TODO [low] Use DatabaseRemoteFile instead
 				}
 			}
 		}
@@ -296,15 +301,24 @@ public class SyncUpOperation extends Operation {
 	}	
 
 	public static class SyncUpOperationOptions implements OperationOptions {
-		private boolean forceEnabled = false;
+		private StatusOperationOptions statusOptions = null;
+		private boolean forceUploadEnabled = false;
 		private boolean cleanupEnabled = true;
 
-		public boolean forceEnabled() {
-			return forceEnabled;
+		public StatusOperationOptions getStatusOptions() {
+			return statusOptions;
 		}
 
-		public void setForceEnabled(boolean forceEnabled) {
-			this.forceEnabled = forceEnabled;
+		public void setStatusOptions(StatusOperationOptions statusOptions) {
+			this.statusOptions = statusOptions;
+		}
+
+		public boolean forceUploadEnabled() {
+			return forceUploadEnabled;
+		}
+
+		public void setForceUploadEnabled(boolean forceUploadEnabled) {
+			this.forceUploadEnabled = forceUploadEnabled;
 		}
 
 		public boolean cleanupEnabled() {

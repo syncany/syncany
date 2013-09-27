@@ -60,6 +60,10 @@ public class ConfigTO {
 		return logDir;
 	}
 
+	public void setLogDir(String logDir) {
+		this.logDir = logDir;
+	}
+	
 	public ConnectionSettings getConnection() {
 		return connection;
 	}

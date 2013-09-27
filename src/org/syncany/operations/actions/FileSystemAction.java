@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
@@ -153,6 +154,7 @@ public abstract class FileSystemAction {
 		FileUtil.renameVia(conflictingLocalFile, newConflictFile);
 	}
 	
+	// TODO [low] This is duplicate code, the indexer also compares a FileVersion to a local file
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());		
 		boolean actualLocalFileExists = actualLocalFile.exists();
@@ -215,13 +217,28 @@ public abstract class FileSystemAction {
 		
 		boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
 		
-		if (isSizeEqual) {
-			return true;
-		}
-		else {
+		if (!isSizeEqual) {
 			logger.log(Level.INFO, "     - Unexpected file detected, size differs: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is "+expectedFileContent.getSize());
 			return false;
-		}		
+		}
+		
+		// Check checksum 
+		try {
+			byte[] actualFileChecksum = FileUtil.createChecksum(actualLocalFile);
+			boolean isChecksumEqual = Arrays.equals(actualFileChecksum, expectedFileContent.getChecksum());
+			
+			if (isChecksumEqual) {
+				return true;
+			}
+			else {
+				logger.log(Level.INFO, "     - Unexpected file detected, checksum differs: "+actualLocalFile+" -> "+StringUtil.toHex(actualFileChecksum)+", expected for "+expectedLocalFileVersion+" -> "+StringUtil.toHex(expectedFileContent.getChecksum()));
+				return false;
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.INFO, "     - Unexpected behavior: Unable to create checksum for local file, assuming differs: "+actualLocalFile);
+			return false;
+		}
 	}
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {

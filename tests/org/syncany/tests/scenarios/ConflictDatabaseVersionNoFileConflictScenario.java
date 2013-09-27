@@ -1,5 +1,6 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 
 import org.junit.Test;
@@ -31,6 +32,6 @@ public class ConflictDatabaseVersionNoFileConflictScenario {
 		clientB.createNewFile("B-NewIndipendentFile.txt",1000);
 		clientB.up();
 		
-		//TODO [HIGH] Dirty-Database version for after-conflict re-upload and re-use of multichunks! 
+		fail("Add some asserts here.");
 	}
 }

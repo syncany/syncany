@@ -16,6 +16,9 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 
+// TODO [high] Implement init --existing repository operation
+// TODO [high] Implement 'repo' file to store encryption settings
+
 public class InitOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());	
 	private InitOperationOptions options;

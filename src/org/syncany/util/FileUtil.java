@@ -295,7 +295,13 @@ public class FileUtil {
     }
     
     public static byte[] readFile(File file) throws IOException {
-        byte[] contents = new byte[(int) file.length()]; // TODO WARNING!!! load file in buffer completely!!
+    	long fileLength = file.length();
+    	
+    	if (fileLength > 20*1024*1024) {
+    		throw new IOException("File is larger than 20 MB. Should not load to memory.");
+    	}
+    	
+        byte[] contents = new byte[(int) fileLength];
 
         FileInputStream fis = new FileInputStream(file);
         fis.read(contents);

@@ -492,10 +492,12 @@ public class Syncany extends Client {
 		down();		
 	}
 
-	private void runStatusOperation(String[] operationArgs) throws Exception {
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
 		StatusOperationOptions operationOptions = new StatusOperationOptions();
 
 		OptionParser parser = new OptionParser();	
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
 		
 		OptionSet options = parser.parse(operationArgs);	
@@ -503,7 +505,12 @@ public class Syncany extends Client {
 		// --force-checksum
 		operationOptions.setForceChecksum(options.has(optionForceChecksum));
 		
+		return operationOptions;
+	}
+	
+	private void runStatusOperation(String[] operationArgs) throws Exception {
 		// Run!
+		StatusOperationOptions operationOptions = parseStatusOptions(operationArgs);
 		ChangeSet changeSet = status(operationOptions);
 				
 		// Output
@@ -537,22 +544,33 @@ public class Syncany extends Client {
 		daemon(operationOptions);
 	}
 
-	private void runSyncUpOperation(String[] operationArgs) throws Exception {
+	private SyncUpOperationOptions parseSyncUpOptions(String[] operationArgs) throws Exception {
+		// Sync up options
 		SyncUpOperationOptions operationOptions = new SyncUpOperationOptions();
 
-		OptionParser parser = new OptionParser();		
+		OptionParser parser = new OptionParser();	
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Void> optionNoCleanup = parser.acceptsAll(asList("c", "no-cleanup"));
-		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
+		OptionSpec<Void> optionForceUpload = parser.acceptsAll(asList("F", "force-upload"));
 		
 		OptionSet options = parser.parse(operationArgs);
+		
+		// status [<args>]
+		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
 		
 		// --no-cleanup
 		operationOptions.setCleanupEnabled(!options.has(optionNoCleanup));
 		
 		// --force
-		operationOptions.setForceEnabled(options.has(optionForce));
+		operationOptions.setForceUploadEnabled(options.has(optionForceUpload));
 		
+		return operationOptions;
+	}
+	
+	private void runSyncUpOperation(String[] operationArgs) throws Exception {
 		// Run!
+		SyncUpOperationOptions operationOptions = parseSyncUpOptions(operationArgs);
 		up(operationOptions);		
 	}
 
@@ -725,8 +743,9 @@ public class Syncany extends Client {
 		System.out.println("      Detect local changes and upload to repo (commit)");
 		System.out.println();
 		System.out.println("      Arguments:");
-		System.out.println("      -f, --force             Force upload even if remote changes exist (will conflict!).");
+		System.out.println("      -F, --force-upload      Force upload even if remote changes exist (will conflict!).");
 		System.out.println("      -c, --no-cleanup        Do not merge own databases in repo.");
+		System.out.println("      -f, --force-checksum    Force checksum comparison, if not enabled mod. date/size is used.");
 		System.out.println();
 		System.out.println("  down");
 		System.out.println("      Detect remote changes and apply locally (update)");

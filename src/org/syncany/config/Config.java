@@ -156,7 +156,8 @@ public class Config {
 	}	
 
 	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
-		// TODO [low] make chunking options configurable			
+		// TODO [low] make chunking options configurable
+		// TODO [low] allow multiple transformers in config, like: trans.1=gzip, trans.2=cipher{opts}, ...
 		chunker = new FixedOffsetChunker(16*1024); //new TTTDChunker(16*1024);// 
 		multiChunker = new ZipMultiChunker(2048*1024);
 		

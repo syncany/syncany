@@ -55,16 +55,16 @@ public class Cache {
 		return getFileInCache(FILE_FORMAT_DATABASE_FILE_ENCRYPTED, name);		
 	}    
 
-    public File createTempFile() throws CacheException {
+    public File createTempFile() throws Exception {
         return createTempFile("temp");
     }
 
-    public File createTempFile(String name) throws CacheException {
+    public File createTempFile(String name) throws Exception {
        try {
            return File.createTempFile(String.format("temp-%s-", name), ".tmp", cacheDir);
        }
        catch (IOException e) {
-           throw new CacheException("Unable to create temporary file in cache.", e);
+           throw new Exception("Unable to create temporary file in cache.", e);
        }
     }
     

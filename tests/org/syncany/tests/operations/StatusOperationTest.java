@@ -9,7 +9,9 @@ import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -78,13 +80,19 @@ public class StatusOperationTest {
 		Config config = TestConfigUtil.createTestLocalConfig();		
 		File testFile = TestFileUtil.createRandomFileInDirectory(config.getLocalDir(), 40);
 		
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setForceChecksum(true);
+
+		SyncUpOperationOptions syncUpOptions = new SyncUpOperationOptions();
+		syncUpOptions.setStatusOptions(statusOptions);			
+		
 		// Perform 'up' and immediately change test file
 		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
-		new SyncUpOperation(config).execute();		
+		new SyncUpOperation(config, null, syncUpOptions).execute();		
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, null, statusOptions).execute()).getChangeSet();						
 		assertEquals(changeSet.getChangedFiles().size(), 1);
 				
 		// Cleanup 

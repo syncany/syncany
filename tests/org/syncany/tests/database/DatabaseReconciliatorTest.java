@@ -357,7 +357,7 @@ public class DatabaseReconciliatorTest {
 		
 		// B
 		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
-			// TODO Fix pruning of machine histories
+			// TODO [lowest] Fix pruning of machine histories -- Is this still an issue?
 			// Explanation: Note, this is the full 'B' history, but it does not include
 			// the 'pruned' histories or invalid parts of pruned histories.
 			// Here: db-b-1 is completely invalid! In other cases, only parts of
@@ -412,7 +412,7 @@ public class DatabaseReconciliatorTest {
 	}				
 	
 	@Test
-	public void testWinnersWinner() throws Exception {	 // TODO Extract this from this class, not related to the scenario
+	public void testWinnersWinner() throws Exception {
 		System.out.println("Winners winner test");
 		System.out.println("----------------");
 		
@@ -479,7 +479,7 @@ public class DatabaseReconciliatorTest {
 	}			
 	
 	@Test
-	public void testWinningBranch() throws Exception {	 // TODO Extract this from this class, not related to the scenario
+	public void testWinningBranch() throws Exception {	
 		System.out.println("Winners winner test");
 		System.out.println("----------------");
 		

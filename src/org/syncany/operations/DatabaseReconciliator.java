@@ -44,7 +44,7 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  *      AND there is a first conflicting database version from the local machine (and possibly more database versions),
  *       (1) these database versions must be pruned/deleted from the local database
  *       (2) and these database versions must be merged somehow in the last winning database version 
- *    - TODO Make an algorithm that constructs the new local history
+ *	  - ...
  *     
  *  In short:
  *    1. Go back to the first conflict of all versions
@@ -148,9 +148,8 @@ public class DatabaseReconciliator {
 	
 	public TreeMap<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(
 			TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
-		// TODO this method curently does not catch the scenario in which two
-		// first winning conflict headers have the same timestamp, this could be
-		// baaad, though very unlikely
+		// TODO [high] this method curently does not catch the scenario in which two first winning conflict headers have the same timestamp
+		//             this could be baaad, though very unlikely
 		DatabaseVersionHeader winningFirstConflictingDatabaseVersionHeader = null;
 
 		// Compare all first conflicting ones and take the one with the EARLIEST
@@ -174,7 +173,7 @@ public class DatabaseReconciliator {
 		}
 
 		// If any, find entries that are GREATER than the winners (= successors)
-		// TODO ugly
+		// TODO [low] Implementation not understandable and ugly
 		List<String> removeWinners = new ArrayList<String>();
 		TreeMap<String, DatabaseVersionHeader> addWinners = new TreeMap<String, DatabaseVersionHeader>();
 
@@ -391,7 +390,7 @@ public class DatabaseReconciliator {
 					logger.log(Level.INFO, "      --> Disconnected branch -- due to previous conflict. Emptying branch contents. SEEMS IRRELEVANT!");
 					reverseStitchedBranch.clear();
 					
-					// TODO Is this right?
+					// TODO [lowest] Is this right? Is this still relevant. Method is deprecated
 				}
 			}
 			

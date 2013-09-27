@@ -40,6 +40,10 @@ public class StatusOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
+		if (options != null && options.isForceChecksum()) {
+			logger.log(Level.INFO, "Force checksum ENABLED.");
+		}
+		
 		Database database = (loadedDatabase != null) 
 				? loadedDatabase
 				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();		
@@ -114,7 +118,7 @@ public class StatusOperation extends Operation {
 						return;
 					}
 					
-					if (!options.isForceChecksum()) {
+					if (options != null && !options.isForceChecksum()) {
 						changeSet.unchangedFiles.add(file);
 						logger.log(Level.FINEST, "- Unchanged file (assuming, --force-checksum disabled): {0}", relativeFilePath);
 

@@ -21,7 +21,7 @@ public class ChangedModifiedDateScenarioTest {
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
-		
+
 		// Run 
 		
 		// A, create two files with identical content and change mod. date of one of them

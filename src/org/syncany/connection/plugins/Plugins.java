@@ -23,8 +23,8 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.syncany.config.Constants;
 import org.syncany.util.ClasspathUtil;
 import org.syncany.util.StringUtil;
 
@@ -33,6 +33,11 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Plugins {
+    public static final Pattern PLUGIN_NAME_REGEX_PLUGIN_INFO = Pattern.compile("org\\.syncany\\.connection\\.plugins\\.([^.]+)\\.[\\w\\d]+Plugin");
+    public static final String PLUGIN_FQCN_PREFIX = "org.syncany.connection.plugins.";
+    public static final String PLUGIN_FQCN_SUFFIX = "Plugin";
+    public static final String PLUGIN_FQCN_PATTERN = PLUGIN_FQCN_PREFIX+"%s.%s"+PLUGIN_FQCN_SUFFIX;
+	
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 	private static boolean loaded = false;
@@ -66,15 +71,15 @@ public class Plugins {
 
 		loaded = true;
 
-		// TODO: Performance!!!!!!
+		// TODO [low] Loading plugins like this is not efficient (better?)
 		for (String className : ClasspathUtil.getClasspathClasses().values()) {
 			// Performance!!
-			if (!className.startsWith(Constants.PLUGIN_FQCN_PREFIX) || !className.endsWith(Constants.PLUGIN_FQCN_SUFFIX)) {
+			if (!className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
 
 				continue;
 			}
 
-			Matcher m = Constants.PLUGIN_NAME_REGEX_PLUGIN_INFO.matcher(className);
+			Matcher m = PLUGIN_NAME_REGEX_PLUGIN_INFO.matcher(className);
 
 			if (!m.matches()) {
 				continue;
@@ -122,7 +127,7 @@ public class Plugins {
 	}
 
 	private static void loadPlugin(String pluginId) {
-		String className = String.format(Constants.PLUGIN_FQCN_PATTERN, pluginId, StringUtil.toCamelCase(pluginId));
+		String className = String.format(PLUGIN_FQCN_PATTERN, pluginId, StringUtil.toCamelCase(pluginId));
 		loadPlugin(pluginId, className);
 	}
 

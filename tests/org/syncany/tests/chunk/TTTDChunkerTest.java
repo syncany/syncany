@@ -68,7 +68,7 @@ public class TTTDChunkerTest {
 		outputCopyOfRandom5MBFileOutputStream.close();
 		
 		// Number of chunks
-		// TODO How to test the number of chunks?
+		// TODO [low] How to test the number of chunks?
 
 		// Checksums
 		byte[] inputFileChecksum = FileUtil.createChecksum(inputRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);

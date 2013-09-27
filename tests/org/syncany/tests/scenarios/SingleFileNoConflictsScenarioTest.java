@@ -6,6 +6,8 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -103,23 +105,27 @@ public class SingleFileNoConflictsScenarioTest {
 	}		
 	
 	@Test
-	public void testSingleFileChangeNoConflicts() throws Exception {
-		// TODO [high] Test fails because StatusOperation is called without --force-checksum, allow in up()
-		
+	public void testSingleFileChangeNoConflicts() throws Exception {		
 		// Setup
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection); 
+		
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setForceChecksum(true);
+
+		SyncUpOperationOptions syncUpOptions = new SyncUpOperationOptions();
+		syncUpOptions.setStatusOptions(statusOptions);		
 
 		// Create files and upload
 		clientA.createNewFile("file");		
-		clientA.up();
+		clientA.up(syncUpOptions);
 		
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
 		
 		clientB.changeFile("file");
-		clientB.up();
+		clientB.up(syncUpOptions);
 		
 		clientA.down();
 		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
@@ -139,9 +145,15 @@ public class SingleFileNoConflictsScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		TestClient clientC = new TestClient("C", testConnection);
 		
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setForceChecksum(true);
+
+		SyncUpOperationOptions syncUpOptions = new SyncUpOperationOptions();
+		syncUpOptions.setStatusOptions(statusOptions);		
+		
 		// Test
 		clientA.createNewFile("1");
-		clientA.up();
+		clientA.up(syncUpOptions);
 		
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("1"), clientB.getLocalFile("1"));
@@ -150,8 +162,8 @@ public class SingleFileNoConflictsScenarioTest {
 		clientA.moveFile("1", "2");
 		assertFileEquals(clientA.getLocalFile("2"), clientB.getLocalFile("1"));
 		
-		clientA.up();
-		clientA.up();
+		clientA.up(syncUpOptions);
+		clientA.up(syncUpOptions);
 		
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("2"), clientB.getLocalFile("2"));
@@ -165,7 +177,7 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		clientC.createNewFile("3");
 		clientC.changeFile("2");
-		clientC.up();
+		clientC.up(syncUpOptions);
 		
 		clientA.down();
 		assertFileEquals(clientC.getLocalFile("3"), clientA.getLocalFile("3"));

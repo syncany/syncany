@@ -84,9 +84,13 @@ public class TestClient extends Client {
 	}
  
 	public File getLocalDatabaseFile() {
-		return new File(config.getDatabaseDir()+File.separator+"local.db");
+		return config.getDatabaseFile();
 	}
 
+	public File getDirtyDatabaseFile() {
+		return config.getDirtyDatabaseFile();
+	}
+	
 	public Database loadLocalDatabase() throws IOException {
 		Database db = new Database();
 		

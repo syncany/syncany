@@ -89,10 +89,12 @@ public class TestConfigUtil {
 		File tempLocalDir = new File(tempClientDir+"/local");
 		File tempCacheDir = new File(tempClientDir+"/app/cache");
 		File tempDatabaseDir = new File(tempClientDir+"/app/db");
+		File tempLogDir = new File(tempClientDir+"/app/logs");
 		
 		tempLocalDir.mkdirs();
 		tempCacheDir.mkdirs();
 		tempDatabaseDir.mkdirs();
+		tempLogDir.mkdirs();
 		
 		// Create transfer object
 		ConfigTO configTO = new ConfigTO();
@@ -101,6 +103,7 @@ public class TestConfigUtil {
 		configTO.setCacheDir(tempCacheDir.getAbsolutePath());
 		configTO.setDatabaseDir(tempDatabaseDir.getAbsolutePath());
 		configTO.setLocalDir(tempLocalDir.getAbsolutePath());
+		configTO.setLogDir(tempLogDir.getAbsolutePath());
 		
 		//configTO.setEncryption(new EncryptionSettings(true, "any password"));
 		configTO.setEncryption(new EncryptionSettings(false, "disabled"));

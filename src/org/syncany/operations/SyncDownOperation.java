@@ -116,9 +116,8 @@ public class SyncDownOperation extends Operation {
 		}
 		else {
 			logger.log(Level.INFO, "- Loading winners database ...");				
-			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache); //readClientDatabase(winnersName, unknownRemoteDatabasesInCache);
+			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
 			
-
 			// Now download and extract multichunks
 			Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, config.getCache());
 			downloadAndExtractMultiChunks(unknownMultiChunks);
@@ -350,20 +349,17 @@ public class SyncDownOperation extends Operation {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();		
 		
 		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
-			if (fileHistory.getLastVersion().getType() == FileType.FILE) {
-				
-				switch(fileHistory.getLastVersion().getStatus()) {
-					case DELETED:
-					case RENAMED:
-						continue;
-					default:
-							break;
-				}
-				
-				FileContent fileContent = database.getContent(fileHistory.getLastVersion().getChecksum());
+			FileVersion lastFileVersion = fileHistory.getLastVersion();
+
+			// TODO [medium] If file has been renamed, all chunks are downloaded
+			// Note: This cannot be fixed by adding a test for RENAMED here, because if a file is completely new to a
+			//       client it is not "RENAMED" for him, it is new. 
+			
+			if (lastFileVersion.getType() == FileType.FILE && lastFileVersion.getStatus() != FileStatus.DELETED) {				
+				FileContent fileContent = database.getContent(lastFileVersion.getChecksum());
 				
 				if (fileContent == null) {
-					fileContent = winnersDatabase.getContent(fileHistory.getLastVersion().getChecksum());
+					fileContent = winnersDatabase.getContent(lastFileVersion.getChecksum());
 				}
 				
 				if (fileContent != null) { // File can be empty!					

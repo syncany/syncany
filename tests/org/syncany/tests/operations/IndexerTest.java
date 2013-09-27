@@ -32,7 +32,7 @@ public class IndexerTest {
 	@Test
 	@Ignore
 	public void testDeduperWithDatabase() throws IOException {
-		// TODO write indexer test
+		// TODO [high] write indexer test
 	}
 
 }
