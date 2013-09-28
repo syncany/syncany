@@ -38,14 +38,15 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
-import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
+import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
@@ -58,17 +59,27 @@ public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
 	
 	private Database localDatabase;
+	private SyncDownOperationOptions options;
+	private SyncDownOperationResult result;
+	
 	private Branch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
 	
 	public SyncDownOperation(Config config) {
-		this(config, null);
+		this(config, null, new SyncDownOperationOptions());
 	}	
 	
 	public SyncDownOperation(Config config, Database database) {
+		this(config, database, new SyncDownOperationOptions());
+	}	
+	
+	public SyncDownOperation(Config config, Database database, SyncDownOperationOptions options) {
 		super(config);
+		
 		this.localDatabase = database;
+		this.options = options;
+		this.result = new SyncDownOperationResult();
 	}	
 	
 	public OperationResult execute() throws Exception {
@@ -84,7 +95,7 @@ public class SyncDownOperation extends Operation {
 		
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
-			return new SyncDownOperationResult(); // TODO [low] Return something here
+			return result;
 		}
 		
 		// 2. Download the remote databases to the local cache folder
@@ -104,7 +115,7 @@ public class SyncDownOperation extends Operation {
 		appyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 		
 		logger.log(Level.INFO, "Sync down done.");		
-		return new SyncDownOperationResult(); // TOOD [low] return something meaningful here		
+		return result;		
 	}		
 	
 	private void appyWinnersBranch(Branch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
@@ -254,6 +265,8 @@ public class SyncDownOperation extends Operation {
 			if (isNewFile) {
 				FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
+
+				result.getChangeSet().getNewFiles().add(winningLastVersion.getFullName());
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Added: "+action);
@@ -263,6 +276,8 @@ public class SyncDownOperation extends Operation {
 				FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
+				result.getChangeSet().getChangedFiles().add(winningLastVersion.getFullName());				
+				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Changed: "+action);
 				}
@@ -270,6 +285,8 @@ public class SyncDownOperation extends Operation {
 			else if (isRenamedFile) {
 				FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
+				
+				result.getChangeSet().getChangedFiles().add(winningLastVersion.getFullName());								
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Renamed: "+action);
@@ -279,14 +296,19 @@ public class SyncDownOperation extends Operation {
 				FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
+				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getFullName());								
+				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Deleted: {0}", action);
 				}
 			}
 			else if (isIdenticalFile) {
+				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getFullName());												
+				
 				if (logger.isLoggable(Level.FINER)) {
-					logger.log(Level.FINER, "      + Identical file. Nothing to do.");			}
+					logger.log(Level.FINER, "      + Identical file. Nothing to do.");	
 				}
+			}
 			else {
 				logger.log(Level.WARNING, "      + THIS SHOULD NOT HAPPEN"); 
 				throw new Exception("Cannot determine file system action!");
@@ -569,7 +591,19 @@ public class SyncDownOperation extends Operation {
 		
 	}	
 
+	public static class SyncDownOperationOptions implements OperationOptions {
+		// Nothing here yet.
+	}
+	
 	public class SyncDownOperationResult implements OperationResult {
-		// TODO [low] Return something for 'down' operation
+		private ChangeSet changeSet = new ChangeSet();
+		
+		public void setChangeSet(ChangeSet ChangeSet) {
+			this.changeSet = ChangeSet;
+		}
+		
+		public ChangeSet getChangeSet() {
+			return changeSet;
+		}
 	}
 }

@@ -33,6 +33,7 @@ public class FixedOffsetChunker extends Chunker {
     private int chunkSize;
     private MessageDigest digest;
     private MessageDigest fileDigest;    
+    private InputStream fileInputStream;
     
     /**
      * 
@@ -55,6 +56,7 @@ public class FixedOffsetChunker extends Chunker {
             this.fileDigest = MessageDigest.getInstance(digestAlg);     
             
             this.fileDigest.reset();
+            this.fileInputStream = null;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -63,7 +65,14 @@ public class FixedOffsetChunker extends Chunker {
   
     @Override
     public Enumeration<Chunk> createChunks(InputStream in) throws IOException {
-        return new FixedChunkEnumeration(in);
+        this.fileInputStream = in;
+    	return new FixedChunkEnumeration(in);
+    }
+    
+    @Override
+    public void close() {
+    	try { fileInputStream.close(); }
+    	catch (Exception e) { /* Not necessary */ }
     }
 
     @Override

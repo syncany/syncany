@@ -24,7 +24,9 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
@@ -41,6 +43,7 @@ public class SyncUpOperation extends Operation {
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
 	private SyncUpOperationOptions options;
+	private SyncUpOperationResult result;
 	private TransferManager transferManager; 
 	private Database loadedDatabase;
 	private Database dirtyDatabase;
@@ -57,6 +60,7 @@ public class SyncUpOperation extends Operation {
 		super(config);		
 		
 		this.options = options;
+		this.result = new SyncUpOperationResult();
 		this.transferManager = config.getConnection().createTransferManager();
 		this.loadedDatabase = database;
 	}
@@ -77,11 +81,12 @@ public class SyncUpOperation extends Operation {
 		}
 		
 		// Find local changes
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, database, options.getStatusOptions()).execute()).getChangeSet();
-
-		if (!changeSet.hasChanges()) {
+		ChangeSet statusChangeSet = ((StatusOperationResult) new StatusOperation(config, database, options.getStatusOptions()).execute()).getChangeSet();
+		result.getStatusResult().setChangeSet(statusChangeSet);
+		
+		if (!statusChangeSet.hasChanges()) {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
-			return new SyncUpOperationResult();
+			return result;
 		}
 		
 		// Find remote changes (unless --force is enabled)
@@ -90,7 +95,7 @@ public class SyncUpOperation extends Operation {
 			
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");
-				return new SyncUpOperationResult();
+				return result;
 			}
 			else {
 				logger.log(Level.INFO, "No remote changes, ready to upload.");
@@ -100,9 +105,7 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
 		}
 		
-		List<File> locallyUpdatedFiles = new ArrayList<File>();
-		locallyUpdatedFiles.addAll(changeSet.getNewFiles());
-		locallyUpdatedFiles.addAll(changeSet.getChangedFiles());
+		List<File> locallyUpdatedFiles = determineLocallyUpdatedFiles(statusChangeSet);
 		
 		// Index
 		DatabaseVersion lastDirtyDatabaseVersion = index(locallyUpdatedFiles, database);
@@ -140,12 +143,51 @@ public class SyncUpOperation extends Operation {
 		}
 		
 		if (config.getDirtyDatabaseFile().exists()) {
-			config.getDirtyDatabaseFile().delete(); // TODO [low] is this correct?
+			config.getDirtyDatabaseFile().delete(); 
 		}
 		
-		return new SyncUpOperationResult();
+		updateResult(lastDirtyDatabaseVersion);
+		
+		return result;
 	}	
 	
+	private List<File> determineLocallyUpdatedFiles(ChangeSet statusChangeSet) {
+		List<File> locallyUpdatedFiles = new ArrayList<File>();
+		
+		for (String relativeFilePath : statusChangeSet.getNewFiles()) {
+			locallyUpdatedFiles.add(new File(config.getLocalDir()+File.separator+relativeFilePath));			
+		}
+		
+		for (String relativeFilePath : statusChangeSet.getChangedFiles()) {
+			locallyUpdatedFiles.add(new File(config.getLocalDir()+File.separator+relativeFilePath));			
+		}
+		
+		return locallyUpdatedFiles;
+	}
+
+	private void updateResult(DatabaseVersion newDatabaseVersion) {
+		ChangeSet changeSet = result.getUploadChangeSet();
+		
+		for (PartialFileHistory partialFileHistory : newDatabaseVersion.getFileHistories()) {
+			FileVersion lastFileVersion = partialFileHistory.getLastVersion();
+			
+			switch (lastFileVersion.getStatus()) {
+				case NEW:
+					changeSet.getNewFiles().add(lastFileVersion.getFullName());
+					break;
+					
+				case CHANGED:
+				case RENAMED:
+					changeSet.getChangedFiles().add(lastFileVersion.getFullName());
+					break;
+					
+				case DELETED:
+					changeSet.getDeletedFiles().add(lastFileVersion.getFullName());
+					break;
+			}			
+		}		
+	}
+
 	private Database loadDirtyDatabase() throws IOException {
 		Database aDirtyDatabase = new Database();
 		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
@@ -255,7 +297,7 @@ public class SyncUpOperation extends Operation {
 				}
 				
 				if (localVersion < lastMergeDatabaseFile.getClientVersion()) {
-					toDeleteDatabaseFiles.add(new RemoteFile("db-"+config.getMachineName()+"-"+localVersion)); // TODO [low] Use DatabaseRemoteFile instead
+					toDeleteDatabaseFiles.add(new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+localVersion)); // TODO [low] Do this differently db-...
 				}
 			}
 		}
@@ -301,7 +343,7 @@ public class SyncUpOperation extends Operation {
 	}	
 
 	public static class SyncUpOperationOptions implements OperationOptions {
-		private StatusOperationOptions statusOptions = null;
+		private StatusOperationOptions statusOptions = new StatusOperationOptions();
 		private boolean forceUploadEnabled = false;
 		private boolean cleanupEnabled = true;
 
@@ -331,6 +373,23 @@ public class SyncUpOperation extends Operation {
 	}
 	
 	public static class SyncUpOperationResult implements OperationResult {
-		// TODO [low] Return something for 'up' operation
+		private StatusOperationResult statusResult = new StatusOperationResult(); 
+		private ChangeSet uploadChangeSet = new ChangeSet();
+		
+		public void setStatusResult(StatusOperationResult statusResult) {
+			this.statusResult = statusResult;
+		}
+		
+		public void setUploadChangeSet(ChangeSet uploadChangeSet) {
+			this.uploadChangeSet = uploadChangeSet;
+		}
+		
+		public StatusOperationResult getStatusResult() {
+			return statusResult;
+		}
+		
+		public ChangeSet getUploadChangeSet() {
+			return uploadChangeSet;
+		}
 	}
 }

@@ -45,8 +45,11 @@ import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.SyncDownOperation.SyncDownOperationOptions;
+import org.syncany.operations.SyncDownOperation.SyncDownOperationResult;
+import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
-import org.syncany.util.FileUtil;
+import org.syncany.operations.SyncUpOperation.SyncUpOperationResult;
 
 public class Syncany extends Client {
 	private static final Logger logger = Logger.getLogger(Syncany.class.getSimpleName());	
@@ -485,17 +488,50 @@ public class Syncany extends Client {
 	}
 
 	private void runSyncOperation(String[] operationArguments) throws Exception {
-		// TODO [high] Process up-options and status options
-
-		sync();
+		SyncOperationOptions operationOptions = parseSyncOptions(operationArguments);		
+		sync(operationOptions);
 		
 		// TODO [high] Print outcome of uploaded/downloaded files
 	}
 
-	private void runSyncDownOperation(String[] operationArguments) throws Exception {
-		down();		
+	private SyncOperationOptions parseSyncOptions(String[] operationArguments) throws Exception {
+		SyncDownOperationOptions syncDownOptions = parseSyncDownOptions(operationArguments);
+		SyncUpOperationOptions syncUpOptions = parseSyncUpOptions(operationArguments);
+
+		SyncOperationOptions syncOptions = new SyncOperationOptions();
+		syncOptions.setSyncDownOptions(syncDownOptions);
+		syncOptions.setSyncUpOptions(syncUpOptions);
 		
-		// TODO [high] Print outcome of downloaded files		
+		return syncOptions;
+	}
+
+	private SyncDownOperationOptions parseSyncDownOptions(String[] operationArguments) {
+		return new SyncDownOperationOptions();
+	}
+
+	private void runSyncDownOperation(String[] operationArguments) throws Exception {
+		SyncDownOperationOptions operationOptions = parseSyncDownOptions(operationArguments);		
+		SyncDownOperationResult operationResult = down(operationOptions);		
+		
+		printSyncDown(operationResult);
+	}
+
+	private void printSyncDown(SyncDownOperationResult operationResult) {
+		ChangeSet changeSet = operationResult.getChangeSet();
+		
+		for (String newFile : changeSet.getNewFiles()) {
+			System.out.println("A "+newFile);
+		}
+
+		for (String changedFile : changeSet.getChangedFiles()) {
+			System.out.println("M "+changedFile);
+		}
+		
+		for (String deletedFile : changeSet.getDeletedFiles()) {
+			System.out.println("D "+deletedFile);
+		}	
+		
+		System.out.println("Sync down finished.");
 	}
 
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
@@ -515,22 +551,24 @@ public class Syncany extends Client {
 	}
 	
 	private void runStatusOperation(String[] operationArgs) throws Exception {
-		// Run!
 		StatusOperationOptions operationOptions = parseStatusOptions(operationArgs);
 		ChangeSet changeSet = status(operationOptions);
-				
-		// Output
-		for (File newFile : changeSet.getNewFiles()) {
-			System.out.println("? "+FileUtil.getRelativePath(config.getLocalDir(), newFile));
+		
+		printStatusResult(changeSet);
+	}
+
+	private void printStatusResult(ChangeSet changeSet) {
+		for (String newFile : changeSet.getNewFiles()) {
+			System.out.println("? "+newFile);
 		}
 
-		for (File changedFile : changeSet.getChangedFiles()) {
-			System.out.println("M "+FileUtil.getRelativePath(config.getLocalDir(), changedFile));
+		for (String changedFile : changeSet.getChangedFiles()) {
+			System.out.println("M "+changedFile);
 		}
 		
-		for (File deletedFile : changeSet.getDeletedFiles()) {
-			System.out.println("D "+FileUtil.getRelativePath(config.getLocalDir(), deletedFile));
-		}	
+		for (String deletedFile : changeSet.getDeletedFiles()) {
+			System.out.println("D "+deletedFile);
+		}			
 	}
 
 	private void runDaemonOperation(String[] operationArgs) throws Exception {
@@ -577,9 +615,25 @@ public class Syncany extends Client {
 	private void runSyncUpOperation(String[] operationArgs) throws Exception {
 		// Run!
 		SyncUpOperationOptions operationOptions = parseSyncUpOptions(operationArgs);
-		up(operationOptions);	
+		SyncUpOperationResult operationResult = up(operationOptions);	
 		
-		// TODO [high] Print outcome of uploaded files, or print error message if sync up fails (e.g. if --force-checksum is not enabled)
+		printSyncUpResult(operationResult);
+	}
+
+	private void printSyncUpResult(SyncUpOperationResult operationResult) {
+		ChangeSet changeSet = operationResult.getUploadChangeSet();
+		
+		for (String newFile : changeSet.getNewFiles()) {
+			System.out.println("A "+newFile);
+		}
+
+		for (String changedFile : changeSet.getChangedFiles()) {
+			System.out.println("M "+changedFile);
+		}
+		
+		for (String deletedFile : changeSet.getDeletedFiles()) {
+			System.out.println("D "+deletedFile);
+		}			
 	}
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
@@ -753,7 +807,8 @@ public class Syncany extends Client {
 		System.out.println("      Arguments:");
 		System.out.println("      -F, --force-upload      Force upload even if remote changes exist (will conflict!).");
 		System.out.println("      -c, --no-cleanup        Do not merge own databases in repo.");
-		System.out.println("      -f, --force-checksum    Force checksum comparison, if not enabled mod. date/size is used.");
+		System.out.println();
+		System.out.println("      In addition to these arguments, all arguments of the 'status'-operation can be used.");
 		System.out.println();
 		System.out.println("  down");
 		System.out.println("      Detect remote changes and apply locally (update)");

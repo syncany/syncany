@@ -69,6 +69,8 @@ public class Deduper {
 					listener.onFileAddChunk(file, chunk);										
 				}
 
+				// Closing file is necessary!
+				chunker.close(); 
 			}
 
 			if (chunk != null) {			

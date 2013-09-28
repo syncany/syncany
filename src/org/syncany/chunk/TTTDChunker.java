@@ -39,7 +39,10 @@ public class TTTDChunker extends Chunker {
     private int windowSize;
     private String digestAlg;
     private String fingerprintAlg;
-    private String name;    
+    private String name;   
+
+    private InputStream fileInputStream;
+    
     
     public TTTDChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize) {
         this(Tmin, Tmax, D, Ddash, windowSize, DEFAULT_DIGEST_ALG, DEFAULT_FINGERPRINT_ALG);
@@ -87,8 +90,15 @@ public class TTTDChunker extends Chunker {
    
     @Override
     public Enumeration<Chunk> createChunks(InputStream in) throws IOException {
+    	this.fileInputStream = in;
         return new TTTDEnumeration(in);
     }
+    
+    @Override
+    public void close() {
+    	try { fileInputStream.close(); }
+    	catch (Exception e) { /* Not necessary */ }
+    }    
 
     @Override
     public String toString() {

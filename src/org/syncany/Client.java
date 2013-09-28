@@ -21,8 +21,13 @@ import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.DaemonOperation;
 import org.syncany.operations.SyncDownOperation;
+import org.syncany.operations.SyncDownOperation.SyncDownOperationOptions;
+import org.syncany.operations.SyncDownOperation.SyncDownOperationResult;
+import org.syncany.operations.SyncOperation;
+import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
+import org.syncany.operations.SyncUpOperation.SyncUpOperationResult;
 
 public class Client {
 	protected static final Logger logger = Logger.getLogger(Client.class.getSimpleName());	
@@ -48,30 +53,37 @@ public class Client {
 		config.getLogDir().mkdirs();
 	}		
 	
-	public void up() throws Exception {
-		new SyncUpOperation(config).execute();
+	public SyncUpOperationResult up() throws Exception {
+		return up(new SyncUpOperationOptions());
 	}
 	
-	public void up(SyncUpOperationOptions options) throws Exception {
-		new SyncUpOperation(config, null, options).execute();
+	public SyncUpOperationResult up(SyncUpOperationOptions options) throws Exception {
+		return (SyncUpOperationResult) new SyncUpOperation(config, null, options).execute();
 	}
 	
-	public void down() throws Exception {
-		new SyncDownOperation(config).execute();
+	public SyncDownOperationResult down() throws Exception {
+		return down(new SyncDownOperationOptions());
+	}
+	
+	public SyncDownOperationResult down(SyncDownOperationOptions options) throws Exception {
+		return (SyncDownOperationResult) new SyncDownOperation(config, null, options).execute();
 	}
 	
 	public void sync() throws Exception {
-		down();
-		up();
-	}
-
-	public ChangeSet status(StatusOperationOptions options) throws Exception {
-		return ((StatusOperationResult) new StatusOperation(config, null, options).execute()).getChangeSet();		
+		sync(new SyncOperationOptions());
 	}
 	
-	public ChangeSet status() throws Exception {
-		return ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();		
+	public void sync(SyncOperationOptions options) throws Exception {
+		new SyncOperation(config, null, options).execute();
 	}
+
+	public ChangeSet status() throws Exception {
+		return status(new StatusOperationOptions());		
+	}
+	
+	public ChangeSet status(StatusOperationOptions options) throws Exception {
+		return ((StatusOperationResult) new StatusOperation(config, null, options).execute()).getChangeSet();		
+	}	
 
 	public List<RemoteFile> remoteStatus() throws Exception {
 		return ((RemoteStatusOperationResult) new RemoteStatusOperation(config).execute()).getUnknownRemoteDatabases();

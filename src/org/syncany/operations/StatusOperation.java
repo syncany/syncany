@@ -55,7 +55,10 @@ public class StatusOperation extends Operation {
 			logger.log(Level.INFO, "- No changes to local database");
 		}
 		
-		return new StatusOperationResult(changeSet);
+		StatusOperationResult statusResult = new StatusOperationResult();
+		statusResult.setChangeSet(changeSet);
+		
+		return statusResult;
 	}		
 
 	private ChangeSet findChangedAndNewFiles(final File root, final Database database) throws FileNotFoundException, IOException {
@@ -85,7 +88,7 @@ public class StatusOperation extends Operation {
 					// Don't do anything if file is folder
 					if (file.isDirectory()) {
 						logger.log(Level.FINEST, "- Unchanged file (directory): {0}", relativeFilePath);						
-						changeSet.unchangedFiles.add(file);
+						changeSet.unchangedFiles.add(relativeFilePath);
 						
 						return;
 					}					
@@ -94,7 +97,7 @@ public class StatusOperation extends Operation {
 					boolean sizeMatches = file.length() == potentiallyMatchingLastFileVersion.getSize();
 					
 					if (!sizeMatches) {
-						changeSet.changedFiles.add(file);
+						changeSet.changedFiles.add(relativeFilePath);
 						logger.log(Level.FINEST, "- Changed file (size, db: {0}, disk: {1}): {2}", new Object[] { potentiallyMatchingLastFileVersion.getSize(), file.length(), relativeFilePath });
 						
 						return;
@@ -104,7 +107,7 @@ public class StatusOperation extends Operation {
 					boolean modifiedDateMatches = file.lastModified() == potentiallyMatchingLastFileVersion.getLastModified().getTime();
 
 					if (!modifiedDateMatches) {
-						changeSet.changedFiles.add(file);
+						changeSet.changedFiles.add(relativeFilePath);
 						logger.log(Level.FINEST, "- Changed file (mod. date, db: {0}, disk: {1}): {2}", new Object[] { potentiallyMatchingLastFileVersion.getLastModified(), new Date(file.lastModified()), relativeFilePath });
 						
 						return;
@@ -112,14 +115,14 @@ public class StatusOperation extends Operation {
 					
 					// Zero-size has not checksum
 					if (file.length() == 0) {
-						changeSet.unchangedFiles.add(file);
+						changeSet.unchangedFiles.add(relativeFilePath);
 						logger.log(Level.FINEST, "- Unchanged file (zero-size!): {0}", relativeFilePath);
 						
 						return;
 					}
 					
 					if (options != null && !options.isForceChecksum()) {
-						changeSet.unchangedFiles.add(file);
+						changeSet.unchangedFiles.add(relativeFilePath);
 						logger.log(Level.FINEST, "- Unchanged file (assuming, --force-checksum disabled): {0}", relativeFilePath);
 
 						return;
@@ -136,22 +139,22 @@ public class StatusOperation extends Operation {
 						byte[] fileChecksum = FileUtil.createChecksum(file, "SHA1"); // TODO [low] The digest could be something else! Get digest from somewhere (Chunker?)
 						
 						if (!Arrays.equals(fileChecksum, potentiallyMatchingLastFileVersion.getChecksum())) {
-							changeSet.changedFiles.add(file);
+							changeSet.changedFiles.add(relativeFilePath);
 							logger.log(Level.FINEST, "- Changed file (checksum!): {0}", relativeFilePath);
 						}
 						else {
-							changeSet.unchangedFiles.add(file);
+							changeSet.unchangedFiles.add(relativeFilePath);
 							logger.log(Level.FINEST, "- Unchanged file (checksum!): {0}", relativeFilePath);
 						}
 					} 
 					catch (Exception e) {
 						// Error: Simply assume file has changed
-						changeSet.changedFiles.add(file);
+						changeSet.changedFiles.add(relativeFilePath);
 						logger.log(Level.FINEST, "- Error when creating checksum, assuming file was changed: {0}", relativeFilePath);
 					}
 				}
 				else {
-					changeSet.newFiles.add(file);
+					changeSet.newFiles.add(relativeFilePath);
 					logger.log(Level.FINEST, "- New file: "+relativeFilePath);
 				}				
 			}			
@@ -186,24 +189,24 @@ public class StatusOperation extends Operation {
 			
 			// If file has VANISHED, mark as DELETED 
 			if (!lastLocalVersionOnDisk.exists()) {
-				changeSet.deletedFiles.add(lastLocalVersionOnDisk);
+				changeSet.deletedFiles.add(lastLocalVersion.getFullName());
 			}
 		}						
 		
 		return changeSet;
 	}
 	
-	public class ChangeSet {
-		private List<File> changedFiles;
-		private List<File> newFiles;
-		private List<File> deletedFiles;
-		private List<File> unchangedFiles;
+	public static class ChangeSet {
+		private List<String> changedFiles;
+		private List<String> newFiles;
+		private List<String> deletedFiles;
+		private List<String> unchangedFiles;
 		
 		public ChangeSet() {
-			changedFiles = new ArrayList<File>();
-			newFiles = new ArrayList<File>();
-			deletedFiles = new ArrayList<File>();
-			unchangedFiles = new ArrayList<File>();
+			changedFiles = new ArrayList<String>();
+			newFiles = new ArrayList<String>();
+			deletedFiles = new ArrayList<String>();
+			unchangedFiles = new ArrayList<String>();
 		}
 		
 		public boolean hasChanges() {
@@ -212,19 +215,19 @@ public class StatusOperation extends Operation {
 				|| deletedFiles.size() > 0;
 		}
 		
-		public List<File> getChangedFiles() {
+		public List<String> getChangedFiles() {
 			return changedFiles;
 		}
 		
-		public List<File> getNewFiles() {
+		public List<String> getNewFiles() {
 			return newFiles;
 		}
 		
-		public List<File> getDeletedFiles() {
+		public List<String> getDeletedFiles() {
 			return deletedFiles;
 		}	
 		
-		public List<File> getUnchangedFiles() {
+		public List<String> getUnchangedFiles() {
 			return unchangedFiles;
 		}	
 	}
@@ -241,10 +244,14 @@ public class StatusOperation extends Operation {
 		}				
 	}
 	
-	public class StatusOperationResult implements OperationResult {
+	public static class StatusOperationResult implements OperationResult {
 		private ChangeSet changeSet;
 
-		public StatusOperationResult(ChangeSet changeSet) {
+		public StatusOperationResult() {
+			changeSet = new ChangeSet();
+		}
+		
+		public void setChangeSet(ChangeSet changeSet) {
 			this.changeSet = changeSet;
 		}
 

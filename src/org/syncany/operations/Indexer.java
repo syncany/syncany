@@ -61,8 +61,7 @@ public class Indexer {
 	}
 	
 	private void addDirtyChunkData(DatabaseVersion newDatabaseVersion) {
-		logger.log(Level.INFO, "- Adding dirty chunks/multichunks/file contents (from dirty databasefor ()) ...");
-		// TODO [high] Is this correct? write test for dirty.db
+		logger.log(Level.INFO, "- Adding dirty chunks/multichunks/file contents (from dirty database) ...");
 		for (DatabaseVersion dirtyDatabaseVersion : dirtyDatabase.getDatabaseVersions()) {
 			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getChunks().size()+" chunks ...");
 			for (ChunkEntry dirtyChunk : dirtyDatabaseVersion.getChunks()) {

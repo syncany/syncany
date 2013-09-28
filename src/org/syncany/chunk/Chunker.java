@@ -41,9 +41,8 @@ public abstract class Chunker {
     public Enumeration<Chunk> createChunks(File file) throws IOException {
         return createChunks(new FileInputStream(file));
     }
-    
+        
     public abstract Enumeration<Chunk> createChunks(InputStream is) throws IOException;
-    
-    @Override
-    public abstract String toString();    
+	public abstract void close();         
+    public abstract String toString();
 }
