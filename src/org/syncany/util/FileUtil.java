@@ -32,16 +32,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileUtil {
-    private static final Logger logger = Logger.getLogger(FileUtil.class.getSimpleName());    
-
     public static String getRelativePath(File base, File file) {
         //System.err.println("rel path = base = "+base.getAbsolutePath() + " - file: "+file.getAbsolutePath()+ " ---> ");
         if (base.getAbsolutePath().length() >= file.getAbsolutePath().length()) {
@@ -164,119 +160,7 @@ public class FileUtil {
             return file;
         }
     }
-
-    public static boolean renameVia(File fromFile, File toFile) {
-        return renameVia(fromFile, toFile, ".ignore-rename-to-");
-    }
-
-    public static boolean renameVia(File fromFile, File toFile, String viaPrefix) {
-        File tempFile = new File(toFile.getParentFile().getAbsoluteFile() + File.separator + viaPrefix + toFile.getName());
-        FileUtil.deleteRecursively(tempFile); // just in case!	
-
-        if (!fromFile.renameTo(tempFile)) {
-            return false;
-        }
-
-        if (!tempFile.renameTo(toFile)) {
-            tempFile.renameTo(fromFile);
-            return false;
-        }
-
-        return true;
-    }
     
-    public static boolean deleteVia(File file) {
-        return deleteVia(file, ".ignore-delete-from-");
-    }
-    
-    public static boolean deleteVia(File file, String viaPrefix) {
-        File tempFile = new File(file.getParentFile().getAbsoluteFile() + File.separator + viaPrefix + file.getName());
-        FileUtil.deleteRecursively(tempFile); // just in case!	
-
-        if (!file.renameTo(tempFile)) {
-            return false;
-        }
-
-        if (!tempFile.delete()) {
-            // If DELETE not successful; rename it back to the original filename
-            tempFile.renameTo(file);
-            return false;
-        }
-        
-        return true;
-    }        
-    
-    public static boolean mkdirVia(File folder) {
-        return mkdirVia(folder, ".ignore-mkdir-");
-    }
-    
-    public static boolean mkdirVia(File folder, String viaPrefix) {
-        if (folder.exists()) {
-            return true;
-        }
-        
-        File canonFolder = null;
-        
-        try {
-            canonFolder = folder.getCanonicalFile();
-        } 
-        catch (IOException e) {
-            return false;
-        }
-        
-        if (!canonFolder.getParentFile().exists()) {
-            return false;
-        }
-        
-        File tempFolder = new File(canonFolder.getParentFile()+File.separator+viaPrefix+canonFolder.getName());
-        tempFolder.delete(); // Just in case
-        
-        if (!tempFolder.mkdir()) {
-            return false;
-        }
-        
-        if (!tempFolder.renameTo(canonFolder)) {
-            tempFolder.delete();
-            return false;
-        }
-        
-        return true;
-    }
-    public static boolean mkdirsVia(File folder) {
-        return mkdirsVia(folder, ".ignore-mkdirs-");
-    }
-    
-    public static boolean mkdirsVia(File folder, String viaPrefix) {
-        if (folder.exists()) {
-            return true;
-        }
- 
-        File canonFolder = null;
-        
-        try {
-            canonFolder = folder.getCanonicalFile();
-        } 
-        catch (IOException e) {
-            if (logger.isLoggable(Level.WARNING)) {
-                logger.log(Level.WARNING, "Could not get canonical file for folder "+folder, e);
-            }
-            
-            return false;
-        }
-        
-        if (!canonFolder.getParentFile().exists()) {
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, "{0} does not exist. creating.", canonFolder.getParentFile());
-            }
-                
-            if (!mkdirsVia(canonFolder.getParentFile(), viaPrefix)) {
-                return false;
-            }
-        }
-        
-        return mkdirVia(canonFolder, viaPrefix);
-    }    
-
     public static void copy(File src, File dst) throws IOException {
         copy(new FileInputStream(src), new FileOutputStream(dst));
     }

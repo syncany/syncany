@@ -25,6 +25,7 @@ import org.syncany.operations.SyncDownOperation.SyncDownOperationOptions;
 import org.syncany.operations.SyncDownOperation.SyncDownOperationResult;
 import org.syncany.operations.SyncOperation;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;
+import org.syncany.operations.SyncOperation.SyncOperationResult;
 import org.syncany.operations.SyncUpOperation;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
 import org.syncany.operations.SyncUpOperation.SyncUpOperationResult;
@@ -69,12 +70,12 @@ public class Client {
 		return (SyncDownOperationResult) new SyncDownOperation(config, null, options).execute();
 	}
 	
-	public void sync() throws Exception {
-		sync(new SyncOperationOptions());
+	public SyncOperationResult sync() throws Exception {
+		return sync(new SyncOperationOptions());
 	}
 	
-	public void sync(SyncOperationOptions options) throws Exception {
-		new SyncOperation(config, null, options).execute();
+	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
+		return (SyncOperationResult) new SyncOperation(config, null, options).execute();
 	}
 
 	public ChangeSet status() throws Exception {

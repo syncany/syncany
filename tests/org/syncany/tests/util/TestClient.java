@@ -97,7 +97,6 @@ public class TestClient extends Client {
 		DatabaseDAO dao = new DatabaseXmlDAO();
 		dao.load(db, getLocalDatabaseFile());
 		
-		return db;
-		
+		return db;		
 	}	
 }

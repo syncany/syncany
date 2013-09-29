@@ -255,7 +255,7 @@ public class DatabaseReconciliator {
 
 				if (machinePosition >= machineDatabaseVersionHeaders.size()) {
 					// Eliminate machine in current loop
-					// TODO [high] Eliminate machine in current loop, is this correct?
+					// TODO [low] Eliminate machine in current loop, is this correct?
 					machineBranchPositionIterator.put(machineName, null);
 					machineInRaceCount--;
 					

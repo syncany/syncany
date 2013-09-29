@@ -1,12 +1,19 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.database.Database;
+import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -16,12 +23,15 @@ public class FileVanishedScenarioTest {
 	// TODO [low] If a file has vanished, are its chunks and multichunks still added to the database, and then uploaded? If so, fix this!
 	
 	@Test
-	public void testManyRenames() throws Exception {
+	public void testCallUpWhileDeletingFiles() throws Exception {
 		// Setup 
 		final Connection testConnection = TestConfigUtil.createTestLocalConnection();
 		final TestClient clientA = new TestClient("A", testConnection);
-		final int numFiles = 10;
-		final int sizeFiles = 5000*1024;
+		final TestClient clientB = new TestClient("B", testConnection);
+		final int numFiles = 100;
+		final int numFilesVanished = 50;
+		final int numFilesRemaining = numFiles - numFilesVanished;
+		final int sizeFiles = 500*1024;
 		
 		// Prepare by creating test files
 		logger.log(Level.INFO, "Creating test files ...");
@@ -34,8 +44,10 @@ public class FileVanishedScenarioTest {
 		Thread deleteFilesThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				for (int i=numFiles; i>=0; i--) {
+				for (int i=numFiles; i>=numFilesVanished; i--) {
 					clientA.deleteFile("A-original"+i);
+					try { Thread.sleep(50); }
+					catch (Exception e) { }
 				}
 			}			
 		});
@@ -47,6 +59,7 @@ public class FileVanishedScenarioTest {
 					clientA.up();
 				}
 				catch (Exception e) {
+					e.printStackTrace();
 					fail(e.getMessage());
 				}				
 			}			
@@ -65,9 +78,36 @@ public class FileVanishedScenarioTest {
 		runUpThread.join();
 		deleteFilesThread.join();
 		
-		fail("Some asserts please");
+		// Test 1: There should be between 50 and 100 file histories in the database
+		Database databaseClientA = clientA.loadLocalDatabase();
+		
+		assertTrue("There should be less file histories than originally added files.", databaseClientA.getFileHistories().size() < numFiles);
+		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistories().size() >= numFilesRemaining);
+		
+		// Test 2: Now up the rest, there should be exactly 50 files in the database
+		clientA.up();		
+		databaseClientA = clientA.loadLocalDatabase();
+		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, getNumNotDeletedFileHistories(databaseClientA));
+		
+		// Test 3: After that, the sync between the clients should of course still work
+		clientB.down();
+		assertFileListEquals("Files of both clients should be identical.", clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
 		
 		// Tear down
 		clientA.cleanup();
+		clientB.cleanup();
+	}
+	
+	private int getNumNotDeletedFileHistories(Database db) {
+		int numNotDeletedFileHistories = 0;
+		
+		for (PartialFileHistory fileHistory : db.getFileHistories()) {
+			if (fileHistory.getLastVersion().getStatus() != FileStatus.DELETED) {
+				numNotDeletedFileHistories++;
+			}
+		}
+		
+		return numNotDeletedFileHistories;
 	}
 }

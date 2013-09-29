@@ -70,5 +70,5 @@ public class Logging {
 		while (Logger.getLogger("").getHandlers().length > 0) {
 			Logger.getLogger("").removeHandler(Logger.getLogger("").getHandlers()[0]);
 		}
-	}
+	}	
 }

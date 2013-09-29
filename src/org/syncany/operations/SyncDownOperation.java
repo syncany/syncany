@@ -59,7 +59,7 @@ public class SyncDownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
 	
 	private Database localDatabase;
-	private SyncDownOperationOptions options;
+	@SuppressWarnings("unused")	private SyncDownOperationOptions options;
 	private SyncDownOperationResult result;
 	
 	private Branch localBranch;
@@ -182,18 +182,13 @@ public class SyncDownOperation extends Operation {
 				logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
 				localDatabase.removeDatabaseVersion(databaseVersion);
 				
-				RemoteFile remoteFileToPrune = new RemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
+				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
 				logger.log(Level.INFO, "    * Deleting remote database file "+remoteFileToPrune+" ...");
 				transferManager.delete(remoteFileToPrune);
-				
-				// TODO [high] Also delete multichunks from this database version (OR better yet: reuse multichunks somehow!) 
 			}
 			
 			logger.log(Level.INFO, "    * Saving dirty database to "+config.getDirtyDatabaseFile()+" ...");
 			saveLocalDatabase(dirtyDatabase, config.getDirtyDatabaseFile());
-			
-			// TODO [medium] currently the loser deletes all its databases. It would be nicer if the old database versions could be marked as "old" so the branch is not forever lost, but it can be recreated later 
-			//XXXXXXXXXXXXXXXXXXXXXXXXX
 		}
 		
 	}

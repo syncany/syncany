@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +30,8 @@ import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class TestAssertUtil {
+	private static final Logger logger = Logger.getLogger(TestAssertUtil.class.getSimpleName());
+	
 	public static void assertCollectionEquals(String message, Collection<? extends Object> expected, Collection<? extends Object> actual) {
 		assertEquals(message+": Different amount of objects.", expected.size(), actual.size());
 		
@@ -115,7 +119,7 @@ public class TestAssertUtil {
 		assertArrayEquals(message+": Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);		
 	}
 	
-	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {
+	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
 		Database expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
 		Database actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
 		
@@ -123,6 +127,10 @@ public class TestAssertUtil {
 	}
 
 	public static void assertDatabaseEquals(Database expectedDatabase, Database actualDatabase) {
+		logger.log(Level.INFO, "--");
+		logger.log(Level.INFO, "Now comparing two databases.");
+		logger.log(Level.INFO, "DON'T WORRY. This can take a long time or even overload the heap space.");
+		
 		List<DatabaseVersion> writtenDatabaseVersions = expectedDatabase.getDatabaseVersions();
 		List<DatabaseVersion> readDatabaseVersions = actualDatabase.getDatabaseVersions();
 		
@@ -142,6 +150,9 @@ public class TestAssertUtil {
 			
 			assertDatabaseVersionEquals(writtenDatabaseVersion, readDatabaseVersion);
 		}
+
+		logger.log(Level.INFO, "End of comparing databases");		
+		logger.log(Level.INFO, "--");		
 	}	
 	
 	public static void assertDatabaseVersionEquals(DatabaseVersion expectedDatabaseVersion, DatabaseVersion actualDatabaseVersion) {

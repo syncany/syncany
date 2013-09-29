@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 
@@ -266,12 +267,14 @@ public class TestFileUtil {
 		fos.close();			
 	}
 	
-	public static void moveFilesIntoSubdirectory(File folder, String subDirName){
+	public static void moveFilesIntoSubdirectory(File folder, String subDirName) throws IOException{
 		File subDir = new File(folder, subDirName);
 		subDir.mkdir();
-		for(File file : folder.listFiles()){
-			if(file.isFile())
-				file.renameTo(new File(subDir, file.getName())); // TODO [low] renameTo() does not work when the two files are on different file systems. Use FileUtils.move() instead (Commons IO)
+		
+		for(File file : folder.listFiles()) {
+			if (file.isFile()) {
+				FileUtils.moveFile(file, new File(subDir, file.getName()));
+			}
 		}
 	}
 	

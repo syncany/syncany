@@ -2,6 +2,7 @@ package org.syncany.operations.actions;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -10,6 +11,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
@@ -101,7 +103,7 @@ public abstract class FileSystemAction {
 			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
 			logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
 			
-			FileUtil.renameVia(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
+			FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
 		}
 		
 		// Folder
@@ -109,11 +111,11 @@ public abstract class FileSystemAction {
 			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
 			
 			logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
-			FileUtil.mkdirsVia(reconstructedFilesAtFinalLocation);
+			reconstructedFilesAtFinalLocation.mkdirs();
 		}									
 	}
 	
-	protected void createConflictFile(FileVersion conflictingLocalVersion) {
+	protected void createConflictFile(FileVersion conflictingLocalVersion) throws IOException {
 		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getFullName());
 		
 		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictingLocalFile);
@@ -151,7 +153,7 @@ public abstract class FileSystemAction {
 		File newConflictFile = new File(conflictDirectory+File.separator+newFullName);
 		
 		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
-		FileUtil.renameVia(conflictingLocalFile, newConflictFile);
+		FileUtils.moveFile(conflictingLocalFile, newConflictFile);
 	}
 	
 	// TODO [low] This is duplicate code, the indexer also compares a FileVersion to a local file

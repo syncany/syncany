@@ -17,10 +17,6 @@
  */
 package org.syncany.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
 
 /**
  *
@@ -56,24 +52,7 @@ public class StringUtil {
 									    : 1));
 
         return distance[str1.length()][str2.length()];
-    }  
-    
-    public static String join(Collection<String> strings, String delimiter) {
-        return join((String[]) strings.toArray(new String[0]), delimiter);
-    }
-
-    public static String join(Object[] objects, String delimiter) {
-    StringBuilder result = new StringBuilder();
-
-    for (int i=0; i<objects.length; i++) {
-        result.append(objects[i]);
-
-        if (i != objects.length-1)
-        result.append(delimiter);
-    }
-
-        return result.toString();
-    }
+    }        
 
     public static String toCamelCase(String str) {
         StringBuilder sb = new StringBuilder();
@@ -119,41 +98,5 @@ public class StringUtil {
         }
         
         return data;        
-    } 
-            
-    public static int count(String text, String search) {
-        int count = 0;
-        
-        for (int fromIndex = 0; fromIndex > -1; count++) {
-            fromIndex = text.indexOf(search, fromIndex + ((count > 0) ? 1 : 0));
-        }
-        
-        return count - 1;                
-    }    
-    
-    public static String readStream(InputStream in, String charsetName) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        
-        // Performance tests say 4K is the fastest (sschellh)
-        byte[] buf = new byte[4096];
-
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            bos.write(buf, 0, len);
-        }
-
-        in.close();
-        return bos.toString(charsetName);
-    }    
-    
-    public static Integer parseInt(String value, Integer defaultValue) {
-        try {
-            return Integer.parseInt(value);
-        }        
-        catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-
+    }                
 }

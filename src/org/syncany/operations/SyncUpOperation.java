@@ -108,14 +108,14 @@ public class SyncUpOperation extends Operation {
 		List<File> locallyUpdatedFiles = determineLocallyUpdatedFiles(statusChangeSet);
 		
 		// Index
-		DatabaseVersion lastDirtyDatabaseVersion = index(locallyUpdatedFiles, database);
+		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles, database);
 		
-		if (lastDirtyDatabaseVersion.getFileHistories().size() == 0) {
+		if (newDatabaseVersion.getFileHistories().size() == 0) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 		}
 		else {
-			logger.log(Level.INFO, "Adding newest database version "+lastDirtyDatabaseVersion.getHeader()+" to local database ...");
-			database.addDatabaseVersion(lastDirtyDatabaseVersion);
+			logger.log(Level.INFO, "Adding newest database version "+newDatabaseVersion.getHeader()+" to local database ...");
+			database.addDatabaseVersion(newDatabaseVersion);
 	
 			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ...");
 			saveLocalDatabase(database, config.getDatabaseFile());
@@ -123,14 +123,14 @@ public class SyncUpOperation extends Operation {
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			uploadMultiChunks(database.getLastDatabaseVersion().getMultiChunks());
 			
-			long newestLocalDatabaseVersion = lastDirtyDatabaseVersion.getVectorClock().get(config.getMachineName());
+			long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().get(config.getMachineName());
 
 			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
 			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
 
 			logger.log(Level.INFO, "Saving local delta database file ...");
-			logger.log(Level.INFO, "- Saving versions from: "+lastDirtyDatabaseVersion.getHeader()+", to: "+lastDirtyDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
-			saveLocalDatabase(database, lastDirtyDatabaseVersion, lastDirtyDatabaseVersion, localDeltaDatabaseFile);
+			logger.log(Level.INFO, "- Saving versions from: "+newDatabaseVersion.getHeader()+", to: "+newDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
+			saveLocalDatabase(database, newDatabaseVersion, newDatabaseVersion, localDeltaDatabaseFile);
 			
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
 			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
@@ -146,7 +146,7 @@ public class SyncUpOperation extends Operation {
 			config.getDirtyDatabaseFile().delete(); 
 		}
 		
-		updateResult(lastDirtyDatabaseVersion);
+		updateResult(newDatabaseVersion);
 		
 		return result;
 	}	

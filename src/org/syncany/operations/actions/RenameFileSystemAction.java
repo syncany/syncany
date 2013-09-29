@@ -3,10 +3,10 @@ package org.syncany.operations.actions;
 import java.io.File;
 import java.util.logging.Level;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
-import org.syncany.util.FileUtil;
 
 public class RenameFileSystemAction extends FileSystemAction {
 	public RenameFileSystemAction(Config config, FileVersion from, FileVersion to, Database localDatabase, Database winningDatabase) {
@@ -24,7 +24,7 @@ public class RenameFileSystemAction extends FileSystemAction {
 			File toFileOnDisk = getAbsolutePathFile(fileVersion2.getFullName());			
 			
 			logger.log(Level.INFO, "     - Renaming file "+fromFileOnDisk+" to "+toFileOnDisk+" ...");				
-			FileUtil.renameVia(fromFileOnDisk, toFileOnDisk);						
+			FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);						
 		}			
 	}	
 	
