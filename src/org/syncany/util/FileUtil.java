@@ -396,8 +396,7 @@ public class FileUtil {
 	}
 	
 	public static String toDatabaseFilePath(String path) {
-		return path.replaceAll(Matcher.quoteReplacement("\\"), "/");
-	}
-
+		return path.replaceAll("\\\\", "/");
+	}	
 }
 
