@@ -21,6 +21,7 @@ import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.VectorClock.VectorClockComparison;
+import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -157,7 +158,7 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					out.print(" version=\""+fileVersion.getVersion()+"\"");
 					out.print(" type=\""+fileVersion.getType()+"\"");
 					out.print(" status=\""+fileVersion.getStatus()+"\"");					
-					out.print(" path=\""+fileVersion.getPath()+"\"");
+					out.print(" path=\""+FileUtil.toDatabaseFilePath(fileVersion.getPath())+"\"");
 					out.print(" name=\""+fileVersion.getName()+"\"");
 					out.print(" size=\""+fileVersion.getSize()+"\"");
 					

@@ -394,6 +394,10 @@ public class FileUtil {
 		fis.close();
 		return complete.digest();
 	}
+	
+	public static String toDatabaseFilePath(String path) {
+		return path.replaceAll(Matcher.quoteReplacement("\\"), "/");
+	}
 
 }
 
