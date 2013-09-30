@@ -17,16 +17,15 @@
  */
 package org.syncany.util;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,52 +160,6 @@ public class FileUtil {
         }
     }
     
-    public static void copy(File src, File dst) throws IOException {
-        copy(new FileInputStream(src), new FileOutputStream(dst));
-    }
-
-    public static void copy(InputStream in, OutputStream out) throws IOException {
-        // Performance tests say 4K is the fastest (sschellh)
-        byte[] buf = new byte[4096];
-
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
-
-        in.close();
-        out.close();
-    }
-    
-    public static byte[] readFile(File file) throws IOException {
-    	long fileLength = file.length();
-    	
-    	if (fileLength > 20*1024*1024) {
-    		throw new IOException("File is larger than 20 MB. Should not load to memory.");
-    	}
-    	
-        byte[] contents = new byte[(int) fileLength];
-
-        FileInputStream fis = new FileInputStream(file);
-        fis.read(contents);
-        fis.close();
-
-        return contents;
-    }
-    
-    public static String readFileToString(File file) throws IOException {
-    	StringBuffer fileData = new StringBuffer();
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		char[] buf = new char[1024];
-		int numRead=0;
-		while((numRead=reader.read(buf)) != -1){
-			String readData = String.valueOf(buf, 0, numRead);
-			fileData.append(readData);
-		}
-		reader.close();
-		
-		return fileData.toString();
-    }
 
     public static void writeToFile(byte[] bytes, File file) throws IOException {
         writeToFile(new ByteArrayInputStream(bytes), file);
@@ -241,22 +194,6 @@ public class FileUtil {
         inputStream.close();
     }
 
-    public static boolean deleteRecursively(File file) {
-        boolean success = true;
-
-        if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                success = (f.isDirectory()) 
-                    ? success && deleteRecursively(f)
-                    : success && f.delete();
-            }
-        }
-
-        success = success && file.delete();
-        return success;
-    }
-    
-
 	public static byte[] createChecksum(File file) throws Exception {
 		return createChecksum(file, "SHA1");
 	}
@@ -282,5 +219,33 @@ public class FileUtil {
 	public static String toDatabaseFilePath(String path) {
 		return path.replaceAll("\\\\", "/");
 	}	
+	
+	public static boolean isFileLocked(File file) {
+		if (!file.exists()) {
+			return false;
+		}
+		
+		if (file.isDirectory()) {
+			return false;
+		}
+		
+		RandomAccessFile randomAccessFile = null;
+		boolean fileLocked = false;
+		
+		try {
+			randomAccessFile = new RandomAccessFile(file, "rw");
+		}
+		catch (Exception e) {
+		    fileLocked = true;
+		}
+		finally {				
+		    if (randomAccessFile != null) {
+				try { randomAccessFile.close(); }
+				catch (IOException e) { /* Nothing */ }
+		    }
+		}
+			
+		return fileLocked;
+	}
 }
 

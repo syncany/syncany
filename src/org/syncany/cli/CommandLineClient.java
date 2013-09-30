@@ -646,7 +646,7 @@ public class CommandLineClient extends Client {
 	}
 
 	private void printSyncUpResult(SyncUpOperationResult operationResult) {
-		ChangeSet changeSet = operationResult.getUploadChangeSet();
+		ChangeSet changeSet = operationResult.getChangeSet();
 		
 		if (changeSet.hasChanges()) {			
 			for (String newFile : changeSet.getNewFiles()) {

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigTO;
@@ -55,7 +56,7 @@ public class TestConfigUtil {
 		clientSettings.put("configFile", tempConfigFile.getAbsolutePath());
 		
 		// Make config file from skeleton
-		String configJsonSkel = FileUtil.readFileToString(new File("tests/config-local.json.skel"));		
+		String configJsonSkel = FileUtils.readFileToString(new File("tests/config-local.json.skel"));		
 		String configJson = configJsonSkel;
 		
 		for (Map.Entry<String, String> clientSetting : clientSettings.entrySet()) {

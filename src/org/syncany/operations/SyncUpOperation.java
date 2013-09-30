@@ -166,7 +166,7 @@ public class SyncUpOperation extends Operation {
 	}
 
 	private void updateResult(DatabaseVersion newDatabaseVersion) {
-		ChangeSet changeSet = result.getUploadChangeSet();
+		ChangeSet changeSet = result.getChangeSet();
 		
 		for (PartialFileHistory partialFileHistory : newDatabaseVersion.getFileHistories()) {
 			FileVersion lastFileVersion = partialFileHistory.getLastVersion();
@@ -388,7 +388,7 @@ public class SyncUpOperation extends Operation {
 			return statusResult;
 		}
 		
-		public ChangeSet getUploadChangeSet() {
+		public ChangeSet getChangeSet() {
 			return uploadChangeSet;
 		}
 	}

@@ -22,10 +22,12 @@ public class Deduper {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		
-		listener.onStart();
-		
 		for (File file : files) {
-			listener.onFileStart(file);
+			boolean fileAllowed = listener.onFileStart(file);
+			
+			if (!fileAllowed) {
+				continue;
+			}
 
 			if (file.isFile()) {
 				// Create chunks from file
@@ -91,8 +93,6 @@ public class Deduper {
 			listener.onCloseMultiChunk(multiChunk);
 
 			multiChunk = null;
-		}
-		
-		listener.onFinish();
+		}		
 	}	
 }

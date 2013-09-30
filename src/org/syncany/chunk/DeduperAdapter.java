@@ -3,10 +3,7 @@ package org.syncany.chunk;
 import java.io.File;
 
 public abstract class DeduperAdapter implements DeduperListener {
-	public void onFinish() { }
-	public void onStart() { }
-	
-	public void onFileStart(File file) { } 
+	public boolean onFileStart(File file) { return true; } 
 	public void onFileAddChunk(File file, Chunk chunk) { }
 	public void onFileEnd(File file, byte[] checksum) { }
 		

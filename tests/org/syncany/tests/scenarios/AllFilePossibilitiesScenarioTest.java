@@ -1,7 +1,5 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 public class AllFilePossibilitiesScenarioTest {
@@ -14,7 +12,7 @@ public class AllFilePossibilitiesScenarioTest {
 		 * - content
 		 * - name
 		 * - path
-		 * 
+		 * - permissions (linux / windows)
 		 * 
 		 * create file
 		 * move file
@@ -33,19 +31,17 @@ public class AllFilePossibilitiesScenarioTest {
 		 * move file to subfolder
 		 * move folder to subfolder
 		 * 
-		 * (create symlink)
-		 * (change symlink target)
-		 * (delete symlink)
+		 * (create symlink folder)
+		 * (change symlink folder target)
+		 * (delete symlink folder)
 		 * 
 		 * file vanishes during index process
-		 * folder vanies during index process
+		 * folder vanishes during index process
 		 * 
 		 * file is changed during sync down operation 
+		 * file is changed during sync up operation
 		 * 
-		 * 
-		 */
-		
-		
-		fail("Nothing here yet.");
+		 * file permission denied
+		 */		
 	}
 }

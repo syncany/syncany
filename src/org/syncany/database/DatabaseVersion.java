@@ -175,7 +175,7 @@ public class DatabaseVersion {
 
 	@Override
 	public String toString() {
-		return "DatabaseVersion [header=" + header + ", chunks=" + chunks + ", multiChunks=" + multiChunks + ", fileContents=" + fileContents
-				+ ", fileHistories=" + fileHistories + ", chunkMultiChunkCache=" + chunkMultiChunkCache + "]";
+		return "DatabaseVersion [header=" + header + ", chunks=" + chunks.size() + ", multiChunks=" + multiChunks.size() + ", fileContents=" + fileContents.size()
+				+ ", fileHistories=" + fileHistories.size() + "]";
 	}    
 }

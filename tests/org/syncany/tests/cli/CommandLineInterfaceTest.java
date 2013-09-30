@@ -100,14 +100,14 @@ public class CommandLineInterfaceTest {
 		cli.start();
 		
 		logger.log(Level.INFO, "CLI output: ");
-		logger.log(Level.INFO, toString(cliOut));		
+		logger.log(Level.INFO, toString(cliOut));			
 		
 		// Test output
 		String out[] = toStringArray(cliOut);
 
-		assertEquals("Different number of output lines expected.", 3, out.length);
-		assertEquals("A somefolder1", out[0]);
-		assertEquals("A somefolder2", out[1]);
+		assertEquals("Different number of output lines expected.", 2, out.length);
+		assertEquals("? somefolder1", out[0]);
+		assertEquals("? somefolder2", out[1]);
 		
 		// Cleanup
 		TestConfigUtil.deleteTestLocalConfigAndData(clientA);		

@@ -126,7 +126,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
             }
 
             // Read file entirely
-            byte[] fileBytes = FileUtil.readFile(localFile); // TODO [medium] WARNING! Read ENTIRE file! Note: This breaks at 20MB!
+            byte[] fileBytes = FileUtils.readFileToByteArray(localFile); // TODO [medium] WARNING! Read ENTIRE file!
 
             StorageObject fileObject = new StorageObject(remoteFile.getName(), fileBytes);
             

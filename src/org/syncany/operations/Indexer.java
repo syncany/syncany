@@ -119,31 +119,36 @@ public class Indexer {
 		private MultiChunkEntry multiChunkEntry;	
 		private FileContent fileContent;
 		
+		private FileProperties startFileProperties;
+		private FileProperties endFileProperties;		
+		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 		}				
 
 		@Override
-		public void onStart() {
-			// Go fish.
-		}		
-
-		@Override
-		public void onFinish() {
-			// Go fish.
-		}
-		
-		@Override
-		public void onFileStart(File file) {
+		public boolean onFileStart(File file) {
 			logger.log(Level.FINER, "- +File {0}", file); 
+			
+			startFileProperties = captureFileProperties(file, null);
+			
+			// Check if file has vanished
+			if (!startFileProperties.exists || startFileProperties.locked) {
+				logger.log(Level.FINER, "- /File: {0}", file);				
+				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED or is LOCKED.");
+				
+				resetFileEnd();
+				return false;
+			}
 			
 			// Content
 			if (file.isFile()) {
 				logger.log(Level.FINER, "- +FileContent: {0}", file);			
-				fileContent = new FileContent();
-				fileContent.setSize((int) file.length()); 
-			}						
+				fileContent = new FileContent();				
+			}	
+			
+			return true;
 		}
 
 		@Override
@@ -151,19 +156,23 @@ public class Indexer {
 			// Get file attributes (get them while file exists)
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part, 
 			//       because the file could vanish! 
-			FileProperties fileProperties = captureFileProperties(file, checksum);
+			endFileProperties = captureFileProperties(file, checksum);
 			
-			// Check if file has vanished
-			if (!fileProperties.exists) {
+			// Check if file has vanished			
+			boolean fileHasChanged = startFileProperties.size != endFileProperties.size || startFileProperties.lastModified != endFileProperties.lastModified;
+			boolean fileIsLocked = endFileProperties.locked;
+			boolean fileVanished = !endFileProperties.exists;
+			
+			if (fileVanished || fileIsLocked || fileHasChanged) {
 				logger.log(Level.FINER, "- /File: {0}", file);				
-				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED.");
+				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED ("+!endFileProperties.exists+"), is LOCKED ("+endFileProperties+" ("+endFileProperties.locked+"), or has CHANGED ("+fileHasChanged+")");
 				
 				resetFileEnd();
 				return;
-			}
+			}			
 			
 			// If it's still there, add it to the database
-			addFileVersion(fileProperties);						
+			addFileVersion(endFileProperties);						
 			
 			// Reset
 			resetFileEnd();		
@@ -238,6 +247,7 @@ public class Indexer {
 			
 			// 3. Add file content (if not a directory)			
 			if (fileProperties.checksum != null && fileContent != null) {
+				fileContent.setSize(fileProperties.size);
 				fileContent.setChecksum(fileProperties.checksum);
 
 				// Check if content already exists, throw gathered content away if it does!
@@ -262,12 +272,15 @@ public class Indexer {
 
 			// Must be last (!), used for vanish-test later
 			fileProperties.exists = file.exists();
+			fileProperties.locked = FileUtil.isFileLocked(file);
 
 			return fileProperties;
 		}
 
 		private void resetFileEnd() {
-			fileContent = null;			
+			fileContent = null;	
+			startFileProperties = null;
+			endFileProperties = null;
 		}
 
 		private PartialFileHistory guessLastFileHistory(FileProperties fileProperties) {
@@ -413,6 +426,7 @@ public class Indexer {
 	
 	private class FileProperties {
 		boolean exists;		
+		boolean locked;
 		long lastModified;
 		long size;
 		FileType type;

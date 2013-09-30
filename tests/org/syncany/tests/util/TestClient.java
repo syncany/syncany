@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
@@ -28,13 +29,15 @@ public class TestClient extends Client {
 		TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 25*1024, 20);		
 	}
 	
-	public void createNewFile(String name) throws IOException {
-		createNewFile(name, 50*1024);
+	public File createNewFile(String name) throws IOException {
+		return createNewFile(name, 50*1024);
 	}
 	
-	public void createNewFile(String name, int size) throws IOException {
+	public File createNewFile(String name, long size) throws IOException {
 		File localFile = getLocalFile(name);		
 		TestFileUtil.createRandomFile(localFile, size);
+		
+		return localFile;
 	}
 	
 	public void createNewFolder(String name) {
@@ -45,23 +48,29 @@ public class TestClient extends Client {
 		File fromLocalFile = getLocalFile(fileFrom);
 		File toLocalFile = getLocalFile(fileTo);
 		
-		boolean moveSuccess = fromLocalFile.renameTo(toLocalFile);
-		
-		if (!moveSuccess) {
-			throw new Exception("Move failed: "+fileFrom+" --> "+fileTo);
+		try {
+			if (fromLocalFile.isDirectory()) {
+				FileUtils.moveDirectory(fromLocalFile, toLocalFile);
+			}
+			else {
+				FileUtils.moveFile(fromLocalFile, toLocalFile);
+			}
+		}
+		catch (Exception e) {		
+			throw new Exception("Move failed: "+fileFrom+" --> "+fileTo, e);
 		}		
 	}	
 	
 	public void copyFile(String fileFrom, String fileTo) throws IOException {
-		FileUtil.copy(getLocalFile(fileFrom), getLocalFile(fileTo));		
+		FileUtils.copyFile(getLocalFile(fileFrom), getLocalFile(fileTo));		
 	}
 
 	public void changeFile(String name) throws IOException {
 		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name));		
 	}	
 	
-	public void deleteFile(String name) {
-		getLocalFile(name).delete();		
+	public boolean deleteFile(String name) {
+		return FileUtils.deleteQuietly(getLocalFile(name));		
 	}	
 	
 	public void cleanup() {
@@ -92,11 +101,14 @@ public class TestClient extends Client {
 	}
 	
 	public Database loadLocalDatabase() throws IOException {
+		File localDatabaseFile = getLocalDatabaseFile();
 		Database db = new Database();
 		
-		DatabaseDAO dao = new DatabaseXmlDAO();
-		dao.load(db, getLocalDatabaseFile());
-		
-		return db;		
+		if (localDatabaseFile.exists()) {			
+			DatabaseDAO dao = new DatabaseXmlDAO();
+			dao.load(db, getLocalDatabaseFile());		
+		}
+
+		return db;
 	}	
 }

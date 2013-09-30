@@ -28,43 +28,6 @@ import org.syncany.util.StringUtil;
  * @author pheckel
  */
 public class FileVersion implements Cloneable {
-	public enum FileStatus {
-		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED");
-		
-		private String name;       
-		
-		private FileStatus(String name) {
-			this.name = name;
-		}
-		
-		public boolean equalsName(String otherName){
-			return (otherName == null) ? false : name.equals(otherName);
-		}
-		
-		public String toString() {
-			return name;
-		}	
-	}
-	
-	public enum FileType {
-		FILE ("FILE"), 
-		FOLDER ("FOLDER");
-		
-		private String name;       
-		
-		private FileType(String name) {
-			this.name = name;
-		}
-		
-		public boolean equalsName(String otherName){
-			return (otherName == null) ? false : name.equals(otherName);
-		}
-		
-		public String toString() {
-			return name;
-		}	
-	}	
-    
 	// Mandatory
     private Long version;   
     private String path;
@@ -164,7 +127,7 @@ public class FileVersion implements Cloneable {
 		this.checksum = checksum;
 	}
 
-	public Long getSize() {
+	public Long getSize() { // TODO [low] Redundant field 'size', this field should not exist. Instead the content's size should be used. This was introduced as a convenience field. 
 		return size;
 	}
 
@@ -259,5 +222,42 @@ public class FileVersion implements Cloneable {
 		} else if (!version.equals(other.version))
 			return false;
 		return true;
-	}  
+	} 
+	
+	public enum FileStatus {
+		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED");
+		
+		private String name;       
+		
+		private FileStatus(String name) {
+			this.name = name;
+		}
+		
+		public boolean equalsName(String otherName){
+			return (otherName == null) ? false : name.equals(otherName);
+		}
+		
+		public String toString() {
+			return name;
+		}	
+	}
+	
+	public enum FileType {
+		FILE ("FILE"), 
+		FOLDER ("FOLDER");
+		
+		private String name;       
+		
+		private FileType(String name) {
+			this.name = name;
+		}
+		
+		public boolean equalsName(String otherName){
+			return (otherName == null) ? false : name.equals(otherName);
+		}
+		
+		public String toString() {
+			return name;
+		}	
+	}		
 }

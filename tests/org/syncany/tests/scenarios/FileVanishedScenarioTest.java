@@ -45,7 +45,15 @@ public class FileVanishedScenarioTest {
 			@Override
 			public void run() {
 				for (int i=numFiles; i>=numFilesVanished; i--) {
-					clientA.deleteFile("A-original"+i);
+					boolean deleteSuccess = clientA.deleteFile("A-original"+i);
+					
+					if (deleteSuccess) {
+						logger.log(Level.SEVERE, "Deleted "+clientA.getLocalFile("A-original"+i));
+					}
+					else {
+						logger.log(Level.SEVERE, "FAILED TO DELETE FILE "+clientA.getLocalFile("A-original"+i));
+					}
+					
 					try { Thread.sleep(50); }
 					catch (Exception e) { }
 				}

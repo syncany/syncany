@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
@@ -91,7 +92,7 @@ public class StatusOperation extends Operation {
 						changeSet.unchangedFiles.add(relativeFilePath);
 						
 						return;
-					}					
+					}										
 					
 					// Simple check by size
 					boolean sizeMatches = file.length() == potentiallyMatchingLastFileVersion.getSize();
@@ -133,7 +134,6 @@ public class StatusOperation extends Operation {
 					// immediately after the 'up'-operation (in the same second!)
 					
 					// To be sure, we must (!) calculate the checksum
-					// TODO [medium] Performance: Checksum calculation on unchanged files is expensive!
 					
 					try {
 						byte[] fileChecksum = FileUtil.createChecksum(file, "SHA1"); // TODO [low] The digest could be something else! Get digest from somewhere (Chunker?)
@@ -161,6 +161,19 @@ public class StatusOperation extends Operation {
 			
 			@Override
 			public boolean fileFilter(File file) {
+				// Symlinks are not supported right now
+				// TODO [low] Add support for symlinks
+				try {
+					if (FileUtils.isSymlink(file)) {
+						logger.log(Level.FINEST, "- Ignored file (symlink!): {0}", file);
+						return false;
+					}
+				}
+				catch (Exception e) {
+					logger.log(Level.FINEST, "- Ignored file (FAILED checking for symlink): {0}", file);
+					return false;
+				}
+
 				return true;
 			}			
 			

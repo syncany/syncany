@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.util.FileUtil;
 
@@ -23,7 +24,7 @@ public class ConfigTO {
 	
 	public static ConfigTO load(File file) throws ConfigException {
 		try {
-			ConfigTO configTO = new Gson().fromJson(FileUtil.readFileToString(file), ConfigTO.class);
+			ConfigTO configTO = new Gson().fromJson(FileUtils.readFileToString(file), ConfigTO.class);
 			configTO.configFile = file.getAbsolutePath();
 			
 			return configTO;

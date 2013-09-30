@@ -190,7 +190,7 @@ public class TestFileUtil {
 			// Alter some of the copies (change some bytes)
 			if (Math.random() > 0.5) {
 				File destFile = new File(destDir+"/file"+i+"-almost-the-same-as-"+srcFile.getName());
-				FileUtil.copy(srcFile, destFile);
+				FileUtils.copyFile(srcFile, destFile);
 				
 				changeRandomPartOfBinaryFile(destFile);				
 				randomFiles.add(destFile);
@@ -199,7 +199,7 @@ public class TestFileUtil {
 			// Or simply copy them
 			else {
 				File destFile = new File(destDir+"/file"+i+"-copy-of-"+srcFile.getName());
-				FileUtil.copy(srcFile, destFile);
+				FileUtils.copyFile(srcFile, destFile);
 				
 				randomFiles.add(destFile);
 			}
@@ -231,8 +231,8 @@ public class TestFileUtil {
 		}
 		
 		FileOutputStream fos = new FileOutputStream(fileToCreate);
-		int bufSize = 1024;
-		long cycles = sizeInBytes / bufSize;
+		int bufSize = 4096;
+		long cycles = sizeInBytes / (long) bufSize;
 		
 		for(int i = 0; i < cycles; i++){
 			byte[] randomByteArray = createRandomArray(bufSize);
@@ -265,18 +265,7 @@ public class TestFileUtil {
 		FileOutputStream fos = new FileOutputStream(fileToCreate);		
 		fos.write(inputByteArray);
 		fos.close();			
-	}
-	
-	public static void moveFilesIntoSubdirectory(File folder, String subDirName) throws IOException{
-		File subDir = new File(folder, subDirName);
-		subDir.mkdir();
-		
-		for(File file : folder.listFiles()) {
-			if (file.isFile()) {
-				FileUtils.moveFile(file, new File(subDir, file.getName()));
-			}
-		}
-	}
+	}	
 	
 	public static byte[] createRandomArray(int size){
 		byte[] ret = new byte[size];
