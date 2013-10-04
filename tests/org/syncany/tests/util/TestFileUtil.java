@@ -145,7 +145,7 @@ public class TestFileUtil {
 		randomAccessFile.close();
 	}	
 		
-	public static File createRandomFileInDirectory(File rootFolder) {
+	public static File getRandomFilenameInDirectory(File rootFolder) {
 		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(rnd.nextInt()) + ".dat";
 		File newRandomFile = new File(rootFolder, fileName);
 		
@@ -219,7 +219,7 @@ public class TestFileUtil {
 	}
 	
 	public static File createRandomFileInDirectory(File rootFolder, long sizeInBytes) throws IOException{		
-		File newRandomFile = createRandomFileInDirectory(rootFolder);		
+		File newRandomFile = getRandomFilenameInDirectory(rootFolder);		
 		createRandomFile(newRandomFile, sizeInBytes);
 		
 		return newRandomFile;

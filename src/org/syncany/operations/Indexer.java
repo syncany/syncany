@@ -136,7 +136,7 @@ public class Indexer {
 			// Check if file has vanished
 			if (!startFileProperties.exists || startFileProperties.locked) {
 				logger.log(Level.FINER, "- /File: {0}", file);				
-				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED or is LOCKED.");
+				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED (exists = {0}) or is LOCKED (locked = {1}).", new Object[] { startFileProperties.exists, startFileProperties.locked });
 				
 				resetFileEnd();
 				return false;

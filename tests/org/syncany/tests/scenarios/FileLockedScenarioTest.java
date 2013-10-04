@@ -3,7 +3,6 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -41,14 +40,30 @@ public class FileLockedScenarioTest {
 	}
 	
 	@Test
-	public void testPermissionDenied() throws Exception {
+	public void testPermissionDeniedNotReadable() throws Exception {
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		
 		// Run
 		File noReadPermissionFile = clientA.createNewFile("no-read-permission-file");
-		noReadPermissionFile.setReadable(false);
+		noReadPermissionFile.setReadable(false, false);
+		
+		runUpAndTestForEmptyDatabase(testConnection, clientA);		
+		
+		// Tear down
+		clientA.cleanup();
+	}	
+
+	@Test
+	public void testPermissionDeniedNotWritable() throws Exception {
+		// Setup 
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		
+		// Run
+		File noReadPermissionFile = clientA.createNewFile("no-read-permission-file");
+		noReadPermissionFile.setWritable(false, false);
 		
 		runUpAndTestForEmptyDatabase(testConnection, clientA);		
 		
@@ -61,7 +76,7 @@ public class FileLockedScenarioTest {
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
 		// Test 1: Check result sets for inconsistencies
-		assertTrue("Status command expected to return changes.", statusResult.getChangeSet().hasChanges());
+		assertFalse("Status command expected to return NO changes.", statusResult.getChangeSet().hasChanges());
 		assertFalse("File should NOT be uploaded while it is locked.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies

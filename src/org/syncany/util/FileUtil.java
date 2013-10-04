@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -226,14 +227,26 @@ public class FileUtil {
 		}
 		
 		if (file.isDirectory()) {
-			return false;
+			return false; 
 		}
 		
 		RandomAccessFile randomAccessFile = null;
 		boolean fileLocked = false;
 		
 		try {
+			// Test 1: Missing permissions or locked file parts
 			randomAccessFile = new RandomAccessFile(file, "rw");
+			
+			// Test 2: Set lock and release it again
+			FileLock fileLock = randomAccessFile.getChannel().tryLock();
+			
+			if (fileLock == null) {
+				fileLocked = true;
+			}
+			else {
+				try { fileLock.release(); }
+				catch (Exception e) { /* Nothing */ }
+			}
 		}
 		catch (Exception e) {
 		    fileLocked = true;

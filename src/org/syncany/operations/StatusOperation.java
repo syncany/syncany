@@ -75,6 +75,16 @@ public class StatusOperation extends Operation {
 			public void processFile(File file) {
 				String relativeFilePath = FileUtil.getRelativePath(root, file);
 
+				// TODO [medium] Duplicate code: The file.*()-tests in this class are semi-duplicated in the Indexer. This often leads to inconsistencies between status and up.  
+
+				// Check if file is locked
+				boolean fileLocked = FileUtil.isFileLocked(file);
+				
+				if (fileLocked) {
+					logger.log(Level.FINEST, "- Ignoring file (locked): {0}", relativeFilePath);						
+					return;
+				}				
+				
 				// Check database by file path
 				PartialFileHistory potentiallyMatchingFileHistory = database.getFileHistory(relativeFilePath);
 				
@@ -92,7 +102,7 @@ public class StatusOperation extends Operation {
 						changeSet.unchangedFiles.add(relativeFilePath);
 						
 						return;
-					}										
+					}		
 					
 					// Simple check by size
 					boolean sizeMatches = file.length() == potentiallyMatchingLastFileVersion.getSize();

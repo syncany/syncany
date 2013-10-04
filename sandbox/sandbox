@@ -88,6 +88,24 @@ cmd_loop() {
 	done
 }
 
+cmd_diff() {
+	CLIENTDIRS=$(ls -d "$PLAY/client"*)
+	PREVCLIENTDIR=""
+	
+	for CURCLIENTDIR in $CLIENTDIRS; do
+		if [ -n "$PREVCLIENTDIR" ]; then
+			DIFFCMD="diff -r --exclude=.syncany $PREVCLIENTDIR $CURCLIENTDIR"
+
+			echo "\$ $DIFFCMD"
+			$DIFFCMD
+		
+			echo ""
+		fi
+		
+		PREVCLIENTDIR="$CURCLIENTDIR"					
+	done	
+}
+
 cmd_log() {
 	if [ -z "${ARGS[0]}" ]; then
 		echo "Usage: ./sandbox run <client>"
@@ -125,7 +143,10 @@ case $1 in
   	shift
   	ARGS=($@)
 	cmd_log	
-    ;;        
+    ;;     
+  diff)
+	cmd_diff
+    ;;       
   *)
 	echo "Usage: ./sandbox <command>"
 	echo "Syncany sandbox script, copyright (c) 2011-2013, Philipp C. Heckel"

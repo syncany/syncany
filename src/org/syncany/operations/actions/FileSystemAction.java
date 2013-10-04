@@ -156,7 +156,7 @@ public abstract class FileSystemAction {
 		FileUtils.moveFile(conflictingLocalFile, newConflictFile);
 	}
 	
-	// TODO [low] This is duplicate code, the indexer also compares a FileVersion to a local file
+	// TODO [medium] This is duplicate code, the indexer and the status operation also compare a FileVersion to a local file
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());		
 		boolean actualLocalFileExists = actualLocalFile.exists();

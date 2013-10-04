@@ -42,8 +42,23 @@ public class FileUtilTests {
 	public void testGetRelativeFilePathSpecialCases() {
 		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user")));
 		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user/")));
-		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user//")));
+		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user//")));		
+	}
+	
+	@Test
+	public void testFileLocked() throws Exception {
+		// Setup
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		
+		// Run
+		File lockedFile = TestFileUtil.createRandomFileInDirectory(tempDir, 50*1024);
+		lockedFile.setWritable(false, false);
+		
+		// Test
+		assertTrue("File should be locked: "+lockedFile, FileUtil.isFileLocked(lockedFile));
+		 
+		// Tear down
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 	
 }
