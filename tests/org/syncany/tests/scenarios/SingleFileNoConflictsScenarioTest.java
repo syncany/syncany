@@ -7,7 +7,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.SyncUpOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

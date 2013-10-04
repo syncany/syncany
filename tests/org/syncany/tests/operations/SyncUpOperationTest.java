@@ -19,7 +19,7 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.SyncUpOperation;
+import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -45,7 +45,7 @@ public class SyncUpOperationTest {
 				fileAmount);
 		
 		// Run!
-		SyncUpOperation op = new SyncUpOperation(testConfig);		
+		UpOperation op = new UpOperation(testConfig);		
 		op.execute();
 
 		//Compare dbs

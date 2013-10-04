@@ -57,7 +57,7 @@ public class StringUtil {
     public static String toCamelCase(String str) {
         StringBuilder sb = new StringBuilder();
 
-        for (String s : str.split("_")) {
+        for (String s : str.split("[_-]")) {
         	if (s.length() > 0) {
 	            sb.append(Character.toUpperCase(s.charAt(0)));
 	

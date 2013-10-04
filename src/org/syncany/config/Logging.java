@@ -29,7 +29,10 @@ public class Logging {
     			logConfigInputStream = Config.class.getResourceAsStream("/logging.properties");
     		}
     		
-    	    LogManager.getLogManager().readConfiguration(logConfigInputStream);
+    	    if (logConfigInputStream != null) {
+    	    	LogManager.getLogManager().readConfiguration(logConfigInputStream);
+    	    }
+    	    
     	    loggingInitialized = true;
     	}
     	catch (Exception e) {

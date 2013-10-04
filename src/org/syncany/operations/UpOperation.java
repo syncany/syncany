@@ -30,14 +30,14 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
-import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
+import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.util.StringUtil;
 
-public class SyncUpOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(SyncUpOperation.class.getSimpleName());
+public class UpOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
 
 	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
@@ -48,15 +48,15 @@ public class SyncUpOperation extends Operation {
 	private Database loadedDatabase;
 	private Database dirtyDatabase;
 	
-	public SyncUpOperation(Config config) {
+	public UpOperation(Config config) {
 		this(config, null, new SyncUpOperationOptions());
 	}	
 	
-	public SyncUpOperation(Config config, Database database) {
+	public UpOperation(Config config, Database database) {
 		this(config, database, new SyncUpOperationOptions());
 	}	
 	
-	public SyncUpOperation(Config config, Database database, SyncUpOperationOptions options) {
+	public UpOperation(Config config, Database database, SyncUpOperationOptions options) {
 		super(config);		
 		
 		this.options = options;
@@ -91,7 +91,7 @@ public class SyncUpOperation extends Operation {
 		
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
-			List<RemoteFile> unknownRemoteDatabases = ((RemoteStatusOperationResult) new RemoteStatusOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+			List<RemoteFile> unknownRemoteDatabases = ((RemoteStatusOperationResult) new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 			
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");

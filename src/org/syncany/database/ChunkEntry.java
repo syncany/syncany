@@ -84,6 +84,7 @@ public class ChunkEntry {
 	
 	/**
 	 * Identifies a chunk entry (= chunk checksum)
+	 * TODO [low] Cleanup chunk entry id usage in application. What about a MultiChunkEntryId, FileContentId, ...
 	 */
 	public static class ChunkEntryId extends ByteArray {
 		public ChunkEntryId() {

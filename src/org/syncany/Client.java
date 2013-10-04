@@ -11,8 +11,8 @@ import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
-import org.syncany.operations.RemoteStatusOperation;
-import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
+import org.syncany.operations.LsRemoteOperation;
+import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.RestoreOperation;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.StatusOperation;
@@ -20,15 +20,15 @@ import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.DaemonOperation;
-import org.syncany.operations.SyncDownOperation;
-import org.syncany.operations.SyncDownOperation.SyncDownOperationOptions;
-import org.syncany.operations.SyncDownOperation.SyncDownOperationResult;
+import org.syncany.operations.DownOperation;
+import org.syncany.operations.DownOperation.SyncDownOperationOptions;
+import org.syncany.operations.DownOperation.SyncDownOperationResult;
 import org.syncany.operations.SyncOperation;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncOperation.SyncOperationResult;
-import org.syncany.operations.SyncUpOperation;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationResult;
+import org.syncany.operations.UpOperation;
+import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.SyncUpOperationResult;
 
 public class Client {
 	protected static final Logger logger = Logger.getLogger(Client.class.getSimpleName());	
@@ -59,7 +59,7 @@ public class Client {
 	}
 	
 	public SyncUpOperationResult up(SyncUpOperationOptions options) throws Exception {
-		return (SyncUpOperationResult) new SyncUpOperation(config, null, options).execute();
+		return (SyncUpOperationResult) new UpOperation(config, null, options).execute();
 	}
 	
 	public SyncDownOperationResult down() throws Exception {
@@ -67,7 +67,7 @@ public class Client {
 	}
 	
 	public SyncDownOperationResult down(SyncDownOperationOptions options) throws Exception {
-		return (SyncDownOperationResult) new SyncDownOperation(config, null, options).execute();
+		return (SyncDownOperationResult) new DownOperation(config, null, options).execute();
 	}
 	
 	public SyncOperationResult sync() throws Exception {
@@ -87,7 +87,7 @@ public class Client {
 	}	
 
 	public List<RemoteFile> remoteStatus() throws Exception {
-		return ((RemoteStatusOperationResult) new RemoteStatusOperation(config).execute()).getUnknownRemoteDatabases();
+		return ((RemoteStatusOperationResult) new LsRemoteOperation(config).execute()).getUnknownRemoteDatabases();
 	}
 
 	public void restore(RestoreOperationOptions options) throws Exception {

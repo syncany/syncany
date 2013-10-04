@@ -24,9 +24,9 @@ public class CommandLineInterfaceTest {
 
 		for (int i=1; i<=20; i++) {
 			new File(clientA.get("localDir")+"/somefolder"+i).mkdir();
-		
+
 			new CommandLineClient(new String[] { 
-					"--config", clientA.get("configFile"), "up", "--no-cleanup" }).start();
+					 "--config", clientA.get("configFile"), "up", "--no-cleanup" }).start();
 		}
 		
 		for (int i=1; i<=20; i++) {

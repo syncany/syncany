@@ -11,8 +11,8 @@ import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
-import org.syncany.operations.SyncUpOperation;
+import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -34,7 +34,7 @@ public class StatusOperationTest {
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
 				
 		// Up
-		new SyncUpOperation(config).execute();		
+		new UpOperation(config).execute();		
 				
 		// Status
 		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();		
@@ -57,7 +57,7 @@ public class StatusOperationTest {
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
 		
 		// Up
-		new SyncUpOperation(config).execute();
+		new UpOperation(config).execute();
 				
 		// Delete all files, run 'status' again
 		for (File file : originalFiles) {
@@ -88,7 +88,7 @@ public class StatusOperationTest {
 		
 		// Perform 'up' and immediately change test file
 		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
-		new SyncUpOperation(config, null, syncUpOptions).execute();		
+		new UpOperation(config, null, syncUpOptions).execute();		
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison
@@ -107,7 +107,7 @@ public class StatusOperationTest {
 		
 		// Perform 'up', wait a second and then change test file
 		// IMPORTANT: Sleep to prevent detailed checksum-based update check in 'status' operation
-		new SyncUpOperation(config).execute();				
+		new UpOperation(config).execute();				
 		Thread.sleep(1500);
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
@@ -133,7 +133,7 @@ public class StatusOperationTest {
 		assertEquals(changeSet.getUnchangedFiles().size(), 0);	
 		
 		// Run 'up' to check in the folder
-		new SyncUpOperation(config).execute();
+		new UpOperation(config).execute();
 		
 		// Run 'status', this SHOULD NOT list the folder in the changed/new files
 		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						

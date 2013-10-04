@@ -10,9 +10,12 @@ import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
 import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
+import org.syncany.tests.database.DatabaseCacheTest;
+import org.syncany.tests.database.DatabaseReconciliatorTest;
 import org.syncany.tests.database.DatabaseXmlDAOTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
+import org.syncany.tests.operations.OperationPerformanceTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.util.ClasspathUtilTest;
@@ -40,11 +43,14 @@ import org.syncany.tests.util.FileUtilTests;
 	LocalConnectionPluginTest.class,
 	
 	// Database
+	DatabaseCacheTest.class,
+	DatabaseReconciliatorTest.class,
 	DatabaseXmlDAOTest.class,
 	VectorClockTest.class,
 	
 	// Operations
 	IndexerTest.class,
+	OperationPerformanceTest.class,
 	SyncUpOperationTest.class,
 	StatusOperationTest.class
 })

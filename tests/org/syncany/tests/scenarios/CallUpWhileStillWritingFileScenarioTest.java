@@ -18,7 +18,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationResult;
+import org.syncany.operations.UpOperation.SyncUpOperationResult;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

@@ -45,7 +45,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
-import org.syncany.operations.RemoteStatusOperation.RemoteStatusOperationResult;
+import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
@@ -55,8 +55,8 @@ import org.syncany.operations.actions.RenameFileSystemAction;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-public class SyncDownOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(SyncDownOperation.class.getSimpleName());
+public class DownOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 	
 	private Database localDatabase;
 	@SuppressWarnings("unused")	private SyncDownOperationOptions options;
@@ -66,15 +66,15 @@ public class SyncDownOperation extends Operation {
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
 	
-	public SyncDownOperation(Config config) {
+	public DownOperation(Config config) {
 		this(config, null, new SyncDownOperationOptions());
 	}	
 	
-	public SyncDownOperation(Config config, Database database) {
+	public DownOperation(Config config, Database database) {
 		this(config, database, new SyncDownOperationOptions());
 	}	
 	
-	public SyncDownOperation(Config config, Database database, SyncDownOperationOptions options) {
+	public DownOperation(Config config, Database database, SyncDownOperationOptions options) {
 		super(config);
 		
 		this.localDatabase = database;
@@ -486,7 +486,7 @@ public class SyncDownOperation extends Operation {
 	}
 
 	private List<RemoteFile> listUnknownRemoteDatabases(Database database, TransferManager transferManager) throws Exception {
-		return ((RemoteStatusOperationResult) new RemoteStatusOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+		return ((RemoteStatusOperationResult) new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 	}
 	
 	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<RemoteFile> unknownRemoteDatabases) throws StorageException {

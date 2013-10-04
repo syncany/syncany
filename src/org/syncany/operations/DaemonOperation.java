@@ -22,8 +22,8 @@ public class DaemonOperation extends Operation {
 		while (true) {
 			logger.log(Level.INFO, "Running sync ...");
 			
-			new SyncDownOperation(config, database).execute();
-			new SyncUpOperation(config, database).execute();
+			new DownOperation(config, database).execute();
+			new UpOperation(config, database).execute();
 			
 			logger.log(Level.INFO, "Sync done, waiting {0} seconds ...", options.getInterval()/1000);
 			Thread.sleep(options.getInterval());

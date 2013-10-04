@@ -20,6 +20,7 @@ import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
+import org.syncany.tests.scenarios.SymlinkIgnoreScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -39,7 +40,8 @@ import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 	ManySyncUpsAndOtherClientSyncDownTest.class,
 	MixedUpDownScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
-	SingleFolderNoConflictsScenarioTest.class
+	SingleFolderNoConflictsScenarioTest.class,
+	SymlinkIgnoreScenarioTest.class
 })
 public class ScenarioTests {
 	// This class executes all tests

@@ -15,16 +15,16 @@ import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 
-public class RemoteStatusOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(RemoteStatusOperation.class.getSimpleName());	
+public class LsRemoteOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
 	private Database loadedDatabase;
 	private TransferManager loadedTransferManager;
 	
-	public RemoteStatusOperation(Config config) {
+	public LsRemoteOperation(Config config) {
 		this(config, null, null);
 	}	
 	
-	public RemoteStatusOperation(Config config, Database database, TransferManager transferManager) {
+	public LsRemoteOperation(Config config, Database database, TransferManager transferManager) {
 		super(config);		
 		
 		this.loadedDatabase = database;

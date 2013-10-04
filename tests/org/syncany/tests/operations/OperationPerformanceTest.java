@@ -8,8 +8,8 @@ import java.util.logging.Logger;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.operations.SyncDownOperation;
-import org.syncany.operations.SyncUpOperation;
+import org.syncany.operations.DownOperation;
+import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -28,7 +28,7 @@ public class OperationPerformanceTest {
 		TestFileUtil.createRandomFilesInDirectory(configA.getLocalDir(), 5000*1024, 3);
 		
 		long timeSyncUpStart = System.currentTimeMillis();
-		new SyncUpOperation(configA).execute();		
+		new UpOperation(configA).execute();		
 		long timeSyncUpEnd = System.currentTimeMillis();		
 		long timeSyncUpTotal = timeSyncUpEnd - timeSyncUpStart;
 		
@@ -40,7 +40,7 @@ public class OperationPerformanceTest {
 		
 		// Sync down B
 		long timeSyncDownStart = System.currentTimeMillis();
-		new SyncDownOperation(configB).execute();
+		new DownOperation(configB).execute();
 		long timeSyncDownEnd = System.currentTimeMillis();		
 		long timeSyncDownTotal = timeSyncDownEnd - timeSyncDownStart;
 		

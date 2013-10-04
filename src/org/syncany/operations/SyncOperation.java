@@ -2,10 +2,10 @@ package org.syncany.operations;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;
-import org.syncany.operations.SyncDownOperation.SyncDownOperationOptions;
-import org.syncany.operations.SyncDownOperation.SyncDownOperationResult;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationOptions;
-import org.syncany.operations.SyncUpOperation.SyncUpOperationResult;
+import org.syncany.operations.DownOperation.SyncDownOperationOptions;
+import org.syncany.operations.DownOperation.SyncDownOperationResult;
+import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.SyncUpOperationResult;
 
 public class SyncOperation extends Operation {
 	private Database loadedDatabase;
@@ -24,8 +24,8 @@ public class SyncOperation extends Operation {
 	
 	@Override
 	public OperationResult execute() throws Exception {
-		SyncDownOperation syncDown = new SyncDownOperation(config, loadedDatabase, options.getSyncDownOptions());
-		SyncUpOperation syncUp = new SyncUpOperation(config, loadedDatabase, options.getSyncUpOptions());
+		DownOperation syncDown = new DownOperation(config, loadedDatabase, options.getSyncDownOptions());
+		UpOperation syncUp = new UpOperation(config, loadedDatabase, options.getSyncUpOptions());
 		
 		SyncDownOperationResult syncDownResults = (SyncDownOperationResult) syncDown.execute();
 		SyncUpOperationResult syncUpResults = (SyncUpOperationResult) syncUp.execute();
