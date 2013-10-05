@@ -48,10 +48,6 @@ public class Branch {
 		return Collections.unmodifiableList(branch);
 	}	
 	
-	public DatabaseVersionHeader getFirst() {
-		return branch.get(0);
-	}	
-	
 	public DatabaseVersionHeader getLast() {
 		return branch.get(branch.size()-1);
 	}	
@@ -73,25 +69,25 @@ public class Branch {
         private int current;
         
         public BranchIterator(int current) {
-        	this.current = 0;
+        	this.current = current;
         }
         
 		@Override
 		public boolean hasNext() {
-			return current+1 < branch.size();
+			return current < branch.size();
 		}
 		
 		public boolean hasPrevious() {
-			return current-1 >= 0;
+			return current > 0;
 		}
 
 		@Override
 		public DatabaseVersionHeader next() {
-			return branch.get(++current);
+			return branch.get(current++);
 		}
 		
 		public DatabaseVersionHeader previous() {
-			return branch.get(--current);
+			return branch.get(current--);
 		}
 
 		@Override

@@ -24,14 +24,14 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		 
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1,C4)/T=8/C",
 			"A/(A2,C4)/T=9/A",
 			"A/(A3,C4)/T=10/A"								
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2/C",
 			"C/(C3)/T=3/C",				
@@ -39,7 +39,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C4)/T=5/C"
 		}));		
 				
@@ -48,12 +48,13 @@ public class DatabaseReconciliatorTest {
 		
 		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
 		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1,C4)/T=8/C",
+			"A", "C/(C4)/T=5/C",
 			"B", "B/(B1,C3)/T=7/C",
 			"C", "C/(C4)/T=5/C"			
 		});		
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1,C4)/T=8/C"
+			"A", "C/(C4)/T=5/C",
+			"C", "C/(C4)/T=5/C"		
 		});
 		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A3,C4)/T=10/C"
@@ -75,7 +76,7 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2/C",
 			"C/(C3)/T=3/C",
@@ -86,7 +87,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"B/(B1,C3)/T=7"								
 		}));
 				
@@ -121,19 +122,19 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1,C4)/T=8",
 			"A/(A2,C4)/T=9",
 			"A/(A3,C4)/T=10"								
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {			
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {			
 			"B/(B1,C3)/T=7"								
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -145,12 +146,13 @@ public class DatabaseReconciliatorTest {
 		
 		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
 		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1,C4)/T=8",
+			"A", "C/(C4)/T=5",
 			"B", "B/(B1,C3)/T=7",
 			"C", "C/(C4)/T=5"
 		});		
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1,C4)/T=8"
+			"A", "C/(C4)/T=5",
+			"C", "C/(C4)/T=5"
 		});
 		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A3,C4)/T=10"
@@ -172,14 +174,14 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A4,C4)/T=11",
 			"A/(A5,C4)/T=12", // db-a-5
 			"A/(A6,C4)/T=19", // db-a-6
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {			
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {			
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -194,7 +196,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(A3,C5)/T=13", // db-c-5
 			"C/(A3,C6)/T=14",
 			"C/(A3,C7)/T=15", // db-c-7
@@ -233,7 +235,7 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -247,7 +249,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {			
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {			
 			"B/(A3,B2,C4)/T=16",
 			"B/(A3,B3,C4)/T=17",
 			"B/(A3,B4,C4)/T=18", // db-b-4
@@ -255,7 +257,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(A3,C5)/T=13", // db-c-5
 			"C/(A3,C6)/T=14",
 			"C/(A3,C7)/T=15", // db-c-7
@@ -294,14 +296,14 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A4,C4)/T=11",
 			"A/(A5,C4)/T=12", // db-a-5
 			"A/(A6,C4)/T=19", // db-a-6
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {			
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {			
 			"B/(A3,B2,C4)/T=16",
 			"B/(A3,B3,C4)/T=17",
 			"B/(A3,B4,C4)/T=18", // db-b-4
@@ -309,7 +311,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -356,7 +358,7 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			// TODO [lowest] Fix pruning of machine histories -- Is this still an issue?
 			// Explanation: Note, this is the full 'B' history, but it does not include
 			// the 'pruned' histories or invalid parts of pruned histories.
@@ -378,7 +380,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
 			"C/(C3)/T=3",				
@@ -422,10 +424,7 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
-			"C/(C1)/T=1",
-			"C/(C2)/T=2",
-			"C/(C3)/T=3",				
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {			
 			"A/(A1,C4)/T=8",     // last common
 			"A/(A2,C4)/T=9",     // first conflicting, wins
 			
@@ -435,25 +434,17 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
-			"C/(C1)/T=1",
-			"C/(C2)/T=2",
-			"C/(C3)/T=3",	
-			"A/(A1,C4)/T=8",     // last common
-			"A/(A2,C4)/T=9",     // first conflicting, wins
-			
-			"A/(A3,C4)/T=10",    // same as in A
-			"B/(A3,B1,C5)/T=12", // second conflict, loses = winners loser
-			"B/(A3,B2,C5)/T=14"		
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
+			"B/(A3,B1,C4)/T=12", // second conflict, loses = winners loser
+			"B/(A3,B2,C4)/T=14"		
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
 			"C/(C2)/T=2",
-			"C/(C3)/T=3",	
-			"A/(A1,C4)/T=8", // last common
-			
+			"C/(C3)/T=3",		
+			"C/(C4)/T=4",		
 			"C/(A1,C5)/T=10", // first conflicting, loses
 		}));		
 				
@@ -489,7 +480,7 @@ public class DatabaseReconciliatorTest {
 		Branches allBranches = new Branches();
 		
 		// A
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A2,C4)/T=9",     // first conflicting, wins
 			
 			"A/(A3,C4)/T=10",    // same as in B
@@ -498,17 +489,17 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		// B
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"B/(A4,B1,C4)/T=12", // second conflict, loses = winners loser
 			"B/(A4,B2,C4)/T=15"		
 		}));
 		
 		// C
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {	
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {	
 			"C/(A1,C5)/T=10", // first conflicting, loses
 		}));		
 		
-		allBranches.add("D", TestDatabaseUtil.createBranch(new String[] {	
+		allBranches.put("D", TestDatabaseUtil.createBranch(new String[] {	
 				"C/(C1)/T=1",
 				"C/(C2)/T=2",
 				"C/(C3)/T=3",	
@@ -546,17 +537,17 @@ public class DatabaseReconciliatorTest {
 	public void testStitchBranches() throws Exception {
 		Branches allBranches = new Branches(); 
 		
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
 			"A/(A2)/T=1376074225230/A",
 			"A/(A3)/T=1376074225256/A",
 		}));
 		
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"B/(A3,B1)/T=1376074225356/A"
 		}));
 		
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1376074225383",
 			"C/(C2)/T=1376074225399/C",
 			"C/(C3)/T=1376074225416/C",
@@ -567,20 +558,20 @@ public class DatabaseReconciliatorTest {
 		
 		Branches expectedStitchedBranches = new Branches();
 		
-		expectedStitchedBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		expectedStitchedBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230",
-			"A/(A3)/T=1376074225256",
+			"A/(A2)/T=1376074225230/A",
+			"A/(A3)/T=1376074225256/A",
 		}));
 		
-		expectedStitchedBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		expectedStitchedBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230",
-			"A/(A3)/T=1376074225256",
-			"B/(A3,B1)/T=1376074225356"
+			"A/(A2)/T=1376074225230/A",
+			"A/(A3)/T=1376074225256/A",
+			"B/(A3,B1)/T=1376074225356/A"
 		}));
 		
-		expectedStitchedBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		expectedStitchedBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1376074225383",
 			"C/(C2)/T=1376074225399/C",
 			"C/(C3)/T=1376074225416/C",
@@ -593,7 +584,7 @@ public class DatabaseReconciliatorTest {
 	public void testStitchBranches2() throws Exception {		
 		Branches allBranches = new Branches();
 		
-		allBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1",
 			"A/(A2)/T=2/A",
 			// --> B 
@@ -604,14 +595,14 @@ public class DatabaseReconciliatorTest {
 			
 		}));
 		
-		allBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"B/(A2,B1)/T=3/A",
 			// --> A
 			"B/(A5,B2,C2)/T=9/C",
 			// --> C
 		}));
 		
-		allBranches.add("C", TestDatabaseUtil.createBranch(new String[] {
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(A5,B1,C1)/T=7/A",
 			"C/(A5,B1,C2)/T=8/C",
 			// --> B
@@ -623,23 +614,38 @@ public class DatabaseReconciliatorTest {
 		
 		Branches expectedStitchedBranches = new Branches();
 		
-		expectedStitchedBranches.add("A", TestDatabaseUtil.createBranch(new String[] {
-			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230",
-			"A/(A3)/T=1376074225256",
+		expectedStitchedBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
+				"A/(A1)/T=1",
+				"A/(A2)/T=2/A",
+				"B/(A2,B1)/T=3/A",
+				"A/(A3,B1)/T=4/B",
+				"A/(A4,B1)/T=5/A",
+				"A/(A5,B1)/T=6/A",
 		}));
 		
-		expectedStitchedBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
-			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230",
-			"A/(A3)/T=1376074225256",
-			"B/(A3,B1)/T=1376074225356"
+		expectedStitchedBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
+				"A/(A1)/T=1",
+				"A/(A2)/T=2/A",
+				"B/(A2,B1)/T=3/A",
+				"A/(A3,B1)/T=4/B",
+				"A/(A4,B1)/T=5/A",
+				"A/(A5,B1)/T=6/A",
+				"C/(A5,B1,C1)/T=7/A",
+				"C/(A5,B1,C2)/T=8/C",
+				"B/(A5,B2,C2)/T=9/C",
 		}));
 		
-		expectedStitchedBranches.add("B", TestDatabaseUtil.createBranch(new String[] {
-			"C/(C1)/T=1376074225383",
-			"C/(C2)/T=1376074225399/C",
-			"C/(C3)/T=1376074225416/C",
+		expectedStitchedBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
+				"A/(A1)/T=1",
+				"A/(A2)/T=2/A",
+				"B/(A2,B1)/T=3/A",
+				"A/(A3,B1)/T=4/B",
+				"A/(A4,B1)/T=5/A",
+				"A/(A5,B1)/T=6/A",
+				"C/(A5,B1,C1)/T=7/A",
+				"C/(A5,B1,C2)/T=8/C",
+				"B/(A5,B2,C2)/T=9/C",
+				"C/(A5,B2,C3)/T=10/B",
 		}));
 		
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
@@ -664,11 +670,7 @@ public class DatabaseReconciliatorTest {
 		Branches unstitchedRemoteBranches = allBranches.clone();
 		unstitchedRemoteBranches.remove(localMachineName);
 
-
 		Branches stitchedRemoteBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
-
-		Branches allStitchedBranches = stitchedRemoteBranches.clone();
-		allStitchedBranches.add(localMachineName, localBranch);
 		
 		System.out.println("Before Orchestration : Remote");
 		printBranches(unstitchedRemoteBranches);
@@ -678,10 +680,10 @@ public class DatabaseReconciliatorTest {
 		printBranches(stitchedRemoteBranches);				
 		System.out.println("END Branch Orchestration ----------");
 				
-		actualTestResult.lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);
-		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, allStitchedBranches);
+		actualTestResult.lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, stitchedRemoteBranches);
+		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, stitchedRemoteBranches);
 		actualTestResult.winningFirstConflictingDatabaseVersionHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(actualTestResult.firstConflictingDatabaseVersionHeaders);
-		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, allStitchedBranches);
+		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, stitchedRemoteBranches);
 		
 		System.out.println("Actual lastCommonDatabaseVersionHeader = " +actualTestResult.lastCommonHeader);
 		System.out.println("Expect lastCommonDatabaseVersionHeader = " +expectedTestResult.lastCommonHeader);
