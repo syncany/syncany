@@ -60,7 +60,8 @@ public class TestConfigUtil {
 		String configJson = configJsonSkel;
 		
 		for (Map.Entry<String, String> clientSetting : clientSettings.entrySet()) {
-			configJson = configJson.replaceAll("\\$"+clientSetting.getKey(), clientSetting.getValue());
+			String quoteReplaced = clientSetting.getValue().replaceAll("\\\\","\\\\\\\\\\\\\\\\"); 	//JSON, f*ck yeah
+			configJson = configJson.replaceAll("\\$"+clientSetting.getKey(), quoteReplaced);
 		}
 		
 		FileUtil.writeToFile(configJson.getBytes(), tempConfigFile);		
