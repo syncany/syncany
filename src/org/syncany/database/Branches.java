@@ -29,7 +29,7 @@ public class Branches {
 		return branch;
 	}
 
-	public void add(String machineName, Branch branch) {
+	public void put(String machineName, Branch branch) {
 		branches.put(machineName, branch);		
 	}	
 
