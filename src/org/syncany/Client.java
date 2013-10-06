@@ -21,14 +21,14 @@ import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.DaemonOperation;
 import org.syncany.operations.DownOperation;
-import org.syncany.operations.DownOperation.SyncDownOperationOptions;
-import org.syncany.operations.DownOperation.SyncDownOperationResult;
+import org.syncany.operations.DownOperation.DownOperationOptions;
+import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.SyncOperation;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncOperation.SyncOperationResult;
 import org.syncany.operations.UpOperation;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
-import org.syncany.operations.UpOperation.SyncUpOperationResult;
+import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationResult;
 
 public class Client {
 	protected static final Logger logger = Logger.getLogger(Client.class.getSimpleName());	
@@ -54,20 +54,20 @@ public class Client {
 		config.getLogDir().mkdirs();
 	}		
 	
-	public SyncUpOperationResult up() throws Exception {
-		return up(new SyncUpOperationOptions());
+	public UpOperationResult up() throws Exception {
+		return up(new UpOperationOptions());
 	}
 	
-	public SyncUpOperationResult up(SyncUpOperationOptions options) throws Exception {
-		return (SyncUpOperationResult) new UpOperation(config, null, options).execute();
+	public UpOperationResult up(UpOperationOptions options) throws Exception {
+		return (UpOperationResult) new UpOperation(config, null, options).execute();
 	}
 	
-	public SyncDownOperationResult down() throws Exception {
-		return down(new SyncDownOperationOptions());
+	public DownOperationResult down() throws Exception {
+		return down(new DownOperationOptions());
 	}
 	
-	public SyncDownOperationResult down(SyncDownOperationOptions options) throws Exception {
-		return (SyncDownOperationResult) new DownOperation(config, null, options).execute();
+	public DownOperationResult down(DownOperationOptions options) throws Exception {
+		return (DownOperationResult) new DownOperation(config, null, options).execute();
 	}
 	
 	public SyncOperationResult sync() throws Exception {

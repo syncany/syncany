@@ -7,23 +7,23 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
-import org.syncany.operations.UpOperation.SyncUpOperationResult;
+import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationResult;
 
 public class UpCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		SyncUpOperationOptions operationOptions = parseOptions(operationArgs);
-		SyncUpOperationResult operationResult = client.up(operationOptions);	
+		UpOperationOptions operationOptions = parseOptions(operationArgs);
+		UpOperationResult operationResult = client.up(operationOptions);	
 		
 		printResults(operationResult);
 		
 		return 0;
 	}
 
-	public SyncUpOperationOptions parseOptions(String[] operationArgs) throws Exception {
+	public UpOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		// Sync up options
-		SyncUpOperationOptions operationOptions = new SyncUpOperationOptions();
+		UpOperationOptions operationOptions = new UpOperationOptions();
 
 		OptionParser parser = new OptionParser();	
 		parser.allowsUnrecognizedOptions();
@@ -50,7 +50,7 @@ public class UpCommand extends Command {
 		return statusCommand.parseOptions(operationArgs);
 	}
 
-	public void printResults(SyncUpOperationResult operationResult) {
+	public void printResults(UpOperationResult operationResult) {
 		ChangeSet changeSet = operationResult.getChangeSet();
 		
 		if (changeSet.hasChanges()) {			

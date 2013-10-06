@@ -1,47 +1,121 @@
 package org.syncany.tests.scenarios;
 
-import org.junit.Test;
+import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
-public class AllFilePossibilitiesScenarioTest {
+import org.junit.Test;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.tests.scenarios.framework.AbstractClientAction;
+import org.syncany.tests.scenarios.framework.ChangeContentWithoutFileSize;
+import org.syncany.tests.scenarios.framework.ChangeFilePermissionsToXXX;
+import org.syncany.tests.scenarios.framework.ChangeFileSize;
+import org.syncany.tests.scenarios.framework.ChangeLastModifiedDate;
+import org.syncany.tests.scenarios.framework.ChangeTypeToFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeToSymlink;
+import org.syncany.tests.scenarios.framework.ClientActions;
+import org.syncany.tests.scenarios.framework.CreateFile;
+import org.syncany.tests.scenarios.framework.CreateFileTree;
+import org.syncany.tests.scenarios.framework.CreateFolder;
+import org.syncany.tests.scenarios.framework.DeleteFile;
+import org.syncany.tests.scenarios.framework.DeleteFolder;
+import org.syncany.tests.scenarios.framework.Executable;
+import org.syncany.tests.scenarios.framework.LockFile;
+import org.syncany.tests.scenarios.framework.MoveFileToOtherFolder;
+import org.syncany.tests.scenarios.framework.MoveFileWithinFolder;
+import org.syncany.tests.scenarios.framework.MoveFolderToOtherFolder;
+import org.syncany.tests.scenarios.framework.MoveFolderWithinFolder;
+import org.syncany.tests.scenarios.framework.UnlockFile;
+import org.syncany.tests.util.TestClient;
+import org.syncany.tests.util.TestConfigUtil;
+/**
+ * attributes:
+ * x- size
+ * x- type
+ * x- content (without size-change)
+ * x- name
+ * x- path
+ * - permissions (linux / windows)
+ * x- last modified date
+ * 
+ * xcreate file
+ * xmove file
+ * xchange file without changing size
+ * xchange file with changing size
+ * xchange file type - folder to file
+ * xchange file type - file to folder
+ * (change file type - folder to symlink)
+ * x(change file type - file to symlink)
+ * xdelete file
+ * 
+ * xcreate folder
+ * xmove folder
+ * xdelete folder
+ * 
+ * xmove file to subfolder
+ * xmove folder to subfolder
+ * 
+ * (create symlink folder)
+ * (change symlink folder target)
+ * (delete symlink folder)
+ * 
+ * file vanishes during index process
+ * folder vanishes during index process
+ * 
+ * file is changed during sync down operation 
+ * file is changed during sync up operation
+ * 
+ * file permission denied
+ */		
+public class AllFilePossibilitiesScenarioTest {	
 	@Test
-	public void testAllPossibilities() {
-		/**
-		 * attributes:
-		 * - size
-		 * - type
-		 * - content
-		 * - name
-		 * - path
-		 * - permissions (linux / windows)
-		 * 
-		 * create file
-		 * move file
-		 * change file without changing size
-		 * change file with changing size
-		 * change file type - folder to file
-		 * change file type - file to folder
-		 * (change file type - folder to symlink)
-		 * (change file type - file to symlink)
-		 * delete file
-		 * 
-		 * create folder
-		 * move folder
-		 * delete folder
-		 * 
-		 * move file to subfolder
-		 * move folder to subfolder
-		 * 
-		 * (create symlink folder)
-		 * (change symlink folder target)
-		 * (delete symlink folder)
-		 * 
-		 * file vanishes during index process
-		 * folder vanishes during index process
-		 * 
-		 * file is changed during sync down operation 
-		 * file is changed during sync up operation
-		 * 
-		 * file permission denied
-		 */		
+	public void testAllPossibilities() throws Exception {		
+		final Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		final TestClient clientA = new TestClient("A", testConnection);
+		final TestClient clientB = new TestClient("B", testConnection);
+		
+		ClientActions.runOps(clientA,
+			new Executable() {
+				@Override
+				public void execute() throws Exception {
+					// Nothing.
+				}			
+			},
+			new AbstractClientAction[] {
+				new CreateFileTree(),
+				
+				new ChangeContentWithoutFileSize(),
+				new ChangeFilePermissionsToXXX(),
+				new ChangeFileSize(),
+				new ChangeLastModifiedDate(),
+				new ChangeTypeToFile(),
+				new ChangeTypeToFolder(),
+				new ChangeTypeToSymlink(),
+				new CreateFile(),
+				new CreateFolder(),
+				new DeleteFile(),
+				new DeleteFolder(),
+				new LockFile(),
+				new MoveFileToOtherFolder(),
+				new MoveFileWithinFolder(),
+				new MoveFolderToOtherFolder(),
+				new MoveFolderWithinFolder(),
+				new UnlockFile()
+			},
+			new Executable() {
+				@Override
+				public void execute() throws Exception {
+					clientA.upWithForceChecksum();		
+					
+					clientB.down();
+					assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
+				}			
+			}
+		);
+		
+		clientA.cleanup();
+		clientB.cleanup();
 	}
+	
 }

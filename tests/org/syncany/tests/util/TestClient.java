@@ -14,6 +14,9 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.util.FileUtil;
 
 public class TestClient extends Client {
@@ -25,8 +28,22 @@ public class TestClient extends Client {
 		this.createDirectories();
 	}	
 	
+	public UpOperationResult upWithForceChecksum() throws Exception {
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setForceChecksum(true);
+		
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setStatusOptions(statusOptions);
+		
+		return up(upOptions);
+	}
+	
 	public void createNewFiles() throws IOException {
 		TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 25*1024, 20);		
+	}
+	
+	public void createNewFiles(String inFolder) throws IOException {
+		TestFileUtil.createRandomFilesInDirectory(getLocalFile(inFolder), 25*1024, 20);		
 	}
 	
 	public File createNewFile(String name) throws IOException {

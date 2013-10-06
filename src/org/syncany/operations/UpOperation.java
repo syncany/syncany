@@ -42,25 +42,25 @@ public class UpOperation extends Operation {
 	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
-	private SyncUpOperationOptions options;
-	private SyncUpOperationResult result;
+	private UpOperationOptions options;
+	private UpOperationResult result;
 	private TransferManager transferManager; 
 	private Database loadedDatabase;
 	private Database dirtyDatabase;
 	
 	public UpOperation(Config config) {
-		this(config, null, new SyncUpOperationOptions());
+		this(config, null, new UpOperationOptions());
 	}	
 	
 	public UpOperation(Config config, Database database) {
-		this(config, database, new SyncUpOperationOptions());
+		this(config, database, new UpOperationOptions());
 	}	
 	
-	public UpOperation(Config config, Database database, SyncUpOperationOptions options) {
+	public UpOperation(Config config, Database database, UpOperationOptions options) {
 		super(config);		
 		
 		this.options = options;
-		this.result = new SyncUpOperationResult();
+		this.result = new UpOperationResult();
 		this.transferManager = config.getConnection().createTransferManager();
 		this.loadedDatabase = database;
 	}
@@ -342,7 +342,7 @@ public class UpOperation extends Operation {
 		
 	}	
 
-	public static class SyncUpOperationOptions implements OperationOptions {
+	public static class UpOperationOptions implements OperationOptions {
 		private StatusOperationOptions statusOptions = new StatusOperationOptions();
 		private boolean forceUploadEnabled = false;
 		private boolean cleanupEnabled = true;
@@ -372,7 +372,7 @@ public class UpOperation extends Operation {
 		}
 	}
 	
-	public static class SyncUpOperationResult implements OperationResult {
+	public static class UpOperationResult implements OperationResult {
 		private StatusOperationResult statusResult = new StatusOperationResult(); 
 		private ChangeSet uploadChangeSet = new ChangeSet();
 		

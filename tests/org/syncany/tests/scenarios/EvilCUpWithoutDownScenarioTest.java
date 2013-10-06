@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -21,16 +23,22 @@ public class EvilCUpWithoutDownScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		TestClient clientC = new TestClient("C", testConnection);
 		
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setForceChecksum(true);
+		
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setStatusOptions(statusOptions);
+		
 		// Run 
 		clientA.createNewFile("A1");
-		clientA.up();
+		clientA.up(upOptions);
 		clientA.moveFile("A1", "A2");
-		clientA.up();		
+		clientA.up(upOptions);		
 		clientA.changeFile("A2");
 		clientA.createNewFile("A3");
-		clientA.up();
+		clientA.up(upOptions);
 		clientA.deleteFile("A3");
-		clientA.up();
+		clientA.up(upOptions);
 		
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());

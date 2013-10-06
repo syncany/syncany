@@ -7,7 +7,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -114,7 +114,7 @@ public class SingleFileNoConflictsScenarioTest {
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
 
-		SyncUpOperationOptions syncUpOptions = new SyncUpOperationOptions();
+		UpOperationOptions syncUpOptions = new UpOperationOptions();
 		syncUpOptions.setStatusOptions(statusOptions);		
 
 		// Create files and upload
@@ -148,7 +148,7 @@ public class SingleFileNoConflictsScenarioTest {
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
 
-		SyncUpOperationOptions syncUpOptions = new SyncUpOperationOptions();
+		UpOperationOptions syncUpOptions = new UpOperationOptions();
 		syncUpOptions.setStatusOptions(statusOptions);		
 		
 		// Test

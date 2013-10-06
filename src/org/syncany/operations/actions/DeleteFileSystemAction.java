@@ -24,12 +24,17 @@ public class DeleteFileSystemAction extends FileSystemAction {
 		// Normal case: locally known file to be deleted
 		else {
 			if (!fileAsExpected(fileVersion1)) {
-				createConflictFile(fileVersion2);				
+				if (fileExists(fileVersion1)) {
+					createConflictFile(fileVersion2);	
+				}
 			}
 		}
 			
 		File toDeleteFileOnDisk = getAbsolutePathFile(fileVersion2.getFullName());
-		toDeleteFileOnDisk.delete();
+		
+		if (toDeleteFileOnDisk.exists()) {
+			toDeleteFileOnDisk.delete();
+		}
 	}
 
 	@Override

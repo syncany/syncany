@@ -2,10 +2,10 @@ package org.syncany.operations;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;
-import org.syncany.operations.DownOperation.SyncDownOperationOptions;
-import org.syncany.operations.DownOperation.SyncDownOperationResult;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
-import org.syncany.operations.UpOperation.SyncUpOperationResult;
+import org.syncany.operations.DownOperation.DownOperationOptions;
+import org.syncany.operations.DownOperation.DownOperationResult;
+import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationResult;
 
 public class SyncOperation extends Operation {
 	private Database loadedDatabase;
@@ -27,47 +27,47 @@ public class SyncOperation extends Operation {
 		DownOperation syncDown = new DownOperation(config, loadedDatabase, options.getSyncDownOptions());
 		UpOperation syncUp = new UpOperation(config, loadedDatabase, options.getSyncUpOptions());
 		
-		SyncDownOperationResult syncDownResults = (SyncDownOperationResult) syncDown.execute();
-		SyncUpOperationResult syncUpResults = (SyncUpOperationResult) syncUp.execute();
+		DownOperationResult syncDownResults = (DownOperationResult) syncDown.execute();
+		UpOperationResult syncUpResults = (UpOperationResult) syncUp.execute();
 		
 		return new SyncOperationResult(syncDownResults, syncUpResults);
 	}
 	
 	public static class SyncOperationOptions implements OperationOptions {
-		private SyncUpOperationOptions syncUpOptions;
-		private SyncDownOperationOptions syncDownOptions;		
+		private UpOperationOptions syncUpOptions = new UpOperationOptions();
+		private DownOperationOptions syncDownOptions = new DownOperationOptions();
 
-		public SyncDownOperationOptions getSyncDownOptions() {
+		public DownOperationOptions getSyncDownOptions() {
 			return syncDownOptions;
 		}
 		
-		public void setSyncDownOptions(SyncDownOperationOptions syncDownOptions) {
+		public void setSyncDownOptions(DownOperationOptions syncDownOptions) {
 			this.syncDownOptions = syncDownOptions;
 		}				
 		
-		public SyncUpOperationOptions getSyncUpOptions() {
+		public UpOperationOptions getSyncUpOptions() {
 			return syncUpOptions;
 		}
 		
-		public void setSyncUpOptions(SyncUpOperationOptions syncUpOptions) {
+		public void setSyncUpOptions(UpOperationOptions syncUpOptions) {
 			this.syncUpOptions = syncUpOptions;
 		}		
 	}
 	
 	public class SyncOperationResult implements OperationResult {
-		private SyncDownOperationResult syncDownResult;
-		private SyncUpOperationResult syncUpResult;
+		private DownOperationResult syncDownResult;
+		private UpOperationResult syncUpResult;
 		
-		public SyncOperationResult(SyncDownOperationResult syncDownResult, SyncUpOperationResult syncUpResult) {
+		public SyncOperationResult(DownOperationResult syncDownResult, UpOperationResult syncUpResult) {
 			this.syncDownResult = syncDownResult;
 			this.syncUpResult = syncUpResult;
 		}
 
-		public SyncDownOperationResult getSyncDownResult() {
+		public DownOperationResult getSyncDownResult() {
 			return syncDownResult;
 		}		
 		
-		public SyncUpOperationResult getSyncUpResult() {
+		public UpOperationResult getSyncUpResult() {
 			return syncUpResult;
 		}				
 	}

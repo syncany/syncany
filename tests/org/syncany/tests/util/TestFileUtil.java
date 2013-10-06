@@ -283,4 +283,9 @@ public class TestFileUtil {
 		return inputFilesWithChecksums;
 	}
 	
+	public static void createSymlink(File targetFile, File symlinkFile) throws Exception {
+		Process process = Runtime.getRuntime().exec(new String[] { "/bin/ln", "-s", targetFile.getAbsolutePath(), symlinkFile.getAbsolutePath() });
+		process.waitFor();
+	}
+	
 }

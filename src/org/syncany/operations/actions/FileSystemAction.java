@@ -118,6 +118,11 @@ public abstract class FileSystemAction {
 	protected void createConflictFile(FileVersion conflictingLocalVersion) throws IOException {
 		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getFullName());
 		
+		if (!conflictingLocalFile.exists()) {
+			logger.log(Level.INFO, "     - Creation of conflict file not necessary. Locally conflicting file vanished from "+conflictingLocalFile);
+			return;
+		}
+		
 		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictingLocalFile);
 		String conflictBasename = FileUtil.getBasename(conflictingLocalFile);
 		String conflictFileExtension = FileUtil.getExtension(conflictingLocalFile);		
@@ -153,7 +158,7 @@ public abstract class FileSystemAction {
 		File newConflictFile = new File(conflictDirectory+File.separator+newFullName);
 		
 		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
-		FileUtils.moveFile(conflictingLocalFile, newConflictFile);
+		FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
 	}
 	
 	// TODO [medium] This is duplicate code, the indexer and the status operation also compare a FileVersion to a local file
@@ -161,7 +166,7 @@ public abstract class FileSystemAction {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());		
 		boolean actualLocalFileExists = actualLocalFile.exists();
 		
-		// Check existance
+		// Check existence
 		if (!actualLocalFileExists) {
 			logger.log(Level.INFO, "     - Unexpected file detected, is expected to EXIST, but does not: "+actualLocalFile);
 			return false;

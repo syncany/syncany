@@ -11,7 +11,7 @@ import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -83,7 +83,7 @@ public class StatusOperationTest {
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
 
-		SyncUpOperationOptions syncUpOptions = new SyncUpOperationOptions();
+		UpOperationOptions syncUpOptions = new UpOperationOptions();
 		syncUpOptions.setStatusOptions(statusOptions);			
 		
 		// Perform 'up' and immediately change test file

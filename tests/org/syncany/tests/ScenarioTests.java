@@ -5,6 +5,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.scenarios.AllFilePossibilitiesScenarioTest;
 import org.syncany.tests.scenarios.CallUpWhileStillWritingFileScenarioTest;
+import org.syncany.tests.scenarios.ChangedTypeScenarioTest;
 import org.syncany.tests.scenarios.ChangedModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.CreateSimilarFileParallelScenarioTest;
 import org.syncany.tests.scenarios.DirtyDatabaseScenarioTest;
@@ -18,6 +19,8 @@ import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
+import org.syncany.tests.scenarios.RenameDeleteScenarioTest;
+import org.syncany.tests.scenarios.RenameToExistingFileScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SymlinkIgnoreScenarioTest;
@@ -27,6 +30,7 @@ import org.syncany.tests.scenarios.SymlinkIgnoreScenarioTest;
 	AllFilePossibilitiesScenarioTest.class,
 	CallUpWhileStillWritingFileScenarioTest.class,
 	ChangedModifiedDateScenarioTest.class,
+	ChangedTypeScenarioTest.class,
 	CreateSimilarFileParallelScenarioTest.class,
 	DirtyDatabaseScenarioTest.class,
 	EmptyFileScenarioTest.class,
@@ -39,6 +43,8 @@ import org.syncany.tests.scenarios.SymlinkIgnoreScenarioTest;
 	ManySyncUpsAndDatabaseFileCleanupTest.class,
 	ManySyncUpsAndOtherClientSyncDownTest.class,
 	MixedUpDownScenarioTest.class,
+	RenameToExistingFileScenarioTest.class,
+	RenameDeleteScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,
 	SymlinkIgnoreScenarioTest.class

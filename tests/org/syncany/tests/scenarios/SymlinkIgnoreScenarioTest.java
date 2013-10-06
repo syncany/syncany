@@ -13,9 +13,10 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.UpOperation.SyncUpOperationResult;
+import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class SymlinkIgnoreScenarioTest {
 	@Test
@@ -30,12 +31,11 @@ public class SymlinkIgnoreScenarioTest {
 
 		// Run 
 		File symlinkFile = clientA.getLocalFile("symlink-name");
-		Process process = Runtime.getRuntime().exec(new String[] { "/bin/ln", "-s", "/etc/hosts", symlinkFile.getAbsolutePath() });
-		process.waitFor();
+		TestFileUtil.createSymlink(new File("/etc/hosts"), symlinkFile);
 		
 		assertTrue("Symlink should exist at "+symlinkFile, symlinkFile.exists());
 		
-		SyncUpOperationResult upResult = clientA.up();
+		UpOperationResult upResult = clientA.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
 		// Test 1: Check result sets for inconsistencies

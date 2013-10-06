@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.syncany.database.Branch;
 import org.syncany.database.Branch.BranchIterator;
@@ -56,7 +54,7 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  *     until B uploads a consolidated version
  */
 public class DatabaseReconciliator {
-	private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
+	//private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
 	
 	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(Branch localBranch, Branches remoteBranches) {
 		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;

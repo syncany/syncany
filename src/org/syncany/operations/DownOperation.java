@@ -59,27 +59,27 @@ public class DownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 	
 	private Database localDatabase;
-	@SuppressWarnings("unused")	private SyncDownOperationOptions options;
-	private SyncDownOperationResult result;
+	@SuppressWarnings("unused")	private DownOperationOptions options;
+	private DownOperationResult result;
 	
 	private Branch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
 	
 	public DownOperation(Config config) {
-		this(config, null, new SyncDownOperationOptions());
+		this(config, null, new DownOperationOptions());
 	}	
 	
 	public DownOperation(Config config, Database database) {
-		this(config, database, new SyncDownOperationOptions());
+		this(config, database, new DownOperationOptions());
 	}	
 	
-	public DownOperation(Config config, Database database, SyncDownOperationOptions options) {
+	public DownOperation(Config config, Database database, DownOperationOptions options) {
 		super(config);
 		
 		this.localDatabase = database;
 		this.options = options;
-		this.result = new SyncDownOperationResult();
+		this.result = new DownOperationResult();
 	}	
 	
 	public OperationResult execute() throws Exception {
@@ -446,12 +446,7 @@ public class DownOperation extends Operation {
 				clientName = null;
 				clientVersionFrom = null;
 				clientVersionTo = null;
-			}
-			
-			// TODO FIXME [high] This currently does not work for this situation:
-			logger.log(Level.WARNING, "TODO WARNING: This currently does not work for this situation: db-A-500  and branch A1-A5, because db-A-5 does NOT exist!!");
-			//   - db-A-500  and branch A1-A5, because db-A-5 does NOT exist!!
-			//   - To IMPLEMENT: if end of client range is reached (here: A5), load from next highest db-file of A (here: db-A-500)
+			}			
 		}
 		
 		return winnerBranchDatabase;		
@@ -586,11 +581,11 @@ public class DownOperation extends Operation {
 		
 	}	
 
-	public static class SyncDownOperationOptions implements OperationOptions {
+	public static class DownOperationOptions implements OperationOptions {
 		// Nothing here yet.
 	}
 	
-	public class SyncDownOperationResult implements OperationResult {
+	public class DownOperationResult implements OperationResult {
 		private ChangeSet changeSet = new ChangeSet();
 		
 		public void setChangeSet(ChangeSet ChangeSet) {

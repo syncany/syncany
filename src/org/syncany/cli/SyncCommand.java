@@ -3,10 +3,10 @@ package org.syncany.cli;
 import java.io.PrintStream;
 
 import org.syncany.Client;
-import org.syncany.operations.DownOperation.SyncDownOperationOptions;
+import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncOperation.SyncOperationResult;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 
 public class SyncCommand extends Command {
 	private DownCommand downCommand;
@@ -44,8 +44,8 @@ public class SyncCommand extends Command {
 	}
 	
 	public SyncOperationOptions parseSyncOptions(String[] operationArguments) throws Exception {
-		SyncDownOperationOptions syncDownOptions = downCommand.parseOptions(operationArguments);
-		SyncUpOperationOptions syncUpOptions = upCommand.parseOptions(operationArguments);
+		DownOperationOptions syncDownOptions = downCommand.parseOptions(operationArguments);
+		UpOperationOptions syncUpOptions = upCommand.parseOptions(operationArguments);
 
 		SyncOperationOptions syncOptions = new SyncOperationOptions();
 		syncOptions.setSyncDownOptions(syncDownOptions);

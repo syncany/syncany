@@ -9,7 +9,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.operations.UpOperation.SyncUpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -23,7 +23,7 @@ public class DirtyDatabaseScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		
 		// Run 
-		SyncUpOperationOptions upOptionsForceEnabled = new SyncUpOperationOptions();
+		UpOperationOptions upOptionsForceEnabled = new UpOperationOptions();
 		upOptionsForceEnabled.setForceUploadEnabled(true);
 		
 		clientA.createNewFile("A-file1.jpg", 50*1024);

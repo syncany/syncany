@@ -1,25 +1,25 @@
 package org.syncany.cli;
 
 import org.syncany.operations.StatusOperation.ChangeSet;
-import org.syncany.operations.DownOperation.SyncDownOperationOptions;
-import org.syncany.operations.DownOperation.SyncDownOperationResult;
+import org.syncany.operations.DownOperation.DownOperationOptions;
+import org.syncany.operations.DownOperation.DownOperationResult;
 
 public class DownCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		SyncDownOperationOptions operationOptions = parseOptions(operationArgs);		
-		SyncDownOperationResult operationResult = client.down(operationOptions);		
+		DownOperationOptions operationOptions = parseOptions(operationArgs);		
+		DownOperationResult operationResult = client.down(operationOptions);		
 		
 		printResults(operationResult);
 		
 		return 0;
 	}
 
-	public SyncDownOperationOptions parseOptions(String[] operationArguments) {
-		return new SyncDownOperationOptions();
+	public DownOperationOptions parseOptions(String[] operationArguments) {
+		return new DownOperationOptions();
 	}
 
-	public void printResults(SyncDownOperationResult operationResult) {
+	public void printResults(DownOperationResult operationResult) {
 		ChangeSet changeSet = operationResult.getChangeSet();
 		
 		if (changeSet.hasChanges()) {

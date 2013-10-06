@@ -3,6 +3,8 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -14,7 +16,13 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.UpOperation.SyncUpOperationResult;
+import org.syncany.operations.UpOperation.UpOperationResult;
+import org.syncany.tests.scenarios.framework.AbstractClientAction;
+import org.syncany.tests.scenarios.framework.ClientActions;
+import org.syncany.tests.scenarios.framework.CreateFileTree;
+import org.syncany.tests.scenarios.framework.Executable;
+import org.syncany.tests.scenarios.framework.LockFile;
+import org.syncany.tests.scenarios.framework.UnlockFile;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -72,7 +80,7 @@ public class FileLockedScenarioTest {
 	}	
 	
 	private void runUpAndTestForEmptyDatabase(Connection connection, TestClient client) throws Exception {
-		SyncUpOperationResult upResult = client.up();
+		UpOperationResult upResult = client.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
 		// Test 1: Check result sets for inconsistencies
@@ -89,5 +97,35 @@ public class FileLockedScenarioTest {
 		// Test 3: Check file system for inconsistencies
 		File repoPath = ((LocalConnection) connection).getRepositoryPath();		
 		assertEquals("Repository should NOT contain any files.", 0, repoPath.list().length);			
+	}
+	
+	@Test
+	public void testChangeTypeToFolder() throws Exception {		
+		final Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		final TestClient clientA = new TestClient("A", testConnection);
+		final TestClient clientB = new TestClient("B", testConnection);
+		
+		ClientActions.runOps(clientA, null,
+			new AbstractClientAction[] {
+				new CreateFileTree(),
+				new LockFile(),
+				new UnlockFile()
+			},
+			new Executable() {
+				@Override
+				public void execute() throws Exception {
+					clientA.upWithForceChecksum();		
+					
+					clientB.down();
+					assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
+				}			
+			}
+		);
+		
+		// TODO [low] Add asserts here, this does not check if the locked file is indexed or not. Something like changeSet.ignoredFiles should be added.
+		
+		clientA.cleanup();
+		clientB.cleanup();
 	}
 }
