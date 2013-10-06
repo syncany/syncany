@@ -91,7 +91,7 @@ public class Indexer {
 			
 			// Check if file exists, remove if it doesn't
 			FileVersion lastLocalVersion = fileHistory.getLastVersion();
-			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getFullName());
+			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
 			// Ignore this file history if the last version is marked "DELETED"
 			if (lastLocalVersion.getStatus() == FileStatus.DELETED) {
@@ -143,12 +143,17 @@ public class Indexer {
 			}
 			
 			// Content
-			if (file.isFile()) {
+			if (startFileProperties.type == FileType.FILE) {
 				logger.log(Level.FINER, "- +FileContent: {0}", file);			
 				fileContent = new FileContent();				
-			}	
+			}				
 			
 			return true;
+		}
+		
+		@Override
+		public boolean onFileStartDeduplicate(File file) {			
+			return startFileProperties.type == FileType.FILE; // Ignore directories and symlinks!
 		}
 
 		@Override
@@ -208,8 +213,8 @@ public class Indexer {
 				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
 			}			
 
-			fileVersion.setPath(fileProperties.path);
-			fileVersion.setName(fileProperties.name);
+			fileVersion.setPath(fileProperties.relativePath);
+			fileVersion.setLinkTarget(fileProperties.linkTarget);
 			fileVersion.setType(fileProperties.type);
 			fileVersion.setSize(fileProperties.size);
 			fileVersion.setChecksum(fileProperties.checksum);
@@ -222,7 +227,7 @@ public class Indexer {
 				if (fileVersion.getType() == FileType.FILE && !Arrays.equals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
 					fileVersion.setStatus(FileStatus.CHANGED);
 				}
-				else if (!fileVersion.getFullName().equals(lastFileVersion.getFullName())) {
+				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
 					fileVersion.setStatus(FileStatus.RENAMED);
 				}
 				else {
@@ -231,8 +236,13 @@ public class Indexer {
 			}			
 							
 			// Only add if not identical
-			boolean isIdenticalToLastVersion = lastFileVersion != null && Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
-					&& lastFileVersion.getName().equals(fileVersion.getName()) && lastFileVersion.getPath().equals(fileVersion.getPath());
+			boolean isIdenticalToLastVersion = 
+				   lastFileVersion != null 
+				&& lastFileVersion.getPath().equals(fileVersion.getPath())
+				&& lastFileVersion.getType().equals(fileVersion.getType())
+				&& lastFileVersion.getSize().equals(fileVersion.getSize())
+				&& Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
+				&& lastFileVersion.getLastModified().equals(fileVersion.getLastModified());
 			
 			if (!isIdenticalToLastVersion) {
 				newDatabaseVersion.addFileHistory(fileHistory);
@@ -263,13 +273,28 @@ public class Indexer {
 			FileProperties fileProperties = new FileProperties();
 			
 			fileProperties.lastModified = file.lastModified();
-			fileProperties.type = (file.isDirectory()) ? FileType.FOLDER : FileType.FILE;
-			fileProperties.name = file.getName();
 			fileProperties.size = file.length();
-			fileProperties.path = FileUtil.getRelativePath(config.getLocalDir(), file.getParentFile());
 			fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
 			fileProperties.checksum = checksum;
 
+			try {
+				if (file.isDirectory()) {	
+					fileProperties.type = FileType.FOLDER;
+					fileProperties.linkTarget = null;
+				}
+				else if (FileUtil.isSymlink(file)) {
+					fileProperties.type = FileType.SYMLINK;
+					fileProperties.linkTarget = FileUtil.readSymlinkTarget(file);
+				}
+				else {
+					fileProperties.type = FileType.FILE;
+					fileProperties.linkTarget = null;
+				}
+			}
+			catch (Exception e) {
+				fileProperties.type = FileType.FILE;
+			}
+			
 			// Must be last (!), used for vanish-test later
 			fileProperties.exists = file.exists();
 			fileProperties.locked = FileUtil.isFileLocked(file);
@@ -333,7 +358,7 @@ public class Indexer {
 								continue;
 							}
 							
-							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getFullName());
+							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getPath());
 							
 							if (lastVersion.getStatus() != FileStatus.DELETED && !lastVersionOnLocalDisk.exists()) {
 								lastFileHistory = fileHistoryWithSameChecksum;
@@ -430,9 +455,8 @@ public class Indexer {
 		long lastModified;
 		long size;
 		FileType type;
-		String path;
-		String name;
 		String relativePath;
+		String linkTarget;
 		byte[] checksum;
 	}
 }

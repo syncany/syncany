@@ -18,8 +18,12 @@ public class ChangeFileSystemAction extends FileSystemAction {
 			createFile(fileVersion2);
 		}
 		else {
-			File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getFullName());
+			File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getPath());
 			fromFileOnDisk.delete();
+			
+			if (fileExists(fileVersion2) && !fileAsExpected(fileVersion2)) {
+				createConflictFile(fileVersion2);
+			}
 			
 			createFile(fileVersion2);				
 		}			

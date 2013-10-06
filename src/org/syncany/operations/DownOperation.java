@@ -35,7 +35,7 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -240,7 +240,7 @@ public class DownOperation extends Operation {
 			
 			// Cases
 			boolean isNewFile = localLastVersion == null;
-			boolean isInSamePlace = !isNewFile && winningLastVersion != null && localLastVersion.getFullName().equals(winningLastVersion.getFullName());
+			boolean isInSamePlace = !isNewFile && winningLastVersion != null && localLastVersion.getPath().equals(winningLastVersion.getPath());
 			boolean isChecksumEqual = !isNewFile && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());
 			
 			boolean isChangedFile = !isNewFile && isInSamePlace && !isChecksumEqual;
@@ -261,7 +261,7 @@ public class DownOperation extends Operation {
 				FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 
-				result.getChangeSet().getNewFiles().add(winningLastVersion.getFullName());
+				result.getChangeSet().getNewFiles().add(winningLastVersion.getPath());
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Added: "+action);
@@ -271,7 +271,7 @@ public class DownOperation extends Operation {
 				FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				result.getChangeSet().getChangedFiles().add(winningLastVersion.getFullName());				
+				result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());				
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Changed: "+action);
@@ -281,7 +281,7 @@ public class DownOperation extends Operation {
 				FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				result.getChangeSet().getChangedFiles().add(winningLastVersion.getFullName());								
+				result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());								
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Renamed: "+action);
@@ -291,14 +291,14 @@ public class DownOperation extends Operation {
 				FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 				
-				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getFullName());								
+				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getPath());								
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Deleted: {0}", action);
 				}
 			}
 			else if (isIdenticalFile) {
-				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getFullName());												
+				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getPath());												
 				
 				if (logger.isLoggable(Level.FINER)) {
 					logger.log(Level.FINER, "      + Identical file. Nothing to do.");	
@@ -414,7 +414,7 @@ public class DownOperation extends Operation {
 		}
 		
 		// Load individual databases for branch ranges
-		DatabaseDAO databaseDAO = new DatabaseXmlDAO(config.getTransformer());
+		DatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
 		Database winnerBranchDatabase = new Database(); // Database cannot be reused, since these might be different clients
 		
 		String clientName = null;
@@ -459,7 +459,7 @@ public class DownOperation extends Operation {
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
-		DatabaseDAO dbDAO = new DatabaseXmlDAO(config.getTransformer());
+		DatabaseDAO dbDAO = new XmlDatabaseDAO(config.getTransformer());
 		
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
@@ -536,12 +536,12 @@ public class DownOperation extends Operation {
 		private int compareByFullName(FileSystemAction a1, FileSystemAction a2) {
 			// For renamed/deleted, do the longest path first
 			if (a1.getClass().equals(DeleteFileSystemAction.class) || a1.getClass().equals(RenameFileSystemAction.class)) {
-				return -1 * a1.getFile2().getFullName().compareTo(a2.getFile2().getFullName());
+				return -1 * a1.getFile2().getPath().compareTo(a2.getFile2().getPath());
 			}
 			
 			// For the rest, do the shortest path first
 			else if (a1.getClass().equals(NewFileSystemAction.class) || a1.getClass().equals(ChangeFileSystemAction.class)) {
-				return a1.getFile2().getFullName().compareTo(a2.getFile2().getFullName());
+				return a1.getFile2().getPath().compareTo(a2.getFile2().getPath());
 			}
 			
 			return 0;

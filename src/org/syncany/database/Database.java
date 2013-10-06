@@ -201,7 +201,7 @@ public class Database {
 			FileVersion lastVersion = cacheFileHistory.getLastVersion();
 			
 			if (lastVersion.getStatus() != FileStatus.DELETED) {
-				String fileName = lastVersion.getFullName();			
+				String fileName = lastVersion.getPath();			
 				filenameHistoryCache.put(fileName, cacheFileHistory);
 			}
 		}

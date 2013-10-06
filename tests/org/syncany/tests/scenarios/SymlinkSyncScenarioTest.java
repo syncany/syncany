@@ -1,8 +1,7 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -16,22 +15,23 @@ import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 
-public class SymlinkIgnoreScenarioTest {
+public class SymlinkSyncScenarioTest {
 	@Test
 	public void testChangedModifiedDate() throws Exception {
-		if (File.separatorChar == '\\') {			
+		if (!FileUtil.symlinksSupported()) {			
 			return; // Skip test for Windows, no symlinks there!
 		}
 		
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
 
 		// Run 
 		File symlinkFile = clientA.getLocalFile("symlink-name");
-		TestFileUtil.createSymlink(new File("/etc/hosts"), symlinkFile);
+		FileUtil.createSymlink(new File("/etc/hosts"), symlinkFile);		
 		
 		assertTrue("Symlink should exist at "+symlinkFile, symlinkFile.exists());
 		
@@ -39,21 +39,31 @@ public class SymlinkIgnoreScenarioTest {
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
 		// Test 1: Check result sets for inconsistencies
-		assertFalse("Status should NOT return changes.", statusResult.getChangeSet().hasChanges());
-		assertFalse("File should NOT be uploaded. Symlinks are unsupported right now.", upResult.getChangeSet().hasChanges());
+		assertTrue("Status should return changes.", statusResult.getChangeSet().hasChanges());
+		assertTrue("File should be uploaded.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
 		Database database = clientA.loadLocalDatabase();
 		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
 
-		assertNull("File should NOT be uploaded. Symlinks are unsupported right now.", database.getFileHistory("large-test-file"));		
-		assertNull("There should NOT be a new database version, because file should not have been added.", databaseVersion);
+		assertNotNull("File should be uploaded.", database.getFileHistory("symlink-name"));		
+		assertNotNull("There should be a new database version, because file should not have been added.", databaseVersion);
 		
 		// Test 3: Check file system for inconsistencies
 		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();		
-		assertEquals("Repository should NOT contain any files.", 0, repoPath.list().length);	
+		assertEquals("Repository should contain only ONE database file, not multichunks.", 1, repoPath.list().length);	
+		
+		// B down
+		clientB.down();
+		assertEquals("Local folder should contain one file (link!)", 1, clientB.getLocalFiles().size());
+		
+		File localSymlinkFile = clientB.getLocalFile("symlink-name");
+		assertTrue("Local symlink file should exist.", localSymlinkFile.exists());
+		assertTrue("Local symlink file should be a SYMLINK.", FileUtil.isSymlink(localSymlinkFile));
+		assertEquals("Local symlink file should point to actual target.", "/etc/hosts", FileUtil.readSymlinkTarget(localSymlinkFile));
 		
 		// Tear down
 		clientA.cleanup();
+		clientB.cleanup();
 	}
 }

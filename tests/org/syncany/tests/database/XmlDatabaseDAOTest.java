@@ -20,7 +20,7 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -32,7 +32,7 @@ import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class DatabaseXmlDAOTest {
+public class XmlDatabaseDAOTest {
 	private File tempDir;
 	
 	static {
@@ -235,19 +235,19 @@ public class DatabaseXmlDAOTest {
         FileVersion versionA1 = new FileVersion();
         versionA1.setVersion(1L);
         versionA1.setType(FileType.FOLDER);
-        versionA1.setPath("Pictures/2013");
-        versionA1.setName("New York Folder");
+        versionA1.setPath("Pictures/2013/New York Folder");
         versionA1.setStatus(FileStatus.NEW);
         versionA1.setSize(0L);
+        versionA1.setLastModified(new Date());
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA1);
         
         FileVersion versionA2 = new FileVersion();
         versionA2.setVersion(2L);
         versionA2.setType(FileType.FOLDER);
-        versionA2.setPath("Pictures/2013");
-        versionA2.setName("New York");  
+        versionA2.setPath("Pictures/2013/New York");  
         versionA2.setStatus(FileStatus.RENAMED);
         versionA2.setSize(0L);
+        versionA2.setLastModified(new Date());
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
 		       
         // File B
@@ -257,19 +257,19 @@ public class DatabaseXmlDAOTest {
         FileVersion versionB1 = new FileVersion();
         versionB1.setVersion(1L);
         versionB1.setType(FileType.FOLDER);
-        versionB1.setPath("Pictures/2013");
-        versionB1.setName("Egypt Folder");
+        versionB1.setPath("Pictures/2013/Egypt Folder");
         versionB1.setStatus(FileStatus.NEW);
         versionB1.setSize(0L);
+        versionB1.setLastModified(new Date());
         newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB1);
         
         FileVersion versionB2 = new FileVersion();
         versionB2.setVersion(2L);
         versionB2.setType(FileType.FOLDER);
-        versionB2.setPath("Pictures/2013");
-        versionB2.setName("Egypt");        
+        versionB2.setPath("Pictures/2013/Egypt");        
         versionB2.setStatus(FileStatus.RENAMED);
         versionB2.setSize(0L);
+        versionB2.setLastModified(new Date());
         newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB2);	        	
         		
         // Add database version
@@ -371,13 +371,13 @@ public class DatabaseXmlDAOTest {
 		// Write database to disk, read it again, and compare them
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		
-		DatabaseXmlDAO writeDAO = new DatabaseXmlDAO();
+		XmlDatabaseDAO writeDAO = new XmlDatabaseDAO();
 		writeDAO.save(writtenDatabase, writtenDatabaseVersions.get(0), writtenDatabaseVersions.get(4), writtenDatabaseFile);
 		
 		// Read again
 		Database readDatabase = new Database();
 		
-		DatabaseXmlDAO readDAO = new DatabaseXmlDAO();
+		XmlDatabaseDAO readDAO = new XmlDatabaseDAO();
 		readDAO.load(readDatabase, writtenDatabaseFile);
 		
 		for (int i=0; i<=4; i++) {

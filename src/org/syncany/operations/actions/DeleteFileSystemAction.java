@@ -30,7 +30,7 @@ public class DeleteFileSystemAction extends FileSystemAction {
 			}
 		}
 			
-		File toDeleteFileOnDisk = getAbsolutePathFile(fileVersion2.getFullName());
+		File toDeleteFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());
 		
 		if (toDeleteFileOnDisk.exists()) {
 			toDeleteFileOnDisk.delete();

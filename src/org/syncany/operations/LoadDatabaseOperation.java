@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 
 public class LoadDatabaseOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LoadDatabaseOperation.class.getSimpleName());
@@ -21,7 +21,7 @@ public class LoadDatabaseOperation extends Operation {
 		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
 		
 		Database db = new Database();
-		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
+		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		
 		if (localDatabaseFile.exists()) {
 			dao.load(db, localDatabaseFile);

@@ -12,11 +12,16 @@ import org.syncany.tests.scenarios.framework.ChangeFileSize;
 import org.syncany.tests.scenarios.framework.ChangeLastModifiedDate;
 import org.syncany.tests.scenarios.framework.ChangeTypeToFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeToFolder;
-import org.syncany.tests.scenarios.framework.ChangeTypeToSymlink;
+import org.syncany.tests.scenarios.framework.ChangeTypeToSymlinkToFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeToSymlinkToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeToSymlinkToNonExisting;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFile;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
 import org.syncany.tests.scenarios.framework.CreateFolder;
+import org.syncany.tests.scenarios.framework.CreateSymlinkToFile;
+import org.syncany.tests.scenarios.framework.CreateSymlinkToFolder;
+import org.syncany.tests.scenarios.framework.CreateSymlinkToNonExisting;
 import org.syncany.tests.scenarios.framework.DeleteFile;
 import org.syncany.tests.scenarios.framework.DeleteFolder;
 import org.syncany.tests.scenarios.framework.Executable;
@@ -90,9 +95,14 @@ public class AllFilePossibilitiesScenarioTest {
 				new ChangeLastModifiedDate(),
 				new ChangeTypeToFile(),
 				new ChangeTypeToFolder(),
-				new ChangeTypeToSymlink(),
+				new ChangeTypeToSymlinkToFile(),
+				new ChangeTypeToSymlinkToFolder(),
+				new ChangeTypeToSymlinkToNonExisting(),
 				new CreateFile(),
 				new CreateFolder(),
+				new CreateSymlinkToFile(),
+				new CreateSymlinkToFolder(),
+				new CreateSymlinkToNonExisting(),
 				new DeleteFile(),
 				new DeleteFolder(),
 				new LockFile(),

@@ -31,15 +31,17 @@ public class FileVersion implements Cloneable {
 	// Mandatory
     private Long version;   
     private String path;
-    private String name;   
     private FileType type; 
     private FileStatus status;    
     private Long size; 
+    private Date lastModified;
 
+    // Mandatory (if type is symlink)
+    private String linkTarget;
+    
     // Optional
     private String createdBy;
     private byte[] checksum;
-    private Date lastModified;
     private Date updated;
     
     public FileVersion() {
@@ -62,14 +64,6 @@ public class FileVersion implements Cloneable {
         this.version = version;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public FileType getType() {
 		return type;
 	}
@@ -78,14 +72,6 @@ public class FileVersion implements Cloneable {
 		this.type = type;
 	}
 
-	public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-    
     public Date getLastModified() {
         return lastModified;
     }
@@ -110,14 +96,17 @@ public class FileVersion implements Cloneable {
         this.status = status;
     }
     
-    public String getFullName() {
-    	if (path == null || "".equals(path)) {
-    		return name;
-    	}
-    	else {
-    		return path+File.separator+name; 
-    	}    	
+    public String getPath() {
+    	return path;  	
     }
+
+	public String getName() {
+		return new File(path).getName();
+	}
+    
+    public void setPath(String path) {
+		this.path = path;
+	}
     
     public byte[] getChecksum() {
 		return checksum;
@@ -134,11 +123,20 @@ public class FileVersion implements Cloneable {
 	public void setSize(Long size) {
 		this.size = size;
 	}
+	
+	public String getLinkTarget() {
+		return linkTarget;
+	}
+	
+	public void setLinkTarget(String linkTarget) {
+		this.linkTarget = linkTarget;
+	}
 
 	@Override
 	public String toString() {
-		return "FileVersion(version=" + version + ", createdBy=" + createdBy + ", checksum=" + StringUtil.toHex(checksum) + ", path=" + path
-				+ ", name=" + name + ", lastModified=" + lastModified + ", updated=" + updated + ", status=" + status + ")";
+		return "FileVersion [version=" + version + ", path=" + path + ", type=" + type + ", status=" + status + ", size=" + size + ", lastModified="
+				+ lastModified + ", linkTarget=" + linkTarget + ", createdBy=" + createdBy + ", checksum=" + StringUtil.toHex(checksum) + ", updated="
+				+ updated + "]";
 	}
 
 	@Override
@@ -150,7 +148,6 @@ public class FileVersion implements Cloneable {
             clone.setCreatedBy(getCreatedBy());
             clone.setLastModified(getLastModified());
             clone.setUpdated(getUpdated());
-            clone.setName(getName());
             clone.setPath(getPath());
             clone.setType(getType());
             clone.setVersion(getVersion());
@@ -169,10 +166,11 @@ public class FileVersion implements Cloneable {
 		int result = 1;
 		result = prime * result + Arrays.hashCode(checksum);
 		result = prime * result + ((createdBy == null) ? 0 : createdBy.hashCode());
-		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
+		result = prime * result + ((size == null) ? 0 : size.hashCode());
 		result = prime * result + ((status == null) ? 0 : status.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		result = prime * result + ((updated == null) ? 0 : updated.hashCode());
 		result = prime * result + ((version == null) ? 0 : version.hashCode());
 		return result;
@@ -194,22 +192,24 @@ public class FileVersion implements Cloneable {
 				return false;
 		} else if (!createdBy.equals(other.createdBy))
 			return false;
-		if (lastModified == null) {
-			if (other.lastModified != null)
-				return false;
-		} else if (!lastModified.equals(other.lastModified))
-			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
 		if (path == null) {
 			if (other.path != null)
 				return false;
 		} else if (!path.equals(other.path))
 			return false;
+		if (lastModified == null) {
+			if (other.lastModified != null)
+				return false;
+		} else if (!lastModified.equals(other.lastModified))
+			return false;
+		if (size == null) {
+			if (other.size != null)
+				return false;
+		} else if (!size.equals(other.size))
+			return false;
 		if (status != other.status)
+			return false;
+		if (type != other.type)
 			return false;
 		if (updated == null) {
 			if (other.updated != null)
@@ -222,8 +222,8 @@ public class FileVersion implements Cloneable {
 		} else if (!version.equals(other.version))
 			return false;
 		return true;
-	} 
-	
+	}
+
 	public enum FileStatus {
 		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED");
 		
@@ -244,7 +244,8 @@ public class FileVersion implements Cloneable {
 	
 	public enum FileType {
 		FILE ("FILE"), 
-		FOLDER ("FOLDER");
+		FOLDER ("FOLDER"),
+		SYMLINK ("SYMLINK");
 		
 		private String name;       
 		
@@ -259,5 +260,5 @@ public class FileVersion implements Cloneable {
 		public String toString() {
 			return name;
 		}	
-	}		
+	}
 }

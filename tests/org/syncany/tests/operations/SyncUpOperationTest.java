@@ -16,9 +16,9 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseXmlDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -57,7 +57,7 @@ public class SyncUpOperationTest {
 		assertTrue(localDatabaseFile.exists());
 		assertTrue(remoteDatabaseFile.exists());
 		
-		DatabaseDAO dDAO = new DatabaseXmlDAO(testConfig.getTransformer());
+		DatabaseDAO dDAO = new XmlDatabaseDAO(testConfig.getTransformer());
 		Database localDatabase = new Database();
 		Database remoteDatabase = new Database();
 		dDAO.load(localDatabase, localDatabaseFile);
@@ -94,7 +94,7 @@ public class SyncUpOperationTest {
 
 	private void compareFileVersionsAgainstOriginalFiles(List<File> originalFiles, List<FileVersion> localFileVersions) throws Exception {
 		int toFind = originalFiles.size();
-		for (File originalFile : originalFiles) {
+		for (File originalFile : originalFiles) { 
 			String originalFileName = originalFile.getName();
 			
 			for (FileVersion fileVersion : localFileVersions) {

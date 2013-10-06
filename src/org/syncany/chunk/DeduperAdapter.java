@@ -4,6 +4,7 @@ import java.io.File;
 
 public abstract class DeduperAdapter implements DeduperListener {
 	public boolean onFileStart(File file) { return true; } 
+	public boolean onFileStartDeduplicate(File file) { return file.isFile(); }
 	public void onFileAddChunk(File file, Chunk chunk) { }
 	public void onFileEnd(File file, byte[] checksum) { }
 		

@@ -4,6 +4,7 @@ import java.io.File;
 
 public interface DeduperListener {
 	public boolean onFileStart(File file);
+	public boolean onFileStartDeduplicate(File file);
 	public void onFileAddChunk(File file, Chunk chunk);
 	public void onFileEnd(File file, byte[] checksum);
 	

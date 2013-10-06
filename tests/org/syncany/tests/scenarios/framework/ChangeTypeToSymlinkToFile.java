@@ -2,20 +2,20 @@ package org.syncany.tests.scenarios.framework;
 
 import java.io.File;
 
-import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 
-public class ChangeTypeToSymlink extends AbstractClientAction {
+public class ChangeTypeToSymlinkToFile extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		if (File.separatorChar == '\\') {
+		if (!FileUtil.symlinksSupported()) {
 			return; // no symbolic links on Windows
 		}
-		
+
 		File file = pickFile(hashCode());
-		
+
 		log(this, file.getAbsolutePath());
-		
+
 		file.delete();
-		TestFileUtil.createSymlink(new File("/etc/hosts"), file);
-	}		
-}	
+		FileUtil.createSymlink(new File("/etc/hosts"), file);
+	}
+}

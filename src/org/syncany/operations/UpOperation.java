@@ -23,7 +23,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
@@ -173,16 +173,16 @@ public class UpOperation extends Operation {
 			
 			switch (lastFileVersion.getStatus()) {
 				case NEW:
-					changeSet.getNewFiles().add(lastFileVersion.getFullName());
+					changeSet.getNewFiles().add(lastFileVersion.getPath());
 					break;
 					
 				case CHANGED:
 				case RENAMED:
-					changeSet.getChangedFiles().add(lastFileVersion.getFullName());
+					changeSet.getChangedFiles().add(lastFileVersion.getPath());
 					break;
 					
 				case DELETED:
-					changeSet.getDeletedFiles().add(lastFileVersion.getFullName());
+					changeSet.getDeletedFiles().add(lastFileVersion.getPath());
 					break;
 			}			
 		}		
@@ -190,7 +190,7 @@ public class UpOperation extends Operation {
 
 	private Database loadDirtyDatabase() throws IOException {
 		Database aDirtyDatabase = new Database();
-		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
+		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		
 		dao.load(aDirtyDatabase, config.getDirtyDatabaseFile());
 		
@@ -312,7 +312,7 @@ public class UpOperation extends Operation {
 		
 		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion.getHeader()+", to "+lastMergeDatabaseVersion.getHeader()+") to file "+localMergeDatabaseVersionFile+" ...");
 
-		DatabaseDAO databaseDAO = new DatabaseXmlDAO(config.getTransformer()); 			
+		DatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer()); 			
 		databaseDAO.save(database, null/*firstMergeDatabaseVersion*/, lastMergeDatabaseVersion, localMergeDatabaseVersionFile);
 		
 		logger.log(Level.INFO, "   + Uploading new file "+remoteMergeDatabaseVersionFile+" from local file "+localMergeDatabaseVersionFile+" ...");

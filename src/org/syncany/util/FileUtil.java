@@ -27,6 +27,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -230,6 +233,10 @@ public class FileUtil {
 			return false; 
 		}
 		
+		if (isSymlink(file)) {
+			return false;
+		}
+		
 		RandomAccessFile randomAccessFile = null;
 		boolean fileLocked = false;
 		
@@ -260,5 +267,34 @@ public class FileUtil {
 			
 		return fileLocked;
 	}
+
+	public static String getName(String fullName) {
+		return new File(fullName).getName();
+	}
+	
+	public static boolean symlinksSupported() {
+		return File.separatorChar == '/';
+	}		
+	
+	public static boolean isSymlink(File file) {
+		return Files.isSymbolicLink(Paths.get(file.getAbsolutePath()));
+	}
+	
+	public static String readSymlinkTarget(File file) {
+		try {
+			return Files.readSymbolicLink(Paths.get(file.getAbsolutePath())).toString();
+		}
+		catch (IOException e) {
+			return null;
+		}
+	}
+	
+	public static void createSymlink(File targetFile, File symlinkFile) throws Exception {
+		Path targetPath = Paths.get(targetFile.getAbsolutePath());
+		Path symlinkPath = Paths.get(symlinkFile.getAbsolutePath());
+		
+		Files.createSymbolicLink(symlinkPath, targetPath);
+	}
+	
 }
 

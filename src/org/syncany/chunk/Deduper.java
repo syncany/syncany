@@ -23,13 +23,17 @@ public class Deduper {
 		MultiChunk multiChunk = null;
 		
 		for (File file : files) {
-			boolean fileAllowed = listener.onFileStart(file);
+			// Filter ignored files
+			boolean fileAccepted = listener.onFileStart(file);
 			
-			if (!fileAllowed) {
+			if (!fileAccepted) {
 				continue;
 			}
+			
+			// Decide whether to index the contents
+			boolean dedupContents = listener.onFileStartDeduplicate(file);
 
-			if (file.isFile()) {
+			if (dedupContents) {
 				// Create chunks from file
 				Enumeration<Chunk> chunks = chunker.createChunks(file);
 

@@ -7,7 +7,7 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 
 public abstract class Operation {
 	protected Config config;
@@ -25,7 +25,7 @@ public abstract class Operation {
 	}	
 	
 	protected void saveLocalDatabase(Database db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
-		DatabaseDAO dao = new DatabaseXmlDAO(config.getTransformer());
+		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}	
 	

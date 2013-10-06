@@ -13,7 +13,7 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -122,7 +122,7 @@ public class TestClient extends Client {
 		Database db = new Database();
 		
 		if (localDatabaseFile.exists()) {			
-			DatabaseDAO dao = new DatabaseXmlDAO();
+			DatabaseDAO dao = new XmlDatabaseDAO();
 			dao.load(db, getLocalDatabaseFile());		
 		}
 

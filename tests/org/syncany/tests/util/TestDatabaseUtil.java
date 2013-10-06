@@ -12,7 +12,7 @@ import org.syncany.database.Branch;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.DatabaseXmlDAO;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.VectorClock;
 
 public class TestDatabaseUtil {
@@ -88,14 +88,14 @@ public class TestDatabaseUtil {
 	public static Database readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
 		Database db = new Database();
 		
-		DatabaseDAO dao = new DatabaseXmlDAO(transformer);
+		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
 		dao.load(db, databaseFile);
 		
 		return db;
 	}
 	
 	public static void writeDatabaseFileToDisk(Database db, File writtenDatabaseFile, Transformer transformer) throws IOException {
-		DatabaseDAO dao = new DatabaseXmlDAO(transformer);
+		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
 		dao.save(db, writtenDatabaseFile);
 	}
 	

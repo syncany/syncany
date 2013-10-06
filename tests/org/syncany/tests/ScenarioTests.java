@@ -23,7 +23,7 @@ import org.syncany.tests.scenarios.RenameDeleteScenarioTest;
 import org.syncany.tests.scenarios.RenameToExistingFileScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
-import org.syncany.tests.scenarios.SymlinkIgnoreScenarioTest;
+import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -47,7 +47,7 @@ import org.syncany.tests.scenarios.SymlinkIgnoreScenarioTest;
 	RenameDeleteScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,
-	SymlinkIgnoreScenarioTest.class
+	SymlinkSyncScenarioTest.class
 })
 public class ScenarioTests {
 	// This class executes all tests

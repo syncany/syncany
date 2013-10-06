@@ -62,7 +62,7 @@ public abstract class FileSystemAction {
 		if (reconstructedFileVersion.getType() == FileType.FILE) {
 			File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
 
-			logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getFullName()+" to "+reconstructedFileInCache+" ...");				
+			logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				
 
 			FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
 			
@@ -100,23 +100,42 @@ public abstract class FileSystemAction {
 			reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());
 			
 			// Okay. Now move to real place
-			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
+			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
 			logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
 			
-			FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation);
+			FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation); // TODO [medium] This should be in a try/catch block
 		}
 		
 		// Folder
-		else {
-			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getFullName());
+		else if (reconstructedFileVersion.getType() == FileType.FOLDER) {
+			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
 			
 			logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
 			reconstructedFilesAtFinalLocation.mkdirs();
-		}									
+		}	
+		
+		// Symlink
+		else if (reconstructedFileVersion.getType() == FileType.SYMLINK) {
+			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
+			File linkTargetFile = new File(reconstructedFileVersion.getLinkTarget());
+
+			if (FileUtil.symlinksSupported()) {				
+				logger.log(Level.INFO, "     - Creating symlink at "+reconstructedFilesAtFinalLocation+" (target: "+linkTargetFile+") ...");
+				FileUtil.createSymlink(linkTargetFile, reconstructedFilesAtFinalLocation);
+			}
+			else {
+				logger.log(Level.INFO, "     - Skipping symlink (not supported) at "+reconstructedFilesAtFinalLocation+" (target: "+linkTargetFile+") ...");
+			}
+		}
+		
+		else {
+			logger.log(Level.INFO, "     - Unknown file type: "+reconstructedFileVersion.getType());
+			throw new Exception("Unknown file type: "+reconstructedFileVersion.getType());
+		}
 	}
 	
 	protected void createConflictFile(FileVersion conflictingLocalVersion) throws IOException {
-		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getFullName());
+		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getPath());
 		
 		if (!conflictingLocalFile.exists()) {
 			logger.log(Level.INFO, "     - Creation of conflict file not necessary. Locally conflicting file vanished from "+conflictingLocalFile);
@@ -163,7 +182,7 @@ public abstract class FileSystemAction {
 	
 	// TODO [medium] This is duplicate code, the indexer and the status operation also compare a FileVersion to a local file
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());		
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());		
 		boolean actualLocalFileExists = actualLocalFile.exists();
 		
 		// Check existence
@@ -249,7 +268,7 @@ public abstract class FileSystemAction {
 	}
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getFullName());
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
 		boolean actualLocalFileExists = actualLocalFile.exists();
 		
 		// Check existence

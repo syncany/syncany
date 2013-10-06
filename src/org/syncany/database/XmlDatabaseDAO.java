@@ -27,17 +27,17 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class DatabaseXmlDAO implements DatabaseDAO {
-	private static final Logger logger = Logger.getLogger(DatabaseXmlDAO.class.getSimpleName());
+public class XmlDatabaseDAO implements DatabaseDAO {
+	private static final Logger logger = Logger.getLogger(XmlDatabaseDAO.class.getSimpleName());
 	private static final int XML_FORMAT_VERSION = 1;
 
 	private Transformer transformer;
 	
-	public DatabaseXmlDAO() {
+	public XmlDatabaseDAO() {
 		this(null);
 	}
 	
-	public DatabaseXmlDAO(Transformer transformer) {
+	public XmlDatabaseDAO(Transformer transformer) {
 		this.transformer = transformer;
 	}
 	
@@ -148,10 +148,14 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				out.print("\t\t\t\t\t<fileVersions>\n");
 				Collection<FileVersion> fileVersions = fileHistory.getFileVersions().values();
 				for (FileVersion fileVersion : fileVersions) {
-					if (fileVersion.getVersion() == null || fileVersion.getType() == null || fileVersion.getPath() == null
-							|| fileVersion.getName() == null || fileVersion.getStatus() == null || fileVersion.getSize() == null) {
+					if (fileVersion.getVersion() == null || fileVersion.getType() == null || fileVersion.getPath() == null 
+							|| fileVersion.getStatus() == null || fileVersion.getSize() == null || fileVersion.getLastModified() == null) {
 						
-						throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status, size): "+fileVersion);
+						throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status, size, last modified): "+fileVersion);
+					}
+					
+					if (fileVersion.getType() == FileType.SYMLINK && fileVersion.getLinkTarget() == null) {
+						throw new IOException("Unable to write file version: All symlinks must have a target.");
 					}
 					
 					out.print("\t\t\t\t\t\t<fileVersion");
@@ -159,15 +163,15 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 					out.print(" type=\""+fileVersion.getType()+"\"");
 					out.print(" status=\""+fileVersion.getStatus()+"\"");					
 					out.print(" path=\""+FileUtil.toDatabaseFilePath(fileVersion.getPath())+"\"");
-					out.print(" name=\""+fileVersion.getName()+"\"");
 					out.print(" size=\""+fileVersion.getSize()+"\"");
+					out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
 					
+					if (fileVersion.getLinkTarget() != null) {
+						out.print(" linkTarget=\""+FileUtil.toDatabaseFilePath(fileVersion.getLinkTarget())+"\"");
+					}
+
 					if (fileVersion.getCreatedBy() != null) {
 						out.print(" createdBy=\""+fileVersion.getCreatedBy()+"\"");
-					}
-					
-					if (fileVersion.getLastModified() != null) {
-						out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
 					}
 					
 					if (fileVersion.getUpdated() != null) {
@@ -364,7 +368,6 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
 				String path = attributes.getValue("path");
-				String name = attributes.getValue("name");
 				String sizeStr = attributes.getValue("size");
 				String typeStr = attributes.getValue("type");
 				String statusStr = attributes.getValue("status");
@@ -372,23 +375,20 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				String updatedStr = attributes.getValue("updated");
 				String createdBy = attributes.getValue("createdBy");
 				String checksumStr = attributes.getValue("checksum");
+				String linkTarget = attributes.getValue("linkTarget");
 				
-				if (fileVersionStr == null || name == null || path == null || typeStr == null || statusStr == null || sizeStr == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, name, path, type, status, and size are mandatory");
+				if (fileVersionStr == null || path == null || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, path, type, status, size and last modified are mandatory");
 				}
 				
 				FileVersion fileVersion = new FileVersion();
 				 
 				fileVersion.setVersion(Long.parseLong(fileVersionStr));
 				fileVersion.setPath(path);
-				fileVersion.setName(name);
 				fileVersion.setType(FileType.valueOf(typeStr));
 				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				fileVersion.setSize(Long.parseLong(sizeStr));				
-				
-				if (lastModifiedStr != null) { // TODO [low] This field should be mandatory
-					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
-				}
+				fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
 				
 				if (updatedStr != null) {
 					fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
@@ -400,6 +400,10 @@ public class DatabaseXmlDAO implements DatabaseDAO {
 				
 				if (checksumStr != null) {
 					fileVersion.setChecksum(StringUtil.fromHex(checksumStr));							
+				}
+				
+				if (linkTarget != null) {
+					fileVersion.setLinkTarget(linkTarget);
 				}
 
 				fileHistory.addFileVersion(fileVersion);							

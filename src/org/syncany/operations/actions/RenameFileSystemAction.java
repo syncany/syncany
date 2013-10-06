@@ -15,8 +15,8 @@ public class RenameFileSystemAction extends FileSystemAction {
 
 	@Override
 	public void execute() throws Exception {		
-		File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getFullName());
-		File toFileOnDisk = getAbsolutePathFile(fileVersion2.getFullName());			
+		File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getPath());
+		File toFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());			
 		
 		boolean fromFileExists = fromFileOnDisk.exists();
 		boolean toFileExists = toFileOnDisk.exists();

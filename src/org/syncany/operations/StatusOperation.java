@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.util.FileLister;
@@ -96,6 +96,22 @@ public class StatusOperation extends Operation {
 						return;
 					}
 					
+					// Check file type (folder/file)
+					// TODO [medium] This is duplicated code from FileSystemAction
+					if ((file.isDirectory() && potentiallyMatchingLastFileVersion.getType() != FileType.FOLDER)
+							|| (file.isFile() && potentiallyMatchingLastFileVersion.getType() != FileType.FILE)) {
+						
+						if (logger.isLoggable(Level.INFO)) {
+							String actualFileType = (file.isDirectory()) ? "DIRECTORY" : "FILE";
+							String expectedFileType = potentiallyMatchingLastFileVersion.getType().toString();
+							
+							logger.log(Level.INFO, "- Changed file (changed type, is "+actualFileType+", was "+expectedFileType+"): "+file);
+						}
+						
+						changeSet.changedFiles.add(relativeFilePath);
+						return;
+					}
+					
 					// Don't do anything if file is folder
 					if (file.isDirectory()) {
 						logger.log(Level.FINEST, "- Unchanged file (directory): {0}", relativeFilePath);						
@@ -171,20 +187,7 @@ public class StatusOperation extends Operation {
 			
 			@Override
 			public boolean fileFilter(File file) {
-				// Symlinks are not supported right now
-				// TODO [low] Add support for symlinks
-				try {
-					if (FileUtils.isSymlink(file)) {
-						logger.log(Level.FINEST, "- Ignored file (symlink!): {0}", file);
-						return false;
-					}
-				}
-				catch (Exception e) {
-					logger.log(Level.FINEST, "- Ignored file (FAILED checking for symlink): {0}", file);
-					return false;
-				}
-
-				return true;
+				return true;				
 			}			
 			
 			@Override
@@ -203,7 +206,7 @@ public class StatusOperation extends Operation {
 		for (PartialFileHistory fileHistory : database.getFileHistories()) {
 			// Check if file exists, remove if it doesn't
 			FileVersion lastLocalVersion = fileHistory.getLastVersion();
-			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getFullName());
+			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
 			// Ignore this file history if the last version is marked "DELETED"
 			if (lastLocalVersion.getStatus() == FileStatus.DELETED) {
@@ -212,7 +215,7 @@ public class StatusOperation extends Operation {
 			
 			// If file has VANISHED, mark as DELETED 
 			if (!lastLocalVersionOnDisk.exists()) {
-				changeSet.deletedFiles.add(lastLocalVersion.getFullName());
+				changeSet.deletedFiles.add(lastLocalVersion.getPath());
 			}
 		}						
 		

@@ -12,7 +12,7 @@ import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.database.DatabaseCacheTest;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
-import org.syncany.tests.database.DatabaseXmlDAOTest;
+import org.syncany.tests.database.XmlDatabaseDAOTest;
 import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.OperationPerformanceTest;
@@ -45,7 +45,7 @@ import org.syncany.tests.util.FileUtilTests;
 	// Database
 	DatabaseCacheTest.class,
 	DatabaseReconciliatorTest.class,
-	DatabaseXmlDAOTest.class,
+	XmlDatabaseDAOTest.class,
 	VectorClockTest.class,
 	
 	// Operations
