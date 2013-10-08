@@ -1,20 +1,23 @@
 package org.syncany.database;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.operations.Indexer;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class FileVersionHelper {
-	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(FileVersionHelper.class.getSimpleName());
 	private Config config;	
 	
 	public FileVersionHelper(Config config) {
@@ -36,7 +39,7 @@ public class FileVersionHelper {
 			
 		// Check existence
 		if (fileComparison.localFileProperties.exists != fileComparison.databaseFileProperties.exists) {
-			logger.log(Level.INFO, "     - Local file DIFFERS from database file, expected EXISTS = {0}, but actual EXISTS = {1}, for file {2}", 
+			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected EXISTS = {0}, but actual EXISTS = {1}, for file {2}", 
 					new Object[] { fileComparison.databaseFileProperties.exists, fileComparison.localFileProperties.exists, actualLocalFile });
 			
 			return fileComparison;
@@ -44,7 +47,7 @@ public class FileVersionHelper {
 		
 		// Check file type (folder/file)
 		if (fileComparison.localFileProperties.type != fileComparison.databaseFileProperties.type) {			
-			logger.log(Level.INFO, "     - Local file DIFFERS from database file, expected TYPE = {0}, but actual TYPE = {1}, for file {2}", 
+			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected TYPE = {0}, but actual TYPE = {1}, for file {2}", 
 					new Object[] { fileComparison.databaseFileProperties.type, fileComparison.localFileProperties.type, actualLocalFile });
 			
 			return fileComparison;
@@ -52,15 +55,34 @@ public class FileVersionHelper {
 		
 		// Check folder
 		if (fileComparison.localFileProperties.type == FileType.FOLDER) {
-			logger.log(Level.INFO, "     - Local file matches database file, directory {0}", new Object[] { actualLocalFile });
+			logger.log(Level.INFO, "     - Local file matches file version, directory {0}", new Object[] { actualLocalFile });
 
 			fileComparison.equals = true;
 			return fileComparison;
 		}
 		
+		// Check symlink
+		if (fileComparison.localFileProperties.type == FileType.SYMLINK) {
+			boolean linkTargetsIdentical = fileComparison.localFileProperties.linkTarget != null
+					&& fileComparison.localFileProperties.linkTarget.equals(fileComparison.databaseFileProperties.linkTarget);
+			
+			if (!linkTargetsIdentical) {
+				logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected LINK TARGET = {0}, but actual LINK TARGET = {1}, for file {2}", 
+						new Object[] { fileComparison.databaseFileProperties.linkTarget, fileComparison.localFileProperties.linkTarget, actualLocalFile });
+				
+				return fileComparison;
+			}
+			else {
+				logger.log(Level.INFO, "     - Local file matches file version, directory {0}", new Object[] { actualLocalFile });
+
+				fileComparison.equals = true;
+				return fileComparison;
+			}
+		}
+		
 		// Check modified date
 		if (fileComparison.localFileProperties.lastModified != fileComparison.databaseFileProperties.lastModified) {			
-			logger.log(Level.INFO, "     - Local file DIFFERS from database file, expected MOD. DATE = {0}, but actual MOD. DATE = {1}, for file {2}", 
+			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected MOD. DATE = {0}, but actual MOD. DATE = {1}, for file {2}", 
 					new Object[] { fileComparison.databaseFileProperties.lastModified, fileComparison.localFileProperties.lastModified, actualLocalFile });
 			
 			return fileComparison;
@@ -68,7 +90,7 @@ public class FileVersionHelper {
 		
 		// Check size	
 		if (fileComparison.localFileProperties.size != fileComparison.databaseFileProperties.size) {			
-			logger.log(Level.INFO, "     - Local file DIFFERS from database file, expected SIZE = {0}, but actual SIZE = {1}, for file {2}", 
+			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected SIZE = {0}, but actual SIZE = {1}, for file {2}", 
 					new Object[] { fileComparison.databaseFileProperties.size, fileComparison.localFileProperties.size, actualLocalFile });
 			
 			return fileComparison;
@@ -76,7 +98,7 @@ public class FileVersionHelper {
 		
 		// Check size (0-byte files, no checksum check necessary)
 		if (fileComparison.localFileProperties.size == 0 && fileComparison.databaseFileProperties.size == 0) {			
-			logger.log(Level.INFO, "     - Local file matches database file, 0-byte file {0}", new Object[] { actualLocalFile });
+			logger.log(Level.INFO, "     - Local file matches file version, 0-byte file {0}", new Object[] { actualLocalFile });
 
 			fileComparison.equals = true;
 			return fileComparison;
@@ -84,24 +106,32 @@ public class FileVersionHelper {
 				
 		// Do not check checksum
 		if (!forceChecksum) {
-			logger.log(Level.INFO, "     - Local file matches database file (checksum SKIPPED), file {0}", new Object[] { actualLocalFile });
+			logger.log(Level.INFO, "     - Local file matches file version (checksum SKIPPED), file {0}", new Object[] { actualLocalFile });
 			
 			fileComparison.equals = true;
 			return fileComparison;			
 		}
 		
 		// Check checksum		
+		if (fileComparison.localFileProperties.checksum == null || fileComparison.databaseFileProperties.checksum == null) {
+			logger.log(Level.SEVERE, "     - Local file DIFFERS or at least that is what we are guessing here, file {0}", new Object[] { actualLocalFile });
+			logger.log(Level.SEVERE, "        ---> If checksum checks are enabled, there should be no case in which checksums are null. The if-statements above must have missed a case.");
+			logger.log(Level.SEVERE, "        ---> Assuming file has changed now!");
+			
+			return fileComparison;	
+		}
+		
 		try {			 
 			boolean isChecksumEqual = Arrays.equals(fileComparison.localFileProperties.checksum, fileComparison.databaseFileProperties.checksum);
 			
 			if (isChecksumEqual) {
-				logger.log(Level.INFO, "     - Local file matches database file (checksum!), file {0}", new Object[] { actualLocalFile });
+				logger.log(Level.INFO, "     - Local file matches file version (checksum!), file {0}", new Object[] { actualLocalFile });
 
 				fileComparison.equals = true;
 				return fileComparison;	
 			}
 			else {
-				logger.log(Level.INFO, "     - Local file DIFFERS from database file, expected CHECKSUM = {0}, but actual CHECKSUM = {1}, for file {2}", 
+				logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected CHECKSUM = {0}, but actual CHECKSUM = {1}, for file {2}", 
 						new Object[] { StringUtil.toHex(fileComparison.databaseFileProperties.checksum), StringUtil.toHex(fileComparison.localFileProperties.checksum), actualLocalFile });
 
 				return fileComparison;
@@ -116,57 +146,62 @@ public class FileVersionHelper {
 
 	public FileProperties captureFileProperties(File file, byte[] knownChecksum, boolean forceChecksum) {
 		FileProperties fileProperties = new FileProperties();
+		fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
 		
-		fileProperties.lastModified = file.lastModified();
-		fileProperties.size = file.length();
-		fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);		
-		
-		// Type
 		try {
-			if (file.isDirectory()) {	
-				fileProperties.type = FileType.FOLDER;
-				fileProperties.linkTarget = null;
-			}
-			else if (FileUtils.isSymlink(file)) {
+			BasicFileAttributes fileAttributes = Files.readAttributes(Paths.get(file.getAbsolutePath()), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+						
+			fileProperties.lastModified = fileAttributes.lastModifiedTime().toMillis();
+			fileProperties.size = fileAttributes.size();
+
+			// Type
+			if (fileAttributes.isSymbolicLink()) {
 				fileProperties.type = FileType.SYMLINK;
 				fileProperties.linkTarget = FileUtil.readSymlinkTarget(file);
+			}
+			else if (fileAttributes.isDirectory()) {	
+				fileProperties.type = FileType.FOLDER;
+				fileProperties.linkTarget = null;
 			}
 			else {
 				fileProperties.type = FileType.FILE;
 				fileProperties.linkTarget = null;
 			}
-		}
-		catch (Exception e) {
-			fileProperties.type = FileType.FILE;
-		}
-		
-		// Checksum
-		if (knownChecksum != null) {
-			fileProperties.checksum = knownChecksum;
-		}
-		else {
-			if (fileProperties.type == FileType.FILE && forceChecksum) {
-				try {
-					String checksumAlgorithm = config.getChunker().getChecksumAlgorithm();
-					fileProperties.checksum = FileUtil.createChecksum(file, checksumAlgorithm);
-				}
-				catch (Exception e) {
-					logger.log(Level.SEVERE, "SEVERE: Unable to create checksum for file {0}", file);					
-					fileProperties.checksum = null;
-				}
+			
+			// Checksum
+			if (knownChecksum != null) {
+				fileProperties.checksum = knownChecksum;
 			}
 			else {
-				fileProperties.checksum = null;
-			}
-		}				
-		
-		// Must be last (!), used for vanish-test later
-		fileProperties.exists = file.exists();
-		fileProperties.locked = fileProperties.exists && FileUtil.isFileLocked(file);
-
-		return fileProperties;
-	}	
-
+				if (fileProperties.type == FileType.FILE && forceChecksum) {
+					try {
+						String checksumAlgorithm = config.getChunker().getChecksumAlgorithm();
+						fileProperties.checksum = FileUtil.createChecksum(file, checksumAlgorithm);
+					}
+					catch (Exception e) {
+						logger.log(Level.SEVERE, "SEVERE: Unable to create checksum for file {0}", file);					
+						fileProperties.checksum = null;
+					}
+				}
+				else {
+					fileProperties.checksum = null; 
+				}
+			}				
+			
+			// Must be last (!), used for vanish-test later
+			fileProperties.exists = file.exists();
+			fileProperties.locked = fileProperties.exists && FileUtil.isFileLocked(file);
+			
+			return fileProperties;
+		}
+		catch (IOException e) {
+			logger.log(Level.SEVERE, "SEVERE: Cannot read file {0}. Assuming file is locked.", file);
+			
+			fileProperties.locked = true;
+			return fileProperties;
+		}
+	}
+	
 	private FileProperties captureFileVersionProperties(FileVersion fileVersion) {
 		FileProperties fileProperties = new FileProperties();
 		

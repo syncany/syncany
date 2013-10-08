@@ -312,16 +312,6 @@ public class CommandLineClient extends Client {
 		out.println("      Synchronizes the local folder with the remote repository by calling the down command");	
 		out.println("      and the up command. All arguments of the up/down/status/ls-remote commands can be used.");
 		out.println();
-		out.println("  daemon [<args>]");
-		out.println("      Performs the sync-command in a loop. In furture releases, this command will");
-		out.println("      watch the file system.");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -i, --interval=<sec>    Repeat sync every <sec> seconds (default is 30).");
-		out.println();
-		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
-		out.println("      can be used.");
-		out.println();
 		out.println("  status [<args>]");
 		out.println("      Detect local changes and print to STDOUT.");
 		out.println();
@@ -331,6 +321,16 @@ public class CommandLineClient extends Client {
 		out.println("  ls-remote");
 		out.println("      Detect remote changes and print to STDOUT.");
 		out.println();
+		out.println("  watch [<args>]");
+		out.println("      Performs the sync-command in a loop. In furture releases, this command will");
+		out.println("      watch the file system.");
+		out.println();
+		out.println("      Arguments:");
+		out.println("      -i, --interval=<sec>    Repeat sync every <sec> seconds (default is 30).");
+		out.println();
+		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
+		out.println("      can be used.");
+		out.println();		
 		
 		System.exit(1);
 	}

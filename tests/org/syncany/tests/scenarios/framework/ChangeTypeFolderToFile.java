@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.syncany.tests.util.TestFileUtil;
 
-public class ChangeTypeToFile extends AbstractClientAction {
+public class ChangeTypeFolderToFile extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
 		File file = pickFolder(hashCode());

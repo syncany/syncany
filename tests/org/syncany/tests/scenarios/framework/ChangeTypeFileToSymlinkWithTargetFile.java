@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.syncany.util.FileUtil;
 
-public class ChangeTypeToSymlinkToFile extends AbstractClientAction {
+public class ChangeTypeFileToSymlinkWithTargetFile extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
 		if (!FileUtil.symlinksSupported()) {

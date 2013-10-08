@@ -118,11 +118,12 @@ public class StatusOperation extends Operation {
 			
 			@Override
 			public boolean directoryFilter(File directory) {
+				boolean isSymlinkDir = FileUtil.isSymlink(directory);
 				boolean isAppRelatedDir = directory.equals(config.getAppDir())
 					|| directory.equals(config.getCache())
 					|| directory.equals(config.getDatabaseDir());
-				
-				return !isAppRelatedDir;
+								
+				return !isSymlinkDir && !isAppRelatedDir;
 			}
 		});
 		

@@ -6,7 +6,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.scenarios.framework.AbstractClientAction;
-import org.syncany.tests.scenarios.framework.ChangeTypeToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeFileToFolder;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
 import org.syncany.tests.scenarios.framework.Executable;
@@ -23,7 +23,7 @@ public class ChangedTypeScenarioTest {
 		ClientActions.runOps(clientA, null,
 			new AbstractClientAction[] {
 				new CreateFileTree(),
-				new ChangeTypeToFolder(),
+				new ChangeTypeFileToFolder(),
 			},
 			new Executable() {
 				@Override

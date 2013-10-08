@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
+import org.syncany.operations.WatchOperation.WatchOperationOptions;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
@@ -19,7 +19,7 @@ import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.DaemonOperation;
+import org.syncany.operations.WatchOperation;
 import org.syncany.operations.DownOperation;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
@@ -94,8 +94,8 @@ public class Client {
 		new RestoreOperation(config, options).execute();		
 	}
 
-	public void daemon(DaemonOperationOptions options) throws Exception {
-		new DaemonOperation(config, options).execute();		
+	public void watch(WatchOperationOptions options) throws Exception {
+		new WatchOperation(config, options).execute();		
 	}	
 
 	public File init(InitOperationOptions options) throws Exception {

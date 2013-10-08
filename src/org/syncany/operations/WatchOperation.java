@@ -7,11 +7,11 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 
-public class DaemonOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
-	private DaemonOperationOptions options;
+public class WatchOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());
+	private WatchOperationOptions options;
 	
-	public DaemonOperation(Config config, DaemonOperationOptions options) {
+	public WatchOperation(Config config, WatchOperationOptions options) {
 		super(config);
 		this.options = options;
 	}	
@@ -30,7 +30,7 @@ public class DaemonOperation extends Operation {
 		}
 	}
 	
-	public static class DaemonOperationOptions implements OperationOptions {
+	public static class WatchOperationOptions implements OperationOptions {
 		private int interval = 30000;
 
 		public int getInterval() {
@@ -42,7 +42,7 @@ public class DaemonOperation extends Operation {
 		}				
 	}
 	
-	public static class DaemonOperationResult implements OperationResult {
+	public static class WatchOperationResult implements OperationResult {
 		// Fressen
 	}
 }

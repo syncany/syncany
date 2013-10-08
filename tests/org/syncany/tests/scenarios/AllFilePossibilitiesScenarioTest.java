@@ -10,11 +10,14 @@ import org.syncany.tests.scenarios.framework.ChangeContentWithoutFileSize;
 import org.syncany.tests.scenarios.framework.ChangeFilePermissionsToXXX;
 import org.syncany.tests.scenarios.framework.ChangeFileSize;
 import org.syncany.tests.scenarios.framework.ChangeLastModifiedDate;
-import org.syncany.tests.scenarios.framework.ChangeTypeToFile;
-import org.syncany.tests.scenarios.framework.ChangeTypeToFolder;
-import org.syncany.tests.scenarios.framework.ChangeTypeToSymlinkToFile;
-import org.syncany.tests.scenarios.framework.ChangeTypeToSymlinkToFolder;
-import org.syncany.tests.scenarios.framework.ChangeTypeToSymlinkToNonExisting;
+import org.syncany.tests.scenarios.framework.ChangeSymlinkTarget;
+import org.syncany.tests.scenarios.framework.ChangeTypeFolderToFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeFileToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithTargetFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithTargetFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithNonExistingTarget;
+import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFileToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFolderToFolder;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFile;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
@@ -90,14 +93,17 @@ public class AllFilePossibilitiesScenarioTest {
 				new CreateFileTree(),
 				
 				new ChangeContentWithoutFileSize(),
-				new ChangeFilePermissionsToXXX(),
+				new ChangeFilePermissionsToXXX(), // TODO [medium] Implement permission changes tests
 				new ChangeFileSize(),
 				new ChangeLastModifiedDate(),
-				new ChangeTypeToFile(),
-				new ChangeTypeToFolder(),
-				new ChangeTypeToSymlinkToFile(),
-				new ChangeTypeToSymlinkToFolder(),
-				new ChangeTypeToSymlinkToNonExisting(),
+				new ChangeSymlinkTarget(),				
+				new ChangeTypeFileToFolder(),
+				new ChangeTypeFileToSymlinkWithNonExistingTarget(),
+				new ChangeTypeFileToSymlinkWithTargetFile(),
+				new ChangeTypeFileToSymlinkWithTargetFolder(),
+				new ChangeTypeSymlinkWithTargetFileToFolder(),
+				new ChangeTypeSymlinkWithTargetFolderToFolder(),
+				new ChangeTypeFolderToFile(), // TODO [medium] Implement rest of change type tests
 				new CreateFile(),
 				new CreateFolder(),
 				new CreateSymlinkToFile(),
@@ -110,7 +116,7 @@ public class AllFilePossibilitiesScenarioTest {
 				new MoveFileWithinFolder(),
 				new MoveFolderToOtherFolder(),
 				new MoveFolderWithinFolder(),
-				new UnlockFile()
+				new UnlockFile() // Must be after LockFile
 			},
 			new Executable() {
 				@Override

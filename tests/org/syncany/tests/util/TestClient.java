@@ -99,7 +99,7 @@ public class TestClient extends Client {
 	}
 	
 	public Map<String, File> getLocalFiles() throws FileNotFoundException {
-		List<File> fileList = FileUtil.getRecursiveFileList(config.getLocalDir(), true);
+		List<File> fileList = FileUtil.getRecursiveFileList(config.getLocalDir(), true, false);
 		Map<String, File> fileMap = new HashMap<String, File>();
 		
 		for (File file : fileList) {

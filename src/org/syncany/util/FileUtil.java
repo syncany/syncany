@@ -77,31 +77,37 @@ public class FileUtil {
     }
 
     public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {
-        return getRecursiveFileList(root, false);
+        return getRecursiveFileList(root, false, false);
     }
 
-    public static List<File> getRecursiveFileList(File root, boolean includeDirectories) throws FileNotFoundException {
+    public static List<File> getRecursiveFileList(File root, boolean includeDirectories, boolean followSymlinkDirectories) throws FileNotFoundException {
         if (!root.isDirectory() || !root.canRead() || !root.exists()) {
             throw new FileNotFoundException("Invalid directory " + root);
         }
 
-        List<File> result = getRecursiveFileListNoSort(root, includeDirectories);
+        List<File> result = getRecursiveFileListNoSort(root, includeDirectories, followSymlinkDirectories);
         Collections.sort(result);
 
         return result;
     }
 
-    private static List<File> getRecursiveFileListNoSort(File root, boolean includeDirectories) {
+    private static List<File> getRecursiveFileListNoSort(File root, boolean includeDirectories, boolean followSymlinkDirectories) {
         List<File> result = new ArrayList<File>();
         List<File> filesDirs = Arrays.asList(root.listFiles());
 
         for (File file : filesDirs) {
-            if (!file.isDirectory() || includeDirectories) {
+        	boolean isDirectory = file.isDirectory();
+        	boolean isSymlinkDirectory = isDirectory && FileUtil.isSymlink(file);
+        	boolean includeFile = !isDirectory || includeDirectories; 
+        	boolean followDirectory = (isSymlinkDirectory && followSymlinkDirectories)
+        			|| (isDirectory && !isSymlinkDirectory); 
+        			
+            if (includeFile) {
                 result.add(file);
             }
 
-            if (file.isDirectory()) {
-                List<File> deeperList = getRecursiveFileListNoSort(file, includeDirectories);
+            if (followDirectory) {
+                List<File> deeperList = getRecursiveFileListNoSort(file, includeDirectories, followSymlinkDirectories);
                 result.addAll(deeperList);
             }
         }
@@ -282,7 +288,7 @@ public class FileUtil {
 	
 	public static String readSymlinkTarget(File file) {
 		try {
-			return Files.readSymbolicLink(Paths.get(file.getAbsolutePath())).toString();
+			return Files.readSymbolicLink(Paths.get(file.getAbsolutePath())).toAbsolutePath().toString();
 		}
 		catch (IOException e) {
 			return null;
@@ -291,7 +297,7 @@ public class FileUtil {
 	
 	public static void createSymlink(File targetFile, File symlinkFile) throws Exception {
 		Path targetPath = Paths.get(targetFile.getAbsolutePath());
-		Path symlinkPath = Paths.get(symlinkFile.getAbsolutePath());
+		Path symlinkPath = Paths.get(symlinkFile.getPath());
 		
 		Files.createSymbolicLink(symlinkPath, targetPath);
 	}

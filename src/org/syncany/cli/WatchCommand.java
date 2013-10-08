@@ -5,12 +5,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.DaemonOperation.DaemonOperationOptions;
+import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
-public class DaemonCommand extends Command {
+public class WatchCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		DaemonOperationOptions operationOptions = new DaemonOperationOptions();
+		WatchOperationOptions operationOptions = new WatchOperationOptions();
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Integer> optionInterval = parser.acceptsAll(asList("i", "interval")).withRequiredArg().ofType(Integer.class);
@@ -23,7 +23,7 @@ public class DaemonCommand extends Command {
 		}
 		
 		// Run!
-		client.daemon(operationOptions);
+		client.watch(operationOptions);
 		
 		return 0;
 	}

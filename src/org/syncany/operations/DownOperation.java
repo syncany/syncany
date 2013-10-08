@@ -368,7 +368,7 @@ public class DownOperation extends Operation {
 		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
 			FileVersion lastFileVersion = fileHistory.getLastVersion();
 
-			// TODO [medium] If file has been renamed, all chunks are downloaded
+			// FIXME TODO [high] If file has been renamed, all chunks are downloaded
 			// Note: This cannot be fixed by adding a test for RENAMED here, because if a file is completely new to a
 			//       client it is not "RENAMED" for him, it is new. 
 			
@@ -508,13 +508,17 @@ public class DownOperation extends Operation {
 	 */
 	public static class FileSystemActionComparator implements Comparator<FileSystemAction> {
 		private static final Object[][] TARGET_ORDER =  new Object[][] {
-			new Object[] { DeleteFileSystemAction.class, FileType.FILE}, 
+			new Object[] { DeleteFileSystemAction.class, FileType.FILE }, 
+			new Object[] { DeleteFileSystemAction.class, FileType.SYMLINK }, 
 			new Object[] { NewFileSystemAction.class, FileType.FOLDER },
 			new Object[] { RenameFileSystemAction.class, FileType.FOLDER },
 			new Object[] { NewFileSystemAction.class, FileType.FILE },
+			new Object[] { NewFileSystemAction.class, FileType.SYMLINK },
 			new Object[] { RenameFileSystemAction.class, FileType.FILE },
+			new Object[] { RenameFileSystemAction.class, FileType.SYMLINK },
 			new Object[] { ChangeFileSystemAction.class, FileType.FOLDER },
 			new Object[] { ChangeFileSystemAction.class, FileType.FILE },
+			new Object[] { ChangeFileSystemAction.class, FileType.SYMLINK },
 			new Object[] { DeleteFileSystemAction.class, FileType.FOLDER },
 		};
 				
