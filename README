@@ -1,18 +1,18 @@
-SIMPLE SETUP GUIDE, as of 18 Sep 2013
-For branch: https://code.launchpad.net/~syncany-team/syncany/core2
+SIMPLE SETUP GUIDE, as of 9 Oct 2013
+For branch: http://github.com/binwiederhier/syncany
 
 Setup Eclipse and build
 --------------------------------------------------------------------------------
-1. Be sure to install Bazaar (bzr), Ivy and Ant won your system
-   On Debian-based systems: $ apt-get install bzr ivy ant
+1. Be sure to install Git, Ivy and Ant won your system
+   On Debian-based systems: $ apt-get install git ivy ant
    
 2. Open Eclipse and create a new workplace, 
    e.g. at "/home/user/workplace"
 
 3. Checkout Syncany on the command line
    $ cd /home/user/workplace
-   $ bzr branch lp:~syncany-team/syncany/core2
-   $ mv core2 SyncanyCore                        <<< Important!
+   $ git clone http://github.com/binwiederhier/syncany
+   $ mv syncany SyncanyCore                        <<< Important!
    
 4. In Eclipse, go to Help -> Install New Software -> Add ...
    Location: http://www.apache.org/dist/ant/ivyde/updatesite
