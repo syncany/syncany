@@ -37,8 +37,8 @@ public class TTTDChunker extends Chunker {
     private int D;
     private int Ddash;   
     private int windowSize;
-    private String digestAlg;
-    private String fingerprintAlg;
+    private String checksumAlgorithm;
+    private String fingerprintAlgorithm;
     private String name;   
 
     private InputStream fileInputStream;
@@ -79,8 +79,8 @@ public class TTTDChunker extends Chunker {
         this.D = D;
         this.Ddash = Ddash;
         this.windowSize = windowSize;
-        this.digestAlg = digestAlg;
-        this.fingerprintAlg = fingerprintAlg;
+        this.checksumAlgorithm = digestAlg;
+        this.fingerprintAlgorithm = fingerprintAlg;
         this.name = name;
         
         if (windowSize > Tmin) {
@@ -92,7 +92,12 @@ public class TTTDChunker extends Chunker {
     public Enumeration<Chunk> createChunks(InputStream in) throws IOException {
     	this.fileInputStream = in;
         return new TTTDEnumeration(in);
-    }
+    }    
+
+	@Override
+	public String getChecksumAlgorithm() {
+		return checksumAlgorithm;
+	}    
     
     @Override
     public void close() {
@@ -124,9 +129,9 @@ public class TTTDChunker extends Chunker {
             this.cpos = -1;         
 
             try {
-                this.fingerprinter = Fingerprinter.getInstance(fingerprintAlg);                
-                this.chunkDigest = MessageDigest.getInstance(digestAlg);
-                this.fileDigest = MessageDigest.getInstance(digestAlg);
+                this.fingerprinter = Fingerprinter.getInstance(fingerprintAlgorithm);                
+                this.chunkDigest = MessageDigest.getInstance(checksumAlgorithm);
+                this.fileDigest = MessageDigest.getInstance(checksumAlgorithm);
                 
                 this.fileDigest.reset();
             }
@@ -257,5 +262,5 @@ public class TTTDChunker extends Chunker {
     		
     		return (bytesRead != 0) ? bytesRead : -1;
     	}
-    }    
+    }
 }

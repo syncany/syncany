@@ -5,9 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,9 +18,10 @@ import org.syncany.database.Database;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.FileVersionHelper;
+import org.syncany.database.FileVersionHelper.FileVersionComparison;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 public abstract class FileSystemAction {
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName()); 
@@ -32,6 +31,7 @@ public abstract class FileSystemAction {
 	protected Database winningDatabase;
 	protected FileVersion fileVersion1;
 	protected FileVersion fileVersion2;
+	protected FileVersionHelper fileVersionHelper;
 	
 	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
@@ -39,6 +39,7 @@ public abstract class FileSystemAction {
 		this.winningDatabase = winningDatabase;
 		this.fileVersion1 = file1;
 		this.fileVersion2 = file2;
+		this.fileVersionHelper = new FileVersionHelper(config);
 	}
 	
 	public FileVersion getFile1() {
@@ -180,89 +181,14 @@ public abstract class FileSystemAction {
 		FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
 	}
 	
-	// TODO [medium] This is duplicate code, the indexer and the status operation also compare a FileVersion to a local file
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());		
-		boolean actualLocalFileExists = actualLocalFile.exists();
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
+		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
 		
-		// Check existence
-		if (!actualLocalFileExists) {
-			logger.log(Level.INFO, "     - Unexpected file detected, is expected to EXIST, but does not: "+actualLocalFile);
-			return false;
-		}
-		
-		// Check file type (folder/file)
-		if ((actualLocalFile.isDirectory() && expectedLocalFileVersion.getType() != FileType.FOLDER)
-				|| (actualLocalFile.isFile() && expectedLocalFileVersion.getType() != FileType.FILE)) {
-			
-			if (logger.isLoggable(Level.INFO)) {
-				String actualFileType = (actualLocalFile.isDirectory()) ? "DIRECTORY" : "FILE";
-				String expectedFileType = expectedLocalFileVersion.getType().toString();
-				
-				logger.log(Level.INFO, "     - Unexpected file detected, is expected to be the same file type: "+actualLocalFile+" is "+actualFileType+", expected for "+expectedLocalFileVersion+" is "+expectedFileType);
-			}
-			
-			return false;
-		}
-		
-		// Check folder
-		if (actualLocalFile.isDirectory()) {
+		if (fileVersionComparison.equals()) {
 			return true;
 		}
-		
-		// Check modified date
-		boolean modifiedEquals = expectedLocalFileVersion.getLastModified().equals(new Date(actualLocalFile.lastModified()));
-		
-		if (!modifiedEquals) {
-			logger.log(Level.INFO, "     - Unexpected file detected, modified date differs: "+actualLocalFile+" was modified "+new Date(actualLocalFile.lastModified())+", expected for "+expectedLocalFileVersion+" is "+expectedLocalFileVersion.getLastModified());
-			return false;
-		}
-		
-		// Check size	
-		if (expectedLocalFileVersion.getChecksum() == null) { // File can be empty!
-			if (actualLocalFile.length() == 0) {
-				return true;
-			}
-			else {
-				logger.log(Level.INFO, "     - Unexpected file detected, empty file expected: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is 0");
-				return false;
-			}			
-		}
-		
-		FileContent expectedFileContent = localDatabase.getContent(expectedLocalFileVersion.getChecksum());
-		
-		if (expectedFileContent == null) {
-			expectedFileContent = winningDatabase.getContent(expectedLocalFileVersion.getChecksum());
-			
-			if (expectedFileContent == null) {
-				// TODO [low] This should be an Exception instead of an error message. 
-				logger.log(Level.SEVERE, "WARNING: Content for "+expectedLocalFileVersion+" not found using checksum "+StringUtil.toHex(expectedLocalFileVersion.getChecksum()));
-				return false;
-			}
-		}
-		
-		boolean isSizeEqual = expectedFileContent.getSize() == actualLocalFile.length();
-		
-		if (!isSizeEqual) {
-			logger.log(Level.INFO, "     - Unexpected file detected, size differs: "+actualLocalFile+" has size "+actualLocalFile.length()+", expected for "+expectedLocalFileVersion+" is "+expectedFileContent.getSize());
-			return false;
-		}
-		
-		// Check checksum 
-		try {
-			byte[] actualFileChecksum = FileUtil.createChecksum(actualLocalFile);
-			boolean isChecksumEqual = Arrays.equals(actualFileChecksum, expectedFileContent.getChecksum());
-			
-			if (isChecksumEqual) {
-				return true;
-			}
-			else {
-				logger.log(Level.INFO, "     - Unexpected file detected, checksum differs: "+actualLocalFile+" -> "+StringUtil.toHex(actualFileChecksum)+", expected for "+expectedLocalFileVersion+" -> "+StringUtil.toHex(expectedFileContent.getChecksum()));
-				return false;
-			}
-		}
-		catch (Exception e) {
-			logger.log(Level.INFO, "     - Unexpected behavior: Unable to create checksum for local file, assuming differs: "+actualLocalFile);
+		else {
 			return false;
 		}
 	}

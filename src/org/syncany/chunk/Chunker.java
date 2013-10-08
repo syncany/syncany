@@ -45,4 +45,5 @@ public abstract class Chunker {
     public abstract Enumeration<Chunk> createChunks(InputStream is) throws IOException;
 	public abstract void close();         
     public abstract String toString();
+    public abstract String getChecksumAlgorithm();
 }

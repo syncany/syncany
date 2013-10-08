@@ -34,6 +34,7 @@ public class FixedOffsetChunker extends Chunker {
     private MessageDigest digest;
     private MessageDigest fileDigest;    
     private InputStream fileInputStream;
+    private String checksumAlgorithm;
     
     /**
      * 
@@ -46,17 +47,19 @@ public class FixedOffsetChunker extends Chunker {
     /**
      * 
      * @param chunkSize in byte
-     * @param digestAlg
+     * @param checksumAlgorithm
      */
-    public FixedOffsetChunker(int chunkSize, String digestAlg) {
+    public FixedOffsetChunker(int chunkSize, String checksumAlgorithm) {
         this.chunkSize = chunkSize;        
  
         try {
-            this.digest = MessageDigest.getInstance(digestAlg);
-            this.fileDigest = MessageDigest.getInstance(digestAlg);     
+            this.digest = MessageDigest.getInstance(checksumAlgorithm);
+            this.fileDigest = MessageDigest.getInstance(checksumAlgorithm);     
             
             this.fileDigest.reset();
             this.fileInputStream = null;
+            
+            this.checksumAlgorithm = checksumAlgorithm;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -69,6 +72,11 @@ public class FixedOffsetChunker extends Chunker {
     	return new FixedChunkEnumeration(in);
     }
     
+	@Override
+	public String getChecksumAlgorithm() {
+		return checksumAlgorithm;
+	}
+
     @Override
     public void close() {
     	try { fileInputStream.close(); }

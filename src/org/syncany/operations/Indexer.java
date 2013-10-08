@@ -23,9 +23,10 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.FileVersionHelper;
+import org.syncany.database.FileVersionHelper.FileProperties;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class Indexer {
@@ -43,6 +44,7 @@ public class Indexer {
 		this.dirtyDatabase = dirtyDatabase;
 	}
 	
+	// TODO [medium] Performance: To avoid having to parse the chekcsum twice (status and indexer), the status operation should pass over the FileProperties object in the ChangeSet
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
 		
@@ -113,6 +115,7 @@ public class Indexer {
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
+		private FileVersionHelper fileVersionHelper;
 		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
 		private ChunkEntry chunkEntry;		
@@ -123,6 +126,7 @@ public class Indexer {
 		private FileProperties endFileProperties;		
 		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
+			this.fileVersionHelper = new FileVersionHelper(config);
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 		}				
@@ -131,19 +135,19 @@ public class Indexer {
 		public boolean onFileStart(File file) {
 			logger.log(Level.FINER, "- +File {0}", file); 
 			
-			startFileProperties = captureFileProperties(file, null);
+			startFileProperties = fileVersionHelper.captureFileProperties(file, null, false);
 			
 			// Check if file has vanished
-			if (!startFileProperties.exists || startFileProperties.locked) {
+			if (!startFileProperties.exists() || startFileProperties.isLocked()) {
 				logger.log(Level.FINER, "- /File: {0}", file);				
-				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED (exists = {0}) or is LOCKED (locked = {1}).", new Object[] { startFileProperties.exists, startFileProperties.locked });
+				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED (exists = {0}) or is LOCKED (locked = {1}).", new Object[] { startFileProperties.exists(), startFileProperties.isLocked() });
 				
 				resetFileEnd();
 				return false;
 			}
 			
 			// Content
-			if (startFileProperties.type == FileType.FILE) {
+			if (startFileProperties.getType() == FileType.FILE) {
 				logger.log(Level.FINER, "- +FileContent: {0}", file);			
 				fileContent = new FileContent();				
 			}				
@@ -153,7 +157,7 @@ public class Indexer {
 		
 		@Override
 		public boolean onFileStartDeduplicate(File file) {			
-			return startFileProperties.type == FileType.FILE; // Ignore directories and symlinks!
+			return startFileProperties.getType() == FileType.FILE; // Ignore directories and symlinks!
 		}
 
 		@Override
@@ -161,16 +165,17 @@ public class Indexer {
 			// Get file attributes (get them while file exists)
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part, 
 			//       because the file could vanish! 
-			endFileProperties = captureFileProperties(file, checksum);
+			endFileProperties = fileVersionHelper.captureFileProperties(file, checksum, false);
 			
 			// Check if file has vanished			
-			boolean fileHasChanged = startFileProperties.size != endFileProperties.size || startFileProperties.lastModified != endFileProperties.lastModified;
-			boolean fileIsLocked = endFileProperties.locked;
-			boolean fileVanished = !endFileProperties.exists;
+			boolean fileIsLocked = endFileProperties.isLocked();
+			boolean fileVanished = !endFileProperties.exists();
+			boolean fileHasChanged = startFileProperties.getSize() != endFileProperties.getSize() 
+					|| startFileProperties.getLastModified() != endFileProperties.getLastModified();			
 			
 			if (fileVanished || fileIsLocked || fileHasChanged) {
 				logger.log(Level.FINER, "- /File: {0}", file);				
-				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED ("+!endFileProperties.exists+"), is LOCKED ("+endFileProperties+" ("+endFileProperties.locked+"), or has CHANGED ("+fileHasChanged+")");
+				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED ("+!endFileProperties.exists()+"), is LOCKED ("+endFileProperties+" ("+endFileProperties.isLocked()+"), or has CHANGED ("+fileHasChanged+")");
 				
 				resetFileEnd();
 				return;
@@ -184,11 +189,11 @@ public class Indexer {
 		}
 		
 		private void addFileVersion(FileProperties fileProperties) {
-			if (fileProperties.checksum != null) {
-				logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] {  fileProperties.relativePath, StringUtil.toHex(fileProperties.checksum) });
+			if (fileProperties.getChecksum() != null) {
+				logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] {  fileProperties.getRelativePath(), StringUtil.toHex(fileProperties.getChecksum()) });
 			}
 			else {
-				logger.log(Level.FINER, "- /File: {0} (directory)", fileProperties.relativePath);
+				logger.log(Level.FINER, "- /File: {0} (directory/symlink/0-byte-file)", fileProperties.getRelativePath());
 			}
 			
 			// 1. Determine if file already exists in database 
@@ -213,12 +218,12 @@ public class Indexer {
 				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
 			}			
 
-			fileVersion.setPath(fileProperties.relativePath);
-			fileVersion.setLinkTarget(fileProperties.linkTarget);
-			fileVersion.setType(fileProperties.type);
-			fileVersion.setSize(fileProperties.size);
-			fileVersion.setChecksum(fileProperties.checksum);
-			fileVersion.setLastModified(new Date(fileProperties.lastModified));
+			fileVersion.setPath(fileProperties.getRelativePath());
+			fileVersion.setLinkTarget(fileProperties.getLinkTarget());
+			fileVersion.setType(fileProperties.getType());
+			fileVersion.setSize(fileProperties.getSize());
+			fileVersion.setChecksum(fileProperties.getChecksum());
+			fileVersion.setLastModified(new Date(fileProperties.getLastModified()));
 			fileVersion.setUpdated(new Date());
 			fileVersion.setCreatedBy(config.getMachineName());
 			
@@ -256,50 +261,17 @@ public class Indexer {
 			}
 			
 			// 3. Add file content (if not a directory)			
-			if (fileProperties.checksum != null && fileContent != null) {
-				fileContent.setSize(fileProperties.size);
-				fileContent.setChecksum(fileProperties.checksum);
+			if (fileProperties.getChecksum() != null && fileContent != null) {
+				fileContent.setSize(fileProperties.getSize());
+				fileContent.setChecksum(fileProperties.getChecksum());
 
 				// Check if content already exists, throw gathered content away if it does!
-				FileContent existingContent = database.getContent(fileProperties.checksum);
+				FileContent existingContent = database.getContent(fileProperties.getChecksum());
 				
 				if (existingContent == null) { 
 					newDatabaseVersion.addFileContent(fileContent);
 				}
 			}						
-		}
-
-		private FileProperties captureFileProperties(File file, byte[] checksum) {
-			FileProperties fileProperties = new FileProperties();
-			
-			fileProperties.lastModified = file.lastModified();
-			fileProperties.size = file.length();
-			fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
-			fileProperties.checksum = checksum;
-
-			try {
-				if (file.isDirectory()) {	
-					fileProperties.type = FileType.FOLDER;
-					fileProperties.linkTarget = null;
-				}
-				else if (FileUtil.isSymlink(file)) {
-					fileProperties.type = FileType.SYMLINK;
-					fileProperties.linkTarget = FileUtil.readSymlinkTarget(file);
-				}
-				else {
-					fileProperties.type = FileType.FILE;
-					fileProperties.linkTarget = null;
-				}
-			}
-			catch (Exception e) {
-				fileProperties.type = FileType.FILE;
-			}
-			
-			// Must be last (!), used for vanish-test later
-			fileProperties.exists = file.exists();
-			fileProperties.locked = FileUtil.isFileLocked(file);
-
-			return fileProperties;
 		}
 
 		private void resetFileEnd() {
@@ -309,28 +281,29 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistory(FileProperties fileProperties) {
-			if (fileProperties.type == FileType.FILE) {
+			if (fileProperties.getType() == FileType.FILE) {
 				return guessLastFileHistoryForFile(fileProperties);
-			}
+			} 
+			// TODO [high] symlink if-branch missing 
 			else {
 				return guessLastFileHistoryForFolder(fileProperties);
 			}
 		}
 		
 		private PartialFileHistory guessLastFileHistoryForFolder(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.relativePath);
+			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
-				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.relativePath+", FOLDER)");
+				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", FOLDER)");
 			}
 			else {
 				FileVersion lastFileVersion = lastFileHistory.getLastVersion();
 				
 				if (lastFileVersion.getStatus() != FileStatus.DELETED) {
-					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.relativePath+"), appending new version.");					
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.getRelativePath()+"), appending new version.");					
 				}
 				else {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.relativePath+", FOLDER)");
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", FOLDER)");
 				}
 			}
 			
@@ -341,12 +314,12 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = null;
 			
 			// 1a. by path
-			lastFileHistory = database.getFileHistory(fileProperties.relativePath);
+			lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				// 1b. by checksum
-				if (fileProperties.checksum != null) {
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(fileProperties.checksum);
+				if (fileProperties.getChecksum() != null) {
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(fileProperties.getChecksum());
 					
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!
@@ -354,7 +327,7 @@ public class Indexer {
 						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
 							FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
 							
-							if (fileProperties.lastModified != lastVersion.getLastModified().getTime() || fileProperties.size != lastVersion.getSize()) {
+							if (fileProperties.getLastModified() != lastVersion.getLastModified().getTime() || fileProperties.getSize() != lastVersion.getSize()) {
 								continue;
 							}
 							
@@ -369,14 +342,14 @@ public class Indexer {
 				}
 				
 				if (lastFileHistory == null) {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.relativePath+", checksum: "+StringUtil.toHex(fileProperties.checksum)+")");
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+StringUtil.toHex(fileProperties.getChecksum())+")");
 				}
 				else {
-					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(fileProperties.checksum)+"), appending new version.");
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(fileProperties.getChecksum())+"), appending new version.");
 				}
 			}
 			else {
-				logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.relativePath+"), appending new version.");
+				logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.getRelativePath()+"), appending new version.");
 			}
 			
 			return lastFileHistory;
@@ -447,16 +420,5 @@ public class Indexer {
 			logger.log(Level.FINER, "- Chunk exists: {0}", StringUtil.toHex(chunk.getChecksum()));
 			return false;
 		}
-	}	
-	
-	private class FileProperties {
-		boolean exists;		
-		boolean locked;
-		long lastModified;
-		long size;
-		FileType type;
-		String relativePath;
-		String linkTarget;
-		byte[] checksum;
-	}
+	}		
 }

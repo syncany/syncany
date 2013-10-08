@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +12,8 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.FileVersionHelper;
+import org.syncany.database.FileVersionHelper.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.util.FileLister;
@@ -23,6 +22,8 @@ import org.syncany.util.FileUtil;
 
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
+	
+	private FileVersionHelper fileVersionHelper; 
 	private Database loadedDatabase;
 	private StatusOperationOptions options;
 	
@@ -32,6 +33,8 @@ public class StatusOperation extends Operation {
 	
 	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
 		super(config);		
+		
+		this.fileVersionHelper = new FileVersionHelper(config);
 		this.loadedDatabase = database;
 		this.options = options;
 	}	
@@ -72,13 +75,13 @@ public class StatusOperation extends Operation {
 			}
 			
 			@Override
-			public void processFile(File file) {
-				String relativeFilePath = FileUtil.getRelativePath(root, file);
+			public void processFile(File actualLocalFile) {
+				String relativeFilePath = FileUtil.getRelativePath(root, actualLocalFile);
 
 				// TODO [medium] Duplicate code: The file.*()-tests in this class are semi-duplicated in the Indexer. This often leads to inconsistencies between status and up.  
 
 				// Check if file is locked
-				boolean fileLocked = FileUtil.isFileLocked(file);
+				boolean fileLocked = FileUtil.isFileLocked(actualLocalFile);
 				
 				if (fileLocked) {
 					logger.log(Level.FINEST, "- Ignoring file (locked): {0}", relativeFilePath);						
@@ -86,98 +89,21 @@ public class StatusOperation extends Operation {
 				}				
 				
 				// Check database by file path
-				PartialFileHistory potentiallyMatchingFileHistory = database.getFileHistory(relativeFilePath);
+				PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
 				
-				if (potentiallyMatchingFileHistory != null) {
-					FileVersion potentiallyMatchingLastFileVersion = potentiallyMatchingFileHistory.getLastVersion();
+				if (expectedFileHistory != null) {
+					FileVersion expectedLastFileVersion = expectedFileHistory.getLastVersion();
 					
-					// Don't do anything if this file is marked as deleted
-					if (potentiallyMatchingLastFileVersion.getStatus() == FileStatus.DELETED) {
-						return;
-					}
+					// Compare
+					boolean forceChecksum = options != null && options.isForceChecksum();
+					FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLastFileVersion, actualLocalFile, forceChecksum);
 					
-					// Check file type (folder/file)
-					// TODO [medium] This is duplicated code from FileSystemAction
-					if ((file.isDirectory() && potentiallyMatchingLastFileVersion.getType() != FileType.FOLDER)
-							|| (file.isFile() && potentiallyMatchingLastFileVersion.getType() != FileType.FILE)) {
-						
-						if (logger.isLoggable(Level.INFO)) {
-							String actualFileType = (file.isDirectory()) ? "DIRECTORY" : "FILE";
-							String expectedFileType = potentiallyMatchingLastFileVersion.getType().toString();
-							
-							logger.log(Level.INFO, "- Changed file (changed type, is "+actualFileType+", was "+expectedFileType+"): "+file);
-						}
-						
-						changeSet.changedFiles.add(relativeFilePath);
-						return;
-					}
-					
-					// Don't do anything if file is folder
-					if (file.isDirectory()) {
-						logger.log(Level.FINEST, "- Unchanged file (directory): {0}", relativeFilePath);						
+					if (fileVersionComparison.equals()) {
 						changeSet.unchangedFiles.add(relativeFilePath);
-						
-						return;
-					}		
-					
-					// Simple check by size
-					boolean sizeMatches = file.length() == potentiallyMatchingLastFileVersion.getSize();
-					
-					if (!sizeMatches) {
+					}
+					else {
 						changeSet.changedFiles.add(relativeFilePath);
-						logger.log(Level.FINEST, "- Changed file (size, db: {0}, disk: {1}): {2}", new Object[] { potentiallyMatchingLastFileVersion.getSize(), file.length(), relativeFilePath });
-						
-						return;
-					}
-					
-					// Simple check by modified date
-					boolean modifiedDateMatches = file.lastModified() == potentiallyMatchingLastFileVersion.getLastModified().getTime();
-
-					if (!modifiedDateMatches) {
-						changeSet.changedFiles.add(relativeFilePath);
-						logger.log(Level.FINEST, "- Changed file (mod. date, db: {0}, disk: {1}): {2}", new Object[] { potentiallyMatchingLastFileVersion.getLastModified(), new Date(file.lastModified()), relativeFilePath });
-						
-						return;
-					}
-					
-					// Zero-size has not checksum
-					if (file.length() == 0) {
-						changeSet.unchangedFiles.add(relativeFilePath);
-						logger.log(Level.FINEST, "- Unchanged file (zero-size!): {0}", relativeFilePath);
-						
-						return;
-					}
-					
-					if (options != null && !options.isForceChecksum()) {
-						changeSet.unchangedFiles.add(relativeFilePath);
-						logger.log(Level.FINEST, "- Unchanged file (assuming, --force-checksum disabled): {0}", relativeFilePath);
-
-						return;
-					}
-					
-					// If the file modified date from the database and the file system modified date
-					// match, it could mean that both files are equal, or that the file was changed
-					// immediately after the 'up'-operation (in the same second!)
-					
-					// To be sure, we must (!) calculate the checksum
-					
-					try {
-						byte[] fileChecksum = FileUtil.createChecksum(file, "SHA1"); // TODO [low] The digest could be something else! Get digest from somewhere (Chunker?)
-						
-						if (!Arrays.equals(fileChecksum, potentiallyMatchingLastFileVersion.getChecksum())) {
-							changeSet.changedFiles.add(relativeFilePath);
-							logger.log(Level.FINEST, "- Changed file (checksum!): {0}", relativeFilePath);
-						}
-						else {
-							changeSet.unchangedFiles.add(relativeFilePath);
-							logger.log(Level.FINEST, "- Unchanged file (checksum!): {0}", relativeFilePath);
-						}
-					} 
-					catch (Exception e) {
-						// Error: Simply assume file has changed
-						changeSet.changedFiles.add(relativeFilePath);
-						logger.log(Level.FINEST, "- Error when creating checksum, assuming file was changed: {0}", relativeFilePath);
-					}
+					}					
 				}
 				else {
 					changeSet.newFiles.add(relativeFilePath);
@@ -223,7 +149,7 @@ public class StatusOperation extends Operation {
 	}
 	
 	public static class ChangeSet {
-		private List<String> changedFiles;
+		private List<String> changedFiles;  
 		private List<String> newFiles;
 		private List<String> deletedFiles;
 		private List<String> unchangedFiles;
