@@ -170,6 +170,10 @@ public class FileVersion implements Cloneable {
             clone.setType(getType());
             clone.setVersion(getVersion());
             clone.setSize(getSize());
+            clone.setDosAttributes(getDosAttributes());
+            clone.setPosixPermissions(getPosixPermissions());
+            clone.setLinkTarget(getLinkTarget());
+            clone.setStatus(getStatus());
             
             return clone;
         }
