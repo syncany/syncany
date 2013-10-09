@@ -103,7 +103,9 @@ public class TestClient extends Client {
 		Map<String, File> fileMap = new HashMap<String, File>();
 		
 		for (File file : fileList) {
-			fileMap.put(FileUtil.getRelativePath(config.getLocalDir(), file), file);
+			if (!FileUtil.isFileLocked(file) && file.canRead()) {			
+				fileMap.put(FileUtil.getRelativePath(config.getLocalDir(), file), file);
+			}
 		}
 		
 		return fileMap;

@@ -43,6 +43,8 @@ public class FileVersion implements Cloneable {
     private String createdBy;
     private byte[] checksum;
     private Date updated;
+    private String posixPermissions;
+    private String dosAttributes;
     
     public FileVersion() {
         // Fressen.
@@ -130,6 +132,22 @@ public class FileVersion implements Cloneable {
 	
 	public void setLinkTarget(String linkTarget) {
 		this.linkTarget = linkTarget;
+	}
+
+	public String getPosixPermissions() {
+		return posixPermissions;
+	}
+
+	public void setPosixPermissions(String posixPermissions) {
+		this.posixPermissions = posixPermissions;
+	}
+
+	public String getDosAttributes() {
+		return dosAttributes;
+	}
+
+	public void setDosAttributes(String dosAttributes) {
+		this.dosAttributes = dosAttributes;
 	}
 
 	@Override

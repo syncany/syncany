@@ -27,6 +27,7 @@ import org.syncany.database.FileVersionHelper;
 import org.syncany.database.FileVersionHelper.FileProperties;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class Indexer {
@@ -44,7 +45,7 @@ public class Indexer {
 		this.dirtyDatabase = dirtyDatabase;
 	}
 	
-	// TODO [medium] Performance: To avoid having to parse the chekcsum twice (status and indexer), the status operation should pass over the FileProperties object in the ChangeSet
+	// TODO [medium] Performance: To avoid having to parse the checksum twice (status and indexer), the status operation should pass over the FileProperties object in the ChangeSet
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
 		
@@ -175,7 +176,7 @@ public class Indexer {
 			
 			if (fileVanished || fileIsLocked || fileHasChanged) {
 				logger.log(Level.FINER, "- /File: {0}", file);				
-				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED ("+!endFileProperties.exists()+"), is LOCKED ("+endFileProperties+" ("+endFileProperties.isLocked()+"), or has CHANGED ("+fileHasChanged+")");
+				logger.log(Level.INFO, "   * NOT ADDING because file has VANISHED ("+!endFileProperties.exists()+"), is LOCKED ("+endFileProperties.isLocked()+"), or has CHANGED ("+fileHasChanged+")");
 				
 				resetFileEnd();
 				return;
@@ -236,8 +237,28 @@ public class Indexer {
 					fileVersion.setStatus(FileStatus.RENAMED);
 				}
 				else {
-					fileVersion.setStatus(FileStatus.UNKNOWN);
+					fileVersion.setStatus(FileStatus.UNKNOWN); // TODO [low] Add more states, ATTRS_CHANGED, or so.
 				}						
+			}	
+			
+			// Overwrite permissions/attributes only on the system we are on
+			boolean hasIdenticalPermsAndAttributes = true;
+			
+			if (FileUtil.isWindows()) {
+				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
+				
+				hasIdenticalPermsAndAttributes = 
+					   lastFileVersion != null
+					&& fileVersion.getPosixPermissions() != null
+					&& fileVersion.getPosixPermissions().equals(lastFileVersion.getPosixPermissions());
+			}
+			else if (FileUtil.isUnixLikeOperatingSystem()) {
+				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
+				
+				hasIdenticalPermsAndAttributes = 
+					   lastFileVersion != null
+					&& fileVersion.getDosAttributes() != null
+					&& fileVersion.getDosAttributes().equals(lastFileVersion.getDosAttributes());							
 			}			
 							
 			// Only add if not identical
@@ -247,7 +268,8 @@ public class Indexer {
 				&& lastFileVersion.getType().equals(fileVersion.getType())
 				&& lastFileVersion.getSize().equals(fileVersion.getSize())
 				&& Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
-				&& lastFileVersion.getLastModified().equals(fileVersion.getLastModified());
+				&& lastFileVersion.getLastModified().equals(fileVersion.getLastModified())
+				&& hasIdenticalPermsAndAttributes;
 			
 			if (!isIdenticalToLastVersion) {
 				newDatabaseVersion.addFileHistory(fileHistory);

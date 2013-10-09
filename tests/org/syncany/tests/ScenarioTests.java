@@ -20,6 +20,7 @@ import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
 import org.syncany.tests.scenarios.RenameDeleteScenarioTest;
+import org.syncany.tests.scenarios.RenameNoDownloadMultiChunksScenarioTest;
 import org.syncany.tests.scenarios.RenameToExistingFileScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
@@ -44,6 +45,7 @@ import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
 	ManySyncUpsAndOtherClientSyncDownTest.class,
 	MixedUpDownScenarioTest.class,
 	RenameToExistingFileScenarioTest.class,
+	RenameNoDownloadMultiChunksScenarioTest.class,
 	RenameDeleteScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,

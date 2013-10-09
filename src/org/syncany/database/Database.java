@@ -62,13 +62,11 @@ public class Database {
 		}
 		
 		return databaseVersions.get(0);
-	}
-		
+	}		
 		
 	public List<DatabaseVersion> getDatabaseVersions() {
 		return Collections.unmodifiableList(databaseVersions);
-	}
-	
+	}	
 
 	public DatabaseVersion getDatabaseVersion(VectorClock vectorClock) {
 		return databaseVersionIdCache.get(vectorClock);

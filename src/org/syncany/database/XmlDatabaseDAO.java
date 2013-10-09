@@ -182,6 +182,14 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 						out.print(" checksum=\""+StringUtil.toHex(fileVersion.getChecksum())+"\"");
 					}
 					
+					if (fileVersion.getDosAttributes() != null) {
+						out.print(" dosattrs=\""+fileVersion.getDosAttributes()+"\"");
+					}
+					
+					if (fileVersion.getPosixPermissions() != null) {
+						out.print(" posixperms=\""+fileVersion.getPosixPermissions()+"\"");
+					}
+					
 					out.print(" />\n");
 				}			
 				out.print("\t\t\t\t\t</fileVersions>\n");				
@@ -376,6 +384,8 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				String createdBy = attributes.getValue("createdBy");
 				String checksumStr = attributes.getValue("checksum");
 				String linkTarget = attributes.getValue("linkTarget");
+				String dosAttributes = attributes.getValue("dosattrs");
+				String posixPermissions = attributes.getValue("posixperms");
 				
 				if (fileVersionStr == null || path == null || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
 					throw new SAXException("FileVersion: Attributes missing: version, path, type, status, size and last modified are mandatory");
@@ -404,6 +414,14 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				
 				if (linkTarget != null) {
 					fileVersion.setLinkTarget(linkTarget);
+				}
+				
+				if (dosAttributes != null) {
+					fileVersion.setDosAttributes(dosAttributes);
+				}
+				
+				if (posixPermissions != null) {
+					fileVersion.setPosixPermissions(posixPermissions);
 				}
 
 				fileHistory.addFileVersion(fileVersion);							

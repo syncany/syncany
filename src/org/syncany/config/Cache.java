@@ -30,7 +30,6 @@ import org.syncany.util.StringUtil;
 public class Cache {
 	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-%s";
 	private static String FILE_FORMAT_MULTICHUNK_DECRYPTED = "multichunk-%s-decrypted";
-    private static String FILE_FORMAT_CHUNK_DECRYPTED = "chunk-%s";
     private static String FILE_FORMAT_DATABASE_FILE_ENCRYPTED = "%s";
 
     private File cacheDir;
@@ -45,11 +44,7 @@ public class Cache {
     
     public File getDecryptedMultiChunkFile(byte[] multiChunkId) {
     	return getFileInCache(FILE_FORMAT_MULTICHUNK_DECRYPTED, StringUtil.toHex(multiChunkId));
-    }
-    
-    public File getChunkFile(byte[] chunkId) {
-    	return getFileInCache(FILE_FORMAT_CHUNK_DECRYPTED, StringUtil.toHex(chunkId));
-    }      
+    }    
     
 	public File getDatabaseFile(String name) {
 		return getFileInCache(FILE_FORMAT_DATABASE_FILE_ENCRYPTED, name);		

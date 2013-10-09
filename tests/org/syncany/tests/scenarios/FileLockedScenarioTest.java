@@ -100,11 +100,11 @@ public class FileLockedScenarioTest {
 	}
 	
 	@Test
-	public void testChangeTypeToFolder() throws Exception {		
+	public void testLockUnlockFile() throws Exception {		
 		final Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
-		
+						
 		ClientActions.runOps(clientA, null,
 			new AbstractClientAction[] {
 				new CreateFileTree(),
@@ -117,6 +117,8 @@ public class FileLockedScenarioTest {
 					clientA.upWithForceChecksum();		
 					
 					clientB.down();
+
+					// TODO [low] The assert fails for the LockFile action because getLocalFiles() does not include locked files, and client A has one more locked file than client B
 					assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 				}			

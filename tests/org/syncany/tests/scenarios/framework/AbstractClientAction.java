@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import org.syncany.tests.scenarios.AllFilePossibilitiesScenarioTest;
 import org.syncany.tests.util.TestClient;
+import org.syncany.util.FileUtil;
 
 public abstract class AbstractClientAction implements Executable {
 	protected static final Logger logger = Logger.getLogger(AllFilePossibilitiesScenarioTest.class.getSimpleName());
@@ -19,7 +20,7 @@ public abstract class AbstractClientAction implements Executable {
 		return pickFileOrFolder(prndNum, new FileFilter() {				
 			@Override
 			public boolean accept(File file) {
-				return file.isFile();
+				return file.isFile() && !FileUtil.isSymlink(file);
 			}
 		});
 	}
@@ -28,7 +29,7 @@ public abstract class AbstractClientAction implements Executable {
 		return pickFileOrFolder(prndNum, new FileFilter() {				
 			@Override
 			public boolean accept(File file) {
-				return file.isDirectory();
+				return file.isDirectory() && !FileUtil.isSymlink(file);
 			}
 		});
 	}

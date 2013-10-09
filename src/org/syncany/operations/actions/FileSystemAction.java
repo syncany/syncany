@@ -4,8 +4,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,9 +103,34 @@ public abstract class FileSystemAction {
 			}
 			
 			reconstructedFileOutputStream.close();		
+						
+			// Set permissions
+			if (FileUtil.isWindows()) {
+				if (reconstructedFileVersion.getDosAttributes() != null) {
+					logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
+
+					DosFileAttributes dosAttrs = FileUtil.dosAttrsFromString(reconstructedFileVersion.getDosAttributes());					
+					Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
+					
+					Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
+					Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
+					Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
+					Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
+				}
+			}
+			else if (FileUtil.isUnixLikeOperatingSystem()) {
+				if (reconstructedFileVersion.getPosixPermissions() != null) {
+					logger.log(Level.INFO, "     - Setting POSIX permissions: "+reconstructedFileVersion.getPosixPermissions()+" ...");
+					
+					Set<PosixFilePermission> posixPerms = PosixFilePermissions.fromString(reconstructedFileVersion.getPosixPermissions());
+					
+					Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
+					Files.setPosixFilePermissions(filePath, posixPerms);
+				}
+			}
 			
 			// Set timestamp
-			reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());
+			reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
 			
 			// Okay. Now move to real place
 			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());

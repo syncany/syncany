@@ -30,6 +30,8 @@ import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -279,8 +281,16 @@ public class FileUtil {
 	}
 	
 	public static boolean symlinksSupported() {
+		return isUnixLikeOperatingSystem();
+	}	
+	
+	public static boolean isUnixLikeOperatingSystem() {
 		return File.separatorChar == '/';
-	}		
+	}
+	
+	public static boolean isWindows() {
+		return File.separatorChar == '\\';
+	}
 	
 	public static boolean isSymlink(File file) {
 		return Files.isSymbolicLink(Paths.get(file.getAbsolutePath()));
@@ -300,6 +310,51 @@ public class FileUtil {
 		Path symlinkPath = Paths.get(symlinkFile.getPath());
 		
 		Files.createSymbolicLink(symlinkPath, targetPath);
+	}
+	
+	public static String dosAttrsToString(DosFileAttributes dosAttrs) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(dosAttrs.isReadOnly() ? "r" : "-");
+		sb.append(dosAttrs.isHidden()   ? "h" : "-");
+		sb.append(dosAttrs.isArchive()  ? "a" : "-");
+		sb.append(dosAttrs.isSystem()   ? "s" : "-");
+		
+		return sb.toString();
+	}
+
+	public static DosFileAttributes dosAttrsFromString(final String dosAttributes) {
+		return new DosFileAttributes() {						
+			@Override
+			public boolean isReadOnly() {
+				return dosAttributes.charAt(0) == 'r';
+			}				
+			
+			@Override
+			public boolean isHidden() {
+				return dosAttributes.charAt(1) == 'h';
+			}
+			
+			@Override
+			public boolean isArchive() {
+				return dosAttributes.charAt(2) == 'a';
+			}
+			
+			@Override
+			public boolean isSystem() {
+				return dosAttributes.charAt(3) == 's';
+			}								
+			
+			@Override public long size() { return 0; }		
+			@Override public FileTime lastModifiedTime() { return null; }
+			@Override public FileTime lastAccessTime() { return null; }
+			@Override public boolean isSymbolicLink() { return false; }			
+			@Override public boolean isRegularFile() { return false; }			
+			@Override public boolean isOther() { return false; }			
+			@Override public boolean isDirectory() { return false; }			
+			@Override public Object fileKey() { return null; }			
+			@Override public FileTime creationTime() { return null; }			
+		};		
 	}
 	
 }

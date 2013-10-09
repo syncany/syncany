@@ -4,9 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,23 +43,25 @@ public class FileVersionHelper {
 		fileComparison.databaseFileProperties = captureFileVersionProperties(expectedLocalFileVersion);
 			
 		// Check existence
-		if (fileComparison.localFileProperties.exists != fileComparison.databaseFileProperties.exists) {
+		if (fileComparison.localFileProperties.exists() != fileComparison.databaseFileProperties.exists()) {			
 			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected EXISTS = {0}, but actual EXISTS = {1}, for file {2}", 
-					new Object[] { fileComparison.databaseFileProperties.exists, fileComparison.localFileProperties.exists, actualLocalFile });
+					new Object[] { fileComparison.databaseFileProperties.exists(), fileComparison.localFileProperties.exists(), actualLocalFile });
 			
 			return fileComparison;
 		}
 		
 		// Check file type (folder/file)
-		if (fileComparison.localFileProperties.type != fileComparison.databaseFileProperties.type) {			
+		if (fileComparison.localFileProperties.getType() != null && fileComparison.databaseFileProperties.getType() != null
+				&& !fileComparison.localFileProperties.getType().equals(fileComparison.databaseFileProperties.getType())) {
+			
 			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected TYPE = {0}, but actual TYPE = {1}, for file {2}", 
-					new Object[] { fileComparison.databaseFileProperties.type, fileComparison.localFileProperties.type, actualLocalFile });
+					new Object[] { fileComparison.databaseFileProperties.getType(), fileComparison.localFileProperties.getType(), actualLocalFile });
 			
 			return fileComparison;
 		}
 		
 		// Check folder
-		if (fileComparison.localFileProperties.type == FileType.FOLDER) {
+		if (fileComparison.localFileProperties.getType() != null && fileComparison.localFileProperties.getType() == FileType.FOLDER) {		
 			logger.log(Level.INFO, "     - Local file matches file version, directory {0}", new Object[] { actualLocalFile });
 
 			fileComparison.equals = true;
@@ -62,13 +69,13 @@ public class FileVersionHelper {
 		}
 		
 		// Check symlink
-		if (fileComparison.localFileProperties.type == FileType.SYMLINK) {
-			boolean linkTargetsIdentical = fileComparison.localFileProperties.linkTarget != null
-					&& fileComparison.localFileProperties.linkTarget.equals(fileComparison.databaseFileProperties.linkTarget);
+		if (fileComparison.localFileProperties.getType() != null && fileComparison.localFileProperties.getType() == FileType.SYMLINK) {			
+			boolean linkTargetsIdentical = fileComparison.localFileProperties.getLinkTarget() != null
+					&& fileComparison.localFileProperties.getLinkTarget().equals(fileComparison.databaseFileProperties.getLinkTarget());
 			
 			if (!linkTargetsIdentical) {
 				logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected LINK TARGET = {0}, but actual LINK TARGET = {1}, for file {2}", 
-						new Object[] { fileComparison.databaseFileProperties.linkTarget, fileComparison.localFileProperties.linkTarget, actualLocalFile });
+						new Object[] { fileComparison.databaseFileProperties.getLinkTarget(), fileComparison.localFileProperties.getLinkTarget(), actualLocalFile });
 				
 				return fileComparison;
 			}
@@ -81,28 +88,50 @@ public class FileVersionHelper {
 		}
 		
 		// Check modified date
-		if (fileComparison.localFileProperties.lastModified != fileComparison.databaseFileProperties.lastModified) {			
+		if (fileComparison.localFileProperties.getLastModified() != fileComparison.databaseFileProperties.getLastModified()) {			
 			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected MOD. DATE = {0}, but actual MOD. DATE = {1}, for file {2}", 
-					new Object[] { fileComparison.databaseFileProperties.lastModified, fileComparison.localFileProperties.lastModified, actualLocalFile });
+					new Object[] { new Date(fileComparison.databaseFileProperties.getLastModified()), new Date(fileComparison.localFileProperties.getLastModified()), actualLocalFile });
 			
 			return fileComparison;
 		}
 		
 		// Check size	
-		if (fileComparison.localFileProperties.size != fileComparison.databaseFileProperties.size) {			
+		if (fileComparison.localFileProperties.getSize() != fileComparison.databaseFileProperties.getSize()) {			
 			logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected SIZE = {0}, but actual SIZE = {1}, for file {2}", 
-					new Object[] { fileComparison.databaseFileProperties.size, fileComparison.localFileProperties.size, actualLocalFile });
+					new Object[] { fileComparison.databaseFileProperties.getSize(), fileComparison.localFileProperties.getSize(), actualLocalFile });
 			
 			return fileComparison;
 		}	
 		
 		// Check size (0-byte files, no checksum check necessary)
-		if (fileComparison.localFileProperties.size == 0 && fileComparison.databaseFileProperties.size == 0) {			
+		if (fileComparison.localFileProperties.getSize() == 0 && fileComparison.databaseFileProperties.getSize() == 0) {			
 			logger.log(Level.INFO, "     - Local file matches file version, 0-byte file {0}", new Object[] { actualLocalFile });
 
 			fileComparison.equals = true;
 			return fileComparison;
 		}	
+		
+		// Check DOS attributes / POSIX permissions
+		if (FileUtil.isWindows()) {
+			if (fileComparison.databaseFileProperties.getDosAttributes() != null 
+					&& !fileComparison.databaseFileProperties.getDosAttributes().equals(fileComparison.localFileProperties.getDosAttributes())) {
+				
+				logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected DOS ATTRS = {0}, but actual DOS ATTRS = {1}, for file {2}", 
+						new Object[] { fileComparison.databaseFileProperties.getDosAttributes(), fileComparison.localFileProperties.getDosAttributes(), actualLocalFile });
+				
+				return fileComparison;
+			}
+		}
+		else if (FileUtil.isUnixLikeOperatingSystem()) {
+			if (fileComparison.databaseFileProperties.getPosixPermissions() != null 
+					&& !fileComparison.databaseFileProperties.getPosixPermissions().equals(fileComparison.localFileProperties.getPosixPermissions())) {
+				
+				logger.log(Level.INFO, "     - Local file DIFFERS from file version, expected POSIX ATTRS = {0}, but actual POSIX ATTRS = {1}, for file {2}", 
+						new Object[] { fileComparison.databaseFileProperties.getPosixPermissions(), fileComparison.localFileProperties.getPosixPermissions(), actualLocalFile });
+				
+				return fileComparison;
+			}			
+		}
 				
 		// Do not check checksum
 		if (!forceChecksum) {
@@ -113,7 +142,7 @@ public class FileVersionHelper {
 		}
 		
 		// Check checksum		
-		if (fileComparison.localFileProperties.checksum == null || fileComparison.databaseFileProperties.checksum == null) {
+		if (fileComparison.localFileProperties.getChecksum() == null || fileComparison.databaseFileProperties.getChecksum() == null) {
 			logger.log(Level.SEVERE, "     - Local file DIFFERS or at least that is what we are guessing here, file {0}", new Object[] { actualLocalFile });
 			logger.log(Level.SEVERE, "        ---> If checksum checks are enabled, there should be no case in which checksums are null. The if-statements above must have missed a case.");
 			logger.log(Level.SEVERE, "        ---> Assuming file has changed now!");
@@ -122,7 +151,7 @@ public class FileVersionHelper {
 		}
 		
 		try {			 
-			boolean isChecksumEqual = Arrays.equals(fileComparison.localFileProperties.checksum, fileComparison.databaseFileProperties.checksum);
+			boolean isChecksumEqual = Arrays.equals(fileComparison.localFileProperties.getChecksum(), fileComparison.databaseFileProperties.getChecksum());
 			
 			if (isChecksumEqual) {
 				logger.log(Level.INFO, "     - Local file matches file version (checksum!), file {0}", new Object[] { actualLocalFile });
@@ -148,8 +177,27 @@ public class FileVersionHelper {
 		FileProperties fileProperties = new FileProperties();
 		fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
 		
+		Path filePath = Paths.get(file.getAbsolutePath());
+		
 		try {
-			BasicFileAttributes fileAttributes = Files.readAttributes(Paths.get(file.getAbsolutePath()), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+			// Read operating system dependent file attributes 
+			BasicFileAttributes fileAttributes = null;
+			
+			if (FileUtil.isWindows()) {
+				DosFileAttributes dosAttrs = Files.readAttributes(filePath, DosFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+				fileProperties.dosAttributes = FileUtil.dosAttrsToString(dosAttrs);					
+
+				fileAttributes = dosAttrs;
+			}
+			else if (FileUtil.isUnixLikeOperatingSystem()) {
+				PosixFileAttributes posixAttrs = Files.readAttributes(filePath, PosixFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+				fileProperties.posixPermissions = PosixFilePermissions.toString(posixAttrs.permissions());
+
+				fileAttributes = posixAttrs;
+			}
+			else {
+				fileAttributes = Files.readAttributes(filePath, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+			}
 						
 			fileProperties.lastModified = fileAttributes.lastModifiedTime().toMillis();
 			fileProperties.size = fileAttributes.size();
@@ -186,7 +234,7 @@ public class FileVersionHelper {
 				else {
 					fileProperties.checksum = null; 
 				}
-			}				
+			}		
 			
 			// Must be last (!), used for vanish-test later
 			fileProperties.exists = file.exists();
@@ -197,7 +245,9 @@ public class FileVersionHelper {
 		catch (IOException e) {
 			logger.log(Level.SEVERE, "SEVERE: Cannot read file {0}. Assuming file is locked.", file);
 			
+			fileProperties.exists = true;
 			fileProperties.locked = true;
+			
 			return fileProperties;
 		}
 	}
@@ -211,6 +261,8 @@ public class FileVersionHelper {
 		fileProperties.linkTarget = fileVersion.getLinkTarget();
 		fileProperties.checksum = fileVersion.getChecksum();
 		fileProperties.type = fileVersion.getType();
+		fileProperties.posixPermissions = fileVersion.getPosixPermissions();
+		fileProperties.dosAttributes = fileVersion.getDosAttributes();
 		fileProperties.exists = fileVersion.getStatus() != FileStatus.DELETED;
 		fileProperties.locked = false;
 		
@@ -251,45 +303,56 @@ public class FileVersionHelper {
 	}
 
 	public static class FileProperties {
-		long lastModified;
-		FileType type;
-		long size;
-		String relativePath;
-		String linkTarget;
-		byte[] checksum;
-		boolean locked;
-		boolean exists;		
+		private long lastModified = -1;
+		private FileType type = null;
+		private long size = -1;
+		private String relativePath;
+		private String linkTarget;
+		private byte[] checksum = null;
+		private boolean locked = true;
+		private boolean exists = false;	
 		
-		public boolean exists() {
-			return exists;
-		}
-		
-		public boolean isLocked() {
-			return locked;
-		}
+		private String posixPermissions = null;	
+		private String dosAttributes = null;
 		
 		public long getLastModified() {
 			return lastModified;
-		}
-		
-		public long getSize() {
-			return size;
 		}
 		
 		public FileType getType() {
 			return type;
 		}
 		
+		public long getSize() {
+			return size;
+		}
+		
 		public String getRelativePath() {
 			return relativePath;
 		}
 		
-		public byte[] getChecksum() {
-			return checksum;
-		}		
-		
 		public String getLinkTarget() {
 			return linkTarget;
 		}
+		
+		public byte[] getChecksum() {
+			return checksum;
+		}
+		
+		public boolean isLocked() {
+			return locked;
+		}
+		
+		public boolean exists() {
+			return exists;
+		}
+		
+		public String getPosixPermissions() {
+			return posixPermissions;
+		}
+		
+		public String getDosAttributes() {
+			return dosAttributes;
+		}		
 	}
 }

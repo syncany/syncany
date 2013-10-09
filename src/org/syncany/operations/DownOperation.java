@@ -130,8 +130,9 @@ public class DownOperation extends Operation {
 			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
 			
 			// Now download and extract multichunks
+			determineLocalChunkActions(localDatabase, winnersDatabase);
 			Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, config.getCache());
-			downloadAndExtractMultiChunks(unknownMultiChunks);
+			downloadAndDecryptMultiChunks(unknownMultiChunks);
 			
 			List<FileSystemAction> actions = determineFileSystemActions(localDatabase, winnersDatabase);
 			applyFileSystemActions(actions);
@@ -149,6 +150,11 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "- Saving local database to "+config.getDatabaseFile()+" ...");
 			saveLocalDatabase(localDatabase, config.getDatabaseFile());
 		}
+	}
+
+	private void determineLocalChunkActions(Database localDatabase, Database winnersDatabase) {
+		// TODO [high] Implement this
+		
 	}
 
 	private void initOperationVariables() throws Exception {		
@@ -329,7 +335,7 @@ public class DownOperation extends Operation {
 		}
 	}
 	
-	private void downloadAndExtractMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
+	private void downloadAndDecryptMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
 		TransferManager transferManager = config.getConnection().createTransferManager();
 		
@@ -342,8 +348,9 @@ public class DownOperation extends Operation {
 			
 			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
+			result.downloadedMultiChunks.add(multiChunkEntry);
 			
-			logger.log(Level.INFO, "  + Extracting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			logger.log(Level.INFO, "  + Decrypting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));			
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile); 			
 
@@ -365,37 +372,54 @@ public class DownOperation extends Operation {
 		Collection<PartialFileHistory> newOrChangedFileHistories = winnersDatabase.getFileHistories();
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();		
 		
-		for (PartialFileHistory fileHistory : newOrChangedFileHistories) {
-			FileVersion lastFileVersion = fileHistory.getLastVersion();
+		for (PartialFileHistory winningFileHistory : newOrChangedFileHistories) {
+			// Get last winning version
+			FileVersion winningLastVersion = winningFileHistory.getLastVersion();
+
+			// Get local file version and content
+			PartialFileHistory localFileHistory = localDatabase.getFileHistory(winningFileHistory.getFileId());			
+			FileVersion localLastVersion = (localFileHistory != null) ? localFileHistory.getLastVersion() : null;
 
 			// FIXME TODO [high] If file has been renamed, all chunks are downloaded
 			// Note: This cannot be fixed by adding a test for RENAMED here, because if a file is completely new to a
 			//       client it is not "RENAMED" for him, it is new. 
+
+			// TODO [medium] If a file has changed in only one chunk, all chunks are downloaded. FileSystemAction.createFile currently does NOT take existing files into account.  
+
 			
-			if (lastFileVersion.getType() == FileType.FILE && lastFileVersion.getStatus() != FileStatus.DELETED) {				
-				FileContent fileContent = database.getContent(lastFileVersion.getChecksum());
+			// TODO [high] This is an ugly workaround with duplicate code
+			boolean winningFileMightBeEligibleForDownload = 
+					winningLastVersion.getType() == FileType.FILE && winningLastVersion.getStatus() != FileStatus.DELETED;
+			
+			boolean isNewFile = localLastVersion == null;
+			boolean isInSamePlace = !isNewFile && winningLastVersion != null && localLastVersion.getPath().equals(winningLastVersion.getPath());
+			boolean isChecksumEqual = !isNewFile && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());			
+			boolean isRenamedFile = !isNewFile && !isInSamePlace && isChecksumEqual;
+			
+			boolean downloadActuallyNeeded = winningFileMightBeEligibleForDownload && !isRenamedFile;
+			
+			if (downloadActuallyNeeded) {				
+				FileContent winningFileContent = database.getContent(winningLastVersion.getChecksum());
 				
-				if (fileContent == null) {
-					fileContent = winnersDatabase.getContent(lastFileVersion.getChecksum());
+				if (winningFileContent == null) {
+					winningFileContent = winnersDatabase.getContent(winningLastVersion.getChecksum());
 				}
 				
-				if (fileContent != null) { // File can be empty!					
-					Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
+				boolean winningFileHasContent = winningFileContent != null;
+				
+				if (winningFileHasContent) { // File can be empty!					
+					Collection<ChunkEntryId> fileChunks = winningFileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
 					
 					for (ChunkEntryId chunkChecksum : fileChunks) {
-						File chunkFileInCache = cache.getChunkFile(chunkChecksum.getArray()); // TODO [medium] Chunk files do not exist anymore. Remove this
+						MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
 						
-						if (!chunkFileInCache.exists()) {
-							MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
-							
-							if (multiChunkForChunk == null) {
-								multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum); 
-							}
-							
-							if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-								logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");
-								multiChunksToDownload.add(multiChunkForChunk);
-							}
+						if (multiChunkForChunk == null) {
+							multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum); 
+						}
+						
+						if (!multiChunksToDownload.contains(multiChunkForChunk)) {
+							logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");
+							multiChunksToDownload.add(multiChunkForChunk);
 						}
 					}
 				}
@@ -591,6 +615,7 @@ public class DownOperation extends Operation {
 	
 	public class DownOperationResult implements OperationResult {
 		private ChangeSet changeSet = new ChangeSet();
+		private Set<MultiChunkEntry> downloadedMultiChunks = new HashSet<MultiChunkEntry>();
 		
 		public void setChangeSet(ChangeSet ChangeSet) {
 			this.changeSet = ChangeSet;
@@ -598,6 +623,14 @@ public class DownOperation extends Operation {
 		
 		public ChangeSet getChangeSet() {
 			return changeSet;
+		}
+		
+		public Set<MultiChunkEntry> getDownloadedMultiChunks() {
+			return downloadedMultiChunks;
+		}
+		
+		public void setDownloadedMultiChunks(Set<MultiChunkEntry> downloadedMultiChunks) {
+			this.downloadedMultiChunks = downloadedMultiChunks;
 		}
 	}
 }
