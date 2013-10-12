@@ -35,22 +35,27 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.FileVersionHelper;
+import org.syncany.database.FileVersionHelper.FileChange;
+import org.syncany.database.FileVersionHelper.FileVersionComparison;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.actions.ChangeAttributesFileSystemAction;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
+import org.syncany.operations.actions.NewSymlinkFileSystemAction;
 import org.syncany.operations.actions.RenameFileSystemAction;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -130,7 +135,7 @@ public class DownOperation extends Operation {
 			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
 			
 			// Now download and extract multichunks
-			determineLocalChunkActions(localDatabase, winnersDatabase);
+			// TODO [high] The order should be: Determine file system actions (cmp. winner to local db), compare to local disk, determine multichunks to download, apply file system actions, exit if anything fails. in case of failure (missing multichunk), it must be because of local changes 
 			Set<MultiChunkEntry> unknownMultiChunks = determineUnknownMultiChunks(localDatabase, winnersDatabase, config.getCache());
 			downloadAndDecryptMultiChunks(unknownMultiChunks);
 			
@@ -150,11 +155,6 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "- Saving local database to "+config.getDatabaseFile()+" ...");
 			saveLocalDatabase(localDatabase, config.getDatabaseFile());
 		}
-	}
-
-	private void determineLocalChunkActions(Database localDatabase, Database winnersDatabase) {
-		// TODO [high] Implement this
-		
 	}
 
 	private void initOperationVariables() throws Exception {		
@@ -211,15 +211,17 @@ public class DownOperation extends Operation {
 		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);		
 		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
 		
-		logger.log(Level.FINER, "- Database reconciliation results:");
-		logger.log(Level.FINER, "  + localBranch: "+localBranch);
-		logger.log(Level.FINER, "  + unknownRemoteBranches: "+unknownRemoteBranches);
-		logger.log(Level.FINER, "  + allStitchedBranches: "+allStitchedBranches);
-		logger.log(Level.FINER, "  + lastCommonHeader: "+lastCommonHeader);
-		logger.log(Level.FINER, "  + firstConflictingHeaders: "+firstConflictingHeaders);
-		logger.log(Level.FINER, "  + winningFirstConflictingHeaders: "+winningFirstConflictingHeaders);
-		logger.log(Level.FINER, "  + winnersWinnersLastDatabaseVersionHeader: "+winnersWinnersLastDatabaseVersionHeader);
-
+		if (logger.isLoggable(Level.FINEST)) {
+			logger.log(Level.FINEST, "- Database reconciliation results:");
+			logger.log(Level.FINEST, "  + localBranch: "+localBranch);
+			logger.log(Level.FINEST, "  + unknownRemoteBranches: "+unknownRemoteBranches);
+			logger.log(Level.FINEST, "  + allStitchedBranches: "+allStitchedBranches);
+			logger.log(Level.FINEST, "  + lastCommonHeader: "+lastCommonHeader);
+			logger.log(Level.FINEST, "  + firstConflictingHeaders: "+firstConflictingHeaders);
+			logger.log(Level.FINEST, "  + winningFirstConflictingHeaders: "+winningFirstConflictingHeaders);
+			logger.log(Level.FINEST, "  + winnersWinnersLastDatabaseVersionHeader: "+winnersWinnersLastDatabaseVersionHeader);
+		}
+		
 		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
 		Branch winnersBranch = allStitchedBranches.getBranch(winnersName);
 		
@@ -230,6 +232,7 @@ public class DownOperation extends Operation {
 	}
 
 	private List<FileSystemAction> determineFileSystemActions(Database localDatabase, Database winnersDatabase) throws Exception {
+		FileVersionHelper fileVersionHelper = new FileVersionHelper(config);
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
 		logger.log(Level.INFO, "- Determine filesystem actions ...");
@@ -242,28 +245,88 @@ public class DownOperation extends Operation {
 			PartialFileHistory localFileHistory = localDatabase.getFileHistory(winningFileHistory.getFileId());			
 			FileVersion localLastVersion = (localFileHistory != null) ? localFileHistory.getLastVersion() : null;
 			
-			logger.log(Level.INFO, "   + Comparing local version "+localLastVersion+" with winning version  "+winningLastVersion);			
+			logger.log(Level.INFO, "   + Comparing local version: "+localLastVersion);			
+			logger.log(Level.INFO, "     with winning version   : "+winningLastVersion);
 			
 			// Cases
-			boolean isNewFile = localLastVersion == null;
-			boolean isInSamePlace = !isNewFile && winningLastVersion != null && localLastVersion.getPath().equals(winningLastVersion.getPath());
-			boolean isChecksumEqual = !isNewFile && Arrays.equals(localLastVersion.getChecksum(), winningLastVersion.getChecksum());
 			
-			boolean isChangedFile = !isNewFile && isInSamePlace && !isChecksumEqual;
-			boolean isIdenticalFile = !isNewFile && isInSamePlace && isChecksumEqual;
-			boolean isRenamedFile = !isNewFile && !isInSamePlace && isChecksumEqual;
-			boolean isDeletedFile = winningLastVersion.getStatus() == FileStatus.DELETED;
+			// TODO [high] Ignore list for already compared lost branches (evil C) 
 			
-			if (isNewFile && isDeletedFile) {
-				isNewFile = false; // TODO [low] This is ugly. Do in original 'isNewFile = ...'-statement
-			}
+			/*
+			 * (fsa = file system action)
+			 * 
+			 * SYNC DOWN ALGORITHM:
+			 * 
+			 * if (has no local version)
+			 *      if (local file of winning version exists)
+			 *         comploc = compare winning version to local file
+			 *         
+			 *         if (comploc: winning version does not match)
+			 *              add conflict fsa for winning version
+			 *          
+			 *      add new fsa for winning version
+			 * 
+			 * else if (has local version)
+			 *      comploc = compare local version with local file
+			 *      
+			 *      if (comploc: local version matches local file)
+			 *           compwin = compare winning version with local version
+			 *           
+			 *           if (compwin: attributes changed and/or path changed)
+			 *                add rename/changeattrs fsa
+			 *                
+			 *           else if (compwin: deleted)
+			 *                add deleted fsa
+			 *           
+			 *           else if (compwin: changed link) 
+			 *                add changed link fsa
+			 *                
+			 *           else 
+			 *                add changed file fsa
+			 *      
+			 *      else if (local version does not match local file) 
+			 *           XXXXXXXXXXXXXXXXXXXx
+			 *           if (local file exists)
+			 *                 add conflict fsa for local last version
+			 *                 
+			 *           add new fsa for winning version
+			 * 
+			 * 
+			 * 
+			 * -------> sort FSAs: 
+			 *    1. conflict fsa
+			 *    2. ... (rest)
+			 * 
+			 * 
+			 * 
+			 * NEW FILE SYSTEM ACTION
+			 * 
+			 * if (local file exists
+			 * 
+			 *      
+			 * CHANGE FILE SYSTEM ACTIONS (incl. attrs, ...):
+			 * 
+			 * if (not local file matches local version)
+			 *     throw exception: inconsistent file system, skip file
+			 *      
+			 * perform action
+			 * 
+			 * 
+			 */
 			
-			if (logger.isLoggable(Level.FINER)) {
-				logger.log(Level.FINER, "      + isNewFile: "+isNewFile+", isInSamePlace:"+isInSamePlace+", isChecksumEqual: "+isChecksumEqual
-						+", isChangedFile: "+isChangedFile+", isIdenticalFile: "+isIdenticalFile+", isRenamedFile: "+isRenamedFile+", isDeletedFile: "+isDeletedFile);
-			}
 			
-			if (isNewFile) {
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			if (localLastVersion == null) {
 				FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
 				fileSystemActions.add(action);
 
@@ -273,50 +336,89 @@ public class DownOperation extends Operation {
 					logger.log(Level.FINER, "      + Added: "+action);
 				}
 			}
-			else if (isChangedFile) {	
-				FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
-				fileSystemActions.add(action);
+			else {
+				FileVersionComparison winningToLocalLastComparison = fileVersionHelper.compare(winningLastVersion, localLastVersion);
+				logger.log(Level.INFO, "   --> "+winningToLocalLastComparison.getFileChanges());
 				
-				result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());				
-				
-				if (logger.isLoggable(Level.FINER)) {
-					logger.log(Level.FINER, "      + Changed: "+action);
-				}
-			}
-			else if (isRenamedFile) {
-				FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase);
-				fileSystemActions.add(action);
-				
-				result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());								
-				
-				if (logger.isLoggable(Level.FINER)) {
-					logger.log(Level.FINER, "      + Renamed: "+action);
-				}
-			}
-			else if (isDeletedFile) {
-				FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
-				fileSystemActions.add(action);
-				
-				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getPath());								
-				
-				if (logger.isLoggable(Level.FINER)) {
-					logger.log(Level.FINER, "      + Deleted: {0}", action);
-				}
-			}
-			else if (isIdenticalFile) {
-				result.getChangeSet().getDeletedFiles().add(winningLastVersion.getPath());												
-				
-				if (logger.isLoggable(Level.FINER)) {
+				Set<FileChange> winningFileChanges = winningToLocalLastComparison.getFileChanges();
+			
+				if (winningFileChanges.size() == 0) {
 					logger.log(Level.FINER, "      + Identical file. Nothing to do.");	
 				}
-			}
-			else {
-				logger.log(Level.WARNING, "      + THIS SHOULD NOT HAPPEN"); 
-				throw new Exception("Cannot determine file system action!");
-			}
+				else if (winningFileChanges.contains(FileChange.NEW)) {					
+					FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
+					fileSystemActions.add(action);
+
+					result.getChangeSet().getNewFiles().add(winningLastVersion.getPath());
+					
+					if (logger.isLoggable(Level.FINER)) {
+						logger.log(Level.FINER, "      + Added: "+action);
+					}
+				}
+				else if (winningFileChanges.contains(FileChange.DELETED)) {
+					FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
+					fileSystemActions.add(action);
+					
+					result.getChangeSet().getDeletedFiles().add(winningLastVersion.getPath());								
+					
+					if (logger.isLoggable(Level.FINER)) {
+						logger.log(Level.FINER, "      + Deleted: {0}", action);
+					}
+				}				
+				else if (winningFileChanges.contains(FileChange.CHANGED_PATH) && winningFileChanges.size() == 1) {
+					FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion,localDatabase, winnersDatabase);
+					fileSystemActions.add(action);
+					
+					result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());								
+					
+					if (logger.isLoggable(Level.FINER)) {
+						logger.log(Level.FINER, "      + Renamed: "+action);
+					}
+				}				
+				else if (winningFileChanges.contains(FileChange.CHANGED_LINK_TARGET) && winningFileChanges.size() == 1) {
+					FileSystemAction action = new NewSymlinkFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
+					fileSystemActions.add(action);
+					
+					result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());				
+					
+					if (logger.isLoggable(Level.FINER)) {
+						logger.log(Level.FINER, "      + Changed symlink: "+action);
+					}
+				}	
+				else if (winningFileChanges.contains(FileChange.CHANGED_ATTRIBUTES) && winningFileChanges.size() == 1) {
+					FileSystemAction action = new ChangeAttributesFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
+					fileSystemActions.add(action);
+					
+					result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());				
+					
+					if (logger.isLoggable(Level.FINER)) {
+						logger.log(Level.FINER, "      + Changed attributes: "+action);
+					}
+				}					
+				else {					
+					// determine multichunks
+					// make create file file system action
+					FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
+					fileSystemActions.add(action);
+					
+					result.getChangeSet().getChangedFiles().add(winningLastVersion.getPath());				
+					
+					if (logger.isLoggable(Level.FINER)) {
+						logger.log(Level.FINER, "      + Changed: "+action);
+					}
+				}				
+			}				
 		}
 				
 		return fileSystemActions;
+	}
+	
+	private boolean equalsLocalFile(FileVersion localLastVersion) {
+		FileVersionHelper fileVersionHelper = new FileVersionHelper(config);
+		File localFile = new File(config.getLocalDir()+File.separator+localLastVersion.getPath());
+		FileVersionComparison localLastVersionToLocalFileComparison = fileVersionHelper.compare(localLastVersion, localFile, false); // TODO [low]forceChecksum configurable?
+		
+		return localLastVersionToLocalFileComparison.equals();
 	}
 	
 	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {

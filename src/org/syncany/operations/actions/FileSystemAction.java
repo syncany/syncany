@@ -104,33 +104,10 @@ public abstract class FileSystemAction {
 			
 			reconstructedFileOutputStream.close();		
 						
-			// Set permissions
-			if (FileUtil.isWindows()) {
-				if (reconstructedFileVersion.getDosAttributes() != null) {
-					logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
-
-					DosFileAttributes dosAttrs = FileUtil.dosAttrsFromString(reconstructedFileVersion.getDosAttributes());					
-					Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
-					
-					Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
-					Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
-					Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
-					Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
-				}
-			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
-				if (reconstructedFileVersion.getPosixPermissions() != null) {
-					logger.log(Level.INFO, "     - Setting POSIX permissions: "+reconstructedFileVersion.getPosixPermissions()+" ...");
-					
-					Set<PosixFilePermission> posixPerms = PosixFilePermissions.fromString(reconstructedFileVersion.getPosixPermissions());
-					
-					Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
-					Files.setPosixFilePermissions(filePath, posixPerms);
-				}
-			}
+			setFileAttributes(reconstructedFileVersion, reconstructedFileInCache);
 			
 			// Set timestamp
-			reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
+			setLastModified(reconstructedFileVersion, reconstructedFileInCache);
 			
 			// Okay. Now move to real place
 			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
@@ -145,6 +122,8 @@ public abstract class FileSystemAction {
 			
 			logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
 			reconstructedFilesAtFinalLocation.mkdirs();
+			
+			setFileAttributes(reconstructedFileVersion, reconstructedFilesAtFinalLocation);
 		}	
 		
 		// Symlink
@@ -167,6 +146,10 @@ public abstract class FileSystemAction {
 		}
 	}
 	
+	private void setLastModified(FileVersion reconstructedFileVersion, File reconstructedFileInCache) {
+		reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
+	}
+
 	protected void createConflictFile(FileVersion conflictingLocalVersion) throws IOException {
 		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getPath());
 		
@@ -213,6 +196,33 @@ public abstract class FileSystemAction {
 		FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
 	}
 	
+	protected void setFileAttributes(FileVersion reconstructedFileVersion, File reconstructedFileInCache) throws IOException {
+		// Set permissions
+					if (FileUtil.isWindows()) {
+						if (reconstructedFileVersion.getDosAttributes() != null) {
+							logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
+
+							DosFileAttributes dosAttrs = FileUtil.dosAttrsFromString(reconstructedFileVersion.getDosAttributes());					
+							Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
+							
+							Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
+							Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
+							Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
+							Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
+						}
+					}
+					else if (FileUtil.isUnixLikeOperatingSystem()) {
+						if (reconstructedFileVersion.getPosixPermissions() != null) {
+							logger.log(Level.INFO, "     - Setting POSIX permissions: "+reconstructedFileVersion.getPosixPermissions()+" ...");
+							
+							Set<PosixFilePermission> posixPerms = PosixFilePermissions.fromString(reconstructedFileVersion.getPosixPermissions());
+							
+							Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
+							Files.setPosixFilePermissions(filePath, posixPerms);
+						}
+					}		
+	}
+	
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
 		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
@@ -223,20 +233,11 @@ public abstract class FileSystemAction {
 		else {
 			return false;
 		}
-	}
+	}	
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
-		boolean actualLocalFileExists = actualLocalFile.exists();
-		
-		// Check existence
-		if (actualLocalFileExists) {
-			logger.log(Level.INFO, "     - Unexpected file detected, is expected to be NON-EXISTANT, but exists: "+actualLocalFile);
-			return true;
-		}
-		else {
-			return false;
-		}
+		return actualLocalFile.exists();
 	}	
 	
 	protected File getAbsolutePathFile(String relativePath) {

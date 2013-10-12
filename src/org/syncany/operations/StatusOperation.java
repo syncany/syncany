@@ -3,6 +3,12 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -16,8 +22,6 @@ import org.syncany.database.FileVersionHelper;
 import org.syncany.database.FileVersionHelper.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
-import org.syncany.util.FileLister;
-import org.syncany.util.FileLister.FileListerAdapter;
 import org.syncany.util.FileUtil;
 
 public class StatusOperation extends Operation {
@@ -66,68 +70,12 @@ public class StatusOperation extends Operation {
 	}		
 
 	private ChangeSet findChangedAndNewFiles(final File root, final Database database) throws FileNotFoundException, IOException {
-		final ChangeSet changeSet = new ChangeSet();
+		Path rootPath = Paths.get(root.getAbsolutePath());
 		
-		FileLister fileLister = new FileLister(root, new FileListerAdapter() {
-			@Override
-			public void enterDirectory(File directory) {
-				processFile(directory);
-			}
-			
-			@Override
-			public void processFile(File actualLocalFile) {
-				String relativeFilePath = FileUtil.getRelativePath(root, actualLocalFile);
-
-				// TODO [medium] Duplicate code: The file.*()-tests in this class are semi-duplicated in the Indexer. This often leads to inconsistencies between status and up.  
-
-				// Check if file is locked
-				boolean fileLocked = FileUtil.isFileLocked(actualLocalFile);
-				
-				if (fileLocked) {
-					logger.log(Level.FINEST, "- Ignoring file (locked): {0}", relativeFilePath);						
-					return;
-				}				
-				
-				// Check database by file path
-				PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
-				
-				if (expectedFileHistory != null) {
-					FileVersion expectedLastFileVersion = expectedFileHistory.getLastVersion();
-					
-					// Compare
-					boolean forceChecksum = options != null && options.isForceChecksum();
-					FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLastFileVersion, actualLocalFile, forceChecksum);
-					
-					if (fileVersionComparison.equals()) {
-						changeSet.unchangedFiles.add(relativeFilePath);
-					}
-					else {
-						changeSet.changedFiles.add(relativeFilePath);
-					}					
-				}
-				else {
-					changeSet.newFiles.add(relativeFilePath);
-					logger.log(Level.FINEST, "- New file: "+relativeFilePath);
-				}				
-			}			
-			
-			@Override
-			public boolean fileFilter(File file) {
-				return true;				
-			}			
-			
-			@Override
-			public boolean directoryFilter(File directory) {
-				boolean isSymlinkDir = FileUtil.isSymlink(directory);
-				boolean isAppRelatedDir = directory.equals(config.getAppDir())
-					|| directory.equals(config.getCache())
-					|| directory.equals(config.getDatabaseDir());
-								
-				return !isSymlinkDir && !isAppRelatedDir;
-			}
-		});
+		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, database);		
+		Files.walkFileTree(rootPath, fileVisitor);
 		
-		fileLister.start();
+		ChangeSet changeSet = fileVisitor.getChangeSet();
 		
 		// Find deleted files
 		for (PartialFileHistory fileHistory : database.getFileHistories()) {
@@ -147,6 +95,86 @@ public class StatusOperation extends Operation {
 		}						
 		
 		return changeSet;
+	}
+	
+	private class StatusFileVisitor implements FileVisitor<Path> {
+		private Path root;
+		private Database database;
+		private ChangeSet changeSet;
+		
+		public StatusFileVisitor(Path root, Database database) {
+			this.root = root;
+			this.database = database;
+			this.changeSet = new ChangeSet();
+		}
+
+		public ChangeSet getChangeSet() {
+			return changeSet;
+		}
+		
+		@Override
+		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
+			String relativeFilePath = root.relativize(actualLocalFile).toString();
+			
+			// Check if in .syncany (or app related acc. to config) 		
+			boolean isAppRelatedDir = actualLocalFile.equals(config.getAppDir())
+				|| actualLocalFile.equals(config.getCache())
+				|| actualLocalFile.equals(config.getDatabaseDir());
+			
+			if (isAppRelatedDir) {
+				logger.log(Level.FINEST, "- Ignoring file (syncany app-related): {0}", relativeFilePath);
+				return FileVisitResult.SKIP_SUBTREE;
+			}
+				
+			// Check if file is locked
+			boolean fileLocked = FileUtil.isFileLocked(actualLocalFile.toFile());
+			
+			if (fileLocked) {
+				logger.log(Level.FINEST, "- Ignoring file (locked): {0}", relativeFilePath);						
+				return FileVisitResult.CONTINUE;
+			}				
+			
+			// Check database by file path
+			PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
+			
+			if (expectedFileHistory != null) {
+				FileVersion expectedLastFileVersion = expectedFileHistory.getLastVersion();
+				
+				// Compare
+				boolean forceChecksum = options != null && options.isForceChecksum();
+				FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
+				// TODO [low] Performance: Attrs are already read, compare() reads them again.  
+				
+				if (fileVersionComparison.equals()) {
+					changeSet.unchangedFiles.add(relativeFilePath);
+				}
+				else {
+					changeSet.changedFiles.add(relativeFilePath);
+				}					
+			}
+			else {
+				changeSet.newFiles.add(relativeFilePath);
+				logger.log(Level.FINEST, "- New file: "+relativeFilePath);
+			}			
+			
+			// Check if file is symlink directory
+			boolean isSymlinkDir = attrs.isDirectory() && attrs.isSymbolicLink();
+			
+			if (isSymlinkDir) {
+				logger.log(Level.FINEST, "   + File is sym. directory. Skipping subtree.");
+				return FileVisitResult.SKIP_SUBTREE;
+			}
+			else {
+				return FileVisitResult.CONTINUE;
+			}
+		}
+		
+		@Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException { 
+			return visitFile(dir, attrs);
+		}
+		
+		@Override public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }
+		@Override public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }		
 	}
 	
 	public static class ChangeSet {

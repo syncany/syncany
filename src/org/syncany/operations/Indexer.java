@@ -260,7 +260,16 @@ public class Indexer {
 					&& fileVersion.getDosAttributes() != null
 					&& fileVersion.getDosAttributes().equals(lastFileVersion.getDosAttributes());							
 			}			
-							
+			
+			// Check identical link target
+			boolean hasIdenticalLinkTarget = true;
+			
+			if (lastFileVersion != null && lastFileVersion.getType() == FileType.SYMLINK
+				&& fileVersion.getType() == FileType.SYMLINK) {
+				
+				hasIdenticalLinkTarget = fileVersion.getLinkTarget().equals(lastFileVersion.getLinkTarget());
+			}
+											
 			// Only add if not identical
 			boolean isIdenticalToLastVersion = 
 				   lastFileVersion != null 
@@ -269,7 +278,8 @@ public class Indexer {
 				&& lastFileVersion.getSize().equals(fileVersion.getSize())
 				&& Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
 				&& lastFileVersion.getLastModified().equals(fileVersion.getLastModified())
-				&& hasIdenticalPermsAndAttributes;
+				&& hasIdenticalPermsAndAttributes
+				&& hasIdenticalLinkTarget;
 			
 			if (!isIdenticalToLastVersion) {
 				newDatabaseVersion.addFileHistory(fileHistory);

@@ -154,7 +154,7 @@ public class FileVersion implements Cloneable {
 	public String toString() {
 		return "FileVersion [version=" + version + ", path=" + path + ", type=" + type + ", status=" + status + ", size=" + size + ", lastModified="
 				+ lastModified + ", linkTarget=" + linkTarget + ", createdBy=" + createdBy + ", checksum=" + StringUtil.toHex(checksum) + ", updated="
-				+ updated + "]";
+				+ updated + ", posixPermissions=" + posixPermissions + ", dosAttributes=" + dosAttributes + "]";
 	}
 
 	@Override
@@ -247,7 +247,13 @@ public class FileVersion implements Cloneable {
 	}
 
 	public enum FileStatus {
-		UNKNOWN ("UNKNOWN"), NEW ("NEW"), CHANGED ("CHANGED"), RENAMED ("RENAMED"), DELETED ("DELETED");
+		UNKNOWN ("UNKNOWN"), 
+		NEW ("NEW"), 
+		CHANGED ("CHANGED"), 
+		RENAMED ("RENAMED"), 
+		DELETED ("DELETED"),
+		ATTRS_CHANGED ("ATTRS_CHANGED"),
+		UNCHANGED ("UNCHANGED");
 		
 		private String name;       
 		

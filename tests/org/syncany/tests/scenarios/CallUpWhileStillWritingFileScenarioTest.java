@@ -34,7 +34,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		final TestClient clientB = new TestClient("B", testConnection);
 		
 		final File testFile = clientA.getLocalFile("large-test-file");
-		final long testFileLength = 200*1024*1024;
+		final long testFileLength = 100*1024*1024;
 		
 		Thread writeFileThread = new Thread(new Runnable() {
 			@Override

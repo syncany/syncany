@@ -7,9 +7,10 @@ import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.scenarios.framework.AbstractClientAction;
 import org.syncany.tests.scenarios.framework.ChangeContentWithoutFileSize;
-import org.syncany.tests.scenarios.framework.ChangeFilePermissionsToXXX;
+import org.syncany.tests.scenarios.framework.ChangePermissionsOfFile;
 import org.syncany.tests.scenarios.framework.ChangeFileSize;
 import org.syncany.tests.scenarios.framework.ChangeLastModifiedDate;
+import org.syncany.tests.scenarios.framework.ChangePermissionsOfFolder;
 import org.syncany.tests.scenarios.framework.ChangeSymlinkTarget;
 import org.syncany.tests.scenarios.framework.ChangeTypeFolderToFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeFileToFolder;
@@ -93,9 +94,10 @@ public class AllFilePossibilitiesScenarioTest {
 				new CreateFileTree(),
 				
 				new ChangeContentWithoutFileSize(),
-				new ChangeFilePermissionsToXXX(), // TODO [medium] Implement permission changes tests
 				new ChangeFileSize(),
 				new ChangeLastModifiedDate(),
+				new ChangePermissionsOfFile(),
+				new ChangePermissionsOfFolder(), 
 				new ChangeSymlinkTarget(),				
 				new ChangeTypeFileToFolder(),
 				new ChangeTypeFileToSymlinkWithNonExistingTarget(),
