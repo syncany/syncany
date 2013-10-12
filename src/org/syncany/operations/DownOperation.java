@@ -257,31 +257,55 @@ public class DownOperation extends Operation {
 			 * 
 			 * SYNC DOWN ALGORITHM:
 			 * 
-			 * if (has no local version)
-			 *      if (local file of winning version exists)
+			 * if (has no local version) {
+			 *      if (local file of winning version exists) {
 			 *         comploc = compare winning version to local file
 			 *         
-			 *         if (comploc: winning version does not match)
+			 *         if (comploc: winning version does not match) {
 			 *              add conflict fsa for winning version
-			 *          
-			 *      add new fsa for winning version
-			 * 
-			 * else if (has local version)
-			 *      comploc = compare local version with local file
+			 *              add new fsa for winning version
+			 *              add multichunks to download list
+			 *         }
+			 *         else { // comploc: winning version does match
+			 *            // Do nothing
+			 *         }
+			 *      }
+			 *      else {
+			 *         add new fsa for winning version
+			 *         add multichunks of winning version to download list
+			 *      }
+			 * }
+			 * else if (has local version) { 
+			 *      comploc = compare local version with local file WITHOUT CHECKSUM 
 			 *      
 			 *      if (comploc: local version matches local file)
 			 *           compwin = compare winning version with local version
+			 *           contentDefinitelyChanged = compwin contains checksum or size
 			 *           
-			 *           if (compwin: attributes changed and/or path changed)
-			 *                add rename/changeattrs fsa
-			 *                
+			 *           if (compwin: identical) 
+			 *                // Nothing
+			 *
 			 *           else if (compwin: deleted)
 			 *                add deleted fsa
 			 *           
 			 *           else if (compwin: changed link) 
 			 *                add changed link fsa
+			 *           
+			 *           else if (compwin: last modified date changed OR attributes changed OR path changed AND NOT contentDefinitelyChanged)
+			 *                if (compwin: NOT last modified changed)
+			 *                   add rename/changeattrs fsa
+			 * 
+			 *                else // = includes last modified change
+			 *                   compcheck = compare local file checksum with winning version checksum
 			 *                
-			 *           else 
+			 *                   if (compcheck: checksum NOT equals)
+			 *                      add multichunks of winning version to download list
+			 *                      add changed file fsa
+			 *                   else 
+			 *                     add rename/changeattrs fsa
+			 *                
+			 *           else // content changed (checksum, size)
+			 *                add multichunks of winning version to download list
 			 *                add changed file fsa
 			 *      
 			 *      else if (local version does not match local file) 
@@ -289,6 +313,7 @@ public class DownOperation extends Operation {
 			 *           if (local file exists)
 			 *                 add conflict fsa for local last version
 			 *                 
+			 *           add multichunks of winning version to download list
 			 *           add new fsa for winning version
 			 * 
 			 * 
