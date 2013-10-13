@@ -193,7 +193,7 @@ public class InitCommand extends Command {
 				out.println();
 				
 				continue;
-			}
+			} 
 			
 			password = new String(passwordChars);
 			
@@ -213,9 +213,9 @@ public class InitCommand extends Command {
 		out.println("few predefined crypto settings. To choose your own, please edit the config file.");
 		out.println();
 		out.println("Options:");
-		out.println("  'aes128'      AES/GCM/NoPadding, 128 bit (weak, but no country restrictions)");
-		out.println("  'aes256'      AES/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
-		out.println("  'twofish256'  Twofish/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
+		out.println("  [1] AES/GCM/NoPadding, 128 bit (weak, but no country restrictions)");
+		out.println("  [2] AES/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
+		out.println("  [3] Twofish/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
 		out.println();
 		
 		String cipherStr = null;
@@ -223,20 +223,20 @@ public class InitCommand extends Command {
 		boolean unlimitedCryptoNeeded = false;
 		
 		while (cipherStr == null) {
-			cipherStr = console.readLine("Cipher [aes128]: ");
+			cipherStr = console.readLine("Cipher [1]: ");
 			
-			if ("".equals(cipherStr) || "aes128".equals(cipherStr)) {
+			if ("".equals(cipherStr) || "1".equals(cipherStr)) {
 				cipherStr = "AES/GCM/NoPadding";
 				keySize = 128;
 				unlimitedCryptoNeeded = false;
 			}
-			else if ("aes256".equals(cipherStr) || "twofish256".equals(cipherStr)) {
+			else if ("2".equals(cipherStr) || "3".equals(cipherStr)) {
 				out.println();
 				out.println("This cipher/keysize might not be allowed in your country.");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
 				if (yesno.toLowerCase().startsWith("y")) {
-					if ("aes256".equals(cipherStr)) {
+					if ("1".equals(cipherStr)) {
 						cipherStr = "AES/GCM/NoPadding";
 						keySize = 256;
 					}
@@ -268,9 +268,6 @@ public class InitCommand extends Command {
 			}
 		}
 		
-		operationOptions.setEncryption(new EncryptionSettings(true, password, cipherStr, keySize, true, unlimitedCryptoNeeded));
-		
+		operationOptions.setEncryption(new EncryptionSettings(true, password, cipherStr, keySize, true, unlimitedCryptoNeeded));		
 	}
-
-
 }

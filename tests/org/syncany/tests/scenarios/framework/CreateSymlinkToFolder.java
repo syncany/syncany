@@ -16,6 +16,6 @@ public class CreateSymlinkToFolder extends AbstractClientAction {
 		
 		log(this, symlinkFile.getAbsolutePath());
 		
-		FileUtil.createSymlink(new File("/etc/init.d"), symlinkFile);
+		FileUtil.createSymlink("/etc/init.d", symlinkFile);
 	}		
 }	

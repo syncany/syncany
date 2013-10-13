@@ -298,15 +298,15 @@ public class FileUtil {
 	
 	public static String readSymlinkTarget(File file) {
 		try {
-			return Files.readSymbolicLink(Paths.get(file.getAbsolutePath())).toAbsolutePath().toString();
+			return Files.readSymbolicLink(Paths.get(file.getAbsolutePath())).toString();
 		}
 		catch (IOException e) {
 			return null;
 		}
 	}
 	
-	public static void createSymlink(File targetFile, File symlinkFile) throws Exception {
-		Path targetPath = Paths.get(targetFile.getAbsolutePath());
+	public static void createSymlink(String targetPathStr, File symlinkFile) throws Exception {
+		Path targetPath = Paths.get(targetPathStr);
 		Path symlinkPath = Paths.get(symlinkFile.getPath());
 		
 		Files.createSymbolicLink(symlinkPath, targetPath);

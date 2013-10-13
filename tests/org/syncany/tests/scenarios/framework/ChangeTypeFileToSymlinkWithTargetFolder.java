@@ -16,6 +16,6 @@ public class ChangeTypeFileToSymlinkWithTargetFolder extends AbstractClientActio
 		log(this, file.getAbsolutePath());
 		
 		file.delete();
-		FileUtil.createSymlink(new File("/etc/init.d"), file);
+		FileUtil.createSymlink("/etc/init.d", file);
 	}		
 }	

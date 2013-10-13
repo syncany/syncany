@@ -16,6 +16,6 @@ public class CreateSymlinkToNonExisting extends AbstractClientAction {
 		
 		log(this, symlinkFile.getAbsolutePath());
 		
-		FileUtil.createSymlink(new File("/does/not/exist"), symlinkFile);
+		FileUtil.createSymlink("/does/not/exist", symlinkFile);
 	}		
 }	
