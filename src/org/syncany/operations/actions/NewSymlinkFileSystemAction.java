@@ -1,31 +1,24 @@
 package org.syncany.operations.actions;
 
-import java.io.File;
-
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 
 public class NewSymlinkFileSystemAction extends FileSystemAction {
-	public NewSymlinkFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase, fromFileVersion, toFileVersion);
+	public NewSymlinkFileSystemAction(Config config, FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
+		super(config, localDatabase, winningDatabase, null, newFileVersion);
 	}
 	
 	@Override
 	public void execute() throws Exception {
-		if (!fileAsExpected(fileVersion1)) {
-			createConflictFile(fileVersion1);
-			createFile(fileVersion2);
+		if (fileExists(fileVersion2)) {
+			if (!fileAsExpected(fileVersion2)) {
+				createConflictFile(fileVersion2);
+				createSymlink(fileVersion2);
+			}
 		}
 		else {
-			File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getPath());
-			fromFileOnDisk.delete();
-			
-			if (fileExists(fileVersion2) && !fileAsExpected(fileVersion2)) {
-				createConflictFile(fileVersion2);
-			}
-			
-			createFile(fileVersion2);				
+			createSymlink(fileVersion2);
 		}			
 	}
 

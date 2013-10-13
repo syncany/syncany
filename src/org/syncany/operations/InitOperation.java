@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,8 +57,13 @@ public class InitOperation extends Operation {
 	}		
 	
 	private void initMachineName() throws UnknownHostException {
-		SecureRandom random = new SecureRandom();
-		options.setMachineName(InetAddress.getLocalHost().getHostName()+System.getProperty("user.name")+Math.abs(random.nextInt()));
+		String machineName = new String(
+			  InetAddress.getLocalHost().getHostName() 
+			+ System.getProperty("user.name")
+			+ Math.abs(new Random().nextInt())
+		).replaceAll("[^a-zA-Z0-9]", "");
+		
+		options.setMachineName(machineName);
 	}
 
 	private void initConnectionSettings() {

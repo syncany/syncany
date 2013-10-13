@@ -116,10 +116,16 @@ public class StatusOperation extends Operation {
 		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
 			String relativeFilePath = root.relativize(actualLocalFile).toString();
 			
-			// Check if in .syncany (or app related acc. to config) 		
-			boolean isAppRelatedDir = actualLocalFile.equals(config.getAppDir())
-				|| actualLocalFile.equals(config.getCache())
-				|| actualLocalFile.equals(config.getDatabaseDir());
+			// Skip Syncany root folder
+			if (actualLocalFile.toFile().equals(config.getLocalDir())) {
+				return FileVisitResult.CONTINUE;
+			}
+			
+			// Skip .syncany (or app related acc. to config) 		
+			boolean isAppRelatedDir =
+				   actualLocalFile.toFile().equals(config.getAppDir())
+				|| actualLocalFile.toFile().equals(config.getCache())
+				|| actualLocalFile.toFile().equals(config.getDatabaseDir());
 			
 			if (isAppRelatedDir) {
 				logger.log(Level.FINEST, "- Ignoring file (syncany app-related): {0}", relativeFilePath);

@@ -43,8 +43,8 @@ public class FileVersionHelper {
 	}
 	
 	public FileVersionComparison compare(FileVersion expectedLocalFileVersion, File actualLocalFile, byte[] knownChecksum, boolean forceChecksum) {
-		FileProperties expectedLocalFileVersionProperties = captureFileProperties(actualLocalFile, knownChecksum, forceChecksum);
-		FileProperties actualFileProperties = captureFileVersionProperties(expectedLocalFileVersion);
+		FileProperties expectedLocalFileVersionProperties = captureFileVersionProperties(expectedLocalFileVersion);
+		FileProperties actualFileProperties= captureFileProperties(actualLocalFile, knownChecksum, forceChecksum);
 		
 		return compare(expectedLocalFileVersionProperties, actualFileProperties, forceChecksum);
 	}
@@ -98,7 +98,11 @@ public class FileVersionHelper {
 		compareSize(fileComparison);
 		compareAttributes(fileComparison);		
 		
-		if (compareChecksums) {
+		// Check if checksum comparison necessary
+		if (fileComparison.getFileChanges().contains(FileChange.CHANGED_SIZE)) {
+			fileComparison.fileChanges.add(FileChange.CHANGED_CHECKSUM);
+		}
+		else if (compareChecksums) {
 			compareChecksum(fileComparison);
 		}
 	}
@@ -110,7 +114,7 @@ public class FileVersionHelper {
 			fileComparison.fileChanges.add(FileChange.CHANGED_CHECKSUM);
 			
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, expected CHECKSUM = {0}, but actual CHECKSUM = {1}, for file {2}", 
-					new Object[] { StringUtil.toHex(fileComparison.actualFileProperties.checksum), StringUtil.toHex(fileComparison.expectedFileProperties.checksum), fileComparison.actualFileProperties.getRelativePath() });
+					new Object[] { StringUtil.toHex(fileComparison.expectedFileProperties.checksum), StringUtil.toHex(fileComparison.actualFileProperties.checksum), fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
 
@@ -123,8 +127,6 @@ public class FileVersionHelper {
 			
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, expected LINK TARGET = {0}, but actual LINK TARGET = {1}, for file {2}", 
 					new Object[] { fileComparison.actualFileProperties.getLinkTarget(), fileComparison.expectedFileProperties.getLinkTarget(), fileComparison.actualFileProperties.getRelativePath() });
-			
-			//return fileComparison;
 		}				
 	}
 	
@@ -161,7 +163,7 @@ public class FileVersionHelper {
 
 	private void compareSize(FileVersionComparison fileComparison) {
 		if (fileComparison.expectedFileProperties.getSize() != fileComparison.actualFileProperties.getSize()) {
-			fileComparison.fileChanges.add(FileChange.CHANGED_SIZE);// = FileStatus.CHANGED;			
+			fileComparison.fileChanges.add(FileChange.CHANGED_SIZE);			
 
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, expected SIZE = {0}, but actual SIZE = {1}, for file {2}", 
 					new Object[] { fileComparison.actualFileProperties.getSize(), fileComparison.expectedFileProperties.getSize(), fileComparison.actualFileProperties.getRelativePath() });			
@@ -188,17 +190,8 @@ public class FileVersionHelper {
 	
 	private FileVersionComparison performCancellingTests(FileVersionComparison fileComparison) {
 		// Check null
-		if (fileComparison.expectedFileProperties == null) {
-			fileComparison.fileChanges.add(FileChange.NEW);
-			
-			logger.log(Level.INFO, "     - Expected file is null, this should not happen. {0}", 
-					new Object[] { fileComparison.actualFileProperties.getRelativePath() });
-			
-			return fileComparison;
-		}
-		
 		if (fileComparison.actualFileProperties == null) {
-			fileComparison.fileChanges.add(FileChange.NEW);
+			fileComparison.fileChanges.add(FileChange.DELETED);
 			
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, actual file is NULL, for file {0}", 
 					new Object[] { fileComparison.expectedFileProperties.getRelativePath() });
@@ -207,10 +200,13 @@ public class FileVersionHelper {
 		}
 		
 		// Check existence
-		if (fileComparison.expectedFileProperties.exists() != fileComparison.actualFileProperties.exists()) {			
-			if (!fileComparison.expectedFileProperties.exists() && fileComparison.actualFileProperties.exists()) {
+		if (fileComparison.expectedFileProperties.exists() != fileComparison.actualFileProperties.exists()) {
+			// File is expected to exist, but it does NOT --> file has been deleted 
+			if (fileComparison.expectedFileProperties.exists() && !fileComparison.actualFileProperties.exists()) {
 				fileComparison.fileChanges.add(FileChange.DELETED);
 			}
+			
+			// File is expected to NOT exist, but it does --> file is new
 			else {
 				fileComparison.fileChanges.add(FileChange.NEW);
 			}
@@ -223,7 +219,7 @@ public class FileVersionHelper {
 		
 		// Check file type (folder/file)
 		if (!fileComparison.expectedFileProperties.getType().equals(fileComparison.actualFileProperties.getType())) {			
-			fileComparison.fileChanges.add(FileChange.NEW);
+			fileComparison.fileChanges.add(FileChange.DELETED);
 			
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, expected TYPE = {0}, but actual TYPE = {1}, for file {2}", 
 					new Object[] { fileComparison.actualFileProperties.getType(), fileComparison.expectedFileProperties.getType(), fileComparison.actualFileProperties.getRelativePath() });
@@ -235,10 +231,15 @@ public class FileVersionHelper {
 	}
 
 	public FileProperties captureFileProperties(File file, byte[] knownChecksum, boolean forceChecksum) {
+		Path filePath = Paths.get(file.getAbsolutePath());
+
 		FileProperties fileProperties = new FileProperties();
 		fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
+		fileProperties.exists = Files.exists(filePath, LinkOption.NOFOLLOW_LINKS);
 		
-		Path filePath = Paths.get(file.getAbsolutePath());
+		if (!fileProperties.exists) {
+			return fileProperties;
+		}
 		
 		try {
 			// Read operating system dependent file attributes 
@@ -284,8 +285,13 @@ public class FileVersionHelper {
 			else {
 				if (fileProperties.type == FileType.FILE && forceChecksum) {
 					try {
-						String checksumAlgorithm = config.getChunker().getChecksumAlgorithm();
-						fileProperties.checksum = FileUtil.createChecksum(file, checksumAlgorithm);
+						if (fileProperties.size > 0) { 
+							String checksumAlgorithm = config.getChunker().getChecksumAlgorithm();
+							fileProperties.checksum = FileUtil.createChecksum(file, checksumAlgorithm);
+						}
+						else {
+							fileProperties.checksum = null;
+						}
 					}
 					catch (Exception e) {
 						logger.log(Level.SEVERE, "SEVERE: Unable to create checksum for file {0}", file);					

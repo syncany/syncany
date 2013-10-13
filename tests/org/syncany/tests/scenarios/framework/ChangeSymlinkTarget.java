@@ -22,6 +22,6 @@ public class ChangeSymlinkTarget extends AbstractClientAction {
 		log(this, symlinkFile.getAbsolutePath());
 		
 		symlinkFile.delete();
-		FileUtil.createSymlink(new File("/etc/motd"+Math.random()), symlinkFile);
+		FileUtil.createSymlink("/does/not/exist/"+Math.random(), symlinkFile);
 	}		
 }	

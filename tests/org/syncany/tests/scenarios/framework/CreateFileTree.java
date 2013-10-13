@@ -65,11 +65,11 @@ public class CreateFileTree extends AbstractClientAction {
 
 	private void createSymlink(File inFolder) throws Exception {
 		if (FileUtil.symlinksSupported()) {
-			File targetFile = new File(inFolder+"/sym-target"+(fileNum++));
+			String targetPathStr = inFolder+"/sym-target"+(fileNum++);
 			File symlinkFile = new File(inFolder+"/symlink"+(fileNum++));
 			
-			TestFileUtil.createRandomFile(targetFile, 20*1024);			
-			FileUtil.createSymlink(targetFile, symlinkFile);
+			TestFileUtil.createRandomFile(new File(targetPathStr), 20*1024);			
+			FileUtil.createSymlink(targetPathStr, symlinkFile);
 		}
 	}
 

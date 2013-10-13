@@ -16,6 +16,6 @@ public class ChangeTypeFileToSymlinkWithNonExistingTarget extends AbstractClient
 		log(this, file.getAbsolutePath());
 		
 		file.delete();
-		FileUtil.createSymlink(new File("/does/not/exist"), file);
+		FileUtil.createSymlink("/does/not/exist", file);
 	}		
 }	

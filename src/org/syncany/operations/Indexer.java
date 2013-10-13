@@ -316,13 +316,26 @@ public class Indexer {
 			if (fileProperties.getType() == FileType.FILE) {
 				return guessLastFileHistoryForFile(fileProperties);
 			} 
-			// TODO [high] symlink if-branch missing 
-			else {
+			else if (fileProperties.getType() == FileType.SYMLINK) {
+				return guessLastFileHistoryForSymlink(fileProperties);
+			} 
+			else if (fileProperties.getType() == FileType.FOLDER) {
 				return guessLastFileHistoryForFolder(fileProperties);
+			}
+			else {
+				throw new RuntimeException("This should not happen.");
 			}
 		}
 		
+		private PartialFileHistory guessLastFileHistoryForSymlink(FileProperties fileProperties) {
+			return guessLastFileHistoryForFolderOrSymlink(fileProperties);
+		}
+		
 		private PartialFileHistory guessLastFileHistoryForFolder(FileProperties fileProperties) {
+			return guessLastFileHistoryForFolderOrSymlink(fileProperties);
+		}
+
+		private PartialFileHistory guessLastFileHistoryForFolderOrSymlink(FileProperties fileProperties) {
 			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
