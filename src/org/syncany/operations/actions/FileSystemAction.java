@@ -66,107 +66,95 @@ public abstract class FileSystemAction {
 		}
 	}
 
-	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
+	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
+		
 		if (reconstructedFileVersion.getType() == FileType.FILE) {
-			File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
-
-			logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				
-
-			FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
-			
-			if (fileContent == null) {
-				fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
-			}
-			
-			// Create file
-			MultiChunker multiChunker = config.getMultiChunker();
-			FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
-
-			if (fileContent != null) { // File can be empty!
-				Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
-				
-				for (ChunkEntryId chunkChecksum : fileChunks) {
-					MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
-					
-					if (multiChunkForChunk == null) {
-						multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
-					}
-					
-					File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId());
-
-					// TODO [low] Make more sensible API for multichunking
-					MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
-					InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getArray());
-					
-					FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
-				}
-			}
-			
-			reconstructedFileOutputStream.close();		
-						
-			// Set permissions
-			if (FileUtil.isWindows()) {
-				if (reconstructedFileVersion.getDosAttributes() != null) {
-					logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
-
-					DosFileAttributes dosAttrs = FileUtil.dosAttrsFromString(reconstructedFileVersion.getDosAttributes());					
-					Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
-					
-					Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
-					Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
-					Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
-					Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
-				}
-			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
-				if (reconstructedFileVersion.getPosixPermissions() != null) {
-					logger.log(Level.INFO, "     - Setting POSIX permissions: "+reconstructedFileVersion.getPosixPermissions()+" ...");
-					
-					Set<PosixFilePermission> posixPerms = PosixFilePermissions.fromString(reconstructedFileVersion.getPosixPermissions());
-					
-					Path filePath = Paths.get(reconstructedFileInCache.getAbsolutePath());
-					Files.setPosixFilePermissions(filePath, posixPerms);
-				}
-			}
-			
-			// Set timestamp
-			reconstructedFileInCache.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
-			
-			// Okay. Now move to real place
-			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
-			logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
-			
-			FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation); // TODO [medium] This should be in a try/catch block
+			createFile0(reconstructedFileVersion);			
 		}
-		
-		// Folder
 		else if (reconstructedFileVersion.getType() == FileType.FOLDER) {
-			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
-			
-			logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
-			reconstructedFilesAtFinalLocation.mkdirs();
+			createFolder(reconstructedFileVersion);			
 		}	
-		
-		// Symlink
 		else if (reconstructedFileVersion.getType() == FileType.SYMLINK) {
-			File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+reconstructedFileVersion.getPath());
-			File linkTargetFile = new File(reconstructedFileVersion.getLinkTarget());
-
-			if (FileUtil.symlinksSupported()) {				
-				logger.log(Level.INFO, "     - Creating symlink at "+reconstructedFilesAtFinalLocation+" (target: "+linkTargetFile+") ...");
-				FileUtil.createSymlink(linkTargetFile, reconstructedFilesAtFinalLocation);
-			}
-			else {
-				logger.log(Level.INFO, "     - Skipping symlink (not supported) at "+reconstructedFilesAtFinalLocation+" (target: "+linkTargetFile+") ...");
-			}
-		}
-		
+			createSymlink(reconstructedFileVersion);
+		}		
 		else {
 			logger.log(Level.INFO, "     - Unknown file type: "+reconstructedFileVersion.getType());
 			throw new Exception("Unknown file type: "+reconstructedFileVersion.getType());
 		}
 	}
 	
+	protected void createFolder(FileVersion reconstructedFileVersion) throws IOException {
+		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
+		
+		reconstructedFilesAtFinalLocation.mkdirs();		
+		setFileAttributes(reconstructedFileVersion);		
+	}
+
+	protected void createFile0(FileVersion reconstructedFileVersion) throws Exception {
+		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
+		logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				
+
+		FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
+		
+		if (fileContent == null) {
+			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
+		}
+		
+		// Create file
+		MultiChunker multiChunker = config.getMultiChunker();
+		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
+
+		if (fileContent != null) { // File can be empty!
+			Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
+			
+			for (ChunkEntryId chunkChecksum : fileChunks) {
+				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
+				
+				if (multiChunkForChunk == null) {
+					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
+				}
+				
+				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId());
+
+				// TODO [low] Make more sensible API for multichunking
+				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
+				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getArray());
+				
+				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
+			}
+		}
+		
+		reconstructedFileOutputStream.close();		
+							
+		// Okay. Now move to real place
+		logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
+		
+		FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation); // TODO [medium] This should be in a try/catch block
+		
+		// Set attributes & timestamp
+		setFileAttributes(reconstructedFileVersion);			
+		setLastModified(reconstructedFileVersion);		
+	}
+
+	protected void createSymlink(FileVersion reconstructedFileVersion) throws Exception {
+		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+
+		if (FileUtil.symlinksSupported()) {				
+			logger.log(Level.INFO, "     - Creating symlink at "+reconstructedFilesAtFinalLocation+" (target: "+reconstructedFileVersion.getLinkTarget()+") ...");
+			FileUtil.createSymlink(reconstructedFileVersion.getLinkTarget(), reconstructedFilesAtFinalLocation);
+		}
+		else {
+			logger.log(Level.INFO, "     - Skipping symlink (not supported) at "+reconstructedFilesAtFinalLocation+" (target: "+reconstructedFileVersion.getLinkTarget()+") ...");
+		}
+	}
+	
+	protected void setLastModified(FileVersion reconstructedFileVersion) {
+		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		reconstructedFilesAtFinalLocation.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
+	}
+
 	protected void createConflictFile(FileVersion conflictingLocalVersion) throws IOException {
 		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getPath());
 		
@@ -213,6 +201,34 @@ public abstract class FileSystemAction {
 		FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
 	}
 	
+	protected void setFileAttributes(FileVersion reconstructedFileVersion) throws IOException {
+		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		
+		if (FileUtil.isWindows()) {
+			if (reconstructedFileVersion.getDosAttributes() != null) {
+				logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
+
+				DosFileAttributes dosAttrs = FileUtil.dosAttrsFromString(reconstructedFileVersion.getDosAttributes());					
+				Path filePath = Paths.get(reconstructedFilesAtFinalLocation.getAbsolutePath());
+				
+				Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
+				Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
+				Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
+				Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
+			}
+		}
+		else if (FileUtil.isUnixLikeOperatingSystem()) {
+			if (reconstructedFileVersion.getPosixPermissions() != null) {
+				logger.log(Level.INFO, "     - Setting POSIX permissions: "+reconstructedFileVersion.getPosixPermissions()+" ...");
+				
+				Set<PosixFilePermission> posixPerms = PosixFilePermissions.fromString(reconstructedFileVersion.getPosixPermissions());
+				
+				Path filePath = Paths.get(reconstructedFilesAtFinalLocation.getAbsolutePath());
+				Files.setPosixFilePermissions(filePath, posixPerms);
+			}
+		}		
+	}
+	
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
 		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
@@ -223,25 +239,21 @@ public abstract class FileSystemAction {
 		else {
 			return false;
 		}
-	}
+	}	
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
-		boolean actualLocalFileExists = actualLocalFile.exists();
-		
-		// Check existence
-		if (actualLocalFileExists) {
-			logger.log(Level.INFO, "     - Unexpected file detected, is expected to be NON-EXISTANT, but exists: "+actualLocalFile);
-			return true;
-		}
-		else {
-			return false;
-		}
+		return actualLocalFile.exists();
 	}	
+	
+	protected void deleteFile(FileVersion deleteFileVersion) {
+		File fromFileOnDisk = getAbsolutePathFile(deleteFileVersion.getPath());
+		fromFileOnDisk.delete();		
+	}
 	
 	protected File getAbsolutePathFile(String relativePath) {
 		return new File(config.getLocalDir()+File.separator+relativePath);
-	}
+	}	
 	
 	public abstract void execute() throws Exception;
 }

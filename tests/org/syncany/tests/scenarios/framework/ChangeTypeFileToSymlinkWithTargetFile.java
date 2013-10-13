@@ -16,6 +16,6 @@ public class ChangeTypeFileToSymlinkWithTargetFile extends AbstractClientAction 
 		log(this, file.getAbsolutePath());
 
 		file.delete();
-		FileUtil.createSymlink(new File("/etc/hosts"), file);
+		FileUtil.createSymlink("/etc/hosts", file);
 	}
 }

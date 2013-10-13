@@ -16,6 +16,6 @@ public class CreateSymlinkToFile extends AbstractClientAction {
 		
 		log(this, symlinkFile.getAbsolutePath());
 		
-		FileUtil.createSymlink(new File("/etc/hosts"), symlinkFile);
+		FileUtil.createSymlink("/etc/hosts", symlinkFile);
 	}		
 }	

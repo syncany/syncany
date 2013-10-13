@@ -20,45 +20,55 @@ public class RenameFileSystemAction extends FileSystemAction {
 		
 		boolean fromFileExists = fromFileOnDisk.exists();
 		boolean toFileExists = toFileOnDisk.exists();
+		
+		boolean fileRenamed = !toFileOnDisk.equals(fromFileOnDisk);
 				
-		if (fromFileExists && !toFileExists) { 
-			if (fileAsExpected(fileVersion1)) { // << Expected case!
-				logger.log(Level.INFO, "     - (1) Renaming file "+fromFileOnDisk+" to "+toFileOnDisk+" ...");				
-				FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);
+		if (fileRenamed) {
+			if (fromFileExists && !toFileExists) { 
+				if (fileAsExpected(fileVersion1)) { // << Expected case!
+					logger.log(Level.INFO, "     - (1) Renaming file "+fromFileOnDisk+" to "+toFileOnDisk+" ...");				
+					FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);
+				}
+				else {
+					logger.log(Level.INFO, "     - (2) Source file differs from what we expected.");
+					throw new Exception("Source file differs from what we expected.");
+				}
 			}
-			else {
-				logger.log(Level.INFO, "     - (2) Source file differs from what we expected. Creating target file at "+toFileOnDisk+" ...");
-				createFile(fileVersion2);
+			else if (fromFileExists && toFileExists) {
+				if (fileAsExpected(fileVersion1)) {
+					if (fileAsExpected(fileVersion2)) {
+						logger.log(Level.INFO, "     - (3) File at destination is what was expected. Nothing to do for "+toFileOnDisk+" ...");
+					}
+					else {
+						logger.log(Level.INFO, "     - (4) File at destination differs, creating conflict file for "+toFileOnDisk+" ...");
+						
+						createConflictFile(fileVersion2);
+						FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);
+					}
+				}
+				else {
+					logger.log(Level.INFO, "     - (5) Cannot rename because orig. file does not exist.");
+					throw new Exception("Cannot rename because orig. file does not exist");
+				}			
+			}		
+			else if (!fromFileExists && !toFileExists) {
+				logger.log(Level.INFO, "     - (6) Cannot rename because orig. file does not exist.");
+				throw new Exception("Cannot rename because orig. file does not exist");
 			}
+			else if (!fromFileExists && toFileExists) {
+				if (fileAsExpected(fileVersion2)) {
+					logger.log(Level.INFO, "     - (7) File at destination is what was expected. Nothing to do for "+toFileOnDisk+" ...");
+				}
+				else {
+					logger.log(Level.INFO, "     - (8) Cannot rename because orig. file does not exist.");
+					throw new Exception("Cannot rename because orig. file does not exist");
+				}
+			}	
 		}
-		else if (fromFileExists && toFileExists) {
-			if (fileAsExpected(fileVersion2)) {
-				logger.log(Level.INFO, "     - (3) File at destination is what was expected. Nothing to do for "+toFileOnDisk+" ...");
-			}
-			else {
-				logger.log(Level.INFO, "     - (4) Cannot rename because target file exists, but differs. Creating file at "+toFileOnDisk+" ...");
-				
-				// TODO [medium] Should we check if the formFile is as expected and delete it if it is?
-				
-				createConflictFile(fileVersion2);
-				createFile(fileVersion2); 
-			}			
-		}		
-		else if (!fromFileExists && !toFileExists) {
-			logger.log(Level.INFO, "     - (5) Cannot rename because orig. file does not exist. Creating file at "+toFileOnDisk+" ...");
-			createFile(fileVersion2);
-		}
-		else if (!fromFileExists && toFileExists) {
-			if (fileAsExpected(fileVersion2)) {
-				logger.log(Level.INFO, "     - (6) File at destination is what was expected. Nothing to do for "+toFileOnDisk+" ...");
-			}
-			else {
-				logger.log(Level.INFO, "     - (7) Cannot rename because orig. file does not exist. Creating file at "+toFileOnDisk+" ...");
-				
-				createConflictFile(fileVersion2);
-				createFile(fileVersion2);
-			}
-		}	
+		
+		// Set attributes
+		setFileAttributes(fileVersion2);
+		setLastModified(fileVersion2);
 	}	
 	
 	@Override

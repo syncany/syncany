@@ -13,14 +13,17 @@ public class NewFileSystemAction extends FileSystemAction {
 	@Override
 	public void execute() throws Exception {
 		if (fileExists(fileVersion2)) {
-			if (!fileAsExpected(fileVersion2)) {
+			if (fileAsExpected(fileVersion2)) {
+				// Nothing to do
+			}
+			else {
 				createConflictFile(fileVersion2);
-				createFile(fileVersion2);
+				createFileFolderOrSymlink(fileVersion2);				
 			}
 		}
-		else {		
-			createFile(fileVersion2);
-		}
+		else {
+			createFileFolderOrSymlink(fileVersion2);
+		}		
 	}
 
 	@Override

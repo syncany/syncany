@@ -25,7 +25,7 @@ public class StatusOperationTest {
 		
 		// Add new files 
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 500*1024, 3);
-		
+		 
 		// Status
 		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();				
 		
