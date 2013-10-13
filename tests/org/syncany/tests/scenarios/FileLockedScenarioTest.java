@@ -9,6 +9,13 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -25,6 +32,7 @@ import org.syncany.tests.scenarios.framework.LockFile;
 import org.syncany.tests.scenarios.framework.UnlockFile;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.util.FileUtil;
 
 public class FileLockedScenarioTest {
 	@Test
@@ -55,8 +63,18 @@ public class FileLockedScenarioTest {
 		
 		// Run
 		File noReadPermissionFile = clientA.createNewFile("no-read-permission-file");
-		noReadPermissionFile.setReadable(false, false);
-		
+		Path filePath = Paths.get(noReadPermissionFile.getAbsolutePath());
+		if (FileUtil.isWindows()) {
+			Files.setAttribute(filePath, "dos:readonly", true);
+		}
+		else if (FileUtil.isUnixLikeOperatingSystem()) {
+			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+	        perms.add(PosixFilePermission.OWNER_READ);
+	        perms.add(PosixFilePermission.GROUP_READ);
+	        perms.add(PosixFilePermission.OTHERS_READ);
+			Files.setPosixFilePermissions(filePath, perms);
+		}		
+
 		runUpAndTestForEmptyDatabase(testConnection, clientA);		
 		
 		// Tear down
