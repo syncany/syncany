@@ -217,7 +217,7 @@ public class DownOperation extends Operation {
 		return winnersBranch;
 	}
 
-	// TODO [high] Ignore list for already compared lost branches (evil C) 
+	// FIXME TODO [high] Ignore list for already compared lost branches (evil C) 
 
 	private Set<MultiChunkEntry> determineRequiredMultiChunks(List<FileSystemAction> actions, Database winnersDatabase) {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();

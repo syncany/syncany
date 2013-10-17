@@ -253,7 +253,7 @@ public class Indexer {
 					fileVersion.setStatus(FileStatus.RENAMED);
 				}
 				else {
-					fileVersion.setStatus(FileStatus.CHANGED); // TODO [low] Add more states, ATTRS_CHANGED, or so.
+					fileVersion.setStatus(FileStatus.CHANGED); 
 				}						
 			}	
 			

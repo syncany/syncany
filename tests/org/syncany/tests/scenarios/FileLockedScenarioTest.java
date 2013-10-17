@@ -34,6 +34,8 @@ import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.FileUtil;
 
 public class FileLockedScenarioTest {
+	// TODO [high] Fix issues with readonly files on Windows, and r------ files on Linux
+	
 	@Test
 	public void testFileLocked() throws Exception {
 		// Setup 
