@@ -23,11 +23,11 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-public class FileVersionHelper {
-	private static final Logger logger = Logger.getLogger(FileVersionHelper.class.getSimpleName());
+public class FileVersionComparator {
+	private static final Logger logger = Logger.getLogger(FileVersionComparator.class.getSimpleName());
 	private Config config;	
 	
-	public FileVersionHelper(Config config) {
+	public FileVersionComparator(Config config) {
 		this.config = config;
 	}
 	
@@ -56,9 +56,9 @@ public class FileVersionHelper {
 		fileComparison.expectedFileProperties = expectedFileProperties;
 		fileComparison.actualFileProperties = actualFileProperties;
 			
-		performCancellingTests(fileComparison);
+		boolean cancelFurtherTests = performCancellingTests(fileComparison);
 		
-		if (!fileComparison.equals()) {
+		if (cancelFurtherTests) {
 			return fileComparison;
 		}
 				
@@ -188,15 +188,23 @@ public class FileVersionHelper {
 		}				
 	}
 	
-	private FileVersionComparison performCancellingTests(FileVersionComparison fileComparison) {
+	private boolean performCancellingTests(FileVersionComparison fileComparison) {
 		// Check null
 		if (fileComparison.actualFileProperties == null) {
-			fileComparison.fileChanges.add(FileChange.DELETED);
-			
-			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, actual file is NULL, for file {0}", 
-					new Object[] { fileComparison.expectedFileProperties.getRelativePath() });
-			
-			return fileComparison;
+			if (!fileComparison.expectedFileProperties.exists()) {
+				logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file does not exist, and expected file was deleted, for file {0}", 
+						new Object[] { fileComparison.expectedFileProperties.getRelativePath() });
+				
+				return true;
+			}
+			else {
+				fileComparison.fileChanges.add(FileChange.DELETED);
+				
+				logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, actual file is NULL, for file {0}", 
+						new Object[] { fileComparison.expectedFileProperties.getRelativePath() });
+				
+				return true;
+			}
 		}
 		
 		// Check existence
@@ -212,9 +220,15 @@ public class FileVersionHelper {
 			}
 
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, expected EXISTS = {0}, but actual EXISTS = {1}, for file {2}", 
-					new Object[] { fileComparison.actualFileProperties.exists(), fileComparison.expectedFileProperties.exists(), fileComparison.actualFileProperties.getRelativePath() });
+					new Object[] { fileComparison.expectedFileProperties.exists(), fileComparison.actualFileProperties.exists(), fileComparison.actualFileProperties.getRelativePath() });
 						
-			return fileComparison;
+			return true;
+		}
+		else if (!fileComparison.expectedFileProperties.exists() && !fileComparison.actualFileProperties.exists()) {
+			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file does not exist, and expected file was deleted, for file {0}", 
+					new Object[] { fileComparison.expectedFileProperties.getRelativePath() });
+			
+			return true;
 		}
 		
 		// Check file type (folder/file)
@@ -222,12 +236,12 @@ public class FileVersionHelper {
 			fileComparison.fileChanges.add(FileChange.DELETED);
 			
 			logger.log(Level.INFO, "     - "+fileComparison.fileChanges+": Local file DIFFERS from file version, expected TYPE = {0}, but actual TYPE = {1}, for file {2}", 
-					new Object[] { fileComparison.actualFileProperties.getType(), fileComparison.expectedFileProperties.getType(), fileComparison.actualFileProperties.getRelativePath() });
+					new Object[] { fileComparison.expectedFileProperties.getType(), fileComparison.actualFileProperties.getType(), fileComparison.actualFileProperties.getRelativePath() });
 			
-			return fileComparison;
+			return true;
 		}	
 		
-		return fileComparison;
+		return false;
 	}
 
 	public FileProperties captureFileProperties(File file, byte[] knownChecksum, boolean forceChecksum) {

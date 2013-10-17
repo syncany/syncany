@@ -3,6 +3,7 @@ package org.syncany.operations.actions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
@@ -18,9 +19,9 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.FileVersionHelper;
-import org.syncany.database.FileVersionHelper.FileChange;
-import org.syncany.database.FileVersionHelper.FileVersionComparison;
+import org.syncany.database.FileVersionComparator;
+import org.syncany.database.FileVersionComparator.FileChange;
+import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
 
@@ -32,7 +33,7 @@ public abstract class FileSystemAction {
 	protected Database winningDatabase;
 	protected FileVersion fileVersion1;
 	protected FileVersion fileVersion2;
-	protected FileVersionHelper fileVersionHelper;
+	protected FileVersionComparator fileVersionHelper;
 	
 	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
@@ -40,7 +41,7 @@ public abstract class FileSystemAction {
 		this.winningDatabase = winningDatabase;
 		this.fileVersion1 = file1;
 		this.fileVersion2 = file2;
-		this.fileVersionHelper = new FileVersionHelper(config);
+		this.fileVersionHelper = new FileVersionComparator(config);
 	}
 	
 	public FileVersion getFile1() {
@@ -184,7 +185,7 @@ public abstract class FileSystemAction {
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
-		return actualLocalFile.exists();
+		return Files.exists(Paths.get(actualLocalFile.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
 	}	
 	
 	protected void deleteFile(FileVersion deleteFileVersion) {

@@ -11,7 +11,7 @@ public class ChangeTypeFileToSymlinkWithNonExistingTarget extends AbstractClient
 			return; // no symbolic links on Windows
 		}
 		
-		File file = pickFile(hashCode());
+		File file = pickFile(2111);
 		
 		log(this, file.getAbsolutePath());
 		

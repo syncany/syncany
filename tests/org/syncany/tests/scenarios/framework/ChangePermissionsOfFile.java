@@ -11,7 +11,7 @@ import org.syncany.util.FileUtil;
 public class ChangePermissionsOfFile extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File file = pickFile(hashCode());
+		File file = pickFile(1231);
 		Path filePath = Paths.get(file.getAbsolutePath());
 				
 		if (FileUtil.isWindows()) {

@@ -1,7 +1,5 @@
 package org.syncany.operations.actions;
 
-import java.io.File;
-
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
@@ -29,11 +27,7 @@ public class DeleteFileSystemAction extends FileSystemAction {
 			}
 		}
 			
-		File toDeleteFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());
-		
-		if (toDeleteFileOnDisk.exists()) {
-			toDeleteFileOnDisk.delete();
-		}
+		deleteFile(fileVersion2);
 	}
 
 	@Override

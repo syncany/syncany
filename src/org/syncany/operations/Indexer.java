@@ -23,8 +23,8 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.FileVersionHelper;
-import org.syncany.database.FileVersionHelper.FileProperties;
+import org.syncany.database.FileVersionComparator;
+import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.util.FileUtil;
@@ -132,7 +132,7 @@ public class Indexer {
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
-		private FileVersionHelper fileVersionHelper;
+		private FileVersionComparator fileVersionHelper;
 		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
 		private ChunkEntry chunkEntry;		
@@ -143,7 +143,7 @@ public class Indexer {
 		private FileProperties endFileProperties;		
 		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
-			this.fileVersionHelper = new FileVersionHelper(config);
+			this.fileVersionHelper = new FileVersionComparator(config);
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 		}				

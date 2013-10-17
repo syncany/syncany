@@ -3,8 +3,8 @@ package org.syncany.operations.actions;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersionHelper.FileChange;
-import org.syncany.database.FileVersionHelper.FileVersionComparison;
+import org.syncany.database.FileVersionComparator.FileChange;
+import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.util.CollectionUtil;
 
 public class NewSymlinkFileSystemAction extends FileSystemAction {

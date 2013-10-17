@@ -121,8 +121,8 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "- Loading winners database ...");				
 			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
 			
-			FileSystemActionReconsiliator recon = new FileSystemActionReconsiliator(config, localDatabase, result);
-			List<FileSystemAction> actions = recon.determineFileSystemActions(winnersDatabase);
+			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, localDatabase, result);
+			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
 			
 			Set<MultiChunkEntry> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
 			downloadAndDecryptMultiChunks(unknownMultiChunks);
@@ -262,9 +262,16 @@ public class DownOperation extends Operation {
 		return multiChunksToDownload;
 	}
 	
+	private List<FileSystemAction> sortFileSystemActions(List<FileSystemAction> actions) {
+		FileSystemActionComparator actionComparator = new FileSystemActionComparator();
+		actionComparator.sort(actions);		
+		
+		return actions;
+	}
+	
 	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
 		// Sort
-		Collections.sort(actions, new FileSystemActionComparator());
+		actions = sortFileSystemActions(actions);
 		
 		logger.log(Level.FINER, "- Applying file system actions (sorted!) ...");		
 		

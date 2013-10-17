@@ -226,7 +226,7 @@ public class TestFileUtil {
 	}
 	
 	public static void createRandomFile(File fileToCreate, long sizeInBytes) throws IOException{
-		if(fileToCreate!=null && fileToCreate.exists()){
+		if (fileToCreate != null && fileToCreate.exists()){
 			throw new IOException("File already exists");
 		}
 		
@@ -245,20 +245,6 @@ public class TestFileUtil {
 		fos.write(arr);
 		
 		fos.close();
-	}
-	
-	public static void createFile(File fileToCreate, byte[] repeatFileContents, long sizeInBytes) throws IOException {
-		if(fileToCreate!=null && fileToCreate.exists()){
-			throw new IOException("File already exists");
-		}
-		
-		FileOutputStream fos = new FileOutputStream(fileToCreate);
-		
-		for(int i = 0; i < sizeInBytes; i++){
-			fos.write(repeatFileContents);
-		}
-		
-		fos.close();		
 	}
 	
 	public static void writeByteArrayToFile(byte[] inputByteArray, File fileToCreate) throws IOException {

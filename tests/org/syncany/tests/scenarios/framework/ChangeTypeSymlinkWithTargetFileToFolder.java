@@ -13,7 +13,7 @@ public class ChangeTypeSymlinkWithTargetFileToFolder extends AbstractClientActio
 			return; // no symbolic links on Windows
 		}
 		
-		File symlinkFile = pickFileOrFolder(hashCode(), new FileFilter() {
+		File symlinkFile = pickFileOrFolder(1811, new FileFilter() {
 			@Override
 			public boolean accept(File file) {
 				return FileUtil.isSymlink(file) && file.isFile();

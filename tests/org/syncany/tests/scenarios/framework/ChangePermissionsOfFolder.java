@@ -11,7 +11,7 @@ import org.syncany.util.FileUtil;
 public class ChangePermissionsOfFolder extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File file = pickFolder(hashCode());
+		File file = pickFolder(1922);
 		Path filePath = Paths.get(file.getAbsolutePath());
 				
 		if (FileUtil.isWindows()) {

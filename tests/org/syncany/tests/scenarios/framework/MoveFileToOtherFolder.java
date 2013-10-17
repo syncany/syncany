@@ -6,8 +6,8 @@ import java.io.FileFilter;
 public class MoveFileToOtherFolder extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		final File fromFile = pickFile(hashCode());
-		final File toFile = pickFileOrFolder(hashCode()*hashCode(), new FileFilter() {				
+		final File fromFile = pickFile(8932);
+		final File toFile = pickFileOrFolder(42342, new FileFilter() {				
 			@Override
 			public boolean accept(File file) {
 				return file.isFile() && !fromFile.getParentFile().getAbsolutePath().equals(file.getParentFile().getAbsolutePath());

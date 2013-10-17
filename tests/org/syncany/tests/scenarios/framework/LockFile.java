@@ -14,7 +14,7 @@ public class LockFile extends AbstractClientAction {
 			throw new Exception("Currently only one file can be locked at a time.");
 		}
 		
-		File file = pickFile(hashCode());
+		File file = pickFile(7878);
 		
 		log(this, file.getAbsolutePath());
 		

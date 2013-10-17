@@ -3,7 +3,7 @@ package org.syncany.operations.actions;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersionHelper.FileChange;
+import org.syncany.database.FileVersionComparator.FileChange;
 
 public class SetAttributesFileSystemAction extends FileSystemAction {
 

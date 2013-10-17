@@ -7,7 +7,7 @@ import java.io.RandomAccessFile;
 public class ChangeContentWithoutFileSize extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File file = pickFile(hashCode());
+		File file = pickFile(76427);
 		
 		log(this, file.getAbsolutePath());
 		

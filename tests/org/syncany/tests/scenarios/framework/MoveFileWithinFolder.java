@@ -6,7 +6,7 @@ import java.io.File;
 public class MoveFileWithinFolder extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File fromFile = pickFile(hashCode());
+		File fromFile = pickFile(2121);
 		File toFile = new File(fromFile+"-ren"+fromFile.hashCode());
 		
 		log(this, fromFile+" -> "+toFile);

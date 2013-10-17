@@ -7,16 +7,19 @@ import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.scenarios.framework.AbstractClientAction;
 import org.syncany.tests.scenarios.framework.ChangeContentWithoutFileSize;
-import org.syncany.tests.scenarios.framework.ChangePermissionsOfFile;
 import org.syncany.tests.scenarios.framework.ChangeFileSize;
 import org.syncany.tests.scenarios.framework.ChangeLastModifiedDate;
+import org.syncany.tests.scenarios.framework.ChangePermissionsOfFile;
 import org.syncany.tests.scenarios.framework.ChangePermissionsOfFolder;
 import org.syncany.tests.scenarios.framework.ChangeSymlinkTarget;
-import org.syncany.tests.scenarios.framework.ChangeTypeFolderToFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeFileToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithNonExistingTarget;
 import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithTargetFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithTargetFolder;
-import org.syncany.tests.scenarios.framework.ChangeTypeFileToSymlinkWithNonExistingTarget;
+import org.syncany.tests.scenarios.framework.ChangeTypeFolderToFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeFolderToSymlinkWithNonExistingTarget;
+import org.syncany.tests.scenarios.framework.ChangeTypeFolderToSymlinkWithTargetFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeFolderToSymlinkWithTargetFolder;
 import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFileToFolder;
 import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFolderToFolder;
 import org.syncany.tests.scenarios.framework.ClientActions;
@@ -29,52 +32,54 @@ import org.syncany.tests.scenarios.framework.CreateSymlinkToNonExisting;
 import org.syncany.tests.scenarios.framework.DeleteFile;
 import org.syncany.tests.scenarios.framework.DeleteFolder;
 import org.syncany.tests.scenarios.framework.Executable;
-import org.syncany.tests.scenarios.framework.LockFile;
 import org.syncany.tests.scenarios.framework.MoveFileToOtherFolder;
 import org.syncany.tests.scenarios.framework.MoveFileWithinFolder;
 import org.syncany.tests.scenarios.framework.MoveFolderToOtherFolder;
 import org.syncany.tests.scenarios.framework.MoveFolderWithinFolder;
-import org.syncany.tests.scenarios.framework.UnlockFile;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+
 /**
- * attributes:
- * x- size
- * x- type
- * x- content (without size-change)
- * x- name
- * x- path
- * - permissions (linux / windows)
- * x- last modified date
+ * This test case tries to implement all possible file change scenarios
+ * using the classes in the framework.* package. An [x] marks implemented 
+ * tests.
  * 
- * xcreate file
- * xmove file
- * xchange file without changing size
- * xchange file with changing size
- * xchange file type - folder to file
- * xchange file type - file to folder
- * (change file type - folder to symlink)
- * x(change file type - file to symlink)
- * xdelete file
+ * Attributes:
+ * [x] size
+ * [x] type
+ * [x] content (without size-change)
+ * [x] name
+ * [x] path
+ * [x] permissions (Linux / Windows)
+ * [x] last modified date
  * 
- * xcreate folder
- * xmove folder
- * xdelete folder
- * 
- * xmove file to subfolder
- * xmove folder to subfolder
- * 
- * (create symlink folder)
- * (change symlink folder target)
- * (delete symlink folder)
- * 
+ * Actions:
+ * [x] create file
+ * [x] move file
+ * [x] change file without changing size
+ * [x] change file with changing size
+ * [x] change file type - file to folder
+ * [x] change file type - file to symlink
+ * [x] change file type - folder to file
+ * [x] change file type - folder to symlink
+ * [x] delete file
+ * [x] create folder
+ * [x] move folder
+ * [x] delete folder
+ * [x] move file to subfolder
+ * [x] move folder to subfolder
+ * [x] create symlink folder
+ * [x] change symlink folder target
+ * [x] delete symlink folder
+ * [x] file permission denied
+ * [x] file is locked
+
  * file vanishes during index process
  * folder vanishes during index process
  * 
  * file is changed during sync down operation 
  * file is changed during sync up operation
  * 
- * file permission denied
  */		
 public class AllFilePossibilitiesScenarioTest {	
 	@Test
@@ -106,6 +111,9 @@ public class AllFilePossibilitiesScenarioTest {
 				new ChangeTypeSymlinkWithTargetFileToFolder(),
 				new ChangeTypeSymlinkWithTargetFolderToFolder(),
 				new ChangeTypeFolderToFile(), // TODO [medium] Implement rest of change type tests
+				new ChangeTypeFolderToSymlinkWithNonExistingTarget(),
+				new ChangeTypeFolderToSymlinkWithTargetFile(),
+				new ChangeTypeFolderToSymlinkWithTargetFolder(),
 				new CreateFile(),
 				new CreateFolder(),
 				new CreateSymlinkToFile(),
@@ -113,12 +121,12 @@ public class AllFilePossibilitiesScenarioTest {
 				new CreateSymlinkToNonExisting(),
 				new DeleteFile(),
 				new DeleteFolder(),
-				new LockFile(),
+				//new LockFile(), // TODO [low] Handle this somehow. Also check other lock-tests
 				new MoveFileToOtherFolder(),
 				new MoveFileWithinFolder(),
 				new MoveFolderToOtherFolder(),
 				new MoveFolderWithinFolder(),
-				new UnlockFile() // Must be after LockFile
+				//new UnlockFile() // Must be after LockFile
 			},
 			new Executable() {
 				@Override

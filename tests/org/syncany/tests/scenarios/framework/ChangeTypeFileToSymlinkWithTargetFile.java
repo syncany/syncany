@@ -11,7 +11,7 @@ public class ChangeTypeFileToSymlinkWithTargetFile extends AbstractClientAction 
 			return; // no symbolic links on Windows
 		}
 
-		File file = pickFile(hashCode());
+		File file = pickFile(7278);
 
 		log(this, file.getAbsolutePath());
 

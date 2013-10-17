@@ -18,8 +18,8 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.FileVersionHelper;
-import org.syncany.database.FileVersionHelper.FileVersionComparison;
+import org.syncany.database.FileVersionComparator;
+import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.util.FileUtil;
@@ -27,7 +27,7 @@ import org.syncany.util.FileUtil;
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
-	private FileVersionHelper fileVersionHelper; 
+	private FileVersionComparator fileVersionHelper; 
 	private Database loadedDatabase;
 	private StatusOperationOptions options;
 	
@@ -38,7 +38,7 @@ public class StatusOperation extends Operation {
 	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
 		super(config);		
 		
-		this.fileVersionHelper = new FileVersionHelper(config);
+		this.fileVersionHelper = new FileVersionComparator(config);
 		this.loadedDatabase = database;
 		this.options = options;
 	}	

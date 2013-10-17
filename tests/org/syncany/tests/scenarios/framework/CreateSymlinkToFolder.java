@@ -11,8 +11,8 @@ public class CreateSymlinkToFolder extends AbstractClientAction {
 			return; // no symbolic links on Windows
 		}
 		
-		File inFolder = pickFolder(hashCode());
-		File symlinkFile = client.getLocalFile(inFolder+"/newFile-"+Math.random());
+		File inFolder = pickFolder(3232);
+		File symlinkFile = new File(inFolder+"/newFile-"+Math.random());
 		
 		log(this, symlinkFile.getAbsolutePath());
 		

@@ -7,8 +7,8 @@ import org.syncany.tests.util.TestFileUtil;
 public class CreateFile extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File inFolder = pickFolder(hashCode());
-		File file = client.getLocalFile(inFolder+"/newFile-"+Math.random());
+		File inFolder = pickFolder(1942);
+		File file = new File(inFolder+"/newFile-"+Math.random());
 		
 		log(this, file.getAbsolutePath());
 		

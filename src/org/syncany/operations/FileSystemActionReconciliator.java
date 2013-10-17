@@ -2,19 +2,16 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersionHelper;
-import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.FileVersionHelper.FileChange;
-import org.syncany.database.FileVersionHelper.FileVersionComparison;
+import org.syncany.database.FileVersionComparator;
+import org.syncany.database.FileVersionComparator.FileChange;
+import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.actions.ChangeFileSystemAction;
@@ -25,22 +22,101 @@ import org.syncany.operations.actions.NewSymlinkFileSystemAction;
 import org.syncany.operations.actions.RenameFileSystemAction;
 import org.syncany.operations.actions.SetAttributesFileSystemAction;
 
-public class FileSystemActionReconsiliator {
 
-	private static final Logger logger = Logger.getLogger(FileSystemActionReconsiliator.class.getSimpleName());
+/**
+ * Implements the file synchronization algorithm in the down operation.
+ * 
+ * The algorithm compares the local file on the disk with the last local
+ * database file version and the last winning file version and determines
+ * what file system action (fsa) to apply.
+ *
+ * Input variables:
+ * - winning version
+ * - winning file (= local file of winning version)
+ * - local version
+ * - local file (= local file of local version)
+ * 
+ * Algorithm:
+ * if (has no local version) { 
+ *   compwinfwinv = compare winning file to winning version (incl. checksum!)
+ *   
+ *   if (compwinfwinv: winning file matches winning version) {
+ *     // do nothing
+ *   }
+ *   else if (compwinfwinv: new) {
+ *     add new fsa for winning version
+ *     add multichunks to download list for winning version
+ *   }
+ *   else if (compwinfwinv: deleted) {
+ *     add delete fsa for winning version
+ *   }
+ *   else if (compwinfwinv: changed link) {
+ *     add changed link fsa for winning version
+ *   } 
+ *   else if (compwinfwinv: changes attrs / modified date) { // does not(!) include "path"
+ *     add changed attrs fsa for winning version
+ *   }
+ *   else if (compwinfwinv: changed path) {
+ *     // Cannot be!
+ *   }
+ *   else { // size/checksum (path cannot be!)
+ *     add conflict fsa for winning file
+ *     add new fsa for winning version
+ *     add multichunks to download list for winning version
+ *   }
+ * }
+ * 
+ * else { // local version exists
+ *   complocflocv = compare local file to local version (incl. checksum!)
+ *   
+ *   if (complocflocv: local file matches local version) { // file as expected on disk
+ *     complocvwinv = compare local version to winning version
+ *       
+ *     if (complocvwinv: local version matches winning version) { // means: local file = local version = winning version
+ *       // Nothing to do
+ *     }
+ *     else if (complocvwinv: new) {
+ *       // Cannot be!
+ *     }
+ *     else if (complocvwinv: deleted) {
+ *       add delete fsa for winning version
+ *     }
+ *     else if (complocvwinv: changed link) {
+ *       add changed link fsa for winning version
+ *     } 
+ *     else if (complocvwinv: changes attrs / modified date / path) { // includes "path!"
+ *       add changed attrs / renamed fsa for winning version
+ *     }
+ *     else { // size/checksum 
+ *       add changed fsa for winning version (and delete local version)
+ *       add multichunks to download list for winning version
+ *     }
+ *   }
+ *   else { // local file does NOT match local version
+ *     if (local file exists) {
+ *       add conflict fsa for local version
+ *     }
+ *     
+ *     add new fsa for winning version
+ *     add multichunks to download list for winning version
+ * }
+ * 
+ */
+public class FileSystemActionReconciliator {
+	private static final Logger logger = Logger.getLogger(FileSystemActionReconciliator.class.getSimpleName());
 
 	private Config config; 
 	private Database localDatabase; 
 	private DownOperationResult result;
 	
-	public FileSystemActionReconsiliator(Config config, Database localDatabase, DownOperationResult result) {
+	public FileSystemActionReconciliator(Config config, Database localDatabase, DownOperationResult result) {
 		this.config = config; 
 		this.localDatabase = localDatabase;
 		this.result = result;
 	}
 	
 	public List<FileSystemAction> determineFileSystemActions(Database winnersDatabase) throws Exception {
-		FileVersionHelper fileVersionHelper = new FileVersionHelper(config);
+		FileVersionComparator fileVersionHelper = new FileVersionComparator(config);
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
 		logger.log(Level.INFO, "- Determine filesystem actions ...");
@@ -180,85 +256,6 @@ public class FileSystemActionReconsiliator {
 			}		
 		}
 			
-			
-			/*
-			 * (fsa = file system action)
-			 * 
-			 * 
-			 * SYNC DOWN ALGORITHM 2:
-			 * 
-			 * winning version
-			 * winning file (= local file of winning version)
-			 * local version
-			 * local file (= local file of local version)
-			 * 
-			 * if (has no local version) { 
-			 *   compwinfwinv = compare winning file to winning version (incl. checksum!)
-			 *   
-			 *   if (compwinfwinv: winning file matches winning version) {
-			 *     // do nothing
-			 *   }
-			 *   else if (compwinfwinv: new) {
-			 *     add new fsa for winning version
-			 *     add multichunks to download list for winning version
-			 *   }
-			 *   else if (compwinfwinv: deleted) {
-			 *     add delete fsa for winning version
-			 *   }
-			 *   else if (compwinfwinv: changed link) {
-			 *     add changed link fsa for winning version
-			 *   } 
-			 *   else if (compwinfwinv: changes attrs / modified date) { // does not(!) include "path"
-			 *     add changed attrs fsa for winning version
-			 *   }
-			 *   else if (compwinfwinv: changed path) {
-			 *     // Cannot be!
-			 *   }
-			 *   else { // size/checksum (path cannot be!)
-			 *     add conflict fsa for winning file
-			 *     add new fsa for winning version
-			 *     add multichunks to download list for winning version
-			 *   }
-			 * }
-			 * 
-			 * else { // local version exists
-			 *   complocflocv = compare local file to local version (incl. checksum!)
-			 *   
-			 *   if (complocflocv: local file matches local version) { // file as expected on disk
-			 *     complocvwinv = compare local version to winning version
-			 *       
-			 *     if (complocvwinv: local version matches winning version) { // means: local file = local version = winning version
-			 *       // Nothing to do
-			 *     }
-			 *     else if (complocvwinv: new) {
-			 *       // Cannot be!
-			 *     }
-			 *     else if (complocvwinv: deleted) {
-			 *       add delete fsa for winning version
-			 *     }
-			 *     else if (complocvwinv: changed link) {
-			 *       add changed link fsa for winning version
-			 *     } 
-			 *     else if (complocvwinv: changes attrs / modified date / path) { // includes "path!"
-			 *       add changed attrs / renamed fsa for winning version
-			 *     }
-			 *     else { // size/checksum 
-			 *       add changed fsa for winning version (and delete local version)
-			 *       add multichunks to download list for winning version
-			 *     }
-			 *   }
-			 *   else { // local file does NOT match local version
-			 *     if (local file exists) {
-			 *       add conflict fsa for local version
-			 *     }
-			 *     
-			 *     add new fsa for winning version
-			 *     add multichunks to download list for winning version
-			 * }
-			 * 
-			 * 
-			 */
-					
 		return fileSystemActions;
 	}
 	

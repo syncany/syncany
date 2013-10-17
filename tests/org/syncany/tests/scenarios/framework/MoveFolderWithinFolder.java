@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils;
 public class MoveFolderWithinFolder extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File fromFolder = pickFolder(hashCode());
+		File fromFolder = pickFolder(3123);
 		File toFolder = new File(fromFolder+"-ren"+fromFolder.hashCode());
 		
 		log(this, fromFolder+" -> "+toFolder);

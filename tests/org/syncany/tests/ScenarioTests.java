@@ -16,6 +16,7 @@ import org.syncany.tests.scenarios.EvilCUpWithoutDownScenarioTest;
 import org.syncany.tests.scenarios.FileLockedScenarioTest;
 import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.scenarios.FileVanishedScenarioTest;
+import org.syncany.tests.scenarios.FilenameCapitalizationWindowsScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownTest;
@@ -40,6 +41,7 @@ import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
 	EmptyFolderScenarioTest.class,
 	EvilCUpWithoutDownScenarioTest.class,
 	FileLockedScenarioTest.class,
+	FilenameCapitalizationWindowsScenarioTest.class,
 	FileTreeMoveToSubfolderScenarioTest.class,
 	FileVanishedScenarioTest.class,
 	ManyRenamesScenarioTest.class,
