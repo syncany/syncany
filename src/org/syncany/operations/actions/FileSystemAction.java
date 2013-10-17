@@ -1,9 +1,7 @@
 package org.syncany.operations.actions;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,23 +9,19 @@ import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
-import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionHelper;
+import org.syncany.database.FileVersionHelper.FileChange;
 import org.syncany.database.FileVersionHelper.FileVersionComparison;
-import org.syncany.database.MultiChunkEntry;
+import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
 
 public abstract class FileSystemAction {
@@ -64,78 +58,6 @@ public abstract class FileSystemAction {
 		else {
 			return fileVersion2.getType();
 		}
-	}
-
-	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
-		
-		if (reconstructedFileVersion.getType() == FileType.FILE) {
-			createFile0(reconstructedFileVersion);			
-		}
-		else if (reconstructedFileVersion.getType() == FileType.FOLDER) {
-			createFolder(reconstructedFileVersion);			
-		}	
-		else if (reconstructedFileVersion.getType() == FileType.SYMLINK) {
-			createSymlink(reconstructedFileVersion);
-		}		
-		else {
-			logger.log(Level.INFO, "     - Unknown file type: "+reconstructedFileVersion.getType());
-			throw new Exception("Unknown file type: "+reconstructedFileVersion.getType());
-		}
-	}
-	
-	protected void createFolder(FileVersion reconstructedFileVersion) throws IOException {
-		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
-		logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
-		
-		reconstructedFilesAtFinalLocation.mkdirs();		
-		setFileAttributes(reconstructedFileVersion);		
-	}
-
-	protected void createFile0(FileVersion reconstructedFileVersion) throws Exception {
-		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
-		File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
-		logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				
-
-		FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
-		
-		if (fileContent == null) {
-			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
-		}
-		
-		// Create file
-		MultiChunker multiChunker = config.getMultiChunker();
-		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
-
-		if (fileContent != null) { // File can be empty!
-			Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
-			
-			for (ChunkEntryId chunkChecksum : fileChunks) {
-				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
-				
-				if (multiChunkForChunk == null) {
-					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
-				}
-				
-				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId());
-
-				// TODO [low] Make more sensible API for multichunking
-				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
-				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getArray());
-				
-				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
-			}
-		}
-		
-		reconstructedFileOutputStream.close();		
-							
-		// Okay. Now move to real place
-		logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
-		
-		FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation); // TODO [medium] This should be in a try/catch block
-		
-		// Set attributes & timestamp
-		setFileAttributes(reconstructedFileVersion);			
-		setLastModified(reconstructedFileVersion);		
 	}
 
 	protected void createSymlink(FileVersion reconstructedFileVersion) throws Exception {
@@ -198,7 +120,13 @@ public abstract class FileSystemAction {
 		File newConflictFile = new File(conflictDirectory+File.separator+newFullName);
 		
 		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
-		FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
+		
+		if (conflictingLocalFile.isDirectory()) {
+			conflictingLocalFile.renameTo(newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
+		}
+		else {
+			FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
+		}
 	}
 	
 	protected void setFileAttributes(FileVersion reconstructedFileVersion) throws IOException {
@@ -230,16 +158,29 @@ public abstract class FileSystemAction {
 	}
 	
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
-		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
+		return fileAsExpected(expectedLocalFileVersion, new FileChange[] { });
+	}	
+	
+	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion, FileChange... allowedFileChanges) {
+		FileVersionComparison fileVersionComparison = fileChanges(expectedLocalFileVersion);
 		
 		if (fileVersionComparison.equals()) {
 			return true;
 		}
-		else {
+		else if (allowedFileChanges.length > 0) {
+			return CollectionUtil.containsOnly(fileVersionComparison.getFileChanges(), allowedFileChanges);
+		}
+		else {			
 			return false;
 		}
 	}	
+	
+	protected FileVersionComparison fileChanges(FileVersion expectedLocalFileVersion) {
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
+		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
+		
+		return fileVersionComparison;
+	}
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
@@ -255,5 +196,25 @@ public abstract class FileSystemAction {
 		return new File(config.getLocalDir()+File.separator+relativePath);
 	}	
 	
-	public abstract void execute() throws Exception;
+	public abstract void execute() throws InconsistentFileSystemException, Exception;
+	
+	public static class InconsistentFileSystemException extends Exception {
+		private static final long serialVersionUID = 14239478881237L;
+
+		public InconsistentFileSystemException() {
+			super();
+		}
+
+		public InconsistentFileSystemException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public InconsistentFileSystemException(String message) {
+			super(message);
+		}
+
+		public InconsistentFileSystemException(Throwable cause) {
+			super(cause);
+		}
+	}
 }

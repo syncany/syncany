@@ -49,6 +49,7 @@ import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
+import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.operations.actions.NewSymlinkFileSystemAction;
@@ -231,7 +232,6 @@ public class DownOperation extends Operation {
 	private List<FileSystemAction> determineFileSystemActions(Database winnersDatabase) throws Exception {
 		FileVersionHelper fileVersionHelper = new FileVersionHelper(config);
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>(); // TODO [low] not used!
 		
 		logger.log(Level.INFO, "- Determine filesystem actions ...");
 		
@@ -265,8 +265,6 @@ public class DownOperation extends Operation {
 					FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, localDatabase, winnersDatabase);
 					fileSystemActions.add(action);
 					
-					multiChunksToDownload.addAll(determineMultiChunksToDownload(winningLastVersion, localDatabase, winnersDatabase));
-
 					logger.log(Level.INFO, "  + (2) Deleted: Local file does NOT exist, but it should, winning version not known: "+winningLastVersion+" AND "+winningLastFile);
 					logger.log(Level.INFO, "    --> "+action);
 				}
@@ -449,88 +447,6 @@ public class DownOperation extends Operation {
 			 * }
 			 * 
 			 * 
-			 * -----------------------------------------------
-			 * SYNC DOWN ALGORITHM 3:
-			 * 
-			 * if (has no local version) {
-			 *      if (local file of winning version exists) {
-			 *         comploc = compare winning version to local file
-			 *         
-			 *         if (comploc: winning version does not match) {
-			 *              add conflict fsa for winning version
-			 *              add new fsa for winning version
-			 *              add multichunks to download list
-			 *         }
-			 *         else { // comploc: winning version does match
-			 *            // Do nothing
-			 *         }
-			 *      }
-			 *      else {
-			 *         add new fsa for winning version
-			 *         add multichunks of winning version to download list
-			 *      }
-			 * }
-			 * else if (has local version) { 
-			 *      comploc = compare local version with local file (incl. CHECKSUM!)
-			 *      
-			 *      if (comploc: local version matches local file)
-			 *           compwin = compare winning version with local version
-			 *           
-			 *           if (compwin: identical) 
-			 *                // Nothing
-			 *
-			 *           else if (compwin: deleted)
-			 *                add deleted fsa
-			 *           
-			 *           else if (compwin: changed link) 
-			 *                add changed link fsa
-			 *           
-			 *           else if (compwin: last modified date changed OR attributes changed OR path changed AND NOT contentDefinitelyChanged)
-			 *                if (compwin: NOT last modified changed)
-			 *                   add rename/changeattrs fsa
-			 * 
-			 *                else // = includes last modified change
-			 *                   compcheck = compare local file checksum with winning version checksum
-			 *                
-			 *                   if (compcheck: checksum NOT equals)
-			 *                      add multichunks of winning version to download list
-			 *                      add changed file fsa
-			 *                   else 
-			 *                     add rename/changeattrs fsa
-			 *                
-			 *           else // content changed (checksum, size)
-			 *                add multichunks of winning version to download list
-			 *                add changed file fsa
-			 *      
-			 *      else if (local version does not match local file) 
-			 *           XXXXXXXXXXXXXXXXXXXx
-			 *           if (local file exists)
-			 *                 add conflict fsa for local last version
-			 *                 
-			 *           add multichunks of winning version to download list
-			 *           add new fsa for winning version
-			 * 
-			 * 
-			 * 
-			 * -------> sort FSAs: 
-			 *    1. conflict fsa
-			 *    2. ... (rest)
-			 * 
-			 * 
-			 * 
-			 * NEW FILE SYSTEM ACTION
-			 * 
-			 * if (local file exists
-			 * 
-			 *      
-			 * CHANGE FILE SYSTEM ACTIONS (incl. attrs, ...):
-			 * 
-			 * if (not local file matches local version)
-			 *     throw exception: inconsistent file system, skip file
-			 *      
-			 * perform action
-			 * 
-			 * 
 			 */
 					
 		return fileSystemActions;
@@ -540,9 +456,7 @@ public class DownOperation extends Operation {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 		
 		for (FileSystemAction action : actions) {
-			if (action instanceof NewFileSystemAction
-					|| action instanceof ChangeFileSystemAction) {
-				
+			if (action instanceof FileCreatingFileSystemAction) { // TODO [low] This adds ALL multichunks even though some might be available locally				
 				multiChunksToDownload.addAll(determineMultiChunksToDownload(action.getFile2(), localDatabase, winnersDatabase));
 			}
 		}
@@ -742,7 +656,7 @@ public class DownOperation extends Operation {
 			new Object[] { ChangeFileSystemAction.class, FileType.FOLDER },
 			new Object[] { ChangeFileSystemAction.class, FileType.FILE },
 			new Object[] { ChangeFileSystemAction.class, FileType.SYMLINK },
-			new Object[] { DeleteFileSystemAction.class, FileType.FOLDER },
+			new Object[] { DeleteFileSystemAction.class, FileType.FOLDER }, // FIXME TODO [high] This order is flawed! It works for normal cases, because directories have to be emptied before they are deleted. However, in the case a new file is created at the same name as a directory that is being deleted, this does not work! 
 		};
 				
 		@Override

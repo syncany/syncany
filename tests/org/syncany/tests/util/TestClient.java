@@ -80,7 +80,7 @@ public class TestClient extends Client {
 	
 	public void copyFile(String fileFrom, String fileTo) throws IOException {
 		FileUtils.copyFile(getLocalFile(fileFrom), getLocalFile(fileTo));		
-	}
+	}	
 
 	public void changeFile(String name) throws IOException {
 		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name));		
@@ -129,5 +129,5 @@ public class TestClient extends Client {
 		}
 
 		return db;
-	}	
+	}
 }

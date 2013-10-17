@@ -87,11 +87,11 @@ public class Indexer {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
 		for (PartialFileHistory fileHistory : database.getFileHistories()) {
-			// Ignore this file history if it has been update in this database version before (file probably renamed!)
+			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
 			if (newDatabaseVersion.getFileHistory(fileHistory.getFileId()) != null) {
 				continue;
 			}
-			
+						
 			// Check if file exists, remove if it doesn't
 			FileVersion lastLocalVersion = fileHistory.getLastVersion();
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
@@ -101,8 +101,11 @@ public class Indexer {
 				continue;
 			}
 			
+			// Add this file history if a new file with this name has been added (file type change)
+			PartialFileHistory newFileWithSameName = getFileHistoryByPathFromDatabaseVersion(newDatabaseVersion, fileHistory.getLastVersion().getPath());
+			
 			// If file has VANISHED, mark as DELETED 
-			if (!lastLocalVersionOnDisk.exists()) {
+			if (!lastLocalVersionOnDisk.exists() || newFileWithSameName != null) {
 				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileId());
 				FileVersion deletedVersion = (FileVersion) lastLocalVersion.clone();
 				deletedVersion.setStatus(FileStatus.DELETED);
@@ -113,6 +116,19 @@ public class Indexer {
 				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), deletedVersion);
 			}
 		}				
+	}
+	
+	private PartialFileHistory getFileHistoryByPathFromDatabaseVersion(DatabaseVersion databaseVersion, String path) {
+		// TODO [high] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
+		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
+			FileVersion lastVersion = fileHistory.getLastVersion();
+				
+			if (lastVersion.getStatus() != FileStatus.DELETED && lastVersion.getPath().equals(path)) {
+				return fileHistory;
+			}
+		}
+		
+		return null;
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
@@ -237,7 +253,7 @@ public class Indexer {
 					fileVersion.setStatus(FileStatus.RENAMED);
 				}
 				else {
-					fileVersion.setStatus(FileStatus.UNKNOWN); // TODO [low] Add more states, ATTRS_CHANGED, or so.
+					fileVersion.setStatus(FileStatus.CHANGED); // TODO [low] Add more states, ATTRS_CHANGED, or so.
 				}						
 			}	
 			
@@ -339,20 +355,21 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
-				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", FOLDER)");
+				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", "+fileProperties.getType()+")");
+				return null;
 			}
 			else {
 				FileVersion lastFileVersion = lastFileHistory.getLastVersion();
 				
-				if (lastFileVersion.getStatus() != FileStatus.DELETED) {
-					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.getRelativePath()+"), appending new version.");					
+				if (lastFileVersion.getStatus() != FileStatus.DELETED && lastFileVersion.getType() == fileProperties.getType()) {
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.getRelativePath()+"), "+fileProperties.getType()+", appending new version.");
+					return lastFileHistory;
 				}
 				else {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", FOLDER)");
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", "+fileProperties.getType()+")");
+					return null;
 				}
 			}
-			
-			return lastFileHistory;
 		}
 		
 		private PartialFileHistory guessLastFileHistoryForFile(FileProperties fileProperties) {
@@ -388,16 +405,23 @@ public class Indexer {
 				
 				if (lastFileHistory == null) {
 					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+StringUtil.toHex(fileProperties.getChecksum())+")");
+					return null;
 				}
 				else {
 					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(fileProperties.getChecksum())+"), appending new version.");
+					return lastFileHistory;
 				}
 			}
 			else {
-				logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.getRelativePath()+"), appending new version.");
-			}
-			
-			return lastFileHistory;
+				if (fileProperties.getType() != lastFileHistory.getLastVersion().getType()) {
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+StringUtil.toHex(fileProperties.getChecksum())+")");
+					return null;
+				}
+				else {
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by path: "+fileProperties.getRelativePath()+"), appending new version.");
+					return lastFileHistory;
+				}
+			}			
 		}
 		
 		@Override

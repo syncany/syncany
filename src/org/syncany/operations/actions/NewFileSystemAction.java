@@ -4,7 +4,7 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 
-public class NewFileSystemAction extends FileSystemAction {
+public class NewFileSystemAction extends FileCreatingFileSystemAction {
 
 	public NewFileSystemAction(Config config, FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
 		super(config, localDatabase, winningDatabase, null, newFileVersion);

@@ -6,13 +6,13 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 
-public class ChangeFileSystemAction extends FileSystemAction {
+public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, Database localDatabase, Database winningDatabase) {
 		super(config, localDatabase, winningDatabase, fromFileVersion, toFileVersion);
 	}
 	
 	@Override
-	public void execute() throws Exception {
+	public void execute() throws InconsistentFileSystemException, Exception {
 		boolean fromFileExists = fileExists(fileVersion1);
 		boolean fromFileMatches = fromFileExists && fileAsExpected(fileVersion1);
 		

@@ -34,6 +34,7 @@ public class RenameToExistingFileScenarioTest {
 		// B creates file at same location
 		clientB.createNewFile("A-moved"); // << same as above
 		clientB.down(); 
+		assertConflictingFileExists("A-moved", clientB.getLocalFiles());
 
 		// Sync them
 		clientB.sync();		

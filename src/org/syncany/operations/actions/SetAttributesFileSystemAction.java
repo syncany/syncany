@@ -3,6 +3,7 @@ package org.syncany.operations.actions;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersionHelper.FileChange;
 
 public class SetAttributesFileSystemAction extends FileSystemAction {
 
@@ -12,7 +13,9 @@ public class SetAttributesFileSystemAction extends FileSystemAction {
 	
 	@Override
 	public void execute() throws Exception {
-		if (fileExists(fileVersion2) && fileAsExpected(fileVersion2)) {
+		if (fileExists(fileVersion2) 
+				&& fileAsExpected(fileVersion2, FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE)) {
+			
 			setFileAttributes(fileVersion2);
 			setLastModified(fileVersion2);
 		}

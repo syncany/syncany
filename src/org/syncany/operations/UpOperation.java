@@ -326,7 +326,7 @@ public class UpOperation extends Operation {
 		}
 	}
 
-	// TODO [medium] Duplicate code in SyncDownOperation
+	// TODO [medium] Duplicate code in SyncDownOperation, maybe make RemoteDatabaseFile 'Comparable'?
 	public static class RemoteDatabaseFileComparator implements Comparator<RemoteDatabaseFile> {
 		@Override
 		public int compare(RemoteDatabaseFile r1, RemoteDatabaseFile r2) {

@@ -3,6 +3,9 @@ package org.syncany.operations.actions;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersionHelper.FileChange;
+import org.syncany.database.FileVersionHelper.FileVersionComparison;
+import org.syncany.util.CollectionUtil;
 
 public class NewSymlinkFileSystemAction extends FileSystemAction {
 	public NewSymlinkFileSystemAction(Config config, FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
@@ -12,7 +15,16 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 	@Override
 	public void execute() throws Exception {
 		if (fileExists(fileVersion2)) {
-			if (!fileAsExpected(fileVersion2)) {
+			FileVersionComparison fileComparison = fileChanges(fileVersion2);
+			
+			if (fileComparison.equals()) {
+				// Nothing to do.
+			}
+			else if (CollectionUtil.containsOnly(fileComparison.getFileChanges(), FileChange.CHANGED_LINK_TARGET)) {
+				deleteFile(fileVersion2);
+				createSymlink(fileVersion2);
+			}
+			else {
 				createConflictFile(fileVersion2);
 				createSymlink(fileVersion2);
 			}

@@ -67,7 +67,7 @@ public class RenameFileSystemAction extends FileSystemAction {
 		}
 		
 		// Set attributes
-		setFileAttributes(fileVersion2);
+		setFileAttributes(fileVersion2); // TODO [low] check for fileAsExpected
 		setLastModified(fileVersion2);
 	}	
 	

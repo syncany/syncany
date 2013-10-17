@@ -94,7 +94,7 @@ public class AllFilePossibilitiesScenarioTest {
 				new CreateFileTree(),
 				
 				new ChangeContentWithoutFileSize(),
-				new ChangeFileSize(),
+				new ChangeFileSize(), 
 				new ChangeLastModifiedDate(),
 				new ChangePermissionsOfFile(),
 				new ChangePermissionsOfFolder(), 
