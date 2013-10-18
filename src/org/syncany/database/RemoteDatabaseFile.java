@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class RemoteDatabaseFile extends DatabaseFile{
+public class RemoteDatabaseFile extends DatabaseFile {
 	private static Pattern namePattern = Pattern.compile("db-([^-]+)-(\\d+)");
 	
 	public RemoteDatabaseFile(File remoteFile) {

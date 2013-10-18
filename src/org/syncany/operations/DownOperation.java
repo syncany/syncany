@@ -3,6 +3,7 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,11 +40,13 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
+import org.syncany.operations.DownOperation.DownOperationResult.DownResultCode;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
+import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -87,6 +90,8 @@ public class DownOperation extends Operation {
 		
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
+			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
+			
 			return result;
 		}
 		
@@ -106,6 +111,9 @@ public class DownOperation extends Operation {
 		// 6. Apply winner's branch 
 		appyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 		
+		// 7. Write names of newly analyzed remote databases (so we don't download them again)
+		writeAlreadyDownloadedDatabasesListFromFile(unknownRemoteDatabases);
+		
 		logger.log(Level.INFO, "Sync down done.");		
 		return result;		
 	}		
@@ -116,6 +124,7 @@ public class DownOperation extends Operation {
 		
 		if (winnersApplyBranch.size() == 0) {
 			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
+			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 		}
 		else {
 			logger.log(Level.INFO, "- Loading winners database ...");				
@@ -140,6 +149,8 @@ public class DownOperation extends Operation {
 
 			logger.log(Level.INFO, "- Saving local database to "+config.getDatabaseFile()+" ...");
 			saveLocalDatabase(localDatabase, config.getDatabaseFile());
+			
+			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
 	}
 
@@ -281,7 +292,12 @@ public class DownOperation extends Operation {
 				logger.log(Level.FINER, "   +  {0}", action);
 			}
 			
-			action.execute();
+			try {
+				action.execute();
+			}
+			catch (InconsistentFileSystemException e) {
+				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
+			}
 		}
 	}
 	
@@ -409,7 +425,17 @@ public class DownOperation extends Operation {
 		}
 		
 		return unknownRemoteDatabasesInCache;
-	}		
+	}	
+	
+	private void writeAlreadyDownloadedDatabasesListFromFile(List<RemoteFile> unknownRemoteDatabases) throws IOException {
+		FileWriter fr = new FileWriter(config.getKnownDatabaseListFile(), true); 
+		
+		for (RemoteFile newlyProcessedRemoteDatabase : unknownRemoteDatabases) {
+			fr.write(newlyProcessedRemoteDatabase.getName()+"\n");
+		}
+		
+		fr.close();
+	}
 	
 	// TODO [medium] Duplicate code in SyncUpOperation
 	public static class DatabaseFileComparator implements Comparator<File> { // TODO [low] Database file structure and natural sort are a workaround
@@ -433,9 +459,21 @@ public class DownOperation extends Operation {
 		// Nothing here yet.
 	}
 	
-	public class DownOperationResult implements OperationResult {
+	public static class DownOperationResult implements OperationResult {
+		public enum DownResultCode { OK_NO_REMOTE_CHANGES, OK_WITH_REMOTE_CHANGES, NOK };
+		
+		private DownResultCode resultCode;
 		private ChangeSet changeSet = new ChangeSet();
+		private Set<String> downloadedUnknownDatabases = new HashSet<String>();
 		private Set<MultiChunkEntry> downloadedMultiChunks = new HashSet<MultiChunkEntry>();
+		
+		public DownResultCode getResultCode() {
+			return resultCode;
+		}
+		
+		public void setResultCode(DownResultCode resultCode) {
+			this.resultCode = resultCode;
+		}
 		
 		public void setChangeSet(ChangeSet ChangeSet) {
 			this.changeSet = ChangeSet;
@@ -443,6 +481,14 @@ public class DownOperation extends Operation {
 		
 		public ChangeSet getChangeSet() {
 			return changeSet;
+		}
+		
+		public Set<String> getDownloadedUnknownDatabases() {
+			return downloadedUnknownDatabases;
+		}
+		
+		public void setDownloadedUnknownDatabases(Set<String> downloadedUnknownDatabases) {
+			this.downloadedUnknownDatabases = downloadedUnknownDatabases;
 		}
 		
 		public Set<MultiChunkEntry> getDownloadedMultiChunks() {

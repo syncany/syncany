@@ -34,6 +34,7 @@ import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 import org.syncany.util.StringUtil;
 
 public class UpOperation extends Operation {
@@ -86,6 +87,8 @@ public class UpOperation extends Operation {
 		
 		if (!statusChangeSet.hasChanges()) {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
+			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+			
 			return result;
 		}
 		
@@ -95,6 +98,8 @@ public class UpOperation extends Operation {
 			
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");
+				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
+				
 				return result;
 			}
 			else {
@@ -111,13 +116,16 @@ public class UpOperation extends Operation {
 		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles, database);
 		
 		if (newDatabaseVersion.getFileHistories().size() == 0) {
-			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
+			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");			
+			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+			
+			return result;
 		}
 		else {
 			logger.log(Level.INFO, "Adding newest database version "+newDatabaseVersion.getHeader()+" to local database ...");
 			database.addDatabaseVersion(newDatabaseVersion);
 	
-			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ...");
+			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ..."); // FIXME TODO [high] Shouldn't this be after multichunks? What if the connection breaks before all multichunks have been uploaded? 
 			saveLocalDatabase(database, config.getDatabaseFile());
 			
 			logger.log(Level.INFO, "Uploading new multichunks ...");
@@ -143,10 +151,13 @@ public class UpOperation extends Operation {
 		}
 		
 		if (config.getDirtyDatabaseFile().exists()) {
+			logger.log(Level.INFO, "- Deleting dirty.db from: "+config.getDirtyDatabaseFile());
 			config.getDirtyDatabaseFile().delete(); 
 		}
 		
-		updateResult(newDatabaseVersion);
+		// Result
+		updateResultChangeSet(newDatabaseVersion);
+		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
 		
 		return result;
 	}	
@@ -165,7 +176,7 @@ public class UpOperation extends Operation {
 		return locallyUpdatedFiles;
 	}
 
-	private void updateResult(DatabaseVersion newDatabaseVersion) {
+	private void updateResultChangeSet(DatabaseVersion newDatabaseVersion) {
 		ChangeSet changeSet = result.getChangeSet();
 		
 		for (PartialFileHistory partialFileHistory : newDatabaseVersion.getFileHistories()) {
@@ -372,9 +383,20 @@ public class UpOperation extends Operation {
 		}
 	}
 	
-	public static class UpOperationResult implements OperationResult {
+	public static class UpOperationResult implements OperationResult {		
+		public enum UpResultCode { OK_APPLIED_CHANGES, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES };
+		
+		private UpResultCode resultCode;
 		private StatusOperationResult statusResult = new StatusOperationResult(); 
 		private ChangeSet uploadChangeSet = new ChangeSet();
+		
+		public UpResultCode getResultCode() {
+			return resultCode;
+		}
+		
+		public void setResultCode(UpResultCode resultCode) {
+			this.resultCode = resultCode;
+		}
 		
 		public void setStatusResult(StatusOperationResult statusResult) {
 			this.statusResult = statusResult;
