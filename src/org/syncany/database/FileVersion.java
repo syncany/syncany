@@ -247,13 +247,10 @@ public class FileVersion implements Cloneable {
 	}
 
 	public enum FileStatus {
-		UNKNOWN ("UNKNOWN"), 
 		NEW ("NEW"), 
 		CHANGED ("CHANGED"), 
 		RENAMED ("RENAMED"), 
-		DELETED ("DELETED"),
-		ATTRS_CHANGED ("ATTRS_CHANGED"),
-		UNCHANGED ("UNCHANGED");
+		DELETED ("DELETED");
 		
 		private String name;       
 		

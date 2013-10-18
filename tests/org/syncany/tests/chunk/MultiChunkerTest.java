@@ -99,6 +99,7 @@ public class MultiChunkerTest {
 		}
 		
 		zipFile.close();
+		testOutFileStream.close();
 		
 		TestFileUtil.deleteDirectory(tempDir);
 	}	

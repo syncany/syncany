@@ -69,6 +69,8 @@ public class LsRemoteOperation extends Operation {
 			while (null != (line = br.readLine())) {
 				alreadyDownloadedRemoteDatabases.add(line);
 			}
+			
+			br.close();
 		}		
 		
 		return alreadyDownloadedRemoteDatabases;

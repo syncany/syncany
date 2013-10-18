@@ -1,13 +1,12 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.DownOperation.DownOperationResult;
-import org.syncany.operations.DownOperation.DownOperationResult.DownResultCode;
+import org.syncany.operations.DownOperation.DownResultCode;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
@@ -53,12 +52,10 @@ public class ThreeClientsOneLoserScenarioTest {
 		
 		// C calls down and up, to sync its changes
 		clientC.down();
-		clientC.upWithForceChecksum(); // FIXME TODO [high] Should C upload db-C-1 or db-C-2? Using db-C-2 might cause problems in DatabaseReconciliator?! Using db-C-1 leads other clients ignoring this file from the repo (because they think they have seen it before)
+		clientC.upWithForceChecksum(); 
 		
 		clientA.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientC.getLocalFiles());
-		
-		fail("xx");
+		assertFileListEquals(clientA.getLocalFiles(), clientC.getLocalFiles());		
 		
 		// Tear down
 		clientA.cleanup();

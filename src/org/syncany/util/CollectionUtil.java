@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public abstract class CollectionUtil<T> {
+	@SafeVarargs
 	public static <T> boolean containsOnly(Collection<T> list, T... allowedItems) {
 		return containsOnly(list, Arrays.asList(allowedItems));
 	}

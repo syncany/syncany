@@ -23,12 +23,12 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
@@ -36,6 +36,7 @@ import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 import org.syncany.util.StringUtil;
+
 
 public class UpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
@@ -124,10 +125,7 @@ public class UpOperation extends Operation {
 		else {
 			logger.log(Level.INFO, "Adding newest database version "+newDatabaseVersion.getHeader()+" to local database ...");
 			database.addDatabaseVersion(newDatabaseVersion);
-	
-			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ..."); // FIXME TODO [high] Shouldn't this be after multichunks? What if the connection breaks before all multichunks have been uploaded? 
-			saveLocalDatabase(database, config.getDatabaseFile());
-			
+				
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			uploadMultiChunks(database.getLastDatabaseVersion().getMultiChunks());
 			
@@ -146,6 +144,9 @@ public class UpOperation extends Operation {
 			if (options.cleanupEnabled()) {
 				cleanupOldDatabases(database, newestLocalDatabaseVersion);
 			}
+			
+			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ...");  
+			saveLocalDatabase(database, config.getDatabaseFile());
 			
 			logger.log(Level.INFO, "Sync up done.");
 		}
@@ -231,14 +232,14 @@ public class UpOperation extends Operation {
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
 	}
 
-	private DatabaseVersion index(List<File> localFiles, Database db) throws FileNotFoundException, IOException {			
+	private DatabaseVersion index(List<File> localFiles, Database database) throws FileNotFoundException, IOException {			
 		// Get last vector clock
 		String previousClient = null;
 		VectorClock lastVectorClock = null;
 		
-		if (db.getLastDatabaseVersion() != null) {
-			previousClient = db.getLastDatabaseVersion().getClient();
-			lastVectorClock = db.getLastDatabaseVersion().getVectorClock();
+		if (database.getLastDatabaseVersion() != null) {
+			previousClient = database.getLastDatabaseVersion().getClient();
+			lastVectorClock = database.getLastDatabaseVersion().getVectorClock();
 		}
 		else {
 			previousClient = null;
@@ -249,13 +250,27 @@ public class UpOperation extends Operation {
 		VectorClock newVectorClock = lastVectorClock.clone();
 
 		Long lastLocalValue = lastVectorClock.getClock(config.getMachineName());
-		Long newLocalValue = (lastLocalValue == null) ? 1 : lastLocalValue+1;
+		Long lastDirtyLocalValue = (dirtyDatabase != null) ? dirtyDatabase.getLastDatabaseVersion().getVectorClock().getClock(config.getMachineName()) : null;
+		
+		Long newLocalValue = null;
+		
+		if (lastDirtyLocalValue != null) {
+			newLocalValue = lastDirtyLocalValue+1; // TODO [medium] Does this lead to problems? C-1 does not exist! Possible problems with DatabaseReconciliator?
+		}
+		else {		
+			if (lastLocalValue != null) {
+				newLocalValue = lastLocalValue+1;
+			}
+			else {
+				newLocalValue = 1L;
+			}
+		}
 		
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);		
 
 		// Index
 		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		Indexer indexer = new Indexer(config, deduper, db, dirtyDatabase);
+		Indexer indexer = new Indexer(config, deduper, database, dirtyDatabase);
 		
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);	
 	

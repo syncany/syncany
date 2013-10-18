@@ -40,7 +40,6 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.operations.DownOperation.DownOperationResult.DownResultCode;
 import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
@@ -458,10 +457,14 @@ public class DownOperation extends Operation {
 	public static class DownOperationOptions implements OperationOptions {
 		// Nothing here yet.
 	}
+
+	public enum DownResultCode { 
+		OK_NO_REMOTE_CHANGES,
+		OK_WITH_REMOTE_CHANGES,
+		NOK
+	};
 	
 	public static class DownOperationResult implements OperationResult {
-		public enum DownResultCode { OK_NO_REMOTE_CHANGES, OK_WITH_REMOTE_CHANGES, NOK };
-		
 		private DownResultCode resultCode;
 		private ChangeSet changeSet = new ChangeSet();
 		private Set<String> downloadedUnknownDatabases = new HashSet<String>();

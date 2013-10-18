@@ -18,6 +18,7 @@ public class UnlockFile extends AbstractClientAction {
 		
 		//log(this, randomAccessFile.getAbsolutePath());
 		fileLock.release();
+		fileLock.close();
 		randomAccessFile.close();		
 	}		
 }
