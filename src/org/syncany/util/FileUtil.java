@@ -60,8 +60,8 @@ public class FileUtil {
         while (relativeFilePath.startsWith(File.separator)) {
         	relativeFilePath = relativeFilePath.substring(1);
         }
-        
-        return relativeFilePath;
+
+        return relativeFilePath.replaceAll("\\\\", "/");
     }
 
     public static String getAbsoluteParentDirectory(File file) {
