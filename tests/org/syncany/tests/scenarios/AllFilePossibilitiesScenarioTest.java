@@ -88,7 +88,7 @@ public class AllFilePossibilitiesScenarioTest {
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 		
-		ClientActions.runOps(clientA,
+		ClientActions.run(clientA,
 			new Executable() {
 				@Override
 				public void execute() throws Exception {

@@ -12,13 +12,16 @@ import org.syncany.tests.config.EncryptionTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.database.DatabaseCacheTest;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
-import org.syncany.tests.database.XmlDatabaseDAOTest;
+import org.syncany.tests.database.FileVersionComparatorTest;
 import org.syncany.tests.database.VectorClockTest;
+import org.syncany.tests.database.XmlDatabaseDAOTest;
+import org.syncany.tests.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.OperationPerformanceTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.util.ClasspathUtilTest;
+import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTests;
 
 @RunWith(Suite.class)
@@ -27,8 +30,9 @@ import org.syncany.tests.util.FileUtilTests;
 	CommandLineInterfaceTest.class,
 	
 	// Util
-	FileUtilTests.class,
 	ClasspathUtilTest.class,
+	CollectionUtilTest.class,
+	FileUtilTests.class,
 	
 	// Config	
 	EncryptionTest.class,
@@ -45,10 +49,12 @@ import org.syncany.tests.util.FileUtilTests;
 	// Database
 	DatabaseCacheTest.class,
 	DatabaseReconciliatorTest.class,
+	FileVersionComparatorTest.class,
 	XmlDatabaseDAOTest.class,
 	VectorClockTest.class,
 	
 	// Operations
+	FileSystemActionComparatorTest.class,
 	IndexerTest.class,
 	OperationPerformanceTest.class,
 	SyncUpOperationTest.class,

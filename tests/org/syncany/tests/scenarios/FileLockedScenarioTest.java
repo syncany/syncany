@@ -1,10 +1,10 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -25,7 +25,6 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.tests.scenarios.framework.AbstractClientAction;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
 import org.syncany.tests.scenarios.framework.Executable;
@@ -146,27 +145,37 @@ public class FileLockedScenarioTest {
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 						
-		ClientActions.runOps(clientA, null,
-			new AbstractClientAction[] {
-				new CreateFileTree(),
-				new LockFile(),
-				new UnlockFile()
-			},
-			new Executable() {
-				@Override
-				public void execute() throws Exception {
-					clientA.upWithForceChecksum();		
-					
-					clientB.down();
-
-					// TODO [low] The assert fails for the LockFile action because getLocalFiles() does not include locked files, and client A has one more locked file than client B
-					assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
-				}			
-			}
-		);
+		ClientActions.run(clientA, null, new CreateFileTree(), new Executable() {
+			@Override
+			public void execute() throws Exception {
+				clientA.upWithForceChecksum();
+				
+				clientB.down();				
+				assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+				assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+			}			
+		});
 		
-		// TODO [low] Add asserts here, this does not check if the locked file is indexed or not. Something like changeSet.ignoredFiles should be added.
+		ClientActions.run(clientA, null, new LockFile(), new Executable() {
+			@Override
+			public void execute() throws Exception {
+				clientA.upWithForceChecksum();				
+				
+				clientB.down();
+				assertEquals(clientA.getLocalFiles().size(), clientB.getLocalFiles().size()-1);
+			}			
+		});
+		
+		ClientActions.run(clientA, null, new UnlockFile(), new Executable() {
+			@Override
+			public void execute() throws Exception {
+				clientA.upWithForceChecksum();						
+
+				clientB.down();				
+				assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+				assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+			}			
+		});
 		
 		clientA.cleanup();
 		clientB.cleanup();

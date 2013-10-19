@@ -25,7 +25,6 @@ public class FileSystemActionComparatorTest {
 		actions.add(createNewFileSystemAction("deletedfolderXX", FileType.FILE));  
 		actions.add(createNewFileSystemAction("newsymlink", FileType.SYMLINK));
 		actions.add(createNewFileSystemAction("NEWfolder", FileType.FOLDER));
-		//actions.add(createDeleteFileSystemAction("deletedfolder1", FileType.FOLDER));
 		actions.add(createNewFileSystemAction("newfile.jpg", FileType.FILE));
 		actions.add(createDeleteFileSystemAction("deletedfolderXX", FileType.FOLDER)); // << same as folder above!
 		actions.add(createDeleteFileSystemAction("deletedsymlink.jpg", FileType.SYMLINK));
@@ -48,8 +47,7 @@ public class FileSystemActionComparatorTest {
 				"NewFileSystemAction,newsymlink,SYMLINK",
 				"RenameFileSystemAction,to.jpg,FILE",
 				"DeleteFileSystemAction,deletedfolderXX,FOLDER",
-				"NewFileSystemAction,deletedfolderXX,FILE",    // <<< moved here by postCompareSort!
-				"DeleteFileSystemAction,deletedfolder1,FOLDER"				
+				"NewFileSystemAction,deletedfolderXX,FILE"    // <<< moved here by postCompareSort!						
 			}, 
 			toArray(actions)
 		);

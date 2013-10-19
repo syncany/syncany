@@ -32,8 +32,8 @@ public class FileVersionComparator {
 	}
 	
 	public FileVersionComparison compare(FileVersion expectedLocalFileVersion, FileVersion actualLocalFileVersion) {
-		FileProperties expectedFileProperties = captureFileVersionProperties(expectedLocalFileVersion);
-		FileProperties actualFileProperties = captureFileVersionProperties(actualLocalFileVersion);
+		FileProperties expectedFileProperties = captureFileProperties(expectedLocalFileVersion);
+		FileProperties actualFileProperties = captureFileProperties(actualLocalFileVersion);
 		 
 		return compare(expectedFileProperties, actualFileProperties, true);
 	}
@@ -43,7 +43,7 @@ public class FileVersionComparator {
 	}
 	
 	public FileVersionComparison compare(FileVersion expectedLocalFileVersion, File actualLocalFile, byte[] knownChecksum, boolean forceChecksum) {
-		FileProperties expectedLocalFileVersionProperties = captureFileVersionProperties(expectedLocalFileVersion);
+		FileProperties expectedLocalFileVersionProperties = captureFileProperties(expectedLocalFileVersion);
 		FileProperties actualFileProperties= captureFileProperties(actualLocalFile, knownChecksum, forceChecksum);
 		
 		return compare(expectedLocalFileVersionProperties, actualFileProperties, forceChecksum);
@@ -333,7 +333,7 @@ public class FileVersionComparator {
 		}
 	}
 	
-	private FileProperties captureFileVersionProperties(FileVersion fileVersion) {
+	public FileProperties captureFileProperties(FileVersion fileVersion) {
 		if (fileVersion == null) {
 			return null;
 		}

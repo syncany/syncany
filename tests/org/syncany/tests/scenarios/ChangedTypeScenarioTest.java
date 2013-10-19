@@ -20,7 +20,7 @@ public class ChangedTypeScenarioTest {
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 		
-		ClientActions.runOps(clientA, null,
+		ClientActions.run(clientA, null,
 			new AbstractClientAction[] {
 				new CreateFileTree(),
 				new ChangeTypeFileToFolder(),
