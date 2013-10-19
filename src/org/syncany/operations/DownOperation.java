@@ -10,7 +10,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -381,7 +380,7 @@ public class DownOperation extends Operation {
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 		// Sort files (db-a-1 must be before db-a-2 !)
-		Collections.sort(remoteDatabases, new DatabaseFileComparator()); // TODO [medium] natural sort is a workaround, database file names should be centrally managed, db-name-0000000009 avoids natural sort  
+		Collections.sort(remoteDatabases); // TODO [medium] natural sort is a workaround, database file names should be centrally managed, db-name-0000000009 avoids natural sort  
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
@@ -436,23 +435,7 @@ public class DownOperation extends Operation {
 		fr.close();
 	}
 	
-	// TODO [medium] Duplicate code in SyncUpOperation
-	public static class DatabaseFileComparator implements Comparator<File> { // TODO [low] Database file structure and natural sort are a workaround
-		@Override
-		public int compare(File f1, File f2) {
-			RemoteDatabaseFile r1 = new RemoteDatabaseFile(f1);
-			RemoteDatabaseFile r2 = new RemoteDatabaseFile(f2);
-			
-			int clientNameCompare = r1.getClientName().compareTo(r2.getClientName());
-			
-			if (clientNameCompare != 0) {
-				return clientNameCompare;
-			}
-			else {
-				return (int) (r1.getClientVersion() - r2.getClientVersion());
-			}
-		}		
-	}	
+
 
 	public static class DownOperationOptions implements OperationOptions {
 		// Nothing here yet.

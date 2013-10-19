@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -291,7 +290,7 @@ public class UpOperation extends Operation {
 			ownDatabaseFiles.add(new RemoteDatabaseFile(ownRemoteDatabaseFile.getName()));
 		}
 		
-		Collections.sort(ownDatabaseFiles, new RemoteDatabaseFileComparator());
+		Collections.sort(ownDatabaseFiles);
 	
 		// Now merge
 		if (ownDatabaseFiles.size() <= MAX_KEEP_DATABASE_VERSIONS) {
@@ -351,22 +350,6 @@ public class UpOperation extends Operation {
 			transferManager.delete(toDeleteRemoteFile);
 		}
 	}
-
-	// TODO [medium] Duplicate code in SyncDownOperation, maybe make RemoteDatabaseFile 'Comparable'?
-	public static class RemoteDatabaseFileComparator implements Comparator<RemoteDatabaseFile> {
-		@Override
-		public int compare(RemoteDatabaseFile r1, RemoteDatabaseFile r2) {
-			int clientNameCompare = r1.getClientName().compareTo(r2.getClientName());
-			
-			if (clientNameCompare != 0) {
-				return clientNameCompare;
-			}
-			else {
-				return (int) (r1.getClientVersion() - r2.getClientVersion());
-			}
-		}
-		
-	}	
 
 	public static class UpOperationOptions implements OperationOptions {
 		private StatusOperationOptions statusOptions = new StatusOperationOptions();
