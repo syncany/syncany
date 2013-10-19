@@ -199,8 +199,8 @@ import org.syncany.tests.util.TestConfigUtil;
  *  - Local:     (  ,  ,C1)/T=01
  *               (  ,  ,C2)/T=02
  *               (  ,  ,C3)/T=03
- *               (  ,B1,C3)/T=07                            TODO [low] This should be the first conflict, right?
- *               (A3,B2,C4)/T=16 (first conflict B)         TODO [low] THIS IS WRONG, RIGHT?
+ *               (  ,B1,C3)/T=07                         
+ *               (A3,B2,C4)/T=16 (first conflict B)      
  *               (A3,B3,C4)/T=17
  *               (A3,B4,C4)/T=18
  *               (A3,B5,C4)/T=20 (last B)

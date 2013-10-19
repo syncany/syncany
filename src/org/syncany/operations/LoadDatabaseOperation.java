@@ -11,20 +11,25 @@ import org.syncany.database.XmlDatabaseDAO;
 
 public class LoadDatabaseOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LoadDatabaseOperation.class.getSimpleName());
+	private File databaseFile;
 	
 	public LoadDatabaseOperation(Config config) {
+		this(config, config.getDatabaseFile());
+	}
+	
+	public LoadDatabaseOperation(Config config, File databaseFile) {
 		super(config);
-	}	
+		this.databaseFile = databaseFile;
+	}
 	
 	public OperationResult execute() throws Exception {
-		File localDatabaseFile = config.getDatabaseFile();
-		logger.log(Level.INFO, "Loading local database file from "+localDatabaseFile+" ...");
+		logger.log(Level.INFO, "Loading database file from "+databaseFile+" ...");
 		
 		Database db = new Database();
 		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		
-		if (localDatabaseFile.exists()) {
-			dao.load(db, localDatabaseFile);
+		if (databaseFile.exists()) {
+			dao.load(db, databaseFile);
 		}
 		else {
 			logger.log(Level.INFO, "- NOT loading. File does not exist.");

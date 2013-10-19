@@ -164,7 +164,7 @@ public class DownOperation extends Operation {
 		databaseReconciliator = new DatabaseReconciliator();
 	}
 
-	private void pruneConflictingLocalBranch(Branch winnersBranch) throws StorageException, IOException {		
+	private void pruneConflictingLocalBranch(Branch winnersBranch) throws Exception {		
 		Branch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
 		logger.log(Level.INFO, "- Database versions to REMOVE locally: "+localPruneBranch);
 		
@@ -172,9 +172,10 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
 		}
 		else {
+			// Load dirty database (if existent) 
 			logger.log(Level.INFO, "  + Pruning databases locally ...");
-			Database dirtyDatabase = new Database();			
-			
+			Database dirtyDatabase = new Database();
+
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 				// Database version
 				DatabaseVersion databaseVersion = localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock());
@@ -191,8 +192,7 @@ public class DownOperation extends Operation {
 			
 			logger.log(Level.INFO, "    * Saving dirty database to "+config.getDirtyDatabaseFile()+" ...");
 			saveLocalDatabase(dirtyDatabase, config.getDirtyDatabaseFile());
-		}
-		
+		}		
 	}
 
 	private Branch determineWinnerBranch(Database localDatabase, Branches unknownRemoteBranches) throws Exception {
@@ -226,8 +226,6 @@ public class DownOperation extends Operation {
 		
 		return winnersBranch;
 	}
-
-	// FIXME TODO [high] Ignore list for already compared lost branches (evil C) 
 
 	private Set<MultiChunkEntry> determineRequiredMultiChunks(List<FileSystemAction> actions, Database winnersDatabase) {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
@@ -421,6 +419,7 @@ public class DownOperation extends Operation {
 			transferManager.download(new DatabaseRemoteFile(remoteFile.getName(), remoteFile.getSource()), unknownRemoteDatabaseFileInCache);
 						
 			unknownRemoteDatabasesInCache.add(unknownRemoteDatabaseFileInCache);
+			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
 		}
 		
 		return unknownRemoteDatabasesInCache;

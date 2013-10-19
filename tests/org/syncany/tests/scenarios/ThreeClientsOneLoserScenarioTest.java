@@ -1,6 +1,6 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -15,7 +15,7 @@ import org.syncany.tests.util.TestConfigUtil;
 
 public class ThreeClientsOneLoserScenarioTest {
 	@Test
-	public void testChangeAttributes() throws Exception {		
+	public void testKnownDatabaseList() throws Exception {		
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -62,5 +62,4 @@ public class ThreeClientsOneLoserScenarioTest {
 		clientB.cleanup();
 		clientC.cleanup();
 	}	
-	
 }

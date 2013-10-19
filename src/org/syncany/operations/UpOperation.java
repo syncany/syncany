@@ -37,7 +37,6 @@ import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 import org.syncany.util.StringUtil;
 
-
 public class UpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
 
@@ -77,9 +76,10 @@ public class UpOperation extends Operation {
 				? loadedDatabase
 				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
 		
-		// TODO [low] this is ugly. Add to LoadDatabaseOperation somehow
+		// Load dirty database (if existent) 
 		if (config.getDirtyDatabaseFile().exists()) {
-			dirtyDatabase = loadDirtyDatabase();
+			dirtyDatabase = 
+				((LoadDatabaseOperationResult) new LoadDatabaseOperation(config, config.getDirtyDatabaseFile()).execute()).getDatabase();
 		}
 		
 		// Find local changes
@@ -198,15 +198,6 @@ public class UpOperation extends Operation {
 					break;
 			}			
 		}		
-	}
-
-	private Database loadDirtyDatabase() throws IOException {
-		Database aDirtyDatabase = new Database();
-		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
-		
-		dao.load(aDirtyDatabase, config.getDirtyDatabaseFile());
-		
-		return aDirtyDatabase;
 	}
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
