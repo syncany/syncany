@@ -3,6 +3,12 @@ package org.syncany.tests.util;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import org.junit.Test;
 import org.syncany.util.FileUtil;
@@ -52,11 +58,29 @@ public class FileUtilTests {
 		
 		// Run
 		File lockedFile = TestFileUtil.createRandomFileInDirectory(tempDir, 50*1024);
-		lockedFile.setWritable(false, false);
 		
 		// Test
+		assertFalse("File should not be locked: "+lockedFile, FileUtil.isFileLocked(lockedFile));
+		 
+		RandomAccessFile fileLock = new RandomAccessFile(lockedFile, "rw");		
+		FileLock lockedFileLock = fileLock.getChannel().lock();
+		
 		assertTrue("File should be locked: "+lockedFile, FileUtil.isFileLocked(lockedFile));
 		 
+		// Tear down
+		lockedFileLock.release();
+		fileLock.close();
+		Path bFilePath = Paths.get(lockedFile.getAbsolutePath());
+
+		if (FileUtil.isWindows()) {
+			Files.setAttribute(bFilePath, "dos:readonly", true);
+		}
+		else if (FileUtil.isUnixLikeOperatingSystem()) {
+			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("r--r--r--"));
+		}	
+		
+		assertFalse("File should not be locked if read-only: "+lockedFile, FileUtil.isFileLocked(lockedFile));
+		
 		// Tear down
 		TestFileUtil.deleteDirectory(tempDir);
 	}

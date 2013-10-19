@@ -1,8 +1,10 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -58,6 +60,10 @@ public class FileLockedScenarioTest {
 	
 	@Test
 	public void testPermissionDeniedNotReadable() throws Exception {
+		if (FileUtil.isWindows()) {
+			return; // Not possible in windows
+		}
+		
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
@@ -65,18 +71,14 @@ public class FileLockedScenarioTest {
 		// Run
 		File noReadPermissionFile = clientA.createNewFile("no-read-permission-file");
 		Path filePath = Paths.get(noReadPermissionFile.getAbsolutePath());
-		if (FileUtil.isWindows()) {
-			Files.setAttribute(filePath, "dos:readonly", true);
-		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
-			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-	        perms.add(PosixFilePermission.OWNER_READ);
-	        perms.add(PosixFilePermission.GROUP_READ);
-	        perms.add(PosixFilePermission.OTHERS_READ);
-			Files.setPosixFilePermissions(filePath, perms);
-		}		
 
-		runUpAndTestForEmptyDatabase(testConnection, clientA);		
+		Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.GROUP_READ);
+        perms.add(PosixFilePermission.OTHERS_READ);
+		Files.setPosixFilePermissions(filePath, perms);		
+
+		runUpAndTestForConsistentDatabase(testConnection, clientA);		
 		
 		// Tear down
 		clientA.cleanup();
@@ -92,11 +94,30 @@ public class FileLockedScenarioTest {
 		File noReadPermissionFile = clientA.createNewFile("no-read-permission-file");
 		noReadPermissionFile.setWritable(false, false);
 		
-		runUpAndTestForEmptyDatabase(testConnection, clientA);		
+		runUpAndTestForConsistentDatabase(testConnection, clientA);		
 		
 		// Tear down
 		clientA.cleanup();
 	}	
+	
+	private void runUpAndTestForConsistentDatabase(Connection connection, TestClient client) throws Exception {
+		UpOperationResult upResult = client.up();
+		StatusOperationResult statusResult = upResult.getStatusResult();
+		
+		// Test 1: Check result sets for inconsistencies
+		assertTrue("Status command expected to return changes.", statusResult.getChangeSet().hasChanges());
+		assertTrue("File should be uploaded while it is read-only.", upResult.getChangeSet().hasChanges());
+		
+		// Test 2: Check database for inconsistencies
+		Database database = client.loadLocalDatabase();
+		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
+
+		assertNotNull("There should be a new database version, because file should have been added.", databaseVersion);
+		
+		// Test 3: Check file system for inconsistencies
+		File repoPath = ((LocalConnection) connection).getRepositoryPath();		
+		assertEquals("Repository should contain any files.", 2, repoPath.list().length);			
+	}
 	
 	private void runUpAndTestForEmptyDatabase(Connection connection, TestClient client) throws Exception {
 		UpOperationResult upResult = client.up();
@@ -117,6 +138,7 @@ public class FileLockedScenarioTest {
 		File repoPath = ((LocalConnection) connection).getRepositoryPath();		
 		assertEquals("Repository should NOT contain any files.", 0, repoPath.list().length);			
 	}
+	
 	
 	@Test
 	public void testLockUnlockFile() throws Exception {		

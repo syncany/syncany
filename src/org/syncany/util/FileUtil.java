@@ -249,30 +249,40 @@ public class FileUtil {
 		boolean fileLocked = false;
 		
 		try {
-			// Test 1: Missing permissions or locked file parts
-			randomAccessFile = new RandomAccessFile(file, "rw");
-			
-			// Test 2: Set lock and release it again
-			FileLock fileLock = randomAccessFile.getChannel().tryLock();
-			
-			if (fileLock == null) {
-				fileLocked = true;
-			}
-			else {
-				try { fileLock.release(); }
-				catch (Exception e) { /* Nothing */ }
-			}
+			// Test 1 missing permissions or locked file parts. If File is not readable == locked
+			randomAccessFile = new RandomAccessFile(file, "r");
+			randomAccessFile.close();
 		}
 		catch (Exception e) {
 		    fileLocked = true;
 		}
-		finally {				
+		
+		if(!fileLocked && file.canWrite()) {
+			try {
+				// Test 2:Locked file parts
+				randomAccessFile = new RandomAccessFile(file, "rw");
+	
+				// Test 3: Set lock and release it again
+				FileLock fileLock = randomAccessFile.getChannel().tryLock();
+	
+				if (fileLock == null) {
+					fileLocked = true;
+				} else {
+					try {
+						fileLock.release();
+					} catch (Exception e) { /* Nothing */
+					}
+				}
+			} catch (Exception e) {
+				fileLocked = true;
+			}
+			
 		    if (randomAccessFile != null) {
 				try { randomAccessFile.close(); }
 				catch (IOException e) { /* Nothing */ }
 		    }
 		}
-			
+		
 		return fileLocked;
 	}
 

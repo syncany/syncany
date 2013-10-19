@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.Database;
 import org.syncany.operations.DownOperation.DownOperationResult;
+import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
@@ -49,6 +50,9 @@ public class ChangedAttributesScenarioTest {
 			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("rwxrwxrwx"));
 		}		
 		
+		ChangeSet changes = clientB.status();
+		
+		assertTrue("Status-Operation should return changes.", changes.hasChanges());
 		UpOperationResult upResult = clientB.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
