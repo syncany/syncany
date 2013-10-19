@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract public class DatabaseFile {
+abstract public class DatabaseFile implements Comparable<DatabaseFile>{
 	protected String clientName;
 	protected long clientVersion;
 	private String fileName;
@@ -47,4 +47,16 @@ abstract public class DatabaseFile {
 	public File getFile() {
 		return this.file;
 	}
+	
+	@Override
+	public int compareTo(DatabaseFile r2) {
+		int clientNameCompare = this.getClientName().compareTo(r2.getClientName());
+
+		if (clientNameCompare != 0) {
+			return clientNameCompare;
+		} else {
+			return (int) (this.getClientVersion() - r2.getClientVersion());
+		}
+	}
+	
 }
