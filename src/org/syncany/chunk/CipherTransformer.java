@@ -37,6 +37,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.syncany.config.Encryption;
 import org.syncany.config.EncryptionException;
+import org.syncany.crypto.GcmCompatibleCipherInputStream;
 
 /**
  *

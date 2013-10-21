@@ -109,7 +109,7 @@ public class CommandLineClient extends Client {
 		command.setOut(out);
 		
 		// Pre-init operations
-		if ("init".equals(operationName)) {
+		if ("init".equals(operationName) || "init2".equals(operationName)) {
 			// Check config (NOT allowed for these operations)
 			if (configFile != null) {
 				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			

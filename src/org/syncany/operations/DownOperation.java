@@ -316,6 +316,7 @@ public class DownOperation extends Operation {
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));			
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile); 			
 
+			// TODO [medium] Calculate checksum while writing file, to verify correct content
 			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
 			
 			decryptedMultiChunkOutputStream.close();

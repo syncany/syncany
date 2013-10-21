@@ -27,7 +27,8 @@
 		<dependency org="junit" name="junit" rev="4.5" conf="cc-impl->default"/>		
 		<dependency org="com.google.code.gson" name="gson" rev="2.1" conf="cc-impl->default"/>
 		<dependency org="org.bouncycastle" name="bcprov-jdk16" rev="1.46"/>
-            	
+		<dependency org="org.simpleframework" name="simple-xml" rev="2.7.1"/>
+                        	
 		<!-- For FTP plugin -->
 		<!-- TODO [low] This dependency needs to be removed once the FTP plugin is its own module-->
 		<dependency org="commons-net" name="commons-net" rev="2.2"/>      
