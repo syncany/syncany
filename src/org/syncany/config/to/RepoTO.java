@@ -7,14 +7,14 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-@Root(name="storage")
+@Root(name="repo")
 @Namespace(reference="http://syncany.org/repo/1")
 public class RepoTO {
 	@Element(name="chunker")
 	private ChunkerTO chunker;
 	
 	@Element(name="multichunker")
-	private MultichunkerTO multichunker;
+	private MultiChunkerTO multichunker;
 	
 	@ElementList(name="transformers", entry="transformer")
 	private List<TransformerTO> transformers;
@@ -27,11 +27,11 @@ public class RepoTO {
 		this.chunker = chunker;
 	}
 
-	public MultichunkerTO getMultichunker() {
+	public MultiChunkerTO getMultichunker() {
 		return multichunker;
 	}
 
-	public void setMultichunker(MultichunkerTO multichunker) {
+	public void setMultichunker(MultiChunkerTO multichunker) {
 		this.multichunker = multichunker;
 	}
 
@@ -47,7 +47,7 @@ public class RepoTO {
 		// Nothing special about this
 	}
 	
-	public static class MultichunkerTO extends TypedPropertyListTO {
+	public static class MultiChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
 	

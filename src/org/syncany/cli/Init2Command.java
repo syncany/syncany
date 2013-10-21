@@ -2,58 +2,36 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.io.Console;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.apache.commons.io.FileUtils;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Encryption;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.util.StringUtil;
+import org.syncany.config.EncryptionException;
+import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.ChunkerTO;
+import org.syncany.config.to.RepoTO.MultiChunkerTO;
+import org.syncany.config.to.RepoTO.TransformerTO;
+import org.syncany.crypto.AdvancedCipherOutputStream;
+import org.syncany.crypto.CipherSession;
+import org.syncany.crypto.CipherSuite;
+import org.syncany.crypto.CipherSuites;
 
 public class Init2Command extends AbstractInitCommand {
-	private Console console;
-	
-	private Plugin plugin;
-	private Map<String, String> pluginSettings;
-	private Connection connection;
-	
-	private String machineName;
-	private File appDir;
-	private String password;
-	
-	public Init2Command() {
-		console = System.console();
-	}
+	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { 1, 2 }; 	
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
@@ -62,149 +40,231 @@ public class Init2Command extends AbstractInitCommand {
 	}	
 
 	private void runInitOperation(String[] operationArguments) throws OptionException, Exception {
-		OptionParser parser = new OptionParser();	
+		OptionParser parser = new OptionParser();	 
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoGzip = parser.acceptsAll(asList("g", "no-gzip"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("e", "no-encryption"));
 		
 		OptionSet options = parser.parse(operationArguments);	
-		List<?> nonOptionArgs = options.nonOptionArguments();
-		
-		runInitInteractive();
-	}
+		//List<?> nonOptionArgs = options.nonOptionArguments();
 	
-	private List<CryptoSuite> getAvailableCryptoSuites() {
-		return null; // TODO
-	}
-
-	private void runInitInteractive() throws Exception {
 		out.println("Interactive repository initialization started.");
 		out.println("Default options are in brackets.");
 		out.println();
 		
 		initAppDir();
-		initMachineName();
+		String machineName = getDefaultMachineName();
 		
 		// Ask for plugin, and plugin settings
 		initPlugin();
 		initPluginSettings();
 		
-		initRepoTest();
+		File tmpEncryptedRepoFile = downloadEncryptedRepoFile();
 			
-		if (false /* TODO Repo exists */) {
-			
+		if (tmpEncryptedRepoFile != null) {
+			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository.");
+		}		
+		
+		out.println("Successful. No repository found on the remote storage. ");			
+		
+		String password = null;
+		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+		
+		ChunkerTO chunkerTO = getDefaultChunkerTO();
+		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
+		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
+		
+		// Compression
+		if (!options.has(optionNoGzip)) { // not --no-gzip
+			transformersTO.add(getGzipTransformerTO());
 		}
-		else {
-			out.println("Successful. No repository found on the remote storage. ");			
-			
-			initPassword();
-			initEncryption();
-			
-			writeRepoFile();
-			writeStorageFile();
-			writeLocalFile();
+		
+		if (!options.has(optionAdvanced)) { // Easy			
+			if (!options.has(optionNoEncryption)) { // not --no-encryption
+				// Add default encryption AES 128 and Twofish 128
+				for (int cipherSuiteId : DEFAULT_CIPHER_SUITE_IDS) {
+					CipherSuite cipherSuite = CipherSuites.getCipherSuite(cipherSuiteId);
+					
+					cipherSuites.add(cipherSuite);
+					transformersTO.add(getCipherTransformer(cipherSuite));
+				}
+			}
+		}
+		else { // --advanced
+			if (!options.has(optionNoEncryption)) { // not --no-encryption
+				cipherSuites = askCipherSuites();
+				
+				for (CipherSuite cipherSuite : cipherSuites) {
+					transformersTO.add(getCipherTransformer(cipherSuite));
+				}
+			}
+		}
+		
+		// Ask for password
+		if (!options.has(optionNoEncryption)) {
+			password = askPassword();
+		}
+		
+		writeStorageFile();
+		writeLocalFile(machineName, password);	
+
+		writeRepoFile(chunkerTO, multiChunkerTO, transformersTO);
+		
+		if (!options.has(optionNoEncryption)) {
+			writeEncryptedRepoFile(cipherSuites, password);
 		}
 	}
 
-	private void initEncryption() throws Exception {
+	private List<CipherSuite> askCipherSuites() throws Exception {
+		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+		Map<Integer, CipherSuite> availableCipherSuites = CipherSuites.getAvailableCipherSuites();
+
 		out.println();
-		out.println("The cipher defines the encryption parameters and key size. There are a ");
-		out.println("few predefined crypto settings. To choose your own, please edit the config file.");
+		out.println("Please choose your encryption settings. If you're paranoid,");
+		out.println("you can choose multiple cipher suites by separating with a comma.");
 		out.println();
 		out.println("Options:");
-		out.println("  [1] AES/GCM/NoPadding, 128 bit (weak, but no country restrictions)");
-		out.println("  [2] AES/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
-		out.println("  [3] Twofish/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
+		
+		for (CipherSuite cipherSuite : availableCipherSuites.values()) {
+			out.println(" ["+cipherSuite.getId()+"] "+cipherSuite);
+		}
+		
 		out.println();
-		
-		String cipherStr = null;
-		int keySize = 0;
-		boolean unlimitedCryptoNeeded = false;
-		
-		while (cipherStr == null) {
-			cipherStr = console.readLine("Cipher [1]: ");
-			
-			if ("".equals(cipherStr) || "1".equals(cipherStr)) {
-				cipherStr = "AES/GCM/NoPadding";
-				keySize = 128;
-				unlimitedCryptoNeeded = false;
-			}
-			else if ("2".equals(cipherStr) || "3".equals(cipherStr)) {
-				out.println();
-				out.println("This cipher/keysize might not be allowed in your country.");
-				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
-				if (yesno.toLowerCase().startsWith("y")) {
-					if ("1".equals(cipherStr)) {
-						cipherStr = "AES/GCM/NoPadding";
-						keySize = 256;
+		boolean continueLoop = true;
+		boolean unlimitedStrengthNeeded = false;
+		
+		while (continueLoop) {
+			String commaSeparatedCipherIdStr = console.readLine("Cipher Suite: ");			
+			String[] cipherSuiteIdStrs = commaSeparatedCipherIdStr.split(",");
+			
+			// Choose cipher
+			try {
+				// Add cipher suites
+				for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
+					Integer cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);				
+					CipherSuite cipherSuite = availableCipherSuites.get(cipherSuiteId);
+					
+					if (cipherSuite == null) {
+						throw new Exception();
+					}
+					
+					if (cipherSuite.isUnlimitedStrength()) {
+						unlimitedStrengthNeeded = true;
+					}
+					
+					cipherSuites.add(cipherSuite);
+				}
+				
+				// Unlimited strength
+				if (unlimitedStrengthNeeded) {
+					out.println();
+					out.println("At least one of the chosen ciphers or key sizes might");
+					out.println("not be allowed in your country.");
+					out.println();
+					
+					String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
+					
+					if (yesno.toLowerCase().startsWith("y")) {
+						try {
+							Encryption.enableUnlimitedCrypto();
+						}
+						catch (Exception e) {
+							throw new Exception("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
+						}
 					}
 					else {
-						cipherStr = "Twofish/GCM/NoPadding";
-						keySize = 256;
+						continue;
 					}
-
-					// Try enabling unlimited crypto
-					unlimitedCryptoNeeded = true;
+				}
 				
-					try {
-						Encryption.enableUnlimitedCrypto();
-					}
-					catch (Exception e) {
-						throw new Exception("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
-					}
-				}
-				else {
-					out.println();
-					cipherStr = null;
-				}
+				continueLoop = false;
+				break;
 			}
-			else {
-				out.println("ERROR: Please choose a valid option.");
+			catch (Exception e) {
+				out.println("ERROR: Please choose at least one valid option.");
 				out.println();
 				
-				cipherStr = null;
+				continue;
 			}
 		}
-		
-		//operationOptions.setEncryption(new EncryptionSettings(true, password, cipherStr, keySize, true, unlimitedCryptoNeeded));
-		
+
+		return cipherSuites;		
 	}
 	
-	private static class CryptoSuite {
-		private boolean unlimitedStrength;
-		private String cipherStr;
-		private int keySize;
-		private boolean iv;		
-		private int ivSize;
+
+	protected void writeRepoFile(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) throws Exception {
+		// Make transfer object
+		RepoTO repoTO = new RepoTO();
+				
+		// Add to repo transfer object
+		repoTO.setChunker(chunkerTO);
+		repoTO.setMultichunker(multiChunkerTO);
+		repoTO.setTransformers(transformersTO);
 		
-		public CryptoSuite(boolean unlimitedStrength, String cipherStr, int keySize, boolean iv, int ivSize) {
-			this.unlimitedStrength = unlimitedStrength;
-			this.cipherStr = cipherStr;
-			this.keySize = keySize;
-			this.iv = iv;
-			this.ivSize = ivSize;
-		}
-
-		public boolean isUnlimitedStrength() {
-			return unlimitedStrength;
-		}
-
-		public String getCipherStr() {
-			return cipherStr;
-		}
-
-		public int getKeySize() {
-			return keySize;
-		}
-
-		public boolean isIv() {
-			return iv;
-		}
-
-		public int getIvSize() {
-			return ivSize;
-		}				
+		// Write file
+		File file = new File(appDir+"/repo.xml");
+		out.println("- Writing "+file);		
+		
+		Serializer serializer = new Persister();
+		serializer.write(repoTO, file);		
 	}
+	
+	private void writeEncryptedRepoFile(List<CipherSuite> cipherSuites, String password) throws IOException, EncryptionException {
+		File fileXml = new File(appDir+"/repo.xml");
+		File file = new File(appDir+"/repo");
+		out.println("- Writing "+file);		
+		
+		Encryption.init(); // TODO workaround
+		OutputStream lastOutputStream = new FileOutputStream(file);
+		
+		for (CipherSuite cipherSuite : cipherSuites) {
+			CipherSession cipherSession = new CipherSession(cipherSuite, password);
+			lastOutputStream = new AdvancedCipherOutputStream(lastOutputStream, cipherSession);
+		}
+			
+		FileUtils.copyFile(fileXml, lastOutputStream);
+	}	
 
+	protected ChunkerTO getDefaultChunkerTO() {
+		ChunkerTO chunkerTO = new ChunkerTO();
+		
+		chunkerTO.setType("fixed");
+		chunkerTO.setSettings(new HashMap<String, String>());
+		chunkerTO.getSettings().put("size", "16");
+		
+		return chunkerTO;
+	}
+	
+	protected MultiChunkerTO getDefaultMultiChunkerTO() {
+		MultiChunkerTO multichunkerTO = new MultiChunkerTO();
+		
+		multichunkerTO.setType("zip");
+		multichunkerTO.setSettings(new HashMap<String, String>());
+		multichunkerTO.getSettings().put("size", "512");
+		
+		return multichunkerTO;		
+	}
+	
+	protected TransformerTO getGzipTransformerTO() {		
+		TransformerTO gzipTransformerTO = new TransformerTO();
+		gzipTransformerTO.setType("gzip");
+		
+		return gzipTransformerTO;				
+	}
+	
+	private TransformerTO getCipherTransformer(CipherSuite cipherSuite) {		
+		Map<String, String> cipherSettings = new HashMap<String, String>();
+		cipherSettings.put("cipher", cipherSuite.getCipherStr());
+		cipherSettings.put("keysize", Integer.toString(cipherSuite.getKeySize()));		
+		cipherSettings.put("iv", Boolean.toString(cipherSuite.isIv()));
+		cipherSettings.put("ivsize", Integer.toString(cipherSuite.getIvSize()));
+		cipherSettings.put("unlimitedstrength", Boolean.toString(cipherSuite.isUnlimitedStrength()));
+		
+		TransformerTO cipherTransformerTO = new TransformerTO();
+		cipherTransformerTO.setType("cipher");		
+		cipherTransformerTO.setSettings(cipherSettings);
+		
+		return cipherTransformerTO;		
+	}	
 }

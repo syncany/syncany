@@ -27,7 +27,7 @@ import org.syncany.config.Encryption;
 import org.syncany.config.to.LocalTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
-import org.syncany.config.to.RepoTO.MultichunkerTO;
+import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.config.to.StorageTO;
 import org.syncany.config.to.StorageTO.ConnectionTO;
@@ -45,15 +45,13 @@ public abstract class AbstractInitCommand extends Command {
 	protected Map<String, String> pluginSettings;
 	protected Connection connection;
 	
-	protected String machineName;
 	protected File appDir;
-	protected String password;
 	
 	public AbstractInitCommand() {
 		console = System.console();
 	}	
 
-	protected void writeLocalFile() throws Exception {
+	protected void writeLocalFile(String machineName, String password) throws Exception {
 		LocalTO localTO = new LocalTO();
 		localTO.setMachineName(machineName);
 		
@@ -87,96 +85,13 @@ public abstract class AbstractInitCommand extends Command {
 		serializer.write(storageTO, file);		
 	}
 
-	protected void writeRepoFile() throws Exception {
-		// Make transfer object
-		RepoTO repoTO = new RepoTO();
-				
-		// Chunker (default for now)
-		ChunkerTO chunkerTO = new ChunkerTO();
-		chunkerTO.setType("fixed");
-		chunkerTO.setSettings(new HashMap<String, String>());
-		chunkerTO.getSettings().put("size", "16");
-		
-		// Multichunker (default for now)
-		MultichunkerTO multichunkerTO = new MultichunkerTO();
-		multichunkerTO.setType("zip");
-		multichunkerTO.setSettings(new HashMap<String,String>());
-		multichunkerTO.getSettings().put("size", "512");
-		
-		// Transformers
-		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
-
-		TransformerTO gzipTransformerTO = new TransformerTO();
-		gzipTransformerTO.setType("gzip");
-		transformersTO.add(gzipTransformerTO);
-		
-		// Add to repo transfer object
-		repoTO.setChunker(chunkerTO);
-		repoTO.setMultichunker(multichunkerTO);
-		repoTO.setTransformers(transformersTO);
-		
-		// Write file
-		File file = new File(appDir+"/repo.xml");
-		out.println("- Writing "+file);		
-		
-		Serializer serializer = new Persister();
-		serializer.write(repoTO, file);
-		
-		
-		/*
-		
-		// Create salted HMAC
-		byte[] salt = createSalt();		
-		SecretKeySpec keySpec = createHmacKeySpec(password, salt);
-
-		Mac mac = Mac.getInstance("HmacSHA1");
-		mac.init(keySpec);
-		
-		byte[] hmac = mac.doFinal(repoXmlPayloadBytes);
-		
-		// Make envelope
-		StringBuilder xmlEnvelope = new StringBuilder();
-		
-		xmlEnvelope.append("<repo xmlns=\"http://syncany.org/repo/1\">\n");
-		xmlEnvelope.append("\t<envelope>\n");
-		xmlEnvelope.append(repoXmlPayloadStr);
-		xmlEnvelope.append("\t</envelope>\n");
-		xmlEnvelope.append("\t<signature>\n");
-		xmlEnvelope.append("\t\t<salt>").append(StringUtil.toHex(salt)).append("</salt>\n");
-		xmlEnvelope.append("\t\t<hmac>").append(StringUtil.toHex(hmac)).append("</hmac>\n");
-		xmlEnvelope.append("\t</signature>\n");
-		xmlEnvelope.append("</repo>");
-		
-		// Write file
-		File repoFile = new File(appDir+"/repo.xml");
-		out.println("- Writing "+repoFile);		
-		
-		PrintWriter out = new PrintWriter(new FileWriter(repoFile));		
-		out.print(xmlEnvelope.toString());
-		out.close();		*/
-	}
-	
-	protected byte[] createSalt() {
-    	byte[] salt = new byte[20];    	
-    	new SecureRandom().nextBytes(salt);
-    	
-    	return salt;
-    }
-	
-	 protected SecretKeySpec createHmacKeySpec(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
-    	// Derive secret key from password 
-    	SecretKeyFactory factory = SecretKeyFactory.getInstance(Encryption.KEY_DERIVATION_FUNCTION);
-        KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, 1000, 20);
-        SecretKey secretKey = factory.generateSecret(pbeKeySpec); 
-        
-        return new SecretKeySpec(secretKey.getEncoded(), "HmacSHA1");          
-    }
-
-	protected void initPassword() {
+	protected String askPassword() {
 		out.println();
 		out.println("The password is used to encrypt data on the remote storage.");
 		out.println("Please choose it wisely.");
 		out.println();
+		
+		String password = null;
 		
 		while (password == null) {
 			char[] passwordChars = console.readPassword("Password: ");
@@ -200,10 +115,12 @@ public abstract class AbstractInitCommand extends Command {
 					password = null;
 				}
 			}
-		}				
+		}	
+		
+		return password;
 	}
 
-	protected void initRepoTest() throws Exception {
+	protected File downloadEncryptedRepoFile() throws Exception {
 		// Test connection
 		File tmpRepoFile = File.createTempFile("syncanyrepo", "tmp");
 		
@@ -213,8 +130,12 @@ public abstract class AbstractInitCommand extends Command {
 			Map<String, RemoteFile> repoFileList = transferManager.list("repo");
 			
 			if (repoFileList.containsKey("repo")) {
-				transferManager.download(new RemoteFile("repo"), tmpRepoFile);	
+				transferManager.download(new RemoteFile("repo"), tmpRepoFile);
+				return tmpRepoFile;
 			}			
+			else {
+				return null;
+			}
 		}
 		catch (Exception e) {
 			throw new Exception("Unable to connect to repository.", e);
@@ -296,12 +217,12 @@ public abstract class AbstractInitCommand extends Command {
 		appDir = new File(".").getCanonicalFile();								
 	}	
 
-	protected void initMachineName() throws UnknownHostException {
-		machineName = new String(
+	protected String getDefaultMachineName() throws UnknownHostException {
+		return new String(
 			  InetAddress.getLocalHost().getHostName() 
 			+ System.getProperty("user.name")
 			+ Math.abs(new Random().nextInt())
 		).replaceAll("[^a-zA-Z0-9]", "");		
 	}
-
+	
 }
