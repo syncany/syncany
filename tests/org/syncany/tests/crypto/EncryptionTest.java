@@ -1,4 +1,4 @@
-package org.syncany.tests.config;
+package org.syncany.tests.crypto;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

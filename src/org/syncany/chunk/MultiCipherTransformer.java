@@ -21,21 +21,24 @@ package org.syncany.chunk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
-import org.syncany.crypto.AdvancedCipherInputStream;
-import org.syncany.crypto.AdvancedCipherOutputStream;
 import org.syncany.crypto.CipherSession;
 import org.syncany.crypto.CipherSuite;
+import org.syncany.crypto.MultiCipherInputStream;
+import org.syncany.crypto.MultiCipherOutputStream;
 
 /**
  *
  * @author pheckel
  */
-public class AdvancedCipherTransformer extends Transformer {
+public class MultiCipherTransformer extends Transformer {
+	private List<CipherSuite> cipherSuites;
 	private CipherSession cipherSession;
 	
-    public AdvancedCipherTransformer(CipherSuite cipherSuite, String password) {
-    	this.cipherSession = new CipherSession(cipherSuite, password);
+    public MultiCipherTransformer(List<CipherSuite> cipherSuites, String password) {
+    	this.cipherSuites = cipherSuites;
+    	this.cipherSession = new CipherSession(password);
     }   
     
     @Override
@@ -45,11 +48,11 @@ public class AdvancedCipherTransformer extends Transformer {
     
     @Override
 	public OutputStream createOutputStream(OutputStream out) throws IOException {
-    	return new AdvancedCipherOutputStream(out, cipherSession);    	
+    	return new MultiCipherOutputStream(out, cipherSuites, cipherSession);    	
     }
 
     @Override
     public InputStream createInputStream(InputStream in) throws IOException {
-    	return new AdvancedCipherInputStream(in, cipherSession);    	
+    	return new MultiCipherInputStream(in, cipherSession);    	
     }
 }

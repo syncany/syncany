@@ -25,10 +25,10 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.crypto.AdvancedCipherOutputStream;
 import org.syncany.crypto.CipherSession;
 import org.syncany.crypto.CipherSuite;
 import org.syncany.crypto.CipherSuites;
+import org.syncany.crypto.MultiCipherOutputStream;
 
 public class Init2Command extends AbstractInitCommand {
 	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { 1, 2 }; 	
@@ -221,13 +221,10 @@ public class Init2Command extends AbstractInitCommand {
 		out.println("- Writing "+file);		
 		
 		Encryption.init(); // TODO workaround
-		OutputStream lastOutputStream = new FileOutputStream(file);
 		
-		for (CipherSuite cipherSuite : cipherSuites) {
-			CipherSession cipherSession = new CipherSession(cipherSuite, password);
-			lastOutputStream = new AdvancedCipherOutputStream(lastOutputStream, cipherSession);
-		}
-			
+		CipherSession cipherSession = new CipherSession(password);
+		OutputStream lastOutputStream = new MultiCipherOutputStream(new FileOutputStream(file), cipherSuites, cipherSession);
+		
 		FileUtils.copyFile(fileXml, lastOutputStream);
 	}	
 
@@ -262,7 +259,7 @@ public class Init2Command extends AbstractInitCommand {
 		Map<String, String> cipherSettings = new HashMap<String, String>();
 		cipherSettings.put("cipher", cipherSuite.getCipherStr());
 		cipherSettings.put("keysize", Integer.toString(cipherSuite.getKeySize()));		
-		cipherSettings.put("iv", Boolean.toString(cipherSuite.isIv()));
+		cipherSettings.put("iv", Boolean.toString(cipherSuite.hasIv()));
 		cipherSettings.put("ivsize", Integer.toString(cipherSuite.getIvSize()));
 		cipherSettings.put("unlimitedstrength", Boolean.toString(cipherSuite.isUnlimitedStrength()));
 		

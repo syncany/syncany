@@ -31,6 +31,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 public class Encryption {	
     public static final String PROVIDER = "BC";
     public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1";
+    public static final int KEY_DERIVATION_ROUNDS = 1000;
 	    
 	public static final String DEFAULT_CIPHER_ALGORITHM = "AES";
 	public static final String DEFAULT_CIPHER_STRING = "AES/GCM/NoPadding";
