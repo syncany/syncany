@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.chunk.MultiCipherTransformer;
@@ -26,6 +29,7 @@ import org.syncany.config.Logging;
 import org.syncany.crypto.CipherSuite;
 import org.syncany.crypto.CipherSuites;
 import org.syncany.util.StringUtil;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class MultiCipherStreamsTest {
 	private static final Logger logger = Logger.getLogger(MultiCipherStreamsTest.class.getSimpleName());		
@@ -59,6 +63,72 @@ public class MultiCipherStreamsTest {
 			})
 		);
 	}
+	
+
+	@Test
+	public void testSaxParserWithCipherTransformerWithAesGcm() throws Exception {
+		doTestEncryption(
+			Arrays.asList(new CipherSuite[] {
+				CipherSuites.getCipherSuite(1),
+				CipherSuites.getCipherSuite(2)
+			})
+		);
+	}
+	
+	@Test
+	public void testSaxParserWithCipherTransformerWithAesCbcPkcs5() throws Exception {
+		doTestEncryption(
+			Arrays.asList(new CipherSuite[] {
+				CipherSuites.getCipherSuite(3),
+				CipherSuites.getCipherSuite(4)
+			})
+		);
+	}
+	
+	public void testSaxParserWithMultiCipherTransformer(List<CipherSuite> cipherSuites) throws Exception {
+		String xmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+			+ "<database version=\"1\">\n"
+			+ "	<databaseVersions>\n"
+			+ "		<databaseVersion>\n"
+			+ "		</databaseVersion>\n"
+			+ "	</databaseVersions>\n"
+			+ "	<databaseVersions>\n"
+			+ "		<databaseVersion>\n"
+			+ "		</databaseVersion>\n"
+			+ "	</databaseVersions>\n"
+			+ "	<databaseVersions>\n"
+			+ "		<databaseVersion>\n"
+			+ "		</databaseVersion>\n"
+			+ "	</databaseVersions>\n"
+			+ "	<databaseVersions>\n"
+			+ "		<databaseVersion>\n"
+			+ "		</databaseVersion>\n"
+			+ "	</databaseVersions>\n"
+			+ "</database>";
+		
+		
+		Transformer cipherTransformer = new MultiCipherTransformer(cipherSuites, "some password");
+		
+		// Test encrypt
+		byte[] encryptedData = doEncrypt(xmlStr.getBytes(), cipherTransformer);
+
+		// Test decrypt with SAX parser	
+		InputStream is = cipherTransformer.createInputStream(new ByteArrayInputStream(encryptedData));
+		
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser saxParser = factory.newSAXParser();
+		
+		saxParser.parse(is, new DefaultHandler());	
+		
+		// Success if it does not throw an exception
+
+		// Regular CipherInputStream does NOT work with GCM mode
+		// GcmCompatibleCipherInputStream fixes this!
+		
+		// See http://bouncy-castle.1462172.n4.nabble.com/Using-AES-GCM-NoPadding-with-javax-crypto-CipherInputStream-td4655271.html
+		// and http://bouncy-castle.1462172.n4.nabble.com/using-GCMBlockCipher-with-CipherInputStream-td4655147.html
+	}	
+	
 	private void doTestEncryption(List<CipherSuite> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {
 		Transformer encryptCipherTransformer = new MultiCipherTransformer(cipherSuites, "some password");
 		Transformer decryptCipherTransformer = new MultiCipherTransformer(cipherSuites, "some password");

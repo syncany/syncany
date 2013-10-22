@@ -22,7 +22,17 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherUtil;
 
 public class ConnectCommand extends AbstractInitCommand {
-	public static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/([^/]*)/(.+)$");	
+	public static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(e|d)/(.+)$");	
+	
+	static { // TODO [high] Workaround
+		try {
+			Encryption.init();
+			Encryption.enableUnlimitedCrypto();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}		
+	}
 	
 	private String password;
 	
@@ -67,34 +77,36 @@ public class ConnectCommand extends AbstractInitCommand {
 			throw new Exception("Invalid link provided, must start with syncany:// and match link pattern.");
 		}
 		
-		String salt = linkMatcher.group(1);
+		String encryptionIndicator = linkMatcher.group(1);
 		String ciphertext = linkMatcher.group(2);
+		String plaintext = null;
 		
-		boolean isEncryptedLink = !"".equals(salt);
+		boolean isEncryptedLink = "e".equals(encryptionIndicator);
 		
 		if (isEncryptedLink) {
 			password = askPassword();
 			
-			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(Base64.decodeBase64(ciphertext));
-			String storageConfigStr = CipherUtil.decryptToString(encryptedStorageConfig, password);
+			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
+			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
 			
-			Serializer serializer = new Persister();
-			StorageTO storageTO = serializer.read(StorageTO.class, storageConfigStr);
-			
-			System.out.println(storageConfigStr);
-			System.out.println(storageTO);
-			// deserialize, read in StorageTO
-			
-			plugin = Plugins.get(storageTO.getConnection().getType());
-			pluginSettings = storageTO.getConnection().getSettings();
-			
-			
-			throw new Exception("this should decrypt and read the storage.xml from the string ...");
+			plaintext = CipherUtil.decryptToString(encryptedStorageConfig, password);					
 		}
 		else {
-			
+			plaintext = new String(Base64.decodeBase64(ciphertext));
 		}
 		
+		System.out.println(plaintext);
+
+		Serializer serializer = new Persister();
+		StorageTO storageTO = serializer.read(StorageTO.class, plaintext);
+		
+		System.out.println(storageTO);
+		
+		plugin = Plugins.get(storageTO.getConnection().getType());
+		pluginSettings = storageTO.getConnection().getSettings();
+		
+		connection = plugin.createConnection();
+		connection.init(pluginSettings);		
 	}
 
 	private void initPluginByAsking() throws StorageException {
@@ -105,8 +117,6 @@ public class ConnectCommand extends AbstractInitCommand {
 	}
 
 	private void downloadAndInitRepo() throws Exception {
-		Encryption.init(); // TODO [high] Workaround!
-		
 		File tmpEncryptedRepoFile = downloadEncryptedRepoFile();		
 		FileInputStream encryptedRepoConfig = new FileInputStream(tmpEncryptedRepoFile);
 		
@@ -118,5 +128,16 @@ public class ConnectCommand extends AbstractInitCommand {
 		System.out.println(repoFileStr);
 		System.out.println(repoTO);
 		
+	}	
+
+	private String askPassword() {
+		String password = null;
+		
+		while (password == null) {
+			char[] passwordChars = console.readPassword("Password: ");			
+			password = new String(passwordChars);			
+		}	
+		
+		return password;
 	}
 }

@@ -20,8 +20,8 @@ public class CipherSuites {
 			new CipherSuite(0x02, "Twofish/GCM/NoPadding", 128, false, true, 128, true),
 			
 			// Unlimited crypto
-			new CipherSuite(0x03, "AES/GCM/NoPadding", 256, true, true, 256, true),
-			new CipherSuite(0x04, "Twofish/GCM/NoPadding", 256, true, true, 256, true)
+			new CipherSuite(0x03, "AES/GCM/NoPadding", 256, true, true, 128, true),
+			new CipherSuite(0x04, "Twofish/GCM/NoPadding", 256, true, true, 128, true)
 		};		
 		
 		for (CipherSuite cryptoSuite : tmpCipherSuites) {

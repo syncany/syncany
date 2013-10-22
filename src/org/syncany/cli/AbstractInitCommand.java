@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,42 +68,7 @@ public abstract class AbstractInitCommand extends Command {
 
 		Serializer serializer = new Persister();
 		serializer.write(storageTO, file);		
-	}
-
-	protected String askPassword() {
-		out.println();
-		out.println("The password is used to encrypt data on the remote storage.");
-		out.println("Please choose it wisely.");
-		out.println();
-		
-		String password = null;
-		
-		while (password == null) {
-			char[] passwordChars = console.readPassword("Password: ");
-			char[] confirmPasswordChars = console.readPassword("Confirm: ");
-			
-			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
-				out.println("ERROR: Passwords do not match.");
-				out.println();
-				
-				continue;
-			} 
-			
-			password = new String(passwordChars);
-			
-			if (passwordChars.length < 12) {
-				out.println("WARNING: The password is a bit short. Less than 12 chars are not future-proof!");
-				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
-				
-				if (!yesno.toLowerCase().startsWith("y")) {
-					out.println();
-					password = null;
-				}
-			}
-		}	
-		
-		return password;
-	}
+	}	
 
 	protected File downloadEncryptedRepoFile() throws Exception {
 		// Test connection
