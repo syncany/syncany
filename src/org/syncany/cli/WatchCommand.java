@@ -9,6 +9,11 @@ import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
 public class WatchCommand extends Command {
 	@Override
+	public boolean needConfigFile() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		WatchOperationOptions operationOptions = new WatchOperationOptions();
 

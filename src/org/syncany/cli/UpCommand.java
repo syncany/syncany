@@ -12,6 +12,11 @@ import org.syncany.operations.UpOperation.UpOperationResult;
 
 public class UpCommand extends Command {
 	@Override
+	public boolean needConfigFile() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpOperationOptions operationOptions = parseOptions(operationArgs);
 		UpOperationResult operationResult = client.up(operationOptions);	

@@ -27,6 +27,11 @@ import org.syncany.operations.InitOperation.InitOperationOptions;
 
 public class InitCommand extends Command {
 	@Override
+	public boolean needConfigFile() {	
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		runInitOperation(operationArgs);
 		return 0;

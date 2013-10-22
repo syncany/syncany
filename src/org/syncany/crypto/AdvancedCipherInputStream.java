@@ -8,8 +8,8 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
 public class AdvancedCipherInputStream extends InputStream {
-	private static final byte[] STREAM_MAGIC = "Syncany".getBytes();
-	private static final byte SUPPORTED_STREAM_VERSION = 1;
+	public static final byte[] STREAM_MAGIC = "Syncany".getBytes();
+	public static final byte SUPPORTED_STREAM_VERSION = 1;
 	
 	private InputStream underlyingInputStream;
 	private GcmCompatibleCipherInputStream cipherInputStream;

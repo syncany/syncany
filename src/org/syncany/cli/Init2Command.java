@@ -34,6 +34,11 @@ public class Init2Command extends AbstractInitCommand {
 	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { 1, 2 }; 	
 	
 	@Override
+	public boolean needConfigFile() {	
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		runInitOperation(operationArgs);
 		return 0;
@@ -56,8 +61,8 @@ public class Init2Command extends AbstractInitCommand {
 		String machineName = getDefaultMachineName();
 		
 		// Ask for plugin, and plugin settings
-		initPlugin();
-		initPluginSettings();
+		askPlugin();
+		askPluginSettings();
 		
 		File tmpEncryptedRepoFile = downloadEncryptedRepoFile();
 			

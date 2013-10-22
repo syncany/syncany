@@ -34,6 +34,11 @@ public class SyncCommand extends Command {
 	}
 	
 	@Override
+	public boolean needConfigFile() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		SyncOperationOptions operationOptions = parseSyncOptions(operationArgs);		
 		SyncOperationResult operationResult = client.sync(operationOptions);

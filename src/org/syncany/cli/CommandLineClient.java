@@ -109,17 +109,17 @@ public class CommandLineClient extends Client {
 		command.setOut(out);
 		
 		// Pre-init operations
-		if ("init".equals(operationName) || "init2".equals(operationName)) {
-			// Check config (NOT allowed for these operations)
-			if (configFile != null) {
-				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
-			}
-		}
-		else {
+		if (command.needConfigFile()) { 
 			// Check config (required for these operations)
 			if (configFile == null) {
 				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
 			}			
+		}
+		else {
+			// Check config (NOT allowed for these operations)
+			if (configFile != null) {
+				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
+			}
 		}
 		
 		// Run!

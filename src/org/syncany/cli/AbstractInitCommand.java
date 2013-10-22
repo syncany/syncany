@@ -5,10 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,19 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Encryption;
 import org.syncany.config.to.LocalTO;
-import org.syncany.config.to.RepoTO;
-import org.syncany.config.to.RepoTO.ChunkerTO;
-import org.syncany.config.to.RepoTO.MultiChunkerTO;
-import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.config.to.StorageTO;
 import org.syncany.config.to.StorageTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
@@ -142,7 +128,7 @@ public abstract class AbstractInitCommand extends Command {
 		}		
 	}
 
-	protected void initPluginSettings() throws StorageException {
+	protected void askPluginSettings() throws StorageException {
 		pluginSettings = new HashMap<String, String>();
 		
 		String[] mandatorySettings = connection.getMandatorySettings();
@@ -182,7 +168,7 @@ public abstract class AbstractInitCommand extends Command {
 		//operationOptions.setConnection(new ConnectionSettings(plugin.getId(), pluginSettings));		
 	}
 
-	protected void initPlugin() {
+	protected void askPlugin() {
 		String pluginStr = null;
 		
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());

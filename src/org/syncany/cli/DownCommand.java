@@ -6,6 +6,11 @@ import org.syncany.operations.DownOperation.DownOperationResult;
 
 public class DownCommand extends Command {
 	@Override
+	public boolean needConfigFile() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		DownOperationOptions operationOptions = parseOptions(operationArgs);		
 		DownOperationResult operationResult = client.down(operationOptions);		
