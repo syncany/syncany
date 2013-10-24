@@ -21,8 +21,8 @@ import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.crypto.CipherSuite;
-import org.syncany.crypto.CipherSuites;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
@@ -89,7 +89,7 @@ public class InitCommand extends AbstractInitCommand {
 		boolean gzipEnabled = !options.has(optionNoGzip);
 		
 		String password = null;
-		List<CipherSuite> cipherSuites = getCipherSuites(encryptionEnabled, advancedModeEnabled);
+		List<CipherSpec> cipherSuites = getCipherSuites(encryptionEnabled, advancedModeEnabled);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
@@ -133,7 +133,7 @@ public class InitCommand extends AbstractInitCommand {
 		}		
 	}
 
-	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSuite> cipherSuites) {
+	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
 		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
 		
 		if (gzipEnabled) { 
@@ -148,8 +148,8 @@ public class InitCommand extends AbstractInitCommand {
 		return transformersTO;
 	}
 
-	private List<CipherSuite> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
-		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
+		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
 			if (advancedModeEnabled) { 			
@@ -157,7 +157,7 @@ public class InitCommand extends AbstractInitCommand {
 			}
 			else { // Default
 				for (int cipherSuiteId : DEFAULT_CIPHER_SUITE_IDS) { 
-					cipherSuites.add(CipherSuites.getCipherSuite(cipherSuiteId));
+					cipherSuites.add(CipherSpecs.getCipherSpec(cipherSuiteId));
 				}								
 			}			
 		}
@@ -165,9 +165,9 @@ public class InitCommand extends AbstractInitCommand {
 		return cipherSuites;
 	}
 
-	private List<CipherSuite> askCipherSuites() throws Exception {
-		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
-		Map<Integer, CipherSuite> availableCipherSuites = CipherSuites.getAvailableCipherSuites();
+	private List<CipherSpec> askCipherSuites() throws Exception {
+		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
+		Map<Integer, CipherSpec> availableCipherSuites = CipherSpecs.getAvailableCipherSpecs();
 
 		out.println();
 		out.println("Please choose your encryption settings. If you're paranoid,");
@@ -175,7 +175,7 @@ public class InitCommand extends AbstractInitCommand {
 		out.println();
 		out.println("Options:");
 		
-		for (CipherSuite cipherSuite : availableCipherSuites.values()) {
+		for (CipherSpec cipherSuite : availableCipherSuites.values()) {
 			out.println(" ["+cipherSuite.getId()+"] "+cipherSuite);
 		}
 		
@@ -193,7 +193,7 @@ public class InitCommand extends AbstractInitCommand {
 				// Add cipher suites
 				for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
 					Integer cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);				
-					CipherSuite cipherSuite = availableCipherSuites.get(cipherSuiteId);
+					CipherSpec cipherSuite = availableCipherSuites.get(cipherSuiteId);
 					
 					if (cipherSuite == null) {
 						throw new Exception();
@@ -342,7 +342,7 @@ public class InitCommand extends AbstractInitCommand {
 		return gzipTransformerTO;				
 	}
 	
-	private TransformerTO getCipherTransformerTO(List<CipherSuite> cipherSuites) {
+	private TransformerTO getCipherTransformerTO(List<CipherSpec> cipherSuites) {
 		String cipherSuitesIdStr = "";
 		
 		for (int i=0; i<cipherSuites.size(); i++) {				

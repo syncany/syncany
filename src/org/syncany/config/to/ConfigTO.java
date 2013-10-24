@@ -34,7 +34,7 @@ public class ConfigTO {
 	private String logDir;	
 		
 	@Element(name="connection", required=true)
-	private ConnectionTO connection;	
+	private ConnectionTO connectionTO;	
 
 	private String configFile;
 	
@@ -120,12 +120,12 @@ public class ConfigTO {
 		this.configFile = configFile;
 	}
 
-	public ConnectionTO getConnection() {
-		return connection;
+	public ConnectionTO getConnectionTO() {
+		return connectionTO;
 	}
 
-	public void setConnection(ConnectionTO connection) {
-		this.connection = connection;
+	public void setConnection(ConnectionTO connectionTO) {
+		this.connectionTO = connectionTO;
 	}
 
 	public static class ConnectionTO extends TypedPropertyListTO {

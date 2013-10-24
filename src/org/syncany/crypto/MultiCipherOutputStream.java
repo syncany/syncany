@@ -51,13 +51,13 @@ public class MultiCipherOutputStream extends OutputStream {
 	public static final int SALT_SIZE = 12;
 	
 	private OutputStream underlyingOutputStream;
-	private List<CipherSuite> cipherSuites;
+	private List<CipherSpec> cipherSuites;
 	private CipherSession cipherSession;
 
 	private OutputStream cipherOutputStream;
 	private boolean headerWritten;	
 	
-	public MultiCipherOutputStream(OutputStream out, List<CipherSuite> cipherSuites, CipherSession cipherSession) throws IOException {
+	public MultiCipherOutputStream(OutputStream out, List<CipherSpec> cipherSuites, CipherSession cipherSession) throws IOException {
 		this.underlyingOutputStream = out;		
 		this.cipherSuites = cipherSuites;		
 		this.cipherSession = cipherSession;
@@ -76,7 +76,7 @@ public class MultiCipherOutputStream extends OutputStream {
 			
 			cipherOutputStream = underlyingOutputStream;
 			
-			for (CipherSuite cipherSuite : cipherSuites) { 
+			for (CipherSpec cipherSuite : cipherSuites) { 
 				byte[] salt = createAndWriteSalt();		
 				byte[] iv = createAndWriteIV(cipherSuite);
 				
@@ -91,7 +91,7 @@ public class MultiCipherOutputStream extends OutputStream {
     	}		
 	}	
 	
-	private byte[] createAndWriteIV(CipherSuite cipherSuite) throws IOException {
+	private byte[] createAndWriteIV(CipherSpec cipherSuite) throws IOException {
 		byte[] streamIV = null;
 		
 		if (cipherSuite.hasIv()) {
@@ -105,7 +105,7 @@ public class MultiCipherOutputStream extends OutputStream {
 	}
 
 	private void doSanityChecks() throws IOException {
-		for (CipherSuite cipherSuite : cipherSuites) {
+		for (CipherSpec cipherSuite : cipherSuites) {
 			if (cipherSuite.getCipherStr().contains("/ECB/")) {
 				throw new IOException("Cannot use ECB mode. This mode is not considered secure.");
 			}
@@ -123,7 +123,7 @@ public class MultiCipherOutputStream extends OutputStream {
 	private void writeCipherSuites() throws IOException {
 		underlyingOutputStream.write(cipherSuites.size());
 		
-		for (CipherSuite cipherSuite : cipherSuites) {
+		for (CipherSpec cipherSuite : cipherSuites) {
 			underlyingOutputStream.write(cipherSuite.getId());
 		}		
 	}

@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.syncany.crypto.CipherSession;
-import org.syncany.crypto.CipherSuite;
-import org.syncany.crypto.CipherSuites;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.MultiCipherInputStream;
 import org.syncany.crypto.MultiCipherOutputStream;
 
@@ -36,15 +36,15 @@ import org.syncany.crypto.MultiCipherOutputStream;
  * @author pheckel
  */
 public class CipherTransformer extends Transformer {
-	private List<CipherSuite> cipherSuites;
+	private List<CipherSpec> cipherSuites;
 	private CipherSession cipherSession;
 	
 	public CipherTransformer() {
-		this.cipherSuites = new ArrayList<CipherSuite>();
+		this.cipherSuites = new ArrayList<CipherSpec>();
 		this.cipherSession = null;
 	}
 	
-    public CipherTransformer(List<CipherSuite> cipherSuites, String password) {
+    public CipherTransformer(List<CipherSpec> cipherSuites, String password) {
     	this.cipherSuites = cipherSuites;
     	this.cipherSession = new CipherSession(password);
     }    
@@ -67,7 +67,7 @@ public class CipherTransformer extends Transformer {
     	
     	for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
     		int cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);
-    		CipherSuite cipherSuite = CipherSuites.getCipherSuite(cipherSuiteId);
+    		CipherSpec cipherSuite = CipherSpecs.getCipherSpec(cipherSuiteId);
     		
     		if (cipherSuite == null) {
     			throw new Exception("Cannot find cipher suite with ID '"+cipherSuiteId+"'");

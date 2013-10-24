@@ -15,7 +15,12 @@ import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.crypto.CipherSuite;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.TransferManager;
+import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 
 public class InitOperation extends Operation {
@@ -52,14 +57,14 @@ public class InitOperation extends Operation {
 			
 			if (options.isEncryptionEnabled()) {
 				writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSuites(), options.getPassword());				
-				shareLink = getEncryptedLink(options.getConfigTO().getConnection(), options.getCipherSuites(), options.getPassword());
+				shareLink = getEncryptedLink(options.getConfigTO().getConnectionTO(), options.getCipherSuites(), options.getPassword());
 			}	
 			else {
 				writeXmlFile(options.getRepoTO(), repoFile); 				
-				shareLink = getPlaintextLink(options.getConfigTO().getConnection()); 
+				shareLink = getPlaintextLink(options.getConfigTO().getConnectionTO()); 
 			}	
 			
-			uploadRepoFile();
+			uploadRepoFile(repoFile, options.getConfigTO().getConnectionTO());
 						
 			return new InitOperationResult(shareLink);
         }                
@@ -69,7 +74,7 @@ public class InitOperation extends Operation {
     		serializer.write(source, file);	
     	}	
     	
-    	private void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSuite> cipherSuites, String password) throws Exception {				
+    	private void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, String password) throws Exception {				
     		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
     		Serializer serializer = new Persister();
     		serializer.write(repoTO, plaintextRepoOutputStream);
@@ -77,17 +82,16 @@ public class InitOperation extends Operation {
     		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, password);
     	}		
     	
-    	private void uploadRepoFile() throws Exception {
-    		//TransferManager transferManager = connection.createTransferManager();
+    	private void uploadRepoFile(File repoFile, ConnectionTO connectionTO) throws Exception {
+    		Plugin plugin = Plugins.get(connectionTO.getType());
+    		Connection connection = plugin.createConnection();
+    		TransferManager transferManager = connection.createTransferManager();
     		
-    		//throw new Exception("upload not yet implemented.");
-    		// TODO FIXME [high] Upload repo file
-    		
-    		
-    		
+    		transferManager.upload(repoFile, new RemoteFile("repo")); // TODO [low] Naming stuff
+    		transferManager.disconnect();
     	}    	
 
-    	private String getEncryptedLink(ConnectionTO connectionTO, List<CipherSuite> cipherSuites, String password) throws Exception {
+    	private String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, String password) throws Exception {
     		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
     		Serializer serializer = new Persister();
     		serializer.write(connectionTO, plaintextOutputStream);
@@ -113,7 +117,7 @@ public class InitOperation extends Operation {
         	private ConfigTO configTO;
         	private RepoTO repoTO;
         	private boolean encryptionEnabled;
-        	private List<CipherSuite> cipherSuites;
+        	private List<CipherSpec> cipherSuites;
         	private String password;
 			
         	public ConfigTO getConfigTO() {
@@ -140,11 +144,11 @@ public class InitOperation extends Operation {
 				this.encryptionEnabled = encryptionEnabled;
 			}
 
-			public List<CipherSuite> getCipherSuites() {
+			public List<CipherSpec> getCipherSuites() {
 				return cipherSuites;
 			}
 
-			public void setCipherSuites(List<CipherSuite> cipherSuites) {
+			public void setCipherSuites(List<CipherSpec> cipherSuites) {
 				this.cipherSuites = cipherSuites;
 			}
 

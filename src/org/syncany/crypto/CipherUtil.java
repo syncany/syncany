@@ -83,7 +83,7 @@ public class CipherUtil {
     	return salt;
     }
 	
-	public static SecretKey createSecretKey(CipherSuite cipherSuite, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
+	public static SecretKey createSecretKey(CipherSpec cipherSuite, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
     	// Derive secret key from password 
     	SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
         KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ROUNDS, cipherSuite.getKeySize());
@@ -96,7 +96,7 @@ public class CipherUtil {
         return secretKeyAlgorithm;
     }
 	
-	public static Cipher createCipher(CipherSuite cipherSuite, int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createCipher(CipherSpec cipherSuite, int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
 		try {
 			if (cipherSuite.needsUnlimitedStrength()) {
 				CipherUtil.enableUnlimitedCrypto();
@@ -118,11 +118,11 @@ public class CipherUtil {
         }
 	}
 
-	public static Cipher createEncCipher(CipherSuite cipherSuite, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createEncCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws EncryptionException {
 		return createCipher(cipherSuite, Cipher.ENCRYPT_MODE, secretKey, iv);
 	}   
 	
-	public static Cipher createDecCipher(CipherSuite cipherSuite, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createDecCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws EncryptionException {
 		return createCipher(cipherSuite, Cipher.DECRYPT_MODE, secretKey, iv);
 	}    	
 	
@@ -136,7 +136,7 @@ public class CipherUtil {
 		return Arrays.equals(actualMagic, MultiCipherOutputStream.STREAM_MAGIC);
 	}
 	
-	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSuite> cipherSuites, String password) throws IOException {
+	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSpec> cipherSuites, String password) throws IOException {
 		CipherSession cipherSession = new CipherSession(password);
 		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSuites, cipherSession);
 		
@@ -146,14 +146,14 @@ public class CipherUtil {
 		ciphertextOutputStream.close();
 	}
 	
-	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSuite> cipherSuites, String password) throws IOException {
+	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, String password) throws IOException {
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
 		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, password);
 		
 		return ciphertextOutputStream.toByteArray();
 	}
 	
-	public static byte[] encrypt(byte[] plaintext, List<CipherSuite> cipherSuites, String password) throws IOException {
+	public static byte[] encrypt(byte[] plaintext, List<CipherSpec> cipherSuites, String password) throws IOException {
 		ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(plaintext);	
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
 		

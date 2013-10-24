@@ -1,6 +1,6 @@
 package org.syncany.crypto;
 
-public class CipherSuite {
+public class CipherSpec {
 	private int id;
 	private boolean unlimitedStrength;
 	private String cipherStr;
@@ -9,7 +9,7 @@ public class CipherSuite {
 	private int ivSize;
 	private boolean authenticated;
 	
-	public CipherSuite(int id, String cipherStr, int keySize, boolean unlimitedStrength, boolean iv, int ivSize, boolean authenticated) {
+	public CipherSpec(int id, String cipherStr, int keySize, boolean unlimitedStrength, boolean iv, int ivSize, boolean authenticated) {
 		this.id = id;
 		this.unlimitedStrength = unlimitedStrength;
 		this.cipherStr = cipherStr;

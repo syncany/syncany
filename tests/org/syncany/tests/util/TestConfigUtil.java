@@ -38,7 +38,7 @@ public class TestConfigUtil {
 		File tempAppDir = new File(tempClientDir+"/app"); // Warning: check delete method below if this is changed!
 		File tempCacheDir = new File(tempAppDir+"/cache");
 		File tempDatabaseDir = new File(tempAppDir+"/db");
-		File tempConfigFile = new File(tempAppDir+"/config.json");
+		File tempConfigFile = new File(tempAppDir+"/config.xml");
 		
 		tempLocalDir.mkdirs();
 		tempAppDir.mkdirs();
@@ -46,25 +46,25 @@ public class TestConfigUtil {
 		tempDatabaseDir.mkdirs();
 		
 		// Client settings 
-		clientSettings.put("machineName", machineName);
-		clientSettings.put("localDir", tempLocalDir.getAbsolutePath());
-		clientSettings.put("appDir", tempAppDir.getAbsolutePath());
-		clientSettings.put("cacheDir", tempCacheDir.getAbsolutePath());
-		clientSettings.put("databaseDir", tempDatabaseDir.getAbsolutePath());
+		clientSettings.put("machinename", machineName);
+		clientSettings.put("localdir", tempLocalDir.getAbsolutePath());
+		clientSettings.put("appdir", tempAppDir.getAbsolutePath());
+		clientSettings.put("cachedir", tempCacheDir.getAbsolutePath());
+		clientSettings.put("databasedir", tempDatabaseDir.getAbsolutePath());
 
-		clientSettings.put("repoPath", connectionProperties.get("path"));
+		clientSettings.put("repopath", connectionProperties.get("path"));
 		clientSettings.put("configFile", tempConfigFile.getAbsolutePath());
 		
 		// Make config file from skeleton
-		String configJsonSkel = FileUtils.readFileToString(new File("tests/config-local.json.skel"));		
-		String configJson = configJsonSkel;
+		String configXmlSkel = FileUtils.readFileToString(new File("tests/config-local.xml.skel"));		
+		String configXml = configXmlSkel;
 		
 		for (Map.Entry<String, String> clientSetting : clientSettings.entrySet()) {
-			String quoteReplaced = clientSetting.getValue().replaceAll("\\\\","\\\\\\\\\\\\\\\\"); 	//JSON, f*ck yeah
-			configJson = configJson.replaceAll("\\$"+clientSetting.getKey(), quoteReplaced);
+			String quoteReplaced = clientSetting.getValue();
+			configXml = configXml.replaceAll("\\$"+clientSetting.getKey(), quoteReplaced);
 		}
 		
-		FileUtil.writeToFile(configJson.getBytes(), tempConfigFile);		
+		FileUtil.writeToFile(configXml.getBytes(), tempConfigFile);		
 		
 		return clientSettings;
 	}	
@@ -89,11 +89,13 @@ public class TestConfigUtil {
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
 		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));
 		File tempLocalDir = new File(tempClientDir+"/local");
+		File tempAppDir = new File(tempClientDir+"/app");
 		File tempCacheDir = new File(tempClientDir+"/app/cache");
 		File tempDatabaseDir = new File(tempClientDir+"/app/db");
 		File tempLogDir = new File(tempClientDir+"/app/logs");
 		
 		tempLocalDir.mkdirs();
+		tempAppDir.mkdirs();
 		tempCacheDir.mkdirs();
 		tempDatabaseDir.mkdirs();
 		tempLogDir.mkdirs();
@@ -113,6 +115,7 @@ public class TestConfigUtil {
 		configTO.setDatabaseDir(tempDatabaseDir.getAbsolutePath());
 		configTO.setLocalDir(tempLocalDir.getAbsolutePath());
 		configTO.setLogDir(tempLogDir.getAbsolutePath());
+		configTO.setAppDir(tempAppDir.getAbsolutePath());
 		
 		configTO.setPassword(null);
 		
@@ -143,6 +146,10 @@ public class TestConfigUtil {
 		TestFileUtil.deleteDirectory(config.getLocalDir());
 		TestFileUtil.deleteDirectory(config.getCacheDir());
 		TestFileUtil.deleteDirectory(config.getDatabaseDir());
+
+		if (config.getAppDir() != null) {
+			TestFileUtil.deleteDirectory(config.getAppDir());
+		}
 		
 		// TODO [low] workaround: delete empty parent folder of getAppDir() --> ROOT/app/.. --> ROOT/
 		config.getLocalDir().getParentFile().delete(); // if empty!

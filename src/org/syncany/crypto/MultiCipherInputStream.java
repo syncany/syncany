@@ -15,14 +15,14 @@ public class MultiCipherInputStream extends InputStream {
 	private CipherSession cipherSession;
 	
 	private boolean headerRead;
-	private List<CipherSuite> cipherSuites;
+	private List<CipherSpec> cipherSuites;
 	
 	public MultiCipherInputStream(InputStream in, CipherSession cipherSession) throws IOException {
 		this.underlyingInputStream = in;		
 		this.cipherSession = cipherSession;
 		
 		this.headerRead = false;		
-		this.cipherSuites = new ArrayList<CipherSuite>();
+		this.cipherSuites = new ArrayList<CipherSpec>();
 	}
 	
 	private void readHeader() throws IOException {
@@ -33,7 +33,7 @@ public class MultiCipherInputStream extends InputStream {
 			
 			cipherInputStream = underlyingInputStream;
 			
-			for (CipherSuite cipherSuite : cipherSuites) { 
+			for (CipherSpec cipherSuite : cipherSuites) { 
 				byte[] salt = readSalt();
 				byte[] iv = readIV(cipherSuite);
 				
@@ -48,7 +48,7 @@ public class MultiCipherInputStream extends InputStream {
     	}
 	}
 
-	private byte[] readIV(CipherSuite cipherSuite) throws IOException {
+	private byte[] readIV(CipherSpec cipherSuite) throws IOException {
 		byte[] iv = null;
 		
 		if (cipherSuite.hasIv()) {
@@ -82,7 +82,7 @@ public class MultiCipherInputStream extends InputStream {
 		for (int i=0; i<cipherSuiteCount; i++) {
 			int cipherSuiteId = underlyingInputStream.read();
 			
-			CipherSuite cipherSuite = CipherSuites.getCipherSuite(cipherSuiteId);
+			CipherSpec cipherSuite = CipherSpecs.getCipherSpec(cipherSuiteId);
 			
 			if (cipherSuite == null) {
 				throw new IOException("Cannot find cipher suite with ID "+cipherSuiteId);

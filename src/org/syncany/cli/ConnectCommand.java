@@ -109,7 +109,6 @@ public class ConnectCommand extends AbstractInitCommand {
 	}
 
 	protected File downloadEncryptedRepoFile() throws Exception {
-		// Test connection
 		File tmpRepoFile = File.createTempFile("syncanyrepo", "tmp");
 		
 		try {

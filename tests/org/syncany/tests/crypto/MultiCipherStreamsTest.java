@@ -24,8 +24,8 @@ import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.config.EncryptionException;
 import org.syncany.config.Logging;
-import org.syncany.crypto.CipherSuite;
-import org.syncany.crypto.CipherSuites;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -39,9 +39,9 @@ public class MultiCipherStreamsTest {
 	@Test
 	public void testCipherSuiteOneAndTwo() throws Exception {
 		doTestEncryption(
-			Arrays.asList(new CipherSuite[] {
-				CipherSuites.getCipherSuite(1),
-				CipherSuites.getCipherSuite(2)
+			Arrays.asList(new CipherSpec[] {
+				CipherSpecs.getCipherSpec(1),
+				CipherSpecs.getCipherSpec(2)
 			})
 		);
 	}
@@ -49,9 +49,9 @@ public class MultiCipherStreamsTest {
 	@Test
 	public void testCipherSuiteThreeAndFour() throws Exception {
 		doTestEncryption(
-			Arrays.asList(new CipherSuite[] {
-				CipherSuites.getCipherSuite(3),
-				CipherSuites.getCipherSuite(4)
+			Arrays.asList(new CipherSpec[] {
+				CipherSpecs.getCipherSpec(3),
+				CipherSpecs.getCipherSpec(4)
 			})
 		);
 	}
@@ -60,9 +60,9 @@ public class MultiCipherStreamsTest {
 	@Test
 	public void testSaxParserWithCipherTransformerWithAesGcm() throws Exception {
 		doTestEncryption(
-			Arrays.asList(new CipherSuite[] {
-				CipherSuites.getCipherSuite(1),
-				CipherSuites.getCipherSuite(2)
+			Arrays.asList(new CipherSpec[] {
+				CipherSpecs.getCipherSpec(1),
+				CipherSpecs.getCipherSpec(2)
 			})
 		);
 	}
@@ -70,14 +70,14 @@ public class MultiCipherStreamsTest {
 	@Test
 	public void testSaxParserWithCipherTransformerWithAesCbcPkcs5() throws Exception {
 		doTestEncryption(
-			Arrays.asList(new CipherSuite[] {
-				CipherSuites.getCipherSuite(3),
-				CipherSuites.getCipherSuite(4)
+			Arrays.asList(new CipherSpec[] {
+				CipherSpecs.getCipherSpec(3),
+				CipherSpecs.getCipherSpec(4)
 			})
 		);
 	}
 	
-	public void testSaxParserWithMultiCipherTransformer(List<CipherSuite> cipherSuites) throws Exception {
+	public void testSaxParserWithMultiCipherTransformer(List<CipherSpec> cipherSuites) throws Exception {
 		String xmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 			+ "<database version=\"1\">\n"
 			+ "	<databaseVersions>\n"
@@ -121,7 +121,7 @@ public class MultiCipherStreamsTest {
 		// and http://bouncy-castle.1462172.n4.nabble.com/using-GCMBlockCipher-with-CipherInputStream-td4655147.html
 	}	
 	
-	private void doTestEncryption(List<CipherSuite> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {
+	private void doTestEncryption(List<CipherSpec> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {
 		Transformer encryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		Transformer decryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		

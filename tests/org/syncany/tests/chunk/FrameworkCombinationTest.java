@@ -31,8 +31,8 @@ import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.TTTDChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
-import org.syncany.crypto.CipherSuite;
-import org.syncany.crypto.CipherSuites;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
@@ -101,9 +101,9 @@ public class FrameworkCombinationTest {
 		}
 
 		// Compression/Encryption
-		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
-		cipherSuites.add(CipherSuites.getCipherSuite(1));
-		cipherSuites.add(CipherSuites.getCipherSuite(2));
+		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
+		cipherSuites.add(CipherSpecs.getCipherSpec(1));
+		cipherSuites.add(CipherSpecs.getCipherSpec(2));
 
 		List<Transformer> transformerChains = new LinkedList<Transformer>();
 

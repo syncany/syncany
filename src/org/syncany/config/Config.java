@@ -200,19 +200,21 @@ public class Config {
 				
 				lastTransformer = transformer;
 			}
+			
+			transformer = lastTransformer;
 		}
 	}
 	
 	private void initConnection(ConfigTO configTO) throws Exception {
-		if (configTO.getConnection() != null) {
-			Plugin plugin = Plugins.get(configTO.getConnection().getType());
+		if (configTO.getConnectionTO() != null) {
+			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());
 	    	
 	    	if (plugin == null) {
-	    		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());
+	    		throw new Exception("Plugin not supported: " + configTO.getConnectionTO().getType());
 	    	}
 	    	
 	    	connection = plugin.createConnection();
-	    	connection.init(configTO.getConnection().getSettings());
+	    	connection.init(configTO.getConnectionTO().getSettings());
 		}
 	}
 	

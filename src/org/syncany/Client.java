@@ -6,6 +6,9 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.operations.ConnectOperation;
+import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
+import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 import org.syncany.operations.DownOperation;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
@@ -99,5 +102,9 @@ public class Client {
 	
 	public InitOperationResult init(InitOperationOptions options) throws Exception {
         return (InitOperationResult) new InitOperation(options).execute();                
+	}
+	
+	public ConnectOperationResult connect(ConnectOperationOptions options) throws Exception {
+        return (ConnectOperationResult) new ConnectOperation(options).execute();                
 	}
 }
