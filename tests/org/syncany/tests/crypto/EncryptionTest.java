@@ -37,14 +37,13 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.config.Encryption;
 import org.syncany.config.EncryptionException;
 import org.syncany.config.Logging;
 import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class EncryptionTest {
-	private static final Logger logger = Logger.getLogger(EncryptionTest.class.getSimpleName());		
+	/*private static final Logger logger = Logger.getLogger(EncryptionTest.class.getSimpleName());		
 	
 	static {
 		Logging.init();
@@ -304,5 +303,5 @@ public class EncryptionTest {
 				logger.log(Level.INFO, "   + "+key+" = "+provider.getProperty(key));
 			}
 		}
-	}			
+	}		*/	
 }

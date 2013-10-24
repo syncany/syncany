@@ -20,6 +20,7 @@ package org.syncany.chunk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -34,10 +35,6 @@ public class GzipTransformer extends Transformer {
     public GzipTransformer() {
         this(Deflater.DEFAULT_COMPRESSION, null);
     }
-
-    public GzipTransformer(int level) {
-        this(level, null);
-    }
     
     public GzipTransformer(Transformer nextTransformer) {
         this(Deflater.DEFAULT_COMPRESSION, nextTransformer);
@@ -47,7 +44,12 @@ public class GzipTransformer extends Transformer {
         super(nextTransformer);
         this.level = level;
     }
-        
+    
+    @Override
+    public void init(Map<String, String> settings) throws Exception {
+    	// Nothing here    	
+    }
+    
     @Override
     public OutputStream createOutputStream(OutputStream out) throws IOException {
         if (nextTransformer == null) {
@@ -81,6 +83,5 @@ public class GzipTransformer extends Transformer {
     @Override
     public String toString() {
         return (nextTransformer == null) ? "Gzip" : "Gzip-"+nextTransformer;
-    }
-    
+    }    
 }

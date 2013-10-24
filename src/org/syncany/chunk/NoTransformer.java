@@ -20,13 +20,18 @@ package org.syncany.chunk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 
 /**
  *
  * @author pheckel
  */
 public class NoTransformer extends Transformer {
-
+	@Override
+	public void init(Map<String, String> settings) throws Exception {
+		// Nothing here
+	}
+	
     @Override
     public OutputStream createOutputStream(OutputStream out) throws IOException {
         if (nextTransformer == null) {

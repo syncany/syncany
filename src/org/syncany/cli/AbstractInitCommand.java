@@ -13,15 +13,10 @@ import java.util.Random;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.to.LocalTO;
-import org.syncany.config.to.StorageTO;
-import org.syncany.config.to.StorageTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 
 public abstract class AbstractInitCommand extends Command {
 	protected Console console;
@@ -30,67 +25,18 @@ public abstract class AbstractInitCommand extends Command {
 	protected Map<String, String> pluginSettings;
 	protected Connection connection;
 	
-	protected File appDir;
+	protected File localDir;
 	
 	public AbstractInitCommand() {
 		console = System.console();
 	}	
-
-	protected void writeLocalFile(String machineName, String password) throws Exception {
-		LocalTO localTO = new LocalTO();
-		localTO.setMachineName(machineName);
-		
-		if (password != null) {
-			localTO.setPassword(password);
-		}		
-
-		// Write file
-		File file = new File(appDir+"/local.xml");
+	
+	protected void writeXmlFile(Object source, File file) throws Exception {
 		out.println("- Writing "+file);		
 
 		Serializer serializer = new Persister();
-		serializer.write(localTO, file);		
+		serializer.write(source, file);	
 	}	
-
-	protected void writeStorageFile() throws Exception {
-		// Make transfer object
-		StorageTO storageTO = new StorageTO();
-		
-		ConnectionTO connectionTO = new ConnectionTO();
-		connectionTO.setType(plugin.getId());
-		connectionTO.setSettings(pluginSettings);
-		
-		storageTO.setConnection(connectionTO);
-		
-		// Write file
-		File file = new File(appDir+"/storage.xml");
-		out.println("- Writing "+file);		
-
-		Serializer serializer = new Persister();
-		serializer.write(storageTO, file);		
-	}	
-
-	protected File downloadEncryptedRepoFile() throws Exception {
-		// Test connection
-		File tmpRepoFile = File.createTempFile("syncanyrepo", "tmp");
-		
-		try {
-			out.print("Trying to connect ... ");
-			TransferManager transferManager = connection.createTransferManager();
-			Map<String, RemoteFile> repoFileList = transferManager.list("repo");
-			
-			if (repoFileList.containsKey("repo")) {
-				transferManager.download(new RemoteFile("repo"), tmpRepoFile);
-				return tmpRepoFile;
-			}			
-			else {
-				return null;
-			}
-		}
-		catch (Exception e) {
-			throw new Exception("Unable to connect to repository.", e);
-		}		
-	}
 
 	protected void askPluginSettings() throws StorageException {
 		pluginSettings = new HashMap<String, String>();
@@ -128,8 +74,7 @@ public abstract class AbstractInitCommand extends Command {
 			}
 		}
 
-		connection.init(pluginSettings);
-		//operationOptions.setConnection(new ConnectionSettings(plugin.getId(), pluginSettings));		
+		connection.init(pluginSettings);		
 	}
 
 	protected void askPlugin() {
@@ -142,8 +87,6 @@ public abstract class AbstractInitCommand extends Command {
 			pluginsList += plugins.get(i).getId();
 			if (i < plugins.size()-1) { pluginsList += ", "; }			
 		}
-		
-		out.println();
 		
 		while (pluginStr == null) {
 			out.println("Choose a storage plugin. Available plugins are: "+pluginsList);
@@ -164,7 +107,7 @@ public abstract class AbstractInitCommand extends Command {
 	}
 
 	protected void initAppDir() throws IOException {
-		appDir = new File(".").getCanonicalFile();								
+		localDir = new File(".").getCanonicalFile();								
 	}	
 
 	protected String getDefaultMachineName() throws UnknownHostException {

@@ -14,7 +14,7 @@ public class RepoTO {
 	private ChunkerTO chunker;
 	
 	@Element(name="multichunker")
-	private MultiChunkerTO multichunker;
+	private MultiChunkerTO multiChunker;
 	
 	@ElementList(name="transformers", entry="transformer")
 	private List<TransformerTO> transformers;
@@ -28,11 +28,11 @@ public class RepoTO {
 	}
 
 	public MultiChunkerTO getMultichunker() {
-		return multichunker;
+		return multiChunker;
 	}
 
-	public void setMultichunker(MultiChunkerTO multichunker) {
-		this.multichunker = multichunker;
+	public void setMultiChunker(MultiChunkerTO multiChunker) {
+		this.multiChunker = multiChunker;
 	}
 
 	public List<TransformerTO> getTransformers() {

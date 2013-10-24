@@ -2,7 +2,9 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -21,15 +23,18 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
-import org.syncany.config.ConfigTO;
-import org.syncany.config.Encryption;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.crypto.CipherUtil;
 
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
@@ -38,6 +43,7 @@ public class CommandLineClient extends Client {
 	private File configFile;
 	
 	private PrintStream out;
+	private Console console;
 		
 	static {
 		Logging.init();
@@ -47,6 +53,7 @@ public class CommandLineClient extends Client {
 	public CommandLineClient(String[] args) {
 		this.args = args;		
 		this.out = System.out;
+		this.console = System.console();
 	}
 	
 	public void setOut(OutputStream out) {
@@ -208,21 +215,10 @@ public class CommandLineClient extends Client {
 		if (configFile != null) {
 			logger.log(Level.INFO, "Loading config from {0} ...", configFile);				
 
-			ConfigTO configTO = ConfigTO.load(configFile);
-			config = new Config(configTO);
+			ConfigTO configTO = loadConfigTO(configFile);
+			RepoTO repoTO = loadRepoTO(configTO);
 			
-			// Enable unlimited crypto if necessary
-			boolean isUnlimitedCryptoNeeded = configTO.getEncryption() != null 
-					&& configTO.getEncryption().isUnlimitedCryptoNeeded() != null && configTO.getEncryption().isUnlimitedCryptoNeeded();
-			
-			if (isUnlimitedCryptoNeeded) {
-				try {
-					Encryption.enableUnlimitedCrypto();
-				}
-				catch (Exception e) {
-					showErrorAndExit("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
-				}
-			}
+			config = new Config(configTO, repoTO);
 			
 			// Create folders
 			logger.log(Level.INFO, "Creating directories ...");				
@@ -230,11 +226,60 @@ public class CommandLineClient extends Client {
 		}				
 	}		
 	
+	private ConfigTO loadConfigTO(File configFile) throws ConfigException {
+		return ConfigTO.load(configFile);
+	}
+
+	private RepoTO loadRepoTO(ConfigTO configTO) throws Exception {
+		File repoFile = findRepoFile(configTO);
+		
+		if (repoFile == null) {
+			throw new Exception("Cannot find repository file. Try connecting to a repository using 'connect', or 'init' to create a new one.");
+		}
+		
+		if (CipherUtil.isEncrypted(repoFile)) {
+			String password = configTO.getPassword();
+			
+			if (password == null) {
+				password = askPassword();
+				configTO.setPassword(password);
+			}
+			
+			String repoFileStr = CipherUtil.decryptToString(new FileInputStream(repoFile), password);
+			
+			Serializer serializer = new Persister();
+			return serializer.read(RepoTO.class, repoFileStr);			
+		}
+		else {
+			Serializer serializer = new Persister();
+			return serializer.read(RepoTO.class, repoFile);
+		}
+	}
+	
+	private File findRepoFile(ConfigTO configTO) {
+		if (configTO.getAppDir() != null) {
+			File repoFile = new File(configTO.getAppDir()+"/"+Config.DEFAULT_FILE_REPO);
+			
+			if (repoFile.exists()) {
+				return repoFile;
+			}
+		}
+		
+		File configFileFolder = new File(configTO.getConfigFile()).getParentFile();
+		File repoFile = new File(configFileFolder+"/"+Config.DEFAULT_FILE_REPO);
+		
+		if (repoFile.exists()) {
+			return repoFile;
+		}
+		
+		return null;
+	}
+
 	private File findConfigFileInPath() throws IOException {
 		File currentSearchFolder = new File(".").getCanonicalFile();
 		
 		while (currentSearchFolder != null) {
-			File possibleConfigFile = new File(currentSearchFolder+"/.syncany/config.json");
+			File possibleConfigFile = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
 			
 			if (possibleConfigFile.exists()) {
 				return possibleConfigFile.getCanonicalFile();
@@ -244,7 +289,18 @@ public class CommandLineClient extends Client {
 		}
 		 
 		return null; 
-	}			
+	}
+	
+	private String askPassword() {
+		String password = null;
+		
+		while (password == null) {
+			char[] passwordChars = console.readPassword("Password: ");			
+			password = new String(passwordChars);			
+		}	
+		
+		return password;
+	}
 	
 	private void showUsageAndExit() {
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());

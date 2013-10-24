@@ -20,12 +20,18 @@ package org.syncany.chunk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.syncany.util.StringUtil;
 
 /**
  *
  * @author pheckel
  */
 public abstract class Transformer {
+	private static final Logger logger = Logger.getLogger(Transformer.class.getSimpleName());
     protected Transformer nextTransformer;
     
     public Transformer() {
@@ -36,9 +42,34 @@ public abstract class Transformer {
         this.nextTransformer = nextTransformer;
     }
     
+    public Transformer getNextTransformer() {
+		return nextTransformer;
+	}
+
+	public void setNextTransformer(Transformer nextTransformer) {
+		this.nextTransformer = nextTransformer;
+	}
+
+	public abstract void init(Map<String, String> settings) throws Exception;
     public abstract OutputStream createOutputStream(OutputStream out) throws IOException;
     public abstract InputStream createInputStream(InputStream in) throws IOException;
     
     @Override
     public abstract String toString();
+    
+    public static Transformer getInstance(String operation) throws Exception {
+		String thisPackage = Transformer.class.getPackage().getName();
+		String camelCaseName = StringUtil.toCamelCase(operation);
+		String fqClassName = thisPackage+"."+camelCaseName+"Transformer";
+		
+		// Try to load!
+		try {
+			Class<?> clazz = Class.forName(fqClassName);
+			return (Transformer) clazz.newInstance();
+		} 
+		catch (Exception ex) {
+			logger.log(Level.INFO, "Could not find operation FQCN " + fqClassName, ex);
+			return null;
+		}		
+	}
 }

@@ -31,7 +31,8 @@ import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.TTTDChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
-import org.syncany.config.Encryption;
+import org.syncany.crypto.CipherSuite;
+import org.syncany.crypto.CipherSuites;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
@@ -68,7 +69,6 @@ public class FrameworkCombinationTest {
 		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		combinations = new ArrayList<FrameworkCombination>();
 
-		Encryption.init();
 		fillCombinations();
 	}
 
@@ -101,15 +101,16 @@ public class FrameworkCombinationTest {
 		}
 
 		// Compression/Encryption
-		Encryption encryption = new Encryption();
-		encryption.setPassword("Password");
+		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+		cipherSuites.add(CipherSuites.getCipherSuite(1));
+		cipherSuites.add(CipherSuites.getCipherSuite(2));
 
 		List<Transformer> transformerChains = new LinkedList<Transformer>();
 
 		transformerChains.add(new NoTransformer());
 		transformerChains.add(new GzipTransformer());
-		transformerChains.add(new CipherTransformer(encryption));
-		transformerChains.add(new GzipTransformer(new CipherTransformer(encryption)));
+		transformerChains.add(new CipherTransformer(cipherSuites, "some password"));
+		transformerChains.add(new GzipTransformer(new CipherTransformer(cipherSuites, "some password")));
 
 		for (MultiChunker multiChunker : multiChunkers) {
 			for (Transformer transformer : transformerChains) {

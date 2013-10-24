@@ -17,7 +17,7 @@ import javax.crypto.SecretKey;
  * <pre>
  *    Length          Description
  *    ----------------------------------------------
- *    07              "Syncany" (7 bytes)
+ *    04              "Sy" 0x02 0x05 (4 bytes)
  *    01              Version (1 byte)
  *    01              Cipher count (=c, 1 byte)
  *    
@@ -46,7 +46,7 @@ import javax.crypto.SecretKey;
  * 
  */
 public class MultiCipherOutputStream extends OutputStream {
-	public static final byte[] STREAM_MAGIC = "Syncany".getBytes();
+	public static final byte[] STREAM_MAGIC = new byte[] {0x53, 0x79, 0x02, 0x05 };
 	public static final byte STREAM_VERSION = 1;
 	public static final int SALT_SIZE = 12;
 	

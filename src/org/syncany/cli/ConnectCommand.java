@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,25 +15,16 @@ import joptsimple.OptionSet;
 import org.apache.commons.codec.binary.Base64;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Encryption;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.config.to.StorageTO;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherUtil;
 
 public class ConnectCommand extends AbstractInitCommand {
-	public static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(e|d)/(.+)$");	
-	
-	static { // TODO [high] Workaround
-		try {
-			Encryption.init();
-			Encryption.enableUnlimitedCrypto();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}		
-	}
+	public static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(not-encrypted/)?(.+)$");	
 	
 	private String password;
 	
@@ -77,11 +69,11 @@ public class ConnectCommand extends AbstractInitCommand {
 			throw new Exception("Invalid link provided, must start with syncany:// and match link pattern.");
 		}
 		
-		String encryptionIndicator = linkMatcher.group(1);
+		String notEncryptedFlag = linkMatcher.group(1);
 		String ciphertext = linkMatcher.group(2);
 		String plaintext = null;
 		
-		boolean isEncryptedLink = "e".equals(encryptionIndicator);
+		boolean isEncryptedLink = !"".equals(notEncryptedFlag);
 		
 		if (isEncryptedLink) {
 			password = askPassword();
@@ -95,15 +87,15 @@ public class ConnectCommand extends AbstractInitCommand {
 			plaintext = new String(Base64.decodeBase64(ciphertext));
 		}
 		
-		System.out.println(plaintext);
+		//System.out.println(plaintext);
 
 		Serializer serializer = new Persister();
-		StorageTO storageTO = serializer.read(StorageTO.class, plaintext);
+		ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);
 		
-		System.out.println(storageTO);
+		System.out.println(connectionTO);
 		
-		plugin = Plugins.get(storageTO.getConnection().getType());
-		pluginSettings = storageTO.getConnection().getSettings();
+		plugin = Plugins.get(connectionTO.getType());
+		pluginSettings = connectionTO.getSettings();
 		
 		connection = plugin.createConnection();
 		connection.init(pluginSettings);		
@@ -116,12 +108,34 @@ public class ConnectCommand extends AbstractInitCommand {
 		password = askPassword(); // TODO [low] This is not necessary for non-encrypted repo files
 	}
 
+	protected File downloadEncryptedRepoFile() throws Exception {
+		// Test connection
+		File tmpRepoFile = File.createTempFile("syncanyrepo", "tmp");
+		
+		try {
+			out.print("Trying to connect ... ");
+			TransferManager transferManager = connection.createTransferManager();
+			Map<String, RemoteFile> repoFileList = transferManager.list("repo");
+			
+			if (repoFileList.containsKey("repo")) {
+				transferManager.download(new RemoteFile("repo"), tmpRepoFile);
+				return tmpRepoFile;
+			}			
+			else {
+				return null;
+			}
+		}
+		catch (Exception e) {
+			throw new Exception("Unable to connect to repository.", e);
+		}		
+	}
+	
 	private void downloadAndInitRepo() throws Exception {
 		File tmpEncryptedRepoFile = downloadEncryptedRepoFile();		
 		FileInputStream encryptedRepoConfig = new FileInputStream(tmpEncryptedRepoFile);
 		
 		String repoFileStr = CipherUtil.decryptToString(encryptedRepoConfig, password);
-		System.out.println("repotfilestr = "+repoFileStr);
+		
 		Serializer serializer = new Persister();
 		RepoTO repoTO = serializer.read(RepoTO.class, repoFileStr);
 		
@@ -130,7 +144,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		
 	}	
 
-	private String askPassword() {
+	private String askPassword() { // TODO [low] Duplicate code in CommandLineClient
 		String password = null;
 		
 		while (password == null) {

@@ -19,11 +19,9 @@ import java.util.logging.Logger;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.syncany.chunk.MultiCipherTransformer;
+import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.Transformer;
-import org.syncany.config.Encryption;
 import org.syncany.config.EncryptionException;
 import org.syncany.config.Logging;
 import org.syncany.crypto.CipherSuite;
@@ -36,13 +34,7 @@ public class MultiCipherStreamsTest {
 	
 	static {
 		Logging.init();
-	}
-		
-	@Before
-	public void initAndLoadProviders() throws EncryptionException {
-		Encryption.init();
-		Encryption.enableUnlimitedCrypto();
-	}			
+	}		
 	
 	@Test
 	public void testCipherSuiteOneAndTwo() throws Exception {
@@ -107,7 +99,7 @@ public class MultiCipherStreamsTest {
 			+ "</database>";
 		
 		
-		Transformer cipherTransformer = new MultiCipherTransformer(cipherSuites, "some password");
+		Transformer cipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		
 		// Test encrypt
 		byte[] encryptedData = doEncrypt(xmlStr.getBytes(), cipherTransformer);
@@ -130,8 +122,8 @@ public class MultiCipherStreamsTest {
 	}	
 	
 	private void doTestEncryption(List<CipherSuite> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {
-		Transformer encryptCipherTransformer = new MultiCipherTransformer(cipherSuites, "some password");
-		Transformer decryptCipherTransformer = new MultiCipherTransformer(cipherSuites, "some password");
+		Transformer encryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
+		Transformer decryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		
 		// Prepare data
 		byte[] srcData = new byte[1024];

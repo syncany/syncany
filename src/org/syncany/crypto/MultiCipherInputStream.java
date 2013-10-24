@@ -10,9 +10,6 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
 public class MultiCipherInputStream extends InputStream {
-	public static final byte[] EXPECTED_STREAM_MAGIC = "Syncany".getBytes();
-	public static final byte EXPECTED_STREAM_VERSION = 1;
-	
 	private InputStream underlyingInputStream;
 	private InputStream cipherInputStream;
 	private CipherSession cipherSession;
@@ -63,10 +60,10 @@ public class MultiCipherInputStream extends InputStream {
 	}
 
 	private void readMagic() throws IOException {
-		byte[] streamMagic = new byte[EXPECTED_STREAM_MAGIC.length];
+		byte[] streamMagic = new byte[MultiCipherOutputStream.STREAM_MAGIC.length];
 		underlyingInputStream.read(streamMagic);
 		
-		if (!Arrays.equals(EXPECTED_STREAM_MAGIC, streamMagic)) {
+		if (!Arrays.equals(MultiCipherOutputStream.STREAM_MAGIC, streamMagic)) {
 			throw new IOException("Not a Syncany-encrypted file, no magic!");
 		}
 	}
@@ -74,7 +71,7 @@ public class MultiCipherInputStream extends InputStream {
 	private void readVersion() throws IOException {
 		byte streamVersion = (byte) underlyingInputStream.read();
 		
-		if (streamVersion != EXPECTED_STREAM_VERSION) {
+		if (streamVersion != MultiCipherOutputStream.STREAM_VERSION) {
 			throw new IOException("Stream version not supported: "+streamVersion);
 		}		
 	}

@@ -2,30 +2,36 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.io.BufferedReader;
-import java.io.Console;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.config.ConfigTO.ConnectionSettings;
-import org.syncany.config.ConfigTO.EncryptionSettings;
-import org.syncany.config.Encryption;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.ChunkerTO;
+import org.syncany.config.to.RepoTO.MultiChunkerTO;
+import org.syncany.config.to.RepoTO.TransformerTO;
+import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.TransferManager;
+import org.syncany.crypto.CipherSuite;
+import org.syncany.crypto.CipherSuites;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.InitOperation.InitOperationOptions;
+import org.syncany.operations.InitOperation.InitOperationResult;
 
-public class InitCommand extends Command {
+public class InitCommand extends AbstractInitCommand {
+	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { 1, 2 };
+	public static final int PASSWORD_MIN_LENGTH = 8;
+	public static final int PASSWORD_WARN_LENGTH = 12;
+	
 	@Override
 	public boolean needConfigFile() {	
 		return false;
@@ -33,155 +39,210 @@ public class InitCommand extends Command {
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		runInitOperation(operationArgs);
-		return 0;
-	}	
+		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
+		InitOperationResult operationResult = client.init(operationOptions);
+		
+		printResults(operationResult);
+		
+		return 0;		
+	}
 
-	private void runInitOperation(String[] operationArguments) throws OptionException, Exception {
-		InitOperationOptions operationOptions = new InitOperationOptions();
+	private InitOperationOptions parseInitOptions(String[] operationArguments) throws Exception {
+		InitOperationOptions opreationOptions = new InitOperationOptions();
 
-		OptionParser parser = new OptionParser();	
-		OptionSpec<Void> optionInteractive = parser.acceptsAll(asList("i", "interactive"));
+		OptionParser parser = new OptionParser();	 
+		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
+		OptionSpec<Void> optionNoGzip = parser.acceptsAll(asList("g", "no-gzip"));
+		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("e", "no-encryption"));
 		
 		OptionSet options = parser.parse(operationArguments);	
 		List<?> nonOptionArgs = options.nonOptionArguments();
-		
-		// --interactive
-		if (options.has(optionInteractive)) {
-			runInitInteractive(operationOptions);
-		}
-		
-		// not --interactive
-		else {			
-			if (nonOptionArgs.size() == 0) {
-				throw new Exception("Argument <plugin> is required.");
-			}
-			
-			// <plugin>
-			String pluginStr = (String) nonOptionArgs.get(0);		
-			operationOptions.setConnection(new ConnectionSettings(pluginStr, null));
-			
-			// <location>
-			File localDir = null;
-			
-			if (nonOptionArgs.size() > 1) {
-				String locationStr = (String) nonOptionArgs.get(1);
-				localDir = new File(locationStr).getCanonicalFile(); 
-			}
-			else {
-				localDir = new File(".").getCanonicalFile(); 			
-			}
-			
-			operationOptions.setLocalDir(localDir.getAbsolutePath());
-		}
-						
-		// Run!
-		File skelConfigFile = client.init(operationOptions);
-		
-		out.println("Repository initialized, skeleton config at "+skelConfigFile);
-		out.println("Please edit the config now, then use '--help' option.");
-	}
-
-	private void runInitInteractive(InitOperationOptions operationOptions) throws Exception {
-		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-		Console console = System.console();
-		
-		// <location>
-		File localDir = null;		
-		File defaultLocalDir = new File(".").getCanonicalFile();
+	
+		// <local dir>
+		File localDir = null;
+        
+        if (nonOptionArgs.size() > 1) {
+            String locationStr = (String) nonOptionArgs.get(1);
+            localDir = new File(locationStr).getCanonicalFile();
+        }
+        else {
+            localDir = new File(".").getCanonicalFile();                         
+        }        
 		
 		out.println("Interactive repository initialization started.");
-		out.println("Default options are in brackets.");
 		out.println();
+						
+		// Ask for plugin, and plugin settings
+		askPlugin();
+		askPluginSettings();
 		
-		while (localDir == null) {
-			out.println("Choose the sync folder. Files in this folder will be synchronized.");
-			out.print("Syncany folder ["+defaultLocalDir+"]: ");
-			String localDirStr = in.readLine();
-			
-			if ("".equals(localDirStr)) {
-				localDir = defaultLocalDir;
-			}
-			else {
-				localDir = new File(localDirStr);
+		out.print("Trying to connect ... ");
+
+		if (encryptedRepoFileExistsOnRemoteStorage()) {
+			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository.");
+		}		
+		
+		out.println("Successful. No repository found on the remote storage. ");			
+		
+		boolean advancedModeEnabled = options.has(optionAdvanced);
+		boolean encryptionEnabled = !options.has(optionNoEncryption);
+		boolean gzipEnabled = !options.has(optionNoGzip);
+		
+		String password = null;
+		List<CipherSuite> cipherSuites = getCipherSuites(encryptionEnabled, advancedModeEnabled);
+		
+		ChunkerTO chunkerTO = getDefaultChunkerTO();
+		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
+		List<TransformerTO> transformersTO = getTransformersTO(gzipEnabled, cipherSuites);
 				
-				if (!localDir.exists()) {
-					out.println("ERROR: "+localDir+" does not exist.");
+		if (encryptionEnabled) {			
+			password = askPasswordAndConfirm();
+		}
+			
+		ConfigTO configTO = createConfigTO(localDir, password);		
+		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
+		
+		opreationOptions.setConfigTO(configTO);
+		opreationOptions.setRepoTO(repoTO);
+		
+		opreationOptions.setEncryptionEnabled(encryptionEnabled);
+		opreationOptions.setCipherSuites(cipherSuites);
+		opreationOptions.setPassword(password);
+		
+		return opreationOptions;
+	}	
+
+	private void printResults(InitOperationResult operationResult) {
+		out.println("Share link: "+operationResult.getShareLink());
+	}
+
+	protected boolean encryptedRepoFileExistsOnRemoteStorage() throws Exception {
+		try {
+			TransferManager transferManager = connection.createTransferManager();
+			Map<String, RemoteFile> repoFileList = transferManager.list("repo");
+			
+			if (repoFileList.containsKey("repo")) {
+				return true;
+			}			
+			else {
+				return false;
+			}
+		}
+		catch (Exception e) {
+			throw new Exception("Unable to connect to repository.", e);
+		}		
+	}
+
+	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSuite> cipherSuites) {
+		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
+		
+		if (gzipEnabled) { 
+			transformersTO.add(getGzipTransformerTO());
+		}
+
+		if (cipherSuites.size() > 0) {	
+			TransformerTO cipherTransformerTO = getCipherTransformerTO(cipherSuites);			
+			transformersTO.add(cipherTransformerTO);
+		}
+		
+		return transformersTO;
+	}
+
+	private List<CipherSuite> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
+		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+		
+		if (encryptionEnabled) {
+			if (advancedModeEnabled) { 			
+				cipherSuites = askCipherSuites();				
+			}
+			else { // Default
+				for (int cipherSuiteId : DEFAULT_CIPHER_SUITE_IDS) { 
+					cipherSuites.add(CipherSuites.getCipherSuite(cipherSuiteId));
+				}								
+			}			
+		}
+		
+		return cipherSuites;
+	}
+
+	private List<CipherSuite> askCipherSuites() throws Exception {
+		List<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+		Map<Integer, CipherSuite> availableCipherSuites = CipherSuites.getAvailableCipherSuites();
+
+		out.println();
+		out.println("Please choose your encryption settings. If you're paranoid,");
+		out.println("you can choose multiple cipher suites by separating with a comma.");
+		out.println();
+		out.println("Options:");
+		
+		for (CipherSuite cipherSuite : availableCipherSuites.values()) {
+			out.println(" ["+cipherSuite.getId()+"] "+cipherSuite);
+		}
+		
+		out.println();
+				
+		boolean continueLoop = true;
+		boolean unlimitedStrengthNeeded = false;
+		
+		while (continueLoop) {
+			String commaSeparatedCipherIdStr = console.readLine("Cipher Suite: ");			
+			String[] cipherSuiteIdStrs = commaSeparatedCipherIdStr.split(",");
+			
+			// Choose cipher
+			try {
+				// Add cipher suites
+				for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
+					Integer cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);				
+					CipherSuite cipherSuite = availableCipherSuites.get(cipherSuiteId);
+					
+					if (cipherSuite == null) {
+						throw new Exception();
+					}
+					
+					if (cipherSuite.needsUnlimitedStrength()) {
+						unlimitedStrengthNeeded = true;
+					}
+					
+					cipherSuites.add(cipherSuite);
+				}
+				
+				// Unlimited strength
+				if (unlimitedStrengthNeeded) {
+					out.println();
+					out.println("At least one of the chosen ciphers or key sizes might");
+					out.println("not be allowed in your country.");
 					out.println();
 					
-					localDir = null;
+					String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
+					
+					if (yesno.toLowerCase().startsWith("y")) {
+						try {
+							CipherUtil.enableUnlimitedCrypto();
+						}
+						catch (Exception e) {
+							throw new Exception("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
+						}
+					}
+					else {
+						continue;
+					}
 				}
+				
+				continueLoop = false;
+				break;
 			}
-		}
-		
-		operationOptions.setLocalDir(localDir.getAbsolutePath());
-		
-		// <plugin>
-		String pluginStr = null;
-		
-		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsList = "";
-		
-		for (int i=0; i<plugins.size(); i++) {
-			pluginsList += plugins.get(i).getId();
-			if (i < plugins.size()-1) { pluginsList += ", "; }			
-		}
-		
-		out.println();
-		
-		while (pluginStr == null) {
-			out.println("Choose a storage plugin. Available plugins are: "+pluginsList);
-			out.print("Plugin: ");
-			pluginStr = in.readLine();
-			
-			if (Plugins.get(pluginStr) == null) {
-				out.println("ERROR: Plugin '"+pluginStr+"' does not exist.");
+			catch (Exception e) {
+				out.println("ERROR: Please choose at least one valid option.");
 				out.println();
 				
-				pluginStr = null;
-			}
-		}
-					
-		// Mandatory plugin fields
-		Connection connection = Plugins.get(pluginStr).createConnection();
-
-		Map<String, String>  pluginSettings = new HashMap<String, String>();
-		String[] mandatorySettings = connection.getMandatorySettings();
-		String[] optionalSettings = connection.getOptionalSettings();
-		
-		out.println();
-		out.println("This plugin has the following settings.");
-		
-		for (String settingKey : mandatorySettings) {
-			String settingValue = null;
-			
-			while (settingValue == null) {
-				out.print("- "+settingKey+": ");
-				settingValue = in.readLine();
-				
-				if ("".equals(settingValue)) {
-					out.println("ERROR: This setting is mandatory.");
-					out.println();
-					
-					settingValue = null;
-				}
-			}
-			
-			pluginSettings.put(settingKey, settingValue);			
-		}
-
-		for (String settingKey : optionalSettings) {
-			out.print("- "+settingKey+" (optional): ");
-			String settingValue = in.readLine();
-			
-			if (!"".equals(settingValue)) {
-				pluginSettings.put(settingKey, settingValue);
+				continue;
 			}
 		}
 
-		operationOptions.setConnection(new ConnectionSettings(pluginStr, pluginSettings));
-		
-		// Encryption
+		return cipherSuites;		
+	}
+	
+	protected String askPasswordAndConfirm() {
 		out.println();
 		out.println("The password is used to encrypt data on the remote storage.");
 		out.println("Please choose it wisely.");
@@ -200,79 +261,103 @@ public class InitCommand extends Command {
 				continue;
 			} 
 			
-			password = new String(passwordChars);
+			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
+				out.println("ERROR: This password is not allowed (too short, min.  chars)");
+				out.println();
+				
+				continue;
+			}
 			
-			if (passwordChars.length < 12) {
+			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
 				out.println("WARNING: The password is a bit short. Less than 12 chars are not future-proof!");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
 				if (!yesno.toLowerCase().startsWith("y")) {
 					out.println();
-					password = null;
+					continue;
 				}
 			}
-		}		
-		
-		out.println();
-		out.println("The cipher defines the encryption parameters and key size. There are a ");
-		out.println("few predefined crypto settings. To choose your own, please edit the config file.");
-		out.println();
-		out.println("Options:");
-		out.println("  [1] AES/GCM/NoPadding, 128 bit (weak, but no country restrictions)");
-		out.println("  [2] AES/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
-		out.println("  [3] Twofish/GCM/NoPadding, 256 bit (strong, but restricted in some countries)");
-		out.println();
-		
-		String cipherStr = null;
-		int keySize = 0;
-		boolean unlimitedCryptoNeeded = false;
-		
-		while (cipherStr == null) {
-			cipherStr = console.readLine("Cipher [1]: ");
 			
-			if ("".equals(cipherStr) || "1".equals(cipherStr)) {
-				cipherStr = "AES/GCM/NoPadding";
-				keySize = 128;
-				unlimitedCryptoNeeded = false;
-			}
-			else if ("2".equals(cipherStr) || "3".equals(cipherStr)) {
-				out.println();
-				out.println("This cipher/keysize might not be allowed in your country.");
-				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
-				
-				if (yesno.toLowerCase().startsWith("y")) {
-					if ("1".equals(cipherStr)) {
-						cipherStr = "AES/GCM/NoPadding";
-						keySize = 256;
-					}
-					else {
-						cipherStr = "Twofish/GCM/NoPadding";
-						keySize = 256;
-					}
+			password = new String(passwordChars);			
+		}	
+		
+		return password;
+	}
+	
+	protected ConfigTO createConfigTO(File localDir, String password) throws Exception {
+		ConfigTO configTO = new ConfigTO();
+		
+		configTO.setMachineName(getDefaultMachineName());
+		configTO.setLocalDir(localDir.getAbsolutePath());
+		
+		if (password != null) {
+			configTO.setPassword(password);
+		}		
 
-					// Try enabling unlimited crypto
-					unlimitedCryptoNeeded = true;
+		ConnectionTO connectionTO = new ConnectionTO();
+		connectionTO.setType(plugin.getId());
+		connectionTO.setSettings(pluginSettings);
+		
+		configTO.setConnection(connectionTO);
+		
+		return configTO;
+	}
+	
+	protected RepoTO createRepoTO(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) throws Exception {
+		// Make transfer object
+		RepoTO repoTO = new RepoTO();
 				
-					try {
-						Encryption.enableUnlimitedCrypto();
-					}
-					catch (Exception e) {
-						throw new Exception("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
-					}
-				}
-				else {
-					out.println();
-					cipherStr = null;
-				}
-			}
-			else {
-				out.println("ERROR: Please choose a valid option.");
-				out.println();
-				
-				cipherStr = null;
-			}
+		// Add to repo transfer object
+		repoTO.setChunker(chunkerTO);
+		repoTO.setMultiChunker(multiChunkerTO);
+		repoTO.setTransformers(transformersTO);
+		
+		return repoTO;
+	}	
+
+	protected ChunkerTO getDefaultChunkerTO() {
+		ChunkerTO chunkerTO = new ChunkerTO();
+		
+		chunkerTO.setType("fixed");
+		chunkerTO.setSettings(new HashMap<String, String>());
+		chunkerTO.getSettings().put("size", "16");
+		
+		return chunkerTO;
+	}
+	
+	protected MultiChunkerTO getDefaultMultiChunkerTO() {
+		MultiChunkerTO multichunkerTO = new MultiChunkerTO();
+		
+		multichunkerTO.setType("zip");
+		multichunkerTO.setSettings(new HashMap<String, String>());
+		multichunkerTO.getSettings().put("size", "512");
+		
+		return multichunkerTO;		
+	}
+	
+	protected TransformerTO getGzipTransformerTO() {		
+		TransformerTO gzipTransformerTO = new TransformerTO();
+		gzipTransformerTO.setType("gzip");
+		
+		return gzipTransformerTO;				
+	}
+	
+	private TransformerTO getCipherTransformerTO(List<CipherSuite> cipherSuites) {
+		String cipherSuitesIdStr = "";
+		
+		for (int i=0; i<cipherSuites.size(); i++) {				
+			cipherSuitesIdStr += 
+				  cipherSuites.get(i).getId()
+				+ ((i < cipherSuites.size()-1) ? "," : "");					
 		}
 		
-		operationOptions.setEncryption(new EncryptionSettings(true, password, cipherStr, keySize, true, unlimitedCryptoNeeded));		
+		Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
+		cipherTransformerSettings.put("ciphersuites", cipherSuitesIdStr);
+
+		TransformerTO cipherTransformerTO = new TransformerTO();
+		cipherTransformerTO.setType("cipher");
+		cipherTransformerTO.setSettings(cipherTransformerSettings);
+
+		return cipherTransformerTO;
 	}
 }

@@ -23,7 +23,7 @@ public class CipherSuite {
 		return id;
 	}
 
-	public boolean isUnlimitedStrength() {
+	public boolean needsUnlimitedStrength() {
 		return unlimitedStrength;
 	}
 

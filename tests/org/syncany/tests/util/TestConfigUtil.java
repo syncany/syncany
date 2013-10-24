@@ -10,8 +10,8 @@ import java.util.Random;
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
-import org.syncany.config.ConfigTO;
-import org.syncany.config.ConfigTO.EncryptionSettings;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -98,7 +98,14 @@ public class TestConfigUtil {
 		tempDatabaseDir.mkdirs();
 		tempLogDir.mkdirs();
 		
-		// Create transfer object
+		// Create Repo TO
+		RepoTO repoTO = new RepoTO();
+		
+		repoTO.setChunker(null); // TODO [low] Chunker not configurable right now. Not used.
+		repoTO.setMultiChunker(null); // TODO [low] Chunker not configurable right now. Not used.
+		repoTO.setTransformers(null);
+		
+		// Create config TO
 		ConfigTO configTO = new ConfigTO();
 		
 		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
@@ -107,12 +114,12 @@ public class TestConfigUtil {
 		configTO.setLocalDir(tempLocalDir.getAbsolutePath());
 		configTO.setLogDir(tempLogDir.getAbsolutePath());
 		
-		//configTO.setEncryption(new EncryptionSettings(true, "any password"));
-		configTO.setEncryption(new EncryptionSettings(false, "disabled"));
+		configTO.setPassword(null);
+		
 		
 		// Skip configTO.setConnection()		
 		
-		Config config = new Config(configTO);
+		Config config = new Config(configTO, repoTO);
 		config.setConnection(connection);
 		
 		return config;
