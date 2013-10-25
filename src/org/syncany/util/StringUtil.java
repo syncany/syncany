@@ -17,12 +17,14 @@
  */
 package org.syncany.util;
 
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class StringUtil {
+public class StringUtil<T> {
     private static int minimum(int a, int b, int c) {
         return Math.min(Math.min(a, b), c);
     }
@@ -98,5 +100,40 @@ public class StringUtil {
         }
         
         return data;        
-    }                
+    }
+	
+	public static <T> String join(List<T> objects, String delimiter, JoinListener<T> listener) {
+		StringBuilder objectsStr = new StringBuilder();
+		
+		for (int i=0; i<objects.size(); i++) {
+			if (listener != null) {
+				objectsStr.append(listener.processObject(objects.get(i)));
+			}
+			else {
+				objectsStr.append(objects.get(i).toString());
+			}
+			
+			if (i < objects.size()-1) { 
+				objectsStr.append(delimiter);
+			}			
+		}
+		
+		return objectsStr.toString();
+	}   
+	
+	public static <T> String join(List<T> objects, String delimiter) {
+		return join(objects, delimiter, null);
+	} 
+	
+	public static <T> String join(T[] objects, String delimiter, JoinListener<T> listener) {
+		return join(Arrays.asList(objects), delimiter, listener);
+	}   
+	
+	public static <T> String join(T[] objects, String delimiter) {
+		return join(Arrays.asList(objects), delimiter, null);
+	}   
+	
+	public static interface JoinListener<T> {
+		public String processObject(T object);
+	}
 }

@@ -14,7 +14,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
@@ -48,12 +47,14 @@ public class InitCommand extends AbstractInitCommand {
 	}
 
 	private InitOperationOptions parseInitOptions(String[] operationArguments) throws Exception {
-		InitOperationOptions opreationOptions = new InitOperationOptions();
+		InitOperationOptions operationOptions = new InitOperationOptions();
 
-		OptionParser parser = new OptionParser();	 
+		OptionParser parser = new OptionParser();
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoGzip = parser.acceptsAll(asList("g", "no-gzip"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("e", "no-encryption"));
+		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
+		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArguments);	
 		List<?> nonOptionArgs = options.nonOptionArguments();
@@ -73,8 +74,19 @@ public class InitCommand extends AbstractInitCommand {
 		out.println();
 						
 		// Ask for plugin, and plugin settings
-		askPlugin();
-		askPluginSettings();
+		if (options.has(optionPlugin)) {
+			initPlugin(options.valueOf(optionPlugin));
+		}
+		else {
+			askPlugin();
+		}
+		
+		if (options.has(optionPluginOpts)) {
+			initPluginSettings(options.valuesOf(optionPluginOpts));			
+		}
+		else {
+			askPluginSettings();
+		}
 		
 		out.print("Trying to connect ... ");
 
@@ -102,15 +114,15 @@ public class InitCommand extends AbstractInitCommand {
 		ConfigTO configTO = createConfigTO(localDir, password);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
-		opreationOptions.setConfigTO(configTO);
-		opreationOptions.setRepoTO(repoTO);
+		operationOptions.setConfigTO(configTO);
+		operationOptions.setRepoTO(repoTO);
 		
-		opreationOptions.setEncryptionEnabled(encryptionEnabled);
-		opreationOptions.setCipherSuites(cipherSuites);
-		opreationOptions.setPassword(password);
+		operationOptions.setEncryptionEnabled(encryptionEnabled);
+		operationOptions.setCipherSpecs(cipherSuites);
+		operationOptions.setPassword(password);
 		
-		return opreationOptions;
-	}	
+		return operationOptions;
+	}		
 
 	private void printResults(InitOperationResult operationResult) {
 		out.println("Share link: "+operationResult.getShareLink());
@@ -282,25 +294,6 @@ public class InitCommand extends AbstractInitCommand {
 		}	
 		
 		return password;
-	}
-	
-	protected ConfigTO createConfigTO(File localDir, String password) throws Exception {
-		ConfigTO configTO = new ConfigTO();
-		
-		configTO.setMachineName(getDefaultMachineName());
-		configTO.setLocalDir(localDir.getAbsolutePath());
-		
-		if (password != null) {
-			configTO.setPassword(password);
-		}		
-
-		ConnectionTO connectionTO = new ConnectionTO();
-		connectionTO.setType(plugin.getId());
-		connectionTO.setSettings(pluginSettings);
-		
-		configTO.setConnection(connectionTO);
-		
-		return configTO;
 	}
 	
 	protected RepoTO createRepoTO(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) throws Exception {

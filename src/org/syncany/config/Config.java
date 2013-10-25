@@ -33,6 +33,7 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.util.FileUtil;
 
 /**
  * 
@@ -97,14 +98,14 @@ public class Config {
 	private void initDirectories(ConfigTO configTO) throws ConfigException {
 		// App folder
 		if (configTO.getAppDir() != null) {			
-			appDir = new File(configTO.getAppDir());
+			appDir = FileUtil.getCanonicalFile(new File(configTO.getAppDir()));
 			
 			if (!appDir.exists()) {
 				throw new ConfigException("Directory 'appDir' must exist if it is explicitly specified: "+appDir);
 			}			
 		}
 		else if (configTO.getConfigFile() != null) {
-			appDir = new File(configTO.getConfigFile()).getParentFile();
+			appDir = FileUtil.getCanonicalFile(new File(configTO.getConfigFile()).getParentFile());
 			
 			if (!DEFAULT_DIR_APPLICATION.equals(appDir.getName())) {
 				throw new ConfigException("Directory 'appDir' must exist either be explicitly specified, or folder of config file must be named '.syncany' to derive it.");
@@ -116,50 +117,50 @@ public class Config {
 					
 		// Local folder
 		if (configTO.getLocalDir() != null) {
-			localDir = new File(configTO.getLocalDir());
+			localDir = FileUtil.getCanonicalFile(new File(configTO.getLocalDir()));
 			
 			if (!localDir.exists()) {
 				throw new ConfigException("Directory 'localDir' must exist if it is explicitly specified: "+localDir);
 			}
 		}
 		else {
-			localDir = appDir.getParentFile();
+			localDir = FileUtil.getCanonicalFile(appDir.getParentFile());
 		}
 		
 		// Cache folder
 		if (configTO.getCacheDir() != null) {
-			cacheDir = new File(configTO.getCacheDir());
+			cacheDir = FileUtil.getCanonicalFile(new File(configTO.getCacheDir()));
 			
 			if (!cacheDir.exists()) {
 				throw new ConfigException("Directory 'cacheDir' must exist if it is explicitly specified: "+cacheDir);
 			}
 		}
 		else {
-			cacheDir = new File(appDir+File.separator+DEFAULT_DIR_CACHE);
+			cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_CACHE));
 		}
 		
 		// Database folder
 		if (configTO.getDatabaseDir() != null) {
-			databaseDir = new File(configTO.getDatabaseDir());
+			databaseDir = FileUtil.getCanonicalFile(new File(configTO.getDatabaseDir()));
 			
 			if (!databaseDir.exists()) {
 				throw new ConfigException("Directory 'databaseDir' must exist if it is explicitly specified: "+databaseDir);
 			}
 		}
 		else {
-			databaseDir = new File(appDir+File.separator+DEFAULT_DIR_DATABASE);
+			databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_DATABASE));
 		}	
 		
 		// Log folder
 		if (configTO.getLogDir() != null) {
-			logDir = new File(configTO.getLogDir());
+			logDir = FileUtil.getCanonicalFile(new File(configTO.getLogDir()));
 			
 			if (!logDir.exists()) {
 				throw new ConfigException("Directory 'logDir' must exist if it is explicitly specified: "+logDir);
 			}
 		}
 		else {
-			logDir = new File(appDir+File.separator+DEFAULT_DIR_LOG);
+			logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_LOG));
 		}	
 	}
 	

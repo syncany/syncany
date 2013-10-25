@@ -28,12 +28,12 @@ import javax.crypto.Mac;
  *
  * @author pheckel
  */
-public class CipherHmacOutputStream_PLAINTEXT_HMAC extends CipherOutputStream {
+public class CipherHmacOutputStream_UNUSED_PLAINTEXT_HMAC extends CipherOutputStream {
 	private Cipher cipher;
 	private Mac mac;
 	private byte[] iv;
 	
-	public CipherHmacOutputStream_PLAINTEXT_HMAC(OutputStream os, Cipher c, Mac m, byte[] iv) {
+	public CipherHmacOutputStream_UNUSED_PLAINTEXT_HMAC(OutputStream os, Cipher c, Mac m, byte[] iv) {
 		super(os, c);
 		cipher = c;
 		mac = m;

@@ -13,10 +13,13 @@ import java.util.Random;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.util.StringUtil;
 
 public abstract class AbstractInitCommand extends Command {
 	protected Console console;
@@ -31,12 +34,65 @@ public abstract class AbstractInitCommand extends Command {
 		console = System.console();
 	}	
 	
+	protected ConfigTO createConfigTO(File localDir, String password) throws Exception {
+		ConfigTO configTO = new ConfigTO();
+		
+		configTO.setMachineName(getDefaultMachineName());
+		configTO.setLocalDir(localDir.getAbsolutePath());
+		
+		if (password != null) {
+			configTO.setPassword(password);
+		}		
+
+		ConnectionTO connectionTO = new ConnectionTO();
+		connectionTO.setType(plugin.getId());
+		connectionTO.setSettings(pluginSettings);
+		
+		configTO.setConnection(connectionTO);
+		
+		return configTO;
+	}
+	
 	protected void writeXmlFile(Object source, File file) throws Exception {
 		out.println("- Writing "+file);		
 
 		Serializer serializer = new Persister();
 		serializer.write(source, file);	
 	}	
+	
+	protected void initPluginSettings(List<String> pluginSettingsOptList) throws Exception {		
+		pluginSettings = new HashMap<String, String>();
+		
+		// Fill settings map
+		for (String pluginSettingKeyValue : pluginSettingsOptList) {
+			String[] keyValue = pluginSettingKeyValue.split("=", 2);
+			
+			if (keyValue.length != 2) {
+				throw new Exception("Invalid setting: "+pluginSettingKeyValue);
+			}
+			
+			pluginSettings.put(keyValue[0], keyValue[1]);
+		}
+		
+		// Check if all mandatory are set
+		for (String mandatorySetting : connection.getMandatorySettings()) {
+			if (!pluginSettings.containsKey(mandatorySetting)) {
+				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getMandatorySettings(), ", ")+"). Use -Psettingname=.. to set it.");
+			}
+		}	
+		
+		connection.init(pluginSettings);
+	}
+
+	protected void initPlugin(String pluginStr) throws Exception {
+		plugin = Plugins.get(pluginStr);
+		
+		if (plugin == null) {
+			throw new Exception("ERROR: Plugin '"+pluginStr+"' does not exist.");
+		}
+		
+		connection = plugin.createConnection();
+	}
 
 	protected void askPluginSettings() throws StorageException {
 		pluginSettings = new HashMap<String, String>();
@@ -45,7 +101,7 @@ public abstract class AbstractInitCommand extends Command {
 		String[] optionalSettings = connection.getOptionalSettings();
 		
 		out.println();
-		out.println("This plugin has the following settings.");
+		out.println("Connection details for "+plugin.getName()+" connection:");
 		
 		for (String settingKey : mandatorySettings) {
 			String settingValue = null;

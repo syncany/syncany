@@ -56,8 +56,8 @@ public class InitOperation extends Operation {
 			String shareLink = null;
 			
 			if (options.isEncryptionEnabled()) {
-				writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSuites(), options.getPassword());				
-				shareLink = getEncryptedLink(options.getConfigTO().getConnectionTO(), options.getCipherSuites(), options.getPassword());
+				writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), options.getPassword());				
+				shareLink = getEncryptedLink(options.getConfigTO().getConnectionTO(), options.getCipherSpecs(), options.getPassword());
 			}	
 			else {
 				writeXmlFile(options.getRepoTO(), repoFile); 				
@@ -84,9 +84,11 @@ public class InitOperation extends Operation {
     	
     	private void uploadRepoFile(File repoFile, ConnectionTO connectionTO) throws Exception {
     		Plugin plugin = Plugins.get(connectionTO.getType());
-    		Connection connection = plugin.createConnection();
-    		TransferManager transferManager = connection.createTransferManager();
     		
+    		Connection connection = plugin.createConnection();
+    		connection.init(connectionTO.getSettings());
+    		
+    		TransferManager transferManager = connection.createTransferManager();    		
     		transferManager.upload(repoFile, new RemoteFile("repo")); // TODO [low] Naming stuff
     		transferManager.disconnect();
     	}    	
@@ -117,7 +119,7 @@ public class InitOperation extends Operation {
         	private ConfigTO configTO;
         	private RepoTO repoTO;
         	private boolean encryptionEnabled;
-        	private List<CipherSpec> cipherSuites;
+        	private List<CipherSpec> cipherSpecs;
         	private String password;
 			
         	public ConfigTO getConfigTO() {
@@ -144,12 +146,12 @@ public class InitOperation extends Operation {
 				this.encryptionEnabled = encryptionEnabled;
 			}
 
-			public List<CipherSpec> getCipherSuites() {
-				return cipherSuites;
+			public List<CipherSpec> getCipherSpecs() {
+				return cipherSpecs;
 			}
 
-			public void setCipherSuites(List<CipherSpec> cipherSuites) {
-				this.cipherSuites = cipherSuites;
+			public void setCipherSpecs(List<CipherSpec> cipherSpecs) {
+				this.cipherSpecs = cipherSpecs;
 			}
 
 			public String getPassword() {

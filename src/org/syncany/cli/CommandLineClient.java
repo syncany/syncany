@@ -35,6 +35,8 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.JoinListener;
 
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
@@ -304,12 +306,13 @@ public class CommandLineClient extends Client {
 	
 	private void showUsageAndExit() {
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsStr = "";
 		
-		for (int i=0; i<plugins.size(); i++) {
-			pluginsStr += plugins.get(i).getId();
-			if (i < plugins.size()-1) { pluginsStr += ", "; }			
-		}
+		String pluginsStr = StringUtil.join(plugins, ", ", new JoinListener<Plugin>() {
+			@Override
+			public String processObject(Plugin plugin) {
+				return plugin.getId();
+			}			
+		});
 		
 		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
 		out.println("Usage: sy [-c|--config=<path>] [-l|--log=<path>]");
@@ -350,14 +353,18 @@ public class CommandLineClient extends Client {
 		out.println("      Currently loaded are: "+pluginsStr);
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -i, --interactive       Run interactive mode to init Syncany folder.");
+		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
+		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
+		out.println("      -e, --no-encryption              The new repo will not be encrypted (no password, DON'T USE THIS).");
+		out.println("      -a, --no-gzip                    The new repo will not use gzip to compress files.");
+		out.println("      -a, --advanced                   Asks more questions in the interactive dialog (pick cipher, etc.).");
 		out.println();
 		out.println("  up [<args>]");
 		out.println("      Detect local changes and upload to repo (commit)");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -F, --force-upload      Force upload even if remote changes exist (will conflict!).");
-		out.println("      -c, --no-cleanup        Do not merge own databases in repo.");
+		out.println("      -F, --force-upload               Force upload even if remote changes exist (will conflict!).");
+		out.println("      -c, --no-cleanup                 Do not merge own databases in repo.");
 		out.println();
 		out.println("      In addition to these arguments, all arguments of the 'status' command can be used.");
 		out.println();
@@ -372,7 +379,7 @@ public class CommandLineClient extends Client {
 		out.println("      Detect local changes and print to STDOUT.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -f, --force-checksum    Force checksum comparison, if not enabled mod. date/size is used.");
+		out.println("      -f, --force-checksum             Force checksum comparison, if not enabled mod. date/size is used.");
 		out.println();
 		out.println("  ls-remote");
 		out.println("      Detect remote changes and print to STDOUT.");
@@ -382,7 +389,7 @@ public class CommandLineClient extends Client {
 		out.println("      watch the file system.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -i, --interval=<sec>    Repeat sync every <sec> seconds (default is 30).");
+		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 30).");
 		out.println();
 		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
 		out.println("      can be used.");

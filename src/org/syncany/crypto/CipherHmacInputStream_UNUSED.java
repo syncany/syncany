@@ -30,7 +30,7 @@ import javax.crypto.Mac;
  *
  * @author pheckel
  */
-public class CipherHmacInputStream extends FilterInputStream {
+public class CipherHmacInputStream_UNUSED extends FilterInputStream {
 
     // the cipher engine to use to process stream data
     private Cipher cipher;
@@ -114,7 +114,7 @@ public class CipherHmacInputStream extends FilterInputStream {
      * @param is the to-be-processed input stream
      * @param c an initialized Cipher object
      */
-    public CipherHmacInputStream(InputStream is, Cipher c, Mac m, byte[] iv) {
+    public CipherHmacInputStream_UNUSED(InputStream is, Cipher c, Mac m, byte[] iv) {
         super(is);
         input = is;
         cipher = c;
