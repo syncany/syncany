@@ -51,16 +51,50 @@
 		</jar>
 	</target>
 	
-	<target name="fakeinstall" depends="fakeuninstall" description="install symbolic links 'sy' and 'syncany' to /usr/local/bin.">
+	<target name="fakeinstall" depends="fakeuninstall" description="install symbolic links 'sy' and 'syncany' to /usr/local/bin." if="isLinux">
 		<symlink resource="${user.dir}/syncany" link="/usr/local/bin/syncany" />
 		<symlink resource="${user.dir}/syncany" link="/usr/local/bin/sy" />
 	</target>
-	
-	<target name="fakeuninstall" description="remove symbolic links 'sy' and 'syncany' from /usr/local/bin.">
+
+	<target name="fakeuninstall" description="remove symbolic links 'sy' and 'syncany' from /usr/local/bin." if="isLinux">
 		<delete file="/usr/local/bin/syncany" />				
 		<delete file="/usr/local/bin/sy" />
 	</target>
 	
+	<target name="windowsfakeinstall" depends="windowsfakeuninstall" description="add syncany path to environment variable Path for futures shells." if="isWindows">
+		<exec executable="setx">
+		    <arg value="Path"/>
+		    <arg value="%Path%;${user.dir}"/>
+		</exec>
+		<echo>Please close current cmd and open new one.</echo>
+	</target>
+	
+	<property environment="env"/>	
+	<target name="windowsfakeuninstall" description="remove syncany path from environment variable Path for futures shells." if="isWindows">
+		<property name="fullenvpath" value="${env.Path}" />
+		<property name="envpathminussyncany" value="" />
+	
+		<script language="javascript">
+		    var before = project.getProperty("fullenvpath");
+			var match = project.getProperty("user.dir");
+			project.setProperty("envpathminussyncany", before.replace(match, ""));
+		</script>
+	
+		<exec executable="setx">
+		    <arg value="Path"/>
+		    <arg value="${envpathminussyncany}"/>
+		</exec>
+		<echo>Please close current cmd and open new one.</echo>
+	</target>
+
+	<condition property="isWindows" value="true">
+	        <os family="windows"/>
+	</condition>
+	
+    <condition property="isLinux" value="true">
+            <os family="unix" />
+    </condition>
+
 	<target name="install" depends="uninstall" description="install to /usr/local">
 		<mkdir dir="/usr/local/lib/syncany" />
 		<mkdir dir="/usr/local/lib/syncany/lib" />
