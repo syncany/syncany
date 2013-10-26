@@ -13,6 +13,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.chunk.CipherTransformer;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
@@ -25,6 +26,8 @@ import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand {
 	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { 1, 2 };
@@ -50,6 +53,7 @@ public class InitCommand extends AbstractInitCommand {
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
 		OptionParser parser = new OptionParser();
+		OptionSpec<String> optionFolder = parser.acceptsAll(asList("f", "folder")).withRequiredArg();
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoGzip = parser.acceptsAll(asList("g", "no-gzip"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("e", "no-encryption"));
@@ -57,13 +61,12 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArguments);	
-		List<?> nonOptionArgs = options.nonOptionArguments();
 	
-		// <local dir>
+		// --folder=<local dir>
 		File localDir = null;
         
-        if (nonOptionArgs.size() > 1) {
-            String locationStr = (String) nonOptionArgs.get(1);
+        if (options.has(optionFolder)) {
+            String locationStr = options.valueOf(optionFolder);
             localDir = new File(locationStr).getCanonicalFile();
         }
         else {
@@ -321,7 +324,7 @@ public class InitCommand extends AbstractInitCommand {
 	protected MultiChunkerTO getDefaultMultiChunkerTO() {
 		MultiChunkerTO multichunkerTO = new MultiChunkerTO();
 		
-		multichunkerTO.setType("zip");
+		multichunkerTO.setType("zip"); 
 		multichunkerTO.setSettings(new HashMap<String, String>());
 		multichunkerTO.getSettings().put("size", "512");
 		
@@ -335,20 +338,20 @@ public class InitCommand extends AbstractInitCommand {
 		return gzipTransformerTO;				
 	}
 	
-	private TransformerTO getCipherTransformerTO(List<CipherSpec> cipherSuites) {
-		String cipherSuitesIdStr = "";
-		
-		for (int i=0; i<cipherSuites.size(); i++) {				
-			cipherSuitesIdStr += 
-				  cipherSuites.get(i).getId()
-				+ ((i < cipherSuites.size()-1) ? "," : "");					
-		}
+	private TransformerTO getCipherTransformerTO(List<CipherSpec> cipherSpec) {
+		String cipherSuitesIdStr = StringUtil.join(cipherSpec, ",", new StringJoinListener<CipherSpec>() {
+			@Override
+			public String getString(CipherSpec cipherSpec) {
+				return ""+cipherSpec.getId();
+			}			
+		});
 		
 		Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
-		cipherTransformerSettings.put("ciphersuites", cipherSuitesIdStr);
+		cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, cipherSuitesIdStr);
+		// Note: Property 'password' is added dynamically by CommandLineClient
 
 		TransformerTO cipherTransformerTO = new TransformerTO();
-		cipherTransformerTO.setType("cipher");
+		cipherTransformerTO.setType(CipherTransformer.TYPE);
 		cipherTransformerTO.setSettings(cipherTransformerSettings);
 
 		return cipherTransformerTO;

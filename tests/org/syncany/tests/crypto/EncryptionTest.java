@@ -37,8 +37,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.config.EncryptionException;
 import org.syncany.config.Logging;
+import org.syncany.crypto.EncryptionException;
 import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 

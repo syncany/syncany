@@ -36,6 +36,10 @@ import org.syncany.crypto.MultiCipherOutputStream;
  * @author pheckel
  */
 public class CipherTransformer extends Transformer {
+	public static final String TYPE = "cipher";
+	public static final String PROPERTY_CIPHER_SPECS = "cipherspecs";
+	public static final String PROPERTY_PASSWORD = "password";
+	
 	private List<CipherSpec> cipherSuites;
 	private CipherSession cipherSession;
 	
@@ -51,14 +55,14 @@ public class CipherTransformer extends Transformer {
     
     @Override
     public void init(Map<String, String> settings) throws Exception {
-    	String password = settings.get("password");
-    	String cipherSuitesListStr = settings.get("ciphersuites");
+    	String password = settings.get(PROPERTY_PASSWORD);
+    	String cipherSpecsListStr = settings.get(PROPERTY_CIPHER_SPECS);
     	
-    	if (password == null || cipherSuitesListStr == null) {
+    	if (password == null || cipherSpecsListStr == null) {
     		throw new Exception("Settings 'ciphersuites' and 'password' must both be filled.");
     	}
     	
-    	initCipherSuites(cipherSuitesListStr);
+    	initCipherSuites(cipherSpecsListStr);
     	initPassword(password);    	
     }
     

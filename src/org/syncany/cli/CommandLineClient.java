@@ -36,7 +36,7 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.util.StringUtil;
-import org.syncany.util.StringUtil.JoinListener;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
@@ -49,7 +49,7 @@ public class CommandLineClient extends Client {
 		
 	static {
 		Logging.init();
-		Logging.disableLogging();		
+		Logging.disableLogging();			
 	}
 	
 	public CommandLineClient(String[] args) {
@@ -80,7 +80,7 @@ public class CommandLineClient extends Client {
 			
 			// Evaluate options
 			// WARNING: Do not re-order unless you know what you are doing!
-			initHelpOption(options, optionHelp);
+			initHelpOption(options, optionHelp, options.nonOptionArguments());
 			initConfigOption(options, optionConfig);
 			initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
 	
@@ -92,8 +92,8 @@ public class CommandLineClient extends Client {
 		}
 	}	
 
-	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp) {
-		if (options.has(optionHelp)) {
+	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) {
+		if (options.has(optionHelp) || nonOptions.size() == 0) {
 			showUsageAndExit();
 		}
 	}
@@ -240,6 +240,8 @@ public class CommandLineClient extends Client {
 		}
 		
 		if (CipherUtil.isEncrypted(repoFile)) {
+			logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
+
 			String password = configTO.getPassword();
 			
 			if (password == null) {
@@ -253,6 +255,8 @@ public class CommandLineClient extends Client {
 			return serializer.read(RepoTO.class, repoFileStr);			
 		}
 		else {
+			logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
+			
 			Serializer serializer = new Persister();
 			return serializer.read(RepoTO.class, repoFile);
 		}
@@ -307,12 +311,12 @@ public class CommandLineClient extends Client {
 	private void showUsageAndExit() {
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
 		
-		String pluginsStr = StringUtil.join(plugins, ", ", new JoinListener<Plugin>() {
+		String pluginsStr = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
 			@Override
-			public String processObject(Plugin plugin) {
+			public String getString(Plugin plugin) {
 				return plugin.getId();
 			}			
-		});
+		});		
 		
 		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
 		out.println("Usage: sy [-c|--config=<path>] [-l|--log=<path>]");
@@ -344,20 +348,26 @@ public class CommandLineClient extends Client {
 		out.println("      Print this help screen");
 		out.println();
 		out.println("Commands:");
-		out.println("  init -i");
-		out.println("  init <plugin> [<folder>]");
-		out.println("      Initialize <folder> as a Syncany folder (default is current folder). This");
-		out.println("      command creates and initializes a skeleton config file for the plugin <plugin>.");
-		out.println();
-		out.println("      The <plugin> attribute can be any of the loaded plugins.");		
-		out.println("      Currently loaded are: "+pluginsStr);
+		out.println("  init [<args>]");
+		out.println("      Initialize the current folder as a Syncany folder (interactive).");		
+		out.println("      Currently loaded plugins: "+pluginsStr);
 		out.println();
 		out.println("      Arguments:");
+		out.println("      -f, --folder=<local dir>         Specify a plugin to use for storage (see list above).");
 		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
 		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
 		out.println("      -e, --no-encryption              The new repo will not be encrypted (no password, DON'T USE THIS).");
 		out.println("      -a, --no-gzip                    The new repo will not use gzip to compress files.");
 		out.println("      -a, --advanced                   Asks more questions in the interactive dialog (pick cipher, etc.).");
+		out.println();
+		out.println("  connect [<args>] [<syncany link>]");
+		out.println("      Connect the current folder to an existing Syncany repository. To initialize the connection");
+		out.println("      a Syncany link (syncany://..) can be used.");
+		out.println();
+		out.println("      Arguments:");
+		out.println("      -f, --folder=<local dir>         Specify a plugin to use for storage (see list above).");
+		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
+		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
 		out.println();
 		out.println("  up [<args>]");
 		out.println("      Detect local changes and upload to repo (commit)");

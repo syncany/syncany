@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class StringUtil<T> {
+public class StringUtil {
     private static int minimum(int a, int b, int c) {
         return Math.min(Math.min(a, b), c);
     }
@@ -102,12 +102,12 @@ public class StringUtil<T> {
         return data;        
     }
 	
-	public static <T> String join(List<T> objects, String delimiter, JoinListener<T> listener) {
+	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
 		StringBuilder objectsStr = new StringBuilder();
 		
 		for (int i=0; i<objects.size(); i++) {
 			if (listener != null) {
-				objectsStr.append(listener.processObject(objects.get(i)));
+				objectsStr.append(listener.getString(objects.get(i)));
 			}
 			else {
 				objectsStr.append(objects.get(i).toString());
@@ -125,7 +125,7 @@ public class StringUtil<T> {
 		return join(objects, delimiter, null);
 	} 
 	
-	public static <T> String join(T[] objects, String delimiter, JoinListener<T> listener) {
+	public static <T> String join(T[] objects, String delimiter, StringJoinListener<T> listener) {
 		return join(Arrays.asList(objects), delimiter, listener);
 	}   
 	
@@ -133,7 +133,7 @@ public class StringUtil<T> {
 		return join(Arrays.asList(objects), delimiter, null);
 	}   
 	
-	public static interface JoinListener<T> {
-		public String processObject(T object);
+	public static interface StringJoinListener<T> {
+		public String getString(T object);
 	}
 }

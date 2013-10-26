@@ -174,11 +174,11 @@ public class Config {
 		chunker = new FixedOffsetChunker(16*1024); //new TTTDChunker(16*1024);// 
 		multiChunker = new ZipMultiChunker(2048*1024);
 		
-		if (repoTO.getTransformers() == null || repoTO.getTransformers().size() == 0) {
+		if (repoTO.getTransformerTOs() == null || repoTO.getTransformerTOs().size() == 0) {
 			transformer = new NoTransformer();
 		}
 		else {			
-			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformers());
+			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformerTOs());
 			Transformer lastTransformer = null;
 			
 			for (int i=transformerTOs.size()-1; i>=0; i--) {
@@ -190,7 +190,7 @@ public class Config {
 				}
 				
 				if (transformer instanceof CipherTransformer) { // Dirty workaround
-					transformerTO.getSettings().put("password", getPassword());
+					transformerTO.getSettings().put(CipherTransformer.PROPERTY_PASSWORD, getPassword());
 				}
 				
 				transformer.init(transformerTO.getSettings());

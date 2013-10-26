@@ -35,7 +35,7 @@ public class RepoTO {
 		this.multiChunker = multiChunker;
 	}
 
-	public List<TransformerTO> getTransformers() {
+	public List<TransformerTO> getTransformerTOs() {
 		return transformers;
 	}
 

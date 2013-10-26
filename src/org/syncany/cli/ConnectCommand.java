@@ -6,7 +6,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,11 +50,23 @@ public class ConnectCommand extends AbstractInitCommand {
 
 	private void runConnectOperation(String[] operationArguments) throws OptionException, Exception {
 		OptionParser parser = new OptionParser();			
+		OptionSpec<String> optionFolder = parser.acceptsAll(asList("f", "folder")).withRequiredArg();
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArguments);	
 		List<?> nonOptionArgs = options.nonOptionArguments();
+		
+		// --folder=<local dir>
+		File localDir = null;
+        
+        if (options.has(optionFolder)) {
+            String locationStr = options.valueOf(optionFolder);
+            localDir = new File(locationStr).getCanonicalFile();
+        }
+        else {
+            localDir = new File(".").getCanonicalFile();                         
+        }        
 		
 		if (nonOptionArgs.size() == 1) {
 			initPluginWithLink((String) nonOptionArgs.get(0));			
@@ -84,8 +95,6 @@ public class ConnectCommand extends AbstractInitCommand {
 		
 		File tmpRepoFile = downloadRepoFile();			
 		RepoTO repoTO = createRepoTOFromFile(tmpRepoFile);
-		
-		File localDir = new File(".");
 		ConfigTO configTO = createConfigTO(localDir, password);
 		
 		File appDir = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION); // TODO [medium] Duplicate code in InitOperation
@@ -152,16 +161,11 @@ public class ConnectCommand extends AbstractInitCommand {
 		
 		try {
 			out.print("Trying to connect ... ");
-			TransferManager transferManager = connection.createTransferManager();
-			Map<String, RemoteFile> repoFileList = transferManager.list("repo");
 			
-			if (repoFileList.containsKey("repo")) {
-				transferManager.download(new RemoteFile("repo"), tmpRepoFile);
-				return tmpRepoFile;
-			}			
-			else {
-				return null;
-			}
+			TransferManager transferManager = connection.createTransferManager();
+			transferManager.download(new RemoteFile("repo"), tmpRepoFile);
+			
+			return tmpRepoFile;			
 		}
 		catch (Exception e) {
 			throw new Exception("Unable to connect to repository.", e);

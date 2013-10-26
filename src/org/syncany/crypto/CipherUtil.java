@@ -14,6 +14,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -24,13 +26,14 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.syncany.config.EncryptionException;
 import org.syncany.util.FileUtil;
 
 public class CipherUtil {
+	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
+	
 	public static final String PROVIDER = "BC";
     public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1";
-    public static final int KEY_DERIVATION_ROUNDS = 1000;	    
+    public static final int KEY_DERIVATION_ROUNDS = 500;	    
     
     private static boolean initialized = false;
     private static boolean unlimitedStrengthEnabled = false;
@@ -41,6 +44,8 @@ public class CipherUtil {
     
     public static synchronized void init() {
     	if (!initialized) {
+    		logger.log(Level.INFO, "Initializing crypto settings and security provider ...");
+    		
     		// Bouncy Castle
     		if (Security.getProvider(PROVIDER) == null) {
     			Security.addProvider(new BouncyCastleProvider()); 
@@ -64,6 +69,8 @@ public class CipherUtil {
     
     public static void enableUnlimitedCrypto() throws EncryptionException {
     	if (!unlimitedStrengthEnabled) {
+    		logger.log(Level.INFO, "Enabling unlimited strength/crypto ...");
+    		
 			try {
 				Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
 	
@@ -84,7 +91,9 @@ public class CipherUtil {
     }
 	
 	public static SecretKey createSecretKey(CipherSpec cipherSuite, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
-    	// Derive secret key from password 
+		logger.log(Level.INFO, "Creating secret key using "+KEY_DERIVATION_FUNCTION+" with "+KEY_DERIVATION_ROUNDS+" rounds ...");
+
+		// Derive secret key from password 
     	SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
         KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ROUNDS, cipherSuite.getKeySize());
         SecretKey secretKey = factory.generateSecret(pbeKeySpec);
@@ -96,15 +105,17 @@ public class CipherUtil {
         return secretKeyAlgorithm;
     }
 	
-	public static Cipher createCipher(CipherSpec cipherSuite, int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
+		logger.log(Level.INFO, "Creating cipher using "+cipherSpec+" ...");
+
 		try {
-			if (cipherSuite.needsUnlimitedStrength()) {
+			if (cipherSpec.needsUnlimitedStrength()) {
 				CipherUtil.enableUnlimitedCrypto();
 			}
 			
-            Cipher cipher = Cipher.getInstance(cipherSuite.getCipherStr(), PROVIDER);
+            Cipher cipher = Cipher.getInstance(cipherSpec.getCipherStr(), PROVIDER);
             
-            if (cipherSuite.hasIv()) {
+            if (cipherSpec.hasIv()) {
             	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
             }
             else {
