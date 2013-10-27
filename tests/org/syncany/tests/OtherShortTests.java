@@ -7,7 +7,6 @@ import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
-import org.syncany.tests.cli.CommandLineInterfaceTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.crypto.EncryptionTest;
 import org.syncany.tests.database.DatabaseCacheTest;
@@ -26,9 +25,6 @@ import org.syncany.tests.util.FileUtilTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	// App
-	CommandLineInterfaceTest.class,
-	
 	// Util
 	ClasspathUtilTest.class,
 	CollectionUtilTest.class,

@@ -2,7 +2,6 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +52,6 @@ public class InitCommand extends AbstractInitCommand {
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
 		OptionParser parser = new OptionParser();
-		OptionSpec<String> optionFolder = parser.acceptsAll(asList("f", "folder")).withRequiredArg();
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoGzip = parser.acceptsAll(asList("g", "no-gzip"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("e", "no-encryption"));
@@ -61,17 +59,6 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArguments);	
-	
-		// --folder=<local dir>
-		File localDir = null;
-        
-        if (options.has(optionFolder)) {
-            String locationStr = options.valueOf(optionFolder);
-            localDir = new File(locationStr).getCanonicalFile();
-        }
-        else {
-            localDir = new File(".").getCanonicalFile();                         
-        }        
 		
 		out.println("Interactive repository initialization started.");
 		out.println();
@@ -117,6 +104,7 @@ public class InitCommand extends AbstractInitCommand {
 		ConfigTO configTO = createConfigTO(localDir, password);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
+		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setRepoTO(repoTO);
 		

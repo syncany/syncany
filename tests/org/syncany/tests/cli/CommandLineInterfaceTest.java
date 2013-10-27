@@ -27,8 +27,8 @@ public class CommandLineInterfaceTest {
 
 		// Init
 		String[] initArgs = new String[] { 			 
+			 "--localdir", clientA.get("localdir"),
 			 "init",
-			 "--folder", clientA.get("localdir"),
 			 "--plugin", "local", 
 			 "--plugin-option", "path="+clientA.get("repopath"),
 			 "--no-encryption", 
@@ -45,7 +45,7 @@ public class CommandLineInterfaceTest {
 		// Connect
 		String[] connectArgs = new String[] { 			 
 			 "connect",
-			 "--folder", clientB.get("localdir"),
+			 "--localdir", clientB.get("localdir"),
 			 "--plugin", "local", 
 			 "--plugin-option", "path="+clientB.get("repopath"),
 		};

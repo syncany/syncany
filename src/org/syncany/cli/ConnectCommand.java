@@ -50,23 +50,11 @@ public class ConnectCommand extends AbstractInitCommand {
 
 	private void runConnectOperation(String[] operationArguments) throws OptionException, Exception {
 		OptionParser parser = new OptionParser();			
-		OptionSpec<String> optionFolder = parser.acceptsAll(asList("f", "folder")).withRequiredArg();
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArguments);	
-		List<?> nonOptionArgs = options.nonOptionArguments();
-		
-		// --folder=<local dir>
-		File localDir = null;
-        
-        if (options.has(optionFolder)) {
-            String locationStr = options.valueOf(optionFolder);
-            localDir = new File(locationStr).getCanonicalFile();
-        }
-        else {
-            localDir = new File(".").getCanonicalFile();                         
-        }        
+		List<?> nonOptionArgs = options.nonOptionArguments();		
 		
 		if (nonOptionArgs.size() == 1) {
 			initPluginWithLink((String) nonOptionArgs.get(0));			
@@ -103,10 +91,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		
 		if (!appDir.exists()) {
 			appDir.mkdir();
-		}
-		
-		// Unset 'localdir' (it should not be saved)
-		configTO.setLocalDir(null);
+		}		
 		
 		writeXmlFile(configTO, configFile);
 		FileUtils.copyFile(tmpRepoFile, repoFile);

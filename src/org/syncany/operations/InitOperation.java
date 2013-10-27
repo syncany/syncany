@@ -38,16 +38,13 @@ public class InitOperation extends Operation {
 			logger.log(Level.INFO, "--------------------------------------------");                      
 			        
 			// Create local .syncany directory
-			File appDir = new File(options.getConfigTO().getLocalDir()+"/"+Config.DEFAULT_DIR_APPLICATION);
+			File appDir = new File(options.getLocalDir()+"/"+Config.DEFAULT_DIR_APPLICATION);
 			File configFile = new File(appDir+"/"+Config.DEFAULT_FILE_CONFIG);
 			File repoFile = new File(appDir+"/"+Config.DEFAULT_FILE_REPO);
 			
 			if (!appDir.exists()) {
 				appDir.mkdir();
-			}
-			
-			// Unset 'localDir' (we don't want to save it!)
-			options.getConfigTO().setLocalDir(null);			
+			}			
 			
 			// Save config.xml and repo file
 			writeXmlFile(options.getConfigTO(), configFile);
@@ -116,13 +113,22 @@ public class InitOperation extends Operation {
     	}
      
         public static class InitOperationOptions implements OperationOptions {
+        	private File localDir;
         	private ConfigTO configTO;
         	private RepoTO repoTO;
         	private boolean encryptionEnabled;
         	private List<CipherSpec> cipherSpecs;
         	private String password;
 			
-        	public ConfigTO getConfigTO() {
+        	public File getLocalDir() {
+				return localDir;
+			}
+
+			public void setLocalDir(File localDir) {
+				this.localDir = localDir;
+			}
+
+			public ConfigTO getConfigTO() {
 				return configTO;
 			}
 			

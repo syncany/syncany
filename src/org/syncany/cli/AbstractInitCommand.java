@@ -38,7 +38,6 @@ public abstract class AbstractInitCommand extends Command {
 		ConfigTO configTO = new ConfigTO();
 		
 		configTO.setMachineName(getDefaultMachineName());
-		configTO.setLocalDir(localDir.getAbsolutePath());
 		
 		if (password != null) {
 			configTO.setPassword(password);

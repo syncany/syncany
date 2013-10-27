@@ -18,33 +18,12 @@ public class ConfigTO {
 	@Element(name="password", required=false)
 	private String password;
 	
-	@Element(name="localdir", required=false)
-	private String localDir;
-	
-	@Element(name="appdir", required=false)
-	private String appDir;
-	
-	@Element(name="databasedir", required=false)
-	private String databaseDir;
-	
-	@Element(name="cachedir", required=false)
-	private String cacheDir;
-	
-	@Element(name="logdir", required=false)
-	private String logDir;	
-		
 	@Element(name="connection", required=true)
 	private ConnectionTO connectionTO;	
-
-	private String configFile;
 	
 	public static ConfigTO load(File file) throws ConfigException {
 		try {
-			Serializer serializer = new Persister();
-			ConfigTO configTO = serializer.read(ConfigTO.class, file);
-			configTO.configFile = file.getAbsolutePath();
-			
-			return configTO;
+			return new Persister().read(ConfigTO.class, file);
 		}
 		catch (Exception ex) {
 			throw new ConfigException("Config file does not exist or is invalid: "+file, ex);
@@ -71,55 +50,7 @@ public class ConfigTO {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
-	public String getLocalDir() {
-		return localDir;
-	}
-
-	public void setLocalDir(String localDir) {
-		this.localDir = localDir;
-	}
-
-	public String getAppDir() {
-		return appDir;
-	}
-
-	public void setAppDir(String appDir) {
-		this.appDir = appDir;
-	}
-
-	public String getDatabaseDir() {
-		return databaseDir;
-	}
-
-	public void setDatabaseDir(String databaseDir) {
-		this.databaseDir = databaseDir;
-	}
-
-	public String getCacheDir() {
-		return cacheDir;
-	}
-
-	public void setCacheDir(String cacheDir) {
-		this.cacheDir = cacheDir;
-	}
-
-	public String getLogDir() {
-		return logDir;
-	}
-
-	public void setLogDir(String logDir) {
-		this.logDir = logDir;
-	}
-
-	public String getConfigFile() {
-		return configFile;
-	}
-
-	public void setConfigFile(String configFile) {
-		this.configFile = configFile;
-	}
-
+	
 	public ConnectionTO getConnectionTO() {
 		return connectionTO;
 	}

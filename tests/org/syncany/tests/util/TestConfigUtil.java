@@ -36,18 +36,8 @@ public class TestConfigUtil {
 	}
 	
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
-		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));
-		File tempLocalDir = new File(tempClientDir+"/local");
-		File tempAppDir = new File(tempClientDir+"/.syncany");
-		File tempCacheDir = new File(tempAppDir+"/cache");
-		File tempDatabaseDir = new File(tempAppDir+"/db");
-		File tempLogDir = new File(tempAppDir+"/logs");
-		
+		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));		
 		tempLocalDir.mkdirs();
-		tempAppDir.mkdirs();
-		tempCacheDir.mkdirs();
-		tempDatabaseDir.mkdirs();
-		tempLogDir.mkdirs();
 		
 		// Create Repo TO
 		RepoTO repoTO = new RepoTO();
@@ -59,20 +49,18 @@ public class TestConfigUtil {
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
 		
-		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
-		configTO.setCacheDir(tempCacheDir.getAbsolutePath());
-		configTO.setDatabaseDir(tempDatabaseDir.getAbsolutePath());
-		configTO.setLocalDir(tempLocalDir.getAbsolutePath());
-		configTO.setLogDir(tempLogDir.getAbsolutePath());
-		configTO.setAppDir(tempAppDir.getAbsolutePath());
-		
-		configTO.setPassword(null);
-		
+		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));		
+		configTO.setPassword(null);		
 		
 		// Skip configTO.setConnection()		
 		
-		Config config = new Config(configTO, repoTO);
+		Config config = new Config(tempLocalDir, configTO, repoTO);
 		config.setConnection(connection);
+		
+		config.getAppDir().mkdirs();
+		config.getCacheDir().mkdirs();
+		config.getDatabaseDir().mkdirs();
+		config.getLogDir().mkdirs();
 		
 		return config;
 	}

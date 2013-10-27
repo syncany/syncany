@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.cli.CommandLineClient;
+import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.util.StringUtil;
@@ -19,9 +20,7 @@ public class TestCliUtil {
 	public static Map<String, String> createLocalTestEnv(String machineName, Map<String, String> connectionProperties) throws Exception {
 		Map<String, String> clientSettings = new HashMap<String, String>();
 		
-		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp(TestConfigUtil.createUniqueName("client-"+machineName, connectionProperties));
-		File tempLocalDir = new File(tempClientDir+"/local");
-		
+		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(TestConfigUtil.createUniqueName("client-"+machineName, connectionProperties));		
 		tempLocalDir.mkdirs();
 		
 		// Client settings 
@@ -37,8 +36,8 @@ public class TestCliUtil {
 		
 		// Init
 		String[] initArgs = new String[] { 			 
+			 "--localdir", client.get("localdir"),
 			 "init",
-			 "--folder", client.get("localdir"),
 			 "--plugin", "local", 
 			 "--plugin-option", "path="+client.get("repopath"),
 			 "--no-encryption", 
@@ -58,8 +57,8 @@ public class TestCliUtil {
 		
 		// Init
 		String[] connectArgs = new String[] { 			 
+			 "--localdir", client.get("localdir"),
 			 "connect",
-			 "--folder", client.get("localdir"),
 			 "--plugin", "local", 
 			 "--plugin-option", "path="+client.get("repopath")
 		}; 
@@ -73,7 +72,7 @@ public class TestCliUtil {
 	}	
 	
 	private static void fixMachineName(Map<String, String> client) throws Exception {
-		File configFile = new File(client.get("localdir")+"/.syncany/config.xml");
+		File configFile = new File(client.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
 		Serializer serializer = new Persister();		
 		
 		ConfigTO configTO = serializer.read(ConfigTO.class, configFile);		

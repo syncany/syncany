@@ -42,7 +42,7 @@ public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
 	
 	private String[] args;	
-	private File configFile;
+	private File localDir;
 	
 	private PrintStream out;
 	private Console console;
@@ -69,7 +69,7 @@ public class CommandLineClient extends Client {
 			parser.allowsUnrecognizedOptions();
 			
 			OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
-			OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
+			OptionSpec<File> optionLocalDir = parser.acceptsAll(asList("d", "localdir")).withRequiredArg().ofType(File.class);
 			OptionSpec<String> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg();
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
@@ -81,7 +81,7 @@ public class CommandLineClient extends Client {
 			// Evaluate options
 			// WARNING: Do not re-order unless you know what you are doing!
 			initHelpOption(options, optionHelp, options.nonOptionArguments());
-			initConfigOption(options, optionConfig);
+			initConfigOption(options, optionLocalDir);
 			initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
 	
 			// Run!
@@ -97,45 +97,6 @@ public class CommandLineClient extends Client {
 			showUsageAndExit();
 		}
 	}
-
-	private int runOperation(OptionSet options, List<?> nonOptions) throws Exception {
-		if (nonOptions.size() == 0) {
-			showUsageAndExit();
-		}
-		
-		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String operationName = (String) nonOptionsCopy.remove(0); 
-		String[] operationArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
-		
-		// Find command
-		Command command = CommandFactory.getInstance(operationName);
-
-		if (command == null) {
-			showErrorAndExit("Given command is unknown: "+operationName);			
-		}
-		
-		command.setClient(this);
-		command.setOut(out);
-		
-		// Pre-init operations
-		if (command.needConfigFile()) { 
-			// Check config (required for these operations)
-			if (configFile == null) {
-				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
-			}			
-		}
-		else {
-			// Check config (NOT allowed for these operations)
-			if (configFile != null) {
-				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
-			}
-		}
-		
-		// Run!
-		int exitCode = command.execute(operationArgs);		
-		return exitCode;	
-	}
-
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		initLogHandlers(options, optionLog, optionDebug);		
@@ -204,23 +165,23 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) throws ConfigException, Exception {
+	private void initConfigOption(OptionSet options, OptionSpec<File> optionLocalDir) throws ConfigException, Exception {
 		// Find config or use --config option
-		if (options.has(optionConfig)) {
-			configFile = options.valueOf(optionConfig);
+		if (options.has(optionLocalDir)) {
+			localDir = options.valueOf(optionLocalDir);
 		}
 		else {
-			configFile = findConfigFileInPath();
+			localDir = findLocalDirInPath();
 		}		
 		
 		// Load config
-		if (configFile != null) {
-			logger.log(Level.INFO, "Loading config from {0} ...", configFile);				
+		if (localDir != null) {
+			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
 
-			ConfigTO configTO = loadConfigTO(configFile);
-			RepoTO repoTO = loadRepoTO(configTO);
+			ConfigTO configTO = loadConfigTO(localDir);
+			RepoTO repoTO = loadRepoTO(localDir, configTO);
 			
-			config = new Config(configTO, repoTO);
+			config = new Config(localDir, configTO, repoTO);
 			
 			// Create folders
 			logger.log(Level.INFO, "Creating directories ...");				
@@ -232,11 +193,11 @@ public class CommandLineClient extends Client {
 		return ConfigTO.load(configFile);
 	}
 
-	private RepoTO loadRepoTO(ConfigTO configTO) throws Exception {
-		File repoFile = findRepoFile(configTO);
+	private RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws Exception {
+		File repoFile = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO);
 		
-		if (repoFile == null) {
-			throw new Exception("Cannot find repository file. Try connecting to a repository using 'connect', or 'init' to create a new one.");
+		if (!repoFile.exists()) {
+			throw new Exception("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
 		}
 		
 		if (CipherUtil.isEncrypted(repoFile)) {
@@ -262,33 +223,14 @@ public class CommandLineClient extends Client {
 		}
 	}
 	
-	private File findRepoFile(ConfigTO configTO) {
-		if (configTO.getAppDir() != null) {
-			File repoFile = new File(configTO.getAppDir()+"/"+Config.DEFAULT_FILE_REPO);
-			
-			if (repoFile.exists()) {
-				return repoFile;
-			}
-		}
-		
-		File configFileFolder = new File(configTO.getConfigFile()).getParentFile();
-		File repoFile = new File(configFileFolder+"/"+Config.DEFAULT_FILE_REPO);
-		
-		if (repoFile.exists()) {
-			return repoFile;
-		}
-		
-		return null;
-	}
-
-	private File findConfigFileInPath() throws IOException {
+	private File findLocalDirInPath() throws IOException {
 		File currentSearchFolder = new File(".").getCanonicalFile();
 		
 		while (currentSearchFolder != null) {
-			File possibleConfigFile = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
+			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION);
 			
-			if (possibleConfigFile.exists()) {
-				return possibleConfigFile.getCanonicalFile();
+			if (possibleAppDir.exists()) {
+				return possibleAppDir.getParentFile().getCanonicalFile();
 			}
 			
 			currentSearchFolder = currentSearchFolder.getParentFile();
@@ -306,6 +248,44 @@ public class CommandLineClient extends Client {
 		}	
 		
 		return password;
+	}
+	
+	private int runOperation(OptionSet options, List<?> nonOptions) throws Exception {
+		if (nonOptions.size() == 0) {
+			showUsageAndExit();
+		}
+		
+		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
+		String operationName = (String) nonOptionsCopy.remove(0); 
+		String[] operationArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
+		
+		// Find command
+		Command command = CommandFactory.getInstance(operationName);
+
+		if (command == null) {
+			showErrorAndExit("Given command is unknown: "+operationName);			
+		}
+		
+		command.setClient(this);
+		command.setOut(out);
+		
+		// Pre-init operations
+		if (command.needConfigFile()) { 
+			// Check config (required for these operations)
+			if (localDir == null) {
+				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
+			}			
+		}
+		else {
+			// Check config (NOT allowed for these operations)
+			if (localDir != null) {
+				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
+			}
+		}
+		
+		// Run!
+		int exitCode = command.execute(operationArgs);		
+		return exitCode;	
 	}
 	
 	private void showUsageAndExit() {

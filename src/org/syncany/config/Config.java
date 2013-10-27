@@ -72,12 +72,10 @@ public class Config {
     	Logging.init();
     }
     
-	public Config(ConfigTO configTO, RepoTO repoTO) throws Exception {		
-		// Initialize config
-		// WARNING: Do not move around without knowing what you are doing!
+	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws Exception {		
 		initMachineName(configTO);
 		initPassword(configTO);
-		initDirectories(configTO);
+		initDirectories(aLocalDir);
 		initCache();
 		initRepo(repoTO);
     	initConnection(configTO);    
@@ -95,73 +93,16 @@ public class Config {
 		password = configTO.getPassword(); // can be null!
 	}
 
-	private void initDirectories(ConfigTO configTO) throws ConfigException {
-		// App folder
-		if (configTO.getAppDir() != null) {			
-			appDir = FileUtil.getCanonicalFile(new File(configTO.getAppDir()));
-			
-			if (!appDir.exists()) {
-				throw new ConfigException("Directory 'appDir' must exist if it is explicitly specified: "+appDir);
-			}			
-		}
-		else if (configTO.getConfigFile() != null) {
-			appDir = FileUtil.getCanonicalFile(new File(configTO.getConfigFile()).getParentFile());
-			
-			if (!DEFAULT_DIR_APPLICATION.equals(appDir.getName())) {
-				throw new ConfigException("Directory 'appDir' must exist either be explicitly specified, or folder of config file must be named '.syncany' to derive it.");
-			}
-		}
-		else {
-			throw new ConfigException("Not a config error: Either 'appDir' or 'configFile' must be set."); 
-		}
-					
-		// Local folder
-		if (configTO.getLocalDir() != null) {
-			localDir = FileUtil.getCanonicalFile(new File(configTO.getLocalDir()));
-			
-			if (!localDir.exists()) {
-				throw new ConfigException("Directory 'localDir' must exist if it is explicitly specified: "+localDir);
-			}
-		}
-		else {
-			localDir = FileUtil.getCanonicalFile(appDir.getParentFile());
+	private void initDirectories(File aLocalDir) throws ConfigException {
+		if (aLocalDir == null) {
+			throw new ConfigException("Local dir cannot be null.");
 		}
 		
-		// Cache folder
-		if (configTO.getCacheDir() != null) {
-			cacheDir = FileUtil.getCanonicalFile(new File(configTO.getCacheDir()));
-			
-			if (!cacheDir.exists()) {
-				throw new ConfigException("Directory 'cacheDir' must exist if it is explicitly specified: "+cacheDir);
-			}
-		}
-		else {
-			cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_CACHE));
-		}
-		
-		// Database folder
-		if (configTO.getDatabaseDir() != null) {
-			databaseDir = FileUtil.getCanonicalFile(new File(configTO.getDatabaseDir()));
-			
-			if (!databaseDir.exists()) {
-				throw new ConfigException("Directory 'databaseDir' must exist if it is explicitly specified: "+databaseDir);
-			}
-		}
-		else {
-			databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_DATABASE));
-		}	
-		
-		// Log folder
-		if (configTO.getLogDir() != null) {
-			logDir = FileUtil.getCanonicalFile(new File(configTO.getLogDir()));
-			
-			if (!logDir.exists()) {
-				throw new ConfigException("Directory 'logDir' must exist if it is explicitly specified: "+logDir);
-			}
-		}
-		else {
-			logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_LOG));
-		}	
+		localDir = FileUtil.getCanonicalFile(aLocalDir);		
+		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DEFAULT_DIR_APPLICATION));
+		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_CACHE));
+		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_DATABASE));
+		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_LOG));
 	}
 	
 	private void initCache() {
