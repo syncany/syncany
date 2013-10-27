@@ -7,19 +7,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.util.FileUtil;
 
 public class TestConfigUtil {
-	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmss").format(new Date());
+	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
 	
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
@@ -29,55 +26,7 @@ public class TestConfigUtil {
 		
 		return pluginSettings;
 	}
-	
-	public static Map<String, String> createTestLocalConfigFile(String machineName, Map<String, String> connectionProperties) throws Exception {
-		Map<String, String> clientSettings = new HashMap<String, String>();
 		
-		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connectionProperties));
-		File tempLocalDir = new File(tempClientDir+"/local");
-		File tempAppDir = new File(tempClientDir+"/app"); // Warning: check delete method below if this is changed!
-		File tempCacheDir = new File(tempAppDir+"/cache");
-		File tempDatabaseDir = new File(tempAppDir+"/db");
-		File tempConfigFile = new File(tempAppDir+"/config.xml");
-		
-		tempLocalDir.mkdirs();
-		tempAppDir.mkdirs();
-		tempCacheDir.mkdirs();
-		tempDatabaseDir.mkdirs();
-		
-		// Client settings 
-		clientSettings.put("machinename", machineName);
-		clientSettings.put("localdir", tempLocalDir.getAbsolutePath());
-		clientSettings.put("appdir", tempAppDir.getAbsolutePath());
-		clientSettings.put("cachedir", tempCacheDir.getAbsolutePath());
-		clientSettings.put("databasedir", tempDatabaseDir.getAbsolutePath());
-
-		clientSettings.put("repopath", connectionProperties.get("path"));
-		clientSettings.put("configFile", tempConfigFile.getAbsolutePath());
-		
-		// Make config file from skeleton
-		String configXmlSkel = FileUtils.readFileToString(new File("tests/config-local.xml.skel"));		
-		String configXml = configXmlSkel;
-		
-		for (Map.Entry<String, String> clientSetting : clientSettings.entrySet()) {
-			String quoteReplaced = clientSetting.getValue();
-			configXml = configXml.replaceAll("\\$"+clientSetting.getKey(), quoteReplaced);
-		}
-		
-		FileUtil.writeToFile(configXml.getBytes(), tempConfigFile);		
-		
-		return clientSettings;
-	}	
-	
-	public static void deleteTestLocalConfigAndData(Map<String, String> clientSettings) throws ConfigException {		
-		if (clientSettings.get("localDir") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("localDir")));
-		if (clientSettings.get("cacheDir") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("cacheDir")));
-		if (clientSettings.get("databaseDir") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("databaseDir")));
-		if (clientSettings.get("configFile") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("configFile")));
-		if (clientSettings.get("appDir") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("appDir")));
-		if (clientSettings.get("repoPath") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("repoPath")));
-	}
-	
 	public static Config createTestLocalConfig() throws Exception {
 		return createTestLocalConfig("syncanyclient");
 	}
@@ -89,10 +38,10 @@ public class TestConfigUtil {
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
 		File tempClientDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));
 		File tempLocalDir = new File(tempClientDir+"/local");
-		File tempAppDir = new File(tempClientDir+"/app");
-		File tempCacheDir = new File(tempClientDir+"/app/cache");
-		File tempDatabaseDir = new File(tempClientDir+"/app/db");
-		File tempLogDir = new File(tempClientDir+"/app/logs");
+		File tempAppDir = new File(tempClientDir+"/.syncany");
+		File tempCacheDir = new File(tempAppDir+"/cache");
+		File tempDatabaseDir = new File(tempAppDir+"/db");
+		File tempLogDir = new File(tempAppDir+"/logs");
 		
 		tempLocalDir.mkdirs();
 		tempAppDir.mkdirs();
@@ -162,8 +111,7 @@ public class TestConfigUtil {
 		TestFileUtil.deleteDirectory(connection.getRepositoryPath());		
 	}
 	
-	private static String createUniqueName(String name, Object uniqueHashObj) {
-		return String.format("syncany-%s-%d-%s", RUNDATE, uniqueHashObj.hashCode() % 1024, name);
+	public static String createUniqueName(String name, Object uniqueHashObj) {
+		return String.format("syncany-%s-%d-%s", RUNDATE, 100 + uniqueHashObj.hashCode() % 899, name);
 	}
-
 }

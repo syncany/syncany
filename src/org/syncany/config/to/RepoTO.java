@@ -10,13 +10,13 @@ import org.simpleframework.xml.Root;
 @Root(name="repo")
 @Namespace(reference="http://syncany.org/repo/1")
 public class RepoTO {
-	@Element(name="chunker")
+	@Element(name="chunker", required=false)
 	private ChunkerTO chunker;
 	
-	@Element(name="multichunker")
+	@Element(name="multichunker", required=false)
 	private MultiChunkerTO multiChunker;
 	
-	@ElementList(name="transformers", entry="transformer")
+	@ElementList(name="transformers", required=false, entry="transformer")
 	private List<TransformerTO> transformers;
 	
 	public ChunkerTO getChunker() {

@@ -412,6 +412,8 @@ public class CommandLineClient extends Client {
 		out.println("Syncany: "+errorMessage);
 		out.println("         Refer to help page using '--help'.");
 		out.println();
+		
+		out.close();
 
 		System.exit(1);		
 		return 1;

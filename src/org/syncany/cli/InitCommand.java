@@ -104,11 +104,11 @@ public class InitCommand extends AbstractInitCommand {
 		boolean gzipEnabled = !options.has(optionNoGzip);
 		
 		String password = null;
-		List<CipherSpec> cipherSuites = getCipherSuites(encryptionEnabled, advancedModeEnabled);
+		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, advancedModeEnabled);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
-		List<TransformerTO> transformersTO = getTransformersTO(gzipEnabled, cipherSuites);
+		List<TransformerTO> transformersTO = getTransformersTO(gzipEnabled, cipherSpecs);
 				
 		if (encryptionEnabled) {			
 			password = askPasswordAndConfirm();
@@ -121,7 +121,7 @@ public class InitCommand extends AbstractInitCommand {
 		operationOptions.setRepoTO(repoTO);
 		
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
-		operationOptions.setCipherSpecs(cipherSuites);
+		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(password);
 		
 		return operationOptions;
