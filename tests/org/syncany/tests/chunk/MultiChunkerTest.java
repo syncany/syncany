@@ -20,7 +20,7 @@ import java.util.zip.ZipOutputStream;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
-import org.syncany.chunk.FixedOffsetChunker;
+import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
@@ -37,7 +37,7 @@ public class MultiChunkerTest {
 		int chunkSizeB = 16000;
 
 		Chunker[] chunkers = new Chunker[] { 
-			new FixedOffsetChunker(chunkSizeB)
+			new FixedChunker(chunkSizeB)
 		};
 		
 		MultiChunker[] multiChunkers = new MultiChunker[] { 

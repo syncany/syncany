@@ -25,7 +25,6 @@ public class TestClient extends Client {
 		testConfig.setMachineName(machineName);
 		
 		this.setConfig(testConfig);
-		this.createDirectories();
 	}	
 	
 	public UpOperationResult upWithForceChecksum() throws Exception {
@@ -103,9 +102,17 @@ public class TestClient extends Client {
 		Map<String, File> fileMap = new HashMap<String, File>();
 		
 		for (File file : fileList) {
-			if (!FileUtil.isFileLocked(file) && file.canRead()) {			
-				fileMap.put(FileUtil.getRelativePath(config.getLocalDir(), file), file);
+			if (FileUtil.isFileLocked(file) || !file.canRead()) {
+				continue;
+			}						
+			
+			String relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
+			
+			if (relativePath.startsWith(Config.DEFAULT_DIR_APPLICATION)) {
+				continue;
 			}
+			
+			fileMap.put(relativePath, file);
 		}
 		
 		return fileMap;

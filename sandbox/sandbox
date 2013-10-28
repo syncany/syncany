@@ -31,8 +31,6 @@ cmd_init() {
 
 initmachine() {
 	MACHINELOCALDIR="$PLAY/client$MACHINENAME"
-	MACHINEAPPDIR="$MACHINELOCALDIR/.syncany"
-	MACHINECONFIGFILE="$PLAY/client$MACHINENAME/.syncany/config.json"
 
 	RANDFILES=(/etc/hosts /etc/profile /etc/motd /etc/bash.bashrc /etc/wgetrc)
 	RANDFILESMAX=2
@@ -41,21 +39,20 @@ initmachine() {
 	echo "- Local directory at $MACHINELOCALDIR ..."
 	mkdir "$MACHINELOCALDIR"
 
-	echo "- Application directory at $MACHINEAPPDIR ..."
-	mkdir "$MACHINEAPPDIR"
-
-	echo "- Config file at $MACHINECONFIGFILE ..."
-	cat config-local.json.skel \
-		| sed -e "s!\$MACHINENAME!$MACHINENAME!" \
-		| sed -e "s!\$LOCALREPO!$LOCALREPO!" \
-		> $MACHINECONFIGFILE
-
 	echo "- Copy up to 2 random files to directory ..."
 
 	for i in `shuf --input-range=0-$(( ${#RANDFILES[*]} - 1 )) | head -${RANDFILESMAX}`; do
 		RANDFILE=${RANDFILES[$i]}
 		cp $RANDFILE $MACHINELOCALDIR/ 2> /dev/null
 	done	
+	
+	if [ ! -f "$LOCALREPO/repo" ]; then
+		echo "Running: " ../syncany init --localdir="$MACHINELOCALDIR" --no-encryption --no-gzip --plugin=local --plugin-option=path="$LOCALREPO" 
+		../syncany init --localdir="$MACHINELOCALDIR" --no-encryption --no-gzip --plugin=local --plugin-option=path="$LOCALREPO" 
+	else
+		echo "Running: " ../syncany connect --localdir="$MACHINELOCALDIR" --plugin=local --plugin-option=path="$LOCALREPO"
+		../syncany connect --localdir="$MACHINELOCALDIR" --plugin=local --plugin-option=path="$LOCALREPO"
+	fi	
 }
 
 cmd_run() {
@@ -68,7 +65,7 @@ cmd_run() {
 	CLIENT=${ARGS[0]}
 
 	CLIENTLOG=$PLAY/log.log
-	CLIENTCONFIG="$PLAY/client$CLIENT/.syncany/config.json"
+	CLIENTCONFIG="$PLAY/client$CLIENT/.syncany/config.xml"
 	CLIENTARGS=(${ARGS[@]:1})
 
 	# Delete previous logs

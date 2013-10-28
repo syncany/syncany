@@ -15,28 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config;
+package org.syncany.crypto;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class EncryptionException extends Exception {
+public class CipherException extends Exception {
 	private static final long serialVersionUID = -4974450231162263359L;
 
-	public EncryptionException(Throwable cause) {
+	public CipherException(Throwable cause) {
         super(cause);
     }
 
-    public EncryptionException(String message, Throwable cause) {
+    public CipherException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public EncryptionException(String message) {
+    public CipherException(String message) {
         super(message);
     }
 
-    public EncryptionException() {
+    public CipherException() {
     	// Intentionally left blank.
     }
     

@@ -10,6 +10,11 @@ import org.syncany.operations.StatusOperation.StatusOperationOptions;
 
 public class StatusCommand extends Command {
 	@Override
+	public boolean initializedLocalDirRequired() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = parseOptions(operationArgs);
 		ChangeSet changeSet = client.status(operationOptions);

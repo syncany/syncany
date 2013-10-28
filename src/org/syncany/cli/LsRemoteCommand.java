@@ -6,6 +6,11 @@ import org.syncany.connection.plugins.RemoteFile;
 
 public class LsRemoteCommand extends Command {
 	@Override
+	public boolean initializedLocalDirRequired() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		List<RemoteFile> remoteStatus = client.remoteStatus();
 		

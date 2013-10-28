@@ -21,6 +21,11 @@ public class RestoreCommand extends Command {
 	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
 	
 	@Override
+	public boolean initializedLocalDirRequired() {	
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 

@@ -2,7 +2,9 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -21,32 +23,39 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
-import org.syncany.config.ConfigTO;
-import org.syncany.config.Encryption;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
 	
 	private String[] args;	
-	private File configFile;
+	private File localDir;
 	
 	private PrintStream out;
+	private Console console;
 		
 	static {
 		Logging.init();
-		Logging.disableLogging();		
+		Logging.disableLogging();			
 	}
 	
 	public CommandLineClient(String[] args) {
 		this.args = args;		
 		this.out = System.out;
+		this.console = System.console();
 	}
 	
 	public void setOut(OutputStream out) {
@@ -60,8 +69,8 @@ public class CommandLineClient extends Client {
 			parser.allowsUnrecognizedOptions();
 			
 			OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
-			OptionSpec<File> optionConfig = parser.acceptsAll(asList("c", "config")).withRequiredArg().ofType(File.class);
-			OptionSpec<String> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg();
+			OptionSpec<File> optionLocalDir = parser.acceptsAll(asList("l", "localdir")).withRequiredArg().ofType(File.class);
+			OptionSpec<String> optionLog = parser.acceptsAll(asList("L", "log")).withRequiredArg();
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
 			OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));		
@@ -71,62 +80,23 @@ public class CommandLineClient extends Client {
 			
 			// Evaluate options
 			// WARNING: Do not re-order unless you know what you are doing!
-			initHelpOption(options, optionHelp);
-			initConfigOption(options, optionConfig);
+			initHelpOption(options, optionHelp, options.nonOptionArguments());
+			initConfigOption(options, optionLocalDir);
 			initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
 	
 			// Run!
-			return runOperation(options, options.nonOptionArguments());
+			return runCommand(options, options.nonOptionArguments());
 		}
 		catch (OptionException e) {
 			return showErrorAndExit(e.getMessage());
 		}
 	}	
 
-	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp) {
-		if (options.has(optionHelp)) {
+	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) {
+		if (options.has(optionHelp) || nonOptions.size() == 0) {
 			showUsageAndExit();
 		}
 	}
-
-	private int runOperation(OptionSet options, List<?> nonOptions) throws Exception {
-		if (nonOptions.size() == 0) {
-			showUsageAndExit();
-		}
-		
-		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String operationName = (String) nonOptionsCopy.remove(0); 
-		String[] operationArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
-		
-		// Find command
-		Command command = CommandFactory.getInstance(operationName);
-
-		if (command == null) {
-			showErrorAndExit("Given command is unknown: "+operationName);			
-		}
-		
-		command.setClient(this);
-		command.setOut(out);
-		
-		// Pre-init operations
-		if ("init".equals(operationName)) {
-			// Check config (NOT allowed for these operations)
-			if (configFile != null) {
-				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
-			}
-		}
-		else {
-			// Check config (required for these operations)
-			if (configFile == null) {
-				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
-			}			
-		}
-		
-		// Run!
-		int exitCode = command.execute(operationArgs);		
-		return exitCode;	
-	}
-
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		initLogHandlers(options, optionLog, optionDebug);		
@@ -195,65 +165,144 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private void initConfigOption(OptionSet options, OptionSpec<File> optionConfig) throws ConfigException, Exception {
+	private void initConfigOption(OptionSet options, OptionSpec<File> optionLocalDir) throws ConfigException, Exception {
 		// Find config or use --config option
-		if (options.has(optionConfig)) {
-			configFile = options.valueOf(optionConfig);
+		if (options.has(optionLocalDir)) {
+			localDir = options.valueOf(optionLocalDir);
 		}
 		else {
-			configFile = findConfigFileInPath();
-		}		
+			localDir = findLocalDirInPath();
+		}			
 		
 		// Load config
-		if (configFile != null) {
-			logger.log(Level.INFO, "Loading config from {0} ...", configFile);				
+		File appDir = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION);
+		
+		if (appDir.exists()) {
+			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
 
-			ConfigTO configTO = ConfigTO.load(configFile);
-			config = new Config(configTO);
+			ConfigTO configTO = loadConfigTO(localDir);
+			RepoTO repoTO = loadRepoTO(localDir, configTO);
 			
-			// Enable unlimited crypto if necessary
-			boolean isUnlimitedCryptoNeeded = configTO.getEncryption() != null 
-					&& configTO.getEncryption().isUnlimitedCryptoNeeded() != null && configTO.getEncryption().isUnlimitedCryptoNeeded();
-			
-			if (isUnlimitedCryptoNeeded) {
-				try {
-					Encryption.enableUnlimitedCrypto();
-				}
-				catch (Exception e) {
-					showErrorAndExit("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
-				}
-			}
-			
-			// Create folders
-			logger.log(Level.INFO, "Creating directories ...");				
-			createDirectories();
-		}				
+			config = new Config(localDir, configTO, repoTO);
+		}		
+		else {
+			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
+		}
 	}		
 	
-	private File findConfigFileInPath() throws IOException {
+	private ConfigTO loadConfigTO(File localDir) throws Exception {
+		File configFile = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
+		
+		if (!configFile.exists()) {
+			throw new Exception("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
+		}
+		
+		return ConfigTO.load(configFile);
+	}
+
+	private RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws Exception {
+		File repoFile = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO);
+		
+		if (!repoFile.exists()) {
+			throw new Exception("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
+		}
+		
+		if (CipherUtil.isEncrypted(repoFile)) {
+			logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
+
+			String password = configTO.getPassword();
+			
+			if (password == null) {
+				password = askPassword();
+				configTO.setPassword(password);
+			}
+			
+			String repoFileStr = CipherUtil.decryptToString(new FileInputStream(repoFile), password);
+			
+			Serializer serializer = new Persister();
+			return serializer.read(RepoTO.class, repoFileStr);			
+		}
+		else {
+			logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
+			
+			Serializer serializer = new Persister();
+			return serializer.read(RepoTO.class, repoFile);
+		}
+	}
+	
+	private File findLocalDirInPath() throws IOException {
 		File currentSearchFolder = new File(".").getCanonicalFile();
 		
 		while (currentSearchFolder != null) {
-			File possibleConfigFile = new File(currentSearchFolder+"/.syncany/config.json");
+			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION);
 			
-			if (possibleConfigFile.exists()) {
-				return possibleConfigFile.getCanonicalFile();
+			if (possibleAppDir.exists()) {
+				return possibleAppDir.getParentFile().getCanonicalFile();
 			}
 			
 			currentSearchFolder = currentSearchFolder.getParentFile();
 		}
 		 
-		return null; 
-	}			
+		return new File(".").getCanonicalFile(); 
+	}
+	
+	private String askPassword() {
+		String password = null;
+		
+		while (password == null) {
+			char[] passwordChars = console.readPassword("Password: ");			
+			password = new String(passwordChars);			
+		}	
+		
+		return password;
+	}
+	
+	private int runCommand(OptionSet options, List<?> nonOptions) throws Exception {
+		if (nonOptions.size() == 0) {
+			showUsageAndExit();
+		}
+		
+		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
+		String operationName = (String) nonOptionsCopy.remove(0); 
+		String[] operationArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
+		
+		// Find command
+		Command command = CommandFactory.getInstance(operationName);
+
+		if (command == null) {
+			showErrorAndExit("Given command is unknown: "+operationName);			
+		}
+		
+		command.setClient(this);
+		command.setOut(out);
+		command.setLocalDir(localDir);
+		
+		// Pre-init operations
+		if (command.initializedLocalDirRequired()) { 
+			if (config == null) {
+				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
+			}			
+		}
+		else {
+			if (config != null) {
+				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
+			}
+		}
+		
+		// Run!
+		int exitCode = command.execute(operationArgs);		
+		return exitCode;	
+	}
 	
 	private void showUsageAndExit() {
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsStr = "";
 		
-		for (int i=0; i<plugins.size(); i++) {
-			pluginsStr += plugins.get(i).getId();
-			if (i < plugins.size()-1) { pluginsStr += ", "; }			
-		}
+		String pluginsStr = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
+			@Override
+			public String getString(Plugin plugin) {
+				return plugin.getId();
+			}			
+		});		
 		
 		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
 		out.println("Usage: sy [-c|--config=<path>] [-l|--log=<path>]");
@@ -285,23 +334,33 @@ public class CommandLineClient extends Client {
 		out.println("      Print this help screen");
 		out.println();
 		out.println("Commands:");
-		out.println("  init -i");
-		out.println("  init <plugin> [<folder>]");
-		out.println("      Initialize <folder> as a Syncany folder (default is current folder). This");
-		out.println("      command creates and initializes a skeleton config file for the plugin <plugin>.");
-		out.println();
-		out.println("      The <plugin> attribute can be any of the loaded plugins.");		
-		out.println("      Currently loaded are: "+pluginsStr);
+		out.println("  init [<args>]");
+		out.println("      Initialize the current folder as a Syncany folder (interactive).");		
+		out.println("      Currently loaded plugins: "+pluginsStr);
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -i, --interactive       Run interactive mode to init Syncany folder.");
+		out.println("      -f, --folder=<local dir>         Specify a plugin to use for storage (see list above).");
+		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
+		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
+		out.println("      -e, --no-encryption              The new repo will not be encrypted (no password, DON'T USE THIS).");
+		out.println("      -a, --no-gzip                    The new repo will not use gzip to compress files.");
+		out.println("      -a, --advanced                   Asks more questions in the interactive dialog (pick cipher, etc.).");
+		out.println();
+		out.println("  connect [<args>] [<syncany link>]");
+		out.println("      Connect the current folder to an existing Syncany repository. To initialize the connection");
+		out.println("      a Syncany link (syncany://..) can be used.");
+		out.println();
+		out.println("      Arguments:");
+		out.println("      -f, --folder=<local dir>         Specify a plugin to use for storage (see list above).");
+		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
+		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
 		out.println();
 		out.println("  up [<args>]");
 		out.println("      Detect local changes and upload to repo (commit)");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -F, --force-upload      Force upload even if remote changes exist (will conflict!).");
-		out.println("      -c, --no-cleanup        Do not merge own databases in repo.");
+		out.println("      -F, --force-upload               Force upload even if remote changes exist (will conflict!).");
+		out.println("      -c, --no-cleanup                 Do not merge own databases in repo.");
 		out.println();
 		out.println("      In addition to these arguments, all arguments of the 'status' command can be used.");
 		out.println();
@@ -316,7 +375,7 @@ public class CommandLineClient extends Client {
 		out.println("      Detect local changes and print to STDOUT.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -f, --force-checksum    Force checksum comparison, if not enabled mod. date/size is used.");
+		out.println("      -f, --force-checksum             Force checksum comparison, if not enabled mod. date/size is used.");
 		out.println();
 		out.println("  ls-remote");
 		out.println("      Detect remote changes and print to STDOUT.");
@@ -326,22 +385,25 @@ public class CommandLineClient extends Client {
 		out.println("      watch the file system.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -i, --interval=<sec>    Repeat sync every <sec> seconds (default is 30).");
+		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 30).");
 		out.println();
 		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
 		out.println("      can be used.");
 		out.println();		
 		
-		System.exit(1);
+		out.close();		
+		System.exit(0);
 	}
 
 	private int showErrorAndExit(String errorMessage) {
 		out.println("Syncany: "+errorMessage);
 		out.println("         Refer to help page using '--help'.");
 		out.println();
-
-		System.exit(1);		
-		return 1;
+		
+		out.close();		
+		System.exit(0);
+		
+		return 0;
 	}
 	
 }

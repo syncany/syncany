@@ -21,163 +21,82 @@ package org.syncany.chunk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.syncany.config.Encryption;
-import org.syncany.config.EncryptionException;
+import org.syncany.crypto.CipherSession;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
+import org.syncany.crypto.MultiCipherInputStream;
+import org.syncany.crypto.MultiCipherOutputStream;
 
 /**
  *
  * @author pheckel
  */
 public class CipherTransformer extends Transformer {
-	private Encryption encryption;
+	public static final String TYPE = "cipher";
+	public static final String PROPERTY_CIPHER_SPECS = "cipherspecs";
+	public static final String PROPERTY_PASSWORD = "password";
 	
-	private byte[] sessionWriteSalt;
-	private SecretKey sessionWriteSecretKey;
+	private List<CipherSpec> cipherSuites;
+	private CipherSession cipherSession;
 	
-	private byte[] lastReadSalt;
-	private SecretKey lastReadSecretKey;	
-    
-    public CipherTransformer(Encryption encryption) {
-    	this.encryption = encryption;
-    }   
+	public CipherTransformer() {
+		this.cipherSuites = new ArrayList<CipherSpec>();
+		this.cipherSession = null;
+	}
+	
+    public CipherTransformer(List<CipherSpec> cipherSuites, String password) {
+    	this.cipherSuites = cipherSuites;
+    	this.cipherSession = new CipherSession(password);
+    }    
     
     @Override
-    public String toString() {
-        return (nextTransformer == null) ? "Cipher" : "Cipher-"+nextTransformer;
-    }     
+    public void init(Map<String, String> settings) throws Exception {
+    	String password = settings.get(PROPERTY_PASSWORD);
+    	String cipherSpecsListStr = settings.get(PROPERTY_CIPHER_SPECS);
+    	
+    	if (password == null || cipherSpecsListStr == null) {
+    		throw new Exception("Settings 'ciphersuites' and 'password' must both be filled.");
+    	}
+    	
+    	initCipherSuites(cipherSpecsListStr);
+    	initPassword(password);    	
+    }
     
-    @Override
+    private void initCipherSuites(String cipherSuitesListStr) throws Exception {
+    	String[] cipherSuiteIdStrs = cipherSuitesListStr.split(",");
+    	
+    	for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
+    		int cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);
+    		CipherSpec cipherSuite = CipherSpecs.getCipherSpec(cipherSuiteId);
+    		
+    		if (cipherSuite == null) {
+    			throw new Exception("Cannot find cipher suite with ID '"+cipherSuiteId+"'");
+    		}
+    		
+    		cipherSuites.add(cipherSuite);
+    	}
+	}
+
+	private void initPassword(String password) {
+		cipherSession = new CipherSession(password);
+	}
+
+	@Override
 	public OutputStream createOutputStream(OutputStream out) throws IOException {
-    	try {
-			// Create and write session salt to unencrypted stream
-			if (sessionWriteSecretKey == null || sessionWriteSalt == null) {
-				sessionWriteSalt = createSalt();
-				sessionWriteSecretKey = createSecretKey(sessionWriteSalt);
-			}
-			
-			out.write(sessionWriteSalt);
-			
-			// Create and write random IV to unencrypted stream
-			byte[] streamIV = null;
-			
-			if (encryption.isIvNeeded()) {
-				streamIV = new byte[encryption.getKeySize()/8]; 
-				new SecureRandom().nextBytes(streamIV);
-			
-				out.write(streamIV);
-			}
-			
-			// Initialize cipher
-			Cipher streamEncryptCipher = createEncCipher(sessionWriteSecretKey, streamIV);
-	
-			// Now create cipher stream and write to encrypted stream
-	        CipherOutputStream cipherOutputStream = new CipherOutputStream(out, streamEncryptCipher);
-	        
-	        return cipherOutputStream;
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}
+    	return new MultiCipherOutputStream(out, cipherSuites, cipherSession);    	
     }
 
     @Override
     public InputStream createInputStream(InputStream in) throws IOException {
-    	try {
-	    	// Read salt from unencrypted stream
-	    	byte[] streamSalt = new byte[encryption.getKeySize()/8]; 
-	    	in.read(streamSalt);
-	    	
-			// Read IV from unencrypted stream
-			byte[] streamIV = null;
-			
-			if (encryption.isIvNeeded()) {
-				streamIV = new byte[encryption.getKeySize()/8];		
-				in.read(streamIV);
-			}
-			
-			// Create key
-			SecretKey streamKey = null;
-			
-			if (lastReadSalt != null && Arrays.equals(lastReadSalt, streamSalt)) {
-				streamKey = lastReadSecretKey;
-			}
-			else {
-				streamKey = createSecretKey(streamSalt);
-				
-				lastReadSalt = streamSalt;
-				lastReadSecretKey = streamKey;
-			}
-			
-			// Initialize cipher
-			Cipher streamDecryptCipher = createDecCipher(streamKey, streamIV);
-	
-			// Now create cipher stream and write to encrypted stream
-			GcmCompatibleCipherInputStream cipherInputStream = new GcmCompatibleCipherInputStream(in, streamDecryptCipher);		
-	        
-	        return cipherInputStream;
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}
-    }
+    	return new MultiCipherInputStream(in, cipherSession);    	
+    }    
 
-    private byte[] createSalt() {
-    	byte[] salt = new byte[encryption.getKeySize()/8];    	
-    	new SecureRandom().nextBytes(salt);
-    	
-    	return salt;
-    }
-    
-    private SecretKey createSecretKey(byte[] keySalt) throws InvalidKeySpecException, NoSuchAlgorithmException {
-    	// Derive secret key from password 
-    	SecretKeyFactory factory = SecretKeyFactory.getInstance(Encryption.KEY_DERIVATION_FUNCTION);
-        KeySpec pbeKeySpec = new PBEKeySpec(encryption.getPassword().toCharArray(), keySalt, 1000, encryption.getKeySize());
-        SecretKey secretKey = factory.generateSecret(pbeKeySpec);
-        
-        // The key name must be "AES" if cipherStr is "AES/...". This is really odd, but necessary
-        String algorithm = (encryption.getCipherStr().indexOf('/') != -1) ? encryption.getCipherStr().substring(0, encryption.getCipherStr().indexOf('/')) : encryption.getCipherStr();
-        SecretKey secretKeyAlgorithm = new SecretKeySpec(secretKey.getEncoded(), algorithm);  
-        
-        return secretKeyAlgorithm;
-    }
-    
-	private Cipher createCipher(int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
-		try {
-            Cipher cipher = Cipher.getInstance(encryption.getCipherStr(), Encryption.PROVIDER);
-            
-            if (encryption.isIvNeeded()) {
-            	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
-            }
-            else {
-            	cipher.init(cipherInitMode, secretKey);
-            }
-
-            return cipher;
-        }
-        catch (Exception e) {
-            throw new EncryptionException(e);
-        }
-	}
-
-	private Cipher createEncCipher(SecretKey secretKey, byte[] iv) throws EncryptionException {
-		return createCipher(Cipher.ENCRYPT_MODE, secretKey, iv);
-	}   
-	
-	private Cipher createDecCipher(SecretKey secretKey, byte[] iv) throws EncryptionException {
-		return createCipher(Cipher.DECRYPT_MODE, secretKey, iv);
-	}      
+    @Override
+    public String toString() {
+        return (nextTransformer == null) ? "Cipher" : "Cipher-"+nextTransformer;
+    }     
 }

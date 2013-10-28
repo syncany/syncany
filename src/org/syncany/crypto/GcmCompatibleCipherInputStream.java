@@ -22,7 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.syncany.chunk;
+package org.syncany.crypto;
 
 import java.io.FilterInputStream;
 import java.io.IOException;

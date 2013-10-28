@@ -17,6 +17,8 @@
  */
 package org.syncany.util;
 
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -98,5 +100,40 @@ public class StringUtil {
         }
         
         return data;        
-    }                
+    }
+	
+	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
+		StringBuilder objectsStr = new StringBuilder();
+		
+		for (int i=0; i<objects.size(); i++) {
+			if (listener != null) {
+				objectsStr.append(listener.getString(objects.get(i)));
+			}
+			else {
+				objectsStr.append(objects.get(i).toString());
+			}
+			
+			if (i < objects.size()-1) { 
+				objectsStr.append(delimiter);
+			}			
+		}
+		
+		return objectsStr.toString();
+	}   
+	
+	public static <T> String join(List<T> objects, String delimiter) {
+		return join(objects, delimiter, null);
+	} 
+	
+	public static <T> String join(T[] objects, String delimiter, StringJoinListener<T> listener) {
+		return join(Arrays.asList(objects), delimiter, listener);
+	}   
+	
+	public static <T> String join(T[] objects, String delimiter) {
+		return join(Arrays.asList(objects), delimiter, null);
+	}   
+	
+	public static interface StringJoinListener<T> {
+		public String getString(T object);
+	}
 }

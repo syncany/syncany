@@ -18,19 +18,22 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.FixedOffsetChunker;
-import org.syncany.chunk.GzipTransformer;
+import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
-import org.syncany.config.ConfigTO.EncryptionSettings;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.util.FileUtil;
 
 /**
  * 
@@ -41,6 +44,8 @@ public class Config {
 	public static final String DEFAULT_DIR_CACHE = "cache";
 	public static final String DEFAULT_DIR_DATABASE = "db";
 	public static final String DEFAULT_DIR_LOG = "logs";
+	public static final String DEFAULT_FILE_CONFIG = "config.xml";
+	public static final String DEFAULT_FILE_REPO = "repo";
 	
 	private String machineName;	
 	private File localDir;
@@ -48,10 +53,11 @@ public class Config {
 	private File cacheDir;
 	private File databaseDir;
 	private File logDir;
+	
+	private String password;
 
 	private Cache cache;	
 	private Connection connection;
-    private Encryption encryption;
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
@@ -66,15 +72,13 @@ public class Config {
     	Logging.init();
     }
     
-	public Config(ConfigTO configTO) throws Exception {		
-		// Initialize config
-		// WARNING: Do not move around without knowing what you are doing!
+	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws Exception {		
 		initMachineName(configTO);
-		initDirectories(configTO);
+		initPassword(configTO);
+		initDirectories(aLocalDir);
 		initCache();
-    	initEncryption(configTO);
-		initChunkingFramework(configTO);
-    	initConnectionPlugin(configTO);    
+		initRepo(repoTO);
+    	initConnection(configTO);    
 	}		
 
 	private void initMachineName(ConfigTO configTO) throws ConfigException {
@@ -84,130 +88,75 @@ public class Config {
 		
 		machineName = configTO.getMachineName();
 	}
+	
+	private void initPassword(ConfigTO configTO) {
+		password = configTO.getPassword(); // can be null!
+	}
 
-	private void initDirectories(ConfigTO configTO) throws ConfigException {
-		// App folder
-		if (configTO.getAppDir() != null) {			
-			appDir = new File(configTO.getAppDir());
-			
-			if (!appDir.exists()) {
-				throw new ConfigException("Directory 'appDir' must exist if it is explicitly specified: "+appDir);
-			}			
-		}
-		else if (configTO.getConfigFile() != null) {
-			appDir = new File(configTO.getConfigFile()).getParentFile();
-			
-			if (!DEFAULT_DIR_APPLICATION.equals(appDir.getName())) {
-				throw new ConfigException("Directory 'appDir' must exist either be explicitly specified, or folder of config file must be named '.syncany' to derive it.");
-			}
-		}
-					
-		// Local folder
-		if (configTO.getLocalDir() != null) {
-			localDir = new File(configTO.getLocalDir());
-			
-			if (!localDir.exists()) {
-				throw new ConfigException("Directory 'localDir' must exist if it is explicitly specified: "+localDir);
-			}
-		}
-		else {
-			localDir = appDir.getParentFile();
+	private void initDirectories(File aLocalDir) throws ConfigException {
+		if (aLocalDir == null) {
+			throw new ConfigException("Local dir cannot be null.");
 		}
 		
-		// Cache folder
-		if (configTO.getCacheDir() != null) {
-			cacheDir = new File(configTO.getCacheDir());
-			
-			if (!cacheDir.exists()) {
-				throw new ConfigException("Directory 'cacheDir' must exist if it is explicitly specified: "+cacheDir);
-			}
-		}
-		else {
-			cacheDir = new File(appDir+File.separator+DEFAULT_DIR_CACHE);
-		}
-		
-		// Database folder
-		if (configTO.getDatabaseDir() != null) {
-			databaseDir = new File(configTO.getDatabaseDir());
-			
-			if (!databaseDir.exists()) {
-				throw new ConfigException("Directory 'databaseDir' must exist if it is explicitly specified: "+databaseDir);
-			}
-		}
-		else {
-			databaseDir = new File(appDir+File.separator+DEFAULT_DIR_DATABASE);
-		}	
-		
-		// Log folder
-		if (configTO.getLogDir() != null) {
-			logDir = new File(configTO.getLogDir());
-			
-			if (!logDir.exists()) {
-				throw new ConfigException("Directory 'logDir' must exist if it is explicitly specified: "+logDir);
-			}
-		}
-		else {
-			logDir = new File(appDir+File.separator+DEFAULT_DIR_LOG);
-		}	
+		localDir = FileUtil.getCanonicalFile(aLocalDir);		
+		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DEFAULT_DIR_APPLICATION));
+		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_CACHE));
+		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_DATABASE));
+		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_LOG));
 	}
 	
 	private void initCache() {
 		cache = new Cache(cacheDir);
 	}	
 
-	private void initChunkingFramework(ConfigTO configTO) throws EncryptionException {
+	private void initRepo(RepoTO repoTO) throws Exception {
 		// TODO [low] make chunking options configurable
-		// TODO [low] allow multiple transformers in config, like: trans.1=gzip, trans.2=cipher{opts}, ...
-		chunker = new FixedOffsetChunker(16*1024); //new TTTDChunker(16*1024);// 
+		
+		chunker = new FixedChunker(16*1024); //new TTTDChunker(16*1024);// 
 		multiChunker = new ZipMultiChunker(2048*1024);
 		
-		if (encryption != null) {
-			transformer = new GzipTransformer(new CipherTransformer(encryption));
-		}
-		else {
+		if (repoTO.getTransformerTOs() == null || repoTO.getTransformerTOs().size() == 0) {
 			transformer = new NoTransformer();
 		}
-	}
-	
-	private void initEncryption(ConfigTO configTO) throws EncryptionException {
-		EncryptionSettings toEncSettings = configTO.getEncryption();
-		
-		if (toEncSettings != null && toEncSettings.isEnabled() != null && toEncSettings.isEnabled()) {	    	
-	    	if (toEncSettings.isEnabled() == null || toEncSettings.getPass() == null) {
-	    		throw new EncryptionException("Parameters 'enabled' and 'pass' are required.'");
-	    	}
-
-	    	encryption = new Encryption();			    	
-	    	encryption.setPassword(toEncSettings.getPass());
-	    	
-	    	if (toEncSettings.getCipherStr() != null) {
-	    		encryption.setCipherStr(toEncSettings.getCipherStr());
-	    	}
-	    	
-	    	if (toEncSettings.getKeySize() != null) {
-	    		encryption.setKeySize(toEncSettings.getKeySize());
-	    	}
-	    	
-	    	if (toEncSettings.isIvNeeded() != null) {
-	    		encryption.setIvNeeded(toEncSettings.isIvNeeded());
-	    	}
-	    	
-	    	if (toEncSettings.isUnlimitedCryptoNeeded() != null) {
-	    		encryption.setUnlimitedCryptoNeeded(toEncSettings.isUnlimitedCryptoNeeded());
-	    	}
+		else {			
+			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformerTOs());
+			Transformer lastTransformer = null;
+			
+			for (int i=transformerTOs.size()-1; i>=0; i--) {
+				TransformerTO transformerTO = transformerTOs.get(i);
+				Transformer transformer = Transformer.getInstance(transformerTO.getType());
+				
+				if (transformer == null) {
+					throw new Exception("Cannot find transformer '"+transformerTO.getType()+"'");
+				}
+				
+				if (transformer instanceof CipherTransformer) { // Dirty workaround
+					transformerTO.getSettings().put(CipherTransformer.PROPERTY_PASSWORD, getPassword());
+				}
+				
+				transformer.init(transformerTO.getSettings());
+				
+				if (lastTransformer != null) {
+					transformer.setNextTransformer(lastTransformer);
+				}
+				
+				lastTransformer = transformer;
+			}
+			
+			transformer = lastTransformer;
 		}
 	}
 	
-	private void initConnectionPlugin(ConfigTO configTO) throws Exception {
-		if (configTO.getConnection() != null) {
-			Plugin plugin = Plugins.get(configTO.getConnection().getType());
+	private void initConnection(ConfigTO configTO) throws Exception {
+		if (configTO.getConnectionTO() != null) {
+			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());
 	    	
 	    	if (plugin == null) {
-	    		throw new Exception("Plugin not supported: " + configTO.getConnection().getType());
+	    		throw new Exception("Plugin not supported: " + configTO.getConnectionTO().getType());
 	    	}
 	    	
 	    	connection = plugin.createConnection();
-	    	connection.init(configTO.getConnection().getSettings());
+	    	connection.init(configTO.getConnectionTO().getSettings());
 		}
 	}
 	
@@ -288,6 +237,14 @@ public class Config {
 		return databaseDir;
 	}
 	
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
 	public File getDatabaseFile() {
 		return new File(databaseDir+File.separator+"local.db");	
 	}
@@ -296,7 +253,6 @@ public class Config {
 		return new File(databaseDir+File.separator+"dirty.db");	
 	}
 	
-
 	public File getKnownDatabaseListFile() {
 		return new File(databaseDir+File.separator+"knowndbs.list");	
 	}

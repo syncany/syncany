@@ -9,8 +9,14 @@ import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
+import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 
 public class UpCommand extends Command {
+	@Override
+	public boolean initializedLocalDirRequired() {	
+		return true;
+	}
+	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpOperationOptions operationOptions = parseOptions(operationArgs);
@@ -51,9 +57,12 @@ public class UpCommand extends Command {
 	}
 
 	public void printResults(UpOperationResult operationResult) {
-		ChangeSet changeSet = operationResult.getChangeSet();
-		
-		if (changeSet.hasChanges()) {			
+		if (operationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
+			out.println("Sync up skipped, because there are remote changes.");
+		}
+		else if (operationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES) {
+			ChangeSet changeSet = operationResult.getChangeSet();
+			
 			for (String newFile : changeSet.getNewFiles()) {
 				out.println("A "+newFile);
 			}
@@ -67,7 +76,7 @@ public class UpCommand extends Command {
 			}	
 			
 			out.println("Sync up finished.");
-		}
+		}		
 		else {
 			out.println("Sync up skipped, no local changes.");
 		}
