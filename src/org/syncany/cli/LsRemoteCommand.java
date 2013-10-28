@@ -6,7 +6,7 @@ import org.syncany.connection.plugins.RemoteFile;
 
 public class LsRemoteCommand extends Command {
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return true;
 	}
 	

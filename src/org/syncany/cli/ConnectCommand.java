@@ -3,9 +3,8 @@ package org.syncany.cli;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,20 +14,18 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
-import org.syncany.config.to.RepoTO;
+import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.ConnectOperation.ConnectOperationListener;
+import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
+import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 
-public class ConnectCommand extends AbstractInitCommand {
+public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
 	public static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(not-encrypted/)?(.+)$");	
 	
 	private String password;
@@ -38,17 +35,23 @@ public class ConnectCommand extends AbstractInitCommand {
 	}
 
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return false;
 	}
-
+	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		runConnectOperation(operationArgs);
-		return 0;
-	}	
+		ConnectOperationOptions operationOptions = parseConnectOptions(operationArgs);
+		ConnectOperationResult operationResult = client.connect(operationOptions, this);
+		
+		printResults(operationResult);
+		
+		return 0;		
+	}
 
-	private void runConnectOperation(String[] operationArguments) throws OptionException, Exception {
+	private ConnectOperationOptions parseConnectOptions(String[] operationArguments) throws OptionException, Exception {
+		ConnectOperationOptions operationOptions = new ConnectOperationOptions();
+
 		OptionParser parser = new OptionParser();			
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
@@ -56,48 +59,39 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionSet options = parser.parse(operationArguments);	
 		List<?> nonOptionArgs = options.nonOptionArguments();		
 		
+		// Plugin
+		ConnectionTO connectionTO = new ConnectionTO();
+		
 		if (nonOptionArgs.size() == 1) {
-			initPluginWithLink((String) nonOptionArgs.get(0));			
+			connectionTO = initPluginWithLink((String) nonOptionArgs.get(0));			
 		}
 		else if (options.has(optionPlugin)) {
-			if (options.has(optionPlugin)) {
-				initPlugin(options.valueOf(optionPlugin));
-			}
-			else {
-				askPlugin();
-			}
-			
-			if (options.has(optionPluginOpts)) {
-				initPluginSettings(options.valuesOf(optionPluginOpts));			
-			}
-			else {
-				askPluginSettings();
-			}		
+			connectionTO = initPluginWithOptions(options, optionPlugin, optionPluginOpts);
 		}
 		else if (nonOptionArgs.size() == 0) {
-			initPluginByAsking();
+			String pluginStr = askPlugin();
+			Map<String, String> pluginSettings = askPluginSettings(pluginStr);
+
+			connectionTO.setType(pluginStr);
+			connectionTO.setSettings(pluginSettings);
 		}
 		else {
 			throw new Exception("Invalid syntax.");
 		}
 		
-		File tmpRepoFile = downloadRepoFile();			
-		RepoTO repoTO = createRepoTOFromFile(tmpRepoFile);
-		ConfigTO configTO = createConfigTO(localDir, password);
+		ConfigTO configTO = createConfigTO(localDir, password, connectionTO);
 		
-		File appDir = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION); // TODO [medium] Duplicate code in InitOperation
-		File configFile = new File(appDir+"/"+Config.DEFAULT_FILE_CONFIG);
-		File repoFile = new File(appDir+"/"+Config.DEFAULT_FILE_REPO);
+		operationOptions.setLocalDir(localDir);
+		operationOptions.setConfigTO(configTO);
 		
-		if (!appDir.exists()) {
-			appDir.mkdir();
-		}		
-		
-		writeXmlFile(configTO, configFile);
-		FileUtils.copyFile(tmpRepoFile, repoFile);
+		return operationOptions;		
+	}	
+
+	private void printResults(ConnectOperationResult operationResult) {
+		// Nothing
 	}
 	
-	private void initPluginWithLink(String link) throws Exception {
+	private ConnectionTO initPluginWithLink(String link) throws Exception {
 		Matcher linkMatcher = LINK_PATTERN.matcher(link);
 		
 		if (!linkMatcher.matches()) {
@@ -125,61 +119,18 @@ public class ConnectCommand extends AbstractInitCommand {
 		//System.out.println(plaintext);
 
 		Serializer serializer = new Persister();
-		ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);
+		ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);		
 		
-		System.out.println(connectionTO);
+		Plugin plugin = Plugins.get(connectionTO.getType());
 		
-		plugin = Plugins.get(connectionTO.getType());
-		pluginSettings = connectionTO.getSettings();
-		
-		connection = plugin.createConnection();
-		connection.init(pluginSettings);		
-	}
-
-	private void initPluginByAsking() throws StorageException {
-		askPlugin();
-		askPluginSettings();		
-	}
-
-	protected File downloadRepoFile() throws Exception {
-		File tmpRepoFile = File.createTempFile("syncanyrepo", "tmp");
-		
-		try {
-			out.print("Trying to connect ... ");
-			
-			TransferManager transferManager = connection.createTransferManager();
-			transferManager.download(new RemoteFile("repo"), tmpRepoFile);
-			
-			return tmpRepoFile;			
+		if (plugin == null) {
+			throw new Exception("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");
 		}
-		catch (Exception e) {
-			throw new Exception("Unable to connect to repository.", e);
-		}		
+		
+		return connectionTO;			
 	}
-	
-	private RepoTO createRepoTOFromFile(File file) throws Exception {
-		if (CipherUtil.isEncrypted(file)) {
-			if (password == null) {
-				password = askPassword();
-			}
-			
-			FileInputStream encryptedRepoConfig = new FileInputStream(file);
-			String repoFileStr = CipherUtil.decryptToString(encryptedRepoConfig, password);
-			
-			Serializer serializer = new Persister();
-			RepoTO repoTO = serializer.read(RepoTO.class, repoFileStr);
 
-			return repoTO;
-		}
-		else {
-			Serializer serializer = new Persister();
-			RepoTO repoTO = serializer.read(RepoTO.class, file);
-
-			return repoTO;
-		}		
-	}	
-
-	private String askPassword() { // TODO [low] Duplicate code in CommandLineClient
+	private String askPassword() { 
 		String password = null;
 		
 		while (password == null) {
@@ -188,5 +139,10 @@ public class ConnectCommand extends AbstractInitCommand {
 		}	
 		
 		return password;
+	}
+
+	@Override
+	public String getPasswordCallback() {
+		return askPassword();
 	}
 }

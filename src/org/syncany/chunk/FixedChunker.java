@@ -27,8 +27,10 @@ import java.util.logging.Level;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class FixedOffsetChunker extends Chunker {
+public class FixedChunker extends Chunker {
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
+	public static final String TYPE = "fixed";
+	public static final String PROPERTY_SIZE = "size";
 
     private int chunkSize;
     private MessageDigest digest;
@@ -40,7 +42,7 @@ public class FixedOffsetChunker extends Chunker {
      * 
      * @param chunkSize in byte
      */
-    public FixedOffsetChunker(int chunkSize) {
+    public FixedChunker(int chunkSize) {
         this(chunkSize, DEFAULT_DIGEST_ALG);
     }
     
@@ -49,7 +51,7 @@ public class FixedOffsetChunker extends Chunker {
      * @param chunkSize in byte
      * @param checksumAlgorithm
      */
-    public FixedOffsetChunker(int chunkSize, String checksumAlgorithm) {
+    public FixedChunker(int chunkSize, String checksumAlgorithm) {
         this.chunkSize = chunkSize;        
  
         try {

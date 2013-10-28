@@ -25,7 +25,6 @@ public class TestClient extends Client {
 		testConfig.setMachineName(machineName);
 		
 		this.setConfig(testConfig);
-		this.createDirectories();
 	}	
 	
 	public UpOperationResult upWithForceChecksum() throws Exception {

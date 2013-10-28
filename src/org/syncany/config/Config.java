@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.FixedOffsetChunker;
+import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
@@ -112,7 +112,7 @@ public class Config {
 	private void initRepo(RepoTO repoTO) throws Exception {
 		// TODO [low] make chunking options configurable
 		
-		chunker = new FixedOffsetChunker(16*1024); //new TTTDChunker(16*1024);// 
+		chunker = new FixedChunker(16*1024); //new TTTDChunker(16*1024);// 
 		multiChunker = new ZipMultiChunker(2048*1024);
 		
 		if (repoTO.getTransformerTOs() == null || repoTO.getTransformerTOs().size() == 0) {

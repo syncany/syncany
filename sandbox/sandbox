@@ -31,8 +31,6 @@ cmd_init() {
 
 initmachine() {
 	MACHINELOCALDIR="$PLAY/client$MACHINENAME"
-	MACHINEAPPDIR="$MACHINELOCALDIR/.syncany"
-	MACHINECONFIGFILE="$PLAY/client$MACHINENAME/.syncany/config.xml"
 
 	RANDFILES=(/etc/hosts /etc/profile /etc/motd /etc/bash.bashrc /etc/wgetrc)
 	RANDFILESMAX=2
@@ -40,15 +38,6 @@ initmachine() {
 	echo "Creating client $MACHINENAME ..."
 	echo "- Local directory at $MACHINELOCALDIR ..."
 	mkdir "$MACHINELOCALDIR"
-
-	echo "- Application directory at $MACHINEAPPDIR ..."
-	mkdir "$MACHINEAPPDIR"
-
-	echo "- Config file at $MACHINECONFIGFILE ..."
-	cat config-local.xml.skel \
-		| sed -e "s!\$machinename!$MACHINENAME!" \
-		| sed -e "s!\$repopath!$LOCALREPO!" \
-		> $MACHINECONFIGFILE
 
 	echo "- Copy up to 2 random files to directory ..."
 
@@ -58,11 +47,11 @@ initmachine() {
 	done	
 	
 	if [ ! -f "$LOCALREPO/repo" ]; then
-		echo "Running: " ../syncany init --folder="$MACHINELOCALDIR" --no-encryption --no-gzip --plugin=local --plugin-option=path="$LOCALREPO" 
-		../syncany init --folder="$MACHINELOCALDIR" --no-encryption --no-gzip --plugin=local --plugin-option=path="$LOCALREPO" 
+		echo "Running: " ../syncany init --localdir="$MACHINELOCALDIR" --no-encryption --no-gzip --plugin=local --plugin-option=path="$LOCALREPO" 
+		../syncany init --localdir="$MACHINELOCALDIR" --no-encryption --no-gzip --plugin=local --plugin-option=path="$LOCALREPO" 
 	else
-		echo "Running: " ../syncany connect --folder="$MACHINELOCALDIR" --plugin=local --plugin-option=path="$LOCALREPO"
-		../syncany connect --folder="$MACHINELOCALDIR" --plugin=local --plugin-option=path="$LOCALREPO"
+		echo "Running: " ../syncany connect --localdir="$MACHINELOCALDIR" --plugin=local --plugin-option=path="$LOCALREPO"
+		../syncany connect --localdir="$MACHINELOCALDIR" --plugin=local --plugin-option=path="$LOCALREPO"
 	fi	
 }
 

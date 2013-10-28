@@ -30,7 +30,8 @@ import java.util.zip.GZIPOutputStream;
  * @author pheckel
  */
 public class GzipTransformer extends Transformer {
-    private int level;
+    public static final String TYPE = "gzip";
+	private int level;
     
     public GzipTransformer() {
         this(Deflater.DEFAULT_COMPRESSION, null);

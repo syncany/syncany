@@ -23,5 +23,5 @@ public abstract class Command {
 	}
 	
 	public abstract int execute(String[] operationArgs) throws Exception;
-	public abstract boolean needConfigFile();
+	public abstract boolean initializedLocalDirRequired();
 }

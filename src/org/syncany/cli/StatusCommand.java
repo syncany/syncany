@@ -10,7 +10,7 @@ import org.syncany.operations.StatusOperation.StatusOperationOptions;
 
 public class StatusCommand extends Command {
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return true;
 	}
 	

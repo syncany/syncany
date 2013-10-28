@@ -39,8 +39,8 @@ public class CommandLineInterfaceTest {
 		new CommandLineClient(initArgs).start();
 
 		assertTrue("Repo file in repository should exist.", new File(clientA.get("repopath")+"/repo").exists());
-		assertTrue("Repo file in local client should exist.", new File(clientA.get("localdir")+"/.syncany/repo").exists());
-		assertTrue("Config file in local client should exist.", new File(clientA.get("configfile")).exists());
+		assertTrue("Repo file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO).exists());
+		assertTrue("Config file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG).exists());
 				
 		// Connect
 		String[] connectArgs = new String[] { 			 
@@ -53,8 +53,8 @@ public class CommandLineInterfaceTest {
 		logger.log(Level.INFO, "Running syncany with argument: "+StringUtil.join(connectArgs, " "));		
 		new CommandLineClient(connectArgs).start();
 
-		assertTrue("Repo file in local client should exist.", new File(clientB.get("repofile")).exists());
-		assertTrue("Config file in local client should exist.", new File(clientB.get("configfile")).exists());
+		assertTrue("Repo file in local client should exist.", new File(clientB.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO).exists());
+		assertTrue("Config file in local client should exist.", new File(clientB.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG).exists());
 
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);		
@@ -66,13 +66,19 @@ public class CommandLineInterfaceTest {
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 
 		new CommandLineClient(new String[] { 
-				 "--folder", clientA.get("localdir"), "up", "--no-cleanup" }).start();
+			 "--localdir", clientA.get("localdir"),
+			 "up",
+			 "--no-cleanup" 
+		}).start();
 
 		for (int i=1; i<=20; i++) {
-			new File(clientA.get("localDir")+"/somefolder"+i).mkdir();
+			new File(clientA.get("localdir")+"/somefolder"+i).mkdir();
 
 			new CommandLineClient(new String[] { 
-					 "--config", clientA.get("configfile"), "up", "--no-cleanup" }).start();
+				"--localdir", clientA.get("localdir"),
+				"up",
+				"--no-cleanup"
+			}).start();
 		}
 		
 		for (int i=1; i<=20; i++) {
@@ -83,9 +89,6 @@ public class CommandLineInterfaceTest {
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 	}	
 	
-	// TODO [low] write test for default config settings
-	// TODO [low] write test for init operation
-	
 	@Test
 	public void testAppFoldersExist() throws Exception {
 		// Setup
@@ -94,10 +97,13 @@ public class CommandLineInterfaceTest {
 		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
 
 		// Run!
-		new File(clientA.get("localDir")+"/somefolder").mkdir();
+		new File(clientA.get("localdir")+"/somefolder").mkdir();
 	
 		CommandLineClient cli = new CommandLineClient(new String[] { 
-				"--config", clientA.get("configfile"), "up", "--no-cleanup" });
+			"--localdir", clientA.get("localdir"),
+			"up",
+			"--no-cleanup" 
+		});
 		
 		cli.setOut(cliOut);
 		cli.start();
@@ -106,7 +112,7 @@ public class CommandLineInterfaceTest {
 		logger.log(Level.INFO, toString(cliOut));		
 		
 		// Test folder existence
-		File appFolder = new File(clientA.get("configfile")).getParentFile();
+		File appFolder = new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION);
 		File logFolder = new File(appFolder+"/"+Config.DEFAULT_DIR_LOG);
 		File dbFolder = new File(appFolder+"/"+Config.DEFAULT_DIR_DATABASE);
 		File cacheFolder = new File(appFolder+"/"+Config.DEFAULT_DIR_CACHE);
@@ -128,19 +134,21 @@ public class CommandLineInterfaceTest {
 	}	
 	
 	@Test
-	public void testSyncanyCliWithLogLevelOff() throws Exception {
+	public void testCliWithLogLevelOff() throws Exception {
 		// Setup
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
 
 		// Run!
-		new File(clientA.get("localDir")+"/somefolder1").mkdir();
-		new File(clientA.get("localDir")+"/somefolder2").mkdir();
+		new File(clientA.get("localdir")+"/somefolder1").mkdir();
+		new File(clientA.get("localdir")+"/somefolder2").mkdir();
 				
 		CommandLineClient cli = new CommandLineClient(new String[] { 
-				"--loglevel", "OFF", 
-				"--config", clientA.get("configfile"), "status" });
+			"--loglevel", "OFF", 
+			"--localdir", clientA.get("localdir"),
+			"status" 
+		});
 		
 		cli.setOut(cliOut);
 		cli.start();
@@ -160,21 +168,24 @@ public class CommandLineInterfaceTest {
 	}	
 	
 	@Test
-	public void testSyncanyCliWithLogFile() throws Exception {
+	public void testCliWithLogFile() throws Exception {
 		// Setup
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
 
-		File tempLogFile = new File(clientA.get("appDir")+"/log");
+		File tempLogFile = new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION
+				+"/"+Config.DEFAULT_DIR_LOG+"/templogfile");
 		
 		// Run!
-		new File(clientA.get("localDir")+"/somefolder1").mkdir();
-		new File(clientA.get("localDir")+"/somefolder2").mkdir();
+		new File(clientA.get("localdir")+"/somefolder1").mkdir();
+		new File(clientA.get("localdir")+"/somefolder2").mkdir();
 				
 		CommandLineClient cli = new CommandLineClient(new String[] { 
-				"--log", tempLogFile.getAbsolutePath(), 
-				"--config", clientA.get("configfile"), "status" });
+			"--log", tempLogFile.getAbsolutePath(), 
+			"--localdir", clientA.get("localdir"),
+			"status"
+		});
 		
 		cli.setOut(cliOut);
 		cli.start();

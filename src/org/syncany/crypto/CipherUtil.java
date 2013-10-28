@@ -67,7 +67,7 @@ public class CipherUtil {
     	return unlimitedStrengthEnabled;
     }
     
-    public static void enableUnlimitedCrypto() throws EncryptionException {
+    public static void enableUnlimitedCrypto() throws CipherException {
     	if (!unlimitedStrengthEnabled) {
     		logger.log(Level.INFO, "Enabling unlimited strength/crypto ...");
     		
@@ -78,7 +78,7 @@ public class CipherUtil {
 				field.set(null, false);		
 			}
 			catch (Exception e) {
-				throw new EncryptionException(e);
+				throw new CipherException(e);
 			}
     	}
     }
@@ -105,7 +105,7 @@ public class CipherUtil {
         return secretKeyAlgorithm;
     }
 	
-	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws CipherException {
 		logger.log(Level.INFO, "Creating cipher using "+cipherSpec+" ...");
 
 		try {
@@ -125,15 +125,15 @@ public class CipherUtil {
             return cipher;
         }
         catch (Exception e) {
-            throw new EncryptionException(e);
+            throw new CipherException(e);
         }
 	}
 
-	public static Cipher createEncCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createEncCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws CipherException {
 		return createCipher(cipherSuite, Cipher.ENCRYPT_MODE, secretKey, iv);
 	}   
 	
-	public static Cipher createDecCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws EncryptionException {
+	public static Cipher createDecCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws CipherException {
 		return createCipher(cipherSuite, Cipher.DECRYPT_MODE, secretKey, iv);
 	}    	
 	

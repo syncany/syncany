@@ -9,7 +9,7 @@ import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
 public class WatchCommand extends Command {
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return true;
 	}
 	

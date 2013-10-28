@@ -21,7 +21,7 @@ public class RestoreCommand extends Command {
 	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
 	
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return true;
 	}
 	

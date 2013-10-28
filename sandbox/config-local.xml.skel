@@ -1,6 +1,0 @@
-<config xmlns="http://syncany.org/config/1">
-   <machinename>$machinename</machinename>
-   <connection type="local">
-      <property name="path">$repopath</property>
-   </connection>
-</config>

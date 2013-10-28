@@ -34,7 +34,7 @@ public class SyncCommand extends Command {
 	}
 	
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return true;
 	}
 	

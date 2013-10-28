@@ -13,13 +13,15 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.chunk.CipherTransformer;
+import org.syncany.chunk.FixedChunker;
+import org.syncany.chunk.GzipTransformer;
+import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -34,7 +36,7 @@ public class InitCommand extends AbstractInitCommand {
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
 	@Override
-	public boolean needConfigFile() {	
+	public boolean initializedLocalDirRequired() {	
 		return false;
 	}
 	
@@ -59,32 +61,8 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArguments);	
-		
-		out.println("Interactive repository initialization started.");
-		out.println();
 						
-		// Ask for plugin, and plugin settings
-		if (options.has(optionPlugin)) {
-			initPlugin(options.valueOf(optionPlugin));
-		}
-		else {
-			askPlugin();
-		}
-		
-		if (options.has(optionPluginOpts)) {
-			initPluginSettings(options.valuesOf(optionPluginOpts));			
-		}
-		else {
-			askPluginSettings();
-		}
-		
-		out.print("Trying to connect ... ");
-
-		if (encryptedRepoFileExistsOnRemoteStorage()) {
-			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository.");
-		}		
-		
-		out.println("Successful. No repository found on the remote storage. ");			
+		ConnectionTO connectionTO = initPluginWithOptions(options, optionPlugin, optionPluginOpts);
 		
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
@@ -101,12 +79,12 @@ public class InitCommand extends AbstractInitCommand {
 			password = askPasswordAndConfirm();
 		}
 			
-		ConfigTO configTO = createConfigTO(localDir, password);		
+		ConfigTO configTO = createConfigTO(localDir, password, connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
-		operationOptions.setRepoTO(repoTO);
+		operationOptions.setRepoTO(repoTO); 
 		
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
@@ -115,25 +93,30 @@ public class InitCommand extends AbstractInitCommand {
 		return operationOptions;
 	}		
 
-	private void printResults(InitOperationResult operationResult) {
-		out.println("Share link: "+operationResult.getShareLink());
-	}
-
-	protected boolean encryptedRepoFileExistsOnRemoteStorage() throws Exception {
-		try {
-			TransferManager transferManager = connection.createTransferManager();
-			Map<String, RemoteFile> repoFileList = transferManager.list("repo");
-			
-			if (repoFileList.containsKey("repo")) {
-				return true;
-			}			
-			else {
-				return false;
-			}
+	private void printResults(InitOperationResult operationResult) {	
+		out.println();
+		out.println("Repository created, and local folder initialized. To share the same repository");
+		out.println("with others, you can share this link:");
+		out.println();		
+		out.println("   "+operationResult.getShareLink());
+		out.println();
+		
+		if (operationResult.isShareLinkEncrypted()) {
+			out.println("This link is encrypted with the given password, so you can safely share it.");
+			out.println("using unsecure communication (chat, e-mail, etc.)");
+			out.println();
+			out.println("WARNING: The link contains the details of your repo connection which typically");
+			out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
 		}
-		catch (Exception e) {
-			throw new Exception("Unable to connect to repository.", e);
-		}		
+		else {
+			out.println("WARNING: This link is NOT ENCRYPTED and might contain connection credentials");
+			out.println("         Do NOT share this link unless you know what you are doing!");
+			out.println();
+			out.println("         The link contains the details of your repo connection which typically");
+			out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
+		}
+
+		out.println();
 	}
 
 	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
@@ -302,9 +285,9 @@ public class InitCommand extends AbstractInitCommand {
 	protected ChunkerTO getDefaultChunkerTO() {
 		ChunkerTO chunkerTO = new ChunkerTO();
 		
-		chunkerTO.setType("fixed");
+		chunkerTO.setType(FixedChunker.TYPE);
 		chunkerTO.setSettings(new HashMap<String, String>());
-		chunkerTO.getSettings().put("size", "16");
+		chunkerTO.getSettings().put(FixedChunker.PROPERTY_SIZE, "16");
 		
 		return chunkerTO;
 	}
@@ -312,16 +295,16 @@ public class InitCommand extends AbstractInitCommand {
 	protected MultiChunkerTO getDefaultMultiChunkerTO() {
 		MultiChunkerTO multichunkerTO = new MultiChunkerTO();
 		
-		multichunkerTO.setType("zip"); 
+		multichunkerTO.setType(ZipMultiChunker.TYPE); 
 		multichunkerTO.setSettings(new HashMap<String, String>());
-		multichunkerTO.getSettings().put("size", "512");
+		multichunkerTO.getSettings().put(ZipMultiChunker.PROPERTY_SIZE, "512");
 		
 		return multichunkerTO;		
 	}
 	
 	protected TransformerTO getGzipTransformerTO() {		
 		TransformerTO gzipTransformerTO = new TransformerTO();
-		gzipTransformerTO.setType("gzip");
+		gzipTransformerTO.setType(GzipTransformer.TYPE);
 		
 		return gzipTransformerTO;				
 	}

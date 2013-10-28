@@ -69,8 +69,8 @@ public class CommandLineClient extends Client {
 			parser.allowsUnrecognizedOptions();
 			
 			OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
-			OptionSpec<File> optionLocalDir = parser.acceptsAll(asList("d", "localdir")).withRequiredArg().ofType(File.class);
-			OptionSpec<String> optionLog = parser.acceptsAll(asList("l", "log")).withRequiredArg();
+			OptionSpec<File> optionLocalDir = parser.acceptsAll(asList("l", "localdir")).withRequiredArg().ofType(File.class);
+			OptionSpec<String> optionLog = parser.acceptsAll(asList("L", "log")).withRequiredArg();
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("v", "loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
 			OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));		
@@ -85,7 +85,7 @@ public class CommandLineClient extends Client {
 			initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
 	
 			// Run!
-			return runOperation(options, options.nonOptionArguments());
+			return runCommand(options, options.nonOptionArguments());
 		}
 		catch (OptionException e) {
 			return showErrorAndExit(e.getMessage());
@@ -172,24 +172,31 @@ public class CommandLineClient extends Client {
 		}
 		else {
 			localDir = findLocalDirInPath();
-		}		
+		}			
 		
 		// Load config
-		if (localDir != null) {
+		File appDir = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION);
+		
+		if (appDir.exists()) {
 			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
 
 			ConfigTO configTO = loadConfigTO(localDir);
 			RepoTO repoTO = loadRepoTO(localDir, configTO);
 			
 			config = new Config(localDir, configTO, repoTO);
-			
-			// Create folders
-			logger.log(Level.INFO, "Creating directories ...");				
-			createDirectories();
-		}				
+		}		
+		else {
+			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
+		}
 	}		
 	
-	private ConfigTO loadConfigTO(File configFile) throws ConfigException {
+	private ConfigTO loadConfigTO(File localDir) throws Exception {
+		File configFile = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
+		
+		if (!configFile.exists()) {
+			throw new Exception("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
+		}
+		
 		return ConfigTO.load(configFile);
 	}
 
@@ -236,7 +243,7 @@ public class CommandLineClient extends Client {
 			currentSearchFolder = currentSearchFolder.getParentFile();
 		}
 		 
-		return null; 
+		return new File(".").getCanonicalFile(); 
 	}
 	
 	private String askPassword() {
@@ -250,7 +257,7 @@ public class CommandLineClient extends Client {
 		return password;
 	}
 	
-	private int runOperation(OptionSet options, List<?> nonOptions) throws Exception {
+	private int runCommand(OptionSet options, List<?> nonOptions) throws Exception {
 		if (nonOptions.size() == 0) {
 			showUsageAndExit();
 		}
@@ -268,17 +275,16 @@ public class CommandLineClient extends Client {
 		
 		command.setClient(this);
 		command.setOut(out);
+		command.setLocalDir(localDir);
 		
 		// Pre-init operations
-		if (command.needConfigFile()) { 
-			// Check config (required for these operations)
-			if (localDir == null) {
+		if (command.initializedLocalDirRequired()) { 
+			if (config == null) {
 				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
 			}			
 		}
 		else {
-			// Check config (NOT allowed for these operations)
-			if (localDir != null) {
+			if (config != null) {
 				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
 			}
 		}
@@ -385,7 +391,8 @@ public class CommandLineClient extends Client {
 		out.println("      can be used.");
 		out.println();		
 		
-		System.exit(1);
+		out.close();		
+		System.exit(0);
 	}
 
 	private int showErrorAndExit(String errorMessage) {
@@ -393,10 +400,10 @@ public class CommandLineClient extends Client {
 		out.println("         Refer to help page using '--help'.");
 		out.println();
 		
-		out.close();
-
-		System.exit(1);		
-		return 1;
+		out.close();		
+		System.exit(0);
+		
+		return 0;
 	}
 	
 }

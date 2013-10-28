@@ -21,22 +21,22 @@ package org.syncany.crypto;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class EncryptionException extends Exception {
+public class CipherException extends Exception {
 	private static final long serialVersionUID = -4974450231162263359L;
 
-	public EncryptionException(Throwable cause) {
+	public CipherException(Throwable cause) {
         super(cause);
     }
 
-    public EncryptionException(String message, Throwable cause) {
+    public CipherException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public EncryptionException(String message) {
+    public CipherException(String message) {
         super(message);
     }
 
-    public EncryptionException() {
+    public CipherException() {
     	// Intentionally left blank.
     }
     

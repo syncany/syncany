@@ -25,7 +25,7 @@ import org.syncany.chunk.Transformer;
 import org.syncany.config.Logging;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
-import org.syncany.crypto.EncryptionException;
+import org.syncany.crypto.CipherException;
 import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -121,7 +121,7 @@ public class MultiCipherStreamsTest {
 		// and http://bouncy-castle.1462172.n4.nabble.com/using-GCMBlockCipher-with-CipherInputStream-td4655147.html
 	}	
 	
-	private void doTestEncryption(List<CipherSpec> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, EncryptionException, InvalidKeyException {
+	private void doTestEncryption(List<CipherSpec> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, CipherException, InvalidKeyException {
 		Transformer encryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		Transformer decryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		
@@ -152,7 +152,7 @@ public class MultiCipherStreamsTest {
 		logger.log(Level.INFO, "Passed.");
 	}
 	
-	private byte[] doEncrypt(byte[] srcData, Transformer cipherTransformer) throws IOException, InvalidKeySpecException, InvalidKeyException, NoSuchAlgorithmException, EncryptionException {
+	private byte[] doEncrypt(byte[] srcData, Transformer cipherTransformer) throws IOException, InvalidKeySpecException, InvalidKeyException, NoSuchAlgorithmException, CipherException {
 		// Write 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		OutputStream os = cipherTransformer.createOutputStream(bos);		
@@ -165,7 +165,7 @@ public class MultiCipherStreamsTest {
 		return encryptedData;
 	}	
 
-	private byte[] doDecrypt(byte[] encryptedData, Transformer cipherTransformer) throws IOException, InvalidKeySpecException, InvalidKeyException, NoSuchAlgorithmException, EncryptionException {
+	private byte[] doDecrypt(byte[] encryptedData, Transformer cipherTransformer) throws IOException, InvalidKeySpecException, InvalidKeyException, NoSuchAlgorithmException, CipherException {
 		ByteArrayOutputStream bosDecryptedData = new ByteArrayOutputStream();
 
 		// Read		

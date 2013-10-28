@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileFilter;
 
 import org.apache.commons.io.FileUtils;
+import org.syncany.util.FileUtil;
 
 public class MoveFolderToOtherFolder extends AbstractClientAction {
 	@Override
@@ -12,7 +13,8 @@ public class MoveFolderToOtherFolder extends AbstractClientAction {
 		final File toFolder = pickFileOrFolder(72178, new FileFilter() {				
 			@Override
 			public boolean accept(File file) {
-				return file.isDirectory() && !file.getAbsolutePath().startsWith(fromFolder.getAbsolutePath());
+				return file.isDirectory() && !FileUtil.isSymlink(file) 
+					&& !file.getAbsolutePath().startsWith(fromFolder.getAbsolutePath());
 			}
 		});
 		
