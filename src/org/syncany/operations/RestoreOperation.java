@@ -45,7 +45,7 @@ public class RestoreOperation extends Operation {
 		}
 
 		Date restoreDate = options.getRestoreTime();
-		List<DatabaseVersion> restoreDatabaseVersions = findDatabaseVersionBeforeRestoreTime(database, restoreDate);
+		List<DatabaseVersion> restoreDatabaseVersions = findDatabaseVersionsBeforeRestoreTime(database, restoreDate);
 		
 		List<String> restoreFilePaths = options.getRestoreFilePaths();
 		List<FileVersion> restoreFileVersions = findRestoreFileVersions(database, restoreDatabaseVersions, restoreFilePaths);
@@ -56,6 +56,9 @@ public class RestoreOperation extends Operation {
 	
 	
 	private List<FileVersion> findRestoreFileVersions(Database database, List<DatabaseVersion> restoreDatabaseVersions, List<String> restoreFilePaths) {
+		// Find file version in the given database versions
+		// TODO [medium] This has terrible performance, because database versions have no file path cache, we have to walk through every database version and every file history!
+		
 		Set<Long> usedRestoreFileHistoryIds = new HashSet<Long>();
 		List<String> leftOverRestoreFilePaths = new ArrayList<String>(restoreFilePaths);
 
@@ -74,19 +77,17 @@ public class RestoreOperation extends Operation {
 		return restoreFileVersions;
 	}
 
-	private List<DatabaseVersion> findDatabaseVersionBeforeRestoreTime(Database database, Date restoreDate) {
+	private List<DatabaseVersion> findDatabaseVersionsBeforeRestoreTime(Database database, Date restoreDate) {
 		List<DatabaseVersion> earlierOrEqualDatabaseVersions = new ArrayList<DatabaseVersion>();
 		
 		for (DatabaseVersion compareDatabaseVersion : database.getDatabaseVersions()) {
 			if (compareDatabaseVersion.getTimestamp().equals(restoreDate) || compareDatabaseVersion.getTimestamp().before(restoreDate)) {
 				earlierOrEqualDatabaseVersions.add(compareDatabaseVersion);
 			}
-		}
+		}		
 		
 		return earlierOrEqualDatabaseVersions;
 	}
-
-
 
 	public static class RestoreOperationOptions implements OperationOptions {
 		private Date restoreTime;

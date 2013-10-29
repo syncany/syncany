@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
 <project name="SyncanyCore" default="dist" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<!-- /// Global variables and required conditions ////////////////////////////////////////// -->
 	<path id="test.classpath">
 		<pathelement location="./build" />
 		<fileset dir="./lib">
@@ -12,21 +13,28 @@
             <http url="http://www.google.com/" />
             <http url="http://www.amazon.com/" />
         </or>
+	</condition>	
+
+	<condition property="isWindows" value="true">
+	        <os family="windows"/>
 	</condition>
-		
+	
+    <condition property="isLinux" value="true">
+            <os family="unix" />
+    </condition>
+	
+	<property environment="env"/>	
+
+	<!-- /// Targets //////////////////////////////////////////////////////////////////////////// -->	
+	
 	<target name="init" depends="init-ivy">
-		<!-- Create the time stamp -->
 		<tstamp />
-		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="build" />
-
 		<ivy:settings file="ivysettings.xml" />
-
 		<ivy:retrieve conf="cc-impl" />
 	</target>
 
 	<target name="compile" depends="init" description="compile the source ">
-		<!-- Compile the java code from ${src} into ${build} -->
 		<echo>Compiling SyncanyCore</echo>
 		<path id="project.class.path">
 			<fileset dir="lib" includes="*.jar" />
@@ -38,7 +46,6 @@
 	</target>
 
 	<target name="dist" depends="compile" description="generate the distribution">
-		<!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
 		<echo>Creating Distribution</echo>
 		<manifestclasspath property="lib.list" jarfile="SyncanyCore.jar">
 			<classpath refid="project.class.path" />
@@ -51,17 +58,26 @@
 		</jar>
 	</target>
 	
-	<target name="fakeinstall" depends="fakeuninstall" description="install symbolic links 'sy' and 'syncany' to /usr/local/bin." if="isLinux">
+	<target name="fakeinstall" depends="fakeinstall-linux,fakeinstall-windows" description="install 'sy' and 'syncany' commands on command line">
+		<!-- Platform-dependent target is run -->
+	</target>
+
+	<target name="fakeuninstall" depends="fakeuninstall-linux,fakeuninstall-windows" description="uninstall 'sy' and 'syncany' commands">
+		<!-- Platform-dependent target is run -->
+	</target>
+
+	<target name="fakeinstall-linux" depends="fakeuninstall-linux" if="isLinux" description="install symbolic links 'sy' and 'syncany' to /usr/local/bin.">
+		<echo>Installing symlinks in /usr/local/bin ...</echo>
 		<symlink resource="${user.dir}/syncany" link="/usr/local/bin/syncany" />
 		<symlink resource="${user.dir}/syncany" link="/usr/local/bin/sy" />
 	</target>
 
-	<target name="fakeuninstall" description="remove symbolic links 'sy' and 'syncany' from /usr/local/bin." if="isLinux">
+	<target name="fakeuninstall-linux" if="isLinux" description="remove symbolic links 'sy' and 'syncany' from /usr/local/bin.">
 		<delete file="/usr/local/bin/syncany" />				
 		<delete file="/usr/local/bin/sy" />
 	</target>
 	
-	<target name="windowsfakeinstall" depends="windowsfakeuninstall" description="add syncany path to environment variable Path for futures shells." if="isWindows">
+	<target name="fakeinstall-windows" depends="fakeuninstall-windows" if="isWindows" description="add syncany path to environment variable Path for futures shells.">
 		<exec executable="setx">
 		    <arg value="Path"/>
 		    <arg value="%Path%;${user.dir}"/>
@@ -69,8 +85,7 @@
 		<echo>Please close current cmd and open new one.</echo>
 	</target>
 	
-	<property environment="env"/>	
-	<target name="windowsfakeuninstall" description="remove syncany path from environment variable Path for futures shells." if="isWindows">
+	<target name="fakeuninstall-windows" if="isWindows" description="remove syncany path from environment variable Path for futures shells.">
 		<property name="fullenvpath" value="${env.Path}" />
 		<property name="envpathminussyncany" value="" />
 	
@@ -83,19 +98,26 @@
 		<exec executable="setx">
 		    <arg value="Path"/>
 		    <arg value="${envpathminussyncany}"/>
-		</exec>
-		<echo>Please close current cmd and open new one.</echo>
+		</exec>	
+	</target>
+	
+	<target name="install" depends="install-linux,install-windows" description="install 'sy' and 'syncany' commands on command line">
+		<!-- Platform-dependent target is run -->
 	</target>
 
-	<condition property="isWindows" value="true">
-	        <os family="windows"/>
-	</condition>
+	<target name="uninstall" depends="uninstall-linux,uninstall-windows" description="uninstall 'sy' and 'syncany' commands">
+		<!-- Platform-dependent target is run -->
+	</target>
 	
-    <condition property="isLinux" value="true">
-            <os family="unix" />
-    </condition>
+	<target name="install-windows" depends="uninstall-windows" if="isWindows" description="install 'sy' and 'syncany' commands on command line">
+		<echo>NO WINDOWS INSTALL/UNINSTALL TARGET</echo>
+	</target>
 
-	<target name="install" depends="uninstall" description="install to /usr/local">
+	<target name="uninstall-windows" if="isWindows" description="uninstall 'sy' and 'syncany' commands">
+		<echo>NO WINDOWS INSTALL/UNINSTALL TARGET</echo>
+	</target>	
+
+	<target name="install-linux" depends="uninstall-linux" if="isLinux" description="install to /usr/local">
 		<mkdir dir="/usr/local/lib/syncany" />
 		<mkdir dir="/usr/local/lib/syncany/lib" />
 		
@@ -114,7 +136,7 @@
 		<symlink resource="/usr/local/lib/syncany/syncany" link="/usr/local/bin/sy"  />
 	</target>
 	
-	<target name="uninstall" description="remove all resources from /usr/local">
+	<target name="uninstall-linux" if="isLinux" description="remove all resources from /usr/local">
 		<delete file="/usr/local/bin/syncany" />				
 		<delete file="/usr/local/bin/sy" />		
 		<delete dir="/usr/local/lib/syncany" />

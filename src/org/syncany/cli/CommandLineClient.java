@@ -305,15 +305,14 @@ public class CommandLineClient extends Client {
 		});		
 		
 		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
-		out.println("Usage: sy [-c|--config=<path>] [-l|--log=<path>]");
+		out.println("Usage: sy [-l|--localdir=<path>] [-L|--log=<path>]");
 		out.println("          [-v|--loglevel=OFF|SEVERE|..] [-q|--quiet]");
 		out.println("          [-d|--debug] [-h|--help] <command> [<args>]");
 		out.println();
 		out.println("Global options:");
-		out.println("  -c, --config=<path>");
-		out.println("      Load config file from <path>. If <path> is in a '.syncany'-folder");
-		out.println("      'localDir' is assumed to be the parent directory. If the -c option");
-		out.println("      is not given, Syncany searches for a '.syncany'-folder in all parent");
+		out.println("  -l, --localdir=<path>");
+		out.println("      Use <path> instead of the current directory as local sync folder. ");
+		out.println("      Syncany searches for a '.syncany' folder in the given and all parent");
 		out.println("      directories.");
 		out.println();
 		out.println("  -l, --log=<path>");
@@ -339,7 +338,6 @@ public class CommandLineClient extends Client {
 		out.println("      Currently loaded plugins: "+pluginsStr);
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -f, --folder=<local dir>         Specify a plugin to use for storage (see list above).");
 		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
 		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
 		out.println("      -e, --no-encryption              The new repo will not be encrypted (no password, DON'T USE THIS).");
@@ -351,7 +349,6 @@ public class CommandLineClient extends Client {
 		out.println("      a Syncany link (syncany://..) can be used.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -f, --folder=<local dir>         Specify a plugin to use for storage (see list above).");
 		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above).");
 		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times.");
 		out.println();

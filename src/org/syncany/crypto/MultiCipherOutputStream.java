@@ -41,7 +41,7 @@ import javax.crypto.SecretKey;
  * - Don't re-use your IVs (IVs are never reused)
  * - Don't encrypt your IVs (IVs are prepended)
  * - Authenticate/HMAC your ciphertexts (TODO [low] Not necessary if GCM, CCM, OCB or EAX mode is used)
- * - Always MAC your IVs (TODO)
+ * -  TODO [medium] Always MAC your IVs 
  * 
  * 
  */

@@ -19,6 +19,7 @@ import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.RestoreOperation;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
+import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
@@ -84,8 +85,8 @@ public class Client {
 		return ((RemoteStatusOperationResult) new LsRemoteOperation(config).execute()).getUnknownRemoteDatabases();
 	}
 
-	public void restore(RestoreOperationOptions options) throws Exception {
-		new RestoreOperation(config, options).execute();		
+	public RestoreOperationResult restore(RestoreOperationOptions options) throws Exception {
+		return (RestoreOperationResult) new RestoreOperation(config, options).execute();		
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {

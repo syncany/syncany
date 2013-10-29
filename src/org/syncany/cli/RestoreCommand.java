@@ -16,6 +16,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
+import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 
 public class RestoreCommand extends Command {
 	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
@@ -27,6 +28,15 @@ public class RestoreCommand extends Command {
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
+		RestoreOperationOptions operationOptions = parseOptions(operationArgs);
+		RestoreOperationResult operationResult = client.restore(operationOptions);
+		
+		printResults(operationResult);
+		
+		return 0;		
+	}
+	
+	public RestoreOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 
 		OptionParser parser = new OptionParser();	
@@ -101,10 +111,10 @@ public class RestoreCommand extends Command {
 
 		operationOptions.setRestoreFilePaths(restoreFilePaths);	
 		
-		// Run!
-		client.restore(operationOptions);
-		
-		return 0;
+		return operationOptions;
 	}
 	
+	private void printResults(RestoreOperationResult operationResult) {
+		// Nothing
+	}	
 }
