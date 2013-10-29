@@ -24,10 +24,9 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		super(config, localDatabase, winningDatabase, file1, file2);
 	}
 
-	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
-		
+	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {		
 		if (reconstructedFileVersion.getType() == FileType.FILE) {
-			createFile0(reconstructedFileVersion);			
+			createFile(reconstructedFileVersion);			
 		}
 		else if (reconstructedFileVersion.getType() == FileType.FOLDER) {
 			createFolder(reconstructedFileVersion);			
@@ -49,7 +48,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		setFileAttributes(reconstructedFileVersion);		
 	}
 
-	protected void createFile0(FileVersion reconstructedFileVersion) throws Exception {
+	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
 		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
 		File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
 		logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				

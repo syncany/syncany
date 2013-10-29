@@ -17,6 +17,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
+import org.syncany.operations.RestoreOperation.RestoreOperationStrategy;
 
 public class RestoreCommand extends Command {
 	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
@@ -40,65 +41,71 @@ public class RestoreCommand extends Command {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 
 		OptionParser parser = new OptionParser();	
-		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("d", "date")).withRequiredArg().required();
-		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
+		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
+		OptionSpec<Integer> optionRevisions = parser.acceptsAll(asList("r", "revisions")).withRequiredArg().ofType(Integer.class);
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
-		// --date
-		String dateStr = options.valueOf(optionDateStr);
-		
-		Pattern relativeDatePattern = Pattern.compile("^(\\d+)([smhDWMY])$");
-		Pattern absoluteDatePattern = Pattern.compile("^(\\d{2})-(\\d{2})-(\\d{4})$");
-		
-		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
-		
-		if (relativeDateMatcher.matches()) {
-			int time = Integer.parseInt(relativeDateMatcher.group(1));
-			String unitStr = relativeDateMatcher.group(2);
-			int unitMultiplier = 0;
-			
-			if ("s".equals(unitStr)) { unitMultiplier = 1; }
-			else if ("m".equals(unitStr)) { unitMultiplier = 60; }
-			else if ("h".equals(unitStr)) { unitMultiplier = 60*60; }
-			else if ("D".equals(unitStr)) { unitMultiplier = 24*60*60; }
-			else if ("W".equals(unitStr)) { unitMultiplier = 7*24*60*60; }
-			else if ("M".equals(unitStr)) { unitMultiplier = 30*24*60*60; }
-			else if ("Y".equals(unitStr)) { unitMultiplier = 365*24*60*60; }
-			
-			long restoreDateMillies = time*unitMultiplier;
-			Date restoreDate = new Date(restoreDateMillies);
-			
-			logger.log(Level.FINE, "Restore date: "+restoreDate);
-			operationOptions.setRestoreTime(restoreDate);
+		if (options.has(optionDateStr) && options.has(optionRevisions)) {
+			throw new Exception("Cannot have both options --date and --revisions.");
 		}
-		else {
-			Matcher absoluteDateMatcher = absoluteDatePattern.matcher(dateStr);
+		
+		// --date
+		if (options.has(optionDateStr)) {			
+			operationOptions.setStrategy(RestoreOperationStrategy.DATABASE_DATE);
+
+			String dateStr = options.valueOf(optionDateStr);
 			
-			if (absoluteDateMatcher.matches()) {
-				int date = Integer.parseInt(absoluteDateMatcher.group(1));
-				int month = Integer.parseInt(absoluteDateMatcher.group(2));
-				int year = Integer.parseInt(absoluteDateMatcher.group(3));
+			Pattern relativeDatePattern = Pattern.compile("^(\\d+)([smhDWMY])$");
+			Pattern absoluteDatePattern = Pattern.compile("^(\\d{2})-(\\d{2})-(\\d{4})$");
+			
+			Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
+			
+			if (relativeDateMatcher.matches()) {
+				int time = Integer.parseInt(relativeDateMatcher.group(1));
+				String unitStr = relativeDateMatcher.group(2);
+				int unitMultiplier = 0;
 				
-				GregorianCalendar calendar = new GregorianCalendar();
-				calendar.set(year, month-1, date);
+				if ("s".equals(unitStr)) { unitMultiplier = 1; }
+				else if ("m".equals(unitStr)) { unitMultiplier = 60; }
+				else if ("h".equals(unitStr)) { unitMultiplier = 60*60; }
+				else if ("D".equals(unitStr)) { unitMultiplier = 24*60*60; }
+				else if ("W".equals(unitStr)) { unitMultiplier = 7*24*60*60; }
+				else if ("M".equals(unitStr)) { unitMultiplier = 30*24*60*60; }
+				else if ("Y".equals(unitStr)) { unitMultiplier = 365*24*60*60; }
 				
-				Date restoreDate = calendar.getTime();
+				long restoreDateMillies = time*unitMultiplier*1000;
+				Date restoreDate = new Date(System.currentTimeMillis()-restoreDateMillies);
 				
 				logger.log(Level.FINE, "Restore date: "+restoreDate);
-				operationOptions.setRestoreTime(restoreDate);
+				operationOptions.setDatabaseBeforeDate(restoreDate);
 			}
 			else {
-				throw new Exception("Invalid '--date' argument: "+dateStr);
+				Matcher absoluteDateMatcher = absoluteDatePattern.matcher(dateStr);
+				
+				if (absoluteDateMatcher.matches()) {
+					int date = Integer.parseInt(absoluteDateMatcher.group(1));
+					int month = Integer.parseInt(absoluteDateMatcher.group(2));
+					int year = Integer.parseInt(absoluteDateMatcher.group(3));
+					
+					GregorianCalendar calendar = new GregorianCalendar();
+					calendar.set(year, month-1, date);
+					
+					Date restoreDate = calendar.getTime();
+					
+					logger.log(Level.FINE, "Restore date: "+restoreDate);
+					operationOptions.setDatabaseBeforeDate(restoreDate);
+				}
+				else {
+					throw new Exception("Invalid '--date' argument: "+dateStr);
+				}
 			}
 		}
 		
-		// --force
-		if (options.has(optionForce)) {
-			operationOptions.setForce(true);
-		}
-		else {
-			operationOptions.setForce(false);
+		// --revisions
+		else if (options.has(optionRevisions)) {
+			operationOptions.setStrategy(RestoreOperationStrategy.FILE_VERSION);
+			operationOptions.setFileVersionNumber(options.valueOf(optionRevisions));
 		}
 		
 		// Files

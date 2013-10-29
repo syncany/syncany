@@ -392,7 +392,7 @@ public class DownOperation extends Operation {
 			dbDAO.load(remoteDatabase, remoteDatabaseFile.getFile());		// TODO [medium] Performance: This is very, very, very inefficient, DB is loaded and then discarded	
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
-			// Pupulate branches
+			// Populate branches
 			Branch remoteClientBranch = unknownRemoteBranches.getBranch(remoteDatabaseFile.getClientName(), true);
 			
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions) {
