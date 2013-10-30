@@ -42,12 +42,15 @@ public class RestoreCommand extends Command {
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
-		OptionSpec<Integer> optionRevisions = parser.acceptsAll(asList("r", "revisions")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Integer> optionVersion = parser.acceptsAll(asList("v", "version")).withRequiredArg().ofType(Integer.class);
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
-		if (options.has(optionDateStr) && options.has(optionRevisions)) {
+		if (options.has(optionDateStr) && options.has(optionVersion)) {
 			throw new Exception("Cannot have both options --date and --revisions.");
+		}
+		else if (!options.has(optionDateStr) && !options.has(optionVersion)) {
+			throw new Exception("Either --version or --date must be specified.");
 		}
 		
 		// --date
@@ -103,10 +106,10 @@ public class RestoreCommand extends Command {
 		}
 		
 		// --revisions
-		else if (options.has(optionRevisions)) {
+		else if (options.has(optionVersion)) {
 			operationOptions.setStrategy(RestoreOperationStrategy.FILE_VERSION);
-			operationOptions.setFileVersionNumber(options.valueOf(optionRevisions));
-		}
+			operationOptions.setFileVersionNumber(options.valueOf(optionVersion));
+		}		
 		
 		// Files
 		List<?> nonOptionArgs = options.nonOptionArguments();

@@ -15,6 +15,9 @@ import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
+import org.syncany.operations.LogOperation;
+import org.syncany.operations.LogOperation.LogOperationOptions;
+import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.RestoreOperation;
@@ -87,6 +90,10 @@ public class Client {
 
 	public RestoreOperationResult restore(RestoreOperationOptions options) throws Exception {
 		return (RestoreOperationResult) new RestoreOperation(config, options).execute();		
+	}
+	
+	public LogOperationResult log(LogOperationOptions options) throws Exception {
+		return (LogOperationResult) new LogOperation(config, options).execute();		
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
