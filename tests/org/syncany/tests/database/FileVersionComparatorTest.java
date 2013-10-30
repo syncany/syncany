@@ -34,7 +34,7 @@ public class FileVersionComparatorTest {
 	public void testCaptureFilePropertiesFromFile() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
-		FileVersionComparator versionComparator = new FileVersionComparator(config);
+		FileVersionComparator versionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 
 		// Create file
 		File somefile = new File(config.getLocalDir()+"/somefile");
@@ -88,7 +88,7 @@ public class FileVersionComparatorTest {
 	public void testCaptureFilePropertiesFromFileVersion() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
-		FileVersionComparator versionComparator = new FileVersionComparator(config);
+		FileVersionComparator versionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		
 		FileVersion fileVersion = new FileVersion();
 		fileVersion.setVersion(3L);
@@ -144,7 +144,7 @@ public class FileVersionComparatorTest {
 	public void testCompareFileVersionToFile() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
-		FileVersionComparator versionComparator = new FileVersionComparator(config);
+		FileVersionComparator versionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		
 		// Create File
 		File somefile = new File(config.getLocalDir()+"/file1");

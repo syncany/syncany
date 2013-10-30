@@ -1,6 +1,6 @@
 package org.syncany.tests.database;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Date;
@@ -9,10 +9,15 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.tests.util.TestFileUtil;
 
 public class DatabaseCacheTest {	
 	static {
@@ -106,7 +111,81 @@ public class DatabaseCacheTest {
         assertEquals(multiChunkP2, database.getMultiChunk(new byte[] { 7,7,7,7,7,7,7,7,7 }));
         assertEquals(multiChunkP3, database.getMultiChunk(new byte[] { 5,5,5,5,5,5,5,5,5 }));
 	}	
+	
+
+	@Test
+	public void testFilenameCache() throws IOException {		
+		Database database = new Database();
+
+		// Round 1: Add file history & version 
+		DatabaseVersion databaseVersion1 = createDatabaseVersion();		
+        
+		FileVersion fileVersion1 = createFileVersion("file1.jpg");		
+		PartialFileHistory fileHistory1 = new PartialFileHistory(11111111111111111L);		
 		
+		databaseVersion1.addFileHistory(fileHistory1);
+		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
+		
+		database.addDatabaseVersion(databaseVersion1);     
+		
+        assertEquals(fileHistory1, database.getFileHistory("file1.jpg"));
+        
+        // Round 2: Add new version
+        DatabaseVersion databaseVersion2 = createDatabaseVersion();		
+        
+		FileVersion fileVersion2 = createFileVersion("file2.jpg", fileVersion1);		
+		PartialFileHistory fileHistory2 = new PartialFileHistory(11111111111111111L); // same ID		
+		
+		databaseVersion2.addFileHistory(fileHistory2);
+		databaseVersion2.addFileVersionToHistory(fileHistory2.getFileId(), fileVersion2);
+		
+		database.addDatabaseVersion(databaseVersion2);   
+		
+        assertNotNull(database.getFileHistory("file2.jpg"));
+        assertEquals(2, database.getFileHistory("file2.jpg").getFileVersions().size());
+        assertNull(database.getFileHistory("file1.jpg"));
+        
+        // Round 3: Add deleted version
+        DatabaseVersion databaseVersion3 = createDatabaseVersion();		
+        
+		FileVersion fileVersion3 = createFileVersion("file2.jpg", fileVersion2);
+		fileVersion3.setStatus(FileStatus.DELETED);
+		
+		PartialFileHistory fileHistory3 = new PartialFileHistory(11111111111111111L); // same ID		
+		
+		databaseVersion3.addFileHistory(fileHistory3);
+		databaseVersion3.addFileVersionToHistory(fileHistory3.getFileId(), fileVersion3);
+		
+		database.addDatabaseVersion(databaseVersion3);   
+		
+        assertNull(database.getFileHistory("file2.jpg"));        
+	}	
+		
+	private FileVersion createFileVersion(String path) {
+		FileVersion fileVersion = new FileVersion();
+		
+		fileVersion.setChecksum(TestFileUtil.createRandomArray(20));
+		fileVersion.setCreatedBy("A");		
+		fileVersion.setLastModified(new Date());
+		fileVersion.setPath(path);
+		fileVersion.setStatus(FileStatus.NEW);
+		fileVersion.setType(FileType.FILE);
+		fileVersion.setUpdated(new Date());
+		fileVersion.setVersion(1L);
+		
+		return fileVersion;
+	}
+	
+	private FileVersion createFileVersion(String path, FileVersion basedOnFileVersion) {
+		FileVersion fileVersion = basedOnFileVersion.clone();
+		
+		fileVersion.setPath(path);
+		fileVersion.setStatus(FileStatus.CHANGED);
+		fileVersion.setVersion(basedOnFileVersion.getVersion()+1);
+		
+		return fileVersion;
+	}
+
 	// TODO [medium] Add functionality tests for the rest of the cache
 	// TODO [high] Add performance tests for the cache and optimize Database.addDatabaseVersion()-cache handling
 	

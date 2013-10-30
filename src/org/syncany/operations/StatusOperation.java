@@ -38,7 +38,7 @@ public class StatusOperation extends Operation {
 	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
 		super(config);		
 		
-		this.fileVersionHelper = new FileVersionComparator(config);
+		this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.loadedDatabase = database;
 		this.options = options;
 	}	

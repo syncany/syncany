@@ -2,10 +2,14 @@ package org.syncany.tests.operations;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.syncany.config.Config;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.RepoTO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.FileSystemActionComparator;
@@ -55,23 +59,23 @@ public class FileSystemActionComparatorTest {
 		System.out.println(actions);
 	}
 	
-	private DeleteFileSystemAction createDeleteFileSystemAction(String path, FileType type) {
+	private DeleteFileSystemAction createDeleteFileSystemAction(String path, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(path, type);
 		FileVersion secondFileVersion = createFileVersion(path, type, firstFileVersion);
 		
-		return new DeleteFileSystemAction(null, firstFileVersion, secondFileVersion, null, null);
-	}
-	
-	private NewFileSystemAction createNewFileSystemAction(String path, FileType type) {
+		return new DeleteFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null, null);
+	}	
+
+	private NewFileSystemAction createNewFileSystemAction(String path, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(path, type);
-		return new NewFileSystemAction(null, firstFileVersion, null, null);
+		return new NewFileSystemAction(createDummyConfig(), firstFileVersion, null, null);
 	}
 	
-	private RenameFileSystemAction createRenameFileSystemAction(String fromPath, String toPath, FileType type) {
+	private RenameFileSystemAction createRenameFileSystemAction(String fromPath, String toPath, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(fromPath, type);
 		FileVersion secondFileVersion = createFileVersion(toPath, type, firstFileVersion);
 		
-		return new RenameFileSystemAction(null, firstFileVersion, secondFileVersion, null, null);
+		return new RenameFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null, null);
 	}
 
 	private FileVersion createFileVersion(String path, FileType type) {
@@ -95,7 +99,14 @@ public class FileSystemActionComparatorTest {
 			
 			return fileVersion;
 		}			
-	}	
+	}		
+
+	private Config createDummyConfig() throws Exception {
+		ConfigTO configTO = new ConfigTO();
+		configTO.setMachineName("dummymachine");
+		
+		return new Config(new File("/dummy"), configTO, new RepoTO());
+	}
 	
 	private String[] toArray(List<FileSystemAction> actions) {
 		String[] actionStrArr = new String[actions.size()];

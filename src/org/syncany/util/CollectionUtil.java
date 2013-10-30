@@ -3,7 +3,7 @@ package org.syncany.util;
 import java.util.Arrays;
 import java.util.Collection;
 
-public abstract class CollectionUtil<T> {	
+public abstract class CollectionUtil {	
 	/**
 	 * Checks if the collection contains only the given allowed items. <tt>list</tt> 
 	 * may contain zero to max(allowedItems) items from allowedItems.

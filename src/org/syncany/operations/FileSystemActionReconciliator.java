@@ -116,7 +116,7 @@ public class FileSystemActionReconciliator {
 	}
 	
 	public List<FileSystemAction> determineFileSystemActions(Database winnersDatabase) throws Exception {
-		FileVersionComparator fileVersionHelper = new FileVersionComparator(config);
+		FileVersionComparator fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
 		logger.log(Level.INFO, "- Determine filesystem actions ...");

@@ -41,7 +41,7 @@ public abstract class FileSystemAction {
 		this.winningDatabase = winningDatabase;
 		this.fileVersion1 = file1;
 		this.fileVersion2 = file2;
-		this.fileVersionHelper = new FileVersionComparator(config);
+		this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 	}
 	
 	public FileVersion getFile1() {

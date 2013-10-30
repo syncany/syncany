@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.Config;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.util.FileUtil;
@@ -25,10 +24,12 @@ import org.syncany.util.StringUtil;
 
 public class FileVersionComparator {
 	private static final Logger logger = Logger.getLogger(FileVersionComparator.class.getSimpleName());
-	private Config config;	
+	private File rootFolder;
+	private String checksumAlgorithm;
 	
-	public FileVersionComparator(Config config) {
-		this.config = config;
+	public FileVersionComparator(File rootFolder, String checksumAlgorithm) {
+		this.rootFolder = rootFolder;
+		this.checksumAlgorithm = checksumAlgorithm;
 	}
 	
 	public FileVersionComparison compare(FileVersion expectedLocalFileVersion, FileVersion actualLocalFileVersion) {
@@ -248,7 +249,7 @@ public class FileVersionComparator {
 		Path filePath = Paths.get(file.getAbsolutePath());
 
 		FileProperties fileProperties = new FileProperties();
-		fileProperties.relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
+		fileProperties.relativePath = FileUtil.getRelativePath(rootFolder, file);
 		fileProperties.exists = Files.exists(filePath, LinkOption.NOFOLLOW_LINKS);
 		
 		if (!fileProperties.exists) {
@@ -300,7 +301,6 @@ public class FileVersionComparator {
 				if (fileProperties.type == FileType.FILE && forceChecksum) {
 					try {
 						if (fileProperties.size > 0) { 
-							String checksumAlgorithm = config.getChunker().getChecksumAlgorithm();
 							fileProperties.checksum = FileUtil.createChecksum(file, checksumAlgorithm);
 						}
 						else {

@@ -194,17 +194,19 @@ public class Database {
 	private void updateFilenameHistoryCache() {
 		// TODO [medium] Performance: This throws away the unchanged entries. It should only update new database version
 		filenameHistoryCache.clear(); 
-		
+		 
 		for (PartialFileHistory cacheFileHistory : fullDatabaseVersionCache.getFileHistories()) {
 			FileVersion lastVersion = cacheFileHistory.getLastVersion();
+			String fileName = lastVersion.getPath();
 			
-			if (lastVersion.getStatus() != FileStatus.DELETED) {
-				String fileName = lastVersion.getPath();			
-				filenameHistoryCache.put(fileName, cacheFileHistory);
+			if (lastVersion.getStatus() == FileStatus.DELETED) {
+				filenameHistoryCache.remove(fileName);
+				System.out.println("remove "+fileName);
 			}
-		}
-		
-		return;
+			else {						
+				filenameHistoryCache.put(fileName, cacheFileHistory);				
+			}
+		}		
 	}
 	
 	private void updateDatabaseVersionIdCache(DatabaseVersion newDatabaseVersion) {

@@ -7,7 +7,7 @@ import org.syncany.tests.scenarios.AllFilePossibilitiesScenarioTest;
 import org.syncany.tests.scenarios.CallUpWhileStillWritingFileScenarioTest;
 import org.syncany.tests.scenarios.ChangedAttributesScenarioTest;
 import org.syncany.tests.scenarios.ChangedTypeScenarioTest;
-import org.syncany.tests.scenarios.ChangedModifiedDateScenarioTest;
+import org.syncany.tests.scenarios.RenameFileWithDiffModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.CreateSimilarFileParallelScenarioTest;
 import org.syncany.tests.scenarios.DirtyDatabaseScenarioTest;
 import org.syncany.tests.scenarios.EmptyFileScenarioTest;
@@ -34,7 +34,7 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	AllFilePossibilitiesScenarioTest.class,
 	CallUpWhileStillWritingFileScenarioTest.class,
 	ChangedAttributesScenarioTest.class,
-	ChangedModifiedDateScenarioTest.class,
+	RenameFileWithDiffModifiedDateScenarioTest.class,
 	ChangedTypeScenarioTest.class,
 	CreateSimilarFileParallelScenarioTest.class,
 	DirtyDatabaseScenarioTest.class,

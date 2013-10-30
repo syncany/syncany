@@ -23,9 +23,14 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
+import org.syncany.database.FileVersionComparator;
+import org.syncany.database.FileVersionComparator.FileChange;
+import org.syncany.database.FileVersionComparator.FileProperties;
+import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -92,7 +97,9 @@ public class TestAssertUtil {
 		
 		assertNotNull(message+": Actual file is "+actualFile+", expected file is null.", expectedFile);
 		assertNotNull(message+": Expected file is "+expectedFile+", actual file is null.", actualFile);
-
+		
+		FileVersionComparator fileVersionComparator = new FileVersionComparator(new File("/"), "SHA1");
+		
 		if (!expectedFile.exists()) {
 			fail(message+": Expected file "+expectedFile+" does not exist.");
 		}
@@ -116,7 +123,16 @@ public class TestAssertUtil {
 		byte[] expectedFileChecksum = FileUtil.createChecksum(expectedFile);
 		byte[] actualFileChecksum = FileUtil.createChecksum(actualFile);
 		
-		assertArrayEquals(message+": Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);		
+		assertArrayEquals(message+": Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);
+		
+		FileProperties actualFileProperties = fileVersionComparator.captureFileProperties(actualFile, null, true);
+		FileProperties expectedFileProperties = fileVersionComparator.captureFileProperties(expectedFile, null, true);
+		
+		FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedFileProperties, actualFileProperties, true);
+		
+		if (!CollectionUtil.containsOnly(fileVersionComparison.getFileChanges(), FileChange.CHANGED_PATH)) {
+			fail(message+": Actual file differs from expected file: "+fileVersionComparison.getFileChanges());
+		}		
 	}
 	
 	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
