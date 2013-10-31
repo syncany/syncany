@@ -95,7 +95,7 @@ public class Database {
 		return filenameHistoryCache.get(relativeFilePath); 
 	}
 	
-	public Collection<PartialFileHistory> getFileHistories(byte[] fileContentChecksum) {
+	public List<PartialFileHistory> getFileHistories(byte[] fileContentChecksum) {
 		return contentChecksumFileHistoriesCache.get(new ByteArray(fileContentChecksum));
 	}	
 	

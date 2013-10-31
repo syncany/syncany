@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.Date;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
@@ -131,7 +132,7 @@ public class DatabaseCacheTest {
         assertEquals(fileHistory1, database.getFileHistory("file1.jpg"));
         
         // Round 2: Add new version
-        DatabaseVersion databaseVersion2 = createDatabaseVersion();		
+        DatabaseVersion databaseVersion2 = createDatabaseVersion(databaseVersion1);		
         
 		FileVersion fileVersion2 = createFileVersion("file2.jpg", fileVersion1);		
 		PartialFileHistory fileHistory2 = new PartialFileHistory(11111111111111111L); // same ID		
@@ -146,7 +147,7 @@ public class DatabaseCacheTest {
         assertNull(database.getFileHistory("file1.jpg"));
         
         // Round 3: Add deleted version
-        DatabaseVersion databaseVersion3 = createDatabaseVersion();		
+        DatabaseVersion databaseVersion3 = createDatabaseVersion(databaseVersion2);		
         
 		FileVersion fileVersion3 = createFileVersion("file2.jpg", fileVersion2);
 		fileVersion3.setStatus(FileStatus.DELETED);
@@ -159,7 +160,111 @@ public class DatabaseCacheTest {
 		database.addDatabaseVersion(databaseVersion3);   
 		
         assertNull(database.getFileHistory("file2.jpg"));        
-	}	
+	}		
+
+	@Test
+	public void testContentChecksumCache() throws IOException {		
+		Database database = new Database();
+
+		// Round 1: Add file history & version 
+		DatabaseVersion databaseVersion1 = createDatabaseVersion();		
+        
+		// - history 1, version 1
+		FileVersion fileVersion1 = createFileVersion("samechecksum1.jpg");
+		fileVersion1.setChecksum(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+		
+		PartialFileHistory fileHistory1 = new PartialFileHistory(11111111111111111L);		
+		
+		databaseVersion1.addFileHistory(fileHistory1);
+		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
+		
+		database.addDatabaseVersion(databaseVersion1);     
+		
+        assertNotNull(database.getFileHistories(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }));
+        assertEquals(1, database.getFileHistories(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }).size());
+        
+        // Round 2: Add two other versions with same checksum to new database version
+        DatabaseVersion databaseVersion2 = createDatabaseVersion(databaseVersion1);		
+        
+        // - history 1, version 2
+        FileVersion fileVersion11 = createFileVersion("samechecksum2-renamed.jpg", fileVersion1);
+        fileVersion11.setChecksum(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }); // same checksum!
+        fileVersion11.setStatus(FileStatus.RENAMED);
+		
+		PartialFileHistory fileHistory11 = new PartialFileHistory(11111111111111111L); // same ID as above		
+		
+		databaseVersion2.addFileHistory(fileHistory11);
+		databaseVersion2.addFileVersionToHistory(fileHistory11.getFileId(), fileVersion11);
+        
+        // - history 2, version 1
+		FileVersion fileVersion2 = createFileVersion("samechecksum2.jpg");
+		fileVersion2.setChecksum(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }); // same checksum!
+		
+		PartialFileHistory fileHistory2 = new PartialFileHistory(22222222222222222L); // different ID		
+		
+		databaseVersion2.addFileHistory(fileHistory2);
+		databaseVersion2.addFileVersionToHistory(fileHistory2.getFileId(), fileVersion2);
+
+		// - history 3, version 1
+		FileVersion fileVersion3 = createFileVersion("samechecksum3.jpg");
+		fileVersion3.setChecksum(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }); // same checksum!
+		
+		PartialFileHistory fileHistory3 = new PartialFileHistory(33333333333333333L); // different ID		
+		
+		databaseVersion2.addFileHistory(fileHistory3);
+		databaseVersion2.addFileVersionToHistory(fileHistory3.getFileId(), fileVersion3);
+		
+		database.addDatabaseVersion(databaseVersion2);   
+		
+		assertNotNull(database.getFileHistories(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }));
+        assertEquals(3, database.getFileHistories(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }).size());        
+	}		
+
+	@Test
+	public void testGetFileHistory() throws IOException {		
+		Database database = new Database();
+
+		// Round 1: Add file history & version 
+		DatabaseVersion databaseVersion1 = createDatabaseVersion();		
+        
+		// - history 1, version 1
+		FileVersion fileVersion1 = createFileVersion("samechecksum1.jpg");
+		fileVersion1.setChecksum(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+		
+		PartialFileHistory fileHistory1 = new PartialFileHistory(11111111111111111L);		
+		
+		databaseVersion1.addFileHistory(fileHistory1);
+		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
+		
+		database.addDatabaseVersion(databaseVersion1);     
+		
+		assertNotNull(database.getFileHistory(11111111111111111L));
+		assertEquals(fileHistory1, database.getFileHistory(11111111111111111L));
+		
+		// Round 2: Add two other versions with same checksum to new database version
+        DatabaseVersion databaseVersion2 = createDatabaseVersion(databaseVersion1);		
+        
+        // - history 1, version 2
+        FileVersion fileVersion11 = createFileVersion("samechecksum2-renamed.jpg", fileVersion1);
+        fileVersion11.setChecksum(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }); // same checksum!
+        fileVersion11.setStatus(FileStatus.RENAMED);
+		
+		PartialFileHistory fileHistory11 = new PartialFileHistory(11111111111111111L); // same ID as above		
+		
+		databaseVersion2.addFileHistory(fileHistory11);
+		databaseVersion2.addFileVersionToHistory(fileHistory11.getFileId(), fileVersion11);
+		
+		database.addDatabaseVersion(databaseVersion2);     
+		
+		assertNotNull(database.getFileHistory(11111111111111111L));
+		assertEquals(2, database.getFileHistory(11111111111111111L).getFileVersions().size());		
+	}
+	
+	@Test
+	@Ignore
+	public void testRemoveDatabaseVersion() {
+		// TODO [medium] Implement this
+	}
 		
 	private FileVersion createFileVersion(String path) {
 		FileVersion fileVersion = new FileVersion();
