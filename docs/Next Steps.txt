@@ -15,3 +15,21 @@ GUI Daemon version
 - Create GUI
 	- Prio 1: Installation GUI 
 	- Prio 2: Daemon monitor GUI 
+	
+	
+	
+	
+	
+	
+	
+	
+CleanupOperation - Facts
+	1. Cleanup requires cleanup-lock - Only one can perform a cleanup operation at a time
+	2. Cleanup compares data by FileVersion  
+	3. Cleanup can be triggered by following parameters
+		1. Delete FileVersions older than x days
+		2. Keep x FileVersions
+	4. Cleanup deletes FileVersions out of corresponding DatabaseVersion
+		1. If DatabaseVersion is empty -> delete 
+	x. Cleanup process can by triggered in GUI/Daemon by RepoSize
+	
