@@ -259,11 +259,16 @@ public class TestFileUtil {
 		return ret;
 	}		
 	
+
+	public static byte[] createChecksum(File file) throws Exception {
+		return FileUtil.createChecksum(file, "SHA1");
+	}
+	
 	public static Map<File, ByteArray> createChecksums(List<File> inputFiles) throws Exception {
 		Map<File, ByteArray> inputFilesWithChecksums = new HashMap<File, ByteArray>();
 		
 		for (File inputFile : inputFiles) {
-			inputFilesWithChecksums.put(inputFile, new ByteArray(FileUtil.createChecksum(inputFile)));
+			inputFilesWithChecksums.put(inputFile, new ByteArray(createChecksum(inputFile)));
 		}
 		
 		return inputFilesWithChecksums;

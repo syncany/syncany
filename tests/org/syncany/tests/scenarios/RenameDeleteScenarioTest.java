@@ -1,5 +1,6 @@
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.*;
 
 import org.junit.Test;
@@ -33,11 +34,14 @@ public class RenameDeleteScenarioTest {
 		
 		// B deletes, then down; this should not fail or throw exceptions
 		clientB.moveFile("A-original", "B-moved");
-		clientB.down(); 
+		clientB.down();
+		assertFalse("File A-orginal should not be recreated.", clientB.getLocalFile("A-original").exists());
 
 		// Sync them
 		clientB.sync();		
 		clientA.sync();
+		assertFalse("File A-orginal should not be recreated.", clientA.getLocalFile("A-original").exists());
+		assertFalse("File A-orginal should not be recreated.", clientB.getLocalFile("A-original").exists());
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());		
 		

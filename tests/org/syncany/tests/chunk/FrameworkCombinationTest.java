@@ -141,8 +141,8 @@ public class FrameworkCombinationTest {
 			File inputFile = inputFilesToReassembledOutputFilesEntry.getKey();
 			File outputFile = inputFilesToReassembledOutputFilesEntry.getValue();
 			
-			byte[] inputFileChecksum = FileUtil.createChecksum(inputFile);
-			byte[] outputFileChecksum = FileUtil.createChecksum(outputFile);
+			byte[] inputFileChecksum = TestFileUtil.createChecksum(inputFile);
+			byte[] outputFileChecksum = TestFileUtil.createChecksum(outputFile);
 			
 			assertArrayEquals("Input file and output file checksums do not match" +
 					"for files "+inputFile+" and "+outputFile, inputFileChecksum, outputFileChecksum);

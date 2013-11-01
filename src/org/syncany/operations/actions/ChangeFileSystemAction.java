@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 
 public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, Database localDatabase, Database winningDatabase) {
@@ -67,8 +68,13 @@ public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 				createFileFolderOrSymlink(fileVersion2);	
 			}
 			else {
-				logger.log(Level.INFO, "     - (7) Original does NOT match, target file does not exist: Creating file at: "+fileVersion2);
-				createFileFolderOrSymlink(fileVersion2);	
+				if (fileVersion2.getStatus() == FileStatus.DELETED) {
+					logger.log(Level.INFO, "     - (7) Original does NOT match, target file does not exist (and SHOUDN'T): Nothing to do!");					
+				}
+				else {
+					logger.log(Level.INFO, "     - (8) Original does NOT match, target file does not exist: Creating file at: "+fileVersion2);
+					createFileFolderOrSymlink(fileVersion2);
+				}
 			}
 		}
 	}

@@ -113,7 +113,6 @@ public class DatabaseCacheTest {
         assertEquals(multiChunkP3, database.getMultiChunk(new byte[] { 5,5,5,5,5,5,5,5,5 }));
 	}	
 	
-
 	@Test
 	public void testFilenameCache() throws IOException {		
 		Database database = new Database();
@@ -159,7 +158,53 @@ public class DatabaseCacheTest {
 		
 		database.addDatabaseVersion(databaseVersion3);   
 		
-        assertNull(database.getFileHistory("file2.jpg"));        
+        assertNull(database.getFileHistory("file2.jpg"));            
+	}	
+	
+	@Test
+	public void testFilenameCacheDeleteAndNewOfSameFileInOneDatabaseVersion() throws IOException {		
+		Database database = new Database();
+
+		// Round 1: Add file history & version 
+		DatabaseVersion databaseVersion1 = createDatabaseVersion();		
+        
+		FileVersion fileVersion1 = createFileVersion("file1.jpg");		
+		PartialFileHistory fileHistory1 = new PartialFileHistory(11111111111111111L);		
+		
+		databaseVersion1.addFileHistory(fileHistory1);
+		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
+		
+		database.addDatabaseVersion(databaseVersion1);     
+		
+        assertEquals(fileHistory1, database.getFileHistory("file1.jpg"));
+        
+        // Round 2: Add new version
+        DatabaseVersion databaseVersion2 = createDatabaseVersion(databaseVersion1);		
+        
+        // - delete file1.jpg
+		FileVersion fileVersion2 = createFileVersion("file1.jpg", fileVersion1);
+		fileVersion2.setStatus(FileStatus.DELETED);
+		
+		PartialFileHistory fileHistory2 = new PartialFileHistory(11111111111111111L); // same ID		
+		
+		databaseVersion2.addFileHistory(fileHistory2);
+		databaseVersion2.addFileVersionToHistory(fileHistory2.getFileId(), fileVersion2);
+		
+		// - add file1.jpg (as FOLDER!)
+		FileVersion fileVersion3 = createFileVersion("file1.jpg"); // new file!
+		fileVersion3.setType(FileType.FOLDER);
+		
+		PartialFileHistory fileHistory3 = new PartialFileHistory(222222222L); // new ID	!	
+		
+		databaseVersion2.addFileHistory(fileHistory3);
+		databaseVersion2.addFileVersionToHistory(fileHistory3.getFileId(), fileVersion3);
+		
+		// - add datbase version
+		database.addDatabaseVersion(databaseVersion2);   
+		
+        assertNotNull(database.getFileHistory("file1.jpg"));
+        assertEquals(1, database.getFileHistory("file1.jpg").getFileVersions().size());
+        assertEquals(fileHistory3, database.getFileHistory("file1.jpg"));        
 	}		
 
 	@Test

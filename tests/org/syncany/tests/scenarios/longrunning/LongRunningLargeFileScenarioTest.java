@@ -10,7 +10,7 @@ import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.util.FileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
 public class LongRunningLargeFileScenarioTest {
@@ -47,7 +47,7 @@ public class LongRunningLargeFileScenarioTest {
 		logln("Creating large file for scenario ("+((long) size/1024L/1024L)+" MB) ...");
 		clientA.createNewFile("A-large-file.zip", size);	
 		logln("Done creating large file. Now creating checksum ...");		
-		String checksumFileA = StringUtil.toHex(FileUtil.createChecksum(clientA.getLocalFile("A-large-file.zip")));
+		String checksumFileA = StringUtil.toHex(TestFileUtil.createChecksum(clientA.getLocalFile("A-large-file.zip")));
 		logln("Done. Checksum is: "+checksumFileA);	
 		
 		logln("clientA.up() started.");
@@ -62,7 +62,7 @@ public class LongRunningLargeFileScenarioTest {
 		logln("clientB.down(); started.");
 		clientB.down(); 
 		logln("clientB.down(); completed.");
-		String checksumFileB = StringUtil.toHex(FileUtil.createChecksum(clientB.getLocalFile("A-large-file.zip")));
+		String checksumFileB = StringUtil.toHex(TestFileUtil.createChecksum(clientB.getLocalFile("A-large-file.zip")));
 		logln("Done. Checksum is: "+checksumFileB);	
 		
 		logln("Freeing up space, deleting file at client B ...");

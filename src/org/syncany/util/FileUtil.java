@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
@@ -44,24 +45,12 @@ import java.util.List;
  */
 public class FileUtil {
     public static String getRelativePath(File base, File file) {
-        //System.err.println("rel path = base = "+base.getAbsolutePath() + " - file: "+file.getAbsolutePath()+ " ---> ");
-        if (base.getAbsolutePath().length() >= file.getAbsolutePath().length()) {
-            return "";
-        }
-
-        String relativeFilePath = file.getAbsolutePath().substring(base.getAbsolutePath().length() + 1);
-        
-        // Remove trailing slashes
-        while (relativeFilePath.endsWith(File.separator)) {
-        	relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length()-1);
-        }
-
-        // Remove leading slashes
-        while (relativeFilePath.startsWith(File.separator)) {
-        	relativeFilePath = relativeFilePath.substring(1);
-        }
-
-        return relativeFilePath.replaceAll("\\\\", "/");
+    	Path baseFilePath = Paths.get(base.getAbsolutePath());
+    	Path filePath = Paths.get(file.getAbsolutePath());
+    	
+    	Path relativeFilePath = baseFilePath.relativize(filePath);
+    	
+    	return relativeFilePath.toString();       
     }
 
     public static String getAbsoluteParentDirectory(File file) {
@@ -205,10 +194,6 @@ public class FileUtil {
 
         inputStream.close();
     }
-
-	public static byte[] createChecksum(File file) throws Exception {
-		return createChecksum(file, "SHA1");
-	}
 	
 	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {
 		FileInputStream fis =  new FileInputStream(filename);
@@ -365,6 +350,11 @@ public class FileUtil {
 			@Override public Object fileKey() { return null; }			
 			@Override public FileTime creationTime() { return null; }			
 		};		
+	}
+
+	public static boolean exists(File lastLocalVersionOnDisk) {
+		// TODO [high] Somehow ban all File.exists()-calls in the application. File.exists() return true if a symlink points to a non-existing target
+		return Files.exists(Paths.get(lastLocalVersionOnDisk.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
 	}
 	
 }

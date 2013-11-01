@@ -6,7 +6,7 @@ import java.io.RandomAccessFile;
 public class ChangeFileSize extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		File file = pickFile(hashCode());
+		File file = pickFile(81818);
 		
 		log(this, file.getAbsolutePath());
 		

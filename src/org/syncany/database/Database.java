@@ -199,11 +199,7 @@ public class Database {
 			FileVersion lastVersion = cacheFileHistory.getLastVersion();
 			String fileName = lastVersion.getPath();
 			
-			if (lastVersion.getStatus() == FileStatus.DELETED) {
-				filenameHistoryCache.remove(fileName);
-				System.out.println("remove "+fileName);
-			}
-			else {						
+			if (lastVersion.getStatus() != FileStatus.DELETED) {
 				filenameHistoryCache.put(fileName, cacheFileHistory);				
 			}
 		}		

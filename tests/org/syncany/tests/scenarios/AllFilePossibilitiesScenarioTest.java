@@ -103,7 +103,7 @@ public class AllFilePossibilitiesScenarioTest {
 				new ChangeLastModifiedDate(),
 				new ChangePermissionsOfFile(),
 				new ChangePermissionsOfFolder(), 
-				new ChangeSymlinkTarget(),				
+				new ChangeSymlinkTarget(),		
 				new ChangeTypeFileToFolder(),
 				new ChangeTypeFileToSymlinkWithNonExistingTarget(),
 				new ChangeTypeFileToSymlinkWithTargetFile(),
@@ -139,6 +139,24 @@ public class AllFilePossibilitiesScenarioTest {
 				}			
 			}
 		);
+		
+		clientA.cleanup();
+		clientB.cleanup();
+	}
+	
+	@Test
+	public void testChangeTypeSymlinkWithTargetFileToFolder() throws Exception {		
+		final Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		final TestClient clientA = new TestClient("A", testConnection);
+		final TestClient clientB = new TestClient("B", testConnection);
+		
+		ClientActions.run(clientA, null, new CreateFileTree(), null);
+		ClientActions.run(clientA, null, new ChangeTypeFileToSymlinkWithTargetFolder(), null);
+		
+		clientA.upWithForceChecksum();		
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 		
 		clientA.cleanup();
 		clientB.cleanup();

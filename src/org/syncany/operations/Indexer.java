@@ -104,8 +104,8 @@ public class Indexer {
 			// Add this file history if a new file with this name has been added (file type change)
 			PartialFileHistory newFileWithSameName = getFileHistoryByPathFromDatabaseVersion(newDatabaseVersion, fileHistory.getLastVersion().getPath());
 			
-			// If file has VANISHED, mark as DELETED 
-			if (!lastLocalVersionOnDisk.exists() || newFileWithSameName != null) {
+			// If file has VANISHED, mark as DELETED			
+			if (!FileUtil.exists(lastLocalVersionOnDisk) || newFileWithSameName != null) {
 				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileId());
 				FileVersion deletedVersion = (FileVersion) lastLocalVersion.clone();
 				deletedVersion.setStatus(FileStatus.DELETED);
@@ -395,7 +395,7 @@ public class Indexer {
 							
 							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getPath());
 							
-							if (lastVersion.getStatus() != FileStatus.DELETED && !lastVersionOnLocalDisk.exists()) {
+							if (lastVersion.getStatus() != FileStatus.DELETED && !FileUtil.exists(lastVersionOnLocalDisk)) {
 								lastFileHistory = fileHistoryWithSameChecksum;
 								break;
 							}

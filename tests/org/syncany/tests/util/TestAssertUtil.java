@@ -120,8 +120,8 @@ public class TestAssertUtil {
 			fail(message+": Actual file size ("+actualFile+" = "+actualFile.length()+") does not match expected file size ("+expectedFile+" = "+expectedFile.length()+")");
 		}
 		
-		byte[] expectedFileChecksum = FileUtil.createChecksum(expectedFile);
-		byte[] actualFileChecksum = FileUtil.createChecksum(actualFile);
+		byte[] expectedFileChecksum = TestFileUtil.createChecksum(expectedFile);
+		byte[] actualFileChecksum = TestFileUtil.createChecksum(actualFile);
 		
 		assertArrayEquals(message+": Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);
 		
