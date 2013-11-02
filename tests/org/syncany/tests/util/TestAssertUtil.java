@@ -8,6 +8,8 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -98,7 +100,8 @@ public class TestAssertUtil {
 		assertNotNull(message+": Actual file is "+actualFile+", expected file is null.", expectedFile);
 		assertNotNull(message+": Expected file is "+expectedFile+", actual file is null.", actualFile);
 		
-		FileVersionComparator fileVersionComparator = new FileVersionComparator(new File("/"), "SHA1");
+		Path root = Paths.get(actualFile.getAbsolutePath()).getRoot();
+		FileVersionComparator fileVersionComparator = new FileVersionComparator(root.toFile(), "SHA1");
 		
 		if (!expectedFile.exists()) {
 			fail(message+": Expected file "+expectedFile+" does not exist.");

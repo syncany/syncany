@@ -50,7 +50,7 @@ public class FileUtil {
     	
     	Path relativeFilePath = baseFilePath.relativize(filePath);
     	
-    	return relativeFilePath.toString();       
+    	return relativeFilePath.toString().replaceAll("\\\\", "/");       
     }
 
     public static String getAbsoluteParentDirectory(File file) {

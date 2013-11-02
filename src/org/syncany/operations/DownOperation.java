@@ -107,7 +107,7 @@ public class DownOperation extends Operation {
 		pruneConflictingLocalBranch(winnersBranch);
 		
 		// 6. Apply winner's branch 
-		appyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
+		applyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 		
 		// 7. Write names of newly analyzed remote databases (so we don't download them again)
 		writeAlreadyDownloadedDatabasesListFromFile(unknownRemoteDatabases);
@@ -116,7 +116,7 @@ public class DownOperation extends Operation {
 		return result;		
 	}		
 	
-	private void appyWinnersBranch(Branch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
+	private void applyWinnersBranch(Branch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
 		Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
 		logger.log(Level.INFO, "- Database versions to APPLY locally: "+winnersApplyBranch);
 		
