@@ -45,6 +45,8 @@ public class TestFileUtil {
 		in.close();
 		out.close();
 		
+		outFile.setLastModified(from.lastModified()); 	//Windows changes last modified when copying file
+		
 		return outFile;
 	}
 
@@ -66,7 +68,7 @@ public class TestFileUtil {
 			for(File f: from.listFiles()){
 				File srcFile = new File(from, f.getName());
 				File destFile = new File(toDirectory, f.getName());
-				
+
 				copyIntoDirectory(srcFile, destFile);
 			}
 			

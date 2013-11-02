@@ -128,6 +128,12 @@ public class Database {
 		updateFilenameHistoryCache();
 		updateContentChecksumCache();
 	} 	
+	
+	public void addDatabaseVersions(List<DatabaseVersion> databaseVersions) {		
+		for (DatabaseVersion databaseVersion : databaseVersions) {
+			addDatabaseVersion(databaseVersion);
+		}
+	} 	
 
 	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {
 		databaseVersions.remove(databaseVersion);

@@ -62,9 +62,7 @@ public class FileUtil {
     }
 
     public static String getRelativeParentDirectory(File base, File file) {
-        //System.out.println(new File(getAbsoluteParentDirectory(file)));
-        //System.err.println("reldir -> base = "+base.getAbsolutePath() + " - file: "+file.getAbsolutePath()+" ---> "+getRelativePath(base, new File(getAbsoluteParentDirectory(file))));
-        return getRelativePath(base, new File(getAbsoluteParentDirectory(file)));
+    	return getRelativePath(base, new File(getAbsoluteParentDirectory(file)));
     }
 
     public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {

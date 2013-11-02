@@ -11,9 +11,13 @@ import org.syncany.chunk.Transformer;
 import org.syncany.database.Branch;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
+import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.FileVersion;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.VectorClock;
+import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 
 public class TestDatabaseUtil {
 	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)(?:/([^/]+))?");
@@ -98,5 +102,59 @@ public class TestDatabaseUtil {
 		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
 		dao.save(db, writtenDatabaseFile);
 	}
+	
+	public static FileVersion createFileVersion(String path) {
+		FileVersion fileVersion = new FileVersion();
+		
+		fileVersion.setChecksum(TestFileUtil.createRandomArray(20));
+		fileVersion.setCreatedBy("A");		
+		fileVersion.setLastModified(new Date());
+		fileVersion.setPath(path);
+		fileVersion.setStatus(FileStatus.NEW);
+		fileVersion.setType(FileType.FILE);
+		fileVersion.setUpdated(new Date());
+		fileVersion.setVersion(1L);
+		
+		return fileVersion;
+	}
+	
+	public static FileVersion createFileVersion(String path, FileVersion basedOnFileVersion) {
+		FileVersion fileVersion = basedOnFileVersion.clone();
+		
+		fileVersion.setPath(path);
+		fileVersion.setStatus(FileStatus.CHANGED);
+		fileVersion.setVersion(basedOnFileVersion.getVersion()+1);
+		
+		return fileVersion;
+	}
+
+	// TODO [medium] Add functionality tests for the rest of the cache
+	// TODO [high] Add performance tests for the cache and optimize Database.addDatabaseVersion()-cache handling
+	
+	public static DatabaseVersion createDatabaseVersion() {
+		return createDatabaseVersion(null, new Date());
+	}
+	
+	public static DatabaseVersion createDatabaseVersion(DatabaseVersion basedOnDatabaseVersion) {
+		return createDatabaseVersion(basedOnDatabaseVersion, new Date());
+	}
+	
+	public static DatabaseVersion createDatabaseVersion(Date date) {
+		return createDatabaseVersion(null, date);
+	}
+	
+	public static DatabaseVersion createDatabaseVersion(DatabaseVersion basedOnDatabaseVersion, Date date) {
+		VectorClock vectorClock = (basedOnDatabaseVersion != null) ? basedOnDatabaseVersion.getVectorClock().clone() : new VectorClock();
+		vectorClock.incrementClock("someclient");
+		
+		DatabaseVersion databaseVersion = new DatabaseVersion();
+		
+		databaseVersion.setClient("someclient");
+		databaseVersion.setTimestamp(date);
+		databaseVersion.setVectorClock(vectorClock);
+		
+		return databaseVersion;
+	}
+
 	
 }
