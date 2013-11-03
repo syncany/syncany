@@ -38,6 +38,7 @@ public class CipherUtil {
     
     private static boolean initialized = false;
     private static boolean unlimitedStrengthEnabled = false;
+    private static SecureRandom secureRandom = new SecureRandom();
     
     static {
 		init();
@@ -86,7 +87,7 @@ public class CipherUtil {
     
 	public static byte[] createRandomArray(int size) {
     	byte[] salt = new byte[size];    	
-    	new SecureRandom().nextBytes(salt);
+    	secureRandom.nextBytes(salt);
     	
     	return salt;
     }
@@ -119,13 +120,7 @@ public class CipherUtil {
 			}
 			
             Cipher cipher = Cipher.getInstance(cipherSpec.getCipherStr(), PROVIDER);
-            
-            if (cipherSpec.hasIv()) {
-            	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
-            }
-            else {
-            	cipher.init(cipherInitMode, secretKey);
-            }
+        	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
 
             return cipher;
         }
@@ -134,12 +129,12 @@ public class CipherUtil {
         }
 	}
 
-	public static Cipher createEncCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws CipherException {
-		return createCipher(cipherSuite, Cipher.ENCRYPT_MODE, secretKey, iv);
+	public static Cipher createEncCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
+		return createCipher(cipherSpec, Cipher.ENCRYPT_MODE, secretKey, iv);
 	}   
 	
-	public static Cipher createDecCipher(CipherSpec cipherSuite, SecretKey secretKey, byte[] iv) throws CipherException {
-		return createCipher(cipherSuite, Cipher.DECRYPT_MODE, secretKey, iv);
+	public static Cipher createDecCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
+		return createCipher(cipherSpec, Cipher.DECRYPT_MODE, secretKey, iv);
 	}    	
 	
 	public static boolean isEncrypted(File file) throws IOException {

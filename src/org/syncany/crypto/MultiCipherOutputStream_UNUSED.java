@@ -169,14 +169,8 @@ public class MultiCipherOutputStream_UNUSED extends OutputStream {
 	}
 	
 	private byte[] createIV(CipherSpec cipherSpec) throws IOException {
-		byte[] streamIV = null;
-		
-		if (cipherSpec.hasIv()) {
-			streamIV = new byte[cipherSpec.getIvSize()/8]; 
-			secureRandom.nextBytes(streamIV);
-		
-			return streamIV;
-		}
+		byte[] streamIV = new byte[cipherSpec.getIvSize()/8]; 
+		secureRandom.nextBytes(streamIV);
 		
 		return streamIV;
 	}		
