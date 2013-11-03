@@ -10,8 +10,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +23,7 @@ import java.util.logging.Logger;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.Transformer;
@@ -183,5 +188,25 @@ public class MultiCipherStreamsTest {
 		byte[] decryptedData = bosDecryptedData.toByteArray();
 		
 		return decryptedData;
+	}	
+	
+
+	@Test 
+	@Ignore
+	public void listCryptoSettingsAvailable() {
+		logger.log(Level.INFO, "Listing security providers and properties:");
+		
+		for (Provider provider: Security.getProviders()) {
+			logger.log(Level.INFO, "- Provider '"+provider.getName()+"' ");
+			
+			List<String> propertyNames = new ArrayList<String>();
+			propertyNames.addAll(provider.stringPropertyNames());
+			
+			Collections.sort(propertyNames);
+			
+			for (String key : propertyNames) {
+				logger.log(Level.INFO, "   + "+key+" = "+provider.getProperty(key));
+			}
+		}
 	}	
 }

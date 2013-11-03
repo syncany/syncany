@@ -134,6 +134,7 @@ public class SymlinkSyncScenarioTest {
 		// B 
 		clientB.deleteFile("folder1");
 		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		
 		// Tear down
 		clientA.cleanup();

@@ -1,8 +1,6 @@
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -101,6 +99,37 @@ public class FileVanishedScenarioTest {
 		clientB.down();
 		assertFileListEquals("Files of both clients should be identical.", clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
+		
+		// Tear down
+		clientA.cleanup();
+		clientB.cleanup();
+	}
+	
+	@Test
+	public void testFolderVanishesWhenSyncingDown() throws Exception {		
+		// Setup 
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		// A 
+		clientA.createNewFolder("folder1");		
+		clientA.up();
+
+		// B
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// A
+		clientA.createNewFile("folder1/file1");	
+		clientA.up();
+		
+		// B 
+		clientB.deleteFile("folder1");
+		assertFalse(clientB.getLocalFile("folder1").exists());
+		
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		
 		// Tear down
 		clientA.cleanup();

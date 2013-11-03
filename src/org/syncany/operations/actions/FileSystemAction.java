@@ -62,14 +62,23 @@ public abstract class FileSystemAction {
 	}
 
 	protected void createSymlink(FileVersion reconstructedFileVersion) throws Exception {
-		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		File reconstructedFileAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
 
 		if (FileUtil.symlinksSupported()) {				
-			logger.log(Level.INFO, "     - Creating symlink at "+reconstructedFilesAtFinalLocation+" (target: "+reconstructedFileVersion.getLinkTarget()+") ...");
-			FileUtil.createSymlink(reconstructedFileVersion.getLinkTarget(), reconstructedFilesAtFinalLocation);
+			// Make directory if it does not exist
+			File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
+			
+			if (!FileUtil.exists(reconstructedFileParentDir)) {
+				logger.log(Level.INFO, "     - Parent folder does not exist, creating "+reconstructedFileParentDir+" ...");
+				reconstructedFileParentDir.mkdirs();
+			}
+			
+			// Make link
+			logger.log(Level.INFO, "     - Creating symlink at "+reconstructedFileAtFinalLocation+" (target: "+reconstructedFileVersion.getLinkTarget()+") ...");
+			FileUtil.createSymlink(reconstructedFileVersion.getLinkTarget(), reconstructedFileAtFinalLocation);
 		}
 		else {
-			logger.log(Level.INFO, "     - Skipping symlink (not supported) at "+reconstructedFilesAtFinalLocation+" (target: "+reconstructedFileVersion.getLinkTarget()+") ...");
+			logger.log(Level.INFO, "     - Skipping symlink (not supported) at "+reconstructedFileAtFinalLocation+" (target: "+reconstructedFileVersion.getLinkTarget()+") ...");
 		}
 	}
 	

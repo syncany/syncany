@@ -49,7 +49,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
-		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		File reconstructedFileAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
 		File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
 		logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				
 
@@ -75,7 +75,6 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 				
 				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId());
 
-				// TODO [low] Make more sensible API for multichunking
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getArray());
 				
@@ -85,10 +84,18 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		
 		reconstructedFileOutputStream.close();		
 							
-		// Okay. Now move to real place
-		logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFilesAtFinalLocation+" ...");
+		// Make directory if it does not exist
+		File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
 		
-		FileUtils.moveFile(reconstructedFileInCache, reconstructedFilesAtFinalLocation); // TODO [medium] This should be in a try/catch block
+		if (!FileUtil.exists(reconstructedFileParentDir)) {
+			logger.log(Level.INFO, "     - Parent folder does not exist, creating "+reconstructedFileParentDir+" ...");
+			reconstructedFileParentDir.mkdirs();
+		}
+		
+		// Okay. Now move to real place
+		logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFileAtFinalLocation+" ...");
+		
+		FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
 		
 		// Set attributes & timestamp
 		setFileAttributes(reconstructedFileVersion);			
