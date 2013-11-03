@@ -17,6 +17,8 @@
  */
 package org.syncany.chunk;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -89,9 +91,9 @@ public class TTTDChunker extends Chunker {
     }        
    
     @Override
-    public Enumeration<Chunk> createChunks(InputStream in) throws IOException {
-    	this.fileInputStream = in;
-        return new TTTDEnumeration(in);
+    public Enumeration<Chunk> createChunks(File file) throws IOException {
+    	fileInputStream = new FileInputStream(file);
+        return new TTTDEnumeration(fileInputStream);
     }    
 
 	@Override

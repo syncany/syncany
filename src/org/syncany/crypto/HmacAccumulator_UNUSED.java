@@ -41,7 +41,7 @@ import org.syncany.util.StringUtil;
  * It is assumed that the supplied buffersize is always greater than or equal to
  * the mac length.
  */
-public class HMACAccumulator_UNUSED {
+public class HmacAccumulator_UNUSED {
 
     protected OutputStream outputStream;
     private CircularBuffer unprocessed;
@@ -49,11 +49,8 @@ public class HMACAccumulator_UNUSED {
     private Mac hmac;
     private int maclength;
     private byte[] appended;
-
-    HMACAccumulator_UNUSED() {
-    }
-
-    public HMACAccumulator_UNUSED(Key key, String macAlgorithm, String cryptoProvider, int buffersize) throws Exception {
+   
+    public HmacAccumulator_UNUSED(Key key, String macAlgorithm, String cryptoProvider, int buffersize) throws Exception {
         hmac = cryptoProvider == null ? Mac.getInstance(macAlgorithm) : Mac.getInstance(macAlgorithm, cryptoProvider);
         Key hmacKey = new SecretKeySpec(key.getEncoded(), macAlgorithm);
         hmac.init(hmacKey);
@@ -67,6 +64,10 @@ public class HMACAccumulator_UNUSED {
      */
     public void encryptUpdate(byte[] buffer, int read) {
         hmac.update(buffer, 0, read);
+    }
+    
+    public void encryptUpdate(int abyte) {
+        hmac.update((byte) abyte);
     }
 
     /**

@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
@@ -90,17 +91,21 @@ public class CipherUtil {
     	return salt;
     }
 	
-	public static SecretKey createSecretKey(CipherSpec cipherSuite, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException {
+	public static SecretKey createSecretKey(CipherSpec cipherSpec, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		return createSecretKey(cipherSpec.getCipherStr(), cipherSpec.getKeySize(), password, salt);
+    }
+	
+	public static SecretKey createSecretKey(String algorithm, int keySize, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		logger.log(Level.INFO, "Creating secret key using "+KEY_DERIVATION_FUNCTION+" with "+KEY_DERIVATION_ROUNDS+" rounds ...");
 
 		// Derive secret key from password 
     	SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
-        KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ROUNDS, cipherSuite.getKeySize());
+        KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ROUNDS, keySize);
         SecretKey secretKey = factory.generateSecret(pbeKeySpec);
         
         // The key name must be "AES" if cipherStr is "AES/...". This is really odd, but necessary
-        String algorithm = (cipherSuite.getCipherStr().indexOf('/') != -1) ? cipherSuite.getCipherStr().substring(0, cipherSuite.getCipherStr().indexOf('/')) : cipherSuite.getCipherStr();
-        SecretKey secretKeyAlgorithm = new SecretKeySpec(secretKey.getEncoded(), algorithm);  
+        String plainAlgorithm = (algorithm.indexOf('/') != -1) ? algorithm.substring(0, algorithm.indexOf('/')) : algorithm;
+        SecretKey secretKeyAlgorithm = new SecretKeySpec(secretKey.getEncoded(), plainAlgorithm);  
         
         return secretKeyAlgorithm;
     }

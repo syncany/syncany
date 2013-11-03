@@ -13,22 +13,22 @@ import javax.crypto.SecretKey;
  * Implements an output stream that encrypts the underlying output
  * stream using one to many ciphers. 
  * 
- * Format:
+ * Format: // TODO [high] Implement this format
  * <pre>
- *    Length          Description
+ *    Length           HMAC'd           Description
  *    ----------------------------------------------
- *    04              "Sy" 0x02 0x05 (4 bytes)
- *    01              Version (1 byte)
- *    01              Cipher count (=c, 1 byte)
+ *    04               no               "Sy" 0x02 0x05 (4 bytes)
+ *    01               no               Version (1 byte)
+ *    12               no               HMAC salt             
+ *    01               yes (in header)  Cipher count (=n, 1 byte)
  *    
- *    for i:= 0..c-1:
- *      01            Cipher IDs (c * 1 byte)
- *    
- *    for i:= 0..c-1:
- *      12            Salt (12 bytes)
- *      nn            IV (cipher suite specific length, 0..x)
+ *    for i := 0..n-1:
+ *      01             yes (in header)  Cipher spec ID (1 byte)
+ *      12             yes (in header)  Salt for cipher i (12 bytes)
+ *      aa             yes (in header)  IV for cipher i (cipher suite specific length, 0..x)
  *      
- *    (ciphertext)
+ *    20               no               Header HMAC (20 bytes, for "HmacSHA1")
+ *    bb               yes (in mode)    Ciphertext (HMAC'd by mode, e.g. GCM)
  * </pre>
  * 
  * TODO [medium] HMAC over IV, Cipher Suites and Ciphertext
@@ -50,16 +50,19 @@ public class MultiCipherOutputStream extends OutputStream {
 	public static final byte STREAM_VERSION = 1;
 	public static final int SALT_SIZE = 12;
 	
+	static final String HMAC_ALGORITHM = "HmacSHA1";
+	static final int HMAC_KEY_SIZE= 256;	
+	
 	private OutputStream underlyingOutputStream;
-	private List<CipherSpec> cipherSuites;
+	private List<CipherSpec> cipherSpecs;
 	private CipherSession cipherSession;
 
 	private OutputStream cipherOutputStream;
 	private boolean headerWritten;	
 	
-	public MultiCipherOutputStream(OutputStream out, List<CipherSpec> cipherSuites, CipherSession cipherSession) throws IOException {
+	public MultiCipherOutputStream(OutputStream out, List<CipherSpec> cipherSpecs, CipherSession cipherSession) throws IOException {
 		this.underlyingOutputStream = out;		
-		this.cipherSuites = cipherSuites;		
+		this.cipherSpecs = cipherSpecs;		
 		this.cipherSession = cipherSession;
 		
 		this.cipherOutputStream = null;
@@ -76,7 +79,7 @@ public class MultiCipherOutputStream extends OutputStream {
 			
 			cipherOutputStream = underlyingOutputStream;
 			
-			for (CipherSpec cipherSuite : cipherSuites) { 
+			for (CipherSpec cipherSuite : cipherSpecs) { 
 				byte[] salt = createAndWriteSalt();		
 				byte[] iv = createAndWriteIV(cipherSuite);
 				
@@ -91,11 +94,11 @@ public class MultiCipherOutputStream extends OutputStream {
     	}		
 	}	
 	
-	private byte[] createAndWriteIV(CipherSpec cipherSuite) throws IOException {
+	private byte[] createAndWriteIV(CipherSpec cipherSpec) throws IOException {
 		byte[] streamIV = null;
 		
-		if (cipherSuite.hasIv()) {
-			streamIV = new byte[cipherSuite.getIvSize()/8]; 
+		if (cipherSpec.hasIv()) {
+			streamIV = new byte[cipherSpec.getIvSize()/8]; 
 			new SecureRandom().nextBytes(streamIV);
 		
 			underlyingOutputStream.write(streamIV);
@@ -105,7 +108,7 @@ public class MultiCipherOutputStream extends OutputStream {
 	}
 
 	private void doSanityChecks() throws IOException {
-		for (CipherSpec cipherSuite : cipherSuites) {
+		for (CipherSpec cipherSuite : cipherSpecs) {
 			if (cipherSuite.getCipherStr().contains("/ECB/")) {
 				throw new IOException("Cannot use ECB mode. This mode is not considered secure.");
 			}
@@ -121,9 +124,9 @@ public class MultiCipherOutputStream extends OutputStream {
 	}
 
 	private void writeCipherSuites() throws IOException {
-		underlyingOutputStream.write(cipherSuites.size());
+		underlyingOutputStream.write(cipherSpecs.size());
 		
-		for (CipherSpec cipherSuite : cipherSuites) {
+		for (CipherSpec cipherSuite : cipherSpecs) {
 			underlyingOutputStream.write(cipherSuite.getId());
 		}		
 	}

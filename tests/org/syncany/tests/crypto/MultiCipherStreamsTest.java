@@ -126,13 +126,14 @@ public class MultiCipherStreamsTest {
 		Transformer decryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
 		
 		// Prepare data
-		byte[] srcData = new byte[1024];
+		byte[] srcData = new byte[10*1024];
 		
 		for (int i=0;i<srcData.length; i++) {
 			srcData[i] = (byte)(i & 0xff);
 		}				
 		
 		byte[] encryptedData1 = doEncrypt(srcData, encryptCipherTransformer);
+		logger.log(Level.INFO, "Encrypted Data (Round 1): "+StringUtil.toHex(encryptedData1));
 		byte[] decryptedData1 = doDecrypt(encryptedData1, decryptCipherTransformer);
 		
 		byte[] encryptedData2 = doEncrypt(srcData, encryptCipherTransformer);
@@ -144,8 +145,8 @@ public class MultiCipherStreamsTest {
 		logger.log(Level.INFO, "Encrypted Data (Round 1): "+StringUtil.toHex(encryptedData1));
 		logger.log(Level.INFO, "Encrypted Data (Round 2): "+StringUtil.toHex(encryptedData2));
 		
-		assertEquals("Encrypted and decrypted Data is different (round 1)", StringUtil.toHex(srcData), StringUtil.toHex(decryptedData1));
-		assertEquals("Encrypted and decrypted Data is different (round 2)", StringUtil.toHex(srcData), StringUtil.toHex(decryptedData2));
+		assertEquals("Source data and decrypted data is different (round 1)", StringUtil.toHex(srcData), StringUtil.toHex(decryptedData1));
+		assertEquals("Source data and decrypted data is different (round 2)", StringUtil.toHex(srcData), StringUtil.toHex(decryptedData2));
 		
 		assertNotSame("Encrypted data for round 1 and 2 are identical", StringUtil.toHex(encryptedData1), StringUtil.toHex(encryptedData2));
 

@@ -19,9 +19,11 @@ package org.syncany.config;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
+import org.syncany.chunk.MimeTypeChunker;
 import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
@@ -112,8 +114,25 @@ public class Config {
 	private void initRepo(RepoTO repoTO) throws Exception {
 		// TODO [low] make chunking options configurable
 		
-		chunker = new FixedChunker(16*1024); //new TTTDChunker(16*1024);// 
-		multiChunker = new ZipMultiChunker(2048*1024);
+		chunker = new MimeTypeChunker(
+			new FixedChunker(16*1024, "SHA1"),
+			new FixedChunker(2*1024*1024, "SHA1"),
+			Arrays.asList(new String[] {
+				"application/x-gzip",
+				"application/x-compressed.*",
+				"application/zip",		
+				"application/x-java-archive",	
+				"application/octet-stream",
+				"application/x-sharedlib",
+				"application/x-executable",
+				"image/.+",
+				"audio/.+",
+				"video/.+",				
+			})
+		);
+		
+		// FixedChunker(16*1024); //new TTTDChunker(16*1024);// 
+		multiChunker = new ZipMultiChunker(2*1024*1024);
 		
 		if (repoTO.getTransformerTOs() == null || repoTO.getTransformerTOs().size() == 0) {
 			transformer = new NoTransformer();

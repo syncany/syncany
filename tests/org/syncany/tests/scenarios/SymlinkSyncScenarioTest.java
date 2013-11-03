@@ -3,6 +3,7 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -100,6 +101,39 @@ public class SymlinkSyncScenarioTest {
 		assertTrue("Local symlink file should exist.", Files.exists(Paths.get(localSymlinkFile.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS));
 		assertTrue("Local symlink file should be a SYMLINK.", FileUtil.isSymlink(localSymlinkFile));
 		assertEquals("Local symlink file should point to actual target.", "symlink-target", FileUtil.readSymlinkTarget(localSymlinkFile));
+		
+		// Tear down
+		clientA.cleanup();
+		clientB.cleanup();
+	}
+	
+	@Test
+	public void testSymlinkSyncToNonExistingFolder() throws Exception {
+		if (!FileUtil.symlinksSupported()) {			
+			return; // Skip test for Windows, no symlinks there!
+		}
+
+		// Setup 
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		// A 
+		clientA.createNewFolder("folder1");		
+		clientA.up();
+
+		// B
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		
+		// A
+		File symlinkFile = clientA.getLocalFile("folder1/symlink-name");
+		FileUtil.createSymlink("/does/not/exist", symlinkFile); // << relative target	
+		clientA.up();
+		
+		// B 
+		clientB.deleteFile("folder1");
+		clientB.down();
 		
 		// Tear down
 		clientA.cleanup();

@@ -18,9 +18,7 @@
 package org.syncany.chunk;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -38,11 +36,7 @@ public abstract class Chunker {
      * @return
      * @throws IOException
      */
-    public Enumeration<Chunk> createChunks(File file) throws IOException {
-        return createChunks(new FileInputStream(file));
-    }
-        
-    public abstract Enumeration<Chunk> createChunks(InputStream is) throws IOException;
+    public abstract Enumeration<Chunk> createChunks(File file) throws IOException;        
 	public abstract void close();         
     public abstract String toString();
     public abstract String getChecksumAlgorithm();
