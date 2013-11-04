@@ -3,11 +3,16 @@ package org.syncany.crypto;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+
+import org.syncany.crypto.CipherSession.SecretKeyCacheEntry;
+import org.syncany.util.StringUtil;
 
 /**
  * Implements an output stream that encrypts the underlying output
@@ -31,8 +36,9 @@ import javax.crypto.SecretKey;
  *    bb               yes (in mode)    Ciphertext (HMAC'd by mode, e.g. GCM)
  * </pre>
  * 
- * It tries to follow a few Do's and Don'ts, as described at
- * http://blog.cryptographyengineering.com/2011/11/how-not-to-use-symmetric-encryption.html
+ * It follows a few Do's and Don'ts:
+ * - http://blog.cryptographyengineering.com/2011/11/how-not-to-use-symmetric-encryption.html
+ * - http://security.stackexchange.com/questions/30170/after-how-much-data-encryption-aes-256-we-should-change-key
  * 
  * Encryption and cipher rules
  * - Don't encrypt with ECB mode (throws exception if ECB is used)
@@ -42,12 +48,13 @@ import javax.crypto.SecretKey;
  * - Only use authenticated ciphers
  */
 public class MultiCipherOutputStream extends OutputStream {
+	private static final Logger logger = Logger.getLogger(MultiCipherOutputStream.class.getSimpleName());
+	
 	public static final byte[] STREAM_MAGIC = new byte[] {0x53, 0x79, 0x02, 0x05 };
 	public static final byte STREAM_VERSION = 1;
-	public static final int SALT_SIZE = 12;
-	
-	static final String HMAC_ALGORITHM = "HmacSHA1";
-	static final int HMAC_KEY_SIZE = 256;	
+
+	public static final int SALT_SIZE = 12;	
+	public static final CipherSpec HMAC_SPEC = new CipherSpec(-1, "HmacSHA512", 256, -1, false);
 	
 	private OutputStream underlyingOutputStream;
 	
@@ -88,8 +95,8 @@ public class MultiCipherOutputStream extends OutputStream {
 	
 	private void doSanityChecks() throws IOException {
 		for (CipherSpec cipherSpec : cipherSpecs) {
-			if (cipherSpec.getCipherStr().matches("/(ECB|CBC|DES|DESde)/")) {
-				throw new IOException("Cipher algorithm or mode not allowed: "+cipherSpec.getCipherStr()+". This mode is not considered secure.");
+			if (cipherSpec.getAlgorithm().matches("/(ECB|CBC|DES|DESde)/")) {
+				throw new IOException("Cipher algorithm or mode not allowed: "+cipherSpec.getAlgorithm()+". This mode is not considered secure.");
 			}
 		}	 
 	}
@@ -98,9 +105,9 @@ public class MultiCipherOutputStream extends OutputStream {
 		try {
 			// Initialize header HMAC
 			byte[] hmacSalt = CipherUtil.createRandomArray(SALT_SIZE);
-			SecretKey hmacSecretKey = CipherUtil.createSecretKey(HMAC_ALGORITHM, HMAC_KEY_SIZE, cipherSession.getPassword(), hmacSalt);
+			SecretKey hmacSecretKey = CipherUtil.createSecretKey(HMAC_SPEC, cipherSession.getPassword(), hmacSalt);
 			
-			headerHmac = Mac.getInstance(HMAC_ALGORITHM, CipherUtil.PROVIDER);
+			headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CipherUtil.PROVIDER);
 			headerHmac.init(hmacSecretKey);
 			
 			// Write header
@@ -112,14 +119,35 @@ public class MultiCipherOutputStream extends OutputStream {
 			cipherOutputStream = underlyingOutputStream;
 			
 			for (CipherSpec cipherSpec : cipherSpecs) { 
-				byte[] salt = CipherUtil.createRandomArray(SALT_SIZE);		
+				byte[] salt = null;
+				SecretKey secretKey = null;
+				
+				SecretKeyCacheEntry secretKeyCacheEntry = cipherSession.getWriteSecretKeyCacheEntry(cipherSpec);
+
+				if (secretKeyCacheEntry != null) {					
+					salt = secretKeyCacheEntry.getSalt();
+					secretKey = secretKeyCacheEntry.getSecretKey();
+					
+					secretKeyCacheEntry.incUseCount();
+					
+					logger.log(Level.INFO, "Using cached write secret key, with salt "+StringUtil.toHex(salt));					
+				}
+				else {
+					salt = CipherUtil.createRandomArray(SALT_SIZE);
+					secretKey = CipherUtil.createSecretKey(cipherSpec, cipherSession.getPassword(), salt);
+					
+					secretKeyCacheEntry = new SecretKeyCacheEntry(secretKey, salt);
+					cipherSession.putWriteSecretKeyCacheEntry(cipherSpec, secretKeyCacheEntry);
+					
+					logger.log(Level.INFO, "Created new write secret key, and added to cache, with salt "+StringUtil.toHex(salt));					
+				}				
+						
 				byte[] iv = CipherUtil.createRandomArray(cipherSpec.getIvSize()/8);
 
 				writeAndUpdateHmac(underlyingOutputStream, cipherSpec.getId());
 				writeAndUpdateHmac(underlyingOutputStream, salt);
 				writeAndUpdateHmac(underlyingOutputStream, iv);
 				
-				SecretKey secretKey = CipherUtil.createSecretKey(cipherSpec, cipherSession.getPassword(), salt); 
 				Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, secretKey, iv);
 				
 				cipherOutputStream = new CipherOutputStream(cipherOutputStream, encryptCipher);	        

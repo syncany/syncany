@@ -17,7 +17,6 @@
  */
 package org.syncany.chunk;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,16 +39,16 @@ public class CipherTransformer extends Transformer {
 	public static final String PROPERTY_CIPHER_SPECS = "cipherspecs";
 	public static final String PROPERTY_PASSWORD = "password";
 	
-	private List<CipherSpec> cipherSuites;
+	private List<CipherSpec> cipherSpecs;
 	private CipherSession cipherSession;
 	
 	public CipherTransformer() {
-		this.cipherSuites = new ArrayList<CipherSpec>();
+		this.cipherSpecs = new ArrayList<CipherSpec>();
 		this.cipherSession = null;
 	}
 	
-    public CipherTransformer(List<CipherSpec> cipherSuites, String password) {
-    	this.cipherSuites = cipherSuites;
+    public CipherTransformer(List<CipherSpec> cipherSpecs, String password) {
+    	this.cipherSpecs = cipherSpecs;
     	this.cipherSession = new CipherSession(password);
     }    
     
@@ -59,25 +58,25 @@ public class CipherTransformer extends Transformer {
     	String cipherSpecsListStr = settings.get(PROPERTY_CIPHER_SPECS);
     	
     	if (password == null || cipherSpecsListStr == null) {
-    		throw new Exception("Settings 'ciphersuites' and 'password' must both be filled.");
+    		throw new Exception("Settings '"+PROPERTY_CIPHER_SPECS+"' and '"+PROPERTY_PASSWORD+"' must both be filled.");
     	}
     	
     	initCipherSuites(cipherSpecsListStr);
     	initPassword(password);    	
     }
     
-    private void initCipherSuites(String cipherSuitesListStr) throws Exception {
-    	String[] cipherSuiteIdStrs = cipherSuitesListStr.split(",");
+    private void initCipherSuites(String cipherSpecListStr) throws Exception {
+    	String[] cipherSpecIdStrs = cipherSpecListStr.split(",");
     	
-    	for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
-    		int cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);
-    		CipherSpec cipherSuite = CipherSpecs.getCipherSpec(cipherSuiteId);
+    	for (String cipherSpecIdStr : cipherSpecIdStrs) {
+    		int cipherSpecId = Integer.parseInt(cipherSpecIdStr);
+    		CipherSpec cipherSpec = CipherSpecs.getCipherSpec(cipherSpecId);
     		
-    		if (cipherSuite == null) {
-    			throw new Exception("Cannot find cipher suite with ID '"+cipherSuiteId+"'");
+    		if (cipherSpec == null) {
+    			throw new Exception("Cannot find cipher suite with ID '"+cipherSpecId+"'");
     		}
     		
-    		cipherSuites.add(cipherSuite);
+    		cipherSpecs.add(cipherSpec);
     	}
 	}
 
@@ -87,7 +86,7 @@ public class CipherTransformer extends Transformer {
 
 	@Override
 	public OutputStream createOutputStream(OutputStream out) throws IOException {
-    	return new MultiCipherOutputStream(out, cipherSuites, cipherSession);    	
+    	return new MultiCipherOutputStream(out, cipherSpecs, cipherSession);    	
     }
 
     @Override

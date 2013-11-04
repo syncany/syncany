@@ -33,8 +33,8 @@ public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
 	
 	public static final String PROVIDER = "BC";
-    public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1";
-    public static final int KEY_DERIVATION_ROUNDS = 500;	    
+    public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1"; // Note: changing this invalidates encrypted data!
+    public static final int KEY_DERIVATION_ROUNDS = 1000; // Note: changing this invalidates encrypted data!	    
     
     private static boolean initialized = false;
     private static boolean unlimitedStrengthEnabled = false;
@@ -69,7 +69,7 @@ public class CipherUtil {
     	return unlimitedStrengthEnabled;
     }
     
-    public static void enableUnlimitedCrypto() throws CipherException {
+    public static void enableUnlimitedStrength() throws CipherException {
     	if (!unlimitedStrengthEnabled) {
     		logger.log(Level.INFO, "Enabling unlimited strength/crypto ...");
     		
@@ -93,7 +93,7 @@ public class CipherUtil {
     }
 	
 	public static SecretKey createSecretKey(CipherSpec cipherSpec, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return createSecretKey(cipherSpec.getCipherStr(), cipherSpec.getKeySize(), password, salt);
+		return createSecretKey(cipherSpec.getAlgorithm(), cipherSpec.getKeySize(), password, salt);
     }
 	
 	public static SecretKey createSecretKey(String algorithm, int keySize, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
@@ -116,10 +116,10 @@ public class CipherUtil {
 
 		try {
 			if (cipherSpec.needsUnlimitedStrength()) {
-				CipherUtil.enableUnlimitedCrypto();
+				CipherUtil.enableUnlimitedStrength();
 			}
 			
-            Cipher cipher = Cipher.getInstance(cipherSpec.getCipherStr(), PROVIDER);
+            Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), PROVIDER);
         	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
 
             return cipher;

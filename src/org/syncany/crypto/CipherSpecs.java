@@ -16,12 +16,12 @@ public class CipherSpecs {
 	static {
 		CipherSpec[] tmpCipherSpecs = new CipherSpec[] {
 			// Standard
-			new CipherSpec(0x01, "AES/GCM/NoPadding", 128, false, 128),
-			new CipherSpec(0x02, "Twofish/GCM/NoPadding", 128, false, 128),
+			new CipherSpec(0x01, "AES/GCM/NoPadding", 128, 128, false),
+			new CipherSpec(0x02, "Twofish/GCM/NoPadding", 128, 128, false),
 			
 			// Unlimited crypto
-			new CipherSpec(0x03, "AES/GCM/NoPadding", 256, true, 128),
-			new CipherSpec(0x04, "Twofish/GCM/NoPadding", 256, true, 128)
+			new CipherSpec(0x03, "AES/GCM/NoPadding", 256, 128, true),
+			new CipherSpec(0x04, "Twofish/GCM/NoPadding", 256, 128, true)
 		};		
 		
 		for (CipherSpec cipherSpec : tmpCipherSpecs) {

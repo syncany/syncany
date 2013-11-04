@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.crypto.Mac;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -31,6 +32,7 @@ import org.syncany.config.Logging;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherException;
+import org.syncany.crypto.MultiCipherOutputStream;
 import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -42,7 +44,7 @@ public class MultiCipherStreamsTest {
 	}		
 	
 	@Test
-	public void testCipherSuiteOneAndTwo() throws Exception {
+	public void testCipherAes128AndTwofish128() throws Exception {
 		doTestEncryption(
 			Arrays.asList(new CipherSpec[] {
 				CipherSpecs.getCipherSpec(1),
@@ -52,34 +54,19 @@ public class MultiCipherStreamsTest {
 	}
 	
 	@Test
-	public void testCipherSuiteThreeAndFour() throws Exception {
+	public void testCipherAes256AndTwofish256() throws Exception {
 		doTestEncryption(
 			Arrays.asList(new CipherSpec[] {
 				CipherSpecs.getCipherSpec(3),
 				CipherSpecs.getCipherSpec(4)
 			})
 		);
-	}
-	
-
-	@Test
-	public void testSaxParserWithCipherTransformerWithAesGcm() throws Exception {
-		doTestEncryption(
-			Arrays.asList(new CipherSpec[] {
-				CipherSpecs.getCipherSpec(1),
-				CipherSpecs.getCipherSpec(2)
-			})
-		);
-	}
+	}	
 	
 	@Test
-	public void testSaxParserWithCipherTransformerWithAesCbcPkcs5() throws Exception {
-		doTestEncryption(
-			Arrays.asList(new CipherSpec[] {
-				CipherSpecs.getCipherSpec(3),
-				CipherSpecs.getCipherSpec(4)
-			})
-		);
+	public void testHmacAvailability() throws Exception {
+		Mac.getInstance(MultiCipherOutputStream.HMAC_SPEC.getAlgorithm());
+		// Should not throw an exception
 	}
 	
 	public void testSaxParserWithMultiCipherTransformer(List<CipherSpec> cipherSuites) throws Exception {

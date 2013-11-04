@@ -53,8 +53,8 @@ public class MultiCipherInputStream extends InputStream {
 			readAndVerifyMagicNoHmac(underlyingInputStream);
 			readAndVerifyVersionNoHmac(underlyingInputStream);
 			
-			headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession.getPassword());				
-			cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession.getPassword());
+			headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
+			cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
 			
 			readAndVerifyHmac(underlyingInputStream, headerHmac);			
     	}
@@ -80,17 +80,17 @@ public class MultiCipherInputStream extends InputStream {
 		}		
 	}
 	
-	private Mac readHmacSaltAndInitHmac(InputStream inputStream, String password) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException {
+	private Mac readHmacSaltAndInitHmac(InputStream inputStream, CipherSession cipherSession) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException {
 		byte[] hmacSalt = readNoHmac(inputStream, MultiCipherOutputStream.SALT_SIZE);
-		SecretKey hmacSecretKey = CipherUtil.createSecretKey(MultiCipherOutputStream.HMAC_ALGORITHM, MultiCipherOutputStream.HMAC_KEY_SIZE, password, hmacSalt);
+		SecretKey hmacSecretKey = cipherSession.getReadSecretKey(MultiCipherOutputStream.HMAC_SPEC, hmacSalt);
 		
-		Mac hmac = Mac.getInstance(MultiCipherOutputStream.HMAC_ALGORITHM, CipherUtil.PROVIDER);
+		Mac hmac = Mac.getInstance(MultiCipherOutputStream.HMAC_SPEC.getAlgorithm(), CipherUtil.PROVIDER);
 		hmac.init(hmacSecretKey);	
 		
 		return hmac;
 	}
 	
-	private InputStream readCipherSpecsAndUpdateHmac(InputStream inputStream, Mac hmac, String password) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CipherException {
+	private InputStream readCipherSpecsAndUpdateHmac(InputStream inputStream, Mac hmac, CipherSession cipherSession) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CipherException {
 		int cipherSpecCount = readByteAndUpdateHmac(inputStream, hmac);		
 		InputStream nestedCipherInputStream = inputStream;
 		
@@ -105,7 +105,7 @@ public class MultiCipherInputStream extends InputStream {
 			byte[] salt = readAndUpdateHmac(inputStream, MultiCipherOutputStream.SALT_SIZE, hmac);
 			byte[] iv = readAndUpdateHmac(inputStream, cipherSpec.getIvSize()/8, hmac);
 			
-			SecretKey secretKey = CipherUtil.createSecretKey(cipherSpec, password, salt); 
+			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);
 			Cipher decryptCipher = CipherUtil.createDecCipher(cipherSpec, secretKey, iv);
 			
 			nestedCipherInputStream = new GcmCompatibleCipherInputStream(nestedCipherInputStream, decryptCipher);		

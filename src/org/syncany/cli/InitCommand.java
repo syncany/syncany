@@ -203,7 +203,7 @@ public class InitCommand extends AbstractInitCommand {
 					
 					if (yesno.toLowerCase().startsWith("y")) {
 						try {
-							CipherUtil.enableUnlimitedCrypto();
+							CipherUtil.enableUnlimitedStrength();
 						}
 						catch (Exception e) {
 							throw new Exception("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
