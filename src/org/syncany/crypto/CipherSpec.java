@@ -1,5 +1,6 @@
 package org.syncany.crypto;
 
+
 public class CipherSpec {
 	private int id;
 	private String algorithm;
@@ -13,6 +14,8 @@ public class CipherSpec {
 		this.keySize = keySize;
 		this.ivSize = ivSize;
 		this.needsUnlimitedStrength = needsUnlimitedStrength;
+		
+		doSanityChecks();
 	}
 	
 	public int getId() {
@@ -38,6 +41,12 @@ public class CipherSpec {
 	@Override
 	public String toString() {
 		return algorithm+", "+keySize+" bit";
+	}
+
+	private void doSanityChecks() {
+		if (algorithm.matches("(^DES/|/ECB/|/CBC/)")) {
+			throw new RuntimeException("Cipher algorithm or mode not allowed: "+algorithm+". This mode is not considered secure.");
+		}
 	}
 
 	@Override

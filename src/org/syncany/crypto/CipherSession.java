@@ -16,7 +16,7 @@ import org.syncany.util.StringUtil;
 
 public class CipherSession {
     private static final Logger logger = Logger.getLogger(CipherSession.class.getSimpleName());   
-	private static final int DEFAULT_SECRET_KEY_READ_CACHE_SIZE = 10;
+	private static final int DEFAULT_SECRET_KEY_READ_CACHE_SIZE = 20;
 	private static final int DEFAULT_SECRET_KEY_WRITE_REUSE_COUNT = 100;
 	
 	private String password;	
@@ -49,97 +49,89 @@ public class CipherSession {
 		this.password = password;
 	}	
 
-	public SecretKeyCacheEntry getWriteSecretKeyCacheEntry(CipherSpec cipherSpec) {
+	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyWriteCache.get(cipherSpec);
 		
+		// Remove key if use more than X times 
 		if (secretKeyCacheEntry != null && secretKeyCacheEntry.getUseCount() >= secretKeyWriteReuseCount) {
+			logger.log(Level.INFO, "Removed WRITE secret key from cache, because it was used "+secretKeyCacheEntry.getUseCount()+" times.");				
+
 			secretKeyWriteCache.remove(cipherSpec);
 			secretKeyCacheEntry = null;
 		}
-		
-		return secretKeyCacheEntry;
-	}
+				
+		// Return cached key, or create a new one
+		if (secretKeyCacheEntry != null) {					
+			secretKeyCacheEntry.increaseUseCount();
+			
+			logger.log(Level.INFO, "Using CACHED WRITE secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", with salt "+StringUtil.toHex(secretKeyCacheEntry.getSaltedSecretKey().getSalt()));
+			return secretKeyCacheEntry.getSaltedSecretKey();
+		}
+		else {			
+			SaltedSecretKey saltedSecretKey = createSaltedSecretKey(cipherSpec);
+						
+			secretKeyCacheEntry = new SecretKeyCacheEntry(saltedSecretKey);
+			secretKeyWriteCache.put(cipherSpec, secretKeyCacheEntry);
+			
+			logger.log(Level.INFO, "Created NEW WRITE secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", and added to cache, with salt "+StringUtil.toHex(saltedSecretKey.getSalt()));		
+			return saltedSecretKey;
+		}				
+	}	
 	
-	public void putWriteSecretKeyCacheEntry(CipherSpec cipherSpec, SecretKeyCacheEntry secretKeyCacheEntry) {
-		secretKeyWriteCache.put(cipherSpec, secretKeyCacheEntry);
-	}
-	
-	public SecretKey getReadSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public SaltedSecretKey getReadSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		CipherSpecWithSalt cipherSpecWithSalt = new CipherSpecWithSalt(cipherSpec, salt);
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyReadCache.get(cipherSpecWithSalt);
 		
 		if (secretKeyCacheEntry != null) {
-			logger.log(Level.INFO, "Using cached secret key, with salt "+StringUtil.toHex(salt));
-			return secretKeyCacheEntry.getSecretKey();
+			logger.log(Level.INFO, "Using CACHED READ secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", with salt "+StringUtil.toHex(salt));
+			return secretKeyCacheEntry.getSaltedSecretKey();
 		}
 		else {
-			SecretKey secretKey = CipherUtil.createSecretKey(cipherSpec, password, salt);
-			secretKeyCacheEntry = new SecretKeyCacheEntry(secretKey, salt);
-			
-			secretKeyReadCache.put(cipherSpecWithSalt, secretKeyCacheEntry);
-			
-			logger.log(Level.INFO, "Created new secret key and added to cache, with salt "+StringUtil.toHex(salt));
-			
 			if (secretKeyReadCache.size() > secretKeyReadCacheSize) {
 				CipherSpecWithSalt firstKey = secretKeyReadCache.keySet().iterator().next();
 				secretKeyReadCache.remove(firstKey);
 				
-				logger.log(Level.INFO, "Removed oldest secret key from cache.");				
+				logger.log(Level.INFO, "Removed oldest READ secret key from cache.");				
 			}
 			
-			return secretKey;
+			SaltedSecretKey saltedSecretKey = createSaltedSecretKey(cipherSpec, salt);
+			secretKeyCacheEntry = new SecretKeyCacheEntry(saltedSecretKey);
+			
+			secretKeyReadCache.put(cipherSpecWithSalt, secretKeyCacheEntry);
+									
+			logger.log(Level.INFO, "Created NEW READ secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", and added to cache, with salt "+StringUtil.toHex(salt));
+			return saltedSecretKey;
 		}
 	}		
 	
-	public static class SaltedSecretKey implements SecretKey {
-		private SecretKey secretKey;
-		private byte[] salt;
-		
-		public SaltedSecretKey(SecretKey secretKey, byte[] salt) {
-			this.secretKey = secretKey;
-			this.salt = salt;
-		}
-
-		@Override
-		public String getAlgorithm() {
-			return secretKey.getAlgorithm();
-		}
-
-		@Override
-		public String getFormat() {
-			return secretKey.getFormat();
-		}
-
-		@Override
-		public byte[] getEncoded() {
-			return secretKey.getEncoded();
-		}		
+	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		byte[] salt = CipherUtil.createRandomArray(MultiCipherOutputStream.SALT_SIZE); 
+		return createSaltedSecretKey(cipherSpec, salt);
 	}
 	
-	public static class SecretKeyCacheEntry {
-		private SecretKey secretKey;
-		private byte[] salt;
+	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		SecretKey secretKey = CipherUtil.createSecretKey(cipherSpec, password, salt);					
+		return new SaltedSecretKey(secretKey, salt);
+	}
+
+	private static class SecretKeyCacheEntry {
+		private SaltedSecretKey saltedSecretKey;
 		private int useCount;
 
-		public SecretKeyCacheEntry(SecretKey secretKey, byte[] salt) {
-			this.secretKey = secretKey;
-			this.salt = salt;
-			this.useCount = 0;
+		public SecretKeyCacheEntry(SaltedSecretKey saltedSecretKey) {
+			this.saltedSecretKey = saltedSecretKey;
+			this.useCount = 1;
 		}
 
-		public SecretKey getSecretKey() {
-			return secretKey;
+		public SaltedSecretKey getSaltedSecretKey() {
+			return saltedSecretKey;
 		}
 
-		public byte[] getSalt() {
-			return salt;
-		}
-		
 		public int getUseCount() {
 			return useCount;
 		}
 		
-		public void incUseCount() {
+		public void increaseUseCount() {
 			useCount++;
 		}
 	}
@@ -181,4 +173,5 @@ public class CipherSession {
 			return true;
 		}			
 	}
+
 }

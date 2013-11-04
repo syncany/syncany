@@ -3,16 +3,10 @@ package org.syncany.crypto;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-
-import org.syncany.crypto.CipherSession.SecretKeyCacheEntry;
-import org.syncany.util.StringUtil;
 
 /**
  * Implements an output stream that encrypts the underlying output
@@ -48,13 +42,11 @@ import org.syncany.util.StringUtil;
  * - Only use authenticated ciphers
  */
 public class MultiCipherOutputStream extends OutputStream {
-	private static final Logger logger = Logger.getLogger(MultiCipherOutputStream.class.getSimpleName());
-	
 	public static final byte[] STREAM_MAGIC = new byte[] {0x53, 0x79, 0x02, 0x05 };
 	public static final byte STREAM_VERSION = 1;
 
 	public static final int SALT_SIZE = 12;	
-	public static final CipherSpec HMAC_SPEC = new CipherSpec(-1, "HmacSHA512", 256, -1, false);
+	public static final CipherSpec HMAC_SPEC = new CipherSpec(-1, "HmacSHA256", 256, -1, false);
 	
 	private OutputStream underlyingOutputStream;
 	
@@ -73,9 +65,7 @@ public class MultiCipherOutputStream extends OutputStream {
 		this.cipherOutputStream = null;
 		
 		this.headerWritten = false;
-		this.headerHmac = null;
-		
-		doSanityChecks();
+		this.headerHmac = null;		
 	}
 	
 	@Override
@@ -92,20 +82,11 @@ public class MultiCipherOutputStream extends OutputStream {
 	public void close() throws IOException {
 		cipherOutputStream.close();
 	}
-	
-	private void doSanityChecks() throws IOException {
-		for (CipherSpec cipherSpec : cipherSpecs) {
-			if (cipherSpec.getAlgorithm().matches("/(ECB|CBC|DES|DESde)/")) {
-				throw new IOException("Cipher algorithm or mode not allowed: "+cipherSpec.getAlgorithm()+". This mode is not considered secure.");
-			}
-		}	 
-	}
 		
 	private void writeHeader() throws IOException {
 		try {
 			// Initialize header HMAC
-			byte[] hmacSalt = CipherUtil.createRandomArray(SALT_SIZE);
-			SecretKey hmacSecretKey = CipherUtil.createSecretKey(HMAC_SPEC, cipherSession.getPassword(), hmacSalt);
+			SaltedSecretKey hmacSecretKey = cipherSession.getWriteSecretKey(HMAC_SPEC);
 			
 			headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CipherUtil.PROVIDER);
 			headerHmac.init(hmacSecretKey);
@@ -113,42 +94,20 @@ public class MultiCipherOutputStream extends OutputStream {
 			// Write header
 			writeNoHmac(underlyingOutputStream, STREAM_MAGIC);
 			writeNoHmac(underlyingOutputStream, STREAM_VERSION);
-			writeNoHmac(underlyingOutputStream, hmacSalt);			
+			writeNoHmac(underlyingOutputStream, hmacSecretKey.getSalt());			
 			writeAndUpdateHmac(underlyingOutputStream, cipherSpecs.size());
 			
 			cipherOutputStream = underlyingOutputStream;
 			
 			for (CipherSpec cipherSpec : cipherSpecs) { 
-				byte[] salt = null;
-				SecretKey secretKey = null;
-				
-				SecretKeyCacheEntry secretKeyCacheEntry = cipherSession.getWriteSecretKeyCacheEntry(cipherSpec);
-
-				if (secretKeyCacheEntry != null) {					
-					salt = secretKeyCacheEntry.getSalt();
-					secretKey = secretKeyCacheEntry.getSecretKey();
-					
-					secretKeyCacheEntry.incUseCount();
-					
-					logger.log(Level.INFO, "Using cached write secret key, with salt "+StringUtil.toHex(salt));					
-				}
-				else {
-					salt = CipherUtil.createRandomArray(SALT_SIZE);
-					secretKey = CipherUtil.createSecretKey(cipherSpec, cipherSession.getPassword(), salt);
-					
-					secretKeyCacheEntry = new SecretKeyCacheEntry(secretKey, salt);
-					cipherSession.putWriteSecretKeyCacheEntry(cipherSpec, secretKeyCacheEntry);
-					
-					logger.log(Level.INFO, "Created new write secret key, and added to cache, with salt "+StringUtil.toHex(salt));					
-				}				
-						
+				SaltedSecretKey saltedSecretKey = cipherSession.getWriteSecretKey(cipherSpec);				
 				byte[] iv = CipherUtil.createRandomArray(cipherSpec.getIvSize()/8);
 
 				writeAndUpdateHmac(underlyingOutputStream, cipherSpec.getId());
-				writeAndUpdateHmac(underlyingOutputStream, salt);
+				writeAndUpdateHmac(underlyingOutputStream, saltedSecretKey.getSalt());
 				writeAndUpdateHmac(underlyingOutputStream, iv);
 				
-				Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, secretKey, iv);
+				Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, saltedSecretKey, iv);
 				
 				cipherOutputStream = new CipherOutputStream(cipherOutputStream, encryptCipher);	        
 			}	

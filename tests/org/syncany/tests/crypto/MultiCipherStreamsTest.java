@@ -113,9 +113,9 @@ public class MultiCipherStreamsTest {
 		// and http://bouncy-castle.1462172.n4.nabble.com/using-GCMBlockCipher-with-CipherInputStream-td4655147.html
 	}	
 	
-	private void doTestEncryption(List<CipherSpec> cipherSuites) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, CipherException, InvalidKeyException {
-		Transformer encryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
-		Transformer decryptCipherTransformer = new CipherTransformer(cipherSuites, "some password");
+	private void doTestEncryption(List<CipherSpec> cipherSpecs) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, CipherException, InvalidKeyException {
+		Transformer encryptCipherTransformer = new CipherTransformer(cipherSpecs, "some password");
+		Transformer decryptCipherTransformer = new CipherTransformer(cipherSpecs, "some password");
 		
 		// Prepare data
 		byte[] srcData = new byte[10*1024];
