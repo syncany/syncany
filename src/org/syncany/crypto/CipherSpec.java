@@ -1,7 +1,11 @@
 package org.syncany.crypto;
 
+import java.util.regex.Pattern;
 
-public class CipherSpec {
+
+public final class CipherSpec {
+	public static final Pattern ALLOWED_CIPHER_ALGORITHMS = Pattern.compile("^HmacSHA256$|(^(AES|Twofish)/(GCM|EAX)/.+)");
+	
 	private int id;
 	private String algorithm;
 	private int keySize; // in bits
@@ -44,7 +48,7 @@ public class CipherSpec {
 	}
 
 	private void doSanityChecks() {
-		if (algorithm.matches("(^DES/|/ECB/|/CBC/)")) {
+		if (!ALLOWED_CIPHER_ALGORITHMS.matcher(algorithm).matches()) {
 			throw new RuntimeException("Cipher algorithm or mode not allowed: "+algorithm+". This mode is not considered secure.");
 		}
 	}

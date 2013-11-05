@@ -7,7 +7,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.util.TestConfigUtil;
 
 @RunWith(Suite.class)
-@SuiteClasses({	
+@SuiteClasses({	 
 	AllTestsExceptLongRunning.class
 })
 public class AllTestsExceptLongRunningWithEncryption {

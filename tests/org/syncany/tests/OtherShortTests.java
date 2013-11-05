@@ -8,6 +8,7 @@ import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
+import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
 import org.syncany.tests.database.DatabaseCacheTest;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
@@ -31,6 +32,7 @@ import org.syncany.tests.util.FileUtilTests;
 	FileUtilTests.class,
 	
 	// Crypto	
+	CipherSpecsTest.class,
 	MultiCipherStreamsTest.class,
 	
 	// Chunking Framework
