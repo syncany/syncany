@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.config.Config;
@@ -61,55 +60,20 @@ public class CommandLineInterfaceTest {
 	}	
 	 
 	@Test
-	public void testCliSyncUpWithNoCleanup() throws Exception {
-		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
-
-		new CommandLineClient(new String[] { 
-			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--no-cleanup" 
-		}).start();
-
-		for (int i=1; i<=20; i++) {
-			new File(clientA.get("localdir")+"/somefolder"+i).mkdir();
-
-			new CommandLineClient(new String[] { 
-				"--localdir", clientA.get("localdir"),
-				"up",
-				"--no-cleanup"
-			}).start();
-		}
-		
-		for (int i=1; i<=20; i++) {
-			File databaseFileInRepo = new File(connectionSettings.get("path")+"/db-A-"+i);			
-			assertTrue("Database file SHOULD exist: "+databaseFileInRepo, databaseFileInRepo.exists());
-		}
-				
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
-	}	
-	
-	@Test
 	public void testAppFoldersExist() throws Exception {
 		// Setup
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
-		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
 
 		// Run!
 		new File(clientA.get("localdir")+"/somefolder").mkdir();
 	
-		CommandLineClient cli = new CommandLineClient(new String[] { 
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
 			"--localdir", clientA.get("localdir"),
 			"up",
 			"--no-cleanup" 
-		});
+		}));
 		
-		cli.setOut(cliOut);
-		cli.start();
-		
-		logger.log(Level.INFO, "CLI output: ");
-		logger.log(Level.INFO, toString(cliOut));		
 		
 		// Test folder existence
 		File appFolder = new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION);
@@ -124,87 +88,10 @@ public class CommandLineInterfaceTest {
 		assertTrue("Cache folder should exist", cacheFolder.exists());
 				
 		// Test output
-		String out[] = toStringArray(cliOut);
-
-		assertEquals("Different number of output lines expected.", 2, out.length);
-		assertEquals("A somefolder", out[0]);
-		
-		// Cleanup
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
-	}	
-	
-	@Test
-	public void testCliWithLogLevelOff() throws Exception {
-		// Setup
-		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
-		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
-
-		// Run!
-		new File(clientA.get("localdir")+"/somefolder1").mkdir();
-		new File(clientA.get("localdir")+"/somefolder2").mkdir();
-				
-		CommandLineClient cli = new CommandLineClient(new String[] { 
-			"--loglevel", "OFF", 
-			"--localdir", clientA.get("localdir"),
-			"status" 
-		});
-		
-		cli.setOut(cliOut);
-		cli.start();
-		
-		logger.log(Level.INFO, "CLI output: ");
-		logger.log(Level.INFO, toString(cliOut));			
-		
-		// Test output
-		String out[] = toStringArray(cliOut);
-
-		assertEquals("Different number of output lines expected.", 2, out.length);
-		assertEquals("? somefolder1", out[0]);
-		assertEquals("? somefolder2", out[1]);
-		
-		// Cleanup
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
-	}	
-	
-	@Test
-	public void testCliWithLogFile() throws Exception {
-		// Setup
-		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
-		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
-
-		File tempLogFile = new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION
-				+"/"+Config.DEFAULT_DIR_LOG+"/templogfile");
-		
-		// Run!
-		new File(clientA.get("localdir")+"/somefolder1").mkdir();
-		new File(clientA.get("localdir")+"/somefolder2").mkdir();
-				
-		CommandLineClient cli = new CommandLineClient(new String[] { 
-			"--log", tempLogFile.getAbsolutePath(), 
-			"--localdir", clientA.get("localdir"),
-			"status"
-		});
-		
-		cli.setOut(cliOut);
-		cli.start();
-		
-		logger.log(Level.INFO, "CLI output: ");
-		logger.log(Level.INFO, toString(cliOut));		
-
-		// Test		
-		assertTrue("Log file should exist.", tempLogFile.exists());
+		assertEquals("Different number of output lines expected.", 2, cliOut.length);
+		assertEquals("A somefolder", cliOut[0]);
 		
 		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 	}		
-	
-	public String toString(ByteArrayOutputStream bos) {
-		return new String(bos.toByteArray());
-	}
-	
-	public String[] toStringArray(ByteArrayOutputStream bos) {		
-		return toString(bos).split("[\\r\\n]+|[\\n\\r]+|[\\n]+");
-	}
 }

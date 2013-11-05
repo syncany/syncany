@@ -1,5 +1,9 @@
 package org.syncany.cli;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
@@ -28,15 +32,23 @@ public class DownCommand extends Command {
 		ChangeSet changeSet = operationResult.getChangeSet();
 		
 		if (changeSet.hasChanges()) {
-			for (String newFile : changeSet.getNewFiles()) {
+			List<String> newFiles = new ArrayList<String>(changeSet.getNewFiles());
+			List<String> changedFiles = new ArrayList<String>(changeSet.getChangedFiles());
+			List<String> deletedFiles = new ArrayList<String>(changeSet.getDeletedFiles());
+			
+			Collections.sort(newFiles);
+			Collections.sort(changedFiles);
+			Collections.sort(deletedFiles);
+			
+			for (String newFile : newFiles) {
 				out.println("A "+newFile);
 			}
 	
-			for (String changedFile : changeSet.getChangedFiles()) {
+			for (String changedFile : changedFiles) {
 				out.println("M "+changedFile);
 			}
 			
-			for (String deletedFile : changeSet.getDeletedFiles()) {
+			for (String deletedFile : deletedFiles) {
 				out.println("D "+deletedFile);
 			}	
 			

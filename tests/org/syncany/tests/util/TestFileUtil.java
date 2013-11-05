@@ -2,6 +2,7 @@ package org.syncany.tests.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.syncany.config.Config;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 
@@ -274,6 +276,27 @@ public class TestFileUtil {
 		}
 		
 		return inputFilesWithChecksums;
+	}
+	
+	public static Map<String, File> getLocalFiles(File root) throws FileNotFoundException {
+		List<File> fileList = FileUtil.getRecursiveFileList(root, true, false);
+		Map<String, File> fileMap = new HashMap<String, File>();
+		
+		for (File file : fileList) {
+			if (FileUtil.isFileLocked(file) || !file.canRead()) {
+				continue;
+			}						
+			
+			String relativePath = FileUtil.getRelativePath(root, file);
+			
+			if (relativePath.startsWith(Config.DEFAULT_DIR_APPLICATION)) {
+				continue;
+			}
+			
+			fileMap.put(relativePath, file);
+		}
+		
+		return fileMap;
 	}
 	
 }

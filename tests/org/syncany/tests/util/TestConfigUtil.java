@@ -2,14 +2,18 @@ package org.syncany.tests.util;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.syncany.chunk.CipherTransformer;
+import org.syncany.chunk.GzipTransformer;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -17,6 +21,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
 
 public class TestConfigUtil {
 	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
+	private static boolean cryptoEnabled = false;
 	
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
@@ -44,14 +49,39 @@ public class TestConfigUtil {
 		
 		repoTO.setChunker(null); // TODO [low] Chunker not configurable right now. Not used.
 		repoTO.setMultiChunker(null); // TODO [low] Chunker not configurable right now. Not used.
-		repoTO.setTransformers(null);
+		
+		if (cryptoEnabled) {
+			TransformerTO gzipTransformerTO = new TransformerTO();
+			gzipTransformerTO.setType(GzipTransformer.TYPE);
+			
+			Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
+			cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, "1,2");
+			
+			TransformerTO cipherTransformerTO = new TransformerTO();
+			cipherTransformerTO.setType(CipherTransformer.TYPE);
+			cipherTransformerTO.setSettings(cipherTransformerSettings);
+			
+			repoTO.setTransformers(Arrays.asList(new TransformerTO[] { 
+				gzipTransformerTO, 
+				cipherTransformerTO 
+			}));
+		}
+		else {
+			repoTO.setTransformers(null);
+		}
 		
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
 		
-		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));		
-		configTO.setPassword(null);		
+		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
 		
+		if (cryptoEnabled) {
+			configTO.setPassword("some password");
+		}
+		else {
+			configTO.setPassword(null);	
+		}
+						
 		// Skip configTO.setConnection()		
 		
 		Config config = new Config(tempLocalDir, configTO, repoTO);
@@ -101,5 +131,9 @@ public class TestConfigUtil {
 	
 	public static String createUniqueName(String name, Object uniqueHashObj) {
 		return String.format("syncany-%s-%d-%s", RUNDATE, 100 + uniqueHashObj.hashCode() % 899, name);
+	}
+
+	public static void setCrypto(boolean cryptoEnabled) {
+		TestConfigUtil.cryptoEnabled = cryptoEnabled;
 	}
 }

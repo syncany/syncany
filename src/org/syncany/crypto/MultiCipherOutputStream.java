@@ -42,7 +42,7 @@ import javax.crypto.Mac;
  * - Only use authenticated ciphers
  */
 public class MultiCipherOutputStream extends OutputStream {
-	public static final byte[] STREAM_MAGIC = new byte[] {0x53, 0x79, 0x02, 0x05 };
+	public static final byte[] STREAM_MAGIC = new byte[] { 0x53, 0x79, 0x02, 0x05 };
 	public static final byte STREAM_VERSION = 1;
 
 	public static final int SALT_SIZE = 12;	

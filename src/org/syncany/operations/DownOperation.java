@@ -434,8 +434,6 @@ public class DownOperation extends Operation {
 		
 		fr.close();
 	}
-	
-
 
 	public static class DownOperationOptions implements OperationOptions {
 		// Nothing here yet.

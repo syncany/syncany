@@ -1,6 +1,7 @@
 package org.syncany.crypto;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +26,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.syncany.util.FileUtil;
 

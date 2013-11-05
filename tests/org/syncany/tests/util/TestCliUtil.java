@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.cli.CommandLineClient;
@@ -71,6 +72,20 @@ public class TestCliUtil {
 		return client;
 	}	
 	
+	public static String[] runAndCaptureOutput(CommandLineClient cli) throws Exception {
+		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
+		
+		cli.setOut(cliOut);
+		cli.start();
+		
+		logger.log(Level.INFO, "CLI output: ");
+		logger.log(Level.INFO, toString(cliOut));
+		
+		System.out.println(toString(cliOut));
+		
+		return toStringArray(cliOut);
+	}
+	
 	private static void fixMachineName(Map<String, String> client) throws Exception {
 		File configFile = new File(client.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
 		Serializer serializer = new Persister();		
@@ -88,6 +103,13 @@ public class TestCliUtil {
 		if (clientSettings.get("configfile") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("configfile")));
 		if (clientSettings.get("appdir") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("appdir")));
 		if (clientSettings.get("repopath") != null) TestFileUtil.deleteDirectory(new File(clientSettings.get("repopath")));
-	}
+	}	
 
+	public static String toString(ByteArrayOutputStream bos) {
+		return new String(bos.toByteArray());
+	}
+	
+	public static String[] toStringArray(ByteArrayOutputStream bos) {		
+		return toString(bos).split("[\\r\\n]+|[\\n\\r]+|[\\n]+");
+	}
 }

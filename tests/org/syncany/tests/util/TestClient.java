@@ -3,8 +3,6 @@ package org.syncany.tests.util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -17,7 +15,6 @@ import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.util.FileUtil;
 
 public class TestClient extends Client {
 	public TestClient(String machineName, Connection connection) throws Exception {
@@ -98,24 +95,7 @@ public class TestClient extends Client {
 	}
 	
 	public Map<String, File> getLocalFiles() throws FileNotFoundException {
-		List<File> fileList = FileUtil.getRecursiveFileList(config.getLocalDir(), true, false);
-		Map<String, File> fileMap = new HashMap<String, File>();
-		
-		for (File file : fileList) {
-			if (FileUtil.isFileLocked(file) || !file.canRead()) {
-				continue;
-			}						
-			
-			String relativePath = FileUtil.getRelativePath(config.getLocalDir(), file);
-			
-			if (relativePath.startsWith(Config.DEFAULT_DIR_APPLICATION)) {
-				continue;
-			}
-			
-			fileMap.put(relativePath, file);
-		}
-		
-		return fileMap;
+		return TestFileUtil.getLocalFiles(config.getLocalDir());		
 	}
  
 	public File getLocalDatabaseFile() {

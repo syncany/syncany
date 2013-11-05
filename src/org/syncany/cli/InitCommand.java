@@ -139,7 +139,7 @@ public class InitCommand extends AbstractInitCommand {
 		
 		if (encryptionEnabled) {
 			if (advancedModeEnabled) { 			
-				cipherSuites = askCipherSuites();				
+				cipherSuites = askCipherSpecs();				
 			}
 			else { // Default
 				for (int cipherSuiteId : DEFAULT_CIPHER_SUITE_IDS) { 
@@ -151,9 +151,9 @@ public class InitCommand extends AbstractInitCommand {
 		return cipherSuites;
 	}
 
-	private List<CipherSpec> askCipherSuites() throws Exception {
-		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
-		Map<Integer, CipherSpec> availableCipherSuites = CipherSpecs.getAvailableCipherSpecs();
+	private List<CipherSpec> askCipherSpecs() throws Exception {
+		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
+		Map<Integer, CipherSpec> availableCipherSpecs = CipherSpecs.getAvailableCipherSpecs();
 
 		out.println();
 		out.println("Please choose your encryption settings. If you're paranoid,");
@@ -161,7 +161,7 @@ public class InitCommand extends AbstractInitCommand {
 		out.println();
 		out.println("Options:");
 		
-		for (CipherSpec cipherSuite : availableCipherSuites.values()) {
+		for (CipherSpec cipherSuite : availableCipherSpecs.values()) {
 			out.println(" ["+cipherSuite.getId()+"] "+cipherSuite);
 		}
 		
@@ -177,19 +177,19 @@ public class InitCommand extends AbstractInitCommand {
 			// Choose cipher
 			try {
 				// Add cipher suites
-				for (String cipherSuiteIdStr : cipherSuiteIdStrs) {
-					Integer cipherSuiteId = Integer.parseInt(cipherSuiteIdStr);				
-					CipherSpec cipherSuite = availableCipherSuites.get(cipherSuiteId);
+				for (String cipherSpecIdStr : cipherSuiteIdStrs) {
+					Integer cipherSpecId = Integer.parseInt(cipherSpecIdStr);				
+					CipherSpec cipherSpec = availableCipherSpecs.get(cipherSpecId);
 					
-					if (cipherSuite == null) {
+					if (cipherSpec == null) {
 						throw new Exception();
 					}
 					
-					if (cipherSuite.needsUnlimitedStrength()) {
+					if (cipherSpec.needsUnlimitedStrength()) {
 						unlimitedStrengthNeeded = true;
 					}
 					
-					cipherSuites.add(cipherSuite);
+					cipherSpecs.add(cipherSpec);
 				}
 				
 				// Unlimited strength
@@ -225,7 +225,7 @@ public class InitCommand extends AbstractInitCommand {
 			}
 		}
 
-		return cipherSuites;		
+		return cipherSpecs;		
 	}
 	
 	protected String askPasswordAndConfirm() {

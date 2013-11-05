@@ -55,6 +55,13 @@ public class TestAssertUtil {
 		}
 	}
 
+	public static void assertFileListEquals(File expectedFilesRoot, File actualFilesRoot) throws ArrayComparisonFailure, Exception {
+		Map<String, File> expectedFiles = TestFileUtil.getLocalFiles(expectedFilesRoot);
+		Map<String, File> actualFiles = TestFileUtil.getLocalFiles(actualFilesRoot);
+		
+		assertFileListEquals("File list does not match", expectedFiles, actualFiles);
+	}
+	
 	public static void assertFileListEquals(Map<String, File> expectedFiles, Map<String, File> actualFiles) throws ArrayComparisonFailure, Exception {
 		assertFileListEquals("File list does not match", expectedFiles, actualFiles);
 	}
