@@ -2,7 +2,6 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,6 +34,7 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -45,7 +45,6 @@ public class CommandLineClient extends Client {
 	private File localDir;
 	
 	private PrintStream out;
-	private Console console;
 		
 	static {
 		Logging.init();
@@ -55,7 +54,6 @@ public class CommandLineClient extends Client {
 	public CommandLineClient(String[] args) {
 		this.args = args;		
 		this.out = System.out;
-		this.console = System.console();
 	}
 	
 	public void setOut(OutputStream out) {
@@ -210,14 +208,13 @@ public class CommandLineClient extends Client {
 		if (CipherUtil.isEncrypted(repoFile)) {
 			logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
 
-			String password = configTO.getPassword();
+			SaltedSecretKey masterKey = configTO.getMasterKey();
 			
-			if (password == null) {
-				password = askPassword();
-				configTO.setPassword(password);
+			if (masterKey == null) {
+				throw new Exception("Repo file is encrypted, but master key not set in config file.");
 			}
 			
-			String repoFileStr = CipherUtil.decryptToString(new FileInputStream(repoFile), password);
+			String repoFileStr = CipherUtil.decryptToString(new FileInputStream(repoFile), masterKey);
 			
 			Serializer serializer = new Persister();
 			return serializer.read(RepoTO.class, repoFileStr);			
@@ -244,17 +241,6 @@ public class CommandLineClient extends Client {
 		}
 		 
 		return new File(".").getCanonicalFile(); 
-	}
-	
-	private String askPassword() {
-		String password = null;
-		
-		while (password == null) {
-			char[] passwordChars = console.readPassword("Password: ");			
-			password = new String(passwordChars);			
-		}	
-		
-		return password;
 	}
 	
 	private int runCommand(OptionSet options, List<?> nonOptions) throws Exception {

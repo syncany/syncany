@@ -79,7 +79,7 @@ public class InitCommand extends AbstractInitCommand {
 			password = askPasswordAndConfirm();
 		}
 			
-		ConfigTO configTO = createConfigTO(localDir, password, connectionTO);		
+		ConfigTO configTO = createConfigTO(localDir, null, connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
 		operationOptions.setLocalDir(localDir);

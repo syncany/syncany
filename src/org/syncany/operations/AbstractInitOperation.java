@@ -10,13 +10,29 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 
 public abstract class AbstractInitOperation extends Operation {
 	public AbstractInitOperation(Config config) {
 		super(config);
 	}	
+	
+	protected TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
+		Plugin plugin = Plugins.get(connectionTO.getType());
+		
+		Connection connection = plugin.createConnection();
+		connection.init(connectionTO.getSettings());
+		
+		return connection.createTransferManager();
+	}
 	
 	protected File createAppDirs(File localDir) throws Exception {
 		if (localDir == null) {
@@ -41,11 +57,11 @@ public abstract class AbstractInitOperation extends Operation {
 		serializer.write(source, file);	
 	}	
 	
-	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, String password) throws Exception {				
+	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {				
 		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
 		Serializer serializer = new Persister();
 		serializer.write(repoTO, plaintextRepoOutputStream);
 		
-		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, password);
+		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
 	}		
 }

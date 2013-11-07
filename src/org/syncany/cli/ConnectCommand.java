@@ -21,14 +21,19 @@ import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
 import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 
 public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
-	public static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(not-encrypted/)?(.+)$");	
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
+	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
+	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
+	private static final int LINK_PATTERN_GROUP_ENCRYPTED_ENCODED = 4;
 	
-	private String password;
+	private SaltedSecretKey masterKey;
 	
 	public ConnectCommand() {
 		super();
@@ -79,7 +84,7 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			throw new Exception("Invalid syntax.");
 		}
 		
-		ConfigTO configTO = createConfigTO(localDir, password, connectionTO);
+		ConfigTO configTO = createConfigTO(localDir, masterKey, connectionTO);
 		
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
@@ -98,22 +103,28 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			throw new Exception("Invalid link provided, must start with syncany:// and match link pattern.");
 		}
 		
-		String notEncryptedFlag = linkMatcher.group(1);
-		String ciphertext = linkMatcher.group(2);
-		String plaintext = null;
+		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
 		
+		String plaintext = null;
 		boolean isEncryptedLink = notEncryptedFlag == null;
 		
 		if (isEncryptedLink) {
-			password = askPassword();
+			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
+			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
 			
+			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
 			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
+
+			String password = askPassword();
+			masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
+			
 			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
 			
-			plaintext = CipherUtil.decryptToString(encryptedStorageConfig, password);					
+			plaintext = CipherUtil.decryptToString(encryptedStorageConfig, masterKey);					
 		}
 		else {
-			plaintext = new String(Base64.decodeBase64(ciphertext));
+			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
+			plaintext = new String(Base64.decodeBase64(encodedPlaintext));
 		}
 		
 		//System.out.println(plaintext);

@@ -19,7 +19,7 @@ public class CipherSession {
 	private static final int DEFAULT_SECRET_KEY_READ_CACHE_SIZE = 20;
 	private static final int DEFAULT_SECRET_KEY_WRITE_REUSE_COUNT = 100;
 	
-	private String password;	
+	private SecretKey masterKey;	
 	
 	private Map<CipherSpecWithSalt, SecretKeyCacheEntry> secretKeyReadCache;
 	private int secretKeyReadCacheSize;
@@ -27,12 +27,12 @@ public class CipherSession {
 	private Map<CipherSpec, SecretKeyCacheEntry> secretKeyWriteCache;
 	private int secretKeyWriteReuseCount;
 	
-	public CipherSession(String password) {
-		this(password, DEFAULT_SECRET_KEY_READ_CACHE_SIZE, DEFAULT_SECRET_KEY_WRITE_REUSE_COUNT);
+	public CipherSession(SaltedSecretKey masterKey) {
+		this(masterKey, DEFAULT_SECRET_KEY_READ_CACHE_SIZE, DEFAULT_SECRET_KEY_WRITE_REUSE_COUNT);
 	}
 	
-	public CipherSession(String password, int secretKeyReadCacheSize, int secretKeyWriteReuseCount) {
-		this.password = password;
+	public CipherSession(SaltedSecretKey masterKey, int secretKeyReadCacheSize, int secretKeyWriteReuseCount) {
+		this.masterKey = masterKey;
 
 		this.secretKeyReadCache = new LinkedHashMap<CipherSpecWithSalt, SecretKeyCacheEntry>();
 		this.secretKeyReadCacheSize = secretKeyReadCacheSize;
@@ -40,14 +40,14 @@ public class CipherSession {
 		this.secretKeyWriteCache = new HashMap<CipherSpec, SecretKeyCacheEntry>();
 		this.secretKeyWriteReuseCount = secretKeyWriteReuseCount;
 	}	
-	
-	public String getPassword() {
-		return password;
+
+	public SecretKey getMasterKey() {
+		return masterKey;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
-	}	
+	public void setMasterKey(SecretKey masterKey) {
+		this.masterKey = masterKey;
+	}
 
 	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyWriteCache.get(cipherSpec);
@@ -110,8 +110,7 @@ public class CipherSession {
 	}
 	
 	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		SecretKey secretKey = CipherUtil.createSecretKey(cipherSpec, password, salt);					
-		return new SaltedSecretKey(secretKey, salt);
+		return CipherUtil.createDerivedKey(cipherSpec, masterKey, salt);					
 	}
 
 	private static class SecretKeyCacheEntry {

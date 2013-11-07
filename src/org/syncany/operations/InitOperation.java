@@ -14,15 +14,14 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.util.StringUtil;
 
 public class InitOperation extends AbstractInitOperation {
     private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());        
@@ -38,10 +37,10 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");                      
-		
+
 		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
 		
-		if (encryptedRepoFileExistsOnRemoteStorage(transferManager)) {
+		if (repoFileExistsOnRemoteStorage(transferManager)) {
 			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository."); 
 		}
 		
@@ -49,18 +48,21 @@ public class InitOperation extends AbstractInitOperation {
 		File appDir = createAppDirs(options.getLocalDir());	
 		File configFile = new File(appDir+"/"+Config.DEFAULT_FILE_CONFIG);
 		File repoFile = new File(appDir+"/"+Config.DEFAULT_FILE_REPO);
+		File masterFile = new File(appDir+"/"+Config.DEFAULT_FILE_MASTER);
 		
 		// Save config.xml and repo file
-		writeXmlFile(options.getConfigTO(), configFile);
-		writeXmlFile(options.getRepoTO(), new File(repoFile+"-NOT-USED.xml")); // TODO [low] Remove this, not used
 		
 		String shareLink = null;
 		boolean shareLinkEncrypted = false;
 		
 		if (options.isEncryptionEnabled()) {
-			writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), options.getPassword());				
+			SaltedSecretKey masterKey = createMasterKeyFromPassword(options.getPassword()); // This takes looong!			
+			options.getConfigTO().setMasterKey(masterKey);
 			
-			shareLink = getEncryptedLink(options.getConfigTO().getConnectionTO(), options.getCipherSpecs(), options.getPassword());
+			writeXmlFile(new MasterTO(masterKey.getSalt()), masterFile);
+			writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), masterKey);				
+			
+			shareLink = getEncryptedLink(options.getConfigTO().getConnectionTO(), options.getCipherSpecs(), masterKey);
 			shareLinkEncrypted = true;
 		}	
 		else {
@@ -70,21 +72,26 @@ public class InitOperation extends AbstractInitOperation {
 			shareLinkEncrypted = false;
 		}	
 		
+		writeXmlFile(options.getConfigTO(), configFile);
+		writeXmlFile(options.getRepoTO(), new File(repoFile+"-NOT-USED.xml")); // TODO [low] Remove this, not used
+
+		if (masterFile.exists()) {
+			uploadMasterFile(masterFile, transferManager);
+		}
+		
 		uploadRepoFile(repoFile, transferManager);
 					
 		return new InitOperationResult(shareLink, shareLinkEncrypted);
     }          
     
-	private TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
-		Plugin plugin = Plugins.get(connectionTO.getType());
+	private SaltedSecretKey createMasterKeyFromPassword(String password) throws Exception {
+		SaltedSecretKey masterKey = CipherUtil.createMasterKey(password);
 		
-		Connection connection = plugin.createConnection();
-		connection.init(connectionTO.getSettings());
-		
-		return connection.createTransferManager();
+		System.out.println(StringUtil.toHex(masterKey.getEncoded()));
+		return masterKey;
 	}
 
-	protected boolean encryptedRepoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
+	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
 		try {
 			Map<String, RemoteFile> repoFileList = transferManager.list("repo"); // TODO [medium] naming stuff
 			
@@ -100,19 +107,26 @@ public class InitOperation extends AbstractInitOperation {
 		}		
 	}
 	
+	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {    		
+		transferManager.upload(masterFile, new RemoteFile("master")); // TODO [low] Naming stuff
+	}  
+	
 	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {    		
 		transferManager.upload(repoFile, new RemoteFile("repo")); // TODO [low] Naming stuff
 	}    	
 
-	private String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, String password) throws Exception {
+	private String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		Serializer serializer = new Persister();
 		serializer.write(connectionTO, plaintextOutputStream);
 		
-		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, password);
+		byte[] masterKeySalt = masterKey.getSalt();
+		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
+		
+		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
 		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
 		
-		return "syncany://storage/1/"+encryptedEncodedStorageXml;				
+		return "syncany://storage/1/"+masterKeySaltEncodedStr+"-"+encryptedEncodedStorageXml;				
 	}
 	
 	private String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
