@@ -36,9 +36,8 @@ import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class MultiCipherStreamsTest {
-	private static final Logger logger = Logger.getLogger(MultiCipherStreamsTest.class.getSimpleName());		
-	
-	private SaltedSecretKey masterKey;
+	private static final Logger logger = Logger.getLogger(MultiCipherStreamsTest.class.getSimpleName());			
+	private static SaltedSecretKey masterKey;
 	
 	static {
 		Logging.init();
@@ -46,7 +45,9 @@ public class MultiCipherStreamsTest {
 	
 	@Before
 	public void setup() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		masterKey = CipherUtil.createMasterKey("some password");
+		if (masterKey == null) {
+			masterKey = CipherUtil.createMasterKey("some password");
+		}
 	}
 	
 	@Test
