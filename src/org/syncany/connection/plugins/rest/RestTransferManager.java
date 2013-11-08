@@ -83,6 +83,11 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     public void disconnect() throws StorageException {
         // Fressen.
     }
+    
+    @Override
+    public void init() throws StorageException {
+    	// Fressen.
+    }
 
     @Override
     public void download(RemoteFile remoteFile, File localFile) throws StorageException {

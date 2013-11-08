@@ -41,62 +41,29 @@ public class Plugins {
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 	private static boolean loaded = false;
-	private static Thread asyncLoadThread = null;
-
-	public static void loadAsync() {
-		if (asyncLoadThread == null) {
-			// Pre-load the plugins
-			asyncLoadThread = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					logger.log(Level.INFO, "Preloading Plugins Start");
-					Plugins.load();
-					logger.log(Level.INFO, "Preloading Plugins End");
-				}
-			}, "PreloadPlugins");
-			asyncLoadThread.start();
-		}
-	}
-
-	public static void waitForAsyncLoaded() throws InterruptedException {
-		if (asyncLoadThread != null) {
-			asyncLoadThread.join();
-		}
-	}
 
 	private static void load() {
 		if (loaded) {
 			return;
 		}
 
-		loaded = true;
-
-		// TODO [low] Loading plugins like this is not efficient (better?)
 		for (String className : ClasspathUtil.getClasspathClasses().values()) {
-			// Performance!!
 			if (!className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
-
 				continue;
 			}
 
 			Matcher m = PLUGIN_NAME_REGEX_PLUGIN_INFO.matcher(className);
 
-			if (!m.matches()) {
-				continue;
+			if (m.matches()) {
+				loadPlugin(m.group(1), className);
 			}
-
-			// System.out.println(className);
-			loadPlugin(m.group(1));
 		}
+		
+		loaded = true;
 	}
 
 	public static Collection<Plugin> list() {
-		loadAsync();
-		try {
-			waitForAsyncLoaded();
-		} catch (InterruptedException e) {
-			// Swallow this Exception, not sure what to do here anyways.
-		}
+		load();
 		return plugins.values();
 	}
 
@@ -143,8 +110,9 @@ public class Plugins {
 			Plugin pluginInfo = (Plugin) pluginInfoClass.newInstance();
 
 			plugins.put(pluginId, pluginInfo);
-		} catch (Exception ex) {
-			logger.log(Level.WARNING, "Could not load plugin : " + className, ex);
+		} 
+		catch (Exception ex) {
+			logger.log(Level.WARNING, "Could not load plugin : " + className);
 		}
 	}
 }

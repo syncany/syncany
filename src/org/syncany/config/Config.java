@@ -23,8 +23,8 @@ import java.util.Arrays;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.MimeTypeChunker;
 import org.syncany.chunk.FixedChunker;
+import org.syncany.chunk.MimeTypeChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
@@ -35,7 +35,9 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 
 /**
  * 
@@ -48,6 +50,7 @@ public class Config {
 	public static final String DEFAULT_DIR_LOG = "logs";
 	public static final String DEFAULT_FILE_CONFIG = "config.xml";
 	public static final String DEFAULT_FILE_REPO = "repo";
+	public static final String DEFAULT_FILE_MASTER = "master";
 	
 	private String machineName;	
 	private File localDir;
@@ -56,7 +59,7 @@ public class Config {
 	private File databaseDir;
 	private File logDir;
 	
-	private String password;
+	private SaltedSecretKey masterKey;
 
 	private Cache cache;	
 	private Connection connection;
@@ -76,7 +79,7 @@ public class Config {
     
 	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws Exception {		
 		initMachineName(configTO);
-		initPassword(configTO);
+		initMasterKey(configTO);
 		initDirectories(aLocalDir);
 		initCache();
 		initRepo(repoTO);
@@ -91,8 +94,8 @@ public class Config {
 		machineName = configTO.getMachineName();
 	}
 	
-	private void initPassword(ConfigTO configTO) {
-		password = configTO.getPassword(); // can be null!
+	private void initMasterKey(ConfigTO configTO) throws Exception {
+		masterKey = configTO.getMasterKey(); // can be null		
 	}
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
@@ -150,7 +153,8 @@ public class Config {
 				}
 				
 				if (transformer instanceof CipherTransformer) { // Dirty workaround
-					transformerTO.getSettings().put(CipherTransformer.PROPERTY_PASSWORD, getPassword());
+					transformerTO.getSettings().put(CipherTransformer.PROPERTY_MASTER_KEY, StringUtil.toHex(getMasterKey().getEncoded()));
+					transformerTO.getSettings().put(CipherTransformer.PROPERTY_MASTER_KEY_SALT, StringUtil.toHex(getMasterKey().getSalt()));
 				}
 				
 				transformer.init(transformerTO.getSettings());
@@ -254,14 +258,14 @@ public class Config {
 
 	public File getDatabaseDir() {
 		return databaseDir;
-	}
-	
-	public String getPassword() {
-		return password;
+	}	
+
+	public SaltedSecretKey getMasterKey() {
+		return masterKey;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setMasterKey(SaltedSecretKey masterKey) {
+		this.masterKey = masterKey;
 	}
 
 	public File getDatabaseFile() {

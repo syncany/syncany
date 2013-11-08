@@ -10,12 +10,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
+import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,24 +21,34 @@ import javax.crypto.Mac;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Logging;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
-import org.syncany.crypto.CipherException;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.MultiCipherOutputStream;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class MultiCipherStreamsTest {
-	private static final Logger logger = Logger.getLogger(MultiCipherStreamsTest.class.getSimpleName());		
+	private static final Logger logger = Logger.getLogger(MultiCipherStreamsTest.class.getSimpleName());			
+	private static SaltedSecretKey masterKey;
 	
 	static {
 		Logging.init();
 	}		
+	
+	@Before
+	public void setup() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		if (masterKey == null) {
+			masterKey = CipherUtil.createMasterKey("some password");
+		}
+	}
 	
 	@Test
 	public void testCipherAes128AndTwofish128() throws Exception {
@@ -91,7 +98,7 @@ public class MultiCipherStreamsTest {
 			+ "</database>";
 		
 		
-		Transformer cipherTransformer = new CipherTransformer(cipherSuites, "some password");
+		Transformer cipherTransformer = new CipherTransformer(cipherSuites, masterKey);
 		
 		// Test encrypt
 		byte[] encryptedData = doEncrypt(xmlStr.getBytes(), cipherTransformer);
@@ -114,8 +121,8 @@ public class MultiCipherStreamsTest {
 	}	
 	
 	private void doTestEncryption(List<CipherSpec> cipherSpecs) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException, CipherException, InvalidKeyException {
-		Transformer encryptCipherTransformer = new CipherTransformer(cipherSpecs, "some password");
-		Transformer decryptCipherTransformer = new CipherTransformer(cipherSpecs, "some password");
+		Transformer encryptCipherTransformer = new CipherTransformer(cipherSpecs, masterKey);
+		Transformer decryptCipherTransformer = new CipherTransformer(cipherSpecs, masterKey);
 		
 		// Prepare data
 		byte[] srcData = new byte[10*1024];
@@ -175,25 +182,5 @@ public class MultiCipherStreamsTest {
 		byte[] decryptedData = bosDecryptedData.toByteArray();
 		
 		return decryptedData;
-	}	
-	
-
-	@Test 
-	@Ignore
-	public void listCryptoSettingsAvailable() {
-		logger.log(Level.INFO, "Listing security providers and properties:");
-		
-		for (Provider provider: Security.getProviders()) {
-			logger.log(Level.INFO, "- Provider '"+provider.getName()+"' ");
-			
-			List<String> propertyNames = new ArrayList<String>();
-			propertyNames.addAll(provider.stringPropertyNames());
-			
-			Collections.sort(propertyNames);
-			
-			for (String key : propertyNames) {
-				logger.log(Level.INFO, "   + "+key+" = "+provider.getProperty(key));
-			}
-		}
-	}	
+	}		
 }

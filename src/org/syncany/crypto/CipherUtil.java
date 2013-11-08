@@ -33,8 +33,18 @@ public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
 	
 	public static final String PROVIDER = "BC";
-    public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1"; // Note: changing this invalidates encrypted data!
-    public static final int KEY_DERIVATION_ROUNDS = 1000; // Note: changing this invalidates encrypted data!	    
+	
+	/*
+	 * Note: changing these key derivation parameters
+	 *       invalidates encrypted data!
+	 */
+    public static final String MASTER_KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1"; 
+    public static final int MASTER_KEY_DERIVATION_ROUNDS = 1000000;
+    public static final int MASTER_KEY_SIZE = 512; 	
+    public static final int MASTER_KEY_SALT_SIZE = 512;
+    
+    public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1"; 
+    public static final int KEY_DERIVATION_ROUNDS = 1000;	    
     
     private static boolean initialized = false;
     private static boolean unlimitedStrengthEnabled = false;
@@ -92,31 +102,57 @@ public class CipherUtil {
     	return salt;
     }
 	
-	public static SecretKey createSecretKey(CipherSpec cipherSpec, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return createSecretKey(cipherSpec.getAlgorithm(), cipherSpec.getKeySize(), password, salt);
+	public static SaltedSecretKey createDerivedKey(CipherSpec cipherSpec, SecretKey masterKey, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		return createDerivedKey(cipherSpec.getAlgorithm(), cipherSpec.getKeySize(), masterKey, salt);
     }
 	
-	public static SecretKey createSecretKey(String algorithm, int keySize, String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		logger.log(Level.INFO, "Creating secret key using "+KEY_DERIVATION_FUNCTION+" with "+KEY_DERIVATION_ROUNDS+" rounds ...");
-
-		// Derive secret key from password 
+	public static SaltedSecretKey createDerivedKey(String algorithm, int keySize, SecretKey masterKey, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		return createDerivedKey(algorithm, keySize, KEY_DERIVATION_ROUNDS, masterKey, salt);
+	}
+	
+	public static SaltedSecretKey createDerivedKey(String algorithm, int keySize, int rounds, SecretKey masterKey, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		logger.log(Level.INFO, "Creating secret key using "+KEY_DERIVATION_FUNCTION+" with "+KEY_DERIVATION_ROUNDS+" rounds ...");		
+		logger.log(Level.SEVERE, "WARNING DIRTY WORKAROUND. SHOULD BE HKDF, not PBKDF2"); // TODO [high] Do this with HKDF
+		
     	SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
-        KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ROUNDS, keySize);
+        KeySpec pbeKeySpec = new PBEKeySpec(new String(masterKey.getEncoded()).toCharArray(), salt, rounds, keySize);
         SecretKey secretKey = factory.generateSecret(pbeKeySpec);
         
-        // The key name must be "AES" if cipherStr is "AES/...". This is really odd, but necessary
-        String plainAlgorithm = (algorithm.indexOf('/') != -1) ? algorithm.substring(0, algorithm.indexOf('/')) : algorithm;
-        SecretKey secretKeyAlgorithm = new SecretKeySpec(secretKey.getEncoded(), plainAlgorithm);  
-        
-        return secretKeyAlgorithm;
+        return toSaltedSecretKey(secretKey.getEncoded(), salt, algorithm);
     }
 	
+	public static SecretKey toSecretKey(byte[] secretKeyBytes, String algorithm) {
+		String plainAlgorithm = (algorithm.indexOf('/') != -1) ? algorithm.substring(0, algorithm.indexOf('/')) : algorithm;
+        SecretKey secretKey = new SecretKeySpec(secretKeyBytes, plainAlgorithm);  
+        
+        return secretKey;
+	}
+	
+	public static SaltedSecretKey toSaltedSecretKey(byte[] secretKeyBytes, byte[] saltBytes, String algorithm) {
+		return new SaltedSecretKey(toSecretKey(secretKeyBytes, algorithm), saltBytes);
+	}
+	
+	public static SaltedSecretKey createMasterKey(String password) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		byte[] salt = createRandomArray(MASTER_KEY_SALT_SIZE/8);
+		return createMasterKey(password, salt);
+    }
+
+	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		logger.log(Level.INFO, "Creating secret key using "+MASTER_KEY_DERIVATION_FUNCTION+" with "+MASTER_KEY_DERIVATION_ROUNDS+" rounds, key size "+MASTER_KEY_SIZE+" bit ...");
+		
+    	SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);
+        KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE);
+        SecretKey masterKey = factory.generateSecret(pbeKeySpec);
+        
+        return new SaltedSecretKey(masterKey, salt);
+    }
+		
 	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws CipherException {
 		logger.log(Level.INFO, "Creating cipher using "+cipherSpec+" ...");
 
 		try {
 			if (cipherSpec.needsUnlimitedStrength()) {
-				CipherUtil.enableUnlimitedStrength();
+				enableUnlimitedStrength();
 			}
 			
             Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), PROVIDER);
@@ -147,8 +183,8 @@ public class CipherUtil {
 		return Arrays.equals(actualMagic, MultiCipherOutputStream.STREAM_MAGIC);
 	}
 	
-	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSpec> cipherSuites, String password) throws IOException {
-		CipherSession cipherSession = new CipherSession(password);
+	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
+		CipherSession cipherSession = new CipherSession(masterKey);
 		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSuites, cipherSession);
 		
 		FileUtil.appendToOutputStream(plaintextInputStream, multiCipherOutputStream);		
@@ -157,28 +193,28 @@ public class CipherUtil {
 		ciphertextOutputStream.close();
 	}
 	
-	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, String password) throws IOException {
+	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
-		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, password);
+		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
 		
 		return ciphertextOutputStream.toByteArray();
 	}
 	
-	public static byte[] encrypt(byte[] plaintext, List<CipherSpec> cipherSuites, String password) throws IOException {
+	public static byte[] encrypt(byte[] plaintext, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
 		ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(plaintext);	
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
 		
-		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, password);
+		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
 		
 		return ciphertextOutputStream.toByteArray();
 	}
 	
-	public static String decryptToString(InputStream fromInputStream, String password) throws IOException {
-		return new String(decrypt(fromInputStream, password));
+	public static String decryptToString(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {
+		return new String(decrypt(fromInputStream, masterKey));
 	}
 	
-	public static byte[] decrypt(InputStream fromInputStream, String password) throws IOException {		
-		CipherSession cipherSession = new CipherSession(password);
+	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {		
+		CipherSession cipherSession = new CipherSession(masterKey);
 		MultiCipherInputStream cipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		

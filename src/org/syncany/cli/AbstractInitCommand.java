@@ -19,6 +19,7 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 
 public abstract class AbstractInitCommand extends Command {
@@ -28,11 +29,11 @@ public abstract class AbstractInitCommand extends Command {
 		console = System.console();
 	}	
 	
-	protected ConfigTO createConfigTO(File localDir, String password, ConnectionTO connectionTO) throws Exception {
+	protected ConfigTO createConfigTO(File localDir, SaltedSecretKey masterKey, ConnectionTO connectionTO) throws Exception {
 		ConfigTO configTO = new ConfigTO();
 		
 		configTO.setMachineName(getDefaultMachineName());
-		configTO.setPassword(password); // can be null
+		configTO.setMasterKey(masterKey); // can be null
 
 		configTO.setConnection(connectionTO);
 		

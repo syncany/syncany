@@ -33,6 +33,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 
@@ -50,10 +51,16 @@ public class FtpTransferManager extends AbstractTransferManager {
     private static final int TIMEOUT_DATA = 5000;
     
     private FTPClient ftp;
+    
+    private String repoPath;
+    private String dataPath;
 
     public FtpTransferManager(FtpConnection connection) {
         super(connection);
+        
         this.ftp = new FTPClient();
+        this.repoPath = connection.getPath();
+        this.dataPath = connection.getPath()+"/data";
     } 
  
     @Override
@@ -106,13 +113,26 @@ public class FtpTransferManager extends AbstractTransferManager {
         catch (Exception ex) {
             
         }
+    } 
+    
+    @Override
+    public void init() throws StorageException {
+    	connect();
+    	
+    	try {
+			ftp.mkd(dataPath);
+		}
+    	catch (IOException e) {
+    		throw new StorageException("Cannot create data directory: "+dataPath, e);
+		}
     }
 
     @Override
     public void download(RemoteFile remoteFile, File localFile) throws StorageException {
         connect();
-        String remotePath = getConnection().getPath()+"/"+remoteFile.getName();
-
+        
+        String remotePath = getRemoteFilePath(remoteFile);
+        
         try {
             // Download file
             File tempFile = createTempFile(localFile.getName());
@@ -141,11 +161,20 @@ public class FtpTransferManager extends AbstractTransferManager {
         }
     }
 
-    @Override
+    private String getRemoteFilePath(RemoteFile remoteFile) {
+    	if (remoteFile instanceof MultiChunkRemoteFile) {
+    		return dataPath+"/"+remoteFile.getName();
+    	}
+    	else {
+    		return repoPath+"/"+remoteFile.getName();
+    	}
+	}
+
+	@Override
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
         connect();
 
-        String remotePath = getConnection().getPath()+"/"+remoteFile.getName();
+        String remotePath = getRemoteFilePath(remoteFile);
         String tempRemotePath = getConnection().getPath()+"/temp-"+remoteFile.getName();
 
         try {
@@ -225,9 +254,11 @@ public class FtpTransferManager extends AbstractTransferManager {
     @Override
     public boolean delete(RemoteFile remoteFile) throws StorageException {
         connect();
+        
+        String remotePath = getRemoteFilePath(remoteFile);
 
         try {
-            return ftp.deleteFile(getConnection().getPath() + "/" + remoteFile.getName());
+            return ftp.deleteFile(remotePath);
         }
         catch (IOException ex) {
             logger.log(Level.SEVERE, "Could not delete file "+remoteFile.getName(), ex);

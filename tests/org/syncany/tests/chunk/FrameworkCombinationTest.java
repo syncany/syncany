@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -18,6 +20,7 @@ import java.util.logging.Logger;
 
 import javax.crypto.NoSuchPaddingException;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
@@ -31,8 +34,11 @@ import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.TTTDChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
+import org.syncany.config.Logging;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
@@ -44,6 +50,17 @@ public class FrameworkCombinationTest {
 	private File tempDir;	
 	private List<FrameworkCombination> combinations;
 
+	private SaltedSecretKey masterKey;
+	
+	static {
+		Logging.init();
+	}		
+	
+	@Before
+	public void initMasterKey() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		masterKey = CipherUtil.createMasterKey("some password");
+	}
+	
 	@Test
 	public void testBlackBoxCombinationsWith50KBInputFile() throws Exception {		
 		// Setup
@@ -101,16 +118,16 @@ public class FrameworkCombinationTest {
 		}
 
 		// Compression/Encryption
-		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
-		cipherSuites.add(CipherSpecs.getCipherSpec(1));
-		cipherSuites.add(CipherSpecs.getCipherSpec(2));
+		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
+		cipherSpecs.add(CipherSpecs.getCipherSpec(1));
+		cipherSpecs.add(CipherSpecs.getCipherSpec(2));
 
 		List<Transformer> transformerChains = new LinkedList<Transformer>();
 
 		transformerChains.add(new NoTransformer());
 		transformerChains.add(new GzipTransformer());
-		transformerChains.add(new CipherTransformer(cipherSuites, "some password"));
-		transformerChains.add(new GzipTransformer(new CipherTransformer(cipherSuites, "some password")));
+		transformerChains.add(new CipherTransformer(cipherSpecs, masterKey));
+		transformerChains.add(new GzipTransformer(new CipherTransformer(cipherSpecs, masterKey)));
 
 		for (MultiChunker multiChunker : multiChunkers) {
 			for (Transformer transformer : transformerChains) {

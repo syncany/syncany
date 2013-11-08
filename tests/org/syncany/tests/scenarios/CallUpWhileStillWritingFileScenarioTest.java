@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,8 +92,15 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		assertNull("There should NOT be a new database version, because file should not have been added.", databaseVersion);
 		
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();		
-		assertEquals("Repository should NOT contain any files.", 0, repoPath.list().length);
+		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();	
+		String[] repoFileList = repoPath.list(new FilenameFilter() {			
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith("db-");
+			}
+		});
+		
+		assertEquals("Repository should NOT contain any files.", 0, repoFileList.length);
 	
 		// Tear down
 		clientA.cleanup();

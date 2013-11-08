@@ -18,10 +18,13 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 
 public class TestConfigUtil {
 	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
 	private static boolean cryptoEnabled = false;
+	private static SaltedSecretKey masterKey = null;
 	
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
@@ -76,10 +79,14 @@ public class TestConfigUtil {
 		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
 		
 		if (cryptoEnabled) {
-			configTO.setPassword("some password");
+			if (masterKey == null) {
+				masterKey = CipherUtil.createMasterKey("some password");
+			}
+			
+			configTO.setMasterKey(masterKey);
 		}
 		else {
-			configTO.setPassword(null);	
+			configTO.setMasterKey(null);	
 		}
 						
 		// Skip configTO.setConnection()		
@@ -104,7 +111,8 @@ public class TestConfigUtil {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 		
-		conn.init(pluginSettings);
+		conn.init(pluginSettings);		
+		conn.createTransferManager().init();
 		
 		return conn;
 	}	

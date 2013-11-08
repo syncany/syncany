@@ -53,6 +53,14 @@ public interface TransferManager {
      *         authentication errors, etc.
      */
     public void disconnect() throws StorageException;
+    
+    /**
+     * Initialize remote storage. This method is called to set up a new repository.
+     * 
+     * @throws StorageException If the repository is already initialized, or any other
+     *         exception occurs. 
+     */
+    public void init() throws StorageException;
 
     /**
      * Download an existing remote file to the local disk.
