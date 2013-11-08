@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
@@ -54,8 +55,15 @@ public class SymlinkSyncScenarioTest {
 		assertNotNull("There should be a new database version, because file should not have been added.", databaseVersion);
 		
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();		
-		assertEquals("Repository should contain only ONE database file, not multichunks.", 1, repoPath.list().length);	
+		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();
+		String[] repoFileList = repoPath.list(new FilenameFilter() {			
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith("db-");
+			}
+		});
+		
+		assertEquals("Repository should contain only ONE database file, not multichunks.", 1, repoFileList.length);	
 		
 		// B down
 		clientB.down();

@@ -111,7 +111,8 @@ public class TestConfigUtil {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 		
-		conn.init(pluginSettings);
+		conn.init(pluginSettings);		
+		conn.createTransferManager().init();
 		
 		return conn;
 	}	

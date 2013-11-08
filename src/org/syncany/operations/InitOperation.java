@@ -75,6 +75,9 @@ public class InitOperation extends AbstractInitOperation {
 		writeXmlFile(options.getConfigTO(), configFile);
 		writeXmlFile(options.getRepoTO(), new File(repoFile+"-NOT-USED.xml")); // TODO [low] Remove this, not used
 
+		// Make remote changes
+		transferManager.init();
+		
 		if (masterFile.exists()) {
 			uploadMasterFile(masterFile, transferManager);
 		}

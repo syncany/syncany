@@ -9,6 +9,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
@@ -134,8 +135,15 @@ public class FileLockedScenarioTest {
 		assertNull("There should NOT be a new database version, because file should not have been added.", databaseVersion);
 		
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) connection).getRepositoryPath();		
-		assertEquals("Repository should NOT contain any files.", 0, repoPath.list().length);			
+		File repoPath = ((LocalConnection) connection).getRepositoryPath();
+		String[] repoFileList = repoPath.list(new FilenameFilter() {			
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith("db-");
+			}
+		});
+		
+		assertEquals("Repository should NOT contain any files.", 0, repoFileList.length);			
 	}
 	
 	

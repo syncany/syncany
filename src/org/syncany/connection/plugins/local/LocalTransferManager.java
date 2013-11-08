@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 
@@ -37,17 +38,20 @@ import org.syncany.connection.plugins.StorageException;
  * @author Philipp C. Heckel
  */
 public class LocalTransferManager extends AbstractTransferManager {
-    private File folder; 
+    private File repoPath; 
+    private File dataPath;
 
     public LocalTransferManager(LocalConnection connection) {
         super(connection);
-        folder = connection.getRepositoryPath();
+        
+        this.repoPath = connection.getRepositoryPath();
+        this.dataPath = new File(connection.getRepositoryPath().getAbsolutePath()+File.separator+"data");
     }
 
     @Override
     public void connect() throws StorageException {
-        if (folder == null || !folder.exists() || !folder.canRead() || !folder.canWrite() || !folder.isDirectory()) {
-            throw new StorageException("Repository folder '"+folder+"' does not exist or is not writable.");
+        if (repoPath == null || !repoPath.exists() || !repoPath.canRead() || !repoPath.canWrite() || !repoPath.isDirectory()) {
+            throw new StorageException("Repository folder '"+repoPath+"' does not exist or is not writable.");
         }
     }
 
@@ -57,10 +61,19 @@ public class LocalTransferManager extends AbstractTransferManager {
     }
 
     @Override
+    public void init() throws StorageException {
+    	connect();
+    	
+		if (!dataPath.mkdir()) {
+			throw new StorageException("Cannot create data directory: "+dataPath);	
+		}
+    }
+    
+    @Override
     public void download(RemoteFile remoteFile, File localFile) throws StorageException {
         connect();
 
-        File repoFile = getRepoFile(remoteFile);
+        File repoFile = getRemoteFile(remoteFile);
 
         if (!repoFile.exists()) {
             throw new StorageException("No such file in local repository: "+repoFile);
@@ -85,7 +98,7 @@ public class LocalTransferManager extends AbstractTransferManager {
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
         connect();
 
-        File repoFile = getRepoFile(remoteFile);
+        File repoFile = getRemoteFile(remoteFile);
         File tempRepoFile = new File(getAbsoluteParentDirectory(repoFile)+File.separator+".temp-"+repoFile.getName());
 
         // Do not overwrite files with same size!
@@ -111,7 +124,7 @@ public class LocalTransferManager extends AbstractTransferManager {
     public boolean delete(RemoteFile remoteFile) throws StorageException {
         connect();
 
-        File repoFile = getRepoFile(remoteFile);
+        File repoFile = getRemoteFile(remoteFile);
 
         if (!repoFile.exists()) {
             return false;
@@ -132,17 +145,17 @@ public class LocalTransferManager extends AbstractTransferManager {
         File[] files;
 
         if (namePrefix == null) {
-            files = folder.listFiles();
+            files = repoPath.listFiles();
         }
         else {
-            files = folder.listFiles(new FilenameFilter() {
+            files = repoPath.listFiles(new FilenameFilter() {
             @Override public boolean accept(File dir, String name) {
                 return name.startsWith(namePrefix); }
             });
         }
 
         if (files == null) {
-            throw new StorageException("Unable to read local respository "+folder);
+            throw new StorageException("Unable to read local respository "+repoPath);
         }
 
         Map<String, RemoteFile> remoteFiles = new HashMap<String, RemoteFile>();
@@ -154,8 +167,13 @@ public class LocalTransferManager extends AbstractTransferManager {
         return remoteFiles;
     }
 
-    private File getRepoFile(RemoteFile remoteFile) {
-        return new File(folder+File.separator+remoteFile.getName());
+    private File getRemoteFile(RemoteFile remoteFile) {
+    	if (remoteFile instanceof MultiChunkRemoteFile) {
+    		return new File(dataPath+File.separator+remoteFile.getName());
+    	}
+    	else {
+    		return new File(repoPath+File.separator+remoteFile.getName());
+    	}
     }
     
     public void copyLocalFile(File src, File dst) throws IOException {
@@ -178,6 +196,6 @@ public class LocalTransferManager extends AbstractTransferManager {
     }
     
     public File createTempFile(String name) throws IOException {
-        return File.createTempFile(String.format("temp-%s-", name), ".tmp", folder);
+        return File.createTempFile(String.format("temp-%s-", name), ".tmp", repoPath);
     }    
 }
