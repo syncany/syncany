@@ -19,9 +19,7 @@ package org.syncany.chunk;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 
 /**
@@ -30,15 +28,12 @@ import java.util.List;
  */
 public abstract class MultiChunk {
     protected byte[] id;
-    protected List<Chunk> chunks;
     protected long size;
     protected int minSize;
     
     public MultiChunk(byte[] id, int minSize) {
         this.id = id;
         this.minSize = minSize;
-
-        this.chunks = new ArrayList<Chunk>();
         this.size = 0;
     }
     

@@ -7,6 +7,7 @@ import org.syncany.tests.scenarios.AllFilePossibilitiesScenarioTest;
 import org.syncany.tests.scenarios.CallUpWhileStillWritingFileScenarioTest;
 import org.syncany.tests.scenarios.ChangedAttributesScenarioTest;
 import org.syncany.tests.scenarios.ChangedTypeScenarioTest;
+import org.syncany.tests.scenarios.LotsOfSmallFilesScenarioTest;
 import org.syncany.tests.scenarios.RenameFileWithDiffModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.CreateSimilarFileParallelScenarioTest;
 import org.syncany.tests.scenarios.DirtyDatabaseScenarioTest;
@@ -45,6 +46,7 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	FilenameCapitalizationWindowsScenarioTest.class,
 	FileTreeMoveToSubfolderScenarioTest.class,
 	FileVanishedScenarioTest.class,
+	LotsOfSmallFilesScenarioTest.class,
 	ManyRenamesScenarioTest.class,
 	ManySyncUpsAndDatabaseFileCleanupTest.class,
 	ManySyncUpsAndOtherClientSyncDownTest.class,

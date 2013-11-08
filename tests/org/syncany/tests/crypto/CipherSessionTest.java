@@ -1,14 +1,6 @@
 package org.syncany.tests.crypto;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-
-import java.util.Map;
-
 import org.junit.Test;
-import org.syncany.crypto.CipherSession;
-import org.syncany.crypto.CipherSpec;
-import org.syncany.crypto.CipherSpecs;
 
 public class CipherSessionTest {
 	@Test

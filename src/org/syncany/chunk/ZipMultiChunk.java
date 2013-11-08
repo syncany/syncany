@@ -65,7 +65,6 @@ public class ZipMultiChunk extends MultiChunk {
 
     @Override
     public void write(Chunk chunk) throws IOException {
-        chunks.add(chunk);
         size += chunk.getSize();
        
         ZipEntry entry = new ZipEntry(StringUtil.toHex(chunk.getChecksum()));

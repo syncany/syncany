@@ -111,6 +111,7 @@ public class UpOperation extends Operation {
 		}
 		
 		List<File> locallyUpdatedFiles = determineLocallyUpdatedFiles(statusChangeSet);
+		statusChangeSet = null; // allow GC to clean up
 		
 		// Index
 		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles, database);

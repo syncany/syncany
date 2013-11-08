@@ -89,7 +89,7 @@ public class StatusOperation extends Operation {
 			}
 			
 			// If file has VANISHED, mark as DELETED 
-			if (!lastLocalVersionOnDisk.exists()) {
+			if (!FileUtil.exists(lastLocalVersionOnDisk)) {
 				changeSet.deletedFiles.add(lastLocalVersion.getPath());
 			}
 		}						
