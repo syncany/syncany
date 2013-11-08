@@ -47,7 +47,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			SaltedSecretKey masterKey = null;
 			
 			if (options.getConfigTO().getMasterKey() != null) {
-				masterKey = options.getConfigTO().getMasterKey();
+				masterKey = options.getConfigTO().getMasterKey(); // TODO [medium] Also create master file! 
 			}
 			else {
 				tmpMasterFile = downloadFile(transferManager, new RemoteFile("master")); // TODO [low] naming stuff
