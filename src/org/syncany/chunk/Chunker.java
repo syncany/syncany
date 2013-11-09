@@ -20,24 +20,47 @@ package org.syncany.chunk;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.logging.Logger;
 
 /**
- *
+ * The chunker implements a core part of the deduplication process by breaking
+ * files into individual {@link Chunk}s. A chunker emits an enumeration of chunks,
+ * allowing the application to process one chunk after the other. 
+ * 
+ * Note: Implementations should never read the entire file into memory at once,
+ *       but instead use an input stream for processing.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Chunker {
-    protected static final Logger logger = Logger.getLogger(Chunker.class.getSimpleName());   
-
     /**
-     * Creates enumeration of Chunks which is filled on demand. 
-     * Does not read the whole file at once. 
+     * Opens the given file and creates enumeration of @link Chunk}s. This method 
+     * should not read the file into memory at once, but instead read and emit new 
+     * chunks when requested using {@link Enumeration#nextElement()}.
+     * 
      * @param file to chunk
      * @return
      * @throws IOException
-     */
-    public abstract Enumeration<Chunk> createChunks(File file) throws IOException;        
-	public abstract void close();         
+     */	
+	public abstract Enumeration<Chunk> createChunks(File file) throws IOException;
+	
+	/**
+	 * Closes the file opened by the {@link #createChunks(File)} method. This 
+	 * method must be called at the end of processing to release any read-/write locks.
+	 * 
+	 * TODO [low] The close method should be moved to a ChunkEnumeration class. The chunker should be stateless.
+	 */
+	public abstract void close();   
+	
+	/**
+	 * Returns a string representation of the
+	 * chunker implementation.
+	 */
     public abstract String toString();
+    
+    /**
+     * Returns the checksum algorithm used by the chunker to calculate the chunk
+     * and file checksums. For the deduplication process to function properly,
+     * the checksum algorithms of all chunkers must be equal. 
+     */
     public abstract String getChecksumAlgorithm();
 }

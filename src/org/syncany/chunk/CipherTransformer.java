@@ -35,8 +35,15 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 
 /**
- *
- * @author pheckel
+ * The CipherTransformer can be used to encrypt/decrypt files (typically 
+ * {@link MultiChunk}s) using the {@link MultiCipherOutputStream} and
+ * {@link MultiCipherInputStream}. 
+ * 
+ * A CipherTransformer requires a list of {@link CipherSpec}s and the master 
+ * key. It can be instantiated using a property list (from a config file) or
+ * by passing the dependencies to the constructor.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CipherTransformer extends Transformer {
 	public static final String TYPE = "cipher";

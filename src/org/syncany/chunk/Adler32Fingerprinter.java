@@ -27,7 +27,8 @@ package org.syncany.chunk;
  *
  * The class has been adapted to work with the Syncany chunking classes. 
  *
- * @author Casey Marshall, Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Casey Marshall
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @version $Revision: 188 $
  */
 public class Adler32Fingerprinter extends Fingerprinter {

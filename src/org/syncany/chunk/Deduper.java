@@ -6,18 +6,45 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
 
-
+/**
+ * The Deduper implements the core deduplication algorithm used by Syncany. 
+ * 
+ * <p>The algorithm uses a {@link Chunker} to break files into individual
+ * {@link Chunk}s. These chunks are added to a {@link MultiChunk} using an implementation
+ * of a {@link MultiChunker}. Before this multichunk is written to a file, it is transformed
+ * using one or many {@link Transformer}s (can be chained). 
+ * 
+ * <p>This class does not maintain a chunk index itself. Instead, it calls a listener to
+ * lookup a chunk, and skips further chunk processing if the chunk already exists. 
+ * 
+ * <p>For a detailed description of the algorithm, please refer to chapter 5.3 of the thesis:
+ * <i>"Minimizing remote storage usage and synchronization time using deduplication and
+ * multichunking: Syncany as an example"</i>
+ * 
+ * @see <a href="http://blog.philippheckel.com/2013/05/20/minimizing-remote-storage-usage-and-synchronization-time-using-deduplication-and-multichunking-syncany-as-an-example/">Blog post: Minimizing remote storage usage and synchronization time using deduplication and multichunking: Syncany as an example</a>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class Deduper {	
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformerChain) {		
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer) {		
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
-		this.transformer = transformerChain;
+		this.transformer = transformer;
 	}
 	
+	/**
+	 * Deduplicates the given list of files according to the Syncany chunk algorithm. 
+	 * 
+	 * <p>A brief description of the algorithm (and further links to a detailed description)
+	 * are given in the {@link Deduper}.
+	 *  	
+	 * @param files List of files to be deduplicated
+	 * @param listener Listener to react of file/chunk/multichunk events, and to implement the chunk index
+	 * @throws IOException If a file cannot be read or an unexpected exception occurs
+	 */
 	public void deduplicate(List<File> files, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;

@@ -24,12 +24,15 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.Enumeration;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FixedChunker extends Chunker {
+    private static final Logger logger = Logger.getLogger(FixedChunker.class.getSimpleName());   
+
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
 	public static final String TYPE = "fixed";
 	public static final String PROPERTY_SIZE = "size";

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -32,6 +33,8 @@ import java.util.regex.Pattern;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class MimeTypeChunker extends Chunker {
+    private static final Logger logger = Logger.getLogger(MimeTypeChunker.class.getSimpleName());   
+
 	private Chunker regularChunker;
 	private Chunker specialChunker;
 	private List<Pattern> specialChunkerMimeTypes;
@@ -54,7 +57,7 @@ public class MimeTypeChunker extends Chunker {
 		String mimeType = Files.probeContentType(Paths.get(file.getAbsolutePath()));
 		
 		for (Pattern mimeTypePattern : specialChunkerMimeTypes) {
-			if (mimeTypePattern.matcher(mimeType).matches()) {
+			if (mimeType != null && mimeTypePattern.matcher(mimeType).matches()) {
 				logger.log(Level.INFO, "File mime type: "+mimeType+", using SPECIAL chunker: "+file);
 				delegatedChunker = specialChunker;	
 				

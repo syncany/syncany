@@ -24,12 +24,15 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.Enumeration;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class TTTDChunker extends Chunker {   
+    private static final Logger logger = Logger.getLogger(TTTDChunker.class.getSimpleName());   
+
     public static final int DEFAULT_WINDOW_SIZE = 48; // like LBFS
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
     public static final String DEFAULT_FINGERPRINT_ALG = "Adler32";

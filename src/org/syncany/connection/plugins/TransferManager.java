@@ -20,7 +20,6 @@ package org.syncany.connection.plugins;
 import java.io.File;
 import java.util.Map;
 
-
 /**
  * The transfer manager synchronously connects to the remote storage. It is
  * responsible for file upload, download and deletion. 
