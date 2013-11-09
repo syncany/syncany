@@ -116,7 +116,7 @@ public class FixedOffsetChunkerTest {
 		boolean exceptionThrown = false;
 		
 		try {
-			new FixedChunker(1337, "does-not-exist");
+			new FixedChunker(1337, "does-not-exist").createChunks(new File("/some/file"));
 		}
 		catch (Exception e) {
 			exceptionThrown = true;

@@ -149,7 +149,7 @@ public class Indexer {
 		}				
 
 		@Override
-		public boolean onFileBeforeStart(File file) {
+		public boolean onFileFilter(File file) {
 			logger.log(Level.FINER, "- +File {0}", file); 
 			
 			startFileProperties = fileVersionHelper.captureFileProperties(file, null, false);
@@ -425,19 +425,19 @@ public class Indexer {
 		}
 		
 		@Override
-		public void onOpenMultiChunk(MultiChunk multiChunk) {
+		public void onMultiChunkOpen(MultiChunk multiChunk) {
 			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
 			multiChunkEntry = new MultiChunkEntry(multiChunk.getId());
 		}
 
 		@Override
-		public void onWriteMultiChunk(MultiChunk multiChunk, Chunk chunk) {
+		public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
 			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
 			multiChunkEntry.addChunk(new ChunkEntryId(chunkEntry.getChecksum()));				
 		}
 		
 		@Override
-		public void onCloseMultiChunk(MultiChunk multiChunk) {
+		public void onMultiChunkClose(MultiChunk multiChunk) {
 			logger.log(Level.FINER, "- /MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
 			
 			newDatabaseVersion.addMultiChunk(multiChunkEntry);

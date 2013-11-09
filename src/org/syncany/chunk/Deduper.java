@@ -52,7 +52,7 @@ public class Deduper {
 		
 		for (File file : files) {
 			// Filter ignored files
-			boolean fileAccepted = listener.onFileBeforeStart(file);
+			boolean fileAccepted = listener.onFileFilter(file);
 			
 			if (!fileAccepted) {
 				continue;
@@ -79,7 +79,7 @@ public class Deduper {
 						// - Check if multichunk full
 						if (multiChunk != null && multiChunk.isFull()) {
 							multiChunk.close();
-							listener.onCloseMultiChunk(multiChunk);
+							listener.onMultiChunkClose(multiChunk);
 
 							multiChunk = null;
 						}
@@ -92,12 +92,12 @@ public class Deduper {
 							multiChunk = multiChunker.createMultiChunk(newMultiChunkId, 
 								transformer.createOutputStream(new FileOutputStream(multiChunkFile)));
 
-							listener.onOpenMultiChunk(multiChunk);
+							listener.onMultiChunkOpen(multiChunk);
 						}
 
 						// - Add chunk data
 						multiChunk.write(chunk);						
-						listener.onWriteMultiChunk(multiChunk, chunk);						
+						listener.onMultiChunkWrite(multiChunk, chunk);						
 					}
 
 					listener.onFileAddChunk(file, chunk);										
@@ -122,7 +122,7 @@ public class Deduper {
 		if (multiChunk != null) {
 			// Data
 			multiChunk.close();
-			listener.onCloseMultiChunk(multiChunk);
+			listener.onMultiChunkClose(multiChunk);
 
 			multiChunk = null;
 		}		

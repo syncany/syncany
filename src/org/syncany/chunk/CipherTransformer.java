@@ -64,6 +64,11 @@ public class CipherTransformer extends Transformer {
     	this.cipherSession = new CipherSession(masterKey);
     }    
     
+    /**
+     * Initializes the cipher transformer using a settings map. Required settings
+     * are: {@link #PROPERTY_CIPHER_SPECS}, {@link #PROPERTY_MASTER_KEY} and 
+     * {@link #PROPERTY_MASTER_KEY_SALT}.
+     */
     @Override
     public void init(Map<String, String> settings) throws Exception {
     	String masterKeyStr = settings.get(PROPERTY_MASTER_KEY);
@@ -103,11 +108,19 @@ public class CipherTransformer extends Transformer {
 
 	@Override
 	public OutputStream createOutputStream(OutputStream out) throws IOException {
+		if (cipherSession == null) {
+			throw new RuntimeException("Cipher session is not initialized. Call init() before!");
+		}
+		
     	return new MultiCipherOutputStream(out, cipherSpecs, cipherSession);    	
     }
 
     @Override
     public InputStream createInputStream(InputStream in) throws IOException {
+		if (cipherSession == null) {
+			throw new RuntimeException("Cipher session is not initialized. Call init() before!");
+		}
+		
     	return new MultiCipherInputStream(in, cipherSession);    	
     }    
 
