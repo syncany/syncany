@@ -149,7 +149,7 @@ public class Indexer {
 		}				
 
 		@Override
-		public boolean onFileStart(File file) {
+		public boolean onFileBeforeStart(File file) {
 			logger.log(Level.FINER, "- +File {0}", file); 
 			
 			startFileProperties = fileVersionHelper.captureFileProperties(file, null, false);
@@ -173,7 +173,7 @@ public class Indexer {
 		}
 		
 		@Override
-		public boolean onFileStartDeduplicate(File file) {			
+		public boolean onFileStart(File file) {			
 			return startFileProperties.getType() == FileType.FILE; // Ignore directories and symlinks!
 		}
 

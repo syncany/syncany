@@ -26,34 +26,28 @@ import java.util.Enumeration;
  * files into individual {@link Chunk}s. A chunker emits an enumeration of chunks,
  * allowing the application to process one chunk after the other. 
  * 
- * Note: Implementations should never read the entire file into memory at once,
- *       but instead use an input stream for processing.
+ * <p>Note: Implementations should never read the entire file into memory at once,
+ *          but instead use an input stream for processing.
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Chunker {
     /**
-     * Opens the given file and creates enumeration of @link Chunk}s. This method 
+     * Opens the given file and creates enumeration of {@link Chunk}s. This method 
      * should not read the file into memory at once, but instead read and emit new 
-     * chunks when requested using {@link Enumeration#nextElement()}.
+     * chunks when requested using {@link Enumeration#nextElement() nextElement()}.
      * 
-     * @param file to chunk
-     * @return
-     * @throws IOException
+     * <p>The enumeration must be closed by the {@link ChunkEnumeration#close() close()} 
+     * method to remove any possible locks.
+     * 
+     * @param file The file that is supposed to be chunked
+     * @return An enumeration of individual chunks, must be closed at the end of processing
+     * @throws IOException If any file exceptions occur
      */	
-	public abstract Enumeration<Chunk> createChunks(File file) throws IOException;
-	
+	public abstract ChunkEnumeration createChunks(File file) throws IOException;
+			
 	/**
-	 * Closes the file opened by the {@link #createChunks(File)} method. This 
-	 * method must be called at the end of processing to release any read-/write locks.
-	 * 
-	 * TODO [low] The close method should be moved to a ChunkEnumeration class. The chunker should be stateless.
-	 */
-	public abstract void close();   
-	
-	/**
-	 * Returns a string representation of the
-	 * chunker implementation.
+	 * Returns a string representation of the chunker implementation.
 	 */
     public abstract String toString();
     
@@ -63,4 +57,18 @@ public abstract class Chunker {
      * the checksum algorithms of all chunkers must be equal. 
      */
     public abstract String getChecksumAlgorithm();
+    
+    /**
+     * The chunk enumeration is implemented by the actual chunkers and emits a new
+     * chunk when {@link ChunkEnumeration#nextElement() nextElement()} is called. When no more 
+     * elements are available, {@link ChunkEnumeration#hasMoreElements() hasMoreElements()} returns
+     * false. Any open streams must be closed with {@link ChunkEnumeration#close() close()}.
+     */
+    public static interface ChunkEnumeration extends Enumeration<Chunk> {
+    	/**
+    	 * Closes the file opened by the {@link Chunker#createChunks(File) createChunks()} method.  
+    	 * This method must be called at the end of processing to release any read-/write locks.
+    	 */
+    	public abstract void close();   
+    }
 }

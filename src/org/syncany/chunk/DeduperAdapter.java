@@ -11,8 +11,8 @@ import org.syncany.util.FileUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class DeduperAdapter implements DeduperListener {
-	public boolean onFileStart(File file) { return true; } 
-	public boolean onFileStartDeduplicate(File file) { return file.isFile() && !FileUtil.isSymlink(file); }
+	public boolean onFileBeforeStart(File file) { return true; } 
+	public boolean onFileStart(File file) { return file.isFile() && !FileUtil.isSymlink(file); }
 	public void onFileAddChunk(File file, Chunk chunk) { }
 	public void onFileEnd(File file, byte[] checksum) { }
 		

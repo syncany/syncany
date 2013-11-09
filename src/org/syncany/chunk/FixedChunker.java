@@ -22,7 +22,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,10 +36,7 @@ public class FixedChunker extends Chunker {
 	public static final String TYPE = "fixed";
 	public static final String PROPERTY_SIZE = "size";
 
-    private int chunkSize;
-    private MessageDigest digest;
-    private MessageDigest fileDigest;    
-    private InputStream fileInputStream;
+    private int chunkSize;   
     private String checksumAlgorithm;
     
     /**
@@ -58,44 +54,28 @@ public class FixedChunker extends Chunker {
      */
     public FixedChunker(int chunkSize, String checksumAlgorithm) {
         this.chunkSize = chunkSize;        
- 
-        try {
-            this.digest = MessageDigest.getInstance(checksumAlgorithm);
-            this.fileDigest = MessageDigest.getInstance(checksumAlgorithm);     
-            
-            this.fileDigest.reset();
-            this.fileInputStream = null;
-            
-            this.checksumAlgorithm = checksumAlgorithm;
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }        
+        this.checksumAlgorithm = checksumAlgorithm;        
     }
   
     @Override
-    public Enumeration<Chunk> createChunks(File file) throws IOException {
-        fileInputStream = new FileInputStream(file);
-    	return new FixedChunkEnumeration(fileInputStream);
+    public ChunkEnumeration createChunks(File file) throws IOException {
+    	return new FixedChunkEnumeration(new FileInputStream(file));
     }
     
 	@Override
 	public String getChecksumAlgorithm() {
 		return checksumAlgorithm;
-	}
-
-    @Override
-    public void close() {
-    	try { fileInputStream.close(); }
-    	catch (Exception e) { /* Not necessary */ }
-    }
+	}    
 
     @Override
     public String toString() {
-        return "Fixed-"+chunkSize+"-"+digest.getAlgorithm();
+        return "Fixed-"+chunkSize+"-"+checksumAlgorithm;
     }
 
-    public class FixedChunkEnumeration implements Enumeration<Chunk> {
+    public class FixedChunkEnumeration implements ChunkEnumeration {
+    	private MessageDigest digest;
+        private MessageDigest fileDigest;    
+        
         private InputStream in;           
         private byte[] buffer;
         private boolean closed;
@@ -104,6 +84,16 @@ public class FixedChunker extends Chunker {
             this.in = in;
             this.buffer = new byte[chunkSize];
             this.closed = false;
+            
+            try {
+                this.digest = MessageDigest.getInstance(checksumAlgorithm);
+                this.fileDigest = MessageDigest.getInstance(checksumAlgorithm);     
+                
+                this.fileDigest.reset();                                          
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }                    
         }
         
         @Override
@@ -156,7 +146,12 @@ public class FixedChunker extends Chunker {
                 return null;
             }
         }
-        
+
+        @Override
+        public void close() {
+        	try { in.close(); }
+        	catch (Exception e) { /* Not necessary */ }
+        }
     }
 }
 

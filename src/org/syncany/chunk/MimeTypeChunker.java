@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,7 +52,7 @@ public class MimeTypeChunker extends Chunker {
 	}
 
 	@Override
-	public Enumeration<Chunk> createChunks(File file) throws IOException {
+	public ChunkEnumeration createChunks(File file) throws IOException {
 		String mimeType = Files.probeContentType(Paths.get(file.getAbsolutePath()));
 		
 		for (Pattern mimeTypePattern : specialChunkerMimeTypes) {
@@ -69,11 +68,6 @@ public class MimeTypeChunker extends Chunker {
 		delegatedChunker = regularChunker;
 
 		return delegatedChunker.createChunks(file);
-	}
-
-	@Override
-	public void close() {
-		delegatedChunker.close();
 	}
 
 	@Override

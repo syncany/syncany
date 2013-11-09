@@ -3,8 +3,9 @@ package org.syncany.chunk;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.List;
+
+import org.syncany.chunk.Chunker.ChunkEnumeration;
 
 /**
  * The Deduper implements the core deduplication algorithm used by Syncany. 
@@ -51,21 +52,21 @@ public class Deduper {
 		
 		for (File file : files) {
 			// Filter ignored files
-			boolean fileAccepted = listener.onFileStart(file);
+			boolean fileAccepted = listener.onFileBeforeStart(file);
 			
 			if (!fileAccepted) {
 				continue;
 			}
 			
 			// Decide whether to index the contents
-			boolean dedupContents = listener.onFileStartDeduplicate(file);
+			boolean dedupContents = listener.onFileStart(file);
 
 			if (dedupContents) {
 				// Create chunks from file
-				Enumeration<Chunk> chunks = chunker.createChunks(file);
+				ChunkEnumeration chunksEnum = chunker.createChunks(file);
 
-				while (chunks.hasMoreElements()) {
-					chunk = chunks.nextElement();
+				while (chunksEnum.hasMoreElements()) {
+					chunk = chunksEnum.nextElement();
 
 					// old chunk
 					if (!listener.onChunk(chunk)) {
@@ -103,7 +104,7 @@ public class Deduper {
 				}
 
 				// Closing file is necessary!
-				chunker.close(); 
+				chunksEnum.close(); 
 			}
 
 			if (chunk != null) {			
