@@ -18,7 +18,6 @@
 package org.syncany.connection.plugins.rest;
 
 import java.io.File;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -30,29 +29,26 @@ import org.jets3t.service.impl.rest.httpclient.RestStorageService;
 import org.jets3t.service.model.StorageBucket;
 import org.jets3t.service.model.StorageObject;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.util.FileUtil;
 
 /**
  *
- * @author oubou68, pheckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RestTransferManager extends AbstractTransferManager {
     private static final Logger logger = Logger.getLogger(RestTransferManager.class.getSimpleName());
-    private static final int CACHE_LIST_TIME = 60000;
     
     private RestStorageService service;
     private StorageBucket bucket;
     
-    private Long cachedListUpdated;
-    /**
-     * Used for the upload function to determine whether a file is already uploaded
-     */
-    private Map<String, RemoteFile> cachedList;
+    private String dataPath;
 
     public RestTransferManager(RestConnection connection) {
-        super(connection);
+        super(connection);        
+        this.dataPath = "data";        
     }
 
     @Override
@@ -86,7 +82,15 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     
     @Override
     public void init() throws StorageException {
-    	// Fressen.
+    	connect();
+    	    	
+    	try {
+    		StorageObject dataPathFolder = new StorageObject(dataPath+"/"); // Slash ('/') makes it a folder
+			service.putObject(bucket.getName(), dataPathFolder);
+		}
+    	catch (ServiceException e) {
+    		throw new StorageException(e);
+		}
     }
 
     @Override
@@ -94,10 +98,11 @@ public abstract class RestTransferManager extends AbstractTransferManager {
         connect();
 
         File tempFile = null;
+        String remotePath = getRemoteFilePath(remoteFile);        
 
         try {
             // Download
-            StorageObject fileObj = service.getObject(bucket.getName(), remoteFile.getName());
+            StorageObject fileObj = service.getObject(bucket.getName(), remotePath);
 
             logger.log(Level.FINE, "- Downloading from bucket "+bucket.getName()+": "+fileObj+" ...");            
             tempFile = createTempFile(remoteFile.getName());            
@@ -121,27 +126,20 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     @Override
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
         connect();
+        
+        String remotePath = getRemoteFilePath(remoteFile);
 
         try {
-            // Skip if file exists
-            Map<String, RemoteFile> list = getList(false);
-            
-            if (list.containsKey(remoteFile.getName())) {
-                return;
-            }
-
             // Read file entirely
             byte[] fileBytes = FileUtils.readFileToByteArray(localFile); // TODO [medium] WARNING! Read ENTIRE file!
 
-            StorageObject fileObject = new StorageObject(remoteFile.getName(), fileBytes);
+            StorageObject fileObject = new StorageObject(remotePath, fileBytes);
             
             logger.log(Level.FINE, "- Uploading to bucket "+bucket.getName()+": "+fileObject+" ...");
             service.putObject(bucket.getName(), fileObject);
-            
-            // Add to cache
-            cachedList.put(remoteFile.getName(), remoteFile);
 
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             Logger.getLogger(RestTransferManager.class.getName()).log(Level.SEVERE, null, ex);
             throw new StorageException(ex);
         }
@@ -151,8 +149,10 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     public boolean delete(RemoteFile remoteFile) throws StorageException {
         connect();
 
+        String remotePath = getRemoteFilePath(remoteFile);
+
         try {
-            service.deleteObject(bucket.getName(), remoteFile.getName());
+            service.deleteObject(bucket.getName(), remotePath);
             return true;
         }
         catch (ServiceException ex) {
@@ -163,60 +163,54 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 
     @Override
     public Map<String, RemoteFile> list() throws StorageException {
-        return list(null);
-    }
-
-    @Override
-    public Map<String, RemoteFile> list(String namePrefix) throws StorageException {
         connect();
-
+        
         try {
-            Map<String, RemoteFile> completeList = getList(true);
-            
-            if (namePrefix == null) {
-                return completeList;
-            }
-            
-            // Filtered (prefix given)
-            Map<String, RemoteFile> filteredList = new HashMap<String, RemoteFile>();
-
-            for (Map.Entry<String, RemoteFile> e : completeList.entrySet()) {
-                if (e.getKey().startsWith(namePrefix)) {
-                    filteredList.put(e.getKey(), e.getValue());
-                }
-            }
-            
-            return filteredList;
-
+	        Map<String, RemoteFile> completeList = new HashMap<String, RemoteFile>();
+	        String bucketName = bucket.getName();
+	        StorageObject[] objects = service.listObjects(bucketName);
+	
+	        for (StorageObject obj : objects) {
+	            completeList.put(obj.getName(), new RemoteFile(obj.getName(), obj));
+	        }
+	        
+	        return completeList;
         }
         catch (ServiceException ex) {
             Logger.getLogger(RestTransferManager.class.getName()).log(Level.SEVERE, null, ex);
             throw new StorageException(ex);
-        }
+        }        
     }
-    
-    private synchronized Map<String, RemoteFile> getList(boolean forceRefresh) throws ServiceException {
-        // Used cached list
-        if (!forceRefresh && cachedListUpdated != null && cachedListUpdated+CACHE_LIST_TIME > System.currentTimeMillis()) {
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, "getList(): using cached list from {0}", new Date(cachedListUpdated));
-            }
-            
-            return cachedList;
-        }
-        
-        // Refresh cache
-        Map<String, RemoteFile> list = new HashMap<String, RemoteFile>();
-        String bucketName = bucket.getName();
-        StorageObject[] objects = service.listObjects(bucketName);
 
-        for (StorageObject obj : objects) {
-            list.put(obj.getName(), new RemoteFile(obj.getName(), obj));
+    @Override
+    public Map<String, RemoteFile> list(String namePrefix) throws StorageException {
+    	Map<String, RemoteFile> completeList = list();
+
+        // No filter
+        if (namePrefix == null) {
+            return completeList;
         }
-        
-        cachedList = list;
-        cachedListUpdated = System.currentTimeMillis();        
-        
-        return list;
-    }
+                
+        // Filtered (prefix given)
+        else {
+	        Map<String, RemoteFile> filteredList = new HashMap<String, RemoteFile>();
+	
+	        for (Map.Entry<String, RemoteFile> e : completeList.entrySet()) {
+	            if (e.getKey().startsWith(namePrefix)) {
+	                filteredList.put(e.getKey(), e.getValue());
+	            }
+	        }
+	        
+	        return filteredList;
+        }
+    }  
+    
+    private String getRemoteFilePath(RemoteFile remoteFile) {
+    	if (remoteFile instanceof MultiChunkRemoteFile) {
+    		return dataPath+"/"+remoteFile.getName();
+    	}
+    	else {
+    		return remoteFile.getName();
+    	}
+	}
 }
