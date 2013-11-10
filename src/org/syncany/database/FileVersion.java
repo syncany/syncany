@@ -1,5 +1,5 @@
 /*
- * Syncany
+ * Syncany, www.syncany.org
  * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,8 +24,17 @@ import java.util.Date;
 import org.syncany.util.StringUtil;
 
 /**
- *
- * @author pheckel
+ * A file version represents a version of a file at a certain time and captures
+ * all of a file's properties. 
+ * 
+ * <p>A {@link PartialFileHistory} typically consists of multiple <tt>FileVersion</tt>s,  
+ * each of which is the incarnation of the same file, but with either changed properties,
+ * or changed content.
+ * 
+ * <p>The <tt>FileVersion</tt>'s checksum attribute implicitly links to a {@link FileContent},
+ * which represents the content of a file. Multiple file versions can link to the same file content.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersion implements Cloneable {
 	// Mandatory
@@ -267,6 +276,10 @@ public class FileVersion implements Cloneable {
 		}	
 	}
 	
+	/**
+	 * A {@link FileVersion} can be of either one of the types in this enum.
+	 * Types are treated differently during the index and synchronization process.
+	 */
 	public enum FileType {
 		FILE ("FILE"), 
 		FOLDER ("FOLDER"),

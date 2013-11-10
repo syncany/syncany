@@ -33,10 +33,10 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Plugins {
-    public static final Pattern PLUGIN_NAME_REGEX_PLUGIN_INFO = Pattern.compile("org\\.syncany\\.connection\\.plugins\\.([^.]+)\\.[\\w\\d]+Plugin");
-    public static final String PLUGIN_FQCN_PREFIX = "org.syncany.connection.plugins.";
-    public static final String PLUGIN_FQCN_SUFFIX = "Plugin";
-    public static final String PLUGIN_FQCN_PATTERN = PLUGIN_FQCN_PREFIX+"%s.%s"+PLUGIN_FQCN_SUFFIX;
+    public static final String PLUGIN_FQCN_PREFIX = Plugin.class.getPackage().getName();
+    public static final String PLUGIN_FQCN_SUFFIX = Plugin.class.getSimpleName();
+    public static final String PLUGIN_FQCN_FORMAT = PLUGIN_FQCN_PREFIX+".%s.%s"+PLUGIN_FQCN_SUFFIX;
+    public static final Pattern PLUGIN_FQCN_REGEX = Pattern.compile(PLUGIN_FQCN_PREFIX+"\\.([^.]+)\\.[\\w\\d]+"+PLUGIN_FQCN_SUFFIX);
 	
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
@@ -45,17 +45,15 @@ public class Plugins {
 	private static void load() {
 		if (loaded) {
 			return;
-		}
-
+		}		
+		
 		for (String className : ClasspathUtil.getClasspathClasses().values()) {
-			if (!className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
-				continue;
-			}
+			if (className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
+				Matcher m = PLUGIN_FQCN_REGEX.matcher(className);
 
-			Matcher m = PLUGIN_NAME_REGEX_PLUGIN_INFO.matcher(className);
-
-			if (m.matches()) {
-				loadPlugin(m.group(1), className);
+				if (m.matches()) {
+					loadPlugin(m.group(1), className);
+				}
 			}
 		}
 		
@@ -94,7 +92,7 @@ public class Plugins {
 	}
 
 	private static void loadPlugin(String pluginId) {
-		String className = String.format(PLUGIN_FQCN_PATTERN, pluginId, StringUtil.toCamelCase(pluginId));
+		String className = String.format(PLUGIN_FQCN_FORMAT, pluginId, StringUtil.toCamelCase(pluginId));
 		loadPlugin(pluginId, className);
 	}
 

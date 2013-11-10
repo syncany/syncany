@@ -20,9 +20,18 @@ package org.syncany.connection.plugins;
 import java.util.Map;
 
 /**
+ * A connection represents the configuration settings of a storage/connection
+ * plugin. It is created through the concrete implementation of a {@link Plugin}.
+ *  
+ * <p>A connection must be initialized by calling the {@link #init(Map) init()} method,
+ * using plugin specific configuration parameters. 
+ * 
+ * <p>Once initialized, a {@link TransferManager} can be created through the {@link #createTransferManager()}
+ * method. The transfer manager can then be used to upload/download files.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+// TODO [low] The naming of this class is a bit off. It should be something like 'PluginConfig'
 public interface Connection {
     public TransferManager createTransferManager();
     public void init(Map<String, String> map) throws StorageException;

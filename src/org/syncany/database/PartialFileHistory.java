@@ -1,5 +1,5 @@
 /*
- * Syncany
+ * Syncany, www.syncany.org
  * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify

@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 import org.syncany.util.StringUtil;
 
 /**
- * A transformer combines one or many stream-transforming {@link OutputStream} and {@link InputStream}. 
+ * A transformer combines one or many stream-transforming {@link OutputStream}s and {@link InputStream}s. 
  * Implementations might provide functionality to encrypt or compress output streams, and to decrypt
  * or uncompress a corresponding  input stream.
  * 

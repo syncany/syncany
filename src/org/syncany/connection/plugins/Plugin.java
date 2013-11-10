@@ -17,14 +17,43 @@
  */
 package org.syncany.connection.plugins;
 
-
 /**
- *
+ * A plugin can be used to store Syncany's repository files on any remote location. 
+ * Implementations of the <tt>Plugin</tt> class identify a storage/connection plugin.
+ * 
+ * <p>Using the 'id' attribute, plugins can be loaded by the {@link Plugins} class. 
+ * Once a plugin is loaded, a corresponding {@link Connection} object must be created and 
+ * initialized. From the connection object, a {@link TransferManager} can then be used to
+ * upload/download files to the repository.
+ * 
+ * <p>Per <b>naming convention</b>, plugins must end by the name <b>Plugin</b> and extend this class. 
+ * Furthermore, all plugin classes must reside in a package <b>org.syncany.connection.plugins.<i>plugin-id</i></b>,
+ * where <i>plugin-id</i> is the identifier specified by {@link #getId()}. 
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Plugin {
+	/**
+	 * Returns a unique plugin identifier.
+	 * 
+	 * <p>This identifier must correspond to the to the fully qualified package name in
+	 * which the plugin classes reside. all plugin classes must reside in a package 
+	 * 'org.syncany.connection.plugins.<i>plugin-id</i>'. 
+	 */
     public abstract String getId();
+    
+    /**
+     * Returns a short name of the plugin
+     */
     public abstract String getName();
+    
+    /**
+     * Returns the version of the plugin
+     */
     public abstract Integer[] getVersion();
+    
+    /**
+     * Creates a plugin-specific {@link Connection}
+     */
     public abstract Connection createConnection();    
 }
