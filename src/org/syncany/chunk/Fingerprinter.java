@@ -20,8 +20,8 @@ package org.syncany.chunk;
 import java.security.NoSuchAlgorithmException;
 
 /**
- *
- * @author pheckel
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Fingerprinter {    
     public static Fingerprinter getInstance(String name) throws NoSuchAlgorithmException {
@@ -38,7 +38,5 @@ public abstract class Fingerprinter {
     public abstract void reset();
     public abstract void roll(byte bt);
     public abstract void check(byte[] buf, int off, int len);
-    
-    @Override
     public abstract String toString();
 }

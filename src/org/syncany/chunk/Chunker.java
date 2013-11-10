@@ -66,9 +66,19 @@ public abstract class Chunker {
      */
     public static interface ChunkEnumeration extends Enumeration<Chunk> {
     	/**
+    	 * Returns true if the chunker can return at least one more chunk.
+    	 */
+    	public boolean hasMoreElements();
+    	
+    	/**
+    	 * Returns the next chunk (if there are any). 
+    	 */
+    	public Chunk nextElement();
+    	
+    	/**
     	 * Closes the file opened by the {@link Chunker#createChunks(File) createChunks()} method.  
     	 * This method must be called at the end of processing to release any read-/write locks.
     	 */
-    	public abstract void close();   
+    	public void close();   
     }
 }

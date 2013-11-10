@@ -26,7 +26,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * The fixed chunker is an implementation of the {@link Chunker}. It implements a simple
+ * fixed-offset chunking, i.e. it breaks files at multiples of the given chunk size
+ * parameter. 
+ * 
+ * <p>While it is very fast due to its offset-based approach (and not content-based), it 
+ * performs very badly when bytes are added or removed from the beginning of a file. 
+ * 
+ * <p>Details can be found in chapter 3.4 of the thesis at <a href="http://blog.philippheckel.com/2013/05/20/minimizing-remote-storage-usage-and-synchronization-time-using-deduplication-and-multichunking-syncany-as-an-example/3/#Fixed-Size%20Chunking">blog.philippheckel.com</a>.
+ * The <tt>FixedChunker</tt> implements the chunker described in chapter 3.4.2.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FixedChunker extends Chunker {
@@ -40,17 +49,20 @@ public class FixedChunker extends Chunker {
     private String checksumAlgorithm;
     
     /**
+     * Creates a new fixed offset chunker with the default file/chunk 
+     * checksum algorithm SHA1.
      * 
-     * @param chunkSize in byte
+     * @param chunkSize Size of a chunk in bytes
      */
     public FixedChunker(int chunkSize) {
         this(chunkSize, DEFAULT_DIGEST_ALG);
     }
     
     /**
+     * Creates a new fixed offset chunker.
      * 
-     * @param chunkSize in byte
-     * @param checksumAlgorithm
+     * @param chunkSize Size of a chunk in bytes
+     * @param checksumAlgorithm Algorithm to calculare the chunk and file checksums (e.g. SHA1, MD5)
      */
     public FixedChunker(int chunkSize, String checksumAlgorithm) {
         this.chunkSize = chunkSize;        
@@ -103,7 +115,6 @@ public class FixedChunker extends Chunker {
             }
             
             try {
-                //System.out.println("fis ="+fis.available());
                 return in.available() > 0;
             }
             catch (IOException ex) {
@@ -154,4 +165,3 @@ public class FixedChunker extends Chunker {
         }
     }
 }
-
