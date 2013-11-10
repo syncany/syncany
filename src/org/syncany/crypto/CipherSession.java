@@ -127,7 +127,7 @@ public class CipherSession {
 	}
 	
 	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return CipherUtil.createDerivedKey(cipherSpec, masterKey, salt);					
+		return CipherUtil.createDerivedKey(masterKey, salt, cipherSpec);					
 	}
 
 	private static class SecretKeyCacheEntry {

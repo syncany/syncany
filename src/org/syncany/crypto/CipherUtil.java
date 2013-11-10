@@ -43,6 +43,10 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
+import org.bouncycastle.crypto.params.HKDFParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.syncany.util.FileUtil;
 
@@ -60,8 +64,8 @@ public class CipherUtil {
     public static final int MASTER_KEY_SIZE = 512; 	
     public static final int MASTER_KEY_SALT_SIZE = 512;
     
-    public static final String KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1"; 
-    public static final int KEY_DERIVATION_ROUNDS = 1000;	    
+    public static final Digest KEY_DERIVATION_DIGEST = new SHA256Digest(); 
+    public static final byte[] KEY_DERIVATION_INFO = "Syncany_SHA256_Derivated_Key".getBytes();    
     
     private static boolean initialized = false;
     private static boolean unlimitedStrengthEnabled = false;
@@ -119,23 +123,20 @@ public class CipherUtil {
     	return salt;
     }
 	
-	public static SaltedSecretKey createDerivedKey(CipherSpec cipherSpec, SecretKey masterKey, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return createDerivedKey(cipherSpec.getAlgorithm(), cipherSpec.getKeySize(), masterKey, salt);
+	public static SaltedSecretKey createDerivedKey(SecretKey inputMasterKey, byte[] inputSalt, CipherSpec outputCipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		return createDerivedKey(inputMasterKey.getEncoded(), inputSalt, KEY_DERIVATION_INFO, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
     }
 	
-	public static SaltedSecretKey createDerivedKey(String algorithm, int keySize, SecretKey masterKey, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return createDerivedKey(algorithm, keySize, KEY_DERIVATION_ROUNDS, masterKey, salt);
-	}
-	
-	public static SaltedSecretKey createDerivedKey(String algorithm, int keySize, int rounds, SecretKey masterKey, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		logger.log(Level.INFO, "Creating secret key using "+KEY_DERIVATION_FUNCTION+" with "+KEY_DERIVATION_ROUNDS+" rounds ...");		
-		logger.log(Level.SEVERE, "WARNING DIRTY WORKAROUND. SHOULD BE HKDF, not PBKDF2"); // TODO [high] Do this with HKDF
+	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] salt, byte[] info, String outputKeyAlgorithm, int outputKeySize) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		logger.log(Level.INFO, "Creating secret key using ...");		
 		
-    	SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
-        KeySpec pbeKeySpec = new PBEKeySpec(new String(masterKey.getEncoded()).toCharArray(), salt, rounds, keySize);
-        SecretKey secretKey = factory.generateSecret(pbeKeySpec);
-        
-        return toSaltedSecretKey(secretKey.getEncoded(), salt, algorithm);
+		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
+		hkdf.init(new HKDFParameters(inputKeyMaterial, salt, info));
+		
+		byte[] derivedKey = new byte[outputKeySize/8];
+		hkdf.generateBytes(derivedKey, 0, derivedKey.length);
+		
+        return toSaltedSecretKey(derivedKey, salt, outputKeyAlgorithm);
     }
 	
 	public static SecretKey toSecretKey(byte[] secretKeyBytes, String algorithm) {

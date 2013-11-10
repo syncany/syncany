@@ -47,6 +47,23 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
+/**
+ * The indexer combines the chunking process with the corresponding database
+ * lookups for the resulting chunks. It implements the deduplication mechanism 
+ * of Syncany.
+ * 
+ * <p>The class takes a list of files as input and uses the {@link Deduper} to
+ * break these files into individual chunks. By implementing the {@link DeduperListener},
+ * it reacts on chunking events and creates a new database version (with the newly
+ * added/changed/removed files. This functionality is entirely implemented by the
+ * {@link #index(List) index()} method.
+ * 
+ * <p>The class uses the currently loaded {@link Database} as well as a potential  
+ * dirty database into account. Lookups for chunks and file histories are performed 
+ * on both databases.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
 	
@@ -62,6 +79,19 @@ public class Indexer {
 		this.dirtyDatabase = dirtyDatabase;
 	}
 	
+	/**
+	 * This method implements the index/deduplication functionality of Syncany. It uses a {@link Deduper}
+	 * to break files down, compares them to the local database and creates a new {@link DatabaseVersion}
+	 * as a result. 
+	 * 
+	 * <p>Depending on what has changed, the new database version will contain new instances of 
+	 * {@link PartialFileHistory}, {@link FileVersion}, {@link FileContent}, {@link ChunkEntry} and 
+	 * {@link MultiChunkEntry}.
+	 * 
+	 * @param files List of files to be deduplicated
+	 * @return New database version containing new/changed/deleted entities
+	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
+	 */
 	// TODO [medium] Performance: To avoid having to parse the checksum twice (status and indexer), the status operation should pass over the FileProperties object in the ChangeSet
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
