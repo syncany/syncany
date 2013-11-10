@@ -44,9 +44,6 @@ public class TTTDChunker extends Chunker {
     private String checksumAlgorithm;
     private String fingerprintAlgorithm;
     private String name;   
-
-//    private InputStream fileInputStream;
-    
     
     public TTTDChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize) {
         this(Tmin, Tmax, D, Ddash, windowSize, DEFAULT_DIGEST_ALG, DEFAULT_FINGERPRINT_ALG);
@@ -220,7 +217,7 @@ public class TTTDChunker extends Chunker {
                     breakpoint = bufpos;
                 }
                 
-                // Inclue breakpoint
+                // Increase breakpoint
                 breakpoint++;
                 
                 // Create chunk

@@ -25,65 +25,58 @@ package org.syncany.chunk;
  * <em>X<sub>k</sub>...X<sub>l</sub></em>, then it is a simple matter to
  * compute the sum for <em>X<sub>k+1</sub>...X<sub>l+1</sub></em>.
  *
- * The class has been adapted to work with the Syncany chunking classes. 
+ * <p>The class has been adapted to work with the Syncany chunking classes. 
  *
  * @author Casey Marshall
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @version $Revision: 188 $
  */
 public class Adler32Fingerprinter extends Fingerprinter {
-    protected final int char_offset;
+    protected final int charOffset;
+    
     /**
      * The first half of the checksum.
-     *
-     * @since 1.1
      */
     protected int a;
-    /**
-     * The second half of the checksum.
-     *
-     * @since 1.1
-     */
-    protected int b;
-    /**
-     * The place from whence the current checksum has been computed.
-     *
-     * @since 1.1
-     */
-    protected int pos;
-    /**
-     * The place to where the current checksum has been computed.
-     *
-     * @since 1.1
-     */
-    protected int len;
-    /**
-     * The block from which the checksum is computed.
-     *
-     * @since 1.1
-     */
-    protected byte[] block;
-    /**
-     * The index in {@link #new_block} where the newest byte has
-     * been stored.
-     *
-     * @since 1.1
-     */
-    protected int new_index;
-    /**
-     * The block that is recieving new input.
-     *
-     * @since 1.1
-     */
-    protected byte[] new_block;
 
     /**
-     * Creates a new rolling checksum. The <i>char_offset</i> argument
+     * The second half of the checksum.
+     */
+    protected int b;
+
+    /**
+     * The place from whence the current checksum has been computed.
+     */
+    protected int pos;
+    
+    /**
+     * The place to where the current checksum has been computed.
+     */
+    protected int len;
+    
+    /**
+     * The block from which the checksum is computed.
+     */
+    protected byte[] block;
+    
+    /**
+     * The index in {@link #newBlock} where the newest byte has
+     * been stored.
+     */
+    protected int newIndex;
+    
+    /**
+     * The block that is receiving new input.
+     */
+    protected byte[] newBlock;
+
+    /**
+     * Creates a new rolling checksum. The <i>charOffset</i> argument
      * affects the output of this checksum; rsync uses a char offset of
      * 0, librsync 31.
      */
-    public Adler32Fingerprinter(int char_offset) {
-        this.char_offset = char_offset;
+    public Adler32Fingerprinter(int charOffset) {
+        this.charOffset = charOffset;
         a = b = 0;
         pos = 0;
     }
@@ -92,23 +85,12 @@ public class Adler32Fingerprinter extends Fingerprinter {
         this(0);
     }
 
-    // Public instance methods.
-    // -----------------------------------------------------------------
-    /**
-     * Return the value of the currently computed checksum.
-     *
-     * @return The currently computed checksum.
-     * @since 1.1
-     */
+    @Override
     public int getValue() {
         return (a & 0xffff) | (b << 16);
     }
 
-    /**
-     * Reset the checksum.
-     *
-     * @since 1.1
-     */
+    @Override
     public void reset() {
         pos = 0;
         a = b = 0;
@@ -122,12 +104,12 @@ public class Adler32Fingerprinter extends Fingerprinter {
      * preferred method for updating the checksum.
      *
      * @param bt The next byte.
-     * @since 1.1
      */
+    @Override
     public void roll(byte bt) {
-        a -= block[pos] + char_offset;
-        b -= len * (block[pos] + char_offset);
-        a += bt + char_offset;
+        a -= block[pos] + charOffset;
+        b -= len * (block[pos] + charOffset);
+        a += bt + charOffset;
         b += a;
         block[pos] = bt;
         pos++;
@@ -135,27 +117,19 @@ public class Adler32Fingerprinter extends Fingerprinter {
             pos = 0;
         }
     }
-
+    
     /**
      * Update the checksum by trimming off a byte only, not adding
      * anything.
      */
     public void trim() {
-        a -= block[pos % block.length] + char_offset;
-        b -= len * (block[pos % block.length] + char_offset);
+        a -= block[pos % block.length] + charOffset;
+        b -= len * (block[pos % block.length] + charOffset);
         pos++;
         len--;
     }
 
-    /**
-     * Update the checksum with an entirely different block, and
-     * potentially a different block length.
-     *
-     * @param buf The byte array that holds the new block.
-     * @param off From whence to begin reading.
-     * @param len The length of the block to read.
-     * @since 1.1
-     */
+    @Override
     public void check(byte[] buf, int off, int len) {
         block = new byte[len];
         System.arraycopy(buf, off, block, 0, len);
@@ -165,12 +139,12 @@ public class Adler32Fingerprinter extends Fingerprinter {
 
         for (i = 0; i < block.length - 4; i += 4) {
             b += 4 * (a + block[i]) + 3 * block[i + 1]
-                    + 2 * block[i + 2] + block[i + 3] + 10 * char_offset;
+                    + 2 * block[i + 2] + block[i + 3] + 10 * charOffset;
             a += block[i] + block[i + 1] + block[i + 2]
-                    + block[i + 3] + 4 * char_offset;
+                    + block[i + 3] + 4 * charOffset;
         }
         for (; i < block.length; i++) {
-            a += block[i] + char_offset;
+            a += block[i] + charOffset;
             b += a;
         }
     }

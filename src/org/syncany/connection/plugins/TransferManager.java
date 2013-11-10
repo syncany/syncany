@@ -33,7 +33,7 @@ import java.util.Map;
  * <li>methods that need an established connections re-connect if necessary
  * </ul>
  *
- * @author Philipp C. Heckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public interface TransferManager {
     /**

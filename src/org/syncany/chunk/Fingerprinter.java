@@ -20,7 +20,15 @@ package org.syncany.chunk;
 import java.security.NoSuchAlgorithmException;
 
 /**
+ * A fingerprinter is used in content based {@link Chunker}s to determine at which  
+ * byte to break a file into {@link Chunk}s. 
  * 
+ * <p>Implementations should make sure that the underlying algorithm is fast, because
+ * the {@link #roll(byte) roll()}-method is called for each byte of a file. It
+ * should rely on a rolling checksum algorithm (also: rolling hash) to reach optimal
+ * performance.
+ * 
+ * @see <a href="http://en.wikipedia.org/wiki/Rolling_hash">http://en.wikipedia.org/wiki/Rolling_hash</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Fingerprinter {    
@@ -34,9 +42,38 @@ public abstract class Fingerprinter {
         }        
     }
     
+    /**
+     * Return the value of the currently computed checksum.
+     * @return The currently computed checksum.
+     */
     public abstract int getValue();
+    
+    /**
+     * Reset the checksum.
+     */
     public abstract void reset();
+    
+    /**
+     * "Roll" the checksum, i.e. update the underlying 
+     * rolling checksum by the given content byte.
+     *
+     * @param bt The next byte.
+     */
     public abstract void roll(byte bt);
+    
+    /**
+     * Update the checksum with an entirely different block, and
+     * potentially a different block length.
+     *
+     * @param buf The byte array that holds the new block.
+     * @param off From whence to begin reading.
+     * @param len The length of the block to read.
+     */    
     public abstract void check(byte[] buf, int off, int len);
+    
+    /**
+	 * Returns a string representation of the fingerprinter
+	 * implementation.
+	 */
     public abstract String toString();
 }

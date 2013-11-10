@@ -28,6 +28,15 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
+ * The mime type chunker uses the file mime type delegate the chunking to
+ * either a <i>regular</i> chunker, or a <i>special</i> chunker. 
+ * 
+ * <p>The {@link #createChunks(File) createChunks()}-method uses the mime type of a file to 
+ * determine which chunker is used. If the mime type matches a pattern in the list given in the constructor,
+ * the special chunker is used. If not, the regular chunker is used.
+ * 
+ * <p>This is particularly useful to differentiate files that might change in a few bytes
+ * from files that hardly change at all (or change entirely) -- like image or video files.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -40,6 +49,17 @@ public class MimeTypeChunker extends Chunker {
 	
 	private Chunker delegatedChunker;
 	
+	/**
+	 * Creates a new mime type chunker. 
+	 * 
+	 * <p>The special chunker is used only if the mime type matches any of the mime types patterns
+	 * in the list. Otherwise, the regular chunker is used.
+	 * 
+	 * @param regularChunker The regular chunker is used if none of the mime types in the list matches  
+	 * @param specialChunker The special chunker is used if any of the mime type patterns matches
+	 * @param specialChunkerMimeTypes List of mime type regex patterns used to determine which chunker to use
+	 * @throws Exception If the two chunkers do not use the same checksum algorithm
+	 */
 	public MimeTypeChunker(Chunker regularChunker, Chunker specialChunker, List<String> specialChunkerMimeTypes) throws Exception {
 		if (!regularChunker.getChecksumAlgorithm().equals(specialChunker.getChecksumAlgorithm())) {
 			throw new Exception("Regular and special chunkers must use the same checksum algorithm.");
@@ -90,4 +110,3 @@ public class MimeTypeChunker extends Chunker {
 		return patternList;
 	}
 }
-
