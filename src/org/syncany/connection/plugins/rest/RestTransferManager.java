@@ -18,6 +18,8 @@
 package org.syncany.connection.plugins.rest;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -39,6 +41,7 @@ import org.syncany.util.FileUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RestTransferManager extends AbstractTransferManager {
+    private static final String APPLICATION_CONTENT_TYPE = "application/x-syncany";
     private static final Logger logger = Logger.getLogger(RestTransferManager.class.getSimpleName());
     
     private RestStorageService service;
@@ -47,8 +50,8 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     private String dataPath;
 
     public RestTransferManager(RestConnection connection) {
-        super(connection);        
-        this.dataPath = "data";        
+        super(connection);             
+        this.dataPath = "data";
     }
 
     @Override
@@ -103,11 +106,15 @@ public abstract class RestTransferManager extends AbstractTransferManager {
         try {
             // Download
             StorageObject fileObj = service.getObject(bucket.getName(), remotePath);
-
+            InputStream fileObjInputStream = fileObj.getDataInputStream();
+            
             logger.log(Level.FINE, "- Downloading from bucket "+bucket.getName()+": "+fileObj+" ...");            
             tempFile = createTempFile(remoteFile.getName());            
-            FileUtil.writeToFile(fileObj.getDataInputStream(), tempFile);
+            FileUtil.writeToFile(fileObjInputStream, tempFile);
 
+            fileObjInputStream.close();
+            
+            // Move to final location
             if (localFile.exists()) {
                 localFile.delete();
             }
@@ -130,14 +137,14 @@ public abstract class RestTransferManager extends AbstractTransferManager {
         String remotePath = getRemoteFilePath(remoteFile);
 
         try {
-            // Read file entirely
-            byte[] fileBytes = FileUtils.readFileToByteArray(localFile); // TODO [medium] WARNING! Read ENTIRE file!
-
-            StorageObject fileObject = new StorageObject(remotePath, fileBytes);
+            StorageObject fileObject = new StorageObject(remotePath);
+            
+            fileObject.setContentLength(localFile.length());
+            fileObject.setContentType(APPLICATION_CONTENT_TYPE);
+            fileObject.setDataInputStream(new FileInputStream(localFile));
             
             logger.log(Level.FINE, "- Uploading to bucket "+bucket.getName()+": "+fileObject+" ...");
             service.putObject(bucket.getName(), fileObject);
-
         }
         catch (Exception ex) {
             Logger.getLogger(RestTransferManager.class.getName()).log(Level.SEVERE, null, ex);

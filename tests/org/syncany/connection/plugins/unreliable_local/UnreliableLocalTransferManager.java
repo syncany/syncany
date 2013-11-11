@@ -18,44 +18,54 @@
 package org.syncany.connection.plugins.unreliable_local;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.local.LocalTransferManager;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection.UnreliableLocalOperationStatus;
 
 /**
  *
  * @author Philipp C. Heckel
  */
 public class UnreliableLocalTransferManager extends LocalTransferManager {
-	private int operationCounter;
+	private int totalOperationCounter;
+	private Map<String, Integer> typeOperationCounters;
+	private List<String> failingOperationPatterns;	
 	
     public UnreliableLocalTransferManager(UnreliableLocalConnection connection) {
         super(connection);   
-        this.operationCounter = 0;
+        
+        this.totalOperationCounter = 0;
+        this.typeOperationCounters = new HashMap<String, Integer>();
+        this.failingOperationPatterns = connection.getFailingOperationPatterns();
     }
     
-    private boolean isNextOperationSuccessful(String operationDescription) {
-    	UnreliableLocalOperationStatus operationSuccess = getConnection().getOperationStatusList().get(operationCounter);
+    private boolean isNextOperationSuccessful(String operationType, String operationDescription) {
+    	// Increase absolute/overall operation counter
+    	totalOperationCounter++;
     	
-    	if (operationSuccess == UnreliableLocalOperationStatus.SUCCESS) {
-    		System.out.println("Operation "+operationCounter+" successful:     "+operationDescription);
-        	
-    		increateOperationCounter();
-        	return true;
+    	// Increase type-relative operation counter
+    	Integer typeOperationCounter = typeOperationCounters.get(operationType);
+    	
+    	typeOperationCounter = (typeOperationCounter != null) ? typeOperationCounter + 1 : 1;    	
+    	typeOperationCounters.put(operationType, typeOperationCounter);
+    	
+    	// Construct operation line
+    	String operationLine = String.format("abs=%d rel=%d op=%s %s", totalOperationCounter, typeOperationCounter, operationType, operationDescription);
+    	
+    	// Check if it fails
+    	for (String failingOperationPattern : failingOperationPatterns) {
+    		if (operationLine.matches(".*"+failingOperationPattern+".*")) {
+        		System.out.println("Operation NOT successful: "+operationLine);
+        		return false;    			
+    		}
     	}
-    	else {
-    		System.out.println("Operation "+operationCounter+" NOT successful: "+operationDescription);
-
-    		increateOperationCounter();
-    		return false;
-    	}    	
-    }
-    
-    private void increateOperationCounter() {
-    	operationCounter = (operationCounter + 1) % getConnection().getOperationStatusList().size();
+    	
+    	System.out.println("Operation successful:     "+operationLine);
+        return true;
     }
     
     @Override
@@ -65,73 +75,79 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
 
     @Override
     public void connect() throws StorageException {
-    	String operationName = "connect";
+    	String operationType = "connect";
+    	String operationDescription = "connect";
     	
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		super.connect();
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
 
     @Override
     public void disconnect() throws StorageException {
-    	String operationName = "disconnect";
+    	String operationType = "disconnect";
+    	String operationDescription = "disconnect";
 
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		super.disconnect();
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
 
     @Override
     public void init() throws StorageException {
-    	String operationName = "init";
+    	String operationType = "init";
+    	String operationDescription = "init";
 
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		super.init();
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
     
     @Override
     public void download(RemoteFile remoteFile, File localFile) throws StorageException {
-    	String operationName = "download("+remoteFile.getName()+", "+localFile.getAbsolutePath()+")";
+    	String operationType = "download";
+    	String operationDescription = "download("+remoteFile.getName()+", "+localFile.getAbsolutePath()+")";
 
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		super.download(remoteFile, localFile);
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
 
     @Override
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
-    	String operationName = "upload("+localFile.getAbsolutePath()+", "+remoteFile.getName()+")";
+    	String operationType = "upload";
+    	String operationDescription = "upload("+localFile.getAbsolutePath()+", "+remoteFile.getName()+")";
 
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		super.upload(localFile, remoteFile);
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
 
     @Override
     public boolean delete(RemoteFile remoteFile) throws StorageException {
-    	String operationName = "delete("+remoteFile.getName()+")";
+    	String operationType = "delete";
+    	String operationDescription = "delete("+remoteFile.getName()+")";
 
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		return super.delete(remoteFile);
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
 
@@ -142,13 +158,14 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
 
     @Override
     public Map<String, RemoteFile> list(final String namePrefix) throws StorageException {
-    	String operationName = "list("+namePrefix+")";
+    	String operationType = "list";
+    	String operationDescription = "list("+namePrefix+")";
 
-    	if (isNextOperationSuccessful(operationName)) {
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
     		return super.list(namePrefix);
     	}
     	else {
-    		throw new StorageException("Operation failed: "+operationName);
+    		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
 }

@@ -29,7 +29,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
  * @author Philipp C. Heckel
  */
 public class UnreliableLocalConnection extends LocalConnection {
-	private List<UnreliableLocalOperationStatus> operationStatusList;
+	private List<String> failingOperationPatterns;
 	
 	@Override
 	public void init(Map<String, String> map) throws StorageException {
@@ -41,16 +41,11 @@ public class UnreliableLocalConnection extends LocalConnection {
         return new UnreliableLocalTransferManager(this);
     }
 
-	public List<UnreliableLocalOperationStatus> getOperationStatusList() {
-		return operationStatusList;
+	public List<String> getFailingOperationPatterns() {
+		return failingOperationPatterns;
 	}
 
-	public void setOperationStatusList(List<UnreliableLocalOperationStatus> operationStatusList) {
-		this.operationStatusList = operationStatusList;
-	}
-
-	public static enum UnreliableLocalOperationStatus {
-		SUCCESS,
-		FAILURE
+	public void setFailingOperationPatterns(List<String> failingOperationPatterns) {
+		this.failingOperationPatterns = failingOperationPatterns;
 	}
 }

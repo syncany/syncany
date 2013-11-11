@@ -17,29 +17,26 @@
  */
 package org.syncany.tests.connection.plugins.unreliable_local;
 
-import static org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection.UnreliableLocalOperationStatus.FAILURE;
-import static org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection.UnreliableLocalOperationStatus.SUCCESS;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection.UnreliableLocalOperationStatus;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class UnreliableLocalPluginTest {
 	@Test
-	public void testMUnreliablePlugin() throws Exception {
+	public void testUnreliablePlugin() throws Exception {
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
-			Arrays.asList(new UnreliableLocalOperationStatus[] {					
-				SUCCESS, // init
-				SUCCESS, // connect (for upload multichunk)
-				SUCCESS, // upload (multichunk)
-				SUCCESS, // connect (for upload database)
-				FAILURE, // upload (database)
+			Arrays.asList(new String[] { 
+				// List of failing operations (regex)
+				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+					
+				"upload.+db-A-2"
 			}
 		));
 		
@@ -49,10 +46,19 @@ public class UnreliableLocalPluginTest {
 		WatchOperationOptions watchOperationOptions = new WatchOperationOptions();
 		watchOperationOptions.setInterval(1000);
 		
+		fail("Implement this"); // TODO [medium] Implement failing storage tests
+		
 		// A new/up
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				
+			}			
+		}).start();
+		
 		clientA.createNewFile("A-original");
-		clientA.up();
-		//clientA.watch(watchOperationOptions);
+		//clientA.up();
+		clientA.watch(watchOperationOptions);
 
 		clientA.createNewFile("A-original2");
 		clientA.up();

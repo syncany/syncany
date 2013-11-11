@@ -37,7 +37,6 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection.UnreliableLocalOperationStatus;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -138,14 +137,14 @@ public class TestConfigUtil {
 		return conn;
 	}	
 	
-	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<UnreliableLocalOperationStatus> successFailureSequence) throws Exception {
+	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
 				
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", unreliableLocalConnection));
 		
 		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
-		unreliableLocalConnection.setOperationStatusList(successFailureSequence);
+		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);
 
 		unreliableLocalConnection.createTransferManager().init();
 		
