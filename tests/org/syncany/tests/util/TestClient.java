@@ -32,6 +32,7 @@ import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
+import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
 public class TestClient extends Client {
 	public TestClient(String machineName, Connection connection) throws Exception {
@@ -49,6 +50,23 @@ public class TestClient extends Client {
 		upOptions.setStatusOptions(statusOptions);
 		
 		return up(upOptions);
+	}
+	
+	public Thread watchAsThread(final int interval) {
+		return new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					WatchOperationOptions watchOperationOptions = new WatchOperationOptions();
+					watchOperationOptions.setInterval(interval);
+					
+					watch(watchOperationOptions);
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}			
+		});
 	}
 	
 	public void createNewFiles() throws IOException {

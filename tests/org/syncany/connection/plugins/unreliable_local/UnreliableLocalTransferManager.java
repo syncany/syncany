@@ -18,8 +18,6 @@
 package org.syncany.connection.plugins.unreliable_local;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.syncany.connection.plugins.RemoteFile;
@@ -31,33 +29,28 @@ import org.syncany.connection.plugins.local.LocalTransferManager;
  * @author Philipp C. Heckel
  */
 public class UnreliableLocalTransferManager extends LocalTransferManager {
-	private int totalOperationCounter;
-	private Map<String, Integer> typeOperationCounters;
-	private List<String> failingOperationPatterns;	
+	private UnreliableLocalConnection connection;
 	
     public UnreliableLocalTransferManager(UnreliableLocalConnection connection) {
-        super(connection);   
-        
-        this.totalOperationCounter = 0;
-        this.typeOperationCounters = new HashMap<String, Integer>();
-        this.failingOperationPatterns = connection.getFailingOperationPatterns();
+        super(connection);  
+        this.connection = connection;
     }
     
     private boolean isNextOperationSuccessful(String operationType, String operationDescription) {
     	// Increase absolute/overall operation counter
-    	totalOperationCounter++;
+    	connection.increaseTotalOperationCounter();
     	
     	// Increase type-relative operation counter
-    	Integer typeOperationCounter = typeOperationCounters.get(operationType);
+    	Integer typeOperationCounter = connection.getTypeOperationCounters().get(operationType);
     	
     	typeOperationCounter = (typeOperationCounter != null) ? typeOperationCounter + 1 : 1;    	
-    	typeOperationCounters.put(operationType, typeOperationCounter);
+    	connection.getTypeOperationCounters().put(operationType, typeOperationCounter);
     	
     	// Construct operation line
-    	String operationLine = String.format("abs=%d rel=%d op=%s %s", totalOperationCounter, typeOperationCounter, operationType, operationDescription);
+    	String operationLine = String.format("abs=%d rel=%d op=%s %s", connection.getTotalOperationCounter(), typeOperationCounter, operationType, operationDescription);
     	
     	// Check if it fails
-    	for (String failingOperationPattern : failingOperationPatterns) {
+    	for (String failingOperationPattern : connection.getFailingOperationPatterns()) {
     		if (operationLine.matches(".*"+failingOperationPattern+".*")) {
         		System.out.println("Operation NOT successful: "+operationLine);
         		return false;    			

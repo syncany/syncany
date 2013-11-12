@@ -39,11 +39,17 @@ public class WatchOperation extends Operation {
 		while (true) {
 			logger.log(Level.INFO, "Running sync ...");
 			
-			new DownOperation(config, database).execute();
-			new UpOperation(config, database).execute();
-			
-			logger.log(Level.INFO, "Sync done, waiting {0} seconds ...", options.getInterval()/1000);
-			Thread.sleep(options.getInterval());
+			try {
+				new DownOperation(config, database).execute();
+				new UpOperation(config, database).execute();
+				
+				logger.log(Level.INFO, "Sync done, waiting {0} seconds ...", options.getInterval()/1000);
+				Thread.sleep(options.getInterval());				
+			}
+			catch (Exception e) {
+				logger.log(Level.INFO, "Sync FAILED, waiting {0} seconds ...", options.getInterval()/1000);
+				Thread.sleep(options.getInterval());			
+			}
 		}
 	}
 	

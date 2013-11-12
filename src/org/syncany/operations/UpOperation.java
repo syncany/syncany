@@ -140,26 +140,31 @@ public class UpOperation extends Operation {
 			return result;
 		}
 		else {
-			logger.log(Level.INFO, "Adding newest database version "+newDatabaseVersion.getHeader()+" to local database ...");
-			database.addDatabaseVersion(newDatabaseVersion);
-				
+			// Upload multichunks
 			logger.log(Level.INFO, "Uploading new multichunks ...");
-			uploadMultiChunks(database.getLastDatabaseVersion().getMultiChunks());
-			
+			uploadMultiChunks(newDatabaseVersion.getMultiChunks());			
+							
 			long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().get(config.getMachineName());
 
+			// Upload delta database
 			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
 			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
 
-			logger.log(Level.INFO, "Saving local delta database file ...");
-			logger.log(Level.INFO, "- Saving versions from: "+newDatabaseVersion.getHeader()+", to: "+newDatabaseVersion.getHeader()+") to file "+localDeltaDatabaseFile+" ...");
-			saveLocalDatabase(database, newDatabaseVersion, newDatabaseVersion, localDeltaDatabaseFile);
+			Database newDeltaDatabase = new Database();
+			newDeltaDatabase.addDatabaseVersion(newDatabaseVersion);
+			
+			logger.log(Level.INFO, "Saving local delta database, version "+newDatabaseVersion.getHeader()+" to file "+localDeltaDatabaseFile+" ...");
+			saveLocalDatabase(newDeltaDatabase, localDeltaDatabaseFile);
 			
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
 			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+
+			// Save local database
+			logger.log(Level.INFO, "Adding newest database version "+newDatabaseVersion.getHeader()+" to local database ...");
+			database.addDatabaseVersion(newDatabaseVersion);
 			
 			if (options.cleanupEnabled()) {
-				cleanupOldDatabases(database, newestLocalDatabaseVersion);
+				cleanupOldDatabases(database, newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation 
 			}
 			
 			logger.log(Level.INFO, "Saving local database to file "+config.getDatabaseFile()+" ...");  

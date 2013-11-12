@@ -33,7 +33,7 @@ public class PluginsTest {
 	public void testPluginsList() {
 		Collection<Plugin> pluginList = Plugins.list();		
 		
-		List<String> expectedPluginIds = Arrays.asList(new String[] { "local", "ftp", "s3" });
+		List<String> expectedPluginIds = Arrays.asList(new String[] { "local", "ftp", "s3", "unreliable_local" });
 		List<String> actualPluginIds = new ArrayList<String>();
 		
 		for (Plugin plugin : pluginList) {

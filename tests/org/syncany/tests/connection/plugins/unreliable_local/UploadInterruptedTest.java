@@ -17,54 +17,48 @@
  */
 package org.syncany.tests.connection.plugins.unreliable_local;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.operations.WatchOperation.WatchOperationOptions;
+import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class UnreliableLocalPluginTest {
+public class UploadInterruptedTest {
 	@Test
-	public void testUnreliablePlugin() throws Exception {
+	public void testUnreliableUpload() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 			Arrays.asList(new String[] { 
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 					
-				"upload.+db-A-2"
+				"rel=1 .+upload.+multichunk", // 1st upload (= multichunk) fails
+				"rel=5 .+upload.+db-A-2"             // 2nd upload of db-A-2 fails
 			}
 		));
 		
 		TestClient clientA = new TestClient("A", testConnection);
-		//TestClient clientB = new TestClient("B", testConnection);
+		Thread clientThreadA = clientA.watchAsThread(500);
 		
-		WatchOperationOptions watchOperationOptions = new WatchOperationOptions();
-		watchOperationOptions.setInterval(1000);
+		clientThreadA.start();
 		
-		fail("Implement this"); // TODO [medium] Implement failing storage tests
+		int i = 0;
+		while (i++ < 5) {
+			clientA.createNewFile("A-original-"+i, 50*1024);
+			Thread.sleep(500);
+		}
 		
-		// A new/up
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				
-			}			
-		}).start();
+		clientThreadA.interrupt();
 		
-		clientA.createNewFile("A-original");
-		//clientA.up();
-		clientA.watch(watchOperationOptions);
-
-		clientA.createNewFile("A-original2");
-		clientA.up();
+		assertTrue(new File(testConnection.getRepositoryPath()+"/db-A-1").exists());
+		assertTrue(new File(testConnection.getRepositoryPath()+"/db-A-2").exists());
+		assertTrue(new File(testConnection.getRepositoryPath()+"/db-A-3").exists());
 		
 		// Tear down
 		clientA.cleanup();
-		//clientB.cleanup();
 	}				
 }

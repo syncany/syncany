@@ -17,6 +17,8 @@
  */
 package org.syncany.connection.plugins.unreliable_local;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +31,15 @@ import org.syncany.connection.plugins.local.LocalConnection;
  * @author Philipp C. Heckel
  */
 public class UnreliableLocalConnection extends LocalConnection {
-	private List<String> failingOperationPatterns;
+	private int totalOperationCounter;
+	private Map<String, Integer> typeOperationCounters;
+	private List<String> failingOperationPatterns;	
+
+	public UnreliableLocalConnection() {
+        this.totalOperationCounter = 0;
+        this.typeOperationCounters = new HashMap<String, Integer>();
+        this.failingOperationPatterns = new ArrayList<String>();
+	}
 	
 	@Override
 	public void init(Map<String, String> map) throws StorageException {
@@ -48,4 +58,24 @@ public class UnreliableLocalConnection extends LocalConnection {
 	public void setFailingOperationPatterns(List<String> failingOperationPatterns) {
 		this.failingOperationPatterns = failingOperationPatterns;
 	}
+
+	public int getTotalOperationCounter() {
+		return totalOperationCounter;
+	}
+
+	public void setTotalOperationCounter(int totalOperationCounter) {
+		this.totalOperationCounter = totalOperationCounter;
+	}
+
+	public Map<String, Integer> getTypeOperationCounters() {
+		return typeOperationCounters;
+	}
+
+	public void setTypeOperationCounters(Map<String, Integer> typeOperationCounters) {
+		this.typeOperationCounters = typeOperationCounters;
+	}
+	
+	public void increaseTotalOperationCounter() {
+		totalOperationCounter++;
+	}		
 }
