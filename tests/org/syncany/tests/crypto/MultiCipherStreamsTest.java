@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -46,7 +47,6 @@ import org.syncany.config.Logging;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
-import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.MultiCipherOutputStream;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
@@ -63,7 +63,7 @@ public class MultiCipherStreamsTest {
 	@Before
 	public void setup() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		if (masterKey == null) {
-			masterKey = CipherUtil.createMasterKey("some password");
+			masterKey = createDummyMasterKey();
 		}
 	}
 	
@@ -199,5 +199,15 @@ public class MultiCipherStreamsTest {
 		byte[] decryptedData = bosDecryptedData.toByteArray();
 		
 		return decryptedData;
-	}		
+	}	
+	
+	private SaltedSecretKey createDummyMasterKey() {
+		return new SaltedSecretKey(
+			new SecretKeySpec(
+				StringUtil.fromHex("44fda24d53b29828b62c362529bd9df5c8a92c2736bcae3a28b3d7b44488e36e246106aa5334813028abb2048eeb5e177df1c702d93cf82aeb7b6d59a8534ff0"),
+				"AnyAlgorithm"
+			),
+			StringUtil.fromHex("157599349e0f1bc713afff442db9d4c3201324073d51cb33407600f305500aa3fdb31136cb1f37bd51a48f183844257d42010a36133b32b424dd02bc63b349bc")			
+		);
+	}
 }

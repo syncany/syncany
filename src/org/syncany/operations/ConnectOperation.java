@@ -132,7 +132,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	private String decryptRepoFile(File file, SaltedSecretKey masterKey) throws Exception {
 		try {
 			FileInputStream encryptedRepoConfig = new FileInputStream(file);
-			return CipherUtil.decryptToString(encryptedRepoConfig, masterKey);			
+			return new String(CipherUtil.decrypt(encryptedRepoConfig, masterKey));			
 		}
 		catch (Exception e) {
 			throw new Exception("Invalid password given, or repo file corrupt.");

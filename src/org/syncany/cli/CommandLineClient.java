@@ -231,7 +231,7 @@ public class CommandLineClient extends Client {
 				throw new Exception("Repo file is encrypted, but master key not set in config file.");
 			}
 			
-			String repoFileStr = CipherUtil.decryptToString(new FileInputStream(repoFile), masterKey);
+			String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
 			
 			Serializer serializer = new Persister();
 			return serializer.read(RepoTO.class, repoFileStr);			

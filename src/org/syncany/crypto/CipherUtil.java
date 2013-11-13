@@ -124,19 +124,19 @@ public class CipherUtil {
     }
 	
 	public static SaltedSecretKey createDerivedKey(SecretKey inputMasterKey, byte[] inputSalt, CipherSpec outputCipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return createDerivedKey(inputMasterKey.getEncoded(), inputSalt, KEY_DERIVATION_INFO, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
+		return createDerivedKey(inputMasterKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
     }
 	
-	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] salt, byte[] info, String outputKeyAlgorithm, int outputKeySize) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		logger.log(Level.INFO, "Creating secret key using ...");		
 		
 		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
-		hkdf.init(new HKDFParameters(inputKeyMaterial, salt, info));
+		hkdf.init(new HKDFParameters(inputKeyMaterial, inputSalt, KEY_DERIVATION_INFO));
 		
 		byte[] derivedKey = new byte[outputKeySize/8];
 		hkdf.generateBytes(derivedKey, 0, derivedKey.length);
 		
-        return toSaltedSecretKey(derivedKey, salt, outputKeyAlgorithm);
+        return toSaltedSecretKey(derivedKey, inputSalt, outputKeyAlgorithm);
     }
 	
 	public static SecretKey toSecretKey(byte[] secretKeyBytes, String algorithm) {
@@ -225,10 +225,6 @@ public class CipherUtil {
 		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
 		
 		return ciphertextOutputStream.toByteArray();
-	}
-	
-	public static String decryptToString(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {
-		return new String(decrypt(fromInputStream, masterKey));
 	}
 	
 	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {		

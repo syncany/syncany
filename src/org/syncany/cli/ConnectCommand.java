@@ -137,7 +137,7 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			
 			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
 			
-			plaintext = CipherUtil.decryptToString(encryptedStorageConfig, masterKey);					
+			plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));					
 		}
 		else {
 			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);

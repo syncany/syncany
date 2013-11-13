@@ -28,6 +28,7 @@ import org.syncany.tests.connection.plugins.PluginsTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.connection.plugins.unreliable_local.UploadInterruptedTest;
 import org.syncany.tests.crypto.CipherSpecsTest;
+import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
 import org.syncany.tests.database.DatabaseCacheTest;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
@@ -52,6 +53,7 @@ import org.syncany.tests.util.FileUtilTests;
 	
 	// Crypto	
 	CipherSpecsTest.class,
+	CipherUtilTest.class,
 	MultiCipherStreamsTest.class,
 	
 	// Chunking Framework

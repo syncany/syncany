@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.crypto;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.*;
 
 import java.util.Map;
 
@@ -32,17 +31,19 @@ public class CipherSpecsTest {
 		Map<Integer, CipherSpec> availableCipherSpecs = CipherSpecs.getAvailableCipherSpecs();
 		
 		assertEquals(4, availableCipherSpecs.size());
-		assertEquals(availableCipherSpecs.get(1).getAlgorithm(), "AES/GCM/NoPadding");		
+		assertEquals(availableCipherSpecs.get(CipherSpecs.AES_128_GCM).getAlgorithm(), "AES/GCM/NoPadding");		
 	}
 	
 	@Test
 	public void testCipherSpec2() {
-		CipherSpec twofish128CipherSpec = CipherSpecs.getCipherSpec(2);
+		CipherSpec twofish128CipherSpec = CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM);
 		
 		assertEquals(twofish128CipherSpec.getId(), 2);
 		assertEquals(twofish128CipherSpec.getAlgorithm(), "Twofish/GCM/NoPadding");
 		assertEquals(twofish128CipherSpec.getKeySize(), 128);
 		assertEquals(twofish128CipherSpec.getIvSize(), 128);
+		assertEquals(twofish128CipherSpec.needsUnlimitedStrength(), false);
+		assertNotNull(twofish128CipherSpec.toString());
 	}
 	
 	@Test(expected=Exception.class)
@@ -52,8 +53,8 @@ public class CipherSpecsTest {
 	
 	@Test
 	public void testCipherSpecHashCodeEquals() {
-		CipherSpec cipherSpec1 = CipherSpecs.getCipherSpec(1);
-		CipherSpec cipherSpec2 = CipherSpecs.getCipherSpec(2);
+		CipherSpec cipherSpec1 = CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM);
+		CipherSpec cipherSpec2 = CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM);
 		
 		assertNotSame(cipherSpec1.hashCode(), cipherSpec2.hashCode());
 		assertNotSame(cipherSpec1, cipherSpec2);
