@@ -58,7 +58,7 @@ public abstract class MultiChunk {
     }
 
     public abstract InputStream getChunkInputStream(byte[] checksum) throws IOException;
-    public abstract Chunk read() throws IOException;
+    public abstract Chunk read() throws IOException; // TODO [low] Not necessary anymore
     public abstract void write(Chunk chunk) throws IOException;
     public abstract void close() throws IOException;
 

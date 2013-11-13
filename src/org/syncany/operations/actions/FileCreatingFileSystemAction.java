@@ -77,6 +77,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 		
 		// Create file
+		// TODO [low] Create an assembler/reconstructor class to package re-assembly in the chunk-package
 		MultiChunker multiChunker = config.getMultiChunker();
 		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
 
