@@ -381,7 +381,7 @@ public class CommandLineClient extends Client {
 		out.println("      Detect remote changes and print to STDOUT.");
 		out.println();
 		out.println("  watch [<args>]");
-		out.println("      Performs the sync-command in a loop. In furture releases, this command will");
+		out.println("      Performs the sync-command in a loop. In future releases, this command will");
 		out.println("      watch the file system.");
 		out.println();
 		out.println("      Arguments:");
@@ -391,7 +391,7 @@ public class CommandLineClient extends Client {
 		out.println("      can be used.");
 		out.println();		
 		out.println("  restore [<args>] <paths>");
-		out.println("     Restore the given file paths from the remote repository.");
+		out.println("      Restore the given file paths from the remote repository.");
 		out.println();
 		out.println("      Arguments:");
 		out.println("      -D, --date=<unit(smhDMWY)>       Restore versions prior to the given relative date");
