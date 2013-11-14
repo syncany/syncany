@@ -17,6 +17,8 @@
  */
 package org.syncany.crypto;
 
+import java.util.Arrays;
+
 import javax.crypto.SecretKey;
 
 public class SaltedSecretKey implements SecretKey {
@@ -47,5 +49,33 @@ public class SaltedSecretKey implements SecretKey {
 	@Override
 	public byte[] getEncoded() {
 		return secretKey.getEncoded();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(salt);
+		result = prime * result + ((secretKey == null) ? 0 : secretKey.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SaltedSecretKey other = (SaltedSecretKey) obj;
+		if (!Arrays.equals(salt, other.salt))
+			return false;
+		if (secretKey == null) {
+			if (other.secretKey != null)
+				return false;
+		} else if (!secretKey.equals(other.secretKey))
+			return false;
+		return true;
 	}		
 }

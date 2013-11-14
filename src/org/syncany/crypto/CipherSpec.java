@@ -19,7 +19,23 @@ package org.syncany.crypto;
 
 import java.util.regex.Pattern;
 
-
+/**
+ * A cipher spec represents the definition of a cipher/encryption algorithm and the  
+ * corresponding settings required to instantiate a new cipher object.
+ * 
+ * <p>Cipher specs are identified by an identifier (<i>id</i>), which will (when the
+ * cipher spec is used by the {@link MultiCipherOutputStream}) be written to the output
+ * file format. When the file is read by {@link MultiCipherInputStream}, the identifier
+ * is looked up using the {@link CipherSpecs} class.
+ * 
+ * <p>While it would be technically possible to define any kind of cipher using this class,
+ * this class restricts the allowed algorithms to a few ones that are considered secure.
+ * 
+ * <p>Instantiating a cipher spec that does pass the sanity checks will result in a 
+ * RuntimeException.  
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public final class CipherSpec {
 	public static final Pattern ALLOWED_CIPHER_ALGORITHMS = Pattern.compile("^HmacSHA256$|(^(AES|Twofish)/(GCM|EAX)/.+)");
 	

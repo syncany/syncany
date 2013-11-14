@@ -62,10 +62,6 @@ public class CipherSession {
 		return masterKey;
 	}
 
-	public void setMasterKey(SecretKey masterKey) {
-		this.masterKey = masterKey;
-	}
-
 	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyWriteCache.get(cipherSpec);
 		
@@ -104,7 +100,7 @@ public class CipherSession {
 			return secretKeyCacheEntry.getSaltedSecretKey();
 		}
 		else {
-			if (secretKeyReadCache.size() > secretKeyReadCacheSize) {
+			if (secretKeyReadCache.size() >= secretKeyReadCacheSize) {
 				CipherSpecWithSalt firstKey = secretKeyReadCache.keySet().iterator().next();
 				secretKeyReadCache.remove(firstKey);
 				
