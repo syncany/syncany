@@ -29,6 +29,10 @@ import java.util.Map;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class NoTransformer extends Transformer {
+	/**
+	 * The no-transformer does not take any parameters and therefore must
+	 * not be initialized. This method does nothing.
+	 */
 	@Override
 	public void init(Map<String, String> settings) throws Exception {
 		// Nothing here

@@ -42,32 +42,7 @@ public class DatabaseVersionHeader {
 	
 	public VectorClock getVectorClock() {
 		return vectorClock;
-	}
-	
-	public VectorClock getPreviousVectorClock() {
-		VectorClock previousVectorClock = vectorClock.clone();
-
-		Long lastPreviousClientLocalClock = previousVectorClock.get(client);
-		
-		if (lastPreviousClientLocalClock == null) {
-			throw new RuntimeException("Previous client '"+client+"' must be present in vector clock of database version header "+this.toString()+".");
-		}
-		
-		if (lastPreviousClientLocalClock == 1) {
-			previousVectorClock.remove(client);
-			
-			if (previousVectorClock.size() == 0) {
-				return new VectorClock();
-			}
-			else {
-				return previousVectorClock;
-			}
-		}
-		else {
-			previousVectorClock.setClock(client, lastPreviousClientLocalClock-1);
-			return previousVectorClock;
-		}		
-	}
+	}	
 	
 	public void setVectorClock(VectorClock vectorClock) {
 		this.vectorClock = vectorClock;

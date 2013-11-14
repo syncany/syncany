@@ -26,9 +26,33 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * The TTTD chunker is an implementation of the Two Threshold Two Divisor (TTTD) 
+ * chunking method based on the paper of Kave Eshghi and Hsiu Khuern Tang, 2005.
+ * 
+ * <p>The class implements a content-based {@link Chunker}, i.e. it determines breakpoints
+ * on the content rather than on the offset. It uses a fingerprinting algorithm to 
+ * calculate window fingerprints and determine a breakpoint. The algorithm given in the
+ * constructor is instantiated to an implementation of a {@link Fingerprinter}.
+ * 
+ * <p>The TTTD chunking method makes sure that it does not produce chunks smaller
+ * than a certain threshold. To do so, it ignores chunk boundaries until a minimum
+ * size is reached. Even though this negatively affects the duplicate detection
+ * (because bigger chunks are created), chunk boundaries are still "natural" -- 
+ * because they are based on the underlying data.
+ * 
+ * <p>To handle chunks that exceed a certain maximum size, TTTD applies two techniques.
+ * It defines the two divisors <i>D</i> (regular divisor) and <i>D'</i> (backup divisor)
+ * with <i>D</i> &gt; <i>D'</i>. Because <i>D'</i> is smaller than <i>D</i>, it is more
+ * likely to find a breakpoint.
+ * 
+ * <p>If <i>D</i> does not find a chunk boundary before the maximum chunk size is reached,
+ * the backup breakpoint found by <i>D'</i> is used. If <i>D</i> also does not find any
+ * breakpoints, TTTD simply cuts the chunk at the maximum chunk size. TTTD hence guarantees 
+ * to emit chunks with a minimum and maximum size.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+// TODO [low] Add reference to TTTD paper here
 public class TTTDChunker extends Chunker {   
     private static final Logger logger = Logger.getLogger(TTTDChunker.class.getSimpleName());   
 
