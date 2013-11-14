@@ -23,19 +23,13 @@ package org.syncany.connection.plugins;
  */
 public class RemoteFile {
     private String name;
-    private Object source;
 
     protected RemoteFile() {
         // Fressen.
     }
 
     public RemoteFile(String name) {
-        this(name, null);
-    }
-
-    public RemoteFile(String name, Object source) {
         this.name = name;
-        this.source = source;
     }
     
     public String getName() {
@@ -46,14 +40,6 @@ public class RemoteFile {
         this.name = name;
     }
     
-    public Object getSource() {
-        return source;
-    }
-
-    public void setSource(Object source) {
-        this.source = source;
-    }
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -89,6 +75,6 @@ public class RemoteFile {
 	@Override
     public String toString() {
         return RemoteFile.class.getSimpleName()
-            +"[name="+name+", source="+source+"]";
+            +"[name="+name+"]";
     }
 }

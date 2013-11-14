@@ -215,7 +215,7 @@ public class FtpTransferManager extends AbstractTransferManager {
             FTPFile[] ftpFiles = ftp.listFiles(getConnection().getPath()+"/");
 
             for (FTPFile f : ftpFiles) {
-                files.put(f.getName(), new RemoteFile(f.getName(), f));
+                files.put(f.getName(), new RemoteFile(f.getName()));
             }
 
             return files;
@@ -240,7 +240,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 			});
 
             for (FTPFile f : ftpFiles) {
-                files.put(f.getName(), new RemoteFile(f.getName(), f));
+                files.put(f.getName(), new RemoteFile(f.getName()));
             }
 
             return files;

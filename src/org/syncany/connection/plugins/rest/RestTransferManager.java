@@ -178,7 +178,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	        StorageObject[] objects = service.listObjects(bucketName);
 	
 	        for (StorageObject obj : objects) {
-	            completeList.put(obj.getName(), new RemoteFile(obj.getName(), obj));
+	            completeList.put(obj.getName(), new RemoteFile(obj.getName()));
 	        }
 	        
 	        return completeList;

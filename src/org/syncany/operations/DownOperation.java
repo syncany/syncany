@@ -433,7 +433,7 @@ public class DownOperation extends Operation {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
-			transferManager.download(new DatabaseRemoteFile(remoteFile.getName(), remoteFile.getSource()), unknownRemoteDatabaseFileInCache);
+			transferManager.download(new DatabaseRemoteFile(remoteFile.getName()), unknownRemoteDatabaseFileInCache);
 						
 			unknownRemoteDatabasesInCache.add(unknownRemoteDatabaseFileInCache);
 			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
