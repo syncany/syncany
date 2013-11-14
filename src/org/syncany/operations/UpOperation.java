@@ -247,15 +247,12 @@ public class UpOperation extends Operation {
 
 	private DatabaseVersion index(List<File> localFiles, Database database) throws FileNotFoundException, IOException {			
 		// Get last vector clock
-		String previousClient = null;
 		VectorClock lastVectorClock = null;
 		
 		if (database.getLastDatabaseVersion() != null) {
-			previousClient = database.getLastDatabaseVersion().getClient();
 			lastVectorClock = database.getLastDatabaseVersion().getVectorClock();
 		}
 		else {
-			previousClient = null;
 			lastVectorClock = new VectorClock();
 		}
 		
@@ -290,7 +287,6 @@ public class UpOperation extends Operation {
 		newDatabaseVersion.setVectorClock(newVectorClock);
 		newDatabaseVersion.setTimestamp(new Date());	
 		newDatabaseVersion.setClient(config.getMachineName());
-		newDatabaseVersion.setPreviousClient(previousClient);
 						
 		return newDatabaseVersion;
 	}

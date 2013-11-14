@@ -99,9 +99,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			out.print("\t\t\t<header>\n");	
 			out.print("\t\t\t\t<time value=\""+databaseVersion.getTimestamp().getTime()+"\" />\n");
 			out.print("\t\t\t\t<client name=\""+databaseVersion.getClient()+"\" />\n");			
-			if (databaseVersion.getPreviousClient() != null && !"".equals(databaseVersion.getPreviousClient())) {
-				out.print("\t\t\t\t<previousClient name=\""+databaseVersion.getPreviousClient()+"\" />\n");
-			}			
 			out.print("\t\t\t\t<vectorClock>\n");			
 			VectorClock vectorClock = databaseVersion.getVectorClock();			
 			for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
@@ -330,10 +327,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/client")) {
 				String clientName = attributes.getValue("name");
 				databaseVersion.setClient(clientName);
-			}
-			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/previousClient")) {
-				String previousClientName = attributes.getValue("name");
-				databaseVersion.setPreviousClient(previousClientName);
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock")) {
 				vectorClock = new VectorClock();

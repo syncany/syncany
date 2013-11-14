@@ -37,7 +37,7 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 
 public class TestDatabaseUtil {
-	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)(?:/([^/]+))?");
+	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)");
 	private static Pattern vectorClockElementPattern = Pattern.compile("([^\\d]+)(\\d+)");
 	
 	public static DatabaseVersionHeader createFromString(String databaseVersionHeaderString) throws Exception {
@@ -50,7 +50,6 @@ public class TestDatabaseUtil {
 		String client = databaseVersionHeaderMatcher.group(1);
 		String vectorClockString = databaseVersionHeaderMatcher.group(2);
 		long databaseVersionHeaderTime = Long.parseLong(databaseVersionHeaderMatcher.group(3));
-		String previousClient = (databaseVersionHeaderMatcher.groupCount() > 3) ? databaseVersionHeaderMatcher.group(4) : null;
 		
 		String[] vectorClockElements = vectorClockString.split(",");		
 		VectorClock vectorClock = new VectorClock();
@@ -77,7 +76,6 @@ public class TestDatabaseUtil {
 		newDatabaseVersionHeader.setDate(new Date(databaseVersionHeaderTime));
 		newDatabaseVersionHeader.setVectorClock(vectorClock);
 		newDatabaseVersionHeader.setClient(client);	
-		newDatabaseVersionHeader.setPreviousClient(previousClient); // optional!
 		
 		return newDatabaseVersionHeader;
 	}

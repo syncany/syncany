@@ -25,13 +25,11 @@ public class DatabaseVersionHeader {
     private Date date;
     private VectorClock vectorClock; // vector clock, machine name to database version map
     private String client;
-    private String previousClient;
     
     public DatabaseVersionHeader() {
     	this.date = new Date();
     	this.vectorClock = new VectorClock();
     	this.client = "UnknownMachine";
-    	this.previousClient = "";
     }    
 
 	public Date getDate() {
@@ -82,15 +80,7 @@ public class DatabaseVersionHeader {
 	public void setClient(String client) {
 		this.client = client;
 	}
-
-	public String getPreviousClient() {
-		return previousClient;
-	}
-
-	public void setPreviousClient(String previousClient) {
-		this.previousClient = previousClient;
-	}
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -137,11 +127,6 @@ public class DatabaseVersionHeader {
 		sb.append(vectorClock.toString());
 		sb.append("/T=");
 		sb.append(date.getTime());
-		
-		if (previousClient != null) {
-			sb.append("/");
-			sb.append(previousClient);
-		}
 		
 		return sb.toString();
 	}

@@ -42,22 +42,22 @@ public class DatabaseReconciliatorTest {
 		 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
-			"A/(A1,C4)/T=8/C",
-			"A/(A2,C4)/T=9/A",
-			"A/(A3,C4)/T=10/A"								
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10"								
 		}));
 		
 		// B
 		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
-			"C/(C2)/T=2/C",
-			"C/(C3)/T=3/C",				
-			"B/(B1,C3)/T=7/C"								
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",				
+			"B/(B1,C3)/T=7"								
 		}));
 		
 		// C
 		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
-			"C/(C4)/T=5/C"
+			"C/(C4)/T=5"
 		}));		
 				
 		/// Expected results ///
@@ -65,16 +65,16 @@ public class DatabaseReconciliatorTest {
 		
 		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
 		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5/C",
-			"B", "B/(B1,C3)/T=7/C",
-			"C", "C/(C4)/T=5/C"			
+			"A", "C/(C4)/T=5",
+			"B", "B/(B1,C3)/T=7",
+			"C", "C/(C4)/T=5"			
 		});		
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5/C",
-			"C", "C/(C4)/T=5/C"		
+			"A", "C/(C4)/T=5",
+			"C", "C/(C4)/T=5"		
 		});
 		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A3,C4)/T=10/C"
+			"A", "A/(A3,C4)/T=10"
 		}).firstEntry();
 				
 		/// Perform test ///
@@ -95,12 +95,12 @@ public class DatabaseReconciliatorTest {
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1",
-			"C/(C2)/T=2/C",
-			"C/(C3)/T=3/C",
-			"C/(C4)/T=5/C",
-			"A/(A1,C4)/T=8/C",
-			"A/(A2,C4)/T=9/A",
-			"A/(A3,C4)/T=10/A"								
+			"C/(C2)/T=2",
+			"C/(C3)/T=3",
+			"C/(C4)/T=5",
+			"A/(A1,C4)/T=8",
+			"A/(A2,C4)/T=9",
+			"A/(A3,C4)/T=10"								
 		}));
 		
 		// B
@@ -556,18 +556,18 @@ public class DatabaseReconciliatorTest {
 		
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230/A",
-			"A/(A3)/T=1376074225256/A",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
 		}));
 		
 		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
-			"B/(A3,B1)/T=1376074225356/A"
+			"B/(A3,B1)/T=1376074225356"
 		}));
 		
 		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1376074225383",
-			"C/(C2)/T=1376074225399/C",
-			"C/(C3)/T=1376074225416/C",
+			"C/(C2)/T=1376074225399",
+			"C/(C3)/T=1376074225416",
 		}));		
 		
 		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
@@ -577,21 +577,21 @@ public class DatabaseReconciliatorTest {
 		
 		expectedStitchedBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230/A",
-			"A/(A3)/T=1376074225256/A",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
 		}));
 		
 		expectedStitchedBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
-			"A/(A2)/T=1376074225230/A",
-			"A/(A3)/T=1376074225256/A",
-			"B/(A3,B1)/T=1376074225356/A"
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
+			"B/(A3,B1)/T=1376074225356"
 		}));
 		
 		expectedStitchedBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 			"C/(C1)/T=1376074225383",
-			"C/(C2)/T=1376074225399/C",
-			"C/(C3)/T=1376074225416/C",
+			"C/(C2)/T=1376074225399",
+			"C/(C3)/T=1376074225416",
 		}));
 		
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
@@ -603,27 +603,27 @@ public class DatabaseReconciliatorTest {
 		
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1",
-			"A/(A2)/T=2/A",
+			"A/(A2)/T=2",
 			// --> B 
-			"A/(A3,B1)/T=4/B",
-			"A/(A4,B1)/T=5/A",
-			"A/(A5,B1)/T=6/A",
+			"A/(A3,B1)/T=4",
+			"A/(A4,B1)/T=5",
+			"A/(A5,B1)/T=6",
 			// --> C
 			
 		}));
 		
 		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
-			"B/(A2,B1)/T=3/A",
+			"B/(A2,B1)/T=3",
 			// --> A
-			"B/(A5,B2,C2)/T=9/C",
+			"B/(A5,B2,C2)/T=9",
 			// --> C
 		}));
 		
 		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
-			"C/(A5,B1,C1)/T=7/A",
-			"C/(A5,B1,C2)/T=8/C",
+			"C/(A5,B1,C1)/T=7",
+			"C/(A5,B1,C2)/T=8",
 			// --> B
-			"C/(A5,B2,C3)/T=10/B",
+			"C/(A5,B2,C3)/T=10",
 		}));		
 		
 		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
@@ -633,36 +633,36 @@ public class DatabaseReconciliatorTest {
 		
 		expectedStitchedBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 				"A/(A1)/T=1",
-				"A/(A2)/T=2/A",
-				"B/(A2,B1)/T=3/A",
-				"A/(A3,B1)/T=4/B",
-				"A/(A4,B1)/T=5/A",
-				"A/(A5,B1)/T=6/A",
+				"A/(A2)/T=2",
+				"B/(A2,B1)/T=3",
+				"A/(A3,B1)/T=4",
+				"A/(A4,B1)/T=5",
+				"A/(A5,B1)/T=6",
 		}));
 		
 		expectedStitchedBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
 				"A/(A1)/T=1",
-				"A/(A2)/T=2/A",
-				"B/(A2,B1)/T=3/A",
-				"A/(A3,B1)/T=4/B",
-				"A/(A4,B1)/T=5/A",
-				"A/(A5,B1)/T=6/A",
-				"C/(A5,B1,C1)/T=7/A",
-				"C/(A5,B1,C2)/T=8/C",
-				"B/(A5,B2,C2)/T=9/C",
+				"A/(A2)/T=2",
+				"B/(A2,B1)/T=3",
+				"A/(A3,B1)/T=4",
+				"A/(A4,B1)/T=5",
+				"A/(A5,B1)/T=6",
+				"C/(A5,B1,C1)/T=7",
+				"C/(A5,B1,C2)/T=8",
+				"B/(A5,B2,C2)/T=9",
 		}));
 		
 		expectedStitchedBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
 				"A/(A1)/T=1",
-				"A/(A2)/T=2/A",
-				"B/(A2,B1)/T=3/A",
-				"A/(A3,B1)/T=4/B",
-				"A/(A4,B1)/T=5/A",
-				"A/(A5,B1)/T=6/A",
-				"C/(A5,B1,C1)/T=7/A",
-				"C/(A5,B1,C2)/T=8/C",
-				"B/(A5,B2,C2)/T=9/C",
-				"C/(A5,B2,C3)/T=10/B",
+				"A/(A2)/T=2",
+				"B/(A2,B1)/T=3",
+				"A/(A3,B1)/T=4",
+				"A/(A4,B1)/T=5",
+				"A/(A5,B1)/T=6",
+				"C/(A5,B1,C1)/T=7",
+				"C/(A5,B1,C2)/T=8",
+				"B/(A5,B2,C2)/T=9",
+				"C/(A5,B2,C3)/T=10",
 		}));
 		
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
