@@ -41,7 +41,7 @@ public class CipherSessionTest {
 	}
 	
 	@Test
-	public void testCipherSessionWriteKeyReuseCountOfTwo() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public void testCipherSessionWriteKeyReuseCountOfTwo() throws Exception {
 		SaltedSecretKey masterKey = createDummyMasterKey();		
 		CipherSession cipherSession = new CipherSession(masterKey, 999, 2);
 		
@@ -66,7 +66,7 @@ public class CipherSessionTest {
 	}	
 	
 	@Test
-	public void testCipherSessionReadKeyCacheSizeOfThree() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public void testCipherSessionReadKeyCacheSizeOfThree() throws Exception {
 		SaltedSecretKey masterKey = createDummyMasterKey();		
 		CipherSession cipherSession = new CipherSession(masterKey, 2, 999);
 		
