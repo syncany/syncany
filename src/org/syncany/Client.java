@@ -18,7 +18,6 @@
 package org.syncany;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
@@ -37,6 +36,9 @@ import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.RestoreOperation;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
@@ -53,8 +55,16 @@ import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.WatchOperation;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
+/**
+ * The client class is a convenience class to call the application's {@link Operation}s
+ * using a central entry point. The class offers wrapper methods around the operations.
+ * 
+ * <p>The methods typically take an {@link OperationOptions} instance as an argument, 
+ * and return an instance of the {@link OperationResult} class.
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class Client {
-	protected static final Logger logger = Logger.getLogger(Client.class.getSimpleName());	
 	protected Config config;
 	
 	public Client() {

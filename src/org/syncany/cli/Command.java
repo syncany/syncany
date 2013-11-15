@@ -22,11 +22,56 @@ import java.io.PrintStream;
 
 import org.syncany.Client;
 
+/**
+ * Commands are the central part of Syncany's command line client. Each implementation 
+ * of this abstract class represents a command that a user can run on the command line.
+ * 
+ * <p>The purpose of a command is to read required and optional arguments from the command
+ * line, run the corresponding operation, and display the results on the console.
+ * Implementations are not supposed to actually run any detailed logic, but are merely
+ * the user interface to collection options and print operation output. 
+ * 
+ * <p>Implementations must implement the {@link #execute(String[]) execute()} method and
+ * the {@link #initializedLocalDirRequired()} method. While the former actually implements
+ * the logic, the latter specifies whether a command must be called inside (or outside) a 
+ * local Syncany directory. 
+ * 
+ * <p>Commands are automatically mapped from their camel case name on the command line
+ * to a class name using the {@link CommandFactory}. The command 'ls-remote', for instance,
+ * is mapped to the <tt>LsRemoteCommand</tt>.
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class Command {
 	protected File localDir;
 	protected Client client;
 	protected PrintStream out;	
 	
+	/**
+	 * This method implements the command-specific option-parsing, operation calling 
+	 * and output printing. To do so, the method must read and evaluate the given 
+	 * arguments, prepare a corresponding operation, call it and display the results
+	 * according to a well-defined format.
+	 * 
+	 * <p>Implementations should not move any business logic in the execute method
+	 * (or any other parts of the command).  
+	 * 
+	 * @param operationArgs Command-specific arguments (might also contain global options) 
+	 * @return Returns a return code
+	 * @throws Exception If the command or the corresponding operation fails 
+	 */
+	// TODO [low] Return code of commands not used right now
+	public abstract int execute(String[] operationArgs) throws Exception;
+	
+	/**
+	 * A command can either be executed within an initialized local directory or 
+	 * in a regular (non-Syncany) directory. This method must return <tt>true</tt>,
+	 * if the command implementation requires an initialized Syncany directory.
+	 *  
+	 * @return Returns <tt>true</tt> if an initialized local directory is required, <tt>false</tt> otherwise. 
+	 */
+	public abstract boolean initializedLocalDirRequired();
+
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;
 	}
@@ -37,8 +82,5 @@ public abstract class Command {
 	
 	public void setOut(PrintStream out) {
 		this.out = out;
-	}
-	
-	public abstract int execute(String[] operationArgs) throws Exception;
-	public abstract boolean initializedLocalDirRequired();
+	}	
 }

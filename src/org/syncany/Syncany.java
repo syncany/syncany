@@ -20,15 +20,41 @@ package org.syncany;
 import org.syncany.cli.CommandLineClient;
 
 /**
+ * Syncany is an open-source cloud storage and filesharing application. It allows
+ * users to backup and share certain folders of their workstations using any kind
+ * of storage, e.g. FTP, Amazon S3 or Google Storage.
  * 
- * General To-Do list:
+ * While the basic idea is similar to Dropbox and JungleDisk, Syncany is open-source
+ * and additionally provides data encryption and more flexibility in terms of storage
+ * type and provider:
  * 
- * TODO [medium] Unsufficient exception handling in the entire application!
- * TODO [low] Ivy-fy project, ad tried in http://bazaar.launchpad.net/~syncany-team/syncany/core3/files/head:/
- * TODO [feature request] Add ignore operation and .ignore file
- *
+ * <ul>
+ *   <li><b>Data encryption:</b> Syncany encrypts the files locally, so that any online storage
+ *       can be used even for sensitive data.</li>
+ *   <li><b>Arbitrary storage:</b> Syncany uses a plug-in based storage system. It can be used
+ *       with any type of remote storage.</li>
+ * </ul>
+ * 
+ * <p>The Syncany class is the central entry point for the command line client and
+ * the only class to expose a main method. It does not offer any functionality
+ * on its own, but rather ust instantiates a {@link CommandLineClient} and passes
+ * the command line arguments to it.  
+ * 
+ * <p>Many thanks to all the people who have supported the project over the years and who have
+ * continued to listen to my constant never-ending Syncany talk! Thank you all!
+ * 
+ * @see <a href="http://www.syncany.org/">Syncany website</a> at syncany.org
+ * @see <a href="https://github.com/binwiederhier/syncany">GitHub code repository</a> at github.com
+ * @see <a href="http://www.philippheckel.com/files/syncany-heckel-thesis.pdf">Master thesis describing core concepts</a> at philippheckel.com
+ * @see <a href="http://blog.philippheckel.com/tag/syncany/">Blog posts about Syncany</a> at blog.philippheckel.com
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class Syncany extends Client {
+public class Syncany {
+	// TODO [medium] Unsufficient exception handling in the entire application!
+	// TODO [low] Ivy-fy project, ad tried in http://bazaar.launchpad.net/~syncany-team/syncany/core3/files/head:/
+	// TODO [feature request] Add ignore operation and .ignore file
+
 	public static void main(String[] args) throws Exception {
 		new CommandLineClient(args).start();
 	}		
