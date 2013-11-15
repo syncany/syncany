@@ -31,6 +31,29 @@ import javax.crypto.SecretKey;
 
 import org.syncany.util.StringUtil;
 
+/**
+ * The cipher session is used by the {@link MultiCipherOutputStream} and the 
+ * {@link MultiCipherInputStream} to reference the application's master key, 
+ * and to temporarily store and retrieve derived secret keys.
+ * 
+ * <p>While a cipher session does not create a master key, it creates and manages
+ * the derived keys using the {@link CipherUtil} class: 
+ * 
+ * <ul>
+ *   <li>Keys used by {@link MultiCipherOutputStream} (for writing new files) are 
+ *       reused a number of times before a new salted key is created. The main 
+ *       purpose of reusing keys is to increase performance. Because the master
+ *       key is cryptographically strong, the derived keys can be reused a few 
+ *       times without any drawbacks on security. The class keeps one secret key
+ *       per {@link CipherSpec}.
+ *   
+ *   <li>Keys used by {@link MultiCipherInputStream} (when reading files) are 
+ *       cached in order to minimize the amount of keys that have to be created when
+ *       files are processed. 
+ * </ul>
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class CipherSession {
     private static final Logger logger = Logger.getLogger(CipherSession.class.getSimpleName());   
 	private static final int DEFAULT_SECRET_KEY_READ_CACHE_SIZE = 20;
@@ -44,10 +67,31 @@ public class CipherSession {
 	private Map<CipherSpec, SecretKeyCacheEntry> secretKeyWriteCache;
 	private int secretKeyWriteReuseCount;
 	
+	/**
+	 * Creates a new cipher session, using the given master key. Derived keys will be created
+	 * from that master key. 
+	 * 
+	 * <p>The default settings for read/write key cache will be used. Refer to 
+	 * {@link CipherSession the class description} for more details. Default values:
+	 * {@link #DEFAULT_SECRET_KEY_READ_CACHE_SIZE} and {@link #DEFAULT_SECRET_KEY_WRITE_REUSE_COUNT}
+	 *  
+	 * @param masterKey The master key, used for deriving new read/write keys
+	 */
 	public CipherSession(SaltedSecretKey masterKey) {
 		this(masterKey, DEFAULT_SECRET_KEY_READ_CACHE_SIZE, DEFAULT_SECRET_KEY_WRITE_REUSE_COUNT);
 	}
 	
+	/**
+	 * Creates a new cipher session, using the given master key. Derived keys will be created
+	 * from that master key. 
+	 * 
+	 * <p>This method expects a reuse-count for write keys and a cache size for the read-key cache. 
+	 * Refer to {@link CipherSession the class description} for more details. 
+	 *  
+	 * @param masterKey The master key, used for deriving new read/write 
+	 * @param secretKeyReadCacheSize Number of read keys to store in the cache (higher means more performance, but more memory usage)
+	 * @param secretKeyWriteReuseCount Number of times to reuse a write key (higher means more performance, but lower security)
+	 */
 	public CipherSession(SaltedSecretKey masterKey, int secretKeyReadCacheSize, int secretKeyWriteReuseCount) {
 		this.masterKey = masterKey;
 
@@ -58,11 +102,28 @@ public class CipherSession {
 		this.secretKeyWriteReuseCount = secretKeyWriteReuseCount;
 	}	
 
+	/**
+	 * Returns the master key
+	 */
 	public SecretKey getMasterKey() {
 		return masterKey;
 	}
 
-	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	/**
+	 * Creates or retrieves a derived write secret key and updates the cache and re-use count. If a key is reused more 
+	 * than the threshold defined in {@link #secretKeyWriteReuseCount} (as set in {@link #CipherSession(SaltedSecretKey, int, int) the constructor},
+	 * a new key is created and added to the cache.
+	 * 
+	 * <p>If a new key needs to be created, {@link CipherUtil} is used to do so.
+	 * 
+	 * <p>Contrary to the read cache, the write cache key is a only {@link CipherSpec}, i.e. only one secret key
+	 * per cipher spec can be held in the cache.
+	 * 
+	 * @param cipherSpec Defines the type of key to be created (or retrieved); used as key for the cache retrieval
+	 * @return Returns a newly created secret key or a cached key
+	 * @throws Exception If an error occurs with key creation
+	 */
+	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) throws Exception {
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyWriteCache.get(cipherSpec);
 		
 		// Remove key if use more than X times 
@@ -91,7 +152,23 @@ public class CipherSession {
 		}				
 	}	
 	
-	public SaltedSecretKey getReadSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	/**
+	 * Creates a new secret key or retrieves it from the read cache. If the given cipher spec / salt combination
+	 * is found in the cache, the cached secret key is returned. If not, a new key is created. Keys are removed
+	 * from the cache when the cache reached the size defined by {@link #secretKeyReadCacheSize} (as set in
+	 * {@link #CipherSession(SaltedSecretKey, int, int) the constructor}.
+	 * 
+	 * <p>If a new key needs to be created, {@link CipherUtil} is used to do so.
+	 * 
+	 * <p>Contrary to the write cache, the read cache key is a combination of {@link CipherSpec} and a salt. For 
+	 * each cipher spec, multiple salted keys can reside in the cache at the same time. 
+	 * 
+	 * @param cipherSpec Defines the type of key to be created (or retrieved); used as one part of the key for cache retrieval
+	 * @param salt Defines the salt for the key to be created (or retrieved); used as one part of the key for cache retrieval
+	 * @return Returns a newly created secret key or a cached key
+	 * @throws Exception If an error occurs with key creation
+	 */
+	public SaltedSecretKey getReadSecretKey(CipherSpec cipherSpec, byte[] salt) throws Exception {
 		CipherSpecWithSalt cipherSpecWithSalt = new CipherSpecWithSalt(cipherSpec, salt);
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyReadCache.get(cipherSpecWithSalt);
 		

@@ -19,10 +19,6 @@ package org.syncany.crypto;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
@@ -97,7 +93,7 @@ public class MultiCipherInputStream extends InputStream {
 		}		
 	}
 	
-	private Mac readHmacSaltAndInitHmac(InputStream inputStream, CipherSession cipherSession) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException {
+	private Mac readHmacSaltAndInitHmac(InputStream inputStream, CipherSession cipherSession) throws Exception {
 		byte[] hmacSalt = readNoHmac(inputStream, MultiCipherOutputStream.SALT_SIZE);
 		SecretKey hmacSecretKey = cipherSession.getReadSecretKey(MultiCipherOutputStream.HMAC_SPEC, hmacSalt);
 		
@@ -107,7 +103,7 @@ public class MultiCipherInputStream extends InputStream {
 		return hmac;
 	}
 	
-	private InputStream readCipherSpecsAndUpdateHmac(InputStream inputStream, Mac hmac, CipherSession cipherSession) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CipherException {
+	private InputStream readCipherSpecsAndUpdateHmac(InputStream inputStream, Mac hmac, CipherSession cipherSession) throws Exception {
 		int cipherSpecCount = readByteAndUpdateHmac(inputStream, hmac);		
 		InputStream nestedCipherInputStream = inputStream;
 		

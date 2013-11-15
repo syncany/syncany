@@ -21,15 +21,36 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Defines the supported Cipher suites.
+ * Defines and identifies the application supported {@link CipherSpec}s.
  * 
- * IMPORTANT: 
- *   The block cipher mode MUST be authenticated. Unauthenticated
- *   modes are not supported and will be rejected in the MultiCipherOutputStream.
+ * <p>These cipher specs are used by the {@link MultiCipherOutputStream} to encrypt
+ * data, and by the {@link MultiCipherInputStream} to decrypt data. The cipher spec
+ * identifiers are used in the crypto format header to identify the crypto algorithms
+ * used for encryption.
+ * 
+ * <p>The class defines a well defined (and developer-approved) set of allowed
+ * cipher algorithms, modes and key sizes. The number of allowed ciphers is greatly
+ * restricted to follow the application-specific security standards. Most prominently,
+ * this includes:
+ * 
+ * <ul>
+ *   <li>The block cipher mode must be authenticated (GCM, EAX, etc.). Unauthenticated
+ *       modes are not supported and will be rejected by the {@link CipherSpec} sanity checks.
+ *   <li>The block cipher mode must require an initialization vector (IV). Modes that do 
+ *       not require an IV (e.g. ECB) will be rejected by the {@link CipherSpec} sanity checks.
+ * </ul>
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CipherSpecs {
 	private static final Map<Integer, CipherSpec> cipherSpecs = new TreeMap<Integer, CipherSpec>();	
 	
+	/*
+	 * WARNING:
+	 *   The cipher spec identifiers are written to the MultiCipherOutputStream and read
+	 *   by the MultiCipherInputStream. The identifiers MUST NOT be changed, because this will 
+	 *   make decryption of already encrypted data impossible! 
+	 */
 	public static final int AES_128_GCM     = 0x01;
 	public static final int TWOFISH_128_GCM = 0x02;
 	public static final int AES_256_GCM     = 0x03;
@@ -47,15 +68,39 @@ public class CipherSpecs {
 		};		
 		
 		for (CipherSpec cipherSpec : tmpCipherSpecs) {
-			cipherSpecs.put(cipherSpec.getId(), cipherSpec);
+			registerCipherSpec(cipherSpec.getId(), cipherSpec);
 		}
 	}
 	
+	/**
+	 * Returns a list of available/registered {@link CipherSpec}s. Refer to the 
+	 * {@link CipherSpecs class description} for a more detailed explanation.
+	 */
 	public static Map<Integer, CipherSpec> getAvailableCipherSpecs() {
 		return cipherSpecs;
 	}
 	
+	/**
+	 * Retrieves an available/registered {@link CipherSpec} using the cipher spec identifier
+	 * defined in this class.
+	 * 
+	 * @param id Identifier of the cipher spec
+	 * @return A cipher spec, or <tt>null</tt> if no cipher spec with this identifier is registered
+	 */
 	public static CipherSpec getCipherSpec(int id) {
 		return cipherSpecs.get(id);
+	}
+	
+	/**
+	 * Register a new cipher spec.
+	 * 
+	 * <p>Note: Registering a cipher spec locally does not make it available on all clients. Unless
+	 * a cipher spec is registered before a client tries to decrypt data using the {@link MultiCipherInputStream},
+	 * the decryption process will fail. 
+	 * 
+	 * @param id Identifier of the cipher spec
+	 */
+	public static void registerCipherSpec(int id, CipherSpec cipherSpec) {
+		cipherSpecs.put(id, cipherSpec);
 	}
 }
