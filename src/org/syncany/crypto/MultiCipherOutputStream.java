@@ -17,6 +17,8 @@
  */
 package org.syncany.crypto;
 
+import static org.syncany.crypto.CipherParams.CRYPTO_PROVIDER_ID;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -105,7 +107,7 @@ public class MultiCipherOutputStream extends OutputStream {
 			// Initialize header HMAC
 			SaltedSecretKey hmacSecretKey = cipherSession.getWriteSecretKey(HMAC_SPEC);
 			
-			headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CipherUtil.PROVIDER);
+			headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
 			headerHmac.init(hmacSecretKey);
 			
 			// Write header

@@ -20,10 +20,6 @@ package org.syncany.tests.crypto;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
-
 import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.Test;

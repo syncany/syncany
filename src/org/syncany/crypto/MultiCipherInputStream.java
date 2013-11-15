@@ -17,6 +17,8 @@
  */
 package org.syncany.crypto;
 
+import static org.syncany.crypto.CipherParams.CRYPTO_PROVIDER_ID;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -97,7 +99,7 @@ public class MultiCipherInputStream extends InputStream {
 		byte[] hmacSalt = readNoHmac(inputStream, MultiCipherOutputStream.SALT_SIZE);
 		SecretKey hmacSecretKey = cipherSession.getReadSecretKey(MultiCipherOutputStream.HMAC_SPEC, hmacSalt);
 		
-		Mac hmac = Mac.getInstance(MultiCipherOutputStream.HMAC_SPEC.getAlgorithm(), CipherUtil.PROVIDER);
+		Mac hmac = Mac.getInstance(MultiCipherOutputStream.HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
 		hmac.init(hmacSecretKey);	
 		
 		return hmac;

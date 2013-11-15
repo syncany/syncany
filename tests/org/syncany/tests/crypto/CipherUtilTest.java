@@ -37,6 +37,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
+import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -70,10 +71,10 @@ public class CipherUtilTest {
 		assertEquals("44fda24d53b29828b62c362529bd9df5c8a92c2736bcae3a28b3d7b44488e36e246106aa5334813028abb2048eeb5e177df1c702d93cf82aeb7b6d59a8534ff0",
 			StringUtil.toHex(masterKeyForPasswordTestAndSalt123.getEncoded()));
 
-		assertEquals(CipherUtil.MASTER_KEY_SIZE/8, masterKeyForPasswordTestAndSalt123.getEncoded().length); 
+		assertEquals(CipherParams.MASTER_KEY_SIZE/8, masterKeyForPasswordTestAndSalt123.getEncoded().length); 
 		assertEquals("PBKDF2WithHmacSHA1", masterKeyForPasswordTestAndSalt123.getAlgorithm());
 		assertEquals("RAW", masterKeyForPasswordTestAndSalt123.getFormat());
-		
+		 
 		assertTrue(timeDuration > 5000);
 	}
 	

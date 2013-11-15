@@ -17,6 +17,15 @@
  */
 package org.syncany.crypto;
 
+import static org.syncany.crypto.CipherParams.CRYPTO_PROVIDER;
+import static org.syncany.crypto.CipherParams.CRYPTO_PROVIDER_ID;
+import static org.syncany.crypto.CipherParams.KEY_DERIVATION_DIGEST;
+import static org.syncany.crypto.CipherParams.KEY_DERIVATION_INFO;
+import static org.syncany.crypto.CipherParams.MASTER_KEY_DERIVATION_FUNCTION;
+import static org.syncany.crypto.CipherParams.MASTER_KEY_DERIVATION_ROUNDS;
+import static org.syncany.crypto.CipherParams.MASTER_KEY_SALT_SIZE;
+import static org.syncany.crypto.CipherParams.MASTER_KEY_SIZE;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,30 +52,21 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.syncany.util.FileUtil;
 
+/**
+ * The cipher utility provides functions to create a master key using PBKDF2, 
+ * a derived key using SHA256, and to create a {@link Cipher} from a derived key.
+ * It furthermore offers a method to programmatically enable the unlimited strength
+ * crypto policies. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
-	
-	public static final String PROVIDER = "BC";
-	
-	/*
-	 * Note: changing these key derivation parameters
-	 *       invalidates encrypted data!
-	 */
-    public static final String MASTER_KEY_DERIVATION_FUNCTION = "PBKDF2WithHmacSHA1"; 
-    public static final int MASTER_KEY_DERIVATION_ROUNDS = 1000000;
-    public static final int MASTER_KEY_SIZE = 512; 	
-    public static final int MASTER_KEY_SALT_SIZE = 512;
-    
-    public static final Digest KEY_DERIVATION_DIGEST = new SHA256Digest(); 
-    public static final byte[] KEY_DERIVATION_INFO = "Syncany_SHA256_Derivated_Key".getBytes();    
-    
+
     private static boolean initialized = false;
     private static boolean unlimitedStrengthEnabled = false;
     private static SecureRandom secureRandom = new SecureRandom();
@@ -80,8 +80,8 @@ public class CipherUtil {
     		logger.log(Level.INFO, "Initializing crypto settings and security provider ...");
     		
     		// Bouncy Castle
-    		if (Security.getProvider(PROVIDER) == null) {
-    			Security.addProvider(new BouncyCastleProvider()); 
+    		if (Security.getProvider(CRYPTO_PROVIDER_ID) == null) {
+    			Security.addProvider(CRYPTO_PROVIDER); 
     		}
     		
     		// Unlimited strength
@@ -173,7 +173,7 @@ public class CipherUtil {
 				enableUnlimitedStrength();
 			}
 			
-            Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), PROVIDER);
+            Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), CRYPTO_PROVIDER_ID);
         	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
 
             return cipher;
