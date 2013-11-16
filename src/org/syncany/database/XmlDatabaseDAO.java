@@ -20,9 +20,9 @@ package org.syncany.database;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Date;
@@ -68,10 +68,12 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		PrintWriter out;
 		
 		if (transformer == null) {
-			out = new PrintWriter(new FileWriter(destinationFile));
+			out = new PrintWriter(new OutputStreamWriter(
+					new FileOutputStream(destinationFile), "UTF-8"));
 		}
 		else {
-			out = new PrintWriter(transformer.createOutputStream(new FileOutputStream(destinationFile)));
+			out = new PrintWriter(new OutputStreamWriter(
+					transformer.createOutputStream(new FileOutputStream(destinationFile)), "UTF-8"));
 		}
 		
 		out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");

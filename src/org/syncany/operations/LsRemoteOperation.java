@@ -35,7 +35,6 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
-import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
@@ -60,9 +59,7 @@ public class LsRemoteOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Remote Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		Database database = (loadedDatabase != null) 
-				? loadedDatabase
-				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();		
+		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();		
 		
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager

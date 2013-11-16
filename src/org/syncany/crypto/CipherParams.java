@@ -17,7 +17,6 @@
  */
 package org.syncany.crypto;
 
-import java.io.UnsupportedEncodingException;
 import java.security.Provider;
 
 import org.bouncycastle.crypto.Digest;

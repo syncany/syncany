@@ -19,6 +19,8 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;
@@ -41,6 +43,7 @@ import org.syncany.database.XmlDatabaseDAO;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Operation {
+	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
 	protected Config config;
 	
 	public Operation(Config config) {
@@ -61,7 +64,28 @@ public abstract class Operation {
 	}	
 	
 	protected void saveLocalDatabase(Database db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
+		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
+		
 		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
 	}		
+	
+	protected Database loadLocalDatabase() throws IOException {
+		return loadLocalDatabase(config.getDatabaseFile());
+	}
+	
+	protected Database loadLocalDatabase(File localDatabaseFile) throws IOException {
+		Database db = new Database();
+		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
+		
+		if (localDatabaseFile.exists()) {
+			logger.log(Level.INFO, "- Loading database from "+localDatabaseFile+" ...");
+			dao.load(db, localDatabaseFile);
+		}
+		else {
+			logger.log(Level.INFO, "- NOT loading. File does not exist.");
+		}
+		
+		return db;
+	}
 }

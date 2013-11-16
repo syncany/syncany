@@ -56,7 +56,6 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
@@ -170,10 +169,7 @@ public class DownOperation extends Operation {
 	}
 
 	private void initOperationVariables() throws Exception {		
-		localDatabase = (localDatabase != null) 
-			? localDatabase
-			: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
-		
+		localDatabase = (localDatabase != null) ? localDatabase : loadLocalDatabase();		
 		localBranch = localDatabase.getBranch();	
 
 		transferManager = config.getConnection().createTransferManager();		

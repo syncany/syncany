@@ -43,7 +43,6 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
@@ -74,7 +73,7 @@ public class RestoreOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Restore' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		Database database = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();		
+		Database database = loadLocalDatabase();		
 		DatabaseVersion currentDatabaseVersion = database.getLastDatabaseVersion();
 		
 		if (currentDatabaseVersion == null) {

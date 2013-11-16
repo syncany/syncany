@@ -38,7 +38,6 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.util.FileUtil;
 
 public class StatusOperation extends Operation {
@@ -69,9 +68,7 @@ public class StatusOperation extends Operation {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
 		
-		Database database = (loadedDatabase != null) 
-				? loadedDatabase
-				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();		
+		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();		
 		
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
 		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir(), database);

@@ -24,7 +24,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
@@ -53,11 +52,6 @@ public class ConfigTO {
 		catch (Exception ex) {
 			throw new ConfigException("Config file does not exist or is invalid: " + file, ex);
 		}
-	}
-
-	public static void save(ConfigTO configTO, File file) throws Exception {
-		Serializer serializer = new Persister();
-		serializer.write(configTO, file);
 	}
 
 	public String getMachineName() {

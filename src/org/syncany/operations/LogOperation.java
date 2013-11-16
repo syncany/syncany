@@ -26,7 +26,6 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
@@ -51,7 +50,7 @@ public class LogOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Log' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		Database database = ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();		
+		Database database = loadLocalDatabase();		
 		DatabaseVersion currentDatabaseVersion = database.getLastDatabaseVersion();
 		
 		if (currentDatabaseVersion == null) {

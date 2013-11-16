@@ -45,7 +45,6 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.operations.LoadDatabaseOperation.LoadDatabaseOperationResult;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
@@ -107,14 +106,11 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 		
 		// Load database
-		Database database = (loadedDatabase != null) 
-				? loadedDatabase
-				: ((LoadDatabaseOperationResult) new LoadDatabaseOperation(config).execute()).getDatabase();
+		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();
 		
 		// Load dirty database (if existent) 
 		if (config.getDirtyDatabaseFile().exists()) {
-			dirtyDatabase = 
-				((LoadDatabaseOperationResult) new LoadDatabaseOperation(config, config.getDirtyDatabaseFile()).execute()).getDatabase();
+			dirtyDatabase = loadLocalDatabase(config.getDirtyDatabaseFile());
 		}
 		
 		// Find local changes
