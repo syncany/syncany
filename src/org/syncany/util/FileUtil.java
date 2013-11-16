@@ -40,7 +40,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *
+ * A file utility class
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileUtil {
@@ -350,10 +351,19 @@ public class FileUtil {
 		};		
 	}
 
-	public static boolean exists(File lastLocalVersionOnDisk) {
-		// TODO [high] Somehow ban all File.exists()-calls in the application. File.exists() return true if a symlink points to a non-existing target
-		return Files.exists(Paths.get(lastLocalVersionOnDisk.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+	/**
+	 * Replaces the <tt>exists()</tt> method in the <tt>File</tt> class by taking symlinks into account. 
+	 * The method returns <tt>true</tt> if the file exists, <tt>false</tt> otherwise.
+	 * 
+	 * <p>Note: The method returns <tt>true</tt>, if a symlink exists, but points to a 
+	 * non-existing target. This behavior is different from the classic 
+	 * {@link #exists(File) exists()}-method in the <tt>File</tt> class.
+	 * 
+	 * @param file A file
+	 * @return Returns <tt>true</tt> if a file exists (even if its symlink target does not), <tt>false</tt> otherwise
+	 */
+	public static boolean exists(File file) {
+		return Files.exists(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
 	}
-	
 }
 

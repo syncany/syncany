@@ -53,6 +53,25 @@ import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 import org.syncany.util.StringUtil;
 
+/**
+ * The up operation implements a central part of Syncany's business logic. It analyzes the local
+ * folder, deduplicates new or changed files and uploads newly packed multichunks to the remote
+ * storage.
+ * 
+ * <p>The general operation flow is as follows:
+ * <ol>
+ *   <li>Load local database (if not already loaded) using the {@link LoadDatabaseOperation}</li>
+ *   <li>Analyze local directory using the {@link StatusOperation} to determine any changed/new/deleted files</li>
+ *   <li>Determine if there are unknown remote databases using the {@link LsRemoteOperation}, and skip the rest if there are</li>
+ *   <li>If there are changes, use the {@link Deduper} and {@link Indexer} to create a new {@link DatabaseVersion} 
+ *       (including new chunks, multichunks, file contents and file versions).</li>
+ *   <li>Upload new multichunks (if any) using a {@link TransferManager}</li>
+ *   <li>Save new {@link DatabaseVersion} to a new (delta) {@link Database} and upload it</li>
+ *   <li>Add delta database to local database and store it locally</li>
+ * </ol>
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class UpOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
 
