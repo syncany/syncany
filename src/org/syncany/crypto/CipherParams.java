@@ -17,11 +17,13 @@
  */
 package org.syncany.crypto;
 
+import java.io.UnsupportedEncodingException;
 import java.security.Provider;
 
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.syncany.util.StringUtil;
 
 /**
  * Defines important crypto constants used in the application.
@@ -121,5 +123,5 @@ public abstract class CipherParams {
 	 * 
 	 * @see #KEY_DERIVATION_DIGEST
      */
-    public static final byte[] KEY_DERIVATION_INFO = "Syncany_SHA256_Derivated_Key".getBytes();        
+    public static final byte[] KEY_DERIVATION_INFO = StringUtil.toBytesUTF8("Syncany_SHA256_Derivated_Key");        
 }

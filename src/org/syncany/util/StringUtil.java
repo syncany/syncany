@@ -17,6 +17,7 @@
  */
 package org.syncany.util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -69,6 +70,15 @@ public class StringUtil {
         }
         
         return data;        
+    }
+    
+    public static byte[] toBytesUTF8(String s) {
+    	try {
+			return s.getBytes("UTF-8");
+		} 
+    	catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("JVM does not support UTF-8 encoding.", e);
+		}
     }
 	
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {

@@ -26,12 +26,35 @@ import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.XmlDatabaseDAO;
 
+/**
+ * Operations represent and implement Syncany's business logic. They typically
+ * correspond to a command or an action initiated by either a user, or by a 
+ * periodic action. 
+ * 
+ * <p>Each operation might be configured using an operation-specific implementation of
+ * the {@link OperationOptions} interface and is run using the {@link #execute()} method.
+ * While the input options are optional, it must return a corresponding {@link OperationResult}
+ * object.  
+ *  
+ * @see OperationOptions
+ * @see OperationResult
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class Operation {
 	protected Config config;
 	
 	public Operation(Config config) {
 		this.config = config;
 	}	
+
+	/**
+	 * Executes the operation synchronously and returns a result when 
+	 * the operation exits.
+	 *   
+	 * @return Returns an operation-specific operation result
+	 * @throws Exception If the operation fails
+	 */
+	public abstract OperationResult execute() throws Exception;
 
 	protected void saveLocalDatabase(Database db, File localDatabaseFile) throws IOException {
 		saveLocalDatabase(db, null, null, localDatabaseFile);
@@ -40,7 +63,5 @@ public abstract class Operation {
 	protected void saveLocalDatabase(Database db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
 		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
-	}	
-	
-	public abstract OperationResult execute() throws Exception;
+	}		
 }

@@ -118,7 +118,7 @@ public class MultiCipherStreamsTest {
 		Transformer cipherTransformer = new CipherTransformer(cipherSuites, masterKey);
 		
 		// Test encrypt
-		byte[] encryptedData = doEncrypt(xmlStr.getBytes(), cipherTransformer);
+		byte[] encryptedData = doEncrypt(StringUtil.toBytesUTF8(xmlStr), cipherTransformer);
 
 		// Test decrypt with SAX parser	
 		InputStream is = cipherTransformer.createInputStream(new ByteArrayInputStream(encryptedData));

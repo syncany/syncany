@@ -53,5 +53,5 @@ public class ListAvailableCryptoPropertiesTest {
 				logger.log(Level.INFO, "   "+provider.getName()+" / "+key+" = "+provider.getProperty(key));
 			}
 		}
-	}	
+	}		
 }

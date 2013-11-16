@@ -44,6 +44,7 @@ import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.StringUtil;
 
 public class MultiChunkerTest {
 	@Test
@@ -173,7 +174,7 @@ public class MultiChunkerTest {
 		MultiChunk customChunk = null;
 		try {
 			fos = new FileOutputStream(tempDir.getAbsolutePath() + "/MultiChunk" + multiChunkName);
-			customChunk = customMultiChunker.createMultiChunk(multiChunkName.getBytes(), 
+			customChunk = customMultiChunker.createMultiChunk(StringUtil.toBytesUTF8(multiChunkName), 
 					transformer.createOutputStream(fos));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -184,5 +185,4 @@ public class MultiChunkerTest {
 
 		return customChunk;
 	}
-
 }
