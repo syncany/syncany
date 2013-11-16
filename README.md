@@ -47,7 +47,7 @@ We have a quite exhaustive JavaDoc (or at least we're trying to build it up). If
 - Cryptography / Encryption: [MultiCipherOutputStream.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/MultiCipherOutputStream.java), [CipherSpec.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSpec.java), [CipherSession.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSession.java)
 
 
-# Build, installation and execution
+# Build and installation
 
 **Requirements**: Syncany is based on Java 7, so you need that installed. We use Ivy for dependency management, and Ant as a build tool. If you have those things, it should be pretty easy.
 
