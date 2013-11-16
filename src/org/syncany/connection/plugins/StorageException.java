@@ -18,7 +18,9 @@
 package org.syncany.connection.plugins;
 
 /**
- *
+ * Exception thrown when any of the methods of the {@link TransferManager}
+ * fail. Usually caused by broken sockets or a not available Internet connection.
+ *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StorageException extends Exception {

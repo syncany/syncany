@@ -22,13 +22,31 @@ import java.util.logging.Logger;
 
 import org.syncany.util.StringUtil;
 
+/**
+ * The command factory can be used to instantiate a new command from a  
+ * command name. The {@link CommandLineClient} uses this class to create
+ * and run commands by mapping a command argument to a corresponding
+ * {@link Command} class.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class CommandFactory {
 	private static final Logger logger = Logger.getLogger(CommandFactory.class.getSimpleName());
 	
-	public static Command getInstance(String operation) throws Exception {
+	/**
+	 * Maps the given command name to a corresponding {@link Command} class and 
+	 * instantiates it. The command name is camel-cased and mapped to a FQCN.
+	 * 
+	 * <p>Example: The command 'ls-remote' is mapped to the FQCN
+	 * <tt>org.syncany.cli.LsRemoteCommand</tt>.
+	 * 
+	 * @param commandName Command name, e.g. ls-remote or init
+	 * @return Returns a <tt>Command</tt> instance, or <tt>null</tt> if the command name cannot be mapped to a class
+	 */
+	public static Command getInstance(String commandName) {
 		String thisPackage = CommandFactory.class.getPackage().getName();
-		String camelCaseOperationName = StringUtil.toCamelCase(operation);
-		String fqCommandClassName = thisPackage+"."+camelCaseOperationName+"Command";
+		String camelCaseCommandName = StringUtil.toCamelCase(commandName);
+		String fqCommandClassName = thisPackage+"."+camelCaseCommandName+Command.class.getSimpleName();
 		
 		// Try to load!
 		try {

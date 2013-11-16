@@ -17,7 +17,8 @@
  */
 package org.syncany.connection.plugins;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -29,7 +30,15 @@ import org.syncany.util.ClasspathUtil;
 import org.syncany.util.StringUtil;
 
 /**
+ * This class loads and manages all the {@link Plugin}s loaded in the classpath.
+ * It provides two public methods: 
  * 
+ * <ul>
+ *  <li>{@link #list()} returns a list of all loaded plugins (as per classpath)</li>
+ *  <li>{@link #get(String) get()} returns a specific plugin, defined by a name</li>
+ * </ul>   
+ *  
+ * @see Plugin
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Plugins {
@@ -42,37 +51,29 @@ public class Plugins {
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 	private static boolean loaded = false;
 
-	private static void load() {
-		if (loaded) {
-			return;
-		}		
-		
-		for (String className : ClasspathUtil.getClasspathClasses().values()) {
-			if (className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
-				Matcher m = PLUGIN_FQCN_REGEX.matcher(className);
-
-				if (m.matches()) {
-					loadPlugin(m.group(1), className);
-				}
-			}
-		}
-		
-		loaded = true;
-	}
-
-	public static Collection<Plugin> list() {
+	
+	/**
+	 * Loads and returns a list of all available {@link Plugin}s.
+	 * 
+	 * <p>Note: This method might take a few milliseconds longer when it is
+	 * first called, because it loads and opens all JARs in the classpath
+	 * to look for matching name patterns.
+	 * 
+	 * @return Returns a collection of all loaded plugins 
+	 */
+	public static List<Plugin> list() {
 		load();
-		return plugins.values();
+		return new ArrayList<Plugin>(plugins.values());
 	}
 
 	/**
-	 * Loads the plugin by a given ID.
+	 * Loads the {@link Plugin} by a given identifier.
 	 * 
-	 * <p>
-	 * Does not call the list() method to boost performance.
+	 * <p>Note: Unlike the {@link #list()} method, this method is not expected 
+	 * to take long, because there is no need to read all JARs in the classpath.
 	 * 
-	 * @param pluginId
-	 * @return
+	 * @param pluginId Identifier of the plugin, as defined by {@link Plugin#getId() the plugin ID)
+	 * @return Returns an instance of a plugin, or <tt>null</tt> if no plugin with the given identifier can be found
 	 */
 	public static Plugin get(String pluginId) {
 		// If already loaded, get from list
@@ -89,6 +90,24 @@ public class Plugins {
 
 		// Not found!
 		return null;
+	}
+	
+	private static void load() {
+		if (loaded) {
+			return;
+		}		
+		
+		for (String className : ClasspathUtil.getClasspathClasses().values()) {
+			if (className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
+				Matcher m = PLUGIN_FQCN_REGEX.matcher(className);
+
+				if (m.matches()) {
+					loadPlugin(m.group(1), className);
+				}
+			}
+		}
+		
+		loaded = true;
 	}
 
 	private static void loadPlugin(String pluginId) {
