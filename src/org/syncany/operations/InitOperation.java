@@ -38,16 +38,18 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.util.StringUtil;
 
 public class InitOperation extends AbstractInitOperation {
     private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());        
     private InitOperationOptions options;
+    private InitOperationListener listener;
     private TransferManager transferManager;
     
-    public InitOperation(InitOperationOptions options) {
+    public InitOperation(InitOperationOptions options, InitOperationListener listener) {
         super(null);
+        
         this.options = options;
+        this.listener = listener;
     }        
             
     public OperationResult execute() throws Exception {
@@ -104,10 +106,12 @@ public class InitOperation extends AbstractInitOperation {
 		return new InitOperationResult(shareLink, shareLinkEncrypted);
     }          
     
-	private SaltedSecretKey createMasterKeyFromPassword(String password) throws Exception {
-		SaltedSecretKey masterKey = CipherUtil.createMasterKey(password);
+	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
+		if (listener != null) {
+			listener.notifyGenerateMasterKey();
+		}
 		
-		System.out.println(StringUtil.toHex(masterKey.getEncoded()));
+		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;
 	}
 
@@ -159,6 +163,10 @@ public class InitOperation extends AbstractInitOperation {
 		
 		return "syncany://storage/1/not-encrypted/"+plaintextEncodedStorageXml;			
 	}
+	
+	public static interface InitOperationListener {
+		public void notifyGenerateMasterKey();
+	}	
  
     public static class InitOperationOptions implements OperationOptions {
     	private File localDir;

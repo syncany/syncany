@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -32,6 +33,9 @@ import java.util.logging.Logger;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
@@ -64,166 +68,218 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 	}
 
 	@Override
-	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {
-		PrintWriter out;
-		
-		if (transformer == null) {
-			out = new PrintWriter(new OutputStreamWriter(
-					new FileOutputStream(destinationFile), "UTF-8"));
-		}
-		else {
-			out = new PrintWriter(new OutputStreamWriter(
-					transformer.createOutputStream(new FileOutputStream(destinationFile)), "UTF-8"));
-		}
-		
-		out.print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-		out.print("<database version=\""+XML_FORMAT_VERSION+"\">\n");
-		out.print("\t<databaseVersions>\n");
-		
-		for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
-			boolean databaseVersionInSaveRange = databaseVersionInRange(databaseVersion, versionFrom, versionTo);
-
-			if (!databaseVersionInSaveRange) {				
-				continue;
-			}		
+	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {				 
+		try {
+			PrintWriter out;
 			
-			// Database version 
-			out.print("\t\t<databaseVersion>\n");
-		
-			// Header
-			if (databaseVersion.getTimestamp() == null || databaseVersion.getClient() == null
-					|| databaseVersion.getVectorClock() == null || databaseVersion.getVectorClock().isEmpty()) {
-
-				logger.log(Level.SEVERE, "Cannot write database version. Header fields must be filled: "+databaseVersion.getHeader());
-				throw new IOException("Cannot write database version. Header fields must be filled: "+databaseVersion.getHeader());
+			if (transformer == null) {
+				out = new PrintWriter(new OutputStreamWriter(
+						new FileOutputStream(destinationFile), "UTF-8"));
+			}
+			else {
+				out = new PrintWriter(new OutputStreamWriter(
+						transformer.createOutputStream(new FileOutputStream(destinationFile)), "UTF-8"));
 			}
 			
-			out.print("\t\t\t<header>\n");	
-			out.print("\t\t\t\t<time value=\""+databaseVersion.getTimestamp().getTime()+"\" />\n");
-			out.print("\t\t\t\t<client name=\""+databaseVersion.getClient()+"\" />\n");			
-			out.print("\t\t\t\t<vectorClock>\n");			
-			VectorClock vectorClock = databaseVersion.getVectorClock();			
-			for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
-				out.print("\t\t\t\t\t<client name=\""+vectorClockEntry.getKey()+"\" value=\""+vectorClockEntry.getValue()+"\" />\n");
-			}
-			out.write("\t\t\t\t</vectorClock>\n");			
-			out.write("\t\t\t</header>\n");				
+			// Initialize XML writer
+			IndentXmlStreamWriter xmlOut = new IndentXmlStreamWriter(out);
 			
-			// Chunks
-			Collection<ChunkEntry> chunks = databaseVersion.getChunks();
+			xmlOut.writeStartDocument();
 			
-			if (chunks.size() > 0) {
-				out.print("\t\t\t<chunks>\n");
-				for (ChunkEntry chunk : chunks) {
-					out.print("\t\t\t\t<chunk checksum=\""+StringUtil.toHex(chunk.getChecksum())+"\" size=\""+chunk.getSize()+"\" />\n");
-				}			
-				out.print("\t\t\t</chunks>\n");
-			}
-			
-			// Multichunks
-			Collection<MultiChunkEntry> multiChunks = databaseVersion.getMultiChunks();
+			xmlOut.writeStartElement("database");
+			xmlOut.writeAttribute("version", XML_FORMAT_VERSION);
+			 
+			xmlOut.writeStartElement("databaseVersions");
+			 			
+			for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
+				boolean databaseVersionInSaveRange = databaseVersionInRange(databaseVersion, versionFrom, versionTo);
 
-			if (multiChunks.size() > 0) {
-				out.print("\t\t\t<multiChunks>\n");
-				for (MultiChunkEntry multiChunk : multiChunks) {
-					out.print("\t\t\t\t<multiChunk id=\""+StringUtil.toHex(multiChunk.getId())+"\">\n");
-					out.print("\t\t\t\t\t<chunkRefs>\n");
-					Collection<ChunkEntryId> multiChunkChunks = multiChunk.getChunks();
-					for (ChunkEntryId chunkChecksum : multiChunkChunks) {
-						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunkChecksum.getArray())+"\" />\n");
-					}			
-					out.print("\t\t\t\t\t</chunkRefs>\n");				
-					out.print("\t\t\t\t</multiChunk>\n");				
-				}			
-				out.print("\t\t\t</multiChunks>\n");
-			}
-			
-			// File contents
-			Collection<FileContent> fileContents = databaseVersion.getFileContents();
-
-			if (fileContents.size() > 0) {
-				out.print("\t\t\t<fileContents>\n");
-				for (FileContent fileContent : fileContents) {
-					out.print("\t\t\t\t<fileContent checksum=\""+StringUtil.toHex(fileContent.getChecksum())+"\" size=\""+fileContent.getSize()+"\">\n");
-					out.print("\t\t\t\t\t<chunkRefs>\n");
-					Collection<ChunkEntryId> fileContentChunkChunks = fileContent.getChunks();
-					for (ChunkEntryId chunkChecksum : fileContentChunkChunks) {
-						out.print("\t\t\t\t\t\t<chunkRef ref=\""+StringUtil.toHex(chunkChecksum.getArray())+"\" />\n");
-					}			
-					out.print("\t\t\t\t\t</chunkRefs>\n");				
-					out.print("\t\t\t\t</fileContent>\n");				
+				if (!databaseVersionInSaveRange) {				
+					continue;
 				}						
-				out.print("\t\t\t</fileContents>\n");
+
+				// Database version
+				xmlOut.writeStartElement("databaseVersion");
+				
+				// Header, chunks, multichunks, file contents, and file histories
+				writeDatabaseVersionHeader(xmlOut, databaseVersion);
+				writeChunks(xmlOut, databaseVersion.getChunks());
+				writeMultiChunks(xmlOut, databaseVersion.getMultiChunks());
+				writeFileContents(xmlOut, databaseVersion.getFileContents());
+				writeFileHistories(xmlOut, databaseVersion.getFileHistories());	
+				
+				xmlOut.writeEndElement(); // </databaserVersion>
 			}
 			
-			// File histories
-			out.print("\t\t\t<fileHistories>\n");
-			Collection<PartialFileHistory> fileHistories = databaseVersion.getFileHistories();
-			for (PartialFileHistory fileHistory : fileHistories) {
-				out.print("\t\t\t\t<fileHistory id=\""+fileHistory.getFileId()+"\">\n");
-				out.print("\t\t\t\t\t<fileVersions>\n");
-				Collection<FileVersion> fileVersions = fileHistory.getFileVersions().values();
-				for (FileVersion fileVersion : fileVersions) {
-					if (fileVersion.getVersion() == null || fileVersion.getType() == null || fileVersion.getPath() == null 
-							|| fileVersion.getStatus() == null || fileVersion.getSize() == null || fileVersion.getLastModified() == null) {
-						
-						throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status, size, last modified): "+fileVersion);
-					}
-					
-					if (fileVersion.getType() == FileType.SYMLINK && fileVersion.getLinkTarget() == null) {
-						throw new IOException("Unable to write file version: All symlinks must have a target.");
-					}
-					
-					out.print("\t\t\t\t\t\t<fileVersion");
-					out.print(" version=\""+fileVersion.getVersion()+"\"");
-					out.print(" type=\""+fileVersion.getType()+"\"");
-					out.print(" status=\""+fileVersion.getStatus()+"\"");					
-					out.print(" path=\""+FileUtil.toDatabaseFilePath(fileVersion.getPath())+"\"");
-					out.print(" size=\""+fileVersion.getSize()+"\"");
-					out.print(" lastModified=\""+fileVersion.getLastModified().getTime()+"\"");
-					
-					if (fileVersion.getLinkTarget() != null) {
-						out.print(" linkTarget=\""+FileUtil.toDatabaseFilePath(fileVersion.getLinkTarget())+"\"");
-					}
-
-					if (fileVersion.getCreatedBy() != null) {
-						out.print(" createdBy=\""+fileVersion.getCreatedBy()+"\"");
-					}
-					
-					if (fileVersion.getUpdated() != null) {
-						out.print(" updated=\""+fileVersion.getUpdated().getTime()+"\"");
-					}
-					
-					if (fileVersion.getChecksum() != null) {
-						out.print(" checksum=\""+StringUtil.toHex(fileVersion.getChecksum())+"\"");
-					}
-					
-					if (fileVersion.getDosAttributes() != null) {
-						out.print(" dosattrs=\""+fileVersion.getDosAttributes()+"\"");
-					}
-					
-					if (fileVersion.getPosixPermissions() != null) {
-						out.print(" posixperms=\""+fileVersion.getPosixPermissions()+"\"");
-					}
-					
-					out.print(" />\n");
-				}			
-				out.print("\t\t\t\t\t</fileVersions>\n");				
-				out.print("\t\t\t\t</fileHistory>\n");				
-			}						
-			out.print("\t\t\t</fileHistories>\n");
+			xmlOut.writeEndElement(); // </databaseVersions>
+			xmlOut.writeEndElement(); // </database>
+			 
+			xmlOut.writeEndDocument();
 			
-			// End of database version
-			out.print("\t\t</databaseVersion>\n");
+			xmlOut.flush();
+			xmlOut.close();
+			
+			out.flush();
+			out.close();
+		}
+		catch (XMLStreamException e) {
+			throw new IOException(e);
+		}
+	}			
+
+	private void writeDatabaseVersionHeader(IndentXmlStreamWriter xmlOut, DatabaseVersion databaseVersion) throws IOException, XMLStreamException {
+		if (databaseVersion.getTimestamp() == null || databaseVersion.getClient() == null
+				|| databaseVersion.getVectorClock() == null || databaseVersion.getVectorClock().isEmpty()) {
+
+			logger.log(Level.SEVERE, "Cannot write database version. Header fields must be filled: "+databaseVersion.getHeader());
+			throw new IOException("Cannot write database version. Header fields must be filled: "+databaseVersion.getHeader());
 		}
 		
-		out.print("\t</databaseVersions>\n");
-		out.print("</database>\n");
+		xmlOut.writeStartElement("header");
 		
-		out.flush();
-		out.close();
+		xmlOut.writeEmptyElement("time");
+		xmlOut.writeAttribute("value", databaseVersion.getTimestamp().getTime());
+		
+		xmlOut.writeEmptyElement("client");
+		xmlOut.writeAttribute("name", databaseVersion.getClient());
+		
+		xmlOut.writeStartElement("vectorClock");
+
+		VectorClock vectorClock = databaseVersion.getVectorClock();			
+		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
+			xmlOut.writeEmptyElement("client");
+			xmlOut.writeAttribute("name", vectorClockEntry.getKey());
+			xmlOut.writeAttribute("value", vectorClockEntry.getValue());
+		}
+		
+		xmlOut.writeEndElement(); // </vectorClock>
+		xmlOut.writeEndElement(); // </header>	
 	}
 	
+	private void writeChunks(IndentXmlStreamWriter xmlOut, Collection<ChunkEntry> chunks) throws XMLStreamException {
+		if (chunks.size() > 0) {
+			xmlOut.writeStartElement("chunks");
+								
+			for (ChunkEntry chunk : chunks) {
+				xmlOut.writeEmptyElement("chunk");
+				xmlOut.writeAttribute("checksum", StringUtil.toHex(chunk.getChecksum()));
+				xmlOut.writeAttribute("size", chunk.getSize());
+			}
+			
+			xmlOut.writeEndElement(); // </chunks>
+		}		
+	}
+	
+	private void writeMultiChunks(IndentXmlStreamWriter xmlOut, Collection<MultiChunkEntry> multiChunks) throws XMLStreamException {
+		if (multiChunks.size() > 0) {
+			xmlOut.writeStartElement("multiChunks");
+			
+			for (MultiChunkEntry multiChunk : multiChunks) {
+				xmlOut.writeStartElement("multiChunk");
+				xmlOut.writeAttribute("id", StringUtil.toHex(multiChunk.getId()));
+			
+				xmlOut.writeStartElement("chunkRefs");
+				
+				Collection<ChunkEntryId> multiChunkChunks = multiChunk.getChunks();
+				for (ChunkEntryId chunkChecksum : multiChunkChunks) {
+					xmlOut.writeEmptyElement("chunkRef");
+					xmlOut.writeAttribute("ref", StringUtil.toHex(chunkChecksum.getArray()));
+				}			
+				
+				xmlOut.writeEndElement(); // </chunkRefs>
+				xmlOut.writeEndElement(); // </multiChunk>			
+			}			
+			
+			xmlOut.writeEndElement(); // </multiChunks>
+		}
+	}
+	
+	private void writeFileContents(IndentXmlStreamWriter xmlOut, Collection<FileContent> fileContents) throws XMLStreamException {
+		if (fileContents.size() > 0) {
+			xmlOut.writeStartElement("fileContents");
+			
+			for (FileContent fileContent : fileContents) {
+				xmlOut.writeStartElement("fileContent");
+				xmlOut.writeAttribute("checksum", StringUtil.toHex(fileContent.getChecksum()));
+				xmlOut.writeAttribute("size", fileContent.getSize());
+				
+				xmlOut.writeStartElement("chunkRefs");
+				
+				Collection<ChunkEntryId> fileContentChunkChunks = fileContent.getChunks();
+				for (ChunkEntryId chunkChecksum : fileContentChunkChunks) {
+					xmlOut.writeEmptyElement("chunkRef");
+					xmlOut.writeAttribute("ref", StringUtil.toHex(chunkChecksum.getArray()));
+				}			
+
+				xmlOut.writeEndElement(); // </chunkRefs>
+				xmlOut.writeEndElement(); // </fileContent>			
+			}	
+			
+			xmlOut.writeEndElement(); // </fileContents>					
+		}		
+	}
+	
+	private void writeFileHistories(IndentXmlStreamWriter xmlOut, Collection<PartialFileHistory> fileHistories) throws XMLStreamException, IOException {
+		xmlOut.writeStartElement("fileHistories");
+		
+		for (PartialFileHistory fileHistory : fileHistories) {
+			xmlOut.writeStartElement("fileHistory");
+			xmlOut.writeAttribute("id", fileHistory.getFileId());
+			
+			xmlOut.writeStartElement("fileVersions");
+			
+			Collection<FileVersion> fileVersions = fileHistory.getFileVersions().values();
+			for (FileVersion fileVersion : fileVersions) {
+				if (fileVersion.getVersion() == null || fileVersion.getType() == null || fileVersion.getPath() == null 
+						|| fileVersion.getStatus() == null || fileVersion.getSize() == null || fileVersion.getLastModified() == null) {
+					
+					throw new IOException("Unable to write file version, because one or many mandatory fields are null (version, type, path, name, status, size, last modified): "+fileVersion);
+				}
+				
+				if (fileVersion.getType() == FileType.SYMLINK && fileVersion.getLinkTarget() == null) {
+					throw new IOException("Unable to write file version: All symlinks must have a target.");
+				}
+				
+				xmlOut.writeEmptyElement("fileVersion");
+				xmlOut.writeAttribute("version", fileVersion.getVersion());
+				xmlOut.writeAttribute("type", fileVersion.getType().toString());
+				xmlOut.writeAttribute("status", fileVersion.getStatus().toString());
+				xmlOut.writeAttribute("path", FileUtil.toDatabaseFilePath(fileVersion.getPath()));
+				xmlOut.writeAttribute("size", fileVersion.getSize());
+				xmlOut.writeAttribute("lastModified", fileVersion.getLastModified().getTime());						
+				
+				if (fileVersion.getLinkTarget() != null) {
+					xmlOut.writeAttribute("linkTarget", FileUtil.toDatabaseFilePath(fileVersion.getLinkTarget()));
+				}
+
+				if (fileVersion.getCreatedBy() != null) {
+					xmlOut.writeAttribute("createdBy", fileVersion.getCreatedBy());
+				}
+				
+				if (fileVersion.getUpdated() != null) {
+					xmlOut.writeAttribute("updated", fileVersion.getUpdated().getTime());
+				}
+				
+				if (fileVersion.getChecksum() != null) {
+					xmlOut.writeAttribute("checksum", StringUtil.toHex(fileVersion.getChecksum()));
+				}
+				
+				if (fileVersion.getDosAttributes() != null) {
+					xmlOut.writeAttribute("dosattrs", fileVersion.getDosAttributes());
+				}
+				
+				if (fileVersion.getPosixPermissions() != null) {
+					xmlOut.writeAttribute("posixperms", fileVersion.getPosixPermissions());
+				}
+			}
+			
+			xmlOut.writeEndElement(); // </fileVersions>
+			xmlOut.writeEndElement(); // </fileHistory>	
+		}						
+		
+		xmlOut.writeEndElement(); // </fileHistories>		
+	}
+
 	private boolean vectorClockInRange(VectorClock vectorClock, VectorClock vectorClockRangeFrom, VectorClock vectorClockRangeTo) {
 		// Determine if: versionFrom < databaseVersion
 		boolean greaterOrEqualToVersionFrom = false;
@@ -292,6 +348,69 @@ public class XmlDatabaseDAO implements DatabaseDAO {
         	throw new IOException(e);
         } 
 	}	
+	
+	public static class IndentXmlStreamWriter {
+		private int indent;
+		private XMLStreamWriter out;
+		
+		public IndentXmlStreamWriter(Writer out) throws XMLStreamException {
+			XMLOutputFactory factory = XMLOutputFactory.newInstance();
+			
+			this.indent = 0;
+			this.out = factory.createXMLStreamWriter(out);
+		}
+		
+		public void writeStartDocument() throws XMLStreamException {
+			out.writeStartDocument();
+		}
+
+		public void writeStartElement(String s) throws XMLStreamException {
+			writeNewLineAndIndent(indent++);
+			out.writeStartElement(s);	
+		}
+		
+		public void writeEmptyElement(String s) throws XMLStreamException {
+			writeNewLineAndIndent(indent);			
+			out.writeEmptyElement(s);	
+		}
+		
+		public void writeAttribute(String name, String value) throws XMLStreamException {
+			out.writeAttribute(name, value);
+		}
+		
+		public void writeAttribute(String name, int value) throws XMLStreamException {
+			out.writeAttribute(name, Integer.toString(value));
+		}
+		
+		public void writeAttribute(String name, long value) throws XMLStreamException {
+			out.writeAttribute(name, Long.toString(value));
+		}
+		
+		public void writeEndElement() throws XMLStreamException {			
+			writeNewLineAndIndent(--indent);
+			out.writeEndElement();			
+		}
+		
+		public void writeEndDocument() throws XMLStreamException {
+			out.writeEndDocument();
+		}
+		
+		public void close() throws XMLStreamException {
+			out.close();
+		}
+		
+		public void flush() throws XMLStreamException {
+			out.flush();
+		}	
+		
+		private void writeNewLineAndIndent(int indent) throws XMLStreamException {
+			out.writeCharacters("\n");			
+			
+			for (int i=0; i<indent; i++) {
+				out.writeCharacters("\t");
+			}
+		}
+	}
 	
 	public class DatabaseXmlHandler extends DefaultHandler {
 		private Database database;

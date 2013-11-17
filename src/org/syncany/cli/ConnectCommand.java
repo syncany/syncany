@@ -159,6 +159,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}
 
 	private String askPassword() { 
+		out.println();
+		
 		String password = null;
 		
 		while (password == null) {
@@ -172,5 +174,11 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	@Override
 	public String getPasswordCallback() {
 		return askPassword();
+	}
+
+	@Override
+	public void notifyGenerateMasterKey() {
+		out.println();
+		out.println("Generating master key (this might take a while) ...");
 	}
 }

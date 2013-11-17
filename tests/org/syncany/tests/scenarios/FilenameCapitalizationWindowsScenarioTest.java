@@ -51,5 +51,30 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		// Tear down
 		clientA.cleanup();
 		clientB.cleanup();
-	}		
+	}	
+	
+	@Test
+	public void testFilenameNonASCII() throws Exception {		
+		// Setup 
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		// Run 
+		clientA.createNewFile("Exposé"); // Non-ASCII
+		clientA.createNewFile("這是一個測試"); // Non-ASCII
+		clientA.createNewFile("One&Two"); // & is not allowed in XML
+		clientA.upWithForceChecksum();
+		assertEquals("There should be three files.", 3, clientA.getLocalFiles().size());
+		
+		clientB.down();
+		assertEquals("There should be three files.", 3, clientB.getLocalFiles().size());
+		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());	
+		
+		// Tear down
+		clientA.cleanup();
+		clientB.cleanup();
+	}	
+	
 }

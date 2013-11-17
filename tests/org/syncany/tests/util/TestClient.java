@@ -146,7 +146,7 @@ public class TestClient extends Client {
 		Database db = new Database();
 		
 		if (localDatabaseFile.exists()) {			
-			DatabaseDAO dao = new XmlDatabaseDAO();
+			DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 			dao.load(db, getLocalDatabaseFile());		
 		}
 

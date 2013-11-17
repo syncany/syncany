@@ -37,7 +37,6 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -45,6 +44,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -416,6 +416,5 @@ public class XmlDatabaseDAOTest {
 		TestAssertUtil.assertDatabaseEquals(writtenDatabase, readDatabase);
 		
 		return readDatabase;
-	}		
-	
+	}			
 }

@@ -73,7 +73,7 @@ public class ConnectOperation extends AbstractInitOperation {
 				String masterKeyPassword = getOrAskPasswordRepoFile();
 				byte[] masterKeySalt = masterTO.getSalt();
 				
-				masterKey = CipherUtil.createMasterKey(masterKeyPassword, masterKeySalt); // This takes looong!			
+				masterKey = createMasterKeyFromPassword(masterKeyPassword, masterKeySalt); // This takes looong!			
 			}						
 			
 			String repoFileStr = decryptRepoFile(tmpRepoFile, masterKey);			
@@ -129,6 +129,15 @@ public class ConnectOperation extends AbstractInitOperation {
 		}		
 	}
 	
+	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword, byte[] masterKeySalt) throws Exception {
+		if (listener != null) {
+			listener.notifyGenerateMasterKey();
+		}
+		
+		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword, masterKeySalt);
+		return masterKey;
+	}
+	
 	private String decryptRepoFile(File file, SaltedSecretKey masterKey) throws Exception {
 		try {
 			FileInputStream encryptedRepoConfig = new FileInputStream(file);
@@ -156,6 +165,7 @@ public class ConnectOperation extends AbstractInitOperation {
 
 	public static interface ConnectOperationListener {
 		public String getPasswordCallback();
+		public void notifyGenerateMasterKey();
 	}	
 	
 	public static class ConnectOperationOptions implements OperationOptions {

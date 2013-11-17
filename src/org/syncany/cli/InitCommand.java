@@ -42,13 +42,14 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.InitOperation.InitOperationListener;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
-public class InitCommand extends AbstractInitCommand {
-	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { 1, 2 };
+public class InitCommand extends AbstractInitCommand implements InitOperationListener {
+	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
 	public static final int PASSWORD_MIN_LENGTH = 8;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
@@ -60,7 +61,7 @@ public class InitCommand extends AbstractInitCommand {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
-		InitOperationResult operationResult = client.init(operationOptions);
+		InitOperationResult operationResult = client.init(operationOptions, this);
 		
 		printResults(operationResult);
 		
@@ -265,14 +266,14 @@ public class InitCommand extends AbstractInitCommand {
 			} 
 			
 			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
-				out.println("ERROR: This password is not allowed (too short, min.  chars)");
+				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
 				out.println();
 				
 				continue;
 			}
 			
 			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
-				out.println("WARNING: The password is a bit short. Less than 12 chars are not future-proof!");
+				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
 				if (!yesno.toLowerCase().startsWith("y")) {
@@ -343,5 +344,11 @@ public class InitCommand extends AbstractInitCommand {
 		cipherTransformerTO.setSettings(cipherTransformerSettings);
 
 		return cipherTransformerTO;
+	}
+
+	@Override
+	public void notifyGenerateMasterKey() {
+		out.println();
+		out.println("Generating master key (this might take a while) ...");
 	}
 }

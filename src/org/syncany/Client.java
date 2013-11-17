@@ -29,6 +29,7 @@ import org.syncany.operations.DownOperation;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.InitOperation;
+import org.syncany.operations.InitOperation.InitOperationListener;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
 import org.syncany.operations.LogOperation;
@@ -128,7 +129,11 @@ public class Client {
 	}	
 	
 	public InitOperationResult init(InitOperationOptions options) throws Exception {
-        return (InitOperationResult) new InitOperation(options).execute();                
+        return init(options, null);              
+	}
+	
+	public InitOperationResult init(InitOperationOptions options, InitOperationListener listener) throws Exception {
+        return (InitOperationResult) new InitOperation(options, listener).execute();                
 	}
 	
 	public ConnectOperationResult connect(ConnectOperationOptions options) throws Exception {
