@@ -55,11 +55,11 @@ import org.syncany.util.StringUtil;
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
  * folder, deduplicates new or changed files and uploads newly packed multichunks to the remote
- * storage.
+ * storage. The up operation is the complement to the {@link DownOperation}.
  * 
  * <p>The general operation flow is as follows:
  * <ol>
- *   <li>Load local database (if not already loaded) using the {@link LoadDatabaseOperation}</li>
+ *   <li>Load local database (if not already loaded)</li>
  *   <li>Analyze local directory using the {@link StatusOperation} to determine any changed/new/deleted files</li>
  *   <li>Determine if there are unknown remote databases using the {@link LsRemoteOperation}, and skip the rest if there are</li>
  *   <li>If there are changes, use the {@link Deduper} and {@link Indexer} to create a new {@link DatabaseVersion} 

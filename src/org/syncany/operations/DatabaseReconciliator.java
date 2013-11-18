@@ -32,44 +32,86 @@ import java.util.TreeMap;
 import org.syncany.database.Branch;
 import org.syncany.database.Branch.BranchIterator;
 import org.syncany.database.Branches;
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
 
-/*
- * This class implements various parts of the sync down algorithm. Test scenarios are available
- * in the DatabaseVersionUpdateDetectorTest class.
+/**
+ * The database reconciliator implements various parts of the sync down algorithm (see also:
+ * {@link DownOperation}). Its main responsibility is to compare the local database to the
+ * other clients' delta databases. The final goal of the algorithms described in this class is
+ * to determine a winning {@link Database} (or better: a winning database {@link Branch}) of
+ * a client.
  * 
- * ALGORITHM B
- * ----------------------------------------------------------------------------------------------------
+ * <p>All algorithm parts largely rely on the comparison of a client's database branch, i.e. its
+ * committed set of {@link DatabaseVersion}s. Instead of comparing the entire database versions
+ * of the different clients, however, the comparisons solely rely on the  {@link DatabaseVersionHeader}s.
+ * In particular, most of them only compare the {@link VectorClock}. If the vector clocks are 
+ * in conflict (= simultaneous), the local timestamp is used as a final decision (oldest wins).
  * 
- *  Algorithm:
- *   - Determine last versions per client A B C
- *   - Determine if there are conflicts between last versions of client, if yes continue 
- *   - Determine last common versions between clients
- *   - Determine first conflicting versions between clients (= last common version + 1)
- *   - Compare first conflicting versions and determine winner
- *
- *   - If one client has the winning first conflicting version, take this client's history as a winner
- *   - If more than 2 clients are based on the winning first conflicting version, compare their other versions
- *      + Iterate forward (from conflicting to newer!), and check for conflicts 
- *      + If a conflict is found, determine the winner and continue the branch of the winner
- *      + This must be done until the last (newest!) version of the winning branch is reached
- *    - If the local machine loses (= winning first conflicting database version is NOT from the local machine)
- *      AND there is a first conflicting database version from the local machine (and possibly more database versions),
- *       (1) these database versions must be pruned/deleted from the local database
- *       (2) and these database versions must be merged somehow in the last winning database version 
- *	  - ...
- *     
- *  In short:
- *    1. Go back to the first conflict of all versions
- *    2. Determine winner of this conflict. Follow the winner(s) branch.
- *    3. If another conflict occurs, go to step 2.
- *   
- *  Issues:
- *   - When db-b-1 is not applied, it is re-downloaded every time by clients A and C
- *     until B uploads a consolidated version
+ * <p>Because there are many ways to say it, there are a few explanations to the algorithms:
+ * 
+ * <p><b>Algorithm (short explanation):</b>
+ * <ol>
+ *  <li>Go back to the first conflict of all versions</li>
+ *  <li>Determine winner of this conflict; follow the winner(s) branch</li>
+ *  <li>If another conflict occurs, go to step 2</li>
+ * </ol>
+ * 
+ * <p><b>Algorithm (medium long explanation):</b>
+ * <ol>
+ *  <li>Determine last versions per client A B C</li>
+ *  <li>Determine if there are conflicts between last versions of client, if yes continue</li> 
+ *  <li>Determine last common versions between clients</li>
+ *  <li>Determine first conflicting versions between clients (= last common version + 1)</li>
+ *  <li>Compare first conflicting versions and determine winner</li>
+ *  <li>If one client has the winning first conflicting version, take this client's history as a winner</li>
+ *  <li>If more than 2 clients are based on the winning first conflicting version, compare their other versions
+ *      <ol>
+ *        <li>Iterate forward (from conflicting to newer!), and check for conflicts</li>
+ *        <li>If a conflict is found, determine the winner and continue the branch of the winner</li>
+ *        <li>This must be done until the last (newest!) version of the winning branch is reached</li>
+ *      </ol>
+ *  </li>
+ *  <li>If the local machine loses (= winning first conflicting database version is NOT from the local machine)
+ *      <i>and</i> there is a first conflicting database version from the local machine (and possibly more database versions),</li>
+ *      <ol>
+ *        <li>these database versions must be pruned/deleted from the local database</li>
+ *        <li>and these database versions must be merged somehow in the last winning database version</li>
+ *      </ol>
+ *  </li>
+ * </ol>
+ * 
+ * <p><b>Algorithm (long explanation):</b> 
+ * <ul>
+ *  <li>{@link #stitchBranches(Branches, String, Branch) stitchBranches()}: Due to the fact that
+ *      Syncany exchanges only delta databases, but the algorithms require a full branch for the
+ *      winner-determination, the full per-client branches must be created/derived from all the
+ *      downloaded branches.</li>
+ *  <li>{@link #findLastCommonDatabaseVersionHeader(Branch, Branches) findLastCommonDatabaseVersionHeader()}:
+ *      Once the full database branches have been stitched together, the algorithm must determine whether there
+ *      are any conflicts between the clients' branches. As a first step, a last common 
+ *      {@link DatabaseVersionHeader} is determined, i.e. a header that all clients share.</li>
+ *  <li>{@link #findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader, Branches) findFirstConflictingDatabaseVersionHeader()}:
+ *      By definition, the first conflicting database version between the clients is the database version
+ *      following the last common version (= last common database version + 1).</li>
+ *  <li>{@link #findWinningFirstConflictingDatabaseVersionHeaders(TreeMap) findWinningFirstConflictingDatabaseVersionHeaders()}:
+ *      Comparing the vector clocks of the first conflicting database version headers, the winners can be
+ *      determined. This is done using the local timestamps of the database version headers (earliest wins).</li>
+ *  <li>{@link #findWinnersWinnersLastDatabaseVersionHeader(TreeMap, Branches) findWinnersWinnersLastDatabaseVersionHeader()}:
+ *      Having found one or many winning branches (candidates), the last step is to walk forward and compare
+ *      the winning branches with each other -- comparing their database version headers. If a set does not match,
+ *      a winner is determined until only one client branch remains. This client branch is the final winning branch.</li>
+ * </ul>
+ * 
+ * @see DownOperation
+ * @see VectorClock
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Steffen Dangmann <steffen.dangmann@googlemail.com>
  */
+// TODO [medium] This class needs some rework, explanations and a code review. It works for now, but its hardly understandable!
 public class DatabaseReconciliator {
 	//private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
 	

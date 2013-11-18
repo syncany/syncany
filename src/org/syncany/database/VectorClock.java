@@ -20,12 +20,22 @@ package org.syncany.database;
 import java.util.TreeMap;
 
 /**
- * Implements a VectorClock that records the time stamps of all send and receive
- * events. It contains functions to compare and merge two VectorClocks.
+ * Implements a vector clock that records the time stamps of all send and receive
+ * events. It contains functions to compare and merge two vector clocks.
+ * 
+ * <p>Vector clocks are a mechanism to track events/actions across multiple distributed
+ * clients. Using vector clocks, one can determine relationships between different events.
+ * In particular:
+ * 
+ * <ul>
+ *  <li>Event A happened before / was caused by event B (cause)</li>
+ *  <li>Event B happened after / caused event B (effect)</li>
+ *  <li>Event A and B happened simultaneously (no cause/effect relationship)</li>
+ * </ul>  
  * 
  * @author Frits de Nijs
  * @author Peter Dijkshoorn
- * @author Philipp C. Heckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class VectorClock extends TreeMap<String, Long> {
 	private static final long serialVersionUID = 109876543L;
@@ -35,38 +45,41 @@ public class VectorClock extends TreeMap<String, Long> {
 	}	
 	
 	/**
-	 * Increases the component of pUnit by 1.
+	 * Increases the component of a unit by 1.
 	 * 
-	 * @param unit
-	 *            - The ID of the vector element being increased.
+	 * @param unit The identifier of the vector element being increased
 	 */
 	public void incrementClock(String unit) {
-		// If we have it in the vector, increment.
 		if (this.containsKey(unit)) {
 			this.put(unit, this.get(unit).longValue() + 1);
 		}
-		// Else, store with value 1 (starts at 0, +1).
 		else {
 			this.put(unit, 1L);
 		}
 	}
 	
 	/**
-	 * Set the component of the pUnit.
+	 * Set the component of a unit.
 	 * 
-	 * @param unit
-	 *            - The ID of the vector element being increased.
+	 * @param unit The identifier of the vector element being set
+	 * @value value The new value of the unit being set
 	 */
 	public void setClock(String unit, long value) {
 		this.put(unit, value);	
 	}
-		
+	
+	/**
+	 * Retrieve the unit's value 
+	 * 
+	 * @param unit The identifier of the vector element being retrieved
+	 * @return Returns the value of the unit (if existent), or <tt>null</tt> if it does not exist
+	 */
 	public Long getClock(String unit) {
 		return get(unit);
 	}
 
 	@Override
-	public Long get(Object unit) {
+	public Long get(Object unit) { // TODO [low] This should not be used, or shoul it? Why inherit from TreeMap?
 		Long lResult = super.get(unit);
 
 		if (lResult == null)
@@ -115,7 +128,7 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * @return A new VectorClock with the maximum for each element in either
 	 *         clock.
 	 */
-	public static VectorClock max(VectorClock clock1,	VectorClock clock2) {
+	public static VectorClock max(VectorClock clock1, VectorClock clock2) {
 		// Create new Clock.
 		VectorClock lResult = new VectorClock();
 

@@ -149,10 +149,10 @@ public abstract class FileSystemAction {
 		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
 		
 		if (conflictingLocalFile.isDirectory()) {
-			conflictingLocalFile.renameTo(newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
+			conflictingLocalFile.renameTo(newConflictFile); 
 		}
 		else {
-			FileUtils.moveFile(conflictingLocalFile, newConflictFile); // TODO [high] Should this be in a try/catch block? What if this throws an IOException?
+			FileUtils.moveFile(conflictingLocalFile, newConflictFile);
 		}
 	}
 	
