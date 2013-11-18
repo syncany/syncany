@@ -9,4 +9,4 @@ if [ ! -e "$JARFILE" ]; then
 	exit 1
 fi
 
-java -Xmx1024m -jar "$JARFILE" $@
+java -Xmx1024m -Dfile.encoding="UTF-8" -jar "$JARFILE" $@
