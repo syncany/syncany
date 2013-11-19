@@ -398,10 +398,14 @@ public class CommandLineClient extends Client {
 		out.println("      -D, --date=<dd-mm-yy>            Restore versions prior to the given absolute date");
 		out.println("      -v, --version=<[-]version>       Restore <version> or go back <version> versions");
 		out.println();
-		out.println("  log [<paths>]");
+		out.println("  log [<args>] [<paths>]");
 		out.println("      Print to STDOUT information stored in the local database about the given file paths or");
 		out.println("      all paths known by the database if no path is given. The output format is unstable and");
 		out.println("      might change in future releases.");
+		out.println();
+		out.println("      Arguments:");
+		out.println("      -f, --format=<format>       Specifies the format to use for printing the log.");
+		out.println("      Currently recognized formats: " + LogCommand.formats);
 		out.println();
 		
 		out.close();		
