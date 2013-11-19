@@ -17,24 +17,40 @@
  */
 package org.syncany.cli;
 
+import static java.util.Arrays.asList;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.operations.LogOperation;
 import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.util.StringUtil;
 
 public class LogCommand extends Command {
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss"); 
-	
+	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
+	public static final Set<String> formats;
+	static {
+		Set<String> localFormats = new HashSet<String>();
+		localFormats.add("full");
+		localFormats.add("last");
+		formats = Collections.unmodifiableSet(localFormats);
+	}
 	@Override
 	public boolean initializedLocalDirRequired() {	
 		return true;
@@ -53,41 +69,65 @@ public class LogCommand extends Command {
 	public LogOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		LogOperationOptions operationOptions = new LogOperationOptions();
 
-		OptionParser parser = new OptionParser();	
-		
-		OptionSet options = parser.parse(operationArgs);	
+		OptionParser parser = new OptionParser();
+		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo("full");
 
+		OptionSet options = parser.parse(operationArgs);
+
+		String format = options.valueOf(optionFormat);
+		if (!formats.contains(format)) {
+			throw new Exception("Unrecognized log format " + format);
+		}
 		// Files
 		List<?> nonOptionArgs = options.nonOptionArguments();
 		List<String> restoreFilePaths = new ArrayList<String>();
-		
+
 		for (Object nonOptionArg : nonOptionArgs) {
 			restoreFilePaths.add(nonOptionArg.toString());
 		}
 
-		operationOptions.setPaths(restoreFilePaths);	
-		
+		operationOptions.setPaths(restoreFilePaths);
+		operationOptions.setFormat(format);
+
 		return operationOptions;
+	}
+	
+	private void printOneVersion(FileVersion fileVersion) {
+		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
+		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
+
+		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
+				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
+				StringUtil.toHex(fileVersion.getChecksum()));
 	}
 	
 	private void printResults(LogOperationResult operationResult) {
 		for (PartialFileHistory fileHistory : operationResult.getFileHistories()) {
 			FileVersion lastVersion = fileHistory.getLastVersion();
-			out.printf("%s %16x\n", lastVersion.getPath(), fileHistory.getFileId());
-			Iterator<Long> fileVersionNumber = fileHistory.getDescendingVersionNumber();
-			while(fileVersionNumber.hasNext()) {
-				FileVersion fileVersion = fileHistory.getFileVersion(fileVersionNumber.next());
-				String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
-				String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
-
-				out.printf("\t%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
-						posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
-						StringUtil.toHex(fileVersion.getChecksum()));
-				if(fileVersion.getPath().equals(lastVersion.getPath())) {
-					out.println();
-				} else {
-					out.println(" "+fileVersion.getPath());
+			out.printf("%s %16x", lastVersion.getPath(), fileHistory.getFileId());
+			switch (operationResult.getFormat()) {
+			case "full":
+				Iterator<Long> fileVersionNumber = fileHistory.getDescendingVersionNumber();
+				out.println();
+				while (fileVersionNumber.hasNext()) {
+					FileVersion fileVersion = fileHistory.getFileVersion(fileVersionNumber.next());
+					out.print('\t');
+					printOneVersion(fileVersion);
+					if (fileVersion.getPath().equals(lastVersion.getPath())) {
+						out.println();
+					} else {
+						out.println(" " + fileVersion.getPath());
+					}
 				}
+				break;
+			case "last":
+				out.print(' ');
+				printOneVersion(lastVersion);
+				out.println();
+				break;
+			default:
+				out.println(" unkown format " + operationResult.getFormat());
+				logger.log(Level.SEVERE, "Unrecognized lof format, should have been rejected earlier " + operationResult.getFormat());
 			}
 		}
 	}
