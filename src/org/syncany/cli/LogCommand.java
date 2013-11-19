@@ -20,6 +20,7 @@ package org.syncany.cli;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -71,25 +72,23 @@ public class LogCommand extends Command {
 	
 	private void printResults(LogOperationResult operationResult) {
 		for (PartialFileHistory fileHistory : operationResult.getFileHistories()) {
-			for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
+			FileVersion lastVersion = fileHistory.getLastVersion();
+			out.printf("%s %16x\n", lastVersion.getPath(), fileHistory.getFileId());
+			Iterator<Long> fileVersionNumber = fileHistory.getDescendingVersionNumber();
+			while(fileVersionNumber.hasNext()) {
+				FileVersion fileVersion = fileHistory.getFileVersion(fileVersionNumber.next());
 				String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 				String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
-				
-				out.printf(
-					"%20d %4d %-20s %9s %4s %8d %7s %8s %40s %s\n",
-					
-					fileHistory.getFileId(),
-					fileVersion.getVersion(),
-					dateFormat.format(fileVersion.getLastModified()),
-					posixPermissions,
-					dosAttributes,
-					fileVersion.getSize(),
-					fileVersion.getType(),
-					fileVersion.getStatus(),
-					StringUtil.toHex(fileVersion.getChecksum()),
-					fileVersion.getPath()				
-				);
+
+				out.printf("\t%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
+						posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
+						StringUtil.toHex(fileVersion.getChecksum()));
+				if(fileVersion.getPath().equals(lastVersion.getPath())) {
+					out.println();
+				} else {
+					out.println(" "+fileVersion.getPath());
+				}
 			}
 		}
-	}	
+	}
 }
