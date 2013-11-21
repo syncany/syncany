@@ -15,10 +15,12 @@ While the basic idea is similar to Dropbox and JungleDisk, Syncany is open-sourc
 - [Build and installation](#build-and-installation)
 - [Sample usage](#sample-usage)
 - [Setup Eclipse IDE for development](#setup-eclipse-ide-for-development)
+- [How can I help?](#how-can-i-help)
 - [Licensing, website and contact](#licensing-website-and-contact)
 
 
-# Documentation, diagrams and screencasts
+Documentation, diagrams and screencasts
+---------------------------------------
 
 There is quite a bit of reading material on Syncany already. Check out the following links:
 
@@ -47,7 +49,8 @@ We have a quite exhaustive JavaDoc (or at least we're trying to build it up). If
 - Cryptography / Encryption: [MultiCipherOutputStream.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/MultiCipherOutputStream.java), [CipherSpec.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSpec.java), [CipherSession.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSession.java)
 
 
-# Build and installation
+Build and installation
+----------------------
 
 **Requirements**: Syncany is based on Java 7, so you need that installed. We use Ivy for dependency management, and Ant as a build tool. If you have those things, it should be pretty easy.
 
@@ -71,7 +74,8 @@ If you do not want to permanently install Syncany on your system, but just try i
 On Windows, it is necessary to open a new terminal window to be able to call the `syncany` command. Linux additionally allows you to use `sy` instead of `syncany` as an abbreviation.
  
 
-# Sample usage
+Sample usage
+------------
 
 Usage is pretty similar to a version control system. If you have used Git or SVN, it should feel a lot alike.
 
@@ -110,7 +114,8 @@ You can also manually trigger the upload of your local files or the download of 
 For a detailed demo, please refer to a [screencast](#documentation-diagrams-and-screencasts). 
 
 
-# Setup Eclipse IDE for development
+Setup Eclipse IDE for development
+---------------------------------
 
 1. Be sure to install Git, Ivy and Ant on your system. On Debian-based systems, for instance:
 
@@ -141,8 +146,15 @@ For a detailed demo, please refer to a [screencast](#documentation-diagrams-and-
 
 9. Run the build.xml as Ant Build
 
+
+How can I help?
+---------------
+Check out the <a href="TODO.md">TODO list</a> for starting points. If you have questions,
+don't hesitate to ask!
+
  
-# Licensing, website and contact
+Licensing, website and contact
+------------------------------
 
 Syncany is licensed under the GPLv2 open source license. It is mainly developed by [Philipp C. Heckel](http://blog.philippheckel.com/) and [Steffen Dangmann](https://www.xing.com/profiles/Steffen_Dangmann). We are always looking for people to join or help out. Feel free to contact us:
 
