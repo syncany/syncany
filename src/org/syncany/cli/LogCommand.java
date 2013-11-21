@@ -23,10 +23,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,15 +40,9 @@ import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.util.StringUtil;
 
 public class LogCommand extends Command {
-	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss"); 
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
-	public static final Set<String> formats;
-	static {
-		Set<String> localFormats = new HashSet<String>();
-		localFormats.add("full");
-		localFormats.add("last");
-		formats = Collections.unmodifiableSet(localFormats);
-	}
+	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss"); 	
+
 	@Override
 	public boolean initializedLocalDirRequired() {	
 		return true;
@@ -74,10 +66,13 @@ public class LogCommand extends Command {
 
 		OptionSet options = parser.parse(operationArgs);
 
+		// --format
 		String format = options.valueOf(optionFormat);
-		if (!formats.contains(format)) {
+		
+		if (!getSupportedFormats().contains(format)) {
 			throw new Exception("Unrecognized log format " + format);
 		}
+		
 		// Files
 		List<?> nonOptionArgs = options.nonOptionArguments();
 		List<String> restoreFilePaths = new ArrayList<String>();
@@ -130,5 +125,14 @@ public class LogCommand extends Command {
 				logger.log(Level.SEVERE, "Unrecognized lof format, should have been rejected earlier " + operationResult.getFormat());
 			}
 		}
+	}
+
+	public static List<String> getSupportedFormats() {		
+		List<String> localFormats = new ArrayList<String>();
+
+		localFormats.add("full");
+		localFormats.add("last");
+
+		return Collections.unmodifiableList(localFormats);
 	}
 }

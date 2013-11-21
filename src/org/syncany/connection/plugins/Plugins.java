@@ -97,6 +97,7 @@ public class Plugins {
 			return;
 		}		
 		
+		// TODO [low] Plugins.list() does not work on Windows. Why?
 		for (String className : ClasspathUtil.getClasspathClasses().values()) {
 			if (className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
 				Matcher m = PLUGIN_FQCN_REGEX.matcher(className);

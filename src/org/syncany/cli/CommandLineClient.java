@@ -307,6 +307,8 @@ public class CommandLineClient extends Client {
 			}			
 		});		
 		
+		String logCommandFormat = StringUtil.join(LogCommand.getSupportedFormats(), ", ");
+		
 		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
 		out.println("Usage: sy [-l|--localdir=<path>] [--log=<path>]");
 		out.println("          [--loglevel=OFF|SEVERE|..] [-q|--quiet]");
@@ -404,8 +406,8 @@ public class CommandLineClient extends Client {
 		out.println("      might change in future releases.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -f, --format=<format>       Specifies the format to use for printing the log.");
-		out.println("      Currently recognized formats: " + LogCommand.formats);
+		out.println("      -f, --format=<format>            Specifies the format to use for printing the log.");
+		out.println("                                       Recognized formats: " + logCommandFormat);
 		out.println();
 		
 		out.close();		
