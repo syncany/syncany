@@ -20,6 +20,8 @@ package org.syncany.operations;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -36,6 +38,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.util.FileUtil;
 
 public abstract class AbstractInitOperation extends Operation {
 	public AbstractInitOperation(Config config) {
@@ -64,7 +67,11 @@ public abstract class AbstractInitOperation extends Operation {
 		appDir.mkdir();
 		logDir.mkdir();
 		cacheDir.mkdir();
-		databaseDir.mkdir();		
+		databaseDir.mkdir();
+		
+		if (FileUtil.isWindows()) {
+			Files.setAttribute(Paths.get(appDir.getAbsolutePath()), "dos:hidden", true);
+		}
 		
 		return appDir;
 	}

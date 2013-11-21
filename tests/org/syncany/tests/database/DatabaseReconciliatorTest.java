@@ -548,6 +548,96 @@ public class DatabaseReconciliatorTest {
 				
 		/// Perform test ///
 		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
+	}		
+	
+	@Test
+	public void testOneLocalVersionDetermineLastCommon() throws Exception {
+		// TODO [high] Bug in last common determination
+		
+		/* Scenario: The local machine ("C") has only one local database version
+		 *           Determining the last common header went wrong in this scenario. 
+		 */
+		
+		/// Input data ///
+		String localMachineName = "C";
+		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1)/T=1376074225169");
+		Branches allBranches = new Branches();
+
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+		}));
+		
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+		}));
+				
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A1)/T=1376074225169");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A1)/T=1376074225169",
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A1)/T=1376074225169",
+		});		
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A1)/T=1376074225169"
+		}).firstEntry();
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
+	}			
+	
+	@Test
+	public void testTwoWinningVersionsWithSameTimestamp() throws Exception {
+		/* Scenario: Three clients, to conflicting DBVs with the same timestamp
+		 *           --> A should win over B (alphabetical order)
+		 */
+		
+		/// Input data ///
+		String localMachineName = "C";
+		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A2)/T=1376074225230");
+		Branches allBranches = new Branches();
+
+		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+			"A/(A3)/T=1376074225256",
+
+			// Conflicts with A -> A3,B1; also: SAME timestamp! 
+			"A/(A4)/T=9999999999999",
+		}));
+		
+		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
+			// Conflicts with B -> A4; also: SAME timestamp!
+			"B/(A3,B1)/T=9999999999999"
+		}));
+		
+		allBranches.put("C", TestDatabaseUtil.createBranch(new String[] {
+			"A/(A1)/T=1376074225169",
+			"A/(A2)/T=1376074225230",
+		}));
+				
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A2)/T=1376074225230");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A3)/T=1376074225256",
+			"B", "A/(A3)/T=1376074225256",
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A3)/T=1376074225256",
+			"B", "A/(A3)/T=1376074225256",
+		});		
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A4)/T=9999999999999"
+		}).firstEntry();
+				
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}			
 
 	@Test
@@ -666,7 +756,7 @@ public class DatabaseReconciliatorTest {
 		}));
 		
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
-	}	
+	}		
 
 	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, Branches allBranches, TestResult expectedTestResult) throws Exception {
 		// Print them all

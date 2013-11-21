@@ -325,27 +325,46 @@ public class DatabaseReconciliator {
 				if (currentComparisonDatabaseVersionHeader == null) {
 					currentComparisonMachineName = machineName;
 					currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
-				} else {
+				} 
+				else {
 					VectorClockComparison comparison = VectorClock.compare(currentComparisonDatabaseVersionHeader.getVectorClock(),
 							currentMachineDatabaseVersionHeader.getVectorClock());
 
-					if (comparison != VectorClockComparison.EQUAL) {
+					if (comparison != VectorClockComparison.EQUAL) {	
+						// a. Decide which machine will be eliminated (by timestamp, then name)
+						Boolean eliminateComparisonMachine = null; 
+						
 						if (currentComparisonDatabaseVersionHeader.getDate().before(currentMachineDatabaseVersionHeader.getDate())) {
-							// Eliminate machine in current loop
-
-							machineBranchPositionIterator.put(machineName, null);
-							machineInRaceCount--;
-						} else if (currentMachineDatabaseVersionHeader.getDate().before(
-								currentComparisonDatabaseVersionHeader.getDate())) {
-							// Eliminate comparison machine
-
+							// Comparison machine timestamp before current machine timestamp							
+							eliminateComparisonMachine = false;
+						} 
+						else if (currentMachineDatabaseVersionHeader.getDate().before(currentComparisonDatabaseVersionHeader.getDate())) {
+							// Current machine timestamp before comparison machine timestamp							
+							eliminateComparisonMachine = true;
+						} 
+						else {
+							// Conflicting database version header timestamps are equal
+							// Now the alphabet decides: A wins before B!
+							
+							if (currentComparisonMachineName.compareTo(machineName) < 0) { 																
+								eliminateComparisonMachine = false;
+							}
+							else { 
+								eliminateComparisonMachine = true;
+							}							
+						}
+						
+						// b. Actually eliminate a machine (comparison machine, or current machine)
+						if (eliminateComparisonMachine) {
 							machineBranchPositionIterator.put(currentComparisonMachineName, null);
 							machineInRaceCount--;
 
 							currentComparisonMachineName = machineName;
-							currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
-						} else {
-							throw new Exception("This should not happen."); // TODO [medium] If database header timestamps are equal, compare names
+							currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;							
+						}
+						else {
+							machineBranchPositionIterator.put(machineName, null);
+							machineInRaceCount--;
 						}
 					}
 				}
