@@ -18,6 +18,7 @@
 package org.syncany.database;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -63,6 +64,15 @@ public class PartialFileHistory {
         return versions.lastEntry().getValue();
     }   
 
+    /**
+     * Returns an iterator on the version numbers stored in this partial history, in reverse order. 
+     * 
+     * @return an iterator on the version numbers in reverse order 
+     */
+    public Iterator<Long> getDescendingVersionNumber() {
+    	return Collections.unmodifiableSet(versions.descendingKeySet()).iterator();
+    }
+    
     /* package */ void addFileVersion(FileVersion fileVersion) {
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
