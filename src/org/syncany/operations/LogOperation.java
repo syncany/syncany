@@ -45,7 +45,8 @@ public class LogOperation extends Operation {
 		this.options = options;
 	}	
 		
-	public OperationResult execute() throws Exception {
+	@Override
+	public LogOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Log' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");

@@ -52,7 +52,8 @@ public class InitOperation extends AbstractInitOperation {
         this.listener = listener;
     }        
             
-    public OperationResult execute() throws Exception {
+    @Override
+    public InitOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");                      

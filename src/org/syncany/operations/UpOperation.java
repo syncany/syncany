@@ -45,7 +45,6 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -100,7 +99,8 @@ public class UpOperation extends Operation {
 		this.loadedDatabase = database;
 	}
 	
-	public OperationResult execute() throws Exception {
+	@Override
+	public UpOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -114,7 +114,7 @@ public class UpOperation extends Operation {
 		}
 		
 		// Find local changes
-		ChangeSet statusChangeSet = ((StatusOperationResult) new StatusOperation(config, database, options.getStatusOptions()).execute()).getChangeSet();
+		ChangeSet statusChangeSet = (new StatusOperation(config, database, options.getStatusOptions()).execute()).getChangeSet();
 		result.getStatusResult().setChangeSet(statusChangeSet);
 		
 		if (!statusChangeSet.hasChanges()) {
@@ -126,7 +126,7 @@ public class UpOperation extends Operation {
 		
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
-			List<RemoteFile> unknownRemoteDatabases = ((RemoteStatusOperationResult) new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+			List<RemoteFile> unknownRemoteDatabases = (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 			
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");

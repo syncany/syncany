@@ -48,7 +48,8 @@ public class ConnectOperation extends AbstractInitOperation {
 		this.listener = listener;
 	}		
 	
-	public OperationResult execute() throws Exception {
+	@Override
+	public ConnectOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Connect'");
 		logger.log(Level.INFO, "--------------------------------------------");

@@ -54,7 +54,8 @@ public class LsRemoteOperation extends Operation {
 		this.alreadyDownloadedRemoteDatabases = new HashSet<String>();
 	}	
 	
-	public OperationResult execute() throws Exception {
+	@Override
+	public RemoteStatusOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Remote Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");

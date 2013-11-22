@@ -32,7 +32,8 @@ public class WatchOperation extends Operation {
 		this.options = options;
 	}	
 	
-	public OperationResult execute() throws Exception {
+	@Override
+	public WatchOperationResult execute() throws Exception {
 		Database database = loadLocalDatabase();
 		
 		while (true) {
