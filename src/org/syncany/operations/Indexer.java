@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -178,6 +179,13 @@ public class Indexer {
 		return null;
 	}
 
+	public static class IndexerException extends RuntimeException {
+		private static final long serialVersionUID = 5247751938336036877L;
+
+		public IndexerException(String message) {
+			super(message);
+		}
+	}
 	private class IndexerDeduperListener implements DeduperListener {
 		private FileVersionComparator fileVersionHelper;
 		private SecureRandom secureRandom;
@@ -189,10 +197,13 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
 		
+		private Random random;
+		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 			this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
+			this.random = new Random();
 		}				
 
 		@Override
@@ -269,7 +280,22 @@ public class Indexer {
 			FileVersion fileVersion = null;			
 			
 			if (lastFileVersion == null) {
-				fileHistory = new PartialFileHistory();
+				int nbAttempts = 0;
+				//TODO [medium] move this generation to a better place. Where?
+				long possibleId;
+				do {
+					possibleId = random.nextLong();
+					if(database.getFileHistory(possibleId) == null 
+					   && newDatabaseVersion.getFileHistory(possibleId) == null) {
+						break;
+					}
+					nbAttempts++;
+				} while (nbAttempts < 10);
+				if (nbAttempts >= 10) {
+					//TODO [low] maybe use a better exception
+					throw new IndexerException("Cannot generate a unique file id, aborting");
+				}
+				fileHistory = new PartialFileHistory(possibleId);
 				
 				fileVersion = new FileVersion();
 				fileVersion.setVersion(1L);

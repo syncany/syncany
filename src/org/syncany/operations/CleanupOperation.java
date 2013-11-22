@@ -46,7 +46,7 @@ public class CleanupOperation extends Operation {
 	}
 
 	@Override
-	public OperationResult execute() throws Exception {
+	public CleanupOperationResult execute() throws Exception {
 		//1. Identify DatabaseVersions older than x days
 		List<DatabaseVersion> identifiedDatabaseVersions = identifyDatabaseVersions(options);
 		
@@ -115,6 +115,10 @@ public class CleanupOperation extends Operation {
 			this.strategy = strategy;
 		}
 		
+	}
+	
+	public static class CleanupOperationResult implements OperationResult {
+		// Nothing
 	}
 	
 }

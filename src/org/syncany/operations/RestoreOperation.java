@@ -68,7 +68,8 @@ public class RestoreOperation extends Operation {
 		this.options = options;
 	}	
 		
-	public OperationResult execute() throws Exception {
+	@Override
+	public RestoreOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Restore' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");

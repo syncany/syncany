@@ -52,7 +52,8 @@ public abstract class Operation {
 
 	/**
 	 * Executes the operation synchronously and returns a result when 
-	 * the operation exits.
+	 * the operation exits. Using covariance is recommend, that is OperationFoo should
+	 * override execute so as to return a OperationFooResult rather than OperationResult.   
 	 *   
 	 * @return Returns an operation-specific operation result
 	 * @throws Exception If the operation fails
