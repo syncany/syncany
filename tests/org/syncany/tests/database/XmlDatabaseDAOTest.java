@@ -246,7 +246,7 @@ public class XmlDatabaseDAOTest {
 		// Create directories (no content!)
 
 		// File A
-		PartialFileHistory fileHistoryA = new PartialFileHistory();
+		PartialFileHistory fileHistoryA = new PartialFileHistory(1L);
 		newDatabaseVersion.addFileHistory(fileHistoryA);
 		
         FileVersion versionA1 = new FileVersion();
@@ -268,7 +268,7 @@ public class XmlDatabaseDAOTest {
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
 		       
         // File B
-		PartialFileHistory fileHistoryB = new PartialFileHistory();
+		PartialFileHistory fileHistoryB = new PartialFileHistory(2L);
 		newDatabaseVersion.addFileHistory(fileHistoryB);
 		
         FileVersion versionB1 = new FileVersion();

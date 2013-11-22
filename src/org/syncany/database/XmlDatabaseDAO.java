@@ -501,8 +501,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				String fileHistoryIdStr = attributes.getValue("id");
 				Long fileHistoryId = Long.parseLong(fileHistoryIdStr);
 				
-				fileHistory = new PartialFileHistory();
-				fileHistory.setFileId(fileHistoryId);
+				fileHistory = new PartialFileHistory(fileHistoryId);
 			}	
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
