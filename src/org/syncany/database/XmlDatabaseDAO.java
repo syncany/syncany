@@ -469,7 +469,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent")) {
 				String checksumStr = attributes.getValue("checksum");
 				byte[] checksum = StringUtil.fromHex(checksumStr);
-				int size = Integer.parseInt(attributes.getValue("size"));
+				long size = Long.parseLong(attributes.getValue("size"));
 
 				fileContent = new FileContent();
 				fileContent.setChecksum(checksum);
