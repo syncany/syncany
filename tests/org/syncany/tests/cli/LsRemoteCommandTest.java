@@ -58,7 +58,7 @@ public class LsRemoteCommandTest {
 		}));
 		
 		assertEquals("Different number of output lines expected.", 1, cliOut.length);
-		assertEquals("? db-B-1", cliOut[0]);
+		assertEquals("? db-B-0000000001", cliOut[0]);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);

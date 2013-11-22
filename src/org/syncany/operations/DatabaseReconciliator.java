@@ -206,8 +206,6 @@ public class DatabaseReconciliator {
 	
 	public TreeMap<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(
 			TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
-		// TODO [high] this method curently does not catch the scenario in which two first winning conflict headers have the same timestamp
-		//             this could be baaad, though very unlikely
 		DatabaseVersionHeader winningFirstConflictingDatabaseVersionHeader = null;
 
 		// Compare all first conflicting ones and take the one with the EARLIEST

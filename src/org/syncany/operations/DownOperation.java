@@ -53,7 +53,6 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
@@ -228,7 +227,10 @@ public class DownOperation extends Operation {
 				logger.log(Level.INFO, "    * Removing "+databaseVersionHeader+" ...");
 				localDatabase.removeDatabaseVersion(databaseVersion);
 				
-				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+databaseVersionHeader.getVectorClock().get(config.getMachineName()));
+				String remoteFileToPruneClientName = config.getMachineName();
+				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().get(config.getMachineName());				
+				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
+				
 				logger.log(Level.INFO, "    * Deleting remote database file "+remoteFileToPrune+" ...");
 				transferManager.delete(remoteFileToPrune);
 			}
@@ -367,7 +369,7 @@ public class DownOperation extends Operation {
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localEncryptedMultiChunkFile.getName()); // TODO [low] Make MultiChunkRemoteFile class, or something like that
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localEncryptedMultiChunkFile.getName()); 
 			
 			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
@@ -419,8 +421,8 @@ public class DownOperation extends Operation {
 				clientVersionTo = databaseVersionHeader.getVectorClock();
 			}
 			
-			String potentialDatabaseShortFileNameForRange = "db-"+clientName+"-"+clientVersionTo.get(clientName); // TODO [medium] Naming stuff
-			File databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseShortFileNameForRange);
+			DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientVersionTo.get(clientName)); 
+			File databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
 			
 			if (databaseFileForRange != null) {
 				// Load database
@@ -440,7 +442,7 @@ public class DownOperation extends Operation {
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 		// Sort files (db-a-1 must be before db-a-2 !)
-		Collections.sort(remoteDatabases); // TODO [medium] natural sort is a workaround, database file names should be centrally managed, db-name-0000000009 avoids natural sort  
+		Collections.sort(remoteDatabases); // TODO [HIGH] This does not work for db-X-9 and db-X-10! natural sort is a workaround, database file names should be centrally managed, db-name-0000000009 avoids natural sort  
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
@@ -449,8 +451,8 @@ public class DownOperation extends Operation {
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
 		
-			RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteDatabaseFileInCache);
-			dbDAO.load(remoteDatabase, remoteDatabaseFile.getFile());		// TODO [medium] Performance: This is very, very, very inefficient, DB is loaded and then discarded	
+			DatabaseRemoteFile remoteDatabaseFile = new DatabaseRemoteFile(remoteDatabaseFileInCache.getName());
+			dbDAO.load(remoteDatabase, remoteDatabaseFileInCache, true); // only load headers!			
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();			
 			
 			// Populate branches

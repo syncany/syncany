@@ -29,11 +29,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
-import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 
 public class LsRemoteOperation extends Operation {
@@ -107,7 +107,7 @@ public class LsRemoteOperation extends Operation {
 			VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
 			
 			for (RemoteFile remoteFile : remoteDatabaseFiles.values()) {
-				RemoteDatabaseFile remoteDatabaseFile = new RemoteDatabaseFile(remoteFile.getName());
+				DatabaseRemoteFile remoteDatabaseFile = new DatabaseRemoteFile(remoteFile.getName());
 				
 				String clientName = remoteDatabaseFile.getClientName();
 				Long knownClientVersion = knownDatabaseVersions.get(clientName);

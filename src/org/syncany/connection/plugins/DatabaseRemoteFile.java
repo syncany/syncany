@@ -17,8 +17,54 @@
  */
 package org.syncany.connection.plugins;
 
-public class DatabaseRemoteFile extends RemoteFile {
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class DatabaseRemoteFile extends RemoteFile implements Comparable<DatabaseRemoteFile> {
+	private static final Pattern NAME_PATTERN = Pattern.compile("db-([^-]+)-(\\d+)");
+	private static final String NAME_FORMAT = "db-%s-%010d";
+	
+	private String clientName;
+	private long clientVersion;
+	
 	public DatabaseRemoteFile(String name) {
 		super(name);
+		parseName();
+	}
+		
+	public DatabaseRemoteFile(String clientName, long version) {
+		super(String.format(NAME_FORMAT, clientName, version)); 
+	}
+		
+	public String getClientName() {
+		return clientName;
+	}
+	
+	public long getClientVersion() {
+		return clientVersion;
+	}
+	
+	private void parseName() {
+		Matcher matcher = NAME_PATTERN.matcher(getName());
+		
+		if (!matcher.matches()) {
+			throw new RuntimeException(getName() + ": remote database filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
+		}
+		
+		clientName = matcher.group(1);
+		clientVersion = Long.parseLong(matcher.group(2));
+	}
+
+
+	@Override
+	public int compareTo(DatabaseRemoteFile r2) {
+		int clientNameCompare = this.getClientName().compareTo(r2.getClientName());
+
+		if (clientNameCompare != 0) {
+			return clientNameCompare;
+		}
+		else {
+			return (int) (this.getClientVersion() - r2.getClientVersion());
+		}
 	}
 }

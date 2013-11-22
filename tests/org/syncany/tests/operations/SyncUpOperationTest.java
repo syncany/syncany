@@ -69,7 +69,7 @@ public class SyncUpOperationTest {
 		LocalConnection localConnection = (LocalConnection) testConfig.getConnection();
 		
 		File localDatabaseFile = new File(testConfig.getDatabaseDir() + "/local.db");
-		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/db-" + testConfig.getMachineName()+"-1");
+		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/db-" + testConfig.getMachineName()+"-0000000001");
 		
 		assertTrue(localDatabaseFile.exists());
 		assertTrue(remoteDatabaseFile.exists());

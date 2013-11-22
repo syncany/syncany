@@ -42,7 +42,6 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.RemoteDatabaseFile;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
@@ -162,7 +161,7 @@ public class UpOperation extends Operation {
 			long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().get(config.getMachineName());
 
 			// Upload delta database
-			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+newestLocalDatabaseVersion);
+			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
 			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());	
 
 			Database newDeltaDatabase = new Database();
@@ -309,10 +308,10 @@ public class UpOperation extends Operation {
 	private void cleanupOldDatabases(Database database, long newestLocalDatabaseVersion) throws Exception {
 		// Retrieve and sort machine's database versions
 		Map<String, RemoteFile> ownRemoteDatabaseFiles = transferManager.list("db-"+config.getMachineName()+"-"); // TODO [low] Use file prefix or other method
-		List<RemoteDatabaseFile> ownDatabaseFiles = new ArrayList<RemoteDatabaseFile>();	
+		List<DatabaseRemoteFile> ownDatabaseFiles = new ArrayList<DatabaseRemoteFile>();	
 		
 		for (RemoteFile ownRemoteDatabaseFile : ownRemoteDatabaseFiles.values()) {
-			ownDatabaseFiles.add(new RemoteDatabaseFile(ownRemoteDatabaseFile.getName()));
+			ownDatabaseFiles.add(new DatabaseRemoteFile(ownRemoteDatabaseFile.getName()));
 		}
 		
 		Collections.sort(ownDatabaseFiles);
@@ -325,8 +324,8 @@ public class UpOperation extends Operation {
 		
 		logger.log(Level.INFO, "- Performing cleanup ("+ownDatabaseFiles.size()+" database files, max. "+MAX_KEEP_DATABASE_VERSIONS+") ...");
 		
-		RemoteDatabaseFile firstMergeDatabaseFile = ownDatabaseFiles.get(0);
-		RemoteDatabaseFile lastMergeDatabaseFile = ownDatabaseFiles.get(ownDatabaseFiles.size()-MIN_KEEP_DATABASE_VERSIONS-1);
+		DatabaseRemoteFile firstMergeDatabaseFile = ownDatabaseFiles.get(0);
+		DatabaseRemoteFile lastMergeDatabaseFile = ownDatabaseFiles.get(ownDatabaseFiles.size()-MIN_KEEP_DATABASE_VERSIONS-1);
 		
 		DatabaseVersion firstMergeDatabaseVersion = null;
 		DatabaseVersion lastMergeDatabaseVersion = null;
@@ -347,7 +346,7 @@ public class UpOperation extends Operation {
 				}
 				
 				if (localVersion < lastMergeDatabaseFile.getClientVersion()) {
-					toDeleteDatabaseFiles.add(new DatabaseRemoteFile("db-"+config.getMachineName()+"-"+localVersion)); // TODO [low] Do this differently db-...
+					toDeleteDatabaseFiles.add(new DatabaseRemoteFile(config.getMachineName(), localVersion)); 
 				}
 			}
 		}
@@ -358,7 +357,7 @@ public class UpOperation extends Operation {
 		
 		// Now write merge file
 		File localMergeDatabaseVersionFile = config.getCache().getDatabaseFile("db-"+config.getMachineName()+"-"+lastMergeDatabaseFile.getClientVersion());
-		DatabaseRemoteFile remoteMergeDatabaseVersionFile = new DatabaseRemoteFile(localMergeDatabaseVersionFile.getName());
+		DatabaseRemoteFile remoteMergeDatabaseVersionFile = new DatabaseRemoteFile(config.getMachineName(), lastMergeDatabaseFile.getClientVersion());
 		
 		logger.log(Level.INFO, "   + Writing new merge file (from "+firstMergeDatabaseVersion.getHeader()+", to "+lastMergeDatabaseVersion.getHeader()+") to file "+localMergeDatabaseVersionFile+" ...");
 
