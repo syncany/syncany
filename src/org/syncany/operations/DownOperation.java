@@ -55,7 +55,6 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
@@ -121,7 +120,8 @@ public class DownOperation extends Operation {
 		this.result = new DownOperationResult();
 	}	
 	
-	public OperationResult execute() throws Exception {
+	@Override
+	public DownOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync down' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");		
@@ -468,7 +468,7 @@ public class DownOperation extends Operation {
 	}
 
 	private List<RemoteFile> listUnknownRemoteDatabases(Database database, TransferManager transferManager) throws Exception {
-		return ((RemoteStatusOperationResult) new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+		return (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 	}
 	
 	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<RemoteFile> unknownRemoteDatabases) throws StorageException {

@@ -27,9 +27,8 @@ import org.syncany.config.Config;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -44,7 +43,7 @@ public class StatusOperationTest {
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 500*1024, 3);
 		 
 		// Status
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();				
+		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();				
 		
 		assertEquals(changeSet.getNewFiles().size(), originalFiles.size());
 		assertEquals(changeSet.getChangedFiles().size(), 0);
@@ -54,7 +53,7 @@ public class StatusOperationTest {
 		new UpOperation(config).execute();		
 				
 		// Status
-		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();		
+		changeSet = (new StatusOperation(config).execute()).getChangeSet();		
 		
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
@@ -67,7 +66,7 @@ public class StatusOperationTest {
 			TestFileUtil.changeRandomPartOfBinaryFile(file);
 		}		
 		
-		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();
+		changeSet = (new StatusOperation(config).execute()).getChangeSet();
 		
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), originalFiles.size());
@@ -81,7 +80,7 @@ public class StatusOperationTest {
 			TestFileUtil.deleteFile(file);
 		}
 				
-		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();
+		changeSet = (new StatusOperation(config).execute()).getChangeSet();
 		
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
@@ -109,7 +108,7 @@ public class StatusOperationTest {
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config, null, statusOptions).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config, null, statusOptions).execute()).getChangeSet();						
 		assertEquals(changeSet.getChangedFiles().size(), 1);
 				
 		// Cleanup 
@@ -129,7 +128,7 @@ public class StatusOperationTest {
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should NOT run a checksum-based file comparison
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();						
 		assertEquals(changeSet.getChangedFiles().size(), 1);
 				
 		// Cleanup 
@@ -143,7 +142,7 @@ public class StatusOperationTest {
 		new File(config.getLocalDir()+"/somefolder").mkdir();
 				
 		// Run 'status', this SHOULD list the folder
-		ChangeSet changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();						
 		assertEquals(changeSet.getNewFiles().size(), 1);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
@@ -153,7 +152,7 @@ public class StatusOperationTest {
 		new UpOperation(config).execute();
 		
 		// Run 'status', this SHOULD NOT list the folder in the changed/new files
-		changeSet = ((StatusOperationResult) new StatusOperation(config).execute()).getChangeSet();						
+		changeSet = (new StatusOperation(config).execute()).getChangeSet();						
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), 0);

@@ -36,7 +36,6 @@ import org.syncany.operations.LogOperation;
 import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
-import org.syncany.operations.LsRemoteOperation.RemoteStatusOperationResult;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -46,7 +45,6 @@ import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.SyncOperation;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncOperation.SyncOperationResult;
@@ -85,7 +83,7 @@ public class Client {
 	}
 	
 	public UpOperationResult up(UpOperationOptions options) throws Exception {
-		return (UpOperationResult) new UpOperation(config, null, options).execute();
+		return new UpOperation(config, null, options).execute();
 	}
 	
 	public DownOperationResult down() throws Exception {
@@ -93,7 +91,7 @@ public class Client {
 	}
 	
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
-		return (DownOperationResult) new DownOperation(config, null, options).execute();
+		return new DownOperation(config, null, options).execute();
 	}
 	
 	public SyncOperationResult sync() throws Exception {
@@ -101,7 +99,7 @@ public class Client {
 	}
 	
 	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
-		return (SyncOperationResult) new SyncOperation(config, null, options).execute();
+		return new SyncOperation(config, null, options).execute();
 	}
 
 	public ChangeSet status() throws Exception {
@@ -109,19 +107,19 @@ public class Client {
 	}
 	
 	public ChangeSet status(StatusOperationOptions options) throws Exception {
-		return ((StatusOperationResult) new StatusOperation(config, null, options).execute()).getChangeSet();		
+		return (new StatusOperation(config, null, options).execute()).getChangeSet();		
 	}	
 
 	public List<RemoteFile> remoteStatus() throws Exception {
-		return ((RemoteStatusOperationResult) new LsRemoteOperation(config).execute()).getUnknownRemoteDatabases();
+		return (new LsRemoteOperation(config).execute()).getUnknownRemoteDatabases();
 	}
 
 	public RestoreOperationResult restore(RestoreOperationOptions options) throws Exception {
-		return (RestoreOperationResult) new RestoreOperation(config, options).execute();		
+		return new RestoreOperation(config, options).execute();		
 	}
 	
 	public LogOperationResult log(LogOperationOptions options) throws Exception {
-		return (LogOperationResult) new LogOperation(config, options).execute();		
+		return new LogOperation(config, options).execute();		
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
@@ -133,7 +131,7 @@ public class Client {
 	}
 	
 	public InitOperationResult init(InitOperationOptions options, InitOperationListener listener) throws Exception {
-        return (InitOperationResult) new InitOperation(options, listener).execute();                
+        return new InitOperation(options, listener).execute();                
 	}
 	
 	public ConnectOperationResult connect(ConnectOperationOptions options) throws Exception {
@@ -141,6 +139,6 @@ public class Client {
 	}
 	
 	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws Exception {
-        return (ConnectOperationResult) new ConnectOperation(options, listener).execute();                
+        return new ConnectOperation(options, listener).execute();                
 	}
 }

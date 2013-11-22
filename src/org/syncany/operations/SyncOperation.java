@@ -40,12 +40,12 @@ public class SyncOperation extends Operation {
 	}		
 	
 	@Override
-	public OperationResult execute() throws Exception {
+	public SyncOperationResult execute() throws Exception {
 		DownOperation syncDown = new DownOperation(config, loadedDatabase, options.getSyncDownOptions());
 		UpOperation syncUp = new UpOperation(config, loadedDatabase, options.getSyncUpOptions());
 		
-		DownOperationResult syncDownResults = (DownOperationResult) syncDown.execute();
-		UpOperationResult syncUpResults = (UpOperationResult) syncUp.execute();
+		DownOperationResult syncDownResults = syncDown.execute();
+		UpOperationResult syncUpResults = syncUp.execute();
 		
 		return new SyncOperationResult(syncDownResults, syncUpResults);
 	}

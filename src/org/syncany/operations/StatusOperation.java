@@ -59,7 +59,8 @@ public class StatusOperation extends Operation {
 		this.options = options;
 	}	
 	
-	public OperationResult execute() throws Exception {
+	@Override
+	public StatusOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");

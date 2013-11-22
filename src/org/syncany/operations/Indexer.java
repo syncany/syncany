@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -178,6 +179,13 @@ public class Indexer {
 		return null;
 	}
 
+	public static class IndexerException extends RuntimeException {
+		private static final long serialVersionUID = 5247751938336036877L;
+
+		public IndexerException(String message) {
+			super(message);
+		}
+	}
 	private class IndexerDeduperListener implements DeduperListener {
 		private FileVersionComparator fileVersionHelper;
 		private SecureRandom secureRandom;
@@ -189,10 +197,13 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
 		
+		private Random random;
+		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 			this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
+			this.random = new Random();
 		}				
 
 		@Override
@@ -268,8 +279,11 @@ public class Indexer {
 			PartialFileHistory fileHistory = null;
 			FileVersion fileVersion = null;			
 			
-			if (lastFileVersion == null) {
-				fileHistory = new PartialFileHistory();
+			if (lastFileVersion == null) {				
+				// TODO [low] move this generation to a better place. Where?
+				long newFileHistoryId = generateNewFileHistoryId();
+				
+				fileHistory = new PartialFileHistory(newFileHistoryId);
 				
 				fileVersion = new FileVersion();
 				fileVersion.setVersion(1L);
@@ -367,6 +381,29 @@ public class Indexer {
 					newDatabaseVersion.addFileContent(fileContent);
 				}
 			}						
+		}
+
+		private long generateNewFileHistoryId() {
+			int nbAttempts = 0;
+			long newFileHistoryId = 0;
+			
+			do {
+				newFileHistoryId = random.nextLong();
+				
+				if (database.getFileHistory(newFileHistoryId) == null 
+					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {
+					
+					break;
+				}
+				
+				nbAttempts++;
+			} while (nbAttempts < 10);
+			
+			if (nbAttempts >= 10) {
+				throw new IndexerException("Cannot generate a unique file id, aborting");
+			}
+			
+			return newFileHistoryId;
 		}
 
 		private void resetFileEnd() {
