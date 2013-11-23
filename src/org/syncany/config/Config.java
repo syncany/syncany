@@ -115,7 +115,7 @@ public class Config {
 	}	
 
 	private void initRepo(RepoTO repoTO) throws Exception {
-		// TODO [low] make chunking options configurable
+		// TODO [feature request] make chunking options configurable
 		
 		chunker = new MimeTypeChunker(
 			new FixedChunker(16*1024, "SHA1"),

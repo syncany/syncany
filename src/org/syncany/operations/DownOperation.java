@@ -441,8 +441,9 @@ public class DownOperation extends Operation {
 
 	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
+
 		// Sort files (db-a-1 must be before db-a-2 !)
-		Collections.sort(remoteDatabases); // TODO [HIGH] This does not work for db-X-9 and db-X-10! natural sort is a workaround, database file names should be centrally managed, db-name-0000000009 avoids natural sort  
+		Collections.sort(remoteDatabases);   
 		
 		// Read database files
 		Branches unknownRemoteBranches = new Branches();
