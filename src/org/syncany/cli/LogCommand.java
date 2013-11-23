@@ -41,23 +41,23 @@ import org.syncany.util.StringUtil;
 
 public class LogCommand extends Command {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
-	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss"); 	
+	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
 
 	@Override
-	public boolean initializedLocalDirRequired() {	
+	public boolean initializedLocalDirRequired() {
 		return true;
 	}
-	
+
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		LogOperationOptions operationOptions = parseOptions(operationArgs);
 		LogOperationResult operationResult = client.log(operationOptions);
-		
+
 		printResults(operationResult);
-		
-		return 0;		
+
+		return 0;
 	}
-	
+
 	public LogOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		LogOperationOptions operationOptions = new LogOperationOptions();
 
@@ -68,11 +68,11 @@ public class LogCommand extends Command {
 
 		// --format
 		String format = options.valueOf(optionFormat);
-		
+
 		if (!getSupportedFormats().contains(format)) {
 			throw new Exception("Unrecognized log format " + format);
 		}
-		
+
 		// Files
 		List<?> nonOptionArgs = options.nonOptionArguments();
 		List<String> restoreFilePaths = new ArrayList<String>();
@@ -86,7 +86,7 @@ public class LogCommand extends Command {
 
 		return operationOptions;
 	}
-	
+
 	private void printOneVersion(FileVersion fileVersion) {
 		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
@@ -95,15 +95,32 @@ public class LogCommand extends Command {
 				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
 				StringUtil.toHex(fileVersion.getChecksum()));
 	}
-	
+
+	private int longestPath(List<PartialFileHistory> fileHistories, boolean lastOnly) {
+		int result = 0;
+		for (PartialFileHistory fileHistory : fileHistories) {
+			if (lastOnly) {
+				result = Math.max(result, fileHistory.getLastVersion().getPath().length());
+			} else {
+				for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
+					result = Math.max(result, fileVersion.getPath().length());
+				}
+			}
+		}
+		return result;
+	}
+
 	private void printResults(LogOperationResult operationResult) {
+		int longestPath = 0;
+		if (operationResult.getFormat().equals("last")) {
+			longestPath = longestPath(operationResult.getFileHistories(), true);
+		}
 		for (PartialFileHistory fileHistory : operationResult.getFileHistories()) {
 			FileVersion lastVersion = fileHistory.getLastVersion();
-			out.printf("%s %16x", lastVersion.getPath(), fileHistory.getFileId());
 			switch (operationResult.getFormat()) {
 			case "full":
 				Iterator<Long> fileVersionNumber = fileHistory.getDescendingVersionNumber();
-				out.println();
+				out.printf("%s %16x\n", lastVersion.getPath(), fileHistory.getFileId());
 				while (fileVersionNumber.hasNext()) {
 					FileVersion fileVersion = fileHistory.getFileVersion(fileVersionNumber.next());
 					out.print('\t');
@@ -116,7 +133,7 @@ public class LogCommand extends Command {
 				}
 				break;
 			case "last":
-				out.print(' ');
+				out.printf("%-" + longestPath + "s %16x", lastVersion.getPath(), fileHistory.getFileId());
 				printOneVersion(lastVersion);
 				out.println();
 				break;
@@ -127,7 +144,7 @@ public class LogCommand extends Command {
 		}
 	}
 
-	public static List<String> getSupportedFormats() {		
+	public static List<String> getSupportedFormats() {
 		List<String> localFormats = new ArrayList<String>();
 
 		localFormats.add("full");
