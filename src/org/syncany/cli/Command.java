@@ -45,8 +45,8 @@ import org.syncany.Client;
 public abstract class Command {
 	protected File localDir;
 	protected Client client;
-	protected PrintStream out;	
-	
+	protected PrintStream out;
+
 	/**
 	 * This method implements the command-specific option-parsing, operation calling 
 	 * and output printing. To do so, the method must read and evaluate the given 
@@ -62,7 +62,7 @@ public abstract class Command {
 	 */
 	// TODO [low] Return code of commands not used right now
 	public abstract int execute(String[] operationArgs) throws Exception;
-	
+
 	/**
 	 * A command can either be executed within an initialized local directory or 
 	 * in a regular (non-Syncany) directory. This method must return <tt>true</tt>,
@@ -79,8 +79,8 @@ public abstract class Command {
 	public void setClient(Client client) {
 		this.client = client;
 	}
-	
+
 	public void setOut(PrintStream out) {
 		this.out = out;
-	}	
+	}
 }

@@ -46,7 +46,7 @@ public class WatchCommand extends Command {
 		
 		// Run!
 		client.watch(operationOptions);
-		
+
 		return 0;
 	}
 }
