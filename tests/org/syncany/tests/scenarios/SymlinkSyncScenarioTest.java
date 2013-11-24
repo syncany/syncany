@@ -72,7 +72,7 @@ public class SymlinkSyncScenarioTest {
 		assertNotNull("There should be a new database version, because file should not have been added.", databaseVersion);
 		
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();
+		File repoPath = new File(((LocalConnection) testConnection).getRepositoryPath()+"/databases");
 		String[] repoFileList = repoPath.list(new FilenameFilter() {			
 			@Override
 			public boolean accept(File dir, String name) {

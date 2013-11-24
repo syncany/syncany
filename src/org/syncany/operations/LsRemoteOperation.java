@@ -96,7 +96,7 @@ public class LsRemoteOperation extends Operation {
 		
 		List<RemoteFile> unknownRemoteDatabasesList = new ArrayList<RemoteFile>();
 
-		Map<String, RemoteFile> remoteDatabaseFiles = transferManager.list("db-");
+		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
 		
 		// No local database yet
 		if (db.getLastDatabaseVersion() == null) {
@@ -107,28 +107,26 @@ public class LsRemoteOperation extends Operation {
 		else {
 			VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
 			
-			for (RemoteFile remoteFile : remoteDatabaseFiles.values()) {
-				DatabaseRemoteFile remoteDatabaseFile = new DatabaseRemoteFile(remoteFile.getName());
-				
+			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 				String clientName = remoteDatabaseFile.getClientName();
 				Long knownClientVersion = knownDatabaseVersions.get(clientName);
 						
 				if (knownClientVersion != null) {
 					if (remoteDatabaseFile.getClientVersion() <= knownClientVersion) {
-						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteFile.getName());
+						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteDatabaseFile.getName());
 					}
-					else if (alreadyDownloadedRemoteDatabases.contains(remoteFile.getName())) {
-						logger.log(Level.INFO, "- Remote database {0} is already known (in knowndbs.list). Ignoring.", remoteFile.getName());
+					else if (alreadyDownloadedRemoteDatabases.contains(remoteDatabaseFile.getName())) {
+						logger.log(Level.INFO, "- Remote database {0} is already known (in knowndbs.list). Ignoring.", remoteDatabaseFile.getName());
 					}
 					else {
-						logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
-						unknownRemoteDatabasesList.add(remoteFile);
+						logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
+						unknownRemoteDatabasesList.add(remoteDatabaseFile);
 					}
 				}
 				
 				else {
-					logger.log(Level.INFO, "- Remote database {0} is new.", remoteFile.getName());
-					unknownRemoteDatabasesList.add(remoteFile);
+					logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
+					unknownRemoteDatabasesList.add(remoteDatabaseFile);
 				}				
 			}
 			

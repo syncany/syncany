@@ -17,8 +17,44 @@
  */
 package org.syncany.connection.plugins;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.syncany.util.StringUtil;
+
 public class MultiChunkRemoteFile extends RemoteFile {
-	public MultiChunkRemoteFile(String name) {
+	private static final Pattern NAME_PATTERN = Pattern.compile("multichunk-([a-f0-9]+)");
+	private static final String NAME_FORMAT = "multichunk-%s";
+	
+	private byte[] multiChunkId;
+	
+	public MultiChunkRemoteFile(String name) throws StorageException {
 		super(name);
-	}	
+	}
+		
+	public MultiChunkRemoteFile(byte[] multiChunkId) throws StorageException {
+		super(String.format(NAME_FORMAT, StringUtil.toHex(multiChunkId))); 
+	}
+		
+	public byte[] getMultiChunkId() {
+		return multiChunkId;
+	}
+	
+	@Override
+	protected String parseName(String name) throws StorageException {
+		Matcher matcher = NAME_PATTERN.matcher(name);
+		
+		if (!matcher.matches()) {
+			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
+		}
+		
+		try {
+			multiChunkId = StringUtil.fromHex(matcher.group(1));
+		}
+		catch (Exception e) {
+			throw new StorageException(e);
+		}
+		
+		return name;
+	}
 }

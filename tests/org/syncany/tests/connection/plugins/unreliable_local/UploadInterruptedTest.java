@@ -36,8 +36,8 @@ public class UploadInterruptedTest {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 					
-				"rel=1 .+upload.+multichunk", // 1st upload (= multichunk) fails
-				"rel=5 .+upload.+db-A-2"             // 2nd upload of db-A-2 fails
+				"rel=1 .+upload.+multichunk",     // 1st upload (= multichunk) fails
+				"rel=5 .+upload.+db-A-0000000002" // 2nd upload of db-A-2 fails
 			}
 		));
 		
@@ -54,9 +54,9 @@ public class UploadInterruptedTest {
 		
 		clientThreadA.interrupt();
 		
-		assertTrue(new File(testConnection.getRepositoryPath()+"/db-A-0000000001").exists());
-		assertTrue(new File(testConnection.getRepositoryPath()+"/db-A-0000000002").exists());
-		assertTrue(new File(testConnection.getRepositoryPath()+"/db-A-0000000003").exists());
+		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000001").exists());
+		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000002").exists());
+		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000003").exists());
 		
 		// Tear down
 		clientA.cleanup();

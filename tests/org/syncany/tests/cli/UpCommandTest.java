@@ -56,7 +56,7 @@ public class UpCommandTest {
 		
 		for (int i=1; i<=20; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File databaseFileInRepo = new File(connectionSettings.get("path")+"/"+expectedDatabaseRemoteFile.getName());
+			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file SHOULD exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}
@@ -86,14 +86,14 @@ public class UpCommandTest {
 
 		for (int i=1; i<=10; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File databaseFileInRepo = new File(connectionSettings.get("path")+"/"+expectedDatabaseRemoteFile.getName());
+			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertFalse("Database file SHOULD NOT exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}
 		
 		for (int i=11; i<=20; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File databaseFileInRepo = new File(connectionSettings.get("path")+"/"+expectedDatabaseRemoteFile.getName());
+			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertTrue("Database file SHOULD exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}

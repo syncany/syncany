@@ -175,8 +175,8 @@ public class AllFilePossibilitiesScenarioTest {
 		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 		
-		clientA.cleanup();
-		clientB.cleanup();
+		//clientA.cleanup();
+		//clientB.cleanup();
 	}
 	
 }

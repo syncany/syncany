@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -120,6 +121,8 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
 			
+			disconnectTransferManager();
+			
 			return result;
 		}
 		
@@ -130,6 +133,8 @@ public class UpOperation extends Operation {
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");
 				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
+				
+				disconnectTransferManager();
 				
 				return result;
 			}
@@ -150,6 +155,8 @@ public class UpOperation extends Operation {
 		if (newDatabaseVersion.getFileHistories().size() == 0) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");			
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+			
+			disconnectTransferManager();
 			
 			return result;
 		}
@@ -191,6 +198,8 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "- Deleting dirty.db from: "+config.getDirtyDatabaseFile());
 			config.getDirtyDatabaseFile().delete(); 
 		}
+		
+		disconnectTransferManager();
 		
 		// Result
 		updateResultChangeSet(newDatabaseVersion);
@@ -243,7 +252,7 @@ public class UpOperation extends Operation {
 			}
 			else {
 				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localMultiChunkFile.getName());
+				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
 				
 				logger.log(Level.INFO, "- Uploading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" from "+localMultiChunkFile+" to "+remoteMultiChunkFile+" ...");
 				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
@@ -305,16 +314,29 @@ public class UpOperation extends Operation {
 		return newDatabaseVersion;
 	}
 	
+	private Map<String, DatabaseRemoteFile> retrieveOwnRemoteDatabaseFiles() throws StorageException {
+		Map<String, DatabaseRemoteFile> ownDatabaseRemoteFiles = new TreeMap<String, DatabaseRemoteFile>();
+		Map<String, DatabaseRemoteFile> allDatabaseRemoteFiles = transferManager.list(DatabaseRemoteFile.class);
+		
+		for (Map.Entry<String, DatabaseRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
+			if (config.getMachineName().equals(entry.getValue().getClientName())) {
+				ownDatabaseRemoteFiles.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
+		return ownDatabaseRemoteFiles;		
+	}
+	
 	private void cleanupOldDatabases(Database database, long newestLocalDatabaseVersion) throws Exception {
 		// Retrieve and sort machine's database versions
-		Map<String, RemoteFile> ownRemoteDatabaseFiles = transferManager.list("db-"+config.getMachineName()+"-"); // TODO [low] Use file prefix or other method
+		Map<String, DatabaseRemoteFile> ownRemoteDatabaseFiles = retrieveOwnRemoteDatabaseFiles();
 		List<DatabaseRemoteFile> ownDatabaseFiles = new ArrayList<DatabaseRemoteFile>();	
 		
 		for (RemoteFile ownRemoteDatabaseFile : ownRemoteDatabaseFiles.values()) {
 			ownDatabaseFiles.add(new DatabaseRemoteFile(ownRemoteDatabaseFile.getName()));
 		}
-		
-		Collections.sort(ownDatabaseFiles);
+		 
+		Collections.sort(ownDatabaseFiles); 
 	
 		// Now merge
 		if (ownDatabaseFiles.size() <= MAX_KEEP_DATABASE_VERSIONS) {
@@ -372,6 +394,15 @@ public class UpOperation extends Operation {
 		for (RemoteFile toDeleteRemoteFile : toDeleteDatabaseFiles) {
 			logger.log(Level.INFO, "   + Deleting remote file "+toDeleteRemoteFile+" ...");
 			transferManager.delete(toDeleteRemoteFile);
+		}
+	}
+	
+	private void disconnectTransferManager() {
+		try {
+			transferManager.disconnect();
+		}
+		catch (StorageException e) {
+			// Don't care!
 		}
 	}
 

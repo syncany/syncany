@@ -31,8 +31,10 @@ import org.jets3t.service.impl.rest.httpclient.RestStorageService;
 import org.jets3t.service.model.StorageBucket;
 import org.jets3t.service.model.StorageObject;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RemoteFileFactory;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.util.FileUtil;
 
@@ -47,11 +49,14 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     private RestStorageService service;
     private StorageBucket bucket;
     
-    private String dataPath;
+    private String multichunkPath;
+    private String databasePath;
 
     public RestTransferManager(RestConnection connection) {
         super(connection);             
-        this.dataPath = "data";
+        
+        this.multichunkPath = "multichunks";
+        this.databasePath = "databases";
     }
 
     @Override
@@ -88,8 +93,11 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     	connect();
     	    	
     	try {
-    		StorageObject dataPathFolder = new StorageObject(dataPath+"/"); // Slash ('/') makes it a folder
-			service.putObject(bucket.getName(), dataPathFolder);
+    		StorageObject multichunkPathFolder = new StorageObject(multichunkPath+"/"); // Slash ('/') makes it a folder
+			service.putObject(bucket.getName(), multichunkPathFolder);
+			
+			StorageObject databasePathFolder = new StorageObject(databasePath+"/"); // Slash ('/') makes it a folder
+			service.putObject(bucket.getName(), databasePathFolder);
 		}
     	catch (ServiceException e) {
     		throw new StorageException(e);
@@ -101,7 +109,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
         connect();
 
         File tempFile = null;
-        String remotePath = getRemoteFilePath(remoteFile);        
+        String remotePath = getRemoteFile(remoteFile);        
 
         try {
             // Download
@@ -134,7 +142,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
         connect();
         
-        String remotePath = getRemoteFilePath(remoteFile);
+        String remotePath = getRemoteFile(remoteFile);
 
         try {
             StorageObject fileObject = new StorageObject(remotePath);
@@ -156,7 +164,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     public boolean delete(RemoteFile remoteFile) throws StorageException {
         connect();
 
-        String remotePath = getRemoteFilePath(remoteFile);
+        String remotePath = getRemoteFile(remoteFile);
 
         try {
             service.deleteObject(bucket.getName(), remotePath);
@@ -169,55 +177,60 @@ public abstract class RestTransferManager extends AbstractTransferManager {
     }
 
     @Override
-    public Map<String, RemoteFile> list() throws StorageException {
-        connect();
-        
-        try {
-	        Map<String, RemoteFile> completeList = new HashMap<String, RemoteFile>();
+    public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
+    	connect();
+    	
+    	try {            
+         	// List folder
+     		String remoteFilePath = getRemoteFilePath(remoteFileClass);
 	        String bucketName = bucket.getName();
-	        StorageObject[] objects = service.listObjects(bucketName);
-	
-	        for (StorageObject obj : objects) {
-	            completeList.put(obj.getName(), new RemoteFile(obj.getName()));
-	        }
-	        
-	        return completeList;
-        }
-        catch (ServiceException ex) {
-            Logger.getLogger(RestTransferManager.class.getName()).log(Level.SEVERE, null, ex);
-            throw new StorageException(ex);
-        }        
+	        StorageObject[] objects = service.listObjects(bucketName, remoteFilePath, null);
+
+            // Create RemoteFile objects
+            Map<String, T> remoteFiles = new HashMap<String, T>();
+             
+            for (StorageObject storageObject : objects) {
+            	String simpleRemoteName = storageObject.getName().substring(storageObject.getName().lastIndexOf("/")+1);
+            	
+            	if (simpleRemoteName.length() > 0) {
+	            	try {
+	             		T remoteFile = RemoteFileFactory.createRemoteFile(simpleRemoteName, remoteFileClass);
+	             		remoteFiles.put(simpleRemoteName, remoteFile);
+	             	}
+	             	catch (Exception e) {
+	             		logger.log(Level.INFO, "Cannot create instance of "+remoteFileClass.getSimpleName()+" for object "+simpleRemoteName+"; maybe invalid file name pattern. Ignoring file.");
+	             	}
+            	}
+            }
+
+            return remoteFiles;
+         }
+         catch (ServiceException ex) {
+             logger.log(Level.SEVERE, "Unable to list FTP directory.", ex);
+             throw new StorageException(ex);
+         }
     }
 
-    @Override
-    public Map<String, RemoteFile> list(String namePrefix) throws StorageException {
-    	Map<String, RemoteFile> completeList = list();
-
-        // No filter
-        if (namePrefix == null) {
-            return completeList;
-        }
-                
-        // Filtered (prefix given)
-        else {
-	        Map<String, RemoteFile> filteredList = new HashMap<String, RemoteFile>();
-	
-	        for (Map.Entry<String, RemoteFile> e : completeList.entrySet()) {
-	            if (e.getKey().startsWith(namePrefix)) {
-	                filteredList.put(e.getKey(), e.getValue());
-	            }
-	        }
-	        
-	        return filteredList;
-        }
-    }  
+	private String getRemoteFile(RemoteFile remoteFile) {
+		String remoteFilePath = getRemoteFilePath(remoteFile.getClass());				
+    	
+		if (remoteFilePath != null) {
+			return remoteFilePath+"/"+remoteFile.getName();
+		}
+		else {
+			return remoteFile.getName();
+		}
+    }
     
-    private String getRemoteFilePath(RemoteFile remoteFile) {
-    	if (remoteFile instanceof MultiChunkRemoteFile) {
-    		return dataPath+"/"+remoteFile.getName();
+    private String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
+    	if (remoteFile.equals(MultiChunkRemoteFile.class)) {
+    		return multichunkPath;
+    	}
+    	else if (remoteFile.equals(DatabaseRemoteFile.class)) {
+    		return databasePath;
     	}
     	else {
-    		return remoteFile.getName();
+    		return null;
     	}
-	}
+    }
 }

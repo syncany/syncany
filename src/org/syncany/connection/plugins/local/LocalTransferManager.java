@@ -20,17 +20,20 @@ package org.syncany.connection.plugins.local;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RemoteFileFactory;
 import org.syncany.connection.plugins.StorageException;
 
 /**
@@ -38,14 +41,18 @@ import org.syncany.connection.plugins.StorageException;
  * @author Philipp C. Heckel
  */
 public class LocalTransferManager extends AbstractTransferManager {
+	private static final Logger logger = Logger.getLogger(LocalTransferManager.class.getSimpleName());
+	
     private File repoPath; 
-    private File dataPath;
+    private File multichunksPath;
+    private File databasePath;
 
     public LocalTransferManager(LocalConnection connection) {
         super(connection);
         
         this.repoPath = connection.getRepositoryPath();
-        this.dataPath = new File(connection.getRepositoryPath().getAbsolutePath()+File.separator+"data");
+        this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath()+File.separator+"multichunks");
+        this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath()+File.separator+"databases");
     }
 
     @Override
@@ -64,8 +71,12 @@ public class LocalTransferManager extends AbstractTransferManager {
     public void init() throws StorageException {
     	connect();
     	
-		if (!dataPath.mkdir()) {
-			throw new StorageException("Cannot create data directory: "+dataPath);	
+		if (!multichunksPath.mkdir()) {
+			throw new StorageException("Cannot create multichunk directory: "+multichunksPath);	
+		}
+		
+		if (!databasePath.mkdir()) {
+			throw new StorageException("Cannot create database directory: "+databasePath);	
 		}
     }
     
@@ -133,46 +144,47 @@ public class LocalTransferManager extends AbstractTransferManager {
         return repoFile.delete();
     }
 
-    @Override
-    public Map<String, RemoteFile> list() throws StorageException {
-        return list(null);
-    }
+	@Override
+	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
+		connect();
 
-    @Override
-    public Map<String, RemoteFile> list(final String namePrefix) throws StorageException {
-        connect();
-
-        File[] files;
-
-        if (namePrefix == null) {
-            files = repoPath.listFiles();
-        }
-        else {
-            files = repoPath.listFiles(new FilenameFilter() {
-            @Override public boolean accept(File dir, String name) {
-                return name.startsWith(namePrefix); }
-            });
-        }
+		// List folder
+		File remoteFilePath = getRemoteFilePath(remoteFileClass);		
+        File[] files = remoteFilePath.listFiles();
 
         if (files == null) {
             throw new StorageException("Unable to read local respository "+repoPath);
         }
 
-        Map<String, RemoteFile> remoteFiles = new HashMap<String, RemoteFile>();
+        // Create RemoteFile objects
+        Map<String, T> remoteFiles = new HashMap<String, T>();
 
         for (File file : files) {
-            remoteFiles.put(file.getName(), new RemoteFile(file.getName()));
+        	try {
+        		T remoteFile = RemoteFileFactory.createRemoteFile(file.getName(), remoteFileClass);
+        		remoteFiles.put(file.getName(), remoteFile);
+        	}
+        	catch (Exception e) {
+        		logger.log(Level.INFO, "Cannot create instance of "+remoteFileClass.getSimpleName()+" for file "+file+"; maybe invalid file name pattern. Ignoring file.");
+        	}            
         }
 
-        return remoteFiles;
-    }
+        return remoteFiles;		
+	}        
 
     private File getRemoteFile(RemoteFile remoteFile) {
-    	if (remoteFile instanceof MultiChunkRemoteFile) {
-    		return new File(dataPath+File.separator+remoteFile.getName());
+    	return new File(getRemoteFilePath(remoteFile.getClass())+File.separator+remoteFile.getName());
+    }
+    
+    private File getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
+    	if (remoteFile.equals(MultiChunkRemoteFile.class)) {
+    		return multichunksPath;
+    	}
+    	else if (remoteFile.equals(DatabaseRemoteFile.class)) {
+    		return databasePath;
     	}
     	else {
-    		return new File(repoPath+File.separator+remoteFile.getName());
+    		return repoPath;
     	}
     }
     
@@ -193,9 +205,5 @@ public class LocalTransferManager extends AbstractTransferManager {
     
     public String getAbsoluteParentDirectory(File file) {
         return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
-    }
-    
-    public File createTempFile(String name) throws IOException {
-        return File.createTempFile(String.format("temp-%s-", name), ".tmp", repoPath);
     }    
 }

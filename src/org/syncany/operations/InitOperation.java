@@ -33,7 +33,8 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.MasterRemoteFile;
+import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
@@ -118,7 +119,7 @@ public class InitOperation extends AbstractInitOperation {
 
 	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
 		try {
-			Map<String, RemoteFile> repoFileList = transferManager.list("repo"); // TODO [medium] naming stuff
+			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);
 			
 			if (repoFileList.containsKey("repo")) {
 				return true;
@@ -133,11 +134,11 @@ public class InitOperation extends AbstractInitOperation {
 	}
 	
 	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {    		
-		transferManager.upload(masterFile, new RemoteFile("master")); // TODO [low] Naming stuff
+		transferManager.upload(masterFile, new MasterRemoteFile());
 	}  
 	
 	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {    		
-		transferManager.upload(repoFile, new RemoteFile("repo")); // TODO [low] Naming stuff
+		transferManager.upload(repoFile, new RepoRemoteFile());
 	}    	
 
 	private String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {

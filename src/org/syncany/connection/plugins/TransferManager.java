@@ -32,6 +32,12 @@ import java.util.Map;
  * <li>files matching the specified file format are complete, i.e. fully uploaded
  * <li>methods that need an established connections re-connect if necessary
  * </ul>
+ * 
+ * <p>A transfer manager may organize files according to their type or name as
+ * it is optimal for the given storage. {@link RemoteFile}s can be classified
+ * by their sub-type. For network-transfer optimization reasons, it might be
+ * useful to place {@link MultiChunkRemoteFile}s and {@link DatabaseRemoteFile}s
+ * in a separate sub-folder on the remote storage.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -114,25 +120,14 @@ public interface TransferManager {
     public boolean delete(RemoteFile remoteFile) throws StorageException;
 
     /**
-     * Retrieves a list of all files in the remote repository.
-     *
+     * Retrieves a list of all files in the remote repository, filtered by
+     * the type of the desired file, i.e. by a sub-class of {@link RemoteFile}.
+     * 
+     * @param remoteFileClass Filter class: <tt>RemoteFile</tt> or a sub-type thereof  
      * @return Returns a list of remote files. In the map, the key is the file name,
      *         the value the entire {@link RemoteFile} object.
      * @throws StorageException If the connection fails due to no Internet connection,
      *         authentication errors, etc
      */
-    public Map<String, RemoteFile> list() throws StorageException;
-
-    /**
-     * Retrieves a list of selected files in the remote repository, filtered by
-     * a given prefix. 
-     *
-     * @param namePrefix Prefix of the files to be return by the method. Can be used
-     *        for updates, chunks, etc.
-     * @return Returns a list of remote files. In the map, the key is the file name,
-     *         the value the entire {@link RemoteFile} object.
-     * @throws StorageException If the connection fails due to no Internet connection,
-     *         authentication errors, etc
-     */
-    public Map<String, RemoteFile> list(String namePrefix) throws StorageException;
+    public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException;       
 }

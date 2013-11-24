@@ -23,13 +23,13 @@ package org.syncany.connection.plugins;
  */
 public class RemoteFile {
     private String name;
-
+    
     protected RemoteFile() {
         // Fressen.
     }
 
-    public RemoteFile(String name) {
-        this.name = name;
+    public RemoteFile(String name) throws StorageException {
+        this.name = parseName(name);
     }
     
     public String getName() {
@@ -38,6 +38,10 @@ public class RemoteFile {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    protected String parseName(String name) throws StorageException {
+    	return name;
     }
     
 	@Override

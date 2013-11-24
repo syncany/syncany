@@ -54,7 +54,7 @@ public class CommandLineInterfaceTest {
 		logger.log(Level.INFO, "Running syncany with argument: "+StringUtil.join(initArgs, " "));		
 		new CommandLineClient(initArgs).start();
 
-		assertTrue("Repo file in repository should exist.", new File(clientA.get("repopath")+"/repo").exists());
+		assertTrue("Repo file in repository should exist.", new File(clientA.get("repopath")+"/syncany").exists());
 		assertTrue("Repo file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO).exists());
 		assertTrue("Config file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG).exists());
 				

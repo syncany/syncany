@@ -145,17 +145,12 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
     }
 
     @Override
-    public Map<String, RemoteFile> list() throws StorageException {
-        return list(null);
-    }
-
-    @Override
-    public Map<String, RemoteFile> list(final String namePrefix) throws StorageException {
-    	String operationType = "list";
-    	String operationDescription = "list("+namePrefix+")";
+    public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
+       	String operationType = "list";
+    	String operationDescription = "list("+remoteFileClass.getSimpleName()+")";
 
     	if (isNextOperationSuccessful(operationType, operationDescription)) {
-    		return super.list(namePrefix);
+    		return super.list(remoteFileClass);
     	}
     	else {
     		throw new StorageException("Operation failed: "+operationDescription);

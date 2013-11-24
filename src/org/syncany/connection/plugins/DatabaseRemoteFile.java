@@ -27,12 +27,11 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 	private String clientName;
 	private long clientVersion;
 	
-	public DatabaseRemoteFile(String name) {
+	public DatabaseRemoteFile(String name) throws StorageException {
 		super(name);
-		parseName();
 	}
 		
-	public DatabaseRemoteFile(String clientName, long version) {
+	public DatabaseRemoteFile(String clientName, long version) throws StorageException {
 		super(String.format(NAME_FORMAT, clientName, version)); 
 	}
 		
@@ -44,17 +43,19 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 		return clientVersion;
 	}
 	
-	private void parseName() {
-		Matcher matcher = NAME_PATTERN.matcher(getName());
+	@Override
+	protected String parseName(String name) throws StorageException {
+		Matcher matcher = NAME_PATTERN.matcher(name);
 		
 		if (!matcher.matches()) {
-			throw new RuntimeException(getName() + ": remote database filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
+			throw new StorageException(name + ": remote database filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
 		}
 		
 		clientName = matcher.group(1);
 		clientVersion = Long.parseLong(matcher.group(2));
+		
+		return name;
 	}
-
 
 	@Override
 	public int compareTo(DatabaseRemoteFile r2) {

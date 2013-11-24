@@ -136,6 +136,8 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 			
+			disconnectTransferManager();
+			
 			return result;
 		}
 		
@@ -158,6 +160,8 @@ public class DownOperation extends Operation {
 		// 7. Write names of newly analyzed remote databases (so we don't download them again)
 		writeAlreadyDownloadedDatabasesListFromFile(unknownRemoteDatabases);
 		
+		disconnectTransferManager();
+
 		logger.log(Level.INFO, "Sync down done.");		
 		return result;		
 	}		
@@ -362,14 +366,13 @@ public class DownOperation extends Operation {
 	
 	private void downloadAndDecryptMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
-		TransferManager transferManager = config.getConnection().createTransferManager();
 		
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them 
 		
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(localEncryptedMultiChunkFile.getName()); 
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId()); 
 			
 			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
@@ -392,7 +395,7 @@ public class DownOperation extends Operation {
 		transferManager.disconnect();
 	}
 	
-	private Database readWinnersDatabase(Branch winnersApplyBranch, List<File> remoteDatabases) throws IOException {
+	private Database readWinnersDatabase(Branch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
 		// Make map 'short filename' -> 'full filename'
 		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
 		
@@ -439,7 +442,7 @@ public class DownOperation extends Operation {
 		return winnerBranchDatabase;		
 	}
 
-	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException {
+	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException, StorageException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 
 		// Sort files (db-a-1 must be before db-a-2 !)
@@ -498,6 +501,15 @@ public class DownOperation extends Operation {
 		}
 		
 		fr.close();
+	}
+	
+	private void disconnectTransferManager() {
+		try {
+			transferManager.disconnect();
+		}
+		catch (StorageException e) {
+			// Don't care!
+		}
 	}
 
 	public static class DownOperationOptions implements OperationOptions {

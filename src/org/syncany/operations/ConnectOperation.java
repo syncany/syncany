@@ -29,7 +29,9 @@ import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -58,7 +60,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		
 		// Create local .syncany directory
 		
-		File tmpRepoFile = downloadFile(transferManager, new RemoteFile("repo")); // TODO [low] naming stuff
+		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
 		File tmpMasterFile = null;
 		
 		if (CipherUtil.isEncrypted(tmpRepoFile)) {
@@ -68,7 +70,7 @@ public class ConnectOperation extends AbstractInitOperation {
 				masterKey = options.getConfigTO().getMasterKey(); // TODO [medium] Also create master file! 
 			}
 			else {
-				tmpMasterFile = downloadFile(transferManager, new RemoteFile("master")); // TODO [low] naming stuff
+				tmpMasterFile = downloadFile(transferManager, new MasterRemoteFile());
 				MasterTO masterTO = readMasterFile(tmpMasterFile);
 				
 				String masterKeyPassword = getOrAskPasswordRepoFile();

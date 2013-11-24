@@ -31,14 +31,25 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPFileFilter;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RemoteFileFactory;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 
 /**
- *
+ * Implements a {@link TransferManager} based on an FTP storage backend for the
+ * {@link FtpPlugin}. 
+ * 
+ * <p>Using an {@link FtpConnection}, the transfer manager is configured and uses 
+ * a well defined FTP folder to store the Syncany repository data. While repo and
+ * master file are stored in the given folder, databases and multichunks are stored
+ * in special sub-folders.
+ * 
+ * <p>All operations are auto-connected, i.e. a connection is automatically
+ * established. Connecting is retried a few times before throwing an exception.
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -53,14 +64,16 @@ public class FtpTransferManager extends AbstractTransferManager {
     private FTPClient ftp;
     
     private String repoPath;
-    private String dataPath;
+    private String multichunkPath;
+    private String databasePath;
 
     public FtpTransferManager(FtpConnection connection) {
         super(connection);
         
         this.ftp = new FTPClient();
         this.repoPath = connection.getPath();
-        this.dataPath = connection.getPath()+"/data";
+        this.multichunkPath = connection.getPath()+"/multichunks";
+        this.databasePath = connection.getPath()+"/databases";
     } 
  
     @Override
@@ -82,7 +95,6 @@ public class FtpTransferManager extends AbstractTransferManager {
 
                 ftp.setConnectTimeout(TIMEOUT_CONNECT);
                 ftp.setDataTimeout(TIMEOUT_DATA);	
-                //ftp.setControlKeepAliveReplyTimeout(TIMEOUT_CONTROL_REPLY);
                 ftp.setDefaultTimeout(TIMEOUT_DEFAULT);
 
                 ftp.connect(getConnection().getHostname(), getConnection().getPort());
@@ -107,11 +119,10 @@ public class FtpTransferManager extends AbstractTransferManager {
     @Override
     public void disconnect() {
         try {
-            ftp.logout();
             ftp.disconnect();
         }
         catch (Exception ex) {
-            
+            // Nothing
         }
     } 
     
@@ -120,10 +131,12 @@ public class FtpTransferManager extends AbstractTransferManager {
     	connect();
     	
     	try {
-			ftp.mkd(dataPath);
+			ftp.mkd(multichunkPath);
+			ftp.mkd(databasePath);
 		}
     	catch (IOException e) {
-    		throw new StorageException("Cannot create data directory: "+dataPath, e);
+        	forceFtpDisconnect();
+    		throw new StorageException("Cannot create directory "+multichunkPath+", or "+databasePath, e);
 		}
     }
 
@@ -131,7 +144,7 @@ public class FtpTransferManager extends AbstractTransferManager {
     public void download(RemoteFile remoteFile, File localFile) throws StorageException {
         connect();
         
-        String remotePath = getRemoteFilePath(remoteFile);
+        String remotePath = getRemoteFile(remoteFile);
         
         try {
             // Download file
@@ -156,25 +169,18 @@ public class FtpTransferManager extends AbstractTransferManager {
             tempFile.delete();
         }
         catch (IOException ex) {
+        	forceFtpDisconnect();
+
             logger.log(Level.SEVERE, "Error while downloading file "+remoteFile.getName(), ex);
             throw new StorageException(ex);
         }
     }
 
-    private String getRemoteFilePath(RemoteFile remoteFile) {
-    	if (remoteFile instanceof MultiChunkRemoteFile) {
-    		return dataPath+"/"+remoteFile.getName();
-    	}
-    	else {
-    		return repoPath+"/"+remoteFile.getName();
-    	}
-	}
-
 	@Override
     public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
         connect();
 
-        String remotePath = getRemoteFilePath(remoteFile);
+        String remotePath = getRemoteFile(remoteFile);
         String tempRemotePath = getConnection().getPath()+"/temp-"+remoteFile.getName();
 
         try {
@@ -201,68 +207,84 @@ public class FtpTransferManager extends AbstractTransferManager {
             ftp.rename(tempRemotePath, remotePath);
         }
         catch (IOException ex) {
+        	forceFtpDisconnect();
+
             logger.log(Level.SEVERE, "Could not upload file "+localFile+" to "+remoteFile.getName(), ex);
             throw new StorageException(ex);
         }
     }
 
     @Override
-    public Map<String, RemoteFile> list() throws StorageException {
-        connect();
-
-        try {
-            Map<String, RemoteFile> files = new HashMap<String, RemoteFile>();
-            FTPFile[] ftpFiles = ftp.listFiles(getConnection().getPath()+"/");
-
-            for (FTPFile f : ftpFiles) {
-                files.put(f.getName(), new RemoteFile(f.getName()));
-            }
-
-            return files;
-        }
-        catch (IOException ex) {
-            logger.log(Level.SEVERE, "Unable to list FTP directory.", ex);
-            throw new StorageException(ex);
-        }
-    }    
-
-	@Override
-	public Map<String, RemoteFile> list(final String namePrefix) throws StorageException {
-		connect();
-
-        try {
-            Map<String, RemoteFile> files = new HashMap<String, RemoteFile>();
-            FTPFile[] ftpFiles = ftp.listFiles(getConnection().getPath()+"/", new FTPFileFilter() {				
-				@Override
-				public boolean accept(FTPFile file) {
-					return file.getName().startsWith(namePrefix);
-				}
-			});
-
-            for (FTPFile f : ftpFiles) {
-                files.put(f.getName(), new RemoteFile(f.getName()));
-            }
-
-            return files;
-        }
-        catch (IOException ex) {
-            logger.log(Level.SEVERE, "Unable to list FTP directory.", ex);
-            throw new StorageException(ex);
-        }
-	}
-
-    @Override
     public boolean delete(RemoteFile remoteFile) throws StorageException {
         connect();
         
-        String remotePath = getRemoteFilePath(remoteFile);
+        String remotePath = getRemoteFile(remoteFile);
 
         try {
             return ftp.deleteFile(remotePath);
         }
         catch (IOException ex) {
+        	forceFtpDisconnect();
+        	
             logger.log(Level.SEVERE, "Could not delete file "+remoteFile.getName(), ex);
             throw new StorageException(ex);
         }
+    }
+
+	@Override
+	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
+		connect();
+		
+        try {            
+        	// List folder
+    		String remoteFilePath = getRemoteFilePath(remoteFileClass);
+            FTPFile[] ftpFiles = ftp.listFiles(remoteFilePath+"/");
+
+            // Create RemoteFile objects
+            Map<String, T> remoteFiles = new HashMap<String, T>();
+            
+            for (FTPFile file : ftpFiles) {
+            	try {
+            		T remoteFile = RemoteFileFactory.createRemoteFile(file.getName(), remoteFileClass);
+            		remoteFiles.put(file.getName(), remoteFile);
+            	}
+            	catch (Exception e) {
+            		logger.log(Level.INFO, "Cannot create instance of "+remoteFileClass.getSimpleName()+" for file "+file+"; maybe invalid file name pattern. Ignoring file.");
+            	}               	
+            }
+
+            return remoteFiles;
+        }
+        catch (IOException ex) {
+        	forceFtpDisconnect();
+
+        	logger.log(Level.SEVERE, "Unable to list FTP directory.", ex);
+            throw new StorageException(ex);
+        }
+	}
+	
+	private void forceFtpDisconnect() {
+		try {
+			ftp.disconnect();
+		}
+		catch (IOException e) {
+			// Nothing
+		}
+	}
+	
+	private String getRemoteFile(RemoteFile remoteFile) {
+    	return getRemoteFilePath(remoteFile.getClass())+"/"+remoteFile.getName();
+    }
+    
+    private String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
+    	if (remoteFile.equals(MultiChunkRemoteFile.class)) {
+    		return multichunkPath;
+    	}
+    	else if (remoteFile.equals(DatabaseRemoteFile.class)) {
+    		return databasePath;
+    	}
+    	else {
+    		return repoPath;
+    	}
     }
 }

@@ -42,7 +42,7 @@ public class ManySyncUpsAndDatabaseFileCleanupTest {
 		
 		for (int i=1; i<=15; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
 		}
@@ -53,14 +53,14 @@ public class ManySyncUpsAndDatabaseFileCleanupTest {
 
 		for (int i=1; i<=10; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
 		
 		for (int i=11; i<=16; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
 		}
@@ -73,14 +73,14 @@ public class ManySyncUpsAndDatabaseFileCleanupTest {
 		
 		for (int i=1; i<=10; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
 		
 		for (int i=11; i<=25; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
 		}		
@@ -91,14 +91,14 @@ public class ManySyncUpsAndDatabaseFileCleanupTest {
 
 		for (int i=1; i<=20; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
 		
 		for (int i=21; i<=25; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/"+expectedDatabaseRemoteFile.getName());
+			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
 		}	
