@@ -17,10 +17,11 @@
  */
 package org.syncany.database;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.TreeMap;
+import java.util.List;
 
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.util.StringUtil;
@@ -43,14 +44,14 @@ public class FileContent {
     private byte[] checksum;
     private long contentSize;
     
-    private TreeMap<Integer, ChunkEntryId> chunks;
+    private List<ChunkEntryId> chunks;
     
     public FileContent() {
-        this.chunks = new TreeMap<Integer, ChunkEntryId>();
+        this.chunks = new ArrayList<ChunkEntryId>();
     }
        
     public void addChunk(ChunkEntryId chunk) {
-        chunks.put(chunks.size(), chunk);        
+        chunks.add(chunk);        
     }    
 
     public byte[] getChecksum() {
@@ -70,7 +71,7 @@ public class FileContent {
     }
 
     public Collection<ChunkEntryId> getChunks() {
-    	return Collections.unmodifiableCollection(chunks.values());
+    	return Collections.unmodifiableCollection(chunks);
     }
 
 	@Override
