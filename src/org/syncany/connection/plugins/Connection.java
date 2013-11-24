@@ -31,7 +31,6 @@ import java.util.Map;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-// TODO [low] The naming of this class is a bit off. It should be something like 'PluginConfig'
 public interface Connection {
     public TransferManager createTransferManager();
     public void init(Map<String, String> map) throws StorageException;

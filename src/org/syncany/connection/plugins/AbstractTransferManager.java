@@ -20,26 +20,25 @@ package org.syncany.connection.plugins;
 import java.io.File;
 import java.io.IOException;
 
-
-
 /**
- *
+ * Implements basic functionality of a {@link TransferManager} which
+ * can be implemented sub-classes.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
-    private Connection connection;
+	private Connection connection;
 
-    public AbstractTransferManager(Connection connection) {
-        this.connection = connection;
-    }
+	public AbstractTransferManager(Connection connection) {
+		this.connection = connection;
+	}
 
-    public Connection getConnection() {
-        return connection;
-    }      
-    
-    // TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
-    protected File createTempFile(String name) throws IOException {
-        return File.createTempFile(String.format("temp-%s-", name), ".tmp");
-    }   
-    
+	public Connection getConnection() {
+		return connection;
+	}
+
+	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
+	protected File createTempFile(String name) throws IOException {
+		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+	}
 }

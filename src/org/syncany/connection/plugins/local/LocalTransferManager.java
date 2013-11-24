@@ -33,7 +33,6 @@ import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.RemoteFileFactory;
 import org.syncany.connection.plugins.StorageException;
 
 /**
@@ -42,168 +41,168 @@ import org.syncany.connection.plugins.StorageException;
  */
 public class LocalTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(LocalTransferManager.class.getSimpleName());
-	
-    private File repoPath; 
-    private File multichunksPath;
-    private File databasePath;
 
-    public LocalTransferManager(LocalConnection connection) {
-        super(connection);
-        
-        this.repoPath = connection.getRepositoryPath();
-        this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath()+File.separator+"multichunks");
-        this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath()+File.separator+"databases");
-    }
+	private File repoPath;
+	private File multichunksPath;
+	private File databasePath;
 
-    @Override
-    public void connect() throws StorageException {
-        if (repoPath == null || !repoPath.exists() || !repoPath.canRead() || !repoPath.canWrite() || !repoPath.isDirectory()) {
-            throw new StorageException("Repository folder '"+repoPath+"' does not exist or is not writable.");
-        }
-    }
+	public LocalTransferManager(LocalConnection connection) {
+		super(connection);
 
-    @Override
-    public void disconnect() throws StorageException {
-        // Nothing.
-    }
+		this.repoPath = connection.getRepositoryPath();
+		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath() + File.separator + "multichunks");
+		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath() + File.separator + "databases");
+	}
 
-    @Override
-    public void init() throws StorageException {
-    	connect();
-    	
+	@Override
+	public void connect() throws StorageException {
+		if (repoPath == null || !repoPath.exists() || !repoPath.canRead() || !repoPath.canWrite() || !repoPath.isDirectory()) {
+			throw new StorageException("Repository folder '" + repoPath + "' does not exist or is not writable.");
+		}
+	}
+
+	@Override
+	public void disconnect() throws StorageException {
+		// Nothing.
+	}
+
+	@Override
+	public void init() throws StorageException {
+		connect();
+
 		if (!multichunksPath.mkdir()) {
-			throw new StorageException("Cannot create multichunk directory: "+multichunksPath);	
+			throw new StorageException("Cannot create multichunk directory: " + multichunksPath);
 		}
-		
+
 		if (!databasePath.mkdir()) {
-			throw new StorageException("Cannot create database directory: "+databasePath);	
+			throw new StorageException("Cannot create database directory: " + databasePath);
 		}
-    }
-    
-    @Override
-    public void download(RemoteFile remoteFile, File localFile) throws StorageException {
-        connect();
+	}
 
-        File repoFile = getRemoteFile(remoteFile);
+	@Override
+	public void download(RemoteFile remoteFile, File localFile) throws StorageException {
+		connect();
 
-        if (!repoFile.exists()) {
-            throw new StorageException("No such file in local repository: "+repoFile);
-        }  
+		File repoFile = getRemoteFile(remoteFile);
 
-        try {
-            File tempLocalFile = createTempFile("local-tm-download");
-            tempLocalFile.deleteOnExit();
+		if (!repoFile.exists()) {
+			throw new StorageException("No such file in local repository: " + repoFile);
+		}
 
-            copyLocalFile(repoFile, tempLocalFile);
+		try {
+			File tempLocalFile = createTempFile("local-tm-download");
+			tempLocalFile.deleteOnExit();
 
-            localFile.delete();            
-            FileUtils.moveFile(tempLocalFile, localFile);            
-            tempLocalFile.delete();
-        }
-        catch (IOException ex) {
-            throw new StorageException("Unable to copy file "+repoFile+" from local repository to "+localFile, ex);
-        }
-    }
+			copyLocalFile(repoFile, tempLocalFile);
 
-    @Override
-    public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
-        connect();
+			localFile.delete();
+			FileUtils.moveFile(tempLocalFile, localFile);
+			tempLocalFile.delete();
+		}
+		catch (IOException ex) {
+			throw new StorageException("Unable to copy file " + repoFile + " from local repository to " + localFile, ex);
+		}
+	}
 
-        File repoFile = getRemoteFile(remoteFile);
-        File tempRepoFile = new File(getAbsoluteParentDirectory(repoFile)+File.separator+".temp-"+repoFile.getName());
+	@Override
+	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
+		connect();
 
-        // Do not overwrite files with same size!
-        if (repoFile.exists() && repoFile.length() == localFile.length()) {
-            return;
-        }
+		File repoFile = getRemoteFile(remoteFile);
+		File tempRepoFile = new File(getAbsoluteParentDirectory(repoFile) + File.separator + ".temp-" + repoFile.getName());
 
-        // No such local file
-        if (!localFile.exists()) {
-            throw new StorageException("No such file on local disk: "+localFile);
-        }
+		// Do not overwrite files with same size!
+		if (repoFile.exists() && repoFile.length() == localFile.length()) {
+			return;
+		}
 
-        try {
-            copyLocalFile(localFile, tempRepoFile);
-            FileUtils.moveFile(tempRepoFile, repoFile);            
-        }
-        catch (IOException ex) {
-            throw new StorageException("Unable to copy file "+localFile+" to local repository "+repoFile, ex);
-        }
-    }
+		// No such local file
+		if (!localFile.exists()) {
+			throw new StorageException("No such file on local disk: " + localFile);
+		}
 
-    @Override
-    public boolean delete(RemoteFile remoteFile) throws StorageException {
-        connect();
+		try {
+			copyLocalFile(localFile, tempRepoFile);
+			FileUtils.moveFile(tempRepoFile, repoFile);
+		}
+		catch (IOException ex) {
+			throw new StorageException("Unable to copy file " + localFile + " to local repository " + repoFile, ex);
+		}
+	}
 
-        File repoFile = getRemoteFile(remoteFile);
+	@Override
+	public boolean delete(RemoteFile remoteFile) throws StorageException {
+		connect();
 
-        if (!repoFile.exists()) {
-            return false;
-        }
+		File repoFile = getRemoteFile(remoteFile);
 
-        return repoFile.delete();
-    }
+		if (!repoFile.exists()) {
+			return false;
+		}
+
+		return repoFile.delete();
+	}
 
 	@Override
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
 		connect();
 
 		// List folder
-		File remoteFilePath = getRemoteFilePath(remoteFileClass);		
-        File[] files = remoteFilePath.listFiles();
+		File remoteFilePath = getRemoteFilePath(remoteFileClass);
+		File[] files = remoteFilePath.listFiles();
 
-        if (files == null) {
-            throw new StorageException("Unable to read local respository "+repoPath);
-        }
+		if (files == null) {
+			throw new StorageException("Unable to read local respository " + repoPath);
+		}
 
-        // Create RemoteFile objects
-        Map<String, T> remoteFiles = new HashMap<String, T>();
+		// Create RemoteFile objects
+		Map<String, T> remoteFiles = new HashMap<String, T>();
 
-        for (File file : files) {
-        	try {
-        		T remoteFile = RemoteFileFactory.createRemoteFile(file.getName(), remoteFileClass);
-        		remoteFiles.put(file.getName(), remoteFile);
-        	}
-        	catch (Exception e) {
-        		logger.log(Level.INFO, "Cannot create instance of "+remoteFileClass.getSimpleName()+" for file "+file+"; maybe invalid file name pattern. Ignoring file.");
-        	}            
-        }
+		for (File file : files) {
+			try {
+				T remoteFile = RemoteFile.createRemoteFile(file.getName(), remoteFileClass);
+				remoteFiles.put(file.getName(), remoteFile);
+			}
+			catch (Exception e) {
+				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file + "; maybe invalid file name pattern. Ignoring file.");
+			}
+		}
 
-        return remoteFiles;		
-	}        
+		return remoteFiles;
+	}
 
-    private File getRemoteFile(RemoteFile remoteFile) {
-    	return new File(getRemoteFilePath(remoteFile.getClass())+File.separator+remoteFile.getName());
-    }
-    
-    private File getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
-    	if (remoteFile.equals(MultiChunkRemoteFile.class)) {
-    		return multichunksPath;
-    	}
-    	else if (remoteFile.equals(DatabaseRemoteFile.class)) {
-    		return databasePath;
-    	}
-    	else {
-    		return repoPath;
-    	}
-    }
-    
-    public void copyLocalFile(File src, File dst) throws IOException {
-        InputStream in = new FileInputStream(src);
-        OutputStream out = new FileOutputStream(dst);
-        
-        byte[] buf = new byte[4096];
+	private File getRemoteFile(RemoteFile remoteFile) {
+		return new File(getRemoteFilePath(remoteFile.getClass()) + File.separator + remoteFile.getName());
+	}
 
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
+	private File getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
+		if (remoteFile.equals(MultiChunkRemoteFile.class)) {
+			return multichunksPath;
+		}
+		else if (remoteFile.equals(DatabaseRemoteFile.class)) {
+			return databasePath;
+		}
+		else {
+			return repoPath;
+		}
+	}
 
-        in.close();
-        out.close();
-    }
-    
-    public String getAbsoluteParentDirectory(File file) {
-        return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
-    }    
+	public void copyLocalFile(File src, File dst) throws IOException {
+		InputStream in = new FileInputStream(src);
+		OutputStream out = new FileOutputStream(dst);
+
+		byte[] buf = new byte[4096];
+
+		int len;
+		while ((len = in.read(buf)) > 0) {
+			out.write(buf, 0, len);
+		}
+
+		in.close();
+		out.close();
+	}
+
+	public String getAbsoluteParentDirectory(File file) {
+		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
+	}
 }

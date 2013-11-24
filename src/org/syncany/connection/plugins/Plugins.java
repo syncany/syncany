@@ -42,16 +42,15 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Plugins {
-    public static final String PLUGIN_FQCN_PREFIX = Plugin.class.getPackage().getName();
-    public static final String PLUGIN_FQCN_SUFFIX = Plugin.class.getSimpleName();
-    public static final String PLUGIN_FQCN_FORMAT = PLUGIN_FQCN_PREFIX+".%s.%s"+PLUGIN_FQCN_SUFFIX;
-    public static final Pattern PLUGIN_FQCN_REGEX = Pattern.compile(PLUGIN_FQCN_PREFIX+"\\.([^.]+)\\.[\\w\\d]+"+PLUGIN_FQCN_SUFFIX);
-	
+	public static final String PLUGIN_FQCN_PREFIX = Plugin.class.getPackage().getName();
+	public static final String PLUGIN_FQCN_SUFFIX = Plugin.class.getSimpleName();
+	public static final String PLUGIN_FQCN_FORMAT = PLUGIN_FQCN_PREFIX + ".%s.%s" + PLUGIN_FQCN_SUFFIX;
+	public static final Pattern PLUGIN_FQCN_REGEX = Pattern.compile(PLUGIN_FQCN_PREFIX + "\\.([^.]+)\\.[\\w\\d]+" + PLUGIN_FQCN_SUFFIX);
+
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 	private static boolean loaded = false;
 
-	
 	/**
 	 * Loads and returns a list of all available {@link Plugin}s.
 	 * 
@@ -91,12 +90,12 @@ public class Plugins {
 		// Not found!
 		return null;
 	}
-	
+
 	private static void load() {
 		if (loaded) {
 			return;
-		}		
-		
+		}
+
 		// TODO [low] Plugins.list() does not work on Windows. Why?
 		for (String className : ClasspathUtil.getClasspathClasses().values()) {
 			if (className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
@@ -107,7 +106,7 @@ public class Plugins {
 				}
 			}
 		}
-		
+
 		loaded = true;
 	}
 
@@ -128,7 +127,7 @@ public class Plugins {
 			Plugin pluginInfo = (Plugin) pluginInfoClass.newInstance();
 
 			plugins.put(pluginId, pluginInfo);
-		} 
+		}
 		catch (Exception ex) {
 			logger.log(Level.WARNING, "Could not load plugin : " + className);
 		}

@@ -22,39 +22,68 @@ import java.util.regex.Pattern;
 
 import org.syncany.util.StringUtil;
 
+/**
+ * The multichunk file represents a multichunk on the remote storage. 
+ * 
+ * <p><b>Name pattern:</b> The name pattern of a multichunk file is
+ * <b>multichunk-&lt;multichunkid&gt;</b>. Initializing an 
+ * instance with a non-matching name will throw an exception.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class MultiChunkRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("multichunk-([a-f0-9]+)");
 	private static final String NAME_FORMAT = "multichunk-%s";
-	
+
 	private byte[] multiChunkId;
-	
+
+	/**
+	 * Initializes a new multichunk file, given a name. This constructor might 
+	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
+	 * method of the {@link RemoteFileFactory}. 
+	 * 
+	 * <p>If the pattern matches, the multichunk identifier is set and can be  
+	 * queried by {@link #getMultiChunkId()}.
+	 *  
+	 * @param name Multichunk file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 * @throws StorageException If the name is not match the name pattern
+	 */
 	public MultiChunkRemoteFile(String name) throws StorageException {
 		super(name);
 	}
-		
+
+	/**
+	 * Initializes a new multichunk file, given a multichunk identifier
+	 *  
+	 * @param multiChunkId The identifier of the multichunk
+	 * @throws StorageException Never throws an exception
+	 */
 	public MultiChunkRemoteFile(byte[] multiChunkId) throws StorageException {
-		super(String.format(NAME_FORMAT, StringUtil.toHex(multiChunkId))); 
+		super(String.format(NAME_FORMAT, StringUtil.toHex(multiChunkId)));
 	}
-		
+
+	/**
+	 * Returns the multichunk identifier
+	 */
 	public byte[] getMultiChunkId() {
 		return multiChunkId;
 	}
-	
+
 	@Override
-	protected String parseName(String name) throws StorageException {
+	protected String validateName(String name) throws StorageException {
 		Matcher matcher = NAME_PATTERN.matcher(name);
-		
+
 		if (!matcher.matches()) {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
 		}
-		
+
 		try {
 			multiChunkId = StringUtil.fromHex(matcher.group(1));
 		}
 		catch (Exception e) {
-			throw new StorageException(e);
+			throw new StorageException(name + ": remote filename pattern does not match (invalid hex): " + NAME_PATTERN.pattern() + " expected.");
 		}
-		
+
 		return name;
 	}
 }
