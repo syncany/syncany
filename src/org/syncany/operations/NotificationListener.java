@@ -37,7 +37,7 @@ import org.syncany.util.StringUtil;
  */
 public class NotificationListener {
 	private static final Logger logger = Logger.getLogger(NotificationListener.class.getSimpleName());
-	private static final int SOCKET_TIMEOUT = 5000;
+	private static final int SOCKET_TIMEOUT = 10000;
 	private static final int RECONNECT_WAIT_TIME = 5000;
 
 	private String host;

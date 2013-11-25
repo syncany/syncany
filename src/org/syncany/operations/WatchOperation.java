@@ -64,7 +64,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			startNotificationListener();
 		}
 		
-		startRecursiveWatcher();
+		if (options.watcherEnabled()) {
+			startRecursiveWatcher();
+		}
 
 		while (true) {
 			try {
@@ -89,7 +91,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		ignorePaths.add(Paths.get(config.getDatabaseDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getLogDir().getAbsolutePath()));
 		
-		recursiveWatcher = new RecursiveWatcher(localDir, ignorePaths, this);
+		recursiveWatcher = new RecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
 		
 		try {
 			recursiveWatcher.start();
@@ -154,10 +156,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 
 	public static class WatchOperationOptions implements OperationOptions {
-		private int interval = 30000;
+		private int interval = 60000;
 		private boolean announcements = false;
 		private String announcementsHost;
 		private int announcementsPort;
+		private int settleDelay = 5000;
+		private boolean watcher = true;
 
 		public int getInterval() {
 			return interval;
@@ -189,6 +193,22 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 		public void setAnnouncementsPort(int announcementsPort) {
 			this.announcementsPort = announcementsPort;
+		}
+
+		public int getSettleDelay() {
+			return settleDelay;
+		}
+
+		public void setSettleDelay(int settleDelay) {
+			this.settleDelay = settleDelay;
+		}
+
+		public boolean watcherEnabled() {
+			return watcher;
+		}
+
+		public void setWatcher(boolean watcher) {
+			this.watcher = watcher;
 		}
 	}
 

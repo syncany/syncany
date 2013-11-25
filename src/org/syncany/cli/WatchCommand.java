@@ -44,7 +44,9 @@ public class WatchCommand extends Command {
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Integer> optionInterval = parser.acceptsAll(asList("i", "interval")).withRequiredArg().ofType(Integer.class);
-		OptionSpec<String> optionAnnouncements = parser.acceptsAll(asList("a", "announcements")).withRequiredArg();
+		OptionSpec<String> optionAnnouncements = parser.acceptsAll(asList("a", "announce")).withRequiredArg();
+		OptionSpec<Void> optionNoWatcher = parser.acceptsAll(asList("W", "no-watcher"));
+		OptionSpec<Integer> optionSettleDelay = parser.acceptsAll(asList("s", "delay")).withRequiredArg().ofType(Integer.class);
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
@@ -53,7 +55,7 @@ public class WatchCommand extends Command {
 			operationOptions.setInterval(options.valueOf(optionInterval)*1000);
 		}
 		
-		// --announcements=<host>[:<port>]
+		// --announce=<host>:<port>
 		if (options.has(optionAnnouncements)) {
 			operationOptions.setAnnouncements(true);
 			
@@ -69,6 +71,16 @@ public class WatchCommand extends Command {
 			
 			operationOptions.setAnnouncementsHost(announcementsHost);
 			operationOptions.setAnnouncementsPort(announcementsPort);
+		}
+		
+		// --delay=<sec>
+		if (options.has(optionSettleDelay)) {
+			operationOptions.setSettleDelay(options.valueOf(optionSettleDelay)*1000);
+		}
+		
+		// --no-watcher
+		if (options.has(optionNoWatcher)) {
+			operationOptions.setWatcher(false);
 		}
 		
 		// Run!

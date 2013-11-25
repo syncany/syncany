@@ -39,37 +39,41 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author pheckel
  *
  */
 public class RecursiveWatcher {
-	private static final int SETTLE_DELAY = 1000;
-	
+	private static final Logger logger = Logger.getLogger(RecursiveWatcher.class.getSimpleName());
+
 	private Path root;
 	private List<Path> ignorePaths;
+	private int settleDelay;
 	private WatchListener listener;
-	
+
 	private boolean running;
-	
+
 	private WatchService watchService;
 	private Map<WatchKey, Path> watchKeyPathMap;
 	private Map<Path, WatchKey> watchPathKeyMap;
-	
-	private Timer timer;	
-	
-	public RecursiveWatcher(Path root, List<Path> ignorePaths, WatchListener listener) {
+
+	private Timer timer;
+
+	public RecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		this.root = root;
 		this.ignorePaths = ignorePaths;
+		this.settleDelay = settleDelay;
 		this.listener = listener;
-		
+
 		this.running = false;
-		
+
 		this.watchService = null;
 		this.watchKeyPathMap = new HashMap<WatchKey, Path>();
 		this.watchPathKeyMap = new HashMap<Path, WatchKey>();
-		
+
 		this.timer = null;
 	}
 
@@ -79,42 +83,48 @@ public class RecursiveWatcher {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				running = true;				
+				running = true;
 				walkTreeAndSetWatches();
-				
+
 				while (running) {
-				    try {
-					    WatchKey watchKey = watchService.take();		    
-					    watchKey.pollEvents(); // Take events, but don't care what they are!
-					    
-					    resetTimer();		    		   
-				    }
-				    catch (InterruptedException e) {
-				    	running = false;
-				    }
+					try {
+						WatchKey watchKey = watchService.take();
+						watchKey.pollEvents(); // Take events, but don't care what they are!
+
+						watchKey.reset();
+						resetWaitSettlementTimer();
+					}
+					catch (InterruptedException e) {
+						running = false;
+					}
 				}
-			}			
-		}).start();		
+			}
+		}, "Watcher").start();
 	}
-	
-	private synchronized void resetTimer() {
+
+	private synchronized void resetWaitSettlementTimer() {
+		logger.log(Level.INFO, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
+
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
 		}
-		
+
 		timer = new Timer();
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				walkTreeAndSetWatches();
 				unregisterStaleWatches();
+
 				fireListenerEvents();
-			}			
-		}, SETTLE_DELAY);		
+			}
+		}, settleDelay);
 	}
 
 	private synchronized void walkTreeAndSetWatches() {
+		logger.log(Level.INFO, "Registering new folders at watch service ...");
+
 		try {
 			Files.walkFileTree(root, new FileVisitor<Path>() {
 				@Override
@@ -123,11 +133,10 @@ public class RecursiveWatcher {
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 					else {
-						registerWatch(dir);					
+						registerWatch(dir);
 						return FileVisitResult.CONTINUE;
 					}
 				}
-
 
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -143,23 +152,25 @@ public class RecursiveWatcher {
 				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 					return FileVisitResult.CONTINUE;
 				}
-			});					
+			});
 		}
 		catch (IOException e) {
 			// Don't care
 		}
 	}
-	
+
 	private synchronized void unregisterStaleWatches() {
+		logger.log(Level.INFO, "Cancelling stale watchers ...");
+
 		Set<Path> paths = new HashSet<Path>(watchPathKeyMap.keySet());
-		
-		for (Path dir : paths) {	
+
+		for (Path dir : paths) {
 			if (!Files.exists(dir, LinkOption.NOFOLLOW_LINKS)) {
 				unregisterWatch(dir);
 			}
 		}
 	}
-	
+
 	private synchronized void fireListenerEvents() {
 		if (listener != null) {
 			listener.watchEventsOccurred();
@@ -168,32 +179,32 @@ public class RecursiveWatcher {
 
 	private synchronized void registerWatch(Path dir) {
 		if (!watchPathKeyMap.containsKey(dir)) {
-			System.out.println("register: "+dir);
-			
+			logger.log(Level.INFO, "- Registering " + dir);
+
 			try {
 				WatchKey watchKey = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW);
-				
+
 				watchKeyPathMap.put(watchKey, dir);
 				watchPathKeyMap.put(dir, watchKey);
 			}
 			catch (IOException e) {
 				// Don't care!
-			}			
+			}
 		}
 	}
-	
+
 	private synchronized void unregisterWatch(Path dir) {
 		WatchKey watchKey = watchPathKeyMap.get(dir);
-		
+
 		if (watchKey != null) {
-			System.out.println("unregister: "+dir);
+			logger.log(Level.INFO, "- Cancelling " + dir);
 			watchKey.cancel();
-			
+
 			watchKeyPathMap.remove(watchKey);
 			watchPathKeyMap.remove(dir);
 		}
-	}	
-	
+	}
+
 	public interface WatchListener {
 		public void watchEventsOccurred();
 	}
