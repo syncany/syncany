@@ -383,7 +383,7 @@ public class CommandLineClient extends Client {
 		out.println("      watch the file system.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 60)");
+		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 120)");
 		out.println("      -s, --delay=<sec>                Watcher: Wait for <sec> seconds for file system watcher to");
 		out.println("                                       settle before starting to sync (default: 5)");
 		out.println("      -W, --no-watcher                 Don't watch the file system (rely on periodic sync)");

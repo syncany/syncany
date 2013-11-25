@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +44,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
+	
+	private String notificationChannel;
+	private String notificationInstanceId;
 
 	public WatchOperation(Config config, WatchOperationOptions options) {
 		super(config);
@@ -54,6 +58,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
+		
+		this.notificationChannel = StringUtil.toHex(config.getRepoId());
+		this.notificationInstanceId = "sy"+Math.abs(new Random().nextLong());
 	}
 
 	@Override
@@ -105,7 +112,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		notificationListener = new NotificationListener(options.getAnnouncementsHost(), options.getAnnouncementsPort(), this);
 		notificationListener.start();
 		
-		notificationListener.subscribe(StringUtil.toHex(config.getRepoId()));
+		notificationListener.subscribe(notificationChannel);
 	}
 
 	private synchronized void runSync() throws Exception {
@@ -131,11 +138,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	@Override
 	public void pushNotificationReceived(String channel, String message) {
-		try {
-			runSync();
-		}
-		catch (Exception e) {
-			logger.log(Level.INFO, "Sync FAILED (event-triggered).");
+		if (channel.equals(notificationChannel) && !message.equals(notificationInstanceId)) {
+			try {
+				runSync();
+			}
+			catch (Exception e) {
+				logger.log(Level.INFO, "Sync FAILED (event-triggered).");
+			}
 		}
 	}	
 
@@ -151,12 +160,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private void notifyChanges() {
 		if (notificationListener != null) {
-			notificationListener.announce(StringUtil.toHex(config.getRepoId()), "1");
+			notificationListener.announce(notificationChannel, notificationInstanceId);
 		}
 	}
 
 	public static class WatchOperationOptions implements OperationOptions {
-		private int interval = 60000;
+		private int interval = 120000;
 		private boolean announcements = true;
 		private String announcementsHost = "notify.syncany.org";
 		private int announcementsPort = 8080;

@@ -134,23 +134,21 @@ public class NotificationListener {
 				logger.log(Level.INFO, "Sent message: " + message.trim());
 			}
 			catch (Exception e) {
-				if (!outgoingMessageQueue.contains(message)) {
-					logger.log(Level.INFO, "Sending failed, queuing message: " + message.trim());
-					outgoingMessageQueue.offer(message);
-				}
-				else {
-					logger.log(Level.INFO, "Sending failed and message already in queue: " + message.trim());
-				}
+				queueOutgoingMessage(message);
 			}
 		}
 		else {
-			if (!outgoingMessageQueue.contains(message)) {
-				logger.log(Level.INFO, "No connection, queuing message: " + message.trim());
-				outgoingMessageQueue.offer(message);
-			}
-			else {
-				logger.log(Level.INFO, "Sending failed and message already in queue: " + message.trim());
-			}
+			queueOutgoingMessage(message);
+		}
+	}
+
+	private void queueOutgoingMessage(String message) {
+		if (!outgoingMessageQueue.contains(message)) {
+			logger.log(Level.INFO, "Sending failed or no connection, queuing message: " + message.trim());
+			outgoingMessageQueue.offer(message);
+		}
+		else {
+			logger.log(Level.INFO, "Sending failed and message already in queue: " + message.trim());
 		}
 	}
 
