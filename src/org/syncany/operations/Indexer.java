@@ -38,6 +38,7 @@ import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
+import org.syncany.database.FileId;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
@@ -281,7 +282,7 @@ public class Indexer {
 			
 			if (lastFileVersion == null) {				
 				// TODO [low] move this generation to a better place. Where?
-				long newFileHistoryId = generateNewFileHistoryId();
+				FileId newFileHistoryId = generateNewFileHistoryId();
 				
 				fileHistory = new PartialFileHistory(newFileHistoryId);
 				
@@ -383,12 +384,12 @@ public class Indexer {
 			}						
 		}
 
-		private long generateNewFileHistoryId() {
+		private FileId generateNewFileHistoryId() {
 			int nbAttempts = 0;
-			long newFileHistoryId = 0;
-			
+			FileId newFileHistoryId = null;
+			//TODO[low]: this is probably useless as the collision probability should be super tiny
 			do {
-				newFileHistoryId = random.nextLong();
+				newFileHistoryId = new FileId(random.nextLong(),random.nextLong());
 				
 				if (database.getFileHistory(newFileHistoryId) == null 
 					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {

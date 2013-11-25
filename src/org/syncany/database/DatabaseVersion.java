@@ -32,7 +32,7 @@ public class DatabaseVersion {
     private Map<ByteArray, ChunkEntry> chunks;
     private Map<ByteArray, MultiChunkEntry> multiChunks;
     private Map<ByteArray, FileContent> fileContents;
-    private Map<Long, PartialFileHistory> fileHistories;
+    private Map<FileId, PartialFileHistory> fileHistories;
 
     // Quick access cache
     private Map<ChunkEntryId, MultiChunkEntry> chunkMultiChunkCache;    
@@ -44,7 +44,7 @@ public class DatabaseVersion {
         chunks = new HashMap<ByteArray, ChunkEntry>();
         multiChunks = new HashMap<ByteArray, MultiChunkEntry>();
         fileContents = new HashMap<ByteArray, FileContent>();
-        fileHistories = new HashMap<Long, PartialFileHistory>();          
+        fileHistories = new HashMap<FileId, PartialFileHistory>();          
 
         // Quick access cache
         chunkMultiChunkCache = new HashMap<ChunkEntryId, MultiChunkEntry>();
@@ -141,7 +141,7 @@ public class DatabaseVersion {
         fileHistories.put(history.getFileId(), history);
     }
     
-    public PartialFileHistory getFileHistory(long fileId) {
+    public PartialFileHistory getFileHistory(FileId fileId) {
         return fileHistories.get(fileId);
     }
         
@@ -149,7 +149,7 @@ public class DatabaseVersion {
         return fileHistories.values();
     }  
     
-    public void addFileVersionToHistory(long fileHistoryID, FileVersion fileVersion) {
+    public void addFileVersionToHistory(FileId fileHistoryID, FileVersion fileVersion) {
     	fileHistories.get(fileHistoryID).addFileVersion(fileVersion);
     }  
     

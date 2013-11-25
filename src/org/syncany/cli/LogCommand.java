@@ -120,7 +120,7 @@ public class LogCommand extends Command {
 			switch (operationResult.getFormat()) {
 			case "full":
 				Iterator<Long> fileVersionNumber = fileHistory.getDescendingVersionNumber();
-				out.printf("%s %16x\n", lastVersion.getPath(), fileHistory.getFileId());
+				out.printf("%s %s\n", lastVersion.getPath(), fileHistory.getFileId());
 				while (fileVersionNumber.hasNext()) {
 					FileVersion fileVersion = fileHistory.getFileVersion(fileVersionNumber.next());
 					out.print('\t');
@@ -133,7 +133,7 @@ public class LogCommand extends Command {
 				}
 				break;
 			case "last":
-				out.printf("%-" + longestPath + "s %16x", lastVersion.getPath(), fileHistory.getFileId());
+				out.printf("%-" + longestPath + "s %s", lastVersion.getPath(), fileHistory.getFileId());
 				printOneVersion(lastVersion);
 				out.println();
 				break;
