@@ -43,8 +43,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author pheckel
- *
+ * The recursive file watcher monitors a folder (and its sub-folders). 
+ * 
+ * <p>The class walks through the file tree and registers to a watch to every sub-folder.
+ * For new folders, a new watch is registered, and stale watches are removed.
+ * 
+ * <p>When a file event occurs, a timer is started to wait for the file operations
+ * to settle. It is reset whenever a new event occurs. When the timer times out,
+ * an event is thrown through the {@link WatchListener}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class RecursiveWatcher {
 	private static final Logger logger = Logger.getLogger(RecursiveWatcher.class.getSimpleName());
@@ -103,14 +111,14 @@ public class RecursiveWatcher {
 	}
 
 	private synchronized void resetWaitSettlementTimer() {
-		logger.log(Level.INFO, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
+		logger.log(Level.FINE, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
 
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
 		}
 
-		timer = new Timer();
+		timer = new Timer("WatchTimer");
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {

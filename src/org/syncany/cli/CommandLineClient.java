@@ -388,10 +388,12 @@ public class CommandLineClient extends Client {
 		out.println();
 		out.println("      Arguments:");
 		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 60)");
-		out.println("      -a, --announce=<host>:<port>     Hostname and port to fanout pub/sub server (default: none)");
-		out.println("      -s, --delay=<sec>                Wait for <sec> seconds for file system watcher to settle, ");
-		out.println("                                       before starting to sync (default: 5)");
+		out.println("      -s, --delay=<sec>                Watcher: Wait for <sec> seconds for file system watcher to");
+		out.println("                                       settle before starting to sync (default: 5)");
 		out.println("      -W, --no-watcher                 Don't watch the file system (rely on periodic sync)");
+		out.println("      -a, --announce=<host>:<port>     Hostname and port to fanout pub/sub server");
+		out.println("                                       (default: notify.syncany.org:8080)");
+		out.println("      -N, --no-announcements           Don't connect to fanout pub/sub server (no instant sync)");
 		out.println();
 		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
 		out.println("      can be used.");

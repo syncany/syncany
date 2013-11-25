@@ -33,7 +33,29 @@ import java.util.logging.Logger;
 import org.syncany.util.StringUtil;
 
 /**
+ * The notification listener implements a client to the fanout, as very
+ * lightweight pub/sub server originally written for SparkleShare.
  * 
+ * <p>Fanout implements a simple TCP-based plaintext protocol.<br /> 
+ * It implements the following <b>commands</b>:
+ * <ul>
+ *  <li><tt>subcribe &lt;channel&gt;</tt></li>
+ *  <li><tt>unsubscribe &lt;channel&gt;</tt></li>
+ *  <li><tt>announce &lt;channel&gt; &lt;message&gt;</tt></li>
+ * </ul>
+ * 
+ * <p><b>Notifications</b> have the following format:
+ * <ul>
+ *  <li><tt>&lt;channel&gt;!&lt;message&gt;</tt></li>
+ * </ul>
+ * 
+ * <p>The notification listener starts a thread and listens for incoming messages.
+ * Outgoing messages (subscribe/unsubscribe/announce) are sent directly or (if that
+ * fails), put in an outgoing queue. Incoming messages are handed over to a 
+ * {@link NotificationListenerListener}.
+ * 
+ * @see <a href="https://github.com/travisghansen/fanout/">https://github.com/travisghansen/fanout/</a> - Fanout source code by Travis G. Hansen
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class NotificationListener {
 	private static final Logger logger = Logger.getLogger(NotificationListener.class.getSimpleName());
@@ -88,8 +110,8 @@ public class NotificationListener {
 
 	public synchronized void subscribe(String channel) {
 		subscribedChannels.add(channel);
-		
-		logger.log(Level.INFO, "Subscribing to channel " + channel + "...");		
+
+		logger.log(Level.INFO, "Subscribing to channel " + channel + "...");
 		sendMessageOrAddToOutgoingQueue(String.format("subscribe %s\n", channel));
 	}
 
@@ -101,7 +123,7 @@ public class NotificationListener {
 	}
 
 	public synchronized void announce(String channel, String message) {
-		logger.log(Level.INFO, "Announcing to channel " + channel + ": " + message);
+		logger.log(Level.INFO, "Announcing to channel " + channel + ": " + message.trim());
 		sendMessageOrAddToOutgoingQueue(String.format("announce %s %s\n", channel, message));
 	}
 
@@ -109,16 +131,26 @@ public class NotificationListener {
 		if (connected) {
 			try {
 				socketOut.write(StringUtil.toBytesUTF8(message));
-				logger.log(Level.INFO, "Sent message: " + message);
+				logger.log(Level.INFO, "Sent message: " + message.trim());
 			}
 			catch (Exception e) {
-				logger.log(Level.INFO, "Sending failed, queuing message: " + message);
-				outgoingMessageQueue.offer(message);
+				if (!outgoingMessageQueue.contains(message)) {
+					logger.log(Level.INFO, "Sending failed, queuing message: " + message.trim());
+					outgoingMessageQueue.offer(message);
+				}
+				else {
+					logger.log(Level.INFO, "Sending failed and message already in queue: " + message.trim());
+				}
 			}
 		}
 		else {
-			logger.log(Level.INFO, "No connection, queuing message: " + message);
-			outgoingMessageQueue.offer(message);
+			if (!outgoingMessageQueue.contains(message)) {
+				logger.log(Level.INFO, "No connection, queuing message: " + message.trim());
+				outgoingMessageQueue.offer(message);
+			}
+			else {
+				logger.log(Level.INFO, "Sending failed and message already in queue: " + message.trim());
+			}
 		}
 	}
 
@@ -186,10 +218,10 @@ public class NotificationListener {
 					}
 
 					if (outgoingMessageQueue.size() > 0) {
-						logger.log(Level.INFO, "Processing queued outgoing messages ...");					
+						logger.log(Level.INFO, "Processing queued outgoing messages ...");
 						processOutgoingMessages();
 					}
-					
+
 					logger.log(Level.INFO, "Waiting for incoming message (" + SOCKET_TIMEOUT + " ms) ...");
 					processIncomingMessage(socketIn.readLine());
 				}
@@ -198,14 +230,15 @@ public class NotificationListener {
 				}
 				catch (Exception e) {
 					try {
-						logger.log(Level.INFO, "Notification connection down: " + e.getMessage() + ", sleeping " + RECONNECT_WAIT_TIME + "ms, then trying a re-connect ...");
+						logger.log(Level.INFO, "Notification connection down: " + e.getMessage() + ", sleeping " + RECONNECT_WAIT_TIME
+								+ "ms, then trying a re-connect ...");
 
 						Thread.sleep(RECONNECT_WAIT_TIME);
 						connect();
-						
+
 						if (subscribedChannels.size() > 0) {
 							logger.log(Level.INFO, "Re-subscribing to channels after broken connection ...");
-							
+
 							for (String channel : subscribedChannels) {
 								subscribe(channel);
 							}

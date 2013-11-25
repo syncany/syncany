@@ -157,9 +157,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	public static class WatchOperationOptions implements OperationOptions {
 		private int interval = 60000;
-		private boolean announcements = false;
-		private String announcementsHost;
-		private int announcementsPort;
+		private boolean announcements = true;
+		private String announcementsHost = "notify.syncany.org";
+		private int announcementsPort = 8080;
 		private int settleDelay = 5000;
 		private boolean watcher = true;
 
