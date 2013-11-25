@@ -17,24 +17,32 @@
  */
 package org.syncany.operations;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.operations.NotificationListener.NotificationListenerListener;
+import org.syncany.operations.RecursiveWatcher.WatchListener;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 import org.syncany.util.StringUtil;
 
-public class WatchOperation extends Operation implements NotificationListenerListener {
+public class WatchOperation extends Operation implements NotificationListenerListener, WatchListener {
 	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());
-	
+
 	private WatchOperationOptions options;
 
 	private Database database;
-	private NotificationListener notificationListener;
 	private boolean syncRunning;
+
+	private RecursiveWatcher recursiveWatcher;
+	private NotificationListener notificationListener;
 
 	public WatchOperation(Config config, WatchOperationOptions options) {
 		super(config);
@@ -42,8 +50,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.options = options;
 
 		this.database = null;
-		this.notificationListener = null;
 		this.syncRunning = false;
+		
+		this.recursiveWatcher = null;
+		this.notificationListener = null;
 	}
 
 	@Override
@@ -53,6 +63,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		if (options.announcementsEnabled()) {
 			startNotificationListener();
 		}
+		
+		startRecursiveWatcher();
 
 		while (true) {
 			try {
@@ -68,11 +80,30 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		}
 	}
 
+	private void startRecursiveWatcher() {
+		Path localDir = Paths.get(config.getLocalDir().getAbsolutePath());
+		List<Path> ignorePaths = new ArrayList<Path>();
+		
+		ignorePaths.add(Paths.get(config.getAppDir().getAbsolutePath()));
+		ignorePaths.add(Paths.get(config.getCacheDir().getAbsolutePath()));
+		ignorePaths.add(Paths.get(config.getDatabaseDir().getAbsolutePath()));
+		ignorePaths.add(Paths.get(config.getLogDir().getAbsolutePath()));
+		
+		recursiveWatcher = new RecursiveWatcher(localDir, ignorePaths, this);
+		
+		try {
+			recursiveWatcher.start();
+		}
+		catch (IOException e) {
+			logger.log(Level.WARNING, "Cannot initiate file watcher. Relying on regular tree walks.");
+		}
+	}
+
 	private void startNotificationListener() {
 		notificationListener = new NotificationListener(options.getAnnouncementsHost(), options.getAnnouncementsPort(), this);
-		notificationListener.subscribe(StringUtil.toHex(config.getRepoId()));
-
 		notificationListener.start();
+		
+		notificationListener.subscribe(StringUtil.toHex(config.getRepoId()));
 	}
 
 	private synchronized void runSync() throws Exception {
@@ -97,7 +128,17 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 
 	@Override
-	public void messageReceived(String channel, String message) {
+	public void pushNotificationReceived(String channel, String message) {
+		try {
+			runSync();
+		}
+		catch (Exception e) {
+			logger.log(Level.INFO, "Sync FAILED (event-triggered).");
+		}
+	}	
+
+	@Override
+	public void watchEventsOccurred() {
 		try {
 			runSync();
 		}
@@ -105,11 +146,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Sync FAILED (event-triggered).");
 		}
 	}
-	
 
 	private void notifyChanges() {
 		if (notificationListener != null) {
-			notificationListener.announce(StringUtil.toHex(config.getRepoId()), "1"); 
+			notificationListener.announce(StringUtil.toHex(config.getRepoId()), "1");
 		}
 	}
 
