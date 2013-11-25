@@ -47,18 +47,6 @@ core. If you have questions, feel free to ask.
   daemon. The [liferay-nativity][9] is a good starting point. It offers file manager 
   integration on all platforms.
 
-* **Push notifications**: Like [SparkleShare's notification service][10], the ``watch`` command
-  should offer an option (default?) to publish notifications when things have changed, and 
-  react on changes when a push-notification is received. This could avoid having to regularly
-  poll for changes on the remote storage (or at least minimize the polling). The pub/sub
-  protocol used by SparkeShare is a simple unencryped text-based TCP/socket protocol based on
-  [fanout][11]. I'd install a service on notify.syncany.org, all we need now is an extension to
-  the watch command, similar to the one [implemented by SparkeShare][12]. Here's how simple the
-  protocol is, try running this to get fanout stats for SparkleShare: 
-  ``echo -en 'info\n' | nc notifications.sparkleshare.org 443``
-  
-
-
   [1]: http://ant.apache.org/ivy/
   [2]: http://bazaar.launchpad.net/~syncany-team/syncany/core3/files
   [3]: http://ant.apache.org/ivy/history/latest-milestone/tutorial/multiproject.html
@@ -68,6 +56,3 @@ core. If you have questions, feel free to ask.
   [7]: http://bazaar.launchpad.net/~syncany-team/syncany/trunk/files/head:/syncany/src/org/syncany/gui/
   [8]: https://github.com/stacksync/desktop/tree/master/src/com/stacksync/desktop/gui
   [9]: https://github.com/liferay/liferay-nativity
-  [10]: https://github.com/hbons/SparkleShare/wiki/Notification-service
-  [11]: https://github.com/travisghansen/fanout/
-  [12]: https://github.com/hbons/SparkleShare/blob/1d5c688342531fac03cb8dd2ef26d1759c9d4cb3/SparkleLib/SparkleListenerTcp.cs
