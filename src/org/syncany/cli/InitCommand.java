@@ -19,6 +19,7 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand implements InitOperationListener {
+	public static final int REPO_ID_LENGTH = 32;
 	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
 	public static final int PASSWORD_MIN_LENGTH = 8;
 	public static final int PASSWORD_WARN_LENGTH = 12;
@@ -291,6 +293,12 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	protected RepoTO createRepoTO(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) throws Exception {
 		// Make transfer object
 		RepoTO repoTO = new RepoTO();
+		
+		// Create random repo identifier
+		byte[] newRepoId = new byte[REPO_ID_LENGTH];
+		new SecureRandom().nextBytes(newRepoId);
+		
+		repoTO.setRepoId(newRepoId);
 				
 		// Add to repo transfer object
 		repoTO.setChunker(chunkerTO);

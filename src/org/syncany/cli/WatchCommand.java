@@ -18,6 +18,10 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -25,6 +29,10 @@ import joptsimple.OptionSpec;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
 public class WatchCommand extends Command {
+	public static final Pattern ANNOUNCEMENTS_PATTERN = Pattern.compile("([^:]+):(\\d+)");
+	public static final int ANNOUNCEMENTS_PATTERN_GROUP_HOST = 1;
+	public static final int ANNOUNCEMENTS_PATTERN_GROUP_PORT = 2;
+	
 	@Override
 	public boolean initializedLocalDirRequired() {	
 		return true;
@@ -36,12 +44,31 @@ public class WatchCommand extends Command {
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Integer> optionInterval = parser.acceptsAll(asList("i", "interval")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<String> optionAnnouncements = parser.acceptsAll(asList("a", "announcements")).withRequiredArg();
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
 		// --interval
 		if (options.has(optionInterval)) {
 			operationOptions.setInterval(options.valueOf(optionInterval)*1000);
+		}
+		
+		// --announcements=<host>[:<port>]
+		if (options.has(optionAnnouncements)) {
+			operationOptions.setAnnouncements(true);
+			
+			String announcementsStr = options.valueOf(optionAnnouncements);
+			Matcher matcher = ANNOUNCEMENTS_PATTERN.matcher(announcementsStr);
+			
+			if (!matcher.matches()) {
+				throw new Exception("Invalid argument for --announcements, expected pattern: "+ANNOUNCEMENTS_PATTERN.pattern());
+			}
+			
+			String announcementsHost = matcher.group(ANNOUNCEMENTS_PATTERN_GROUP_HOST);
+			int announcementsPort = Integer.parseInt(matcher.group(ANNOUNCEMENTS_PATTERN_GROUP_PORT));
+			
+			operationOptions.setAnnouncementsHost(announcementsHost);
+			operationOptions.setAnnouncementsPort(announcementsPort);
 		}
 		
 		// Run!

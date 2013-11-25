@@ -52,6 +52,7 @@ public class Config {
 	public static final String DEFAULT_FILE_REPO = "repo";
 	public static final String DEFAULT_FILE_MASTER = "master";
 	
+	private byte[] repoId;
 	private String machineName;	
 	private File localDir;
 	private File appDir;
@@ -116,6 +117,8 @@ public class Config {
 
 	private void initRepo(RepoTO repoTO) throws Exception {
 		// TODO [feature request] make chunking options configurable
+		
+		repoId = repoTO.getRepoId();
 		
 		chunker = new MimeTypeChunker(
 			new FixedChunker(16*1024, "SHA1"),
@@ -216,6 +219,10 @@ public class Config {
         this.connection = connection;
     }
 
+    public byte[] getRepoId() {
+		return repoId;
+	}
+    
     public Chunker getChunker() {
         return chunker;
     }
