@@ -26,8 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +38,11 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.util.FileUtil;
 
+/**
+ * The status operation 
+ *   
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
@@ -105,7 +108,7 @@ public class StatusOperation extends Operation {
 			
 			// If file has VANISHED, mark as DELETED 
 			if (!FileUtil.exists(lastLocalVersionOnDisk)) {
-				changeSet.deletedFiles.add(lastLocalVersion.getPath());
+				changeSet.getDeletedFiles().add(lastLocalVersion.getPath());
 			}
 		}						
 		
@@ -167,14 +170,14 @@ public class StatusOperation extends Operation {
 				// TODO [low] Performance: Attrs are already read, compare() reads them again.  
 				
 				if (fileVersionComparison.equals()) {
-					changeSet.unchangedFiles.add(relativeFilePath);
+					changeSet.getUnchangedFiles().add(relativeFilePath);
 				}
 				else {
-					changeSet.changedFiles.add(relativeFilePath);
+					changeSet.getChangedFiles().add(relativeFilePath);
 				}					
 			}
 			else {
-				changeSet.newFiles.add(relativeFilePath);
+				changeSet.getNewFiles().add(relativeFilePath);
 				logger.log(Level.FINEST, "- New file: "+relativeFilePath);
 			}			
 			
@@ -196,43 +199,7 @@ public class StatusOperation extends Operation {
 		
 		@Override public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }
 		@Override public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }		
-	}
-	
-	public static class ChangeSet {
-		private List<String> changedFiles;  
-		private List<String> newFiles;
-		private List<String> deletedFiles;
-		private List<String> unchangedFiles;
-		
-		public ChangeSet() {
-			changedFiles = new ArrayList<String>();
-			newFiles = new ArrayList<String>();
-			deletedFiles = new ArrayList<String>();
-			unchangedFiles = new ArrayList<String>();
-		}
-		
-		public boolean hasChanges() {
-			return changedFiles.size() > 0 
-				|| newFiles.size() > 0
-				|| deletedFiles.size() > 0;
-		}
-		
-		public List<String> getChangedFiles() {
-			return changedFiles;
-		}
-		
-		public List<String> getNewFiles() {
-			return newFiles;
-		}
-		
-		public List<String> getDeletedFiles() {
-			return deletedFiles;
-		}	
-		
-		public List<String> getUnchangedFiles() {
-			return unchangedFiles;
-		}	
-	}
+	}	
 	
 	public static class StatusOperationOptions implements OperationOptions {
 		private boolean forceChecksum = false;

@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.operations.ChangeSet;
 import org.syncany.operations.ConnectOperation;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
@@ -43,7 +44,6 @@ import org.syncany.operations.RestoreOperation;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
-import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.SyncOperation;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;

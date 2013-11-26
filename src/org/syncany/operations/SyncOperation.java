@@ -24,6 +24,13 @@ import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
 
+/**
+ * The sync operation combines the {@link DownOperation} and the {@link UpOperation}
+ * by subsequently running the two operations. Consequently, it takes arguments
+ * for both operations and returns results for both of them. 
+ *   
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class SyncOperation extends Operation {
 	private Database loadedDatabase;
 	private SyncOperationOptions options;

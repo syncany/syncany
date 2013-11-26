@@ -275,6 +275,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 			}
 			
 			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
+				out.println();
 				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
@@ -357,6 +358,6 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	@Override
 	public void notifyGenerateMasterKey() {
 		out.println();
-		out.println("Generating master key (this might take a while) ...");
+		out.println("Generating master key from password (this might take a while) ...");
 	}
 }

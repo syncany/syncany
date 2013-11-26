@@ -34,6 +34,29 @@ import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
 import org.syncany.util.StringUtil;
 
+/**
+ * The watch operation implements the constant synchronization known from other
+ * sync tools. 
+ * 
+ * <p>In order to sync instantly, it offers the following strategies:
+ * <ul>
+ *  <li>It monitors the local file system using the {@link RecursiveWatcher}.
+ *      Whenever a file or folder changes, the sync is started (after a short
+ *      settlement wait period).</li>
+ *  <li>It subscribes to a repo-specific channel on the Syncany pub/sub server,
+ *      using the {@link NotificationListener}, and publishes updates to this 
+ *      channel.</li>
+ *  <li>It periodically runs the sync, i.e. the {@link DownOperation} and 
+ *      subsequently the {@link UpOperation}. If the other two mechanisms are
+ *      disabled or fail to register changes, this method will make sure that
+ *      changes are synced eventually.</li>
+ * </ul>
+ * 
+ * As of now, this operation never returns, because it runs in a loop. The user
+ * has to manually abort the operation on the command line.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class WatchOperation extends Operation implements NotificationListenerListener, WatchListener {
 	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());
 
@@ -60,7 +83,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.notificationListener = null;
 		
 		this.notificationChannel = StringUtil.toHex(config.getRepoId());
-		this.notificationInstanceId = "sy"+Math.abs(new Random().nextLong());
+		this.notificationInstanceId = ""+Math.abs(new Random().nextLong());
 	}
 
 	@Override
@@ -169,7 +192,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		private boolean announcements = true;
 		private String announcementsHost = "notify.syncany.org";
 		private int announcementsPort = 8080;
-		private int settleDelay = 5000;
+		private int settleDelay = 3000;
 		private boolean watcher = true;
 
 		public int getInterval() {

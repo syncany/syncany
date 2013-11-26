@@ -38,6 +38,9 @@ public class ConfigTO {
 	@Element(name="machinename", required=true)
 	private String machineName;
 
+	@Element(name="displayname", required=false)
+	private String displayName; 
+	
 	@Element(name="masterkey", required=false)
 	private String masterKeyEncoded;
 	private SaltedSecretKey masterKey;
@@ -60,6 +63,14 @@ public class ConfigTO {
 
 	public void setMachineName(String machineName) {
 		this.machineName = machineName;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 
 	public ConnectionTO getConnectionTO() {

@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.operations.ChangeSet;
 import org.syncany.operations.StatusOperation;
-import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation;
 import org.syncany.operations.UpOperation.UpOperationOptions;

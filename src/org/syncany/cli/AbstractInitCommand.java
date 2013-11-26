@@ -49,6 +49,7 @@ public abstract class AbstractInitCommand extends Command {
 	protected ConfigTO createConfigTO(File localDir, SaltedSecretKey masterKey, ConnectionTO connectionTO) throws Exception {
 		ConfigTO configTO = new ConfigTO();
 		
+		configTO.setDisplayName(getDefaultDisplayName());
 		configTO.setMachineName(getDefaultMachineName());
 		configTO.setMasterKey(masterKey); // can be null
 
@@ -205,4 +206,8 @@ public abstract class AbstractInitCommand extends Command {
 		).replaceAll("[^a-zA-Z0-9]", "");		
 	}
 	
+
+	protected String getDefaultDisplayName() throws UnknownHostException {
+		return System.getProperty("user.name");		
+	}
 }

@@ -55,7 +55,6 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
