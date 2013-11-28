@@ -20,6 +20,13 @@ package org.syncany.database;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The database DAO represents the database peristence layer abstraction.
+ * It can be used to persist a database from memory to the disk, or load a
+ * database from a file.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public interface DatabaseDAO {
 	public void save(Database db, File destinationFile) throws IOException;	
 	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException;

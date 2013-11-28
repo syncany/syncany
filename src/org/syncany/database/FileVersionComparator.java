@@ -39,11 +39,38 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
+/**
+ * The file version comparator is a helper class to compare {@link FileVersion}s with each 
+ * other, or compare {@link FileVersion}s to local {@link File}s. 
+ * 
+ * <p>It captures the {@link FileProperties} of two files or file versions and compares them
+ * using the various <tt>compare*</tt>-methods. A comparison returns a set of {@link FileChange}s,
+ * each of which identifies a certain attribute change (e.g. checksum changed, name changed).
+ * A file can be considered equal if the returned set of {@link FileChange}s is empty.
+ * 
+ * <p>The file version comparator distinguishes between <i>cancelling</i> tests and regular tests.
+ * Cancelling tests are implemented in {@link #performCancellingTests(FileVersionComparison) performCancellingTests()}.
+ * They represent significant changes in a file, for which further comparison would not make
+ * sense (e.g. new vs. deleted files or files vs. folders). If a cancelling test is not successful,
+ * other tests are not performed.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class FileVersionComparator {
 	private static final Logger logger = Logger.getLogger(FileVersionComparator.class.getSimpleName());
 	private File rootFolder;
 	private String checksumAlgorithm;
 	
+	/**
+	 * Creates a new file version comparator helper class. 
+	 * 
+	 * <p>The <tt>rootFolder</tt> is needed to allow a comparison of the relative file path.
+	 * The <tt>checksumAlgorithm</tt> is used for calculate and compare file checksums. Both
+	 * are used if a local {@link File} is compared to a {@link FileVersion}.
+	 * 
+	 * @param rootFolder Base folder to determine a relative path to 
+	 * @param checksumAlgorithm Digest algorithm for checksum calculation, e.g. "SHA1" or "MD5"
+	 */
 	public FileVersionComparator(File rootFolder, String checksumAlgorithm) {
 		this.rootFolder = rootFolder;
 		this.checksumAlgorithm = checksumAlgorithm;

@@ -28,6 +28,24 @@ import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.util.ByteArray;
 
+/**
+ * The database represents the internal file and chunk index of the application. It
+ * can be used to reference or load a full local database (local client) or a 
+ * remote database (from a delta database file of another clients).
+ * 
+ * <p>A database consists of a sorted list of {@link DatabaseVersion}s, i.e. it is a
+ * collection of changes to the local file system. 
+ * 
+ * <p>For convenience, the class also offers a set of functionality to select objects
+ * from the current accumulated database. Examples include {@link #getChunk(byte[]) getChunk()},
+ * {@link #getContent(byte[]) getContent()} and {@link #getMultiChunk(byte[]) getMultiChunk()}.
+ * 
+ * <p>To allow this convenience, a few caches are kept in memory, and updated whenever a
+ * database version is added or removed.
+ * 
+ * @see DatabaseVersion
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class Database {
     private List<DatabaseVersion> databaseVersions;    
 	

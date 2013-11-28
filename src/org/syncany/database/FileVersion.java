@@ -34,11 +34,12 @@ import org.syncany.util.StringUtil;
  * <p>The <tt>FileVersion</tt>'s checksum attribute implicitly links to a {@link FileContent},
  * which represents the content of a file. Multiple file versions can link to the same file content.
  * 
+ * @see PartialFileHistory
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersion implements Cloneable {
 	// Mandatory
-    private Long version;   
+    private Long version; // TODO [low] This can be an Integer. No need for a long!
     private String path;
     private FileType type; 
     private FileStatus status;    

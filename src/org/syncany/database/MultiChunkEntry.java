@@ -25,8 +25,14 @@ import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.util.StringUtil;
 
 /**
- *
- * @author pheckel
+ * The multichunk entry represents the chunk container in which a set of 
+ * {@link ChunkEntry}s is stored. On a file, level, a multichunk is represented
+ * by a file (container format) and chunks are added to this file.
+ * 
+ * <p>A multichunk is identified by a unique identifier (random, not a checksum),
+ * and contains references to {@link ChunkEntry}s. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class MultiChunkEntry  {
     private byte[] id;    
