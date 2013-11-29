@@ -244,8 +244,9 @@ public class CommandLineClient extends Client {
 		
 		while (currentSearchFolder != null) {
 			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION);
+			File possibleConfigFile = new File(possibleAppDir+"/"+Config.DEFAULT_FILE_CONFIG);
 			
-			if (possibleAppDir.exists()) {
+			if (possibleAppDir.exists() && possibleConfigFile.exists()) {
 				return possibleAppDir.getParentFile().getCanonicalFile();
 			}
 			

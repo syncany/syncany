@@ -45,14 +45,14 @@ public class FileTreeMoveToSubfolderScenarioTest {
 		clientA.up();		
 		
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientB.moveFile("A-folder1/A-subfolder1", "A-folder1/A-subfolder2/B-subsubfolder1");
 		clientB.up();
 		
 		clientA.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// Tear down

@@ -63,7 +63,9 @@ public class CreateFileTree extends AbstractClientAction {
 		}
 		
 		// Create a symlink and its target
-		createSymlink(newFolder);	
+		createSymlinkWithTargetFile(newFolder);
+		createSymlinkWithTargetFolder(newFolder);
+		createSymlinkWithNonExistingTarget(newFolder);
 		
 		// Create a file that we don't allow ourselves access to
 		createNoAccessFile(newFolder);
@@ -80,12 +82,32 @@ public class CreateFileTree extends AbstractClientAction {
 		accessDeniedFile.setReadable(false, false);
 	}
 
-	private void createSymlink(File inFolder) throws Exception {
+	private void createSymlinkWithTargetFile(File inFolder) throws Exception {
 		if (FileUtil.symlinksSupported()) {
-			String targetPathStr = inFolder+"/sym-target"+(fileNum++);
-			File symlinkFile = new File(inFolder+"/symlink"+(fileNum++));
+			String targetPathStr = inFolder+"/sym-target-"+(fileNum++);
+			File symlinkFile = new File(inFolder+"/symlink-"+(fileNum++));
 			
 			TestFileUtil.createRandomFile(new File(targetPathStr), 20*1024);			
+			FileUtil.createSymlink(targetPathStr, symlinkFile);
+		}		
+	}
+	
+	private void createSymlinkWithTargetFolder(File inFolder) throws Exception {
+		if (FileUtil.symlinksSupported()) {
+			String targetPathStr = inFolder+"/sym-target-folder-"+(fileNum++);
+			File symlinkFile = new File(inFolder+"/symlink-"+(fileNum++));
+			
+			new File(targetPathStr).mkdir();			
+			FileUtil.createSymlink(targetPathStr, symlinkFile);
+		}	
+	}
+	
+	private void createSymlinkWithNonExistingTarget(File inFolder) throws Exception {		
+		if (FileUtil.symlinksSupported()) {
+			String targetPathStr = inFolder+"/sym-target-does-NOT-exist-"+(fileNum++);
+			File symlinkFile = new File(inFolder+"/symlink-BROKEN-"+(fileNum++));
+						
+			// Do NOT create target (!)
 			FileUtil.createSymlink(targetPathStr, symlinkFile);
 		}
 	}

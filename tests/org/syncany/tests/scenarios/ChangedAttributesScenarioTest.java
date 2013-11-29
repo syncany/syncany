@@ -100,7 +100,7 @@ public class ChangedAttributesScenarioTest {
 		}	
 		
 		// Test 2: The rest
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// Tear down
@@ -154,7 +154,7 @@ public class ChangedAttributesScenarioTest {
 		}	
 		
 		// Test 3: The rest
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// Tear down

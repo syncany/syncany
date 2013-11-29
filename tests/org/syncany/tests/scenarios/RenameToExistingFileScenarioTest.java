@@ -41,7 +41,7 @@ public class RenameToExistingFileScenarioTest {
 		
 		// B down/move/up
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// A moves, and up
@@ -51,12 +51,12 @@ public class RenameToExistingFileScenarioTest {
 		// B creates file at same location
 		clientB.createNewFile("A-moved"); // << same as above
 		clientB.down(); 
-		assertConflictingFileExists("A-moved", clientB.getLocalFiles());
+		assertConflictingFileExists("A-moved", clientB.getLocalFilesExcludeLockedAndNoRead());
 
 		// Sync them
 		clientB.sync();		
 		clientA.sync();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());		
 		
 		// Tear down

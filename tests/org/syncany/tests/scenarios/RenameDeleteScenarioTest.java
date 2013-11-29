@@ -42,7 +42,7 @@ public class RenameDeleteScenarioTest {
 		
 		// B down/move/up
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// A moves, and up
@@ -59,7 +59,7 @@ public class RenameDeleteScenarioTest {
 		clientA.sync();
 		assertFalse("File A-orginal should not be recreated.", clientA.getLocalFile("A-original").exists());
 		assertFalse("File A-orginal should not be recreated.", clientB.getLocalFile("A-original").exists());
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());		
 		
 		// Tear down

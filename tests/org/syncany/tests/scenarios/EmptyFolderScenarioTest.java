@@ -46,7 +46,7 @@ public class EmptyFolderScenarioTest {
 		clientA.up();		
 		
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		clientB.createNewFolder("B-folder4");
@@ -58,12 +58,12 @@ public class EmptyFolderScenarioTest {
 		assertFileEquals("Nothing changed. Local database file should not change.", beforeUpDatabaseFile, clientB.getLocalDatabaseFile());
 		
 		clientA.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
-		Map<String, File> beforeSyncDownFileList = clientB.getLocalFiles();
+		Map<String, File> beforeSyncDownFileList = clientB.getLocalFilesExcludeLockedAndNoRead();
 		clientA.down(); // double-down, has caused problems		
-		assertFileListEquals("No change in file lists expected. Nothing changed", beforeSyncDownFileList, clientA.getLocalFiles()); 				
+		assertFileListEquals("No change in file lists expected. Nothing changed", beforeSyncDownFileList, clientA.getLocalFilesExcludeLockedAndNoRead()); 				
 		
 		// Tear down
 		clientA.cleanup();

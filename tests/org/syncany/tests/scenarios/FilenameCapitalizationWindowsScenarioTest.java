@@ -41,11 +41,11 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		clientA.createNewFile("filename-for-windows");
 		clientA.createNewFile("Filename-For-Windows");
 		clientA.upWithForceChecksum();
-		assertEquals("There should be three files.", 3, clientA.getLocalFiles().size());
+		assertEquals("There should be three files.", 3, clientA.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		clientB.down();
-		assertEquals("There should be three files.", 3, clientB.getLocalFiles().size());
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertEquals("There should be three files.", 3, clientB.getLocalFilesExcludeLockedAndNoRead().size());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());	
 		
 		// Tear down
@@ -65,11 +65,11 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		clientA.createNewFile("這是一個測試"); // Non-ASCII
 		clientA.createNewFile("One&Two"); // & is not allowed in XML
 		clientA.upWithForceChecksum();
-		assertEquals("There should be three files.", 3, clientA.getLocalFiles().size());
+		assertEquals("There should be three files.", 3, clientA.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		clientB.down();
-		assertEquals("There should be three files.", 3, clientB.getLocalFiles().size());
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertEquals("There should be three files.", 3, clientB.getLocalFilesExcludeLockedAndNoRead().size());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());	
 		
 		// Tear down

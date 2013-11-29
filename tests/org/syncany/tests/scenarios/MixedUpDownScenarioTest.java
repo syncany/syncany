@@ -391,14 +391,14 @@ public class MixedUpDownScenarioTest {
 		clientC.up();
 		
 		clientB.down(); // NO CONFLICT
-		assertFileListEquals("Client B and C should be on the same versions.", clientB.getLocalFiles(), clientC.getLocalFiles());		
+		assertFileListEquals("Client B and C should be on the same versions.", clientB.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());		
 
 		clientC.createNewFile("C4"); // up without down! Evil!
 		clientC.up();
 		
 		clientA.down(); // NO CONFLICT
-		assertFileListEquals("Client A and C should be on the same versions.", clientA.getLocalFiles(), clientC.getLocalFiles());
-		assertEquals("Client A should have C4, client B should not", clientA.getLocalFiles().size()-1, clientB.getLocalFiles().size());
+		assertFileListEquals("Client A and C should be on the same versions.", clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
+		assertEquals("Client A should have C4, client B should not", clientA.getLocalFilesExcludeLockedAndNoRead().size()-1, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		clientB.createNewFile("B1,C3");
 		clientB.up();
@@ -412,12 +412,12 @@ public class MixedUpDownScenarioTest {
 		
 		clientB.down(); // CONFLICT 1
 		fail("Add some asserts");
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientA.down(); // CONFLICT 2
 		clientC.down(); // CONFLICT 3
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertFileListEquals(clientB.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientA.createNewFile("A4,C4");
 		clientA.up();
@@ -467,10 +467,10 @@ public class MixedUpDownScenarioTest {
 		clientB.down(); // CONFLICT 8
 		clientA.down(); // CONFLICT 9
 		
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertFileListEquals(clientB.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
 		
-		assertEquals("File list count does not match.", 19, clientA.getLocalFiles().size());
+		assertEquals("File list count does not match.", 19, clientA.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		// Tear down
 		clientA.cleanup();

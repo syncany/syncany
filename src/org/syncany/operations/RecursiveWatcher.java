@@ -23,6 +23,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,10 +64,10 @@ public class RecursiveWatcher {
 	private int settleDelay;
 	private WatchListener listener;
 
-	private boolean running;
-
+	private AtomicBoolean running;
+	
 	private WatchService watchService;
-	private Map<WatchKey, Path> watchKeyPathMap;
+	private Thread watchThread;
 	private Map<Path, WatchKey> watchPathKeyMap;
 
 	private Timer timer;
@@ -76,25 +78,34 @@ public class RecursiveWatcher {
 		this.settleDelay = settleDelay;
 		this.listener = listener;
 
-		this.running = false;
-
+		this.running = new AtomicBoolean(false);
+		
 		this.watchService = null;
-		this.watchKeyPathMap = new HashMap<WatchKey, Path>();
+		this.watchThread = null;
 		this.watchPathKeyMap = new HashMap<Path, WatchKey>();
 
 		this.timer = null;
 	}
 
+	/**
+	 * Starts the watcher service and registers watches in all of the sub-folders of
+	 * the given root folder.
+	 * 
+	 * <p><b>Important:</b> This method returns immediately, even though the watches
+	 * might not be in place yet. For large file trees, it might take several seconds
+	 * until all directories are being monitored. For normal cases (1-100 folders), this
+	 * should not take longer than a few milliseconds. 
+	 */
 	public void start() throws IOException {
 		watchService = FileSystems.getDefault().newWatchService();
 
-		new Thread(new Runnable() {
+		watchThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				running = true;
+				running.set(true);
 				walkTreeAndSetWatches();
 
-				while (running) {
+				while (running.get()) {
 					try {
 						WatchKey watchKey = watchService.take();
 						watchKey.pollEvents(); // Take events, but don't care what they are!
@@ -102,12 +113,27 @@ public class RecursiveWatcher {
 						watchKey.reset();
 						resetWaitSettlementTimer();
 					}
-					catch (InterruptedException e) {
-						running = false;
+					catch (InterruptedException | ClosedWatchServiceException e) {
+						running.set(false);
 					}
 				}
 			}
-		}, "Watcher").start();
+		}, "Watcher");
+		
+		watchThread.start();
+	}
+	
+	public synchronized void stop() {
+		if (watchThread != null) {
+			try {
+				watchService.close();
+				running.set(false);
+				watchThread.interrupt();
+			}
+			catch (IOException e) {
+				// Don't care
+			}			
+		}		
 	}
 
 	private synchronized void resetWaitSettlementTimer() {
@@ -122,6 +148,7 @@ public class RecursiveWatcher {
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
+				logger.log(Level.INFO, "File system actions (on watched folders) settled. Updating watches ...");
 				walkTreeAndSetWatches();
 				unregisterStaleWatches();
 
@@ -168,19 +195,27 @@ public class RecursiveWatcher {
 	}
 
 	private synchronized void unregisterStaleWatches() {
-		logger.log(Level.INFO, "Cancelling stale watchers ...");
-
 		Set<Path> paths = new HashSet<Path>(watchPathKeyMap.keySet());
-
-		for (Path dir : paths) {
-			if (!Files.exists(dir, LinkOption.NOFOLLOW_LINKS)) {
-				unregisterWatch(dir);
+		Set<Path> stalePaths = new HashSet<Path>();
+		
+		for (Path path : paths) {
+			if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+				stalePaths.add(path);
+			}
+		}
+		
+		if (stalePaths.size() > 0) {
+			logger.log(Level.INFO, "Cancelling stale path watches ...");
+			
+			for (Path stalePath : stalePaths) {
+				unregisterWatch(stalePath);
 			}
 		}
 	}
 
 	private synchronized void fireListenerEvents() {
 		if (listener != null) {
+			logger.log(Level.INFO, "- Firing watch event (watchEventsOccurred) ...");
 			listener.watchEventsOccurred();
 		}
 	}
@@ -191,8 +226,6 @@ public class RecursiveWatcher {
 
 			try {
 				WatchKey watchKey = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW);
-
-				watchKeyPathMap.put(watchKey, dir);
 				watchPathKeyMap.put(dir, watchKey);
 			}
 			catch (IOException e) {
@@ -206,9 +239,8 @@ public class RecursiveWatcher {
 
 		if (watchKey != null) {
 			logger.log(Level.INFO, "- Cancelling " + dir);
+			
 			watchKey.cancel();
-
-			watchKeyPathMap.remove(watchKey);
 			watchPathKeyMap.remove(dir);
 		}
 	}

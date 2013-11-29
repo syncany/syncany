@@ -18,6 +18,7 @@
 package org.syncany.tests.util;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -296,13 +297,26 @@ public class TestFileUtil {
 	}
 	
 	public static Map<String, File> getLocalFiles(File root) throws FileNotFoundException {
+		return getLocalFiles(root, null);		
+	}
+	
+	public static Map<String, File> getLocalFilesExcludeLockedAndNoRead(File root) throws FileNotFoundException {
+		return getLocalFiles(root, new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return !FileUtil.isFileLocked(file) && FileUtil.canRead(file);
+			}
+		});		
+	}
+	
+	public static Map<String, File> getLocalFiles(File root, FileFilter filter) throws FileNotFoundException {
 		List<File> fileList = FileUtil.getRecursiveFileList(root, true, false);
 		Map<String, File> fileMap = new HashMap<String, File>();
 		
 		for (File file : fileList) {
-			if (FileUtil.isFileLocked(file) || !file.canRead()) {
+			if (filter != null && !filter.accept(file)) {
 				continue;
-			}						
+			}
 			
 			String relativePath = FileUtil.getRelativePath(root, file);
 			
@@ -313,7 +327,7 @@ public class TestFileUtil {
 			fileMap.put(relativePath, file);
 		}
 		
-		return fileMap;
+		return fileMap;		
 	}
 	
 }

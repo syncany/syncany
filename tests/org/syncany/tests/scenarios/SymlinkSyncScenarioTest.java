@@ -84,7 +84,7 @@ public class SymlinkSyncScenarioTest {
 		
 		// B down
 		clientB.down();
-		assertEquals("Local folder should contain one file (link!)", 1, clientB.getLocalFiles().size());
+		assertEquals("Local folder should contain one file (link!)", 1, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		File localSymlinkFile = clientB.getLocalFile("symlink-name");
 		assertTrue("Local symlink file should exist.", localSymlinkFile.exists());
@@ -119,7 +119,7 @@ public class SymlinkSyncScenarioTest {
 
 		// B down
 		clientB.down();
-		assertEquals("Local folder should contain two files (symlink and target!)", 2, clientB.getLocalFiles().size());
+		assertEquals("Local folder should contain two files (symlink and target!)", 2, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		File localSymlinkFile = clientB.getLocalFile("symlink-name");
 		
@@ -149,17 +149,18 @@ public class SymlinkSyncScenarioTest {
 
 		// B
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// A
 		File symlinkFile = clientA.getLocalFile("folder1/symlink-name");
-		FileUtil.createSymlink("/does/not/exist", symlinkFile); // << relative target	
+		FileUtil.createSymlink("/does/not/exist", symlinkFile); 	
 		clientA.up();
 		
 		// B 
 		clientB.deleteFile("folder1");
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertTrue(FileUtil.exists(clientB.getLocalFile("folder1/symlink-name")));
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
 		clientA.cleanup();

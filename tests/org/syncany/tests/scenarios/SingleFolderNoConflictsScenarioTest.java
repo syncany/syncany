@@ -63,7 +63,7 @@ public class SingleFolderNoConflictsScenarioTest {
 		
 		clientA.down();
 		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));	
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();
@@ -87,7 +87,7 @@ public class SingleFolderNoConflictsScenarioTest {
 		
 		clientA.down();	
 		assertFalse("Deleted folder should not exist.", clientA.getLocalFile("folder").exists());		
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();
@@ -109,7 +109,7 @@ public class SingleFolderNoConflictsScenarioTest {
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("folder"), clientB.getLocalFile("folder"));
 		assertFileEquals(clientA.getLocalFile("folder/file"), clientB.getLocalFile("folder/file"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();
@@ -137,7 +137,7 @@ public class SingleFolderNoConflictsScenarioTest {
 		assertFalse("Deleted file should not exist.", clientA.getLocalFile("folder/file").exists());
 		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));
 		assertFileEquals(clientA.getLocalFile("moved/file"), clientB.getLocalFile("moved/file"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();
@@ -167,7 +167,7 @@ public class SingleFolderNoConflictsScenarioTest {
 		assertFalse("Deleted file should not exist.", clientA.getLocalFile("folder/file").exists());
 		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));
 		assertFileEquals(clientA.getLocalFile("moved/file"), clientB.getLocalFile("moved/file"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();

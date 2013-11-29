@@ -51,7 +51,7 @@ public class CreateSimilarFileParallelScenarioTest {
 
 		// B, B should have conflicting file and updated on A's file
 		clientB.down();
-		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFiles());
+		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertFileEquals(clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
 		assertEquals(clientB.getLocalFile("A-file1.jpg").length(), 100);
 		
@@ -60,7 +60,7 @@ public class CreateSimilarFileParallelScenarioTest {
 				
 		// A, should retrieve B's conflicting copy
 		clientA.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
 		
 		// Tear down

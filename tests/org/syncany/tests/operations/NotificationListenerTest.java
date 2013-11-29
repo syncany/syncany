@@ -17,6 +17,8 @@
  */
 package org.syncany.tests.operations;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 
 import org.junit.Test;
@@ -66,6 +68,7 @@ public class NotificationListenerTest {
 		
 		Thread.sleep(60000);
 		
+		fail("Test me!!!");
 	}
 
 }

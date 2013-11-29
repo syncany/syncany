@@ -38,7 +38,7 @@ public class LongRunningLotsOfSmallFilesScenarioTest {
 		
 		clientA.up(); // This has caused a heap space exception
 		clientB.down(); 
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
 		clientA.cleanup();

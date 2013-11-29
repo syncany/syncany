@@ -133,6 +133,10 @@ public class TestClient extends Client {
 	public Map<String, File> getLocalFiles() throws FileNotFoundException {
 		return TestFileUtil.getLocalFiles(config.getLocalDir());		
 	}
+	
+	public Map<String, File> getLocalFilesExcludeLockedAndNoRead() throws FileNotFoundException {
+		return TestFileUtil.getLocalFilesExcludeLockedAndNoRead(config.getLocalDir());		
+	}
  
 	public File getLocalDatabaseFile() {
 		return config.getDatabaseFile();
