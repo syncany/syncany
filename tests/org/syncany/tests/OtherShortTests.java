@@ -41,14 +41,12 @@ import org.syncany.tests.operations.OperationPerformanceTest;
 import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.util.ClasspathUtilTest;
 import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
-	ClasspathUtilTest.class,
 	CollectionUtilTest.class,
 	FileUtilTests.class,
 	
