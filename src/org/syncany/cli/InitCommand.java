@@ -251,7 +251,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	protected String askPasswordAndConfirm() {
 		out.println();
 		out.println("The password is used to encrypt data on the remote storage.");
-		out.println("Please choose it wisely.");
+		out.println("Wisely choose you must!");
 		out.println();
 		
 		String password = null;

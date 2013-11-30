@@ -28,7 +28,8 @@
 		<!--<dependency org="org.bouncycastle" name="bcprov-jdk16" rev="1.46"/>-->
 		<!--<dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.49"/>-->
 		<dependency org="org.bouncycastle" name="bcprov-ext-jdk15on" rev="1.49"/>            
-            
+        <dependency org="org.reflections" name="reflections" rev="0.9.9-RC1"/>
+                
 		<dependency org="org.simpleframework" name="simple-xml" rev="2.7.1"/>
                         	
 		<!-- For FTP plugin -->
