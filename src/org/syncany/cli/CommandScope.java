@@ -17,31 +17,8 @@
  */
 package org.syncany.cli;
 
-import java.util.List;
-
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-
-public class LsRemoteCommand extends Command {
-	@Override
-	public CommandScope getRequiredCommandScope() {	
-		return CommandScope.INITIALIZED_LOCALDIR;
-	}
-	
-	@Override
-	public int execute(String[] operationArgs) throws Exception {
-		List<DatabaseRemoteFile> remoteStatus = ((LsRemoteOperationResult) client.lsRemote()).getUnknownRemoteDatabases();
-		
-		if (remoteStatus.size() > 0) {
-			for (RemoteFile unknownRemoteFile : remoteStatus) {
-				out.println("? "+unknownRemoteFile.getName());
-			}
-		}
-		else {
-			out.println("No remote changes.");
-		}
-		
-		return 0;
-	}
+public enum CommandScope {
+	INITIALIZED_LOCALDIR,
+	UNINITIALIZED_LOCALDIR,
+	ANY
 }

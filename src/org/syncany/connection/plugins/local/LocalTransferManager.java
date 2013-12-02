@@ -34,10 +34,27 @@ import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 
 /**
- *
- * @author Philipp C. Heckel
+ * Implements a {@link TransferManager} based on a local storage backend for the
+ * {@link LocalPlugin}. 
+ * 
+ * <p>Using a {@link LocalConnection}, the transfer manager is configured and uses 
+ * any local folder to store the Syncany repository data. While repo and
+ * master file are stored in the given folder, databases and multichunks are stored
+ * in special sub-folders:
+ * 
+ * <ul>
+ *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
+ *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultiChunkRemoteFile}s</li>
+ * </ul>
+ * 
+ * <p>This plugin can be used for testing or to point to a repository
+ * on a mounted remote device or network storage such as an NFS or a 
+ * Samba/NetBIOS share.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(LocalTransferManager.class.getSimpleName());

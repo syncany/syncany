@@ -51,8 +51,8 @@ public class SyncCommand extends Command {
 	}
 	
 	@Override
-	public boolean initializedLocalDirRequired() {	
-		return true;
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override

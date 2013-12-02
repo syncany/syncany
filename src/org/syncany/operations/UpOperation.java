@@ -127,7 +127,7 @@ public class UpOperation extends Operation {
 		
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
-			List<RemoteFile> unknownRemoteDatabases = (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+			List<DatabaseRemoteFile> unknownRemoteDatabases = (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 			
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");

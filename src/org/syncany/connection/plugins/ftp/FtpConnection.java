@@ -24,7 +24,9 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
- *
+ * The FTP connection represents the settings required to connect to an
+ * FTP-based storage backend. It can be used to initialize/create an 
+ * {@link FtpTransferManager} and is part of the {@link FtpPlugin}.  
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -129,5 +131,4 @@ public class FtpConnection implements Connection {
         return FtpConnection.class.getSimpleName()
         + "[hostname=" + hostname + ":" + port + ", username=" + username + ", path=" + path + "]";
     }
-
 }

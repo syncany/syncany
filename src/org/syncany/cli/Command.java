@@ -32,7 +32,7 @@ import org.syncany.Client;
  * the user interface to collection options and print operation output. 
  * 
  * <p>Implementations must implement the {@link #execute(String[]) execute()} method and
- * the {@link #initializedLocalDirRequired()} method. While the former actually implements
+ * the {@link #getRequiredCommandScope()} method. While the former actually implements
  * the logic, the latter specifies whether a command must be called inside (or outside) a 
  * local Syncany directory. 
  * 
@@ -65,12 +65,15 @@ public abstract class Command {
 
 	/**
 	 * A command can either be executed within an initialized local directory or 
-	 * in a regular (non-Syncany) directory. This method must return <tt>true</tt>,
-	 * if the command implementation requires an initialized Syncany directory.
+	 * in a regular (non-Syncany) directory. Syncany determines this by searching for
+	 * a .syncany folder.
+	 * 
+	 * <p>The required command scope resembles whether or not a command must be executed 
+	 * inside a .syncany directory or not -- or whether it does not matter.
 	 *  
-	 * @return Returns <tt>true</tt> if an initialized local directory is required, <tt>false</tt> otherwise. 
+	 * @return Returns the required command scope of the command 
 	 */
-	public abstract boolean initializedLocalDirRequired();
+	public abstract CommandScope getRequiredCommandScope();
 
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;

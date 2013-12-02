@@ -25,7 +25,11 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
- *
+ * The local connection represents the settings required to create to an
+ * backend based on a local (or mounted network) folder. It can be used to
+ * initialize/create a {@link LocalTransferManager} and is part of
+ * the {@link LocalPlugin}.  
+ *  
  * @author Philipp C. Heckel
  */
 public class LocalConnection implements Connection {

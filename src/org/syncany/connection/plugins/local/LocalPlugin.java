@@ -21,7 +21,16 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 
 /**
- *
+ * Identifies the local storage {@link Plugin} for Syncany.
+ * 
+ * <p>This plugin can be used for testing or to point to a repository
+ * on a mounted remote device or network storage such as an NFS or a 
+ * Samba/NetBIOS share.
+ * 
+ * <p>The class implements defines the identifier, name and 
+ * version of the plugin. It furthermore allows the instantiation 
+ * of a plugin-specific {@link LocalConnection}. 
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalPlugin extends Plugin {

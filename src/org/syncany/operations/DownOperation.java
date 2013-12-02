@@ -130,7 +130,7 @@ public class DownOperation extends Operation {
 		initOperationVariables();
 
 		// 1. Check which remote databases to download based on the last local vector clock
-		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
+		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
 
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
@@ -472,11 +472,11 @@ public class DownOperation extends Operation {
 		return unknownRemoteBranches;
 	}
 
-	private List<RemoteFile> listUnknownRemoteDatabases(Database database, TransferManager transferManager) throws Exception {
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(Database database, TransferManager transferManager) throws Exception {
 		return (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 	}
 
-	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<RemoteFile> unknownRemoteDatabases) throws StorageException {
+	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> unknownRemoteDatabases) throws StorageException {
 		logger.log(Level.INFO, "Downloading unknown databases.");
 		List<File> unknownRemoteDatabasesInCache = new ArrayList<File>();
 
@@ -494,7 +494,7 @@ public class DownOperation extends Operation {
 	}
 
 	// TODO [low] This should be in the local RDMS, not in a plain text file
-	private void writeAlreadyDownloadedDatabasesListFromFile(List<RemoteFile> unknownRemoteDatabases) throws IOException {
+	private void writeAlreadyDownloadedDatabasesListFromFile(List<DatabaseRemoteFile> unknownRemoteDatabases) throws IOException {
 		FileWriter fr = new FileWriter(config.getKnownDatabaseListFile(), true);
 
 		for (RemoteFile newlyProcessedRemoteDatabase : unknownRemoteDatabases) {

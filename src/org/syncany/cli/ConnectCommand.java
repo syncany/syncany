@@ -57,8 +57,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}
 
 	@Override
-	public boolean initializedLocalDirRequired() {	
-		return false;
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.UNINITIALIZED_LOCALDIR;
 	}
 	
 	@Override

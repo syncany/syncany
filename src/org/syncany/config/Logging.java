@@ -26,6 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import org.reflections.Reflections;
+
 public class Logging {
 	private static boolean loggingInitialized = false;
 	
@@ -33,7 +35,11 @@ public class Logging {
 		if (loggingInitialized) {
 			return;
 		}
+
+		// Turn off INFO message of Reflections library (dirty, but the only way!) 
+		Reflections.log = null;
 		
+		// Load logging.properties
     	try {
     		// Use file if exists, else use file embedded in JAR
     		File logConfig = new File("logging.properties");
