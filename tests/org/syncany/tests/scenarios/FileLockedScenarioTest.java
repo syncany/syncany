@@ -176,7 +176,7 @@ public class FileLockedScenarioTest {
 				clientA.upWithForceChecksum();
 				
 				clientB.down();				
-				assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+				assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 				assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 			}			
 		});
@@ -187,7 +187,7 @@ public class FileLockedScenarioTest {
 				clientA.upWithForceChecksum();				
 				
 				clientB.down();
-				assertEquals(clientA.getLocalFiles().size(), clientB.getLocalFiles().size()-1);
+				assertEquals(clientA.getLocalFilesExcludeLockedAndNoRead().size(), clientB.getLocalFilesExcludeLockedAndNoRead().size()-1);
 			}			
 		});
 		
@@ -197,7 +197,7 @@ public class FileLockedScenarioTest {
 				clientA.upWithForceChecksum();						
 
 				clientB.down();				
-				assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+				assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 				assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 			}			
 		});

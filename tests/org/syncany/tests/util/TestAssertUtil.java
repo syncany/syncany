@@ -72,9 +72,9 @@ public class TestAssertUtil {
 		}
 	}
 
-	public static void assertFileListEquals(File expectedFilesRoot, File actualFilesRoot) throws ArrayComparisonFailure, Exception {
-		Map<String, File> expectedFiles = TestFileUtil.getLocalFiles(expectedFilesRoot);
-		Map<String, File> actualFiles = TestFileUtil.getLocalFiles(actualFilesRoot);
+	public static void assertFileListEqualsExcludeLockedAndNoRead(File expectedFilesRoot, File actualFilesRoot) throws ArrayComparisonFailure, Exception {
+		Map<String, File> expectedFiles = TestFileUtil.getLocalFilesExcludeLockedAndNoRead(expectedFilesRoot);
+		Map<String, File> actualFiles = TestFileUtil.getLocalFilesExcludeLockedAndNoRead(actualFilesRoot);
 		
 		assertFileListEquals("File list does not match", expectedFiles, actualFiles);
 	}
@@ -127,14 +127,18 @@ public class TestAssertUtil {
 		Path root = Paths.get(actualFile.getAbsolutePath()).getRoot();
 		FileVersionComparator fileVersionComparator = new FileVersionComparator(root.toFile(), "SHA1");
 		
-		if (!expectedFile.exists()) {
+		if (!FileUtil.exists(expectedFile)) {
 			fail(message+": Expected file "+expectedFile+" does not exist.");
 		}
 		
-		if (!actualFile.exists()) {
+		if (!FileUtil.exists(actualFile)) {
 			fail(message+": Actual file "+actualFile+" does not exist.");
 		}
 
+		if (FileUtil.isSymlink(actualFile) && FileUtil.isSymlink(expectedFile)) {
+			return;
+		}
+		
 		if (actualFile.isDirectory() != expectedFile.isDirectory()) {
 			fail(message+" Comparing a directory with a file (actual is dir = "+actualFile.isDirectory()+", expected is dir = "+expectedFile.isDirectory()+")");
 		}

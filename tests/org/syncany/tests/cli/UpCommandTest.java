@@ -19,7 +19,7 @@ package org.syncany.tests.cli;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEqualsExcludeLockedAndNoRead;
 
 import java.io.File;
 import java.util.Map;
@@ -119,7 +119,7 @@ public class UpCommandTest {
 			 "down" 
 		}).start();
 		
-		assertFileListEquals(new File(clientA.get("localdir")), new File(clientB.get("localdir")));
+		assertFileListEqualsExcludeLockedAndNoRead(new File(clientA.get("localdir")), new File(clientB.get("localdir")));
 		
 		// TODO [medium] Write asserts for 'down' output
 		

@@ -37,7 +37,11 @@ import org.syncany.tests.scenarios.framework.ChangeTypeFolderToFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeFolderToSymlinkWithNonExistingTarget;
 import org.syncany.tests.scenarios.framework.ChangeTypeFolderToSymlinkWithTargetFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeFolderToSymlinkWithTargetFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithNonExistingTargetToFile;
+import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithNonExistingTargetToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFileToFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFileToFolder;
+import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFolderToFile;
 import org.syncany.tests.scenarios.framework.ChangeTypeSymlinkWithTargetFolderToFolder;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFile;
@@ -125,9 +129,13 @@ public class AllFilePossibilitiesScenarioTest {
 				new ChangeTypeFileToSymlinkWithNonExistingTarget(),
 				new ChangeTypeFileToSymlinkWithTargetFile(),
 				new ChangeTypeFileToSymlinkWithTargetFolder(),
+				new ChangeTypeSymlinkWithNonExistingTargetToFile(),
+				new ChangeTypeSymlinkWithTargetFileToFile(),
+				new ChangeTypeSymlinkWithTargetFolderToFile(),
+				new ChangeTypeSymlinkWithNonExistingTargetToFolder(),
 				new ChangeTypeSymlinkWithTargetFileToFolder(),
 				new ChangeTypeSymlinkWithTargetFolderToFolder(),
-				new ChangeTypeFolderToFile(), // TODO [medium] Implement rest of change type tests
+				new ChangeTypeFolderToFile(), 
 				new ChangeTypeFolderToSymlinkWithNonExistingTarget(),
 				new ChangeTypeFolderToSymlinkWithTargetFile(),
 				new ChangeTypeFolderToSymlinkWithTargetFolder(),
@@ -137,13 +145,13 @@ public class AllFilePossibilitiesScenarioTest {
 				new CreateSymlinkToFolder(),
 				new CreateSymlinkToNonExisting(),
 				new DeleteFile(),
-				new DeleteFolder(),
-				//new LockFile(), // TODO [low] Handle this somehow. Also check other lock-tests
+				new DeleteFolder(),				
 				new MoveFileToOtherFolder(),
 				new MoveFileWithinFolder(),
 				new MoveFolderToOtherFolder(),
 				new MoveFolderWithinFolder(),
-				//new UnlockFile() // Must be after LockFile
+				
+				//new LockFile() and new UnlockFile() are not compatible with these tests
 			},
 			new Executable() {
 				@Override
@@ -151,7 +159,7 @@ public class AllFilePossibilitiesScenarioTest {
 					clientA.upWithForceChecksum();		
 					
 					clientB.down();
-					assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+					assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 				}			
 			}
@@ -172,7 +180,7 @@ public class AllFilePossibilitiesScenarioTest {
 		
 		clientA.upWithForceChecksum();		
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 		
 		//clientA.cleanup();

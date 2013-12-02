@@ -50,7 +50,7 @@ public class EvilCUpWithoutDownScenarioTest {
 		clientA.upWithForceChecksum();
 		
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientB.createNewFile("A4,B1");
 		clientB.up();
@@ -64,14 +64,14 @@ public class EvilCUpWithoutDownScenarioTest {
 		clientC.up();
 		
 		clientA.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
-		Map<String, File> beforeSyncDownBFileList = clientB.getLocalFiles();
+		Map<String, File> beforeSyncDownBFileList = clientB.getLocalFilesExcludeLockedAndNoRead();
 		clientB.down();
-		assertFileListEquals("No change in file lists expected. Nothing changed for 'B'.", beforeSyncDownBFileList, clientB.getLocalFiles()); 
+		assertFileListEquals("No change in file lists expected. Nothing changed for 'B'.", beforeSyncDownBFileList, clientB.getLocalFilesExcludeLockedAndNoRead()); 
 				
 		clientC.down();
-		assertEquals("Client C is expected to have one more local file (C1)", clientA.getLocalFiles().size()+1, clientC.getLocalFiles().size());
+		assertEquals("Client C is expected to have one more local file (C1)", clientA.getLocalFilesExcludeLockedAndNoRead().size()+1, clientC.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		clientA.up();
 		clientB.up();
@@ -81,8 +81,8 @@ public class EvilCUpWithoutDownScenarioTest {
 		clientB.down();
 		clientC.down();		
 		
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());		
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertFileListEquals(clientB.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Tear down
 		clientA.cleanup();

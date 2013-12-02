@@ -18,6 +18,10 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -25,6 +29,10 @@ import joptsimple.OptionSpec;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
 public class WatchCommand extends Command {
+	public static final Pattern ANNOUNCEMENTS_PATTERN = Pattern.compile("([^:]+):(\\d+)");
+	public static final int ANNOUNCEMENTS_PATTERN_GROUP_HOST = 1;
+	public static final int ANNOUNCEMENTS_PATTERN_GROUP_PORT = 2;
+	
 	@Override
 	public boolean initializedLocalDirRequired() {	
 		return true;
@@ -36,12 +44,54 @@ public class WatchCommand extends Command {
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Integer> optionInterval = parser.acceptsAll(asList("i", "interval")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Void> optionNoAnnouncements = parser.acceptsAll(asList("N", "no-announcements"));
+		OptionSpec<String> optionAnnouncements = parser.acceptsAll(asList("a", "announce")).withRequiredArg();
+		OptionSpec<Void> optionNoWatcher = parser.acceptsAll(asList("W", "no-watcher"));
+		OptionSpec<Integer> optionSettleDelay = parser.acceptsAll(asList("s", "delay")).withRequiredArg().ofType(Integer.class);
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
 		// --interval
 		if (options.has(optionInterval)) {
 			operationOptions.setInterval(options.valueOf(optionInterval)*1000);
+		}
+		
+		// Conflicting options: --no-announcements and --announce=<..>
+		if (options.has(optionNoAnnouncements) && options.has(optionAnnouncements)) {
+			throw new Exception("Options --no-announcements and --announce in conflict with one another.");
+		}
+		
+		// --no-announcements
+		if (options.has(optionNoAnnouncements)) {
+			operationOptions.setAnnouncements(false);
+		}
+		
+		// --announce=<host>:<port>
+		if (options.has(optionAnnouncements)) {
+			operationOptions.setAnnouncements(true);
+			
+			String announcementsStr = options.valueOf(optionAnnouncements);
+			Matcher matcher = ANNOUNCEMENTS_PATTERN.matcher(announcementsStr);
+			
+			if (!matcher.matches()) {
+				throw new Exception("Invalid argument for --announcements, expected pattern: "+ANNOUNCEMENTS_PATTERN.pattern());
+			}
+			
+			String announcementsHost = matcher.group(ANNOUNCEMENTS_PATTERN_GROUP_HOST);
+			int announcementsPort = Integer.parseInt(matcher.group(ANNOUNCEMENTS_PATTERN_GROUP_PORT));
+			
+			operationOptions.setAnnouncementsHost(announcementsHost);
+			operationOptions.setAnnouncementsPort(announcementsPort);
+		}
+		
+		// --delay=<sec>
+		if (options.has(optionSettleDelay)) {
+			operationOptions.setSettleDelay(options.valueOf(optionSettleDelay)*1000);
+		}
+		
+		// --no-watcher
+		if (options.has(optionNoWatcher)) {
+			operationOptions.setWatcher(false);
 		}
 		
 		// Run!

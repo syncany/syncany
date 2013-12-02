@@ -115,7 +115,7 @@ public abstract class FileSystemAction {
 		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictingLocalFile);
 		String conflictBasename = FileUtil.getBasename(conflictingLocalFile);
 		String conflictFileExtension = FileUtil.getExtension(conflictingLocalFile);		
-		String conflictMachineName = config.getMachineName();
+		String conflictUserName = (config.getDisplayName() != null) ? config.getDisplayName() : config.getMachineName();
 		String conflictDate = new SimpleDateFormat("d MMM yy, h-mm a").format(conflictingLocalVersion.getLastModified()); 
 				
 		boolean conflictCreatedByEndsWithS = conflictingLocalVersion.getCreatedBy().endsWith("s");
@@ -126,21 +126,21 @@ public abstract class FileSystemAction {
 		if (conflictFileHasExtension) {
 			if (conflictCreatedByEndsWithS) {
 				newFullName = String.format("%s (%s' conflicted copy, %s).%s", 
-						conflictBasename, conflictMachineName, conflictDate, conflictFileExtension);
+						conflictBasename, conflictUserName, conflictDate, conflictFileExtension);
 			}
 			else {
 				newFullName = String.format("%s (%s's conflicted copy, %s).%s", 
-						conflictBasename, conflictMachineName, conflictDate, conflictFileExtension);				
+						conflictBasename, conflictUserName, conflictDate, conflictFileExtension);				
 			}
 		}
 		else {
 			if (conflictCreatedByEndsWithS) {
 				newFullName = String.format("%s (%s' conflicted copy, %s)", 
-						conflictBasename, conflictMachineName, conflictDate);
+						conflictBasename, conflictUserName, conflictDate);
 			}
 			else {
 				newFullName = String.format("%s (%s's conflicted copy, %s)", 
-						conflictBasename, conflictMachineName, conflictDate);				
+						conflictBasename, conflictUserName, conflictDate);				
 			}
 		}
 					

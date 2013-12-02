@@ -27,6 +27,9 @@ import org.simpleframework.xml.Root;
 @Root(name="repo")
 @Namespace(reference="http://syncany.org/repo/1")
 public class RepoTO {
+	@Element(name="repoid", required=true)
+	private byte[] repoId;
+	
 	@Element(name="chunker", required=false)
 	private ChunkerTO chunker;
 	
@@ -36,6 +39,14 @@ public class RepoTO {
 	@ElementList(name="transformers", required=false, entry="transformer")
 	private List<TransformerTO> transformers;
 	
+	public byte[] getRepoId() {
+		return repoId;
+	}
+
+	public void setRepoId(byte[] repoId) {
+		this.repoId = repoId;
+	}
+
 	public ChunkerTO getChunker() {
 		return chunker;
 	}

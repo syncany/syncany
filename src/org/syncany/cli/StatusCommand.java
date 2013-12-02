@@ -22,7 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.StatusOperation.ChangeSet;
+import org.syncany.operations.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 
 public class StatusCommand extends Command {

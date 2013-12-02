@@ -52,7 +52,9 @@ public class Config {
 	public static final String DEFAULT_FILE_REPO = "repo";
 	public static final String DEFAULT_FILE_MASTER = "master";
 	
-	private String machineName;	
+	private byte[] repoId;
+	private String machineName;
+	private String displayName;
 	private File localDir;
 	private File appDir;
 	private File cacheDir;
@@ -78,7 +80,7 @@ public class Config {
     }
     
 	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws Exception {		
-		initMachineName(configTO);
+		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
 		initCache();
@@ -86,12 +88,13 @@ public class Config {
     	initConnection(configTO);    
 	}		
 
-	private void initMachineName(ConfigTO configTO) throws ConfigException {
+	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
 			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
 		}
 		
 		machineName = configTO.getMachineName();
+		displayName = configTO.getDisplayName();
 	}
 	
 	private void initMasterKey(ConfigTO configTO) throws Exception {
@@ -116,6 +119,8 @@ public class Config {
 
 	private void initRepo(RepoTO repoTO) throws Exception {
 		// TODO [feature request] make chunking options configurable
+		
+		repoId = repoTO.getRepoId();
 		
 		chunker = new MimeTypeChunker(
 			new FixedChunker(16*1024, "SHA1"),
@@ -206,9 +211,17 @@ public class Config {
 
 	public void setMachineName(String machineName) {
 		this.machineName = machineName;
-	}		
+	}			
 
-    public Connection getConnection() {
+    public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public Connection getConnection() {
         return connection;
     }
 
@@ -216,6 +229,10 @@ public class Config {
         this.connection = connection;
     }
 
+    public byte[] getRepoId() {
+		return repoId;
+	}
+    
     public Chunker getChunker() {
         return chunker;
     }

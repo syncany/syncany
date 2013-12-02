@@ -56,7 +56,7 @@ public class LongRunningNewAndDeleteScenarioTest {
 			
 			// B 
 			clientB.down();						
-			assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+			assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 			assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 			for (int i=1; i<100; i++) { clientB.changeFile("A-file-with-size-"+i+".jpg"); }
@@ -64,7 +64,7 @@ public class LongRunningNewAndDeleteScenarioTest {
 			
 			// A 
 			clientA.down();						
-			assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+			assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 			assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 			for (int i=1; i<100; i++) { clientA.deleteFile("A-file-with-size-"+i+".jpg"); }
@@ -72,7 +72,7 @@ public class LongRunningNewAndDeleteScenarioTest {
 			
 			// B 
 			clientB.down();						
-			assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+			assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 			assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());			
 		}
 

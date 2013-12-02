@@ -23,11 +23,22 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- *
- * @author pheckel
+ * A <tt>PartialFileHistory</tt> represents a single file in a repository over a 
+ * certain period of time/versions. Whenever a file is updated or deleted, a new  
+ * {@link FileVersion} is added to the file history. 
+ * 
+ * <p>A file history is identified by a unique random identifier and holds a sorted
+ * list of file versions. 
+ * 
+ * <p>Due to cleanup mechanisms and the delta database concept, the list of file
+ * versions is not always complete. The class hence represents a part of the file
+ * history.
+ * 
+ * @see FileVersion
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class PartialFileHistory {
-	//TODO [medium] switch to a 128 bits id to limit the collision risk
+    //TODO [medium] switch to a 128 or 160 bit id to limit the collision risk
     private FileId fileId;
     private TreeMap<Long, FileVersion> versions;
     

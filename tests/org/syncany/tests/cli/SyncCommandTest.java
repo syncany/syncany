@@ -18,7 +18,7 @@
 package org.syncany.tests.cli;
 
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEqualsExcludeLockedAndNoRead;
 
 import java.io.File;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class SyncCommandTest {
 		assertFileEquals(new File(clientB.get("localdir")+"/file2"), new File(clientA.get("localdir")+"/file2"));
 		assertFileEquals(new File(clientB.get("localdir")+"/file3"), new File(clientA.get("localdir")+"/file3"));
 		assertFileEquals(new File(clientB.get("localdir")+"/file4"), new File(clientA.get("localdir")+"/file4"));
-		assertFileListEquals(new File(clientA.get("localdir")), new File(clientB.get("localdir")));
+		assertFileListEqualsExcludeLockedAndNoRead(new File(clientA.get("localdir")), new File(clientB.get("localdir")));
 
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);

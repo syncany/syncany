@@ -28,7 +28,7 @@ import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEqualsExcludeLockedAndNoRead;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 
 public class WatchCommandTest {	
@@ -68,7 +68,7 @@ public class WatchCommandTest {
 		// Client A: Wait for client A to sync it
 		Thread.sleep(2000); 
 		assertFileEquals(new File(clientB.get("localdir")+"/file1"), new File(clientA.get("localdir")+"/file1"));
-		assertFileListEquals(new File(clientB.get("localdir")), new File(clientA.get("localdir")));
+		assertFileListEqualsExcludeLockedAndNoRead(new File(clientB.get("localdir")), new File(clientA.get("localdir")));
 		
 		// Client A: New file, wait for it to sync it
 		TestFileUtil.createRandomFile(new File(clientA.get("localdir")+"/file2"), 20*1024);

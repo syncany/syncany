@@ -114,7 +114,7 @@ public class FileVanishedScenarioTest {
 		
 		// Test 3: After that, the sync between the clients should of course still work
 		clientB.down();
-		assertFileListEquals("Files of both clients should be identical.", clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals("Files of both clients should be identical.", clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
 		
 		// Tear down
@@ -135,7 +135,7 @@ public class FileVanishedScenarioTest {
 
 		// B
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// A
 		clientA.createNewFile("folder1/file1");	
@@ -146,7 +146,7 @@ public class FileVanishedScenarioTest {
 		assertFalse(clientB.getLocalFile("folder1").exists());
 		
 		clientB.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
 		clientA.cleanup();

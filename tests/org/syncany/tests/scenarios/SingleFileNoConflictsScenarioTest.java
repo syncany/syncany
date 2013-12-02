@@ -40,7 +40,7 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		// Download and reconstruct
 		clientA2.down();		
-		assertFileListEquals(clientA1.getLocalFiles(), clientA2.getLocalFiles());
+		assertFileListEquals(clientA1.getLocalFilesExcludeLockedAndNoRead(), clientA2.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA1.cleanup();
@@ -86,7 +86,7 @@ public class SingleFileNoConflictsScenarioTest {
 		clientA.down();
 		assertFalse("Originally moved file should not exist.", clientA.getLocalFile("file").exists());
 		assertFileEquals(clientA.getLocalFile("moved"), clientB.getLocalFile("moved"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();
@@ -112,7 +112,7 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		clientA.down();
 		assertFalse("Deleted file should not exist.", clientA.getLocalFile("file").exists());
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
 		clientA.cleanup();
@@ -138,7 +138,7 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		clientA.down();
 		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());		
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Cleanup
 		clientA.cleanup();
@@ -160,7 +160,7 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("1"), clientB.getLocalFile("1"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientA.moveFile("1", "2");
 		assertFileEquals(clientA.getLocalFile("2"), clientB.getLocalFile("1"));
@@ -170,13 +170,13 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		clientB.down();
 		assertFileEquals(clientA.getLocalFile("2"), clientB.getLocalFile("2"));
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientC.down();
 		assertFileEquals(clientA.getLocalFile("2"), clientC.getLocalFile("2"));
 		assertFileEquals(clientB.getLocalFile("2"), clientC.getLocalFile("2"));
-		assertFileListEquals(clientA.getLocalFiles(), clientC.getLocalFiles());
-		assertFileListEquals(clientB.getLocalFiles(), clientC.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
+		assertFileListEquals(clientB.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientC.createNewFile("3");
 		clientC.changeFile("2");
@@ -184,15 +184,15 @@ public class SingleFileNoConflictsScenarioTest {
 		
 		clientA.down();
 		assertFileEquals(clientC.getLocalFile("3"), clientA.getLocalFile("3"));
-		assertFileListEquals(clientC.getLocalFiles(), clientA.getLocalFiles());
+		assertFileListEquals(clientC.getLocalFilesExcludeLockedAndNoRead(), clientA.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientB.down();
 		assertFileEquals(clientC.getLocalFile("3"), clientB.getLocalFile("3"));
-		assertFileListEquals(clientC.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientC.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientC.down();		
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
-		assertFileListEquals(clientA.getLocalFiles(), clientC.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
 		clientA.cleanup();

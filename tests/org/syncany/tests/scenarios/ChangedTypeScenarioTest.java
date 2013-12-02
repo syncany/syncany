@@ -48,7 +48,7 @@ public class ChangedTypeScenarioTest {
 					clientA.upWithForceChecksum();		
 					
 					clientB.down();
-					assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+					assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 				}			
 			}

@@ -40,6 +40,13 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.FileUtil;
 
+/**
+ * The abstract init operation implements common functions of the {@link InitOperation}
+ * and the {@link ConnectOperation}. Its sole purpose is to avoid duplicate code in these
+ * similar operations.
+ *   
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class AbstractInitOperation extends Operation {
 	public AbstractInitOperation(Config config) {
 		super(config);

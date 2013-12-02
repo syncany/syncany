@@ -52,14 +52,16 @@ public abstract class AbstractClientAction implements Executable {
 	}
 	
 	protected File pickFileOrFolder(int prndNum, FileFilter filter) throws Exception {
-		int pickFileIndex = Math.abs(prndNum % (client.getLocalFiles().size()/3));			
+		Map<String, File> localFiles = client.getLocalFiles();//ExcludeLockedAndNoRead();
+		
+		int pickFileIndex = Math.abs(prndNum % (localFiles.size()/3));			
 		Iterator<File> fileIterator = null;
 
 		int i = 0, rounds = 0;
 		
 		while (i <= pickFileIndex && ++rounds < 100000) {		
 			if (fileIterator == null || !fileIterator.hasNext()) {
-				fileIterator = client.getLocalFiles().values().iterator();
+				fileIterator = localFiles.values().iterator();
 			}
 			
 			File pickedFile = fileIterator.next();

@@ -86,9 +86,9 @@ public class CommandLineClient extends Client {
 			OptionSpec<Void> optionHelp = parser.acceptsAll(asList("h", "help"));
 			OptionSpec<File> optionLocalDir = parser.acceptsAll(asList("l", "localdir")).withRequiredArg().ofType(File.class);
 			OptionSpec<String> optionLog = parser.acceptsAll(asList("log")).withRequiredArg();
+			OptionSpec<Void> optionLogPrint = parser.acceptsAll(asList("print"));		
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
-			OptionSpec<Void> optionQuiet = parser.acceptsAll(asList("q", "quiet"));		
 			
 			// Parse global options and operation name
 			OptionSet options = parser.parse(args);
@@ -97,7 +97,7 @@ public class CommandLineClient extends Client {
 			// WARNING: Do not re-order unless you know what you are doing!
 			initHelpOption(options, optionHelp, options.nonOptionArguments());
 			initConfigOption(options, optionLocalDir);
-			initLogOption(options, optionLog, optionLogLevel, optionQuiet, optionDebug);
+			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
 	
 			// Run!
 			return runCommand(options, options.nonOptionArguments());
@@ -113,23 +113,18 @@ public class CommandLineClient extends Client {
 		}
 	}
 
-	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionQuiet, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
-		initLogHandlers(options, optionLog, optionDebug);		
-		initLogLevel(options, optionDebug, optionQuiet, optionLogLevel);		
+	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
+		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);		
+		initLogLevel(options, optionDebug, optionLogLevel);		
 	}
 
-	private void initLogLevel(OptionSet options, OptionSpec<Void> optionDebug, OptionSpec<Void> optionQuiet, OptionSpec<String> optionLogLevel) {
+	private void initLogLevel(OptionSet options, OptionSpec<Void> optionDebug, OptionSpec<String> optionLogLevel) {
 		Level newLogLevel = null;
 
 		// --debug
 		if (options.has(optionDebug)) {
 			out.println("debug");
 			newLogLevel = Level.ALL;			
-		}
-		
-		// --quiet
-		else if (options.has(optionQuiet)) {
-			newLogLevel = Level.OFF;
 		}
 		
 		// --loglevel=<level>
@@ -151,7 +146,7 @@ public class CommandLineClient extends Client {
 		Logging.setGlobalLogLevel(newLogLevel);	
 	}
 
-	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
+	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		// --log=<file>
 		String logFilePattern = null;
 				
@@ -172,7 +167,7 @@ public class CommandLineClient extends Client {
 		}
 				
 		// --debug, add console handler
-		if (options.has(optionDebug) || (options.has(optionLog) && "-".equals(options.valueOf(optionLog)))) {
+		if (options.has(optionDebug) || options.has(optionLogPrint) || (options.has(optionLog) && "-".equals(options.valueOf(optionLog)))) {
 			Handler consoleLogHandler = new ConsoleHandler();
 			consoleLogHandler.setFormatter(new LogFormatter());
 			
@@ -249,8 +244,9 @@ public class CommandLineClient extends Client {
 		
 		while (currentSearchFolder != null) {
 			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION);
+			File possibleConfigFile = new File(possibleAppDir+"/"+Config.DEFAULT_FILE_CONFIG);
 			
-			if (possibleAppDir.exists()) {
+			if (possibleAppDir.exists() && possibleConfigFile.exists()) {
 				return possibleAppDir.getParentFile().getCanonicalFile();
 			}
 			
@@ -311,7 +307,7 @@ public class CommandLineClient extends Client {
 		
 		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
 		out.println("Usage: sy [-l|--localdir=<path>] [--log=<path>]");
-		out.println("          [--loglevel=OFF|SEVERE|..] [-q|--quiet]");
+		out.println("          [--loglevel=OFF|SEVERE|..] [--print-log]");
 		out.println("          [-d|--debug] [-h|--help] <command> [<args>]");
 		out.println();
 		out.println("Global options:");
@@ -320,11 +316,9 @@ public class CommandLineClient extends Client {
 		out.println("      Syncany searches for a '.syncany' folder in the given and all parent");
 		out.println("      directories.");
 		out.println();
-		out.println("  -q, --quiet");
-		out.println("      Alias to --loglevel=OFF");
-		out.println();
 		out.println("  -d, --debug");
 		out.println("      Sets the log level to ALL, and print the log to the console.");
+		out.println("      Alias to: --loglevel=ALL --print-log");
 		out.println();
 		out.println("  -h, --help");
 		out.println("      Print this help screen");
@@ -336,6 +330,9 @@ public class CommandLineClient extends Client {
 		out.println("  --loglevel=<level>");
 		out.println("      Change log level to <level>. Level can be either of the");
 		out.println("      following: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL");
+		out.println();
+		out.println("  --print");
+		out.println("      Print the log to the console (in addition to the log file).");
 		out.println();
 		out.println("Commands:");
 		out.println("  init [<args>]");
@@ -387,7 +384,13 @@ public class CommandLineClient extends Client {
 		out.println("      watch the file system.");
 		out.println();
 		out.println("      Arguments:");
-		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 30)");
+		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 120)");
+		out.println("      -s, --delay=<sec>                Watcher: Wait for <sec> seconds for file system watcher to");
+		out.println("                                       settle before starting to sync (default: 3)");
+		out.println("      -W, --no-watcher                 Don't watch the file system (rely on periodic sync)");
+		out.println("      -a, --announce=<host>:<port>     Hostname and port to fanout pub/sub server");
+		out.println("                                       (default: notify.syncany.org:8080)");
+		out.println("      -N, --no-announcements           Don't connect to fanout pub/sub server (no instant sync)");
 		out.println();
 		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
 		out.println("      can be used.");

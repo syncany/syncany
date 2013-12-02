@@ -38,16 +38,15 @@ import org.syncany.tests.database.XmlDatabaseDAOTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.OperationPerformanceTest;
+import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.util.ClasspathUtilTest;
 import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
-	ClasspathUtilTest.class,
 	CollectionUtilTest.class,
 	FileUtilTests.class,
 	
@@ -78,6 +77,7 @@ import org.syncany.tests.util.FileUtilTests;
 	FileSystemActionComparatorTest.class,
 	IndexerTest.class,
 	OperationPerformanceTest.class,
+	RecursiveWatcherTest.class,
 	SyncUpOperationTest.class,
 	StatusOperationTest.class
 })

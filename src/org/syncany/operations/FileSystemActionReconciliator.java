@@ -31,7 +31,6 @@ import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.DownOperation.DownOperationResult;
-import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;

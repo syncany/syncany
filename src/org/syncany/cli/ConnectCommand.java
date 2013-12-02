@@ -110,7 +110,10 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}	
 
 	private void printResults(ConnectOperationResult operationResult) {
-		// Nothing
+		out.println();
+		out.println("Repository connected, and local folder initialized.");
+		out.println("You can now use the 'syncany' command to sync your files.");
+		out.println();		
 	}
 	
 	private ConnectionTO initPluginWithLink(String link) throws Exception {
@@ -133,6 +136,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
 
 			String password = askPassword();
+			
+			notifyCreateMasterKey();
 			masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
 			
 			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
@@ -177,8 +182,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}
 
 	@Override
-	public void notifyGenerateMasterKey() {
+	public void notifyCreateMasterKey() {
 		out.println();
-		out.println("Generating master key (this might take a while) ...");
+		out.println("Creating master key from password (this might take a while) ...");
 	}
 }

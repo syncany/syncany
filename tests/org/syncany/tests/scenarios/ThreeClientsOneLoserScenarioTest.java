@@ -72,7 +72,7 @@ public class ThreeClientsOneLoserScenarioTest {
 		clientC.upWithForceChecksum(); 
 		
 		clientA.down();
-		assertFileListEquals(clientA.getLocalFiles(), clientC.getLocalFiles());		
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Tear down
 		clientA.cleanup();

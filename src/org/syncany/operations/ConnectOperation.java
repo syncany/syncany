@@ -36,6 +36,22 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
+/**
+ * The connect operation connects to an existing repository at a given remote storage
+ * location. Its responsibilities include:
+ * 
+ * <ul>
+ *   <li>Downloading of the repo file. If it is encrypted, also downloading the master
+ *       file to allow decrypting the repo file.</li>
+ *   <li>If encrypted: Querying the user for the password and creating the master key using
+ *       the password and the master salt.</li>
+ *   <li>If encrypted: Decrypting and verifying the repo file.</li>
+ *   <li>Creating the local Syncany folder structure in the local directory (.syncany 
+ *       folder and the sub-structure) and copying the repo/master file to it.</li>
+ * </ul> 
+ *   
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());		
 	
@@ -134,7 +150,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword, byte[] masterKeySalt) throws Exception {
 		if (listener != null) {
-			listener.notifyGenerateMasterKey();
+			listener.notifyCreateMasterKey();
 		}
 		
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword, masterKeySalt);
@@ -168,7 +184,7 @@ public class ConnectOperation extends AbstractInitOperation {
 
 	public static interface ConnectOperationListener {
 		public String getPasswordCallback();
-		public void notifyGenerateMasterKey();
+		public void notifyCreateMasterKey();
 	}	
 	
 	public static class ConnectOperationOptions implements OperationOptions {

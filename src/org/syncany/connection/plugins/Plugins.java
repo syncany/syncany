@@ -23,10 +23,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.util.ClasspathUtil;
+import org.reflections.Reflections;
 import org.syncany.util.StringUtil;
 
 /**
@@ -48,6 +47,7 @@ public class Plugins {
 	public static final Pattern PLUGIN_FQCN_REGEX = Pattern.compile(PLUGIN_FQCN_PREFIX + "\\.([^.]+)\\.[\\w\\d]+" + PLUGIN_FQCN_SUFFIX);
 
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
+	private static final Reflections reflections = new Reflections(PLUGIN_FQCN_PREFIX);
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 	private static boolean loaded = false;
 
@@ -96,17 +96,10 @@ public class Plugins {
 			return;
 		}
 
-		// TODO [low] Plugins.list() does not work on Windows. Why?
-		for (String className : ClasspathUtil.getClasspathClasses().values()) {
-			if (className.startsWith(PLUGIN_FQCN_PREFIX) || !className.endsWith(PLUGIN_FQCN_SUFFIX)) {
-				Matcher m = PLUGIN_FQCN_REGEX.matcher(className);
-
-				if (m.matches()) {
-					loadPlugin(m.group(1), className);
-				}
-			}
+		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
+			loadPlugin(pluginClass);			
 		}
-
+		
 		loaded = true;
 	}
 
@@ -123,13 +116,20 @@ public class Plugins {
 
 		// Try to load!
 		try {
-			Class<?> pluginInfoClass = Class.forName(className);
-			Plugin pluginInfo = (Plugin) pluginInfoClass.newInstance();
-
-			plugins.put(pluginId, pluginInfo);
+			loadPlugin(Class.forName(className));		
 		}
 		catch (Exception ex) {
 			logger.log(Level.WARNING, "Could not load plugin : " + className);
+		}
+	}
+	
+	private static void loadPlugin(Class<?> pluginClass) {		
+		try {
+			Plugin plugin = (Plugin) pluginClass.newInstance();			
+			plugins.put(plugin.getId(), plugin);
+		}
+		catch (Exception ex) {
+			logger.log(Level.WARNING, "Could not load plugin : " + pluginClass.getName());
 		}
 	}
 }

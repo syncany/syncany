@@ -365,5 +365,22 @@ public class FileUtil {
 	public static boolean exists(File file) {
 		return Files.exists(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
 	}
+
+	/**
+	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
+	 * symlinks into account. Returns <tt>true</tt> if a symlink exists even if its target file
+	 * does not exist and can hence not be read.
+	 * 
+	 * @param file A file
+	 * @return Returns <tt>true</tt> if the file can be read (or the symlink exists), <tt>false</tt> otherwise
+	 */
+	public static boolean canRead(File file) {
+		if (isSymlink(file)) {
+			return exists(file);
+		}
+		else {
+			return file.canRead();
+		}
+	}
 }
 

@@ -40,6 +40,23 @@ import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
+/**
+ * The init operation initializes a new repository at a given remote storage
+ * location. Its responsibilities include:
+ * 
+ * <ul>
+ *   <li>Generating a master key from the user password (if encryption is enabled)
+ *       using the {@link CipherUtil#createMasterKey(String) createMasterKey()} method</li>
+ *   <li>Creating the local Syncany folder structure in the local directory (.syncany 
+ *       folder and the sub-structure).</li>
+ *   <li>Initializing the remote storage (creating folder-structure, if necessary)
+ *       using the transfer manager's {@link TransferManager#init()} method.</li>
+ *   <li>Creating a new repo and master file using {@link RepoTO} and {@link MasterTO},
+ *       saving them locally and uploading them to the remote repository.</li>
+ * </ul> 
+ *   
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class InitOperation extends AbstractInitOperation {
     private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());        
     private InitOperationOptions options;

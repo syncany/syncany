@@ -35,8 +35,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.Database;
+import org.syncany.operations.ChangeSet;
 import org.syncany.operations.DownOperation.DownOperationResult;
-import org.syncany.operations.StatusOperation.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
@@ -100,7 +100,7 @@ public class ChangedAttributesScenarioTest {
 		}	
 		
 		// Test 2: The rest
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// Tear down
@@ -154,7 +154,7 @@ public class ChangedAttributesScenarioTest {
 		}	
 		
 		// Test 3: The rest
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
 		
 		// Tear down

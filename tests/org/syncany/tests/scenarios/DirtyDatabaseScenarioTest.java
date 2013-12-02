@@ -52,15 +52,15 @@ public class DirtyDatabaseScenarioTest {
 		clientB.down(); // This creates a dirty database		
 		assertTrue("Dirty database should exist.", clientB.getDirtyDatabaseFile().exists());
 		assertFileEquals("Files should be identical", clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
-		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFiles());
+		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientB.up(); // This deletes the dirty database file
 		assertFalse("Dirty database should NOT exist.", clientB.getDirtyDatabaseFile().exists());
 		
 		clientA.down(); // This pulls down the conflicting file
-		assertFileListEquals(clientA.getLocalFiles(), clientB.getLocalFiles());
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
-		assertConflictingFileExists("A-file1.jpg", clientA.getLocalFiles());
+		assertConflictingFileExists("A-file1.jpg", clientA.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
 		clientA.cleanup();
