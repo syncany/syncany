@@ -389,7 +389,7 @@ public class Indexer {
 			FileId newFileHistoryId = null;
 			//TODO[low]: this is probably useless as the collision probability should be super tiny
 			do {
-				newFileHistoryId = new FileId(random.nextLong(),random.nextLong());
+				newFileHistoryId = FileId.secureRandomFileId();
 				
 				if (database.getFileHistory(newFileHistoryId) == null 
 					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {

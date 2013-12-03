@@ -17,70 +17,26 @@
  */
 package org.syncany.database;
 
+import org.syncany.util.ObjectId;
+
 /**
  * @author fabrice rossi
  *
  */
-public class FileId {
-	private long first;
-
-	private long second;
+public class FileId extends ObjectId {
 
 	/**
-	 * @param first
-	 * @param second
+	 * @param array
 	 */
-	public FileId(long first, long second) {
-		this.first = first;
-		this.second = second;
+	private FileId(byte[] array) {
+		super(array);
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (first ^ (first >>> 32));
-		result = prime * result + (int) (second ^ (second >>> 32));
-		return result;
+	
+	public static FileId secureRandomFileId() {
+		return new FileId(ObjectId.secureRandomBytes(16));
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof FileId)) {
-			return false;
-		}
-		FileId other = (FileId) obj;
-		if (first != other.first) {
-			return false;
-		}
-		if (second != other.second) {
-			return false;
-		}
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("%016x%016x", first, second);
-	}
-
-	private static long parseHexLong(String s) throws NumberFormatException {
-		// this is used to induce the proper overflow needed to 2 complements coding of long
-		long baseValue = Long.parseLong(s.substring(1), 16);
-		long firstDigit = Character.digit(s.charAt(0), 16);
-		return (firstDigit << 60) + baseValue;
-	}
-
-	public static FileId parseFileId(String s) throws NumberFormatException {
-		if (s.length() != 32) {
-			throw new NumberFormatException("Expecting 32 hexadecimal representation");
-		}
-		return new FileId(parseHexLong(s.substring(0, 16)), parseHexLong(s.substring(16)));
+	
+	public static FileId parseFileId(String s) {
+		return new FileId(ObjectId.parseBytes(s));
 	}
 }
