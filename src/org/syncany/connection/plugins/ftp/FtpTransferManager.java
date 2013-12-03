@@ -45,7 +45,12 @@ import org.syncany.connection.plugins.TransferManager;
  * <p>Using an {@link FtpConnection}, the transfer manager is configured and uses 
  * a well defined FTP folder to store the Syncany repository data. While repo and
  * master file are stored in the given folder, databases and multichunks are stored
- * in special sub-folders.
+ * in special sub-folders:
+ * 
+ * <ul>
+ *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
+ *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultiChunkRemoteFile}s</li>
+ * </ul>
  * 
  * <p>All operations are auto-connected, i.e. a connection is automatically
  * established. Connecting is retried a few times before throwing an exception.

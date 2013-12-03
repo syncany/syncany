@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +64,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private WatchOperationOptions options;
 
 	private Database database;
-	private boolean syncRunning;
+	private AtomicBoolean syncRunning;
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
@@ -77,7 +78,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.options = options;
 
 		this.database = null;
-		this.syncRunning = false;
+		this.syncRunning = new AtomicBoolean(false);
 		
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
@@ -138,9 +139,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		notificationListener.subscribe(notificationChannel);
 	}
 
-	private synchronized void runSync() throws Exception {
-		if (!syncRunning) {
-			syncRunning = true;
+	private void runSync() throws Exception {
+		if (!syncRunning.get()) {
+			syncRunning.set(true);
 
 			logger.log(Level.INFO, "Running sync ...");
 
@@ -154,7 +155,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				}
 			}
 			finally {
-				syncRunning = false;
+				syncRunning.set(false);
 			}
 		}
 	}

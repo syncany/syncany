@@ -18,6 +18,8 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
+import static org.syncany.cli.CommandScope.INITIALIZED_LOCALDIR;
+import static org.syncany.cli.CommandScope.UNINITIALIZED_LOCALDIR;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -277,12 +279,12 @@ public class CommandLineClient extends Client {
 		command.setLocalDir(localDir);
 		
 		// Pre-init operations
-		if (command.initializedLocalDirRequired()) { 
+		if (command.getRequiredCommandScope() == INITIALIZED_LOCALDIR) { 
 			if (config == null) {
 				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
 			}			
 		}
-		else {
+		else if (command.getRequiredCommandScope() == UNINITIALIZED_LOCALDIR) {
 			if (config != null) {
 				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
 			}

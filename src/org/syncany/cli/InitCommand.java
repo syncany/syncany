@@ -56,8 +56,8 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
 	@Override
-	public boolean initializedLocalDirRequired() {	
-		return false;
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.UNINITIALIZED_LOCALDIR;
 	}
 	
 	@Override

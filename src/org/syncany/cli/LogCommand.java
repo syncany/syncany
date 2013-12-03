@@ -44,8 +44,8 @@ public class LogCommand extends Command {
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
 
 	@Override
-	public boolean initializedLocalDirRequired() {
-		return true;
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 
 	@Override

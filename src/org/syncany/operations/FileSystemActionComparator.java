@@ -30,7 +30,6 @@ import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.operations.actions.RenameFileSystemAction;
 
-
 /**
  * Sorts file system actions according to their natural order to prevent scenarios 
  * in which a non-empty directory is deleted, ...

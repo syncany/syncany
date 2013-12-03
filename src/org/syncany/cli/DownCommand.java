@@ -27,8 +27,8 @@ import org.syncany.operations.DownOperation.DownOperationResult;
 
 public class DownCommand extends Command {
 	@Override
-	public boolean initializedLocalDirRequired() {	
-		return true;
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override

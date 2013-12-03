@@ -34,8 +34,8 @@ public class WatchCommand extends Command {
 	public static final int ANNOUNCEMENTS_PATTERN_GROUP_PORT = 2;
 	
 	@Override
-	public boolean initializedLocalDirRequired() {	
-		return true;
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override

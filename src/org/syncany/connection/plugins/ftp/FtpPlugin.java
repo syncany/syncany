@@ -21,15 +21,16 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 
 /**
- *
+ * Identifies the FTP-based storage {@link Plugin} for Syncany. 
+ * 
+ * <p>This class implements defines the identifier, name and 
+ * version of the plugin. It furthermore allows the instantiation 
+ * of a plugin-specific {@link FtpConnection}. 
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FtpPlugin extends Plugin {
     public static final String ID = "ftp";
-
-    public FtpPlugin() {
-    	// Fressen.
-    }        
     
     @Override
     public String getId() {

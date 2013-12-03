@@ -30,12 +30,21 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.Database;
 import org.syncany.database.VectorClock;
 
+/**
+ * The list remote operation queries the transfer manager for any unknown 
+ * {@link DatabaseRemoteFile}s. 
+ * 
+ * <p>It first uses a {@link TransferManager} to list all remote databases and then
+ * uses the local list of known databases to filter already processed files. The local
+ * list of known databases is loaded from {@link Config#getKnownDatabaseListFile() getKnownDatabaseListFile()}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
 	private Database loadedDatabase;
@@ -55,7 +64,7 @@ public class LsRemoteOperation extends Operation {
 	}	
 	
 	@Override
-	public RemoteStatusOperationResult execute() throws Exception {
+	public LsRemoteOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Remote Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -67,10 +76,9 @@ public class LsRemoteOperation extends Operation {
 				: config.getConnection().createTransferManager();
 		
 		alreadyDownloadedRemoteDatabases = readAlreadyDownloadedDatabasesListFromFile();
-		List<RemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(database, transferManager, alreadyDownloadedRemoteDatabases);
+		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(database, transferManager, alreadyDownloadedRemoteDatabases);		
 		
-		
-		return new RemoteStatusOperationResult(unknownRemoteDatabases);
+		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 
 	private Set<String> readAlreadyDownloadedDatabasesListFromFile() throws IOException {
@@ -91,16 +99,16 @@ public class LsRemoteOperation extends Operation {
 		return alreadyDownloadedRemoteDatabases;
 	}
 
-	private List<RemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager, Set<String> alreadyDownloadedRemoteDatabases2) throws StorageException {
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager, Set<String> alreadyDownloadedRemoteDatabases) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
-		List<RemoteFile> unknownRemoteDatabasesList = new ArrayList<RemoteFile>();
+		List<DatabaseRemoteFile> unknownRemoteDatabasesList = new ArrayList<DatabaseRemoteFile>();
 
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
 		
 		// No local database yet
 		if (db.getLastDatabaseVersion() == null) {
-			return new ArrayList<RemoteFile>(remoteDatabaseFiles.values());
+			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
 		}
 		
 		// At least one local database version exists
@@ -134,14 +142,14 @@ public class LsRemoteOperation extends Operation {
 		}
 	}
 	
-	public class RemoteStatusOperationResult implements OperationResult {
-		private List<RemoteFile> unknownRemoteDatabases;
+	public class LsRemoteOperationResult implements OperationResult {
+		private List<DatabaseRemoteFile> unknownRemoteDatabases;
 		
-		public RemoteStatusOperationResult(List<RemoteFile> unknownRemoteDatabases) {
+		public LsRemoteOperationResult(List<DatabaseRemoteFile> unknownRemoteDatabases) {
 			this.unknownRemoteDatabases = unknownRemoteDatabases;
 		}
 
-		public List<RemoteFile> getUnknownRemoteDatabases() {
+		public List<DatabaseRemoteFile> getUnknownRemoteDatabases() {
 			return unknownRemoteDatabases;
 		}
 	}

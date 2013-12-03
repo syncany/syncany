@@ -17,6 +17,16 @@
  */
 package org.syncany.operations;
 
+/**
+ * Marker interface to indicate a result for a given {@link Operation}.
+ * 
+ * <p>{@link OperationOptions} are passed to an operation (similar to method parameters).
+ * Onve an operation returns, it returns an instance of an operation result.
+ * 
+ * @see Operation
+ * @see OperationOptions
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public interface OperationResult {
 	// Marker interface for type safety
 }

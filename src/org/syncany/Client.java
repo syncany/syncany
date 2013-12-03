@@ -17,10 +17,7 @@
  */
 package org.syncany;
 
-import java.util.List;
-
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.ConnectOperation;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
@@ -37,6 +34,7 @@ import org.syncany.operations.LogOperation;
 import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
+import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -110,8 +108,8 @@ public class Client {
 		return (new StatusOperation(config, null, options).execute()).getChangeSet();		
 	}	
 
-	public List<RemoteFile> remoteStatus() throws Exception {
-		return (new LsRemoteOperation(config).execute()).getUnknownRemoteDatabases();
+	public LsRemoteOperationResult lsRemote() throws Exception {
+		return new LsRemoteOperation(config).execute();
 	}
 
 	public RestoreOperationResult restore(RestoreOperationOptions options) throws Exception {
