@@ -21,11 +21,21 @@ import java.util.Map;
 
 import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.StorageException;
 
 /**
- *
- * @author oubou68, pheckel
+ * The REST connection represents the settings required to create to a
+ * backend based on a bucket-based storage such as Amazon S3 or Google Storage.
+ * 
+ * <p>This class is an abstraction for the concrete implementations offered
+ * by the Jets3t library. It is used to configure the REST connection using the
+ * {@link ProviderCredentials} class.
+ * 
+ * In addition to extending this class, implementations must offer a separate
+ * {@link Plugin}, as well as an implementation of the {@link RestTransferManager}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RestConnection implements Connection {
     protected String accessKey;

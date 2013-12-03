@@ -48,8 +48,10 @@ import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
-// TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation
-
+/**
+ * TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation
+ * 
+ */
 public class RestoreOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());	
 	private RestoreOperationOptions options;

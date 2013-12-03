@@ -15,20 +15,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.database;
+package org.syncany.operations;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class Branch {
+import org.syncany.database.Database;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.VectorClock;
+
+/**
+ * A branch represents a list of {@link DatabaseVersionHeader}s, thereby identifying a 
+ * the history of a client's database. It can be compared to a sorted list of 
+ * {@link DatabaseVersion} pointers. 
+ * 
+ * <p>Branches are used mainly in the {@link DatabaseReconciliator} to compare database
+ * versions and reconcile conflicts. 
+ *    
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+public class DatabaseBranch {
 	private ArrayList<DatabaseVersionHeader> branch;
 	
-	public Branch() {
+	public DatabaseBranch() {
 		this.branch = new ArrayList<DatabaseVersionHeader>();
 	}
-	
+		
+	public DatabaseBranch(Database database) {
+		this();
+		
+		for (DatabaseVersion databaseVersion : database.getDatabaseVersions()) {
+			branch.add(databaseVersion.getHeader());
+		}
+	}
+
 	public void add(DatabaseVersionHeader header) {
 		branch.add(header);		
 	}	
@@ -110,8 +133,6 @@ public class Branch {
 		@Override
 		public void remove() {
 			throw new RuntimeException("Operation not supported, BranchIterator.remove()");			
-		}
-		
+		}	
 	}
-
 }

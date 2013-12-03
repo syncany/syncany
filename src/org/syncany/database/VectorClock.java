@@ -116,54 +116,15 @@ public class VectorClock extends TreeMap<String, Long> {
 	}
 
 	/**
-	 * VectorClock merging operation. Creates a new VectorClock with the maximum
-	 * for each element in either clock. Used in Buffer and Process to
-	 * manipulate clocks.
-	 * 
-	 * @param clock1
-	 *            - First Clock being merged.
-	 * @param clock2
-	 *            - Second Clock being merged.
-	 * 
-	 * @return A new VectorClock with the maximum for each element in either
-	 *         clock.
-	 */
-	public static VectorClock max(VectorClock clock1, VectorClock clock2) {
-		// Create new Clock.
-		VectorClock lResult = new VectorClock();
-
-		// Go over all elements in clock One, put them in the new clock.
-		for (String lEntry : clock1.keySet()) {
-			lResult.put(lEntry, clock1.get(lEntry));
-		}
-
-		// Go over all elements in clock Two,
-		for (String lEntry : clock2.keySet()) {
-			// Insert the Clock Two value if it is not present in One, or if it
-			// is higher.
-			if (!lResult.containsKey(lEntry)
-					|| lResult.get(lEntry) < clock2.get(lEntry)) {
-				lResult.put(lEntry, clock2.get(lEntry));
-			}
-		}
-
-		// Return the merged clock.
-		return lResult;
-	}
-
-	/**
 	 * VectorClock compare operation. Returns one of four possible values
 	 * indicating how clock one relates to clock two:
 	 * 
 	 * VectorComparison.GREATER If One > Two. VectorComparison.EQUAL If One =
 	 * Two. VectorComparison.SMALLER If One < Two. VectorComparison.SIMULTANEOUS
-	 * If One <> Two.
+	 * If One != Two.
 	 * 
-	 * @param clock1
-	 *            - First Clock being compared.
-	 * @param clock2
-	 *            - Second Clock being compared.
-	 * 
+	 * @param clock1 First Clock being compared.
+	 * @param clock2 Second Clock being compared.
 	 * @return VectorComparison value indicating how One relates to Two.
 	 */
 	public static VectorClockComparison compare(VectorClock clock1, VectorClock clock2) {

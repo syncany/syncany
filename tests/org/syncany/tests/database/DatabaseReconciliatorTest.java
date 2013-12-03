@@ -23,9 +23,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.junit.Test;
-import org.syncany.database.Branch;
-import org.syncany.database.Branches;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.DatabaseBranches;
 import org.syncany.operations.DatabaseReconciliator;
 import org.syncany.tests.util.TestDatabaseUtil;
 
@@ -38,7 +38,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "B";
 		DatabaseVersionHeader currentLocalVersion = null;
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -90,7 +90,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "A";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -136,7 +136,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "C";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -188,7 +188,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "B";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -249,7 +249,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "A";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -310,7 +310,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "C";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -372,7 +372,7 @@ public class DatabaseReconciliatorTest {
 		
 		DatabaseVersionHeader currentLocalVersion = null;
 
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// B
 		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
@@ -438,7 +438,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "B";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1,C4)/T=8");
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {			
@@ -494,7 +494,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "D";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1,C4)/T=8");
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -561,7 +561,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "C";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1)/T=1376074225169");
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
@@ -599,7 +599,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "C";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A2)/T=1376074225230");
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
@@ -642,7 +642,7 @@ public class DatabaseReconciliatorTest {
 
 	@Test
 	public void testStitchBranches() throws Exception {
-		Branches allBranches = new Branches(); 
+		DatabaseBranches allBranches = new DatabaseBranches(); 
 		
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
@@ -661,9 +661,9 @@ public class DatabaseReconciliatorTest {
 		}));		
 		
 		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
-		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchBranches(allBranches, "D", new Branch());
+		DatabaseBranches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchBranches(allBranches, "D", new DatabaseBranch());
 		
-		Branches expectedStitchedBranches = new Branches();
+		DatabaseBranches expectedStitchedBranches = new DatabaseBranches();
 		
 		expectedStitchedBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1376074225169",
@@ -689,7 +689,7 @@ public class DatabaseReconciliatorTest {
 	
 	@Test
 	public void testStitchBranches2() throws Exception {		
-		Branches allBranches = new Branches();
+		DatabaseBranches allBranches = new DatabaseBranches();
 		
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 			"A/(A1)/T=1",
@@ -717,9 +717,9 @@ public class DatabaseReconciliatorTest {
 		}));		
 		
 		DatabaseReconciliator databaseVersionUpdateDetector = new DatabaseReconciliator();
-		Branches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchBranches(allBranches, "D", new Branch());
+		DatabaseBranches actualStitchedRemoteBranches = databaseVersionUpdateDetector.stitchBranches(allBranches, "D", new DatabaseBranch());
 		
-		Branches expectedStitchedBranches = new Branches();
+		DatabaseBranches expectedStitchedBranches = new DatabaseBranches();
 		
 		expectedStitchedBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 				"A/(A1)/T=1",
@@ -758,7 +758,7 @@ public class DatabaseReconciliatorTest {
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
 	}		
 
-	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, Branches allBranches, TestResult expectedTestResult) throws Exception {
+	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, DatabaseBranches allBranches, TestResult expectedTestResult) throws Exception {
 		// Print them all
 		System.out.println("testFromMachinePerspective('"+localMachineName+"') with database version headers:");
 		
@@ -771,13 +771,13 @@ public class DatabaseReconciliatorTest {
 		TestResult actualTestResult = new TestResult();
 		
 		// Get 'local' branch
-		Branch localBranch = allBranches.getBranch(localMachineName);
+		DatabaseBranch localBranch = allBranches.getBranch(localMachineName);
 		
 		// Get all the other ones (clone 'all', and remove local)
-		Branches unstitchedRemoteBranches = allBranches.clone();
+		DatabaseBranches unstitchedRemoteBranches = allBranches.clone();
 		unstitchedRemoteBranches.remove(localMachineName);
 
-		Branches stitchedRemoteBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
+		DatabaseBranches stitchedRemoteBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
 		
 		System.out.println("Before Orchestration : Remote");
 		printBranches(unstitchedRemoteBranches);
@@ -810,14 +810,14 @@ public class DatabaseReconciliatorTest {
 		assertEquals("Different winners winners last version expected", expectedTestResult.winnersWinnersLastDatabaseVersionHeader, actualTestResult.winnersWinnersLastDatabaseVersionHeader);
 	}
 
-	private void printBranches(Branches branches) {
+	private void printBranches(DatabaseBranches branches) {
 		for (String machineName : branches.getClients()) {
 			System.out.println(machineName+":");
 			printBranch(branches.getBranch(machineName));
 		}
 	}
 	
-	private void printBranch(Branch branch) {
+	private void printBranch(DatabaseBranch branch) {
 		for (DatabaseVersionHeader databaseVersionHeader : branch.getAll()) {
 			System.out.println("- "+databaseVersionHeader);
 		}

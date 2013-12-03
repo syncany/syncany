@@ -124,17 +124,6 @@ public class Database {
 		return fullDatabaseVersionCache.getFileHistories();		
 	}
 	
-	// TODO [low] Database and branch very closely related. The type hierarchy should reflect that. 
-	public Branch getBranch() {
-		Branch branch = new Branch();
-		
-		for (DatabaseVersion databaseVersion : databaseVersions) {
-			branch.add(databaseVersion.getHeader());
-		}
-		
-		return branch;
-	}
-	
 	public void addDatabaseVersion(DatabaseVersion databaseVersion) {		
 		databaseVersions.add(databaseVersion);
 		

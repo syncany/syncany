@@ -48,8 +48,8 @@ public class VectorClockTest {
 		vc.setClock("Unit2", 2);
 		vc.incrementClock("Unit2"); // 3
 		
-		assertEquals("Expected clock value to be different.", 3L, (long) vc.get("Unit1"));
-		assertEquals("Expected clock value to be different.", 3L, (long) vc.get("Unit2"));
+		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("Unit1"));
+		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("Unit2"));
 	}	
 	
 	@Test
@@ -152,35 +152,6 @@ public class VectorClockTest {
 		VectorClock vc = new  VectorClock();
 		
 		assertEquals("Expected clock value to be different.", 0L, (long) vc.getClock("NonExistingUnit"));
-	}	
-	
-	@Test
-	public void testMaxClockWithSameUnitCounts() {
-		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
-		
-		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L);
-		vc2.setClock("Unit2", 100000L); // different
-		
-		assertEquals("Expected clock 2 to be the maximum.", vc2, VectorClock.max(vc1, vc2));
-		assertEquals("Expected clock 2 to be the maximum.", vc2, VectorClock.max(vc2, vc1));
-	}		
-	
-	@Test
-	public void testMaxClockWithDifferentUnitCounts() {
-		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
-		
-		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L); 
-		vc2.setClock("Unit2", 5L); 
-		vc2.setClock("Unit3", 1L); // not in vc1		
-		
-		assertEquals("Expected clock 2 to be the maximum.", vc2, VectorClock.max(vc1, vc2));
-		assertEquals("Expected clock 2 to be the maximum.", vc2, VectorClock.max(vc2, vc1));
 	}	
 		
 	@Test

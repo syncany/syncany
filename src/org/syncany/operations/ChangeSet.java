@@ -21,8 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author pheckel
- *
+ * A change set represents the result of a comparison of two file trees, either 
+ * by comparing a local file tree with the local database, or by comparing the remote
+ * database with the local database.
+ * 
+ * <p>It contains several lists, indicating new, changed, deleted and unchanged files.
+ * File paths are stored relative to the root Syncany directory.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChangeSet {
 	private List<String> changedFiles;  
@@ -37,6 +43,11 @@ public class ChangeSet {
 		unchangedFiles = new ArrayList<String>();
 	}
 	
+	/**
+	 * Returns <tt>true</tt> if files have been added, changed or
+	 * deleted by checking the size of {@link #getNewFiles()}, {@link #getChangedFiles()}
+	 * and {@link #getDeletedFiles()}.
+	 */
 	public boolean hasChanges() {
 		return changedFiles.size() > 0 
 			|| newFiles.size() > 0

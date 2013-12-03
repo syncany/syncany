@@ -29,20 +29,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.syncany.database.Branch;
-import org.syncany.database.Branch.BranchIterator;
-import org.syncany.database.Branches;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
+import org.syncany.operations.DatabaseBranch.BranchIterator;
 
 /**
  * The database reconciliator implements various parts of the sync down algorithm (see also:
  * {@link DownOperation}). Its main responsibility is to compare the local database to the
  * other clients' delta databases. The final goal of the algorithms described in this class is
- * to determine a winning {@link Database} (or better: a winning database {@link Branch}) of
+ * to determine a winning {@link Database} (or better: a winning database {@link DatabaseBranch}) of
  * a client.
  * 
  * <p>All algorithm parts largely rely on the comparison of a client's database branch, i.e. its
@@ -86,21 +84,21 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  * 
  * <p><b>Algorithm (long explanation):</b> 
  * <ul>
- *  <li>{@link #stitchBranches(Branches, String, Branch) stitchBranches()}: Due to the fact that
+ *  <li>{@link #stitchBranches(DatabaseBranches, String, DatabaseBranch) stitchBranches()}: Due to the fact that
  *      Syncany exchanges only delta databases, but the algorithms require a full branch for the
  *      winner-determination, the full per-client branches must be created/derived from all the
  *      downloaded branches.</li>
- *  <li>{@link #findLastCommonDatabaseVersionHeader(Branch, Branches) findLastCommonDatabaseVersionHeader()}:
+ *  <li>{@link #findLastCommonDatabaseVersionHeader(DatabaseBranch, DatabaseBranches) findLastCommonDatabaseVersionHeader()}:
  *      Once the full database branches have been stitched together, the algorithm must determine whether there
  *      are any conflicts between the clients' branches. As a first step, a last common 
  *      {@link DatabaseVersionHeader} is determined, i.e. a header that all clients share.</li>
- *  <li>{@link #findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader, Branches) findFirstConflictingDatabaseVersionHeader()}:
+ *  <li>{@link #findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader, DatabaseBranches) findFirstConflictingDatabaseVersionHeader()}:
  *      By definition, the first conflicting database version between the clients is the database version
  *      following the last common version (= last common database version + 1).</li>
  *  <li>{@link #findWinningFirstConflictingDatabaseVersionHeaders(TreeMap) findWinningFirstConflictingDatabaseVersionHeaders()}:
  *      Comparing the vector clocks of the first conflicting database version headers, the winners can be
  *      determined. This is done using the local timestamps of the database version headers (earliest wins).</li>
- *  <li>{@link #findWinnersWinnersLastDatabaseVersionHeader(TreeMap, Branches) findWinnersWinnersLastDatabaseVersionHeader()}:
+ *  <li>{@link #findWinnersWinnersLastDatabaseVersionHeader(TreeMap, DatabaseBranches) findWinnersWinnersLastDatabaseVersionHeader()}:
  *      Having found one or many winning branches (candidates), the last step is to walk forward and compare
  *      the winning branches with each other -- comparing their database version headers. If a set does not match,
  *      a winner is determined until only one client branch remains. This client branch is the final winning branch.</li>
@@ -115,7 +113,7 @@ import org.syncany.database.VectorClock.VectorClockComparison;
 public class DatabaseReconciliator {
 	//private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
 	
-	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(Branch localBranch, Branches remoteBranches) {
+	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(DatabaseBranch localBranch, DatabaseBranches remoteBranches) {
 		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;
 		
 		for (BranchIterator localBranchIterator = localBranch.iteratorLast(); localBranchIterator.hasPrevious(); ) {
@@ -131,12 +129,12 @@ public class DatabaseReconciliator {
 		return lastCommonDatabaseVersionHeader;
 	}	
 	
-	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock, Branches remoteDatabaseVersionHeaders) {
+	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock, DatabaseBranches remoteDatabaseVersionHeaders) {
 		Set<String> remoteClients = remoteDatabaseVersionHeaders.getClients();
 		Map<String, Boolean> foundInClientMatrix = initializeFoundInClientMatrix(remoteClients);
 
 		for (String currentRemoteClient : remoteClients) {
-			Branch remoteBranch = remoteDatabaseVersionHeaders.getBranch(currentRemoteClient);
+			DatabaseBranch remoteBranch = remoteDatabaseVersionHeaders.getBranch(currentRemoteClient);
 
 			for (DatabaseVersionHeader remoteDatabaseVersionHeader : remoteBranch.getAll()) {
 				VectorClock remoteVectorClock = remoteDatabaseVersionHeader.getVectorClock();
@@ -172,11 +170,11 @@ public class DatabaseReconciliator {
 		return true;
 	}
 
-	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, Branches allDatabaseVersionHeaders) {
+	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, DatabaseBranches allDatabaseVersionHeaders) {
 		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 		
 		nextClient:	for (String remoteMachineName : allDatabaseVersionHeaders.getClients()) {
-			Branch branch = allDatabaseVersionHeaders.getBranch(remoteMachineName);
+			DatabaseBranch branch = allDatabaseVersionHeaders.getBranch(remoteMachineName);
 			
 			for (Iterator<DatabaseVersionHeader> i = branch.iteratorFirst(); i.hasNext(); ) {
 				DatabaseVersionHeader thisDatabaseVersionHeader = i.next();
@@ -263,7 +261,7 @@ public class DatabaseReconciliator {
 
 	public Map.Entry<String, DatabaseVersionHeader> findWinnersWinnersLastDatabaseVersionHeader(
 			TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders,
-			Branches allDatabaseVersionHeaders) throws Exception {
+			DatabaseBranches allDatabaseVersionHeaders) throws Exception {
 
 		if (winningFirstConflictingDatabaseVersionHeaders.size() == 1) {
 			String winningMachineName = winningFirstConflictingDatabaseVersionHeaders.firstKey();
@@ -281,7 +279,7 @@ public class DatabaseReconciliator {
 
 		for (String machineName : winningFirstConflictingDatabaseVersionHeaders.keySet()) {
 			DatabaseVersionHeader machineWinnersWinner = winningFirstConflictingDatabaseVersionHeaders.get(machineName);
-			Branch machineBranch = allDatabaseVersionHeaders.getBranch(machineName);
+			DatabaseBranch machineBranch = allDatabaseVersionHeaders.getBranch(machineName);
 
 			for (int i=0; i<machineBranch.size(); i++) {
 				DatabaseVersionHeader machineDatabaseVersionHeader = machineBranch.get(i);
@@ -302,7 +300,7 @@ public class DatabaseReconciliator {
 
 			for (Map.Entry<String, Integer> machineBranchPosition : machineBranchPositionIterator.entrySet()) {
 				String machineName = machineBranchPosition.getKey();
-				Branch machineDatabaseVersionHeaders = allDatabaseVersionHeaders.getBranch(machineName);
+				DatabaseBranch machineDatabaseVersionHeaders = allDatabaseVersionHeaders.getBranch(machineName);
 				Integer machinePosition = machineBranchPosition.getValue();
 
 				if (machinePosition == null) {
@@ -391,8 +389,8 @@ public class DatabaseReconciliator {
 		return null;
 	}
 	
-	public Branches stitchBranches(Branches unstitchedUnknownBranches, String localClientName, Branch localBranch) {
-		Branches allBranches = unstitchedUnknownBranches.clone();
+	public DatabaseBranches stitchBranches(DatabaseBranches unstitchedUnknownBranches, String localClientName, DatabaseBranch localBranch) {
+		DatabaseBranches allBranches = unstitchedUnknownBranches.clone();
 		
 		mergeLocalBranchInRemoteBranches(localClientName, allBranches, localBranch);
 		
@@ -403,9 +401,9 @@ public class DatabaseReconciliator {
 		return allBranches;
 	}
 
-	private void mergeLocalBranchInRemoteBranches(String localClientName, Branches allBranches, Branch localBranch) {
+	private void mergeLocalBranchInRemoteBranches(String localClientName, DatabaseBranches allBranches, DatabaseBranch localBranch) {
 		if(allBranches.getClients().contains(localClientName)) {
-			Branch unknownLocalClientBranch = allBranches.getBranch(localClientName);
+			DatabaseBranch unknownLocalClientBranch = allBranches.getBranch(localClientName);
 			
 			for (DatabaseVersionHeader header : localBranch.getAll()) {
 				if (unknownLocalClientBranch.get(header.getVectorClock()) == null) {
@@ -413,18 +411,18 @@ public class DatabaseReconciliator {
 				}
 			}
 			
-			Branch sortedClientBranch = sortBranch(unknownLocalClientBranch);
+			DatabaseBranch sortedClientBranch = sortBranch(unknownLocalClientBranch);
 			allBranches.put(localClientName, sortedClientBranch);
 		} else if (localBranch.size() > 0)	{
 			allBranches.put(localClientName, localBranch);
 		}
 	}
 	
-	private Set<DatabaseVersionHeader> gatherAllDatabaseVersionHeaders(Branches allBranches) {
+	private Set<DatabaseVersionHeader> gatherAllDatabaseVersionHeaders(DatabaseBranches allBranches) {
 		Set<DatabaseVersionHeader> allHeaders = new HashSet<DatabaseVersionHeader>();
 		
 		for (String client : allBranches.getClients()) {
-			Branch clientBranch = allBranches.getBranch(client);
+			DatabaseBranch clientBranch = allBranches.getBranch(client);
 			
 			for (DatabaseVersionHeader databaseVersionHeader : clientBranch.getAll()) {
 				allHeaders.add(databaseVersionHeader);
@@ -434,9 +432,9 @@ public class DatabaseReconciliator {
 		return allHeaders;
 	}
 
-	private void completeBranchesWithDatabaseVersionHeaders(Branches allBranches, Set<DatabaseVersionHeader> allHeaders) {
+	private void completeBranchesWithDatabaseVersionHeaders(DatabaseBranches allBranches, Set<DatabaseVersionHeader> allHeaders) {
 		for (String client : allBranches.getClients()) {
-			Branch clientBranch = allBranches.getBranch(client);
+			DatabaseBranch clientBranch = allBranches.getBranch(client);
 			if(clientBranch.size() > 0) {
 				VectorClock lastVectorClock = clientBranch.getLast().getVectorClock();
 				
@@ -451,16 +449,16 @@ public class DatabaseReconciliator {
 					}
 				}
 				
-				Branch sortedBranch = sortBranch(clientBranch);
+				DatabaseBranch sortedBranch = sortBranch(clientBranch);
 		        allBranches.put(client, sortedBranch);
 			}
 		}
 	}
 
-	private Branch sortBranch(Branch clientBranch) {
+	private DatabaseBranch sortBranch(DatabaseBranch clientBranch) {
 		List<DatabaseVersionHeader> branchCopy = new ArrayList<DatabaseVersionHeader>(clientBranch.getAll());
 		Collections.sort(branchCopy, new DatabaseVersionHeaderComparator());
-		Branch sortedBranch = new Branch();
+		DatabaseBranch sortedBranch = new DatabaseBranch();
 		sortedBranch.addAll(branchCopy);
 		return sortedBranch;
 	}
@@ -487,8 +485,8 @@ public class DatabaseReconciliator {
         }
     }
 	
-	public Branch findLosersPruneBranch(Branch losersBranch, Branch winnersBranch) {
-		Branch losersPruneBranch = new Branch();
+	public DatabaseBranch findLosersPruneBranch(DatabaseBranch losersBranch, DatabaseBranch winnersBranch) {
+		DatabaseBranch losersPruneBranch = new DatabaseBranch();
 		
 		boolean pruneBranchStarted = false;
 		
@@ -505,8 +503,8 @@ public class DatabaseReconciliator {
 		return losersPruneBranch;
 	}
 
-	public Branch findWinnersApplyBranch(Branch losersBranch, Branch winnersBranch) {
-		Branch winnersApplyBranch = new Branch();
+	public DatabaseBranch findWinnersApplyBranch(DatabaseBranch losersBranch, DatabaseBranch winnersBranch) {
+		DatabaseBranch winnersApplyBranch = new DatabaseBranch();
 		
 		boolean applyBranchStarted = false;
 		

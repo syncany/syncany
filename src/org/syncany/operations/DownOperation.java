@@ -43,8 +43,6 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.Branch;
-import org.syncany.database.Branches;
 import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
@@ -76,7 +74,7 @@ import org.syncany.util.StringUtil;
  *  <li>Load remote database headers (branches) and compare them to the local database to determine a winner
  *      using several methods of the {@link DatabaseReconciliator}</li>
  *  <li>Determine whether the local branch conflicts with the winner branch; if so, prune conflicting
- *      local database versions (using {@link DatabaseReconciliator#findLosersPruneBranch(Branch, Branch)
+ *      local database versions (using {@link DatabaseReconciliator#findLosersPruneBranch(DatabaseBranch, DatabaseBranch)
  *      findLosersPruneBranch()})</li>
  *  <li>Determine whether the local branch needs to be updated (new database versions); if so, determine
  *      local {@link FileSystemAction}s</li>
@@ -100,7 +98,7 @@ public class DownOperation extends Operation {
 	private DownOperationOptions options;
 	private DownOperationResult result;
 
-	private Branch localBranch;
+	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
 
@@ -145,10 +143,10 @@ public class DownOperation extends Operation {
 		List<File> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 
 		// 3. Read version headers (vector clocks)
-		Branches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
+		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 
 		// 4. Determine winner branch
-		Branch winnersBranch = determineWinnerBranch(localDatabase, unknownRemoteBranches);
+		DatabaseBranch winnersBranch = determineWinnerBranch(localDatabase, unknownRemoteBranches);
 		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
 
 		// 5. Prune local stuff (if local conflicts exist)
@@ -166,8 +164,8 @@ public class DownOperation extends Operation {
 		return result;
 	}
 
-	private void applyWinnersBranch(Branch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
-		Branch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
+	private void applyWinnersBranch(DatabaseBranch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
+		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
 		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
 
 		if (winnersApplyBranch.size() == 0) {
@@ -204,14 +202,14 @@ public class DownOperation extends Operation {
 
 	private void initOperationVariables() throws Exception {
 		localDatabase = (localDatabase != null) ? localDatabase : loadLocalDatabase();
-		localBranch = localDatabase.getBranch();
+		localBranch = new DatabaseBranch(localDatabase);
 
 		transferManager = config.getConnection().createTransferManager();
 		databaseReconciliator = new DatabaseReconciliator();
 	}
 
-	private void pruneConflictingLocalBranch(Branch winnersBranch) throws Exception {
-		Branch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
+	private void pruneConflictingLocalBranch(DatabaseBranch winnersBranch) throws Exception {
+		DatabaseBranch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
 		logger.log(Level.INFO, "- Database versions to REMOVE locally: " + localPruneBranch);
 
 		if (localPruneBranch.size() == 0) {
@@ -232,7 +230,7 @@ public class DownOperation extends Operation {
 				localDatabase.removeDatabaseVersion(databaseVersion);
 
 				String remoteFileToPruneClientName = config.getMachineName();
-				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().get(config.getMachineName());
+				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
 				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
 
 				logger.log(Level.INFO, "    * Deleting remote database file " + remoteFileToPrune + " ...");
@@ -261,12 +259,12 @@ public class DownOperation extends Operation {
 	 * @return Returns the branch of the winner 
 	 * @throws Exception If any kind of error occurs (...)
 	 */
-	private Branch determineWinnerBranch(Database localDatabase, Branches unknownRemoteBranches) throws Exception {
+	private DatabaseBranch determineWinnerBranch(Database localDatabase, DatabaseBranches unknownRemoteBranches) throws Exception {
 		logger.log(Level.INFO, "Detect updates and conflicts ...");
 		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
 
 		logger.log(Level.INFO, "- Stitching branches ...");
-		Branches allStitchedBranches = databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
+		DatabaseBranches allStitchedBranches = databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 
 		DatabaseVersionHeader lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);
 		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);
@@ -285,7 +283,7 @@ public class DownOperation extends Operation {
 		}
 
 		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
-		Branch winnersBranch = allStitchedBranches.getBranch(winnersName);
+		DatabaseBranch winnersBranch = allStitchedBranches.getBranch(winnersName);
 
 		logger.log(Level.INFO, "- Compared branches: " + allStitchedBranches);
 		logger.log(Level.INFO, "- Winner is " + winnersName + " with branch " + winnersBranch);
@@ -396,7 +394,7 @@ public class DownOperation extends Operation {
 		transferManager.disconnect();
 	}
 
-	private Database readWinnersDatabase(Branch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
+	private Database readWinnersDatabase(DatabaseBranch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
 		// Make map 'short filename' -> 'full filename'
 		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
 
@@ -425,7 +423,7 @@ public class DownOperation extends Operation {
 				clientVersionTo = databaseVersionHeader.getVectorClock();
 			}
 
-			DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientVersionTo.get(clientName));
+			DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientVersionTo.getClock(clientName));
 			File databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
 
 			if (databaseFileForRange != null) {
@@ -443,14 +441,14 @@ public class DownOperation extends Operation {
 		return winnerBranchDatabase;
 	}
 
-	private Branches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException, StorageException {
+	private DatabaseBranches readUnknownDatabaseVersionHeaders(List<File> remoteDatabases) throws IOException, StorageException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 
 		// Sort files (db-a-1 must be before db-a-2 !)
 		Collections.sort(remoteDatabases);
 
 		// Read database files
-		Branches unknownRemoteBranches = new Branches();
+		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
 		DatabaseDAO dbDAO = new XmlDatabaseDAO(config.getTransformer());
 
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
@@ -461,7 +459,7 @@ public class DownOperation extends Operation {
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();
 
 			// Populate branches
-			Branch remoteClientBranch = unknownRemoteBranches.getBranch(remoteDatabaseFile.getClientName(), true);
+			DatabaseBranch remoteClientBranch = unknownRemoteBranches.getBranch(remoteDatabaseFile.getClientName(), true);
 
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();

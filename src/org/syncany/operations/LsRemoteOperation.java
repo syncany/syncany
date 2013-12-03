@@ -117,7 +117,7 @@ public class LsRemoteOperation extends Operation {
 			
 			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 				String clientName = remoteDatabaseFile.getClientName();
-				Long knownClientVersion = knownDatabaseVersions.get(clientName);
+				Long knownClientVersion = knownDatabaseVersions.getClock(clientName);
 						
 				if (knownClientVersion != null) {
 					if (remoteDatabaseFile.getClientVersion() <= knownClientVersion) {

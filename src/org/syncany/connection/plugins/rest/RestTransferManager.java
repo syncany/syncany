@@ -35,10 +35,27 @@ import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.util.FileUtil;
 
 /**
+ * The REST transfer manager implements a {@link TransferManager} based on 
+ * a bucket-based storage such as Amazon S3 or Google Storage. It uses the 
+ * Jets3t library's {@link RestStorageService}.
+ * 
+ * <p>Using a {@link RestConnection}, the transfer manager is configured and uses 
+ * a {@link StorageBucket} to store the Syncany repository data. While repo and
+ * master file are stored in the given folder, databases and multichunks are stored
+ * in special sub-folders:
+ * 
+ * <ul>
+ *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
+ *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultiChunkRemoteFile}s</li>
+ * </ul>
  *
+ * <p>Concrete implementations of this class must override the {@link #createBucket()} method and the 
+ * {@link #createService()} method. 
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RestTransferManager extends AbstractTransferManager {
@@ -58,6 +75,10 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 		this.databasePath = "databases";
 	}
 
+	protected abstract RestStorageService createService() throws ServiceException;
+
+	protected abstract StorageBucket createBucket();
+	
 	@Override
 	public RestConnection getConnection() {
 		return (RestConnection) super.getConnection();
@@ -78,10 +99,6 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to connect to S3: " + ex.getMessage(), ex);
 		}
 	}
-
-	protected abstract RestStorageService createService() throws ServiceException;
-
-	protected abstract StorageBucket createBucket();
 
 	@Override
 	public void disconnect() throws StorageException {

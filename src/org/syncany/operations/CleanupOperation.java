@@ -26,6 +26,9 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 
+/**
+ * TODO [low] Cleanup is not implemented. This class is a stub.
+ */
 public class CleanupOperation extends Operation {
 
 	private CleanupOperationOptions options;

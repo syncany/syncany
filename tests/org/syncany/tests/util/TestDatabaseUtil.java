@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.chunk.Transformer;
-import org.syncany.database.Branch;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
@@ -35,6 +34,7 @@ import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.database.VectorClock;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.operations.DatabaseBranch;
 
 public class TestDatabaseUtil {
 	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)");
@@ -93,8 +93,8 @@ public class TestDatabaseUtil {
 		return databaseVersionHeaderMap;
 	}
 
-	public static Branch createBranch(String[] databaseVersionHeaderStrings) throws Exception {
-		Branch branch = new Branch();
+	public static DatabaseBranch createBranch(String[] databaseVersionHeaderStrings) throws Exception {
+		DatabaseBranch branch = new DatabaseBranch();
 		
 		for (String databaseVersionHeaderString : databaseVersionHeaderStrings) {
 			DatabaseVersionHeader databaseVersionHeader = createFromString(databaseVersionHeaderString);

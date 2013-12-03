@@ -164,7 +164,7 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			uploadMultiChunks(newDatabaseVersion.getMultiChunks());			
 							
-			long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().get(config.getMachineName());
+			long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().getClock(config.getMachineName());
 
 			// Upload delta database
 			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
@@ -354,7 +354,7 @@ public class UpOperation extends Operation {
 		List<RemoteFile> toDeleteDatabaseFiles = new ArrayList<RemoteFile>();
 		
 		for (DatabaseVersion databaseVersion : database.getDatabaseVersions()) {
-			Long localVersion = databaseVersion.getVectorClock().get(config.getMachineName());
+			Long localVersion = databaseVersion.getVectorClock().getClock(config.getMachineName());
 
 			if (localVersion != null) {				
 				if (firstMergeDatabaseVersion == null) {

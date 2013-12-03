@@ -39,7 +39,9 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.util.FileUtil;
 
 /**
- * The status operation 
+ * The status operation analyzes the local file tree and compares it to the current local
+ * database. It uses the {@link FileVersionComparator} to determine differences and returns
+ * new/changed/deleted files in form of a {@link ChangeSet}.
  *   
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -72,15 +74,20 @@ public class StatusOperation extends Operation {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
 		
+		// Load database, or use already loaded database
 		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();		
 		
+		// Find changed and deleted files
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
+		
 		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir(), database);
+		changeSet = findDeletedFiles(changeSet, database);
 		
 		if (!changeSet.hasChanges()) {
 			logger.log(Level.INFO, "- No changes to local database");
 		}
 		
+		// Return result
 		StatusOperationResult statusResult = new StatusOperationResult();
 		statusResult.setChangeSet(changeSet);
 		
@@ -93,9 +100,10 @@ public class StatusOperation extends Operation {
 		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, database);		
 		Files.walkFileTree(rootPath, fileVisitor);
 		
-		ChangeSet changeSet = fileVisitor.getChangeSet();
-		
-		// Find deleted files
+		return fileVisitor.getChangeSet();		
+	}
+	
+	private ChangeSet findDeletedFiles(ChangeSet changeSet, Database database) {
 		for (PartialFileHistory fileHistory : database.getFileHistories()) {
 			// Check if file exists, remove if it doesn't
 			FileVersion lastLocalVersion = fileHistory.getLastVersion();
@@ -110,7 +118,7 @@ public class StatusOperation extends Operation {
 			if (!FileUtil.exists(lastLocalVersionOnDisk)) {
 				changeSet.getDeletedFiles().add(lastLocalVersion.getPath());
 			}
-		}						
+		}		
 		
 		return changeSet;
 	}
@@ -143,7 +151,8 @@ public class StatusOperation extends Operation {
 			boolean isAppRelatedDir =
 				   actualLocalFile.toFile().equals(config.getAppDir())
 				|| actualLocalFile.toFile().equals(config.getCache())
-				|| actualLocalFile.toFile().equals(config.getDatabaseDir());
+				|| actualLocalFile.toFile().equals(config.getDatabaseDir())
+				|| actualLocalFile.toFile().equals(config.getLogDir());
 			
 			if (isAppRelatedDir) {
 				logger.log(Level.FINEST, "- Ignoring file (syncany app-related): {0}", relativeFilePath);
@@ -167,7 +176,7 @@ public class StatusOperation extends Operation {
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
 				FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
-				// TODO [low] Performance: Attrs are already read, compare() reads them again.  
+				// TODO [lowest] Performance: Attrs are already read, compare() reads them again.  
 				
 				if (fileVersionComparison.equals()) {
 					changeSet.getUnchangedFiles().add(relativeFilePath);
