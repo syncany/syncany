@@ -224,7 +224,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		
 		for (PartialFileHistory fileHistory : fileHistories) {
 			xmlOut.writeStartElement("fileHistory");
-			xmlOut.writeAttribute("id", fileHistory.getFileId());
+			xmlOut.writeAttribute("id", fileHistory.getFileId().toString());
 			
 			xmlOut.writeStartElement("fileVersions");
 			
@@ -512,9 +512,8 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
 					String fileHistoryIdStr = attributes.getValue("id");
-					Long fileHistoryId = Long.parseLong(fileHistoryIdStr);
-					
-					fileHistory = new PartialFileHistory(fileHistoryId);
+					FileId fileId = FileId.parseFileId(fileHistoryIdStr);
+					fileHistory = new PartialFileHistory(fileId);
 				}	
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 					String fileVersionStr = attributes.getValue("version");

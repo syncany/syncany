@@ -116,7 +116,7 @@ public class Database {
 		return contentChecksumFileHistoriesCache.get(new ByteArray(fileContentChecksum));
 	}	
 	
-	public PartialFileHistory getFileHistory(long fileId) {
+	public PartialFileHistory getFileHistory(FileId fileId) {
 		return fullDatabaseVersionCache.getFileHistory(fileId); 
 	}	
 

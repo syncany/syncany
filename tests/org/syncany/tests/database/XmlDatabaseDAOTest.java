@@ -38,6 +38,7 @@ import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
+import org.syncany.database.FileId;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
@@ -246,7 +247,7 @@ public class XmlDatabaseDAOTest {
 		// Create directories (no content!)
 
 		// File A
-		PartialFileHistory fileHistoryA = new PartialFileHistory(1L);
+		PartialFileHistory fileHistoryA = new PartialFileHistory(FileId.secureRandomFileId());
 		newDatabaseVersion.addFileHistory(fileHistoryA);
 		
         FileVersion versionA1 = new FileVersion();
@@ -268,7 +269,7 @@ public class XmlDatabaseDAOTest {
         newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
 		       
         // File B
-		PartialFileHistory fileHistoryB = new PartialFileHistory(2L);
+		PartialFileHistory fileHistoryB = new PartialFileHistory(FileId.secureRandomFileId());
 		newDatabaseVersion.addFileHistory(fileHistoryB);
 		
         FileVersion versionB1 = new FileVersion();

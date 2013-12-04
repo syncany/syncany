@@ -38,20 +38,20 @@ import java.util.TreeMap;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class PartialFileHistory {
-	//TODO [medium] switch to a 128 or 160 bit id to limit the collision risk
-    private Long fileId;
+    //TODO [medium] switch to a 128 or 160 bit id to limit the collision risk
+    private FileId fileId;
     private TreeMap<Long, FileVersion> versions;
     
-    public PartialFileHistory(long fileId) {
+    public PartialFileHistory(FileId fileId) {
         this.fileId = fileId;
         this.versions = new TreeMap<Long, FileVersion>();    	
     }
 
-    public Long getFileId() {
+    public FileId getFileId() {
         return fileId;
     }
 
-    /* package */  void setFileId(Long fileId) {
+    /* package */  void setFileId(FileId fileId) {
         this.fileId = fileId;
     }
 
