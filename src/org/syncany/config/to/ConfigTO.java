@@ -32,6 +32,18 @@ import org.syncany.config.Config.ConfigException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 
+/**
+ * The config transfer object is used to create and load the local config
+ * file from/to XML. The config file contains local config settings of a client,
+ * namely the machine and display name, the master key as well as connection
+ * information (for the connection plugin).
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name="config")
 @Namespace(reference="http://syncany.org/config/1")
 public class ConfigTO {

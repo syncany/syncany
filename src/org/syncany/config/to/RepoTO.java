@@ -24,6 +24,18 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
+/**
+ * The repo transfer object is used to create and load the repo file
+ * from/to XML. The repo file identifies the repository with a unique
+ * repo ID, and defines the chunking framework settings. It is
+ * stored locally and on the remote storage. 
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name="repo")
 @Namespace(reference="http://syncany.org/repo/1")
 public class RepoTO {

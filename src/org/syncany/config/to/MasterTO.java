@@ -25,6 +25,19 @@ import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
 import org.syncany.util.StringUtil;
 
+/**
+ * The master transfer object is used to create and load the master file
+ * from/to XML. The master file only contains the salt for the master key.
+ * 
+ * <p>The master file is stored locally and on the remote storage. The salt
+ * is used to create the master key from a password.
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name="master")
 @Namespace(reference="http://syncany.org/master/1")
 public class MasterTO {

@@ -320,7 +320,7 @@ public class TestFileUtil {
 			
 			String relativePath = FileUtil.getRelativePath(root, file);
 			
-			if (relativePath.startsWith(Config.DEFAULT_DIR_APPLICATION)) {
+			if (relativePath.startsWith(Config.DIR_APPLICATION)) {
 				continue;
 			}
 			

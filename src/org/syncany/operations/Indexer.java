@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -198,13 +197,10 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
 		
-		private Random random;
-		
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 			this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
-			this.random = new Random();
 		}				
 
 		@Override

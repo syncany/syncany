@@ -104,7 +104,7 @@ public class TestCliUtil {
 	}
 	
 	private static void fixMachineName(Map<String, String> client) throws Exception {
-		File configFile = new File(client.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
+		File configFile = new File(client.get("localdir")+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG);
 		Serializer serializer = new Persister();		
 		
 		ConfigTO configTO = serializer.read(ConfigTO.class, configFile);		

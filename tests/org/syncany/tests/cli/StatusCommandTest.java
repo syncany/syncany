@@ -62,8 +62,8 @@ public class StatusCommandTest {
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 
-		File tempLogFile = new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION
-				+"/"+Config.DEFAULT_DIR_LOG+"/templogfile");
+		File tempLogFile = new File(clientA.get("localdir")+"/"+Config.DIR_APPLICATION
+				+"/"+Config.DIR_LOG+"/templogfile");
 		
 		// Run!
 		new File(clientA.get("localdir")+"/somefolder1").mkdir();

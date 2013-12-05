@@ -187,7 +187,7 @@ public class CommandLineClient extends Client {
 		}			
 		
 		// Load config
-		File appDir = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION);
+		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
 		
 		if (appDir.exists()) {
 			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
@@ -203,7 +203,7 @@ public class CommandLineClient extends Client {
 	}		
 	
 	private ConfigTO loadConfigTO(File localDir) throws Exception {
-		File configFile = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG);
+		File configFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG);
 		
 		if (!configFile.exists()) {
 			throw new Exception("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
@@ -213,7 +213,7 @@ public class CommandLineClient extends Client {
 	}
 
 	private RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws Exception {
-		File repoFile = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO);
+		File repoFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_REPO);
 		
 		if (!repoFile.exists()) {
 			throw new Exception("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
@@ -245,8 +245,8 @@ public class CommandLineClient extends Client {
 		File currentSearchFolder = new File(".").getCanonicalFile();
 		
 		while (currentSearchFolder != null) {
-			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DEFAULT_DIR_APPLICATION);
-			File possibleConfigFile = new File(possibleAppDir+"/"+Config.DEFAULT_FILE_CONFIG);
+			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DIR_APPLICATION);
+			File possibleConfigFile = new File(possibleAppDir+"/"+Config.FILE_CONFIG);
 			
 			if (possibleAppDir.exists() && possibleConfigFile.exists()) {
 				return possibleAppDir.getParentFile().getCanonicalFile();

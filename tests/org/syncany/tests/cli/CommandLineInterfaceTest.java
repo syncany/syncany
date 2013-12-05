@@ -55,8 +55,8 @@ public class CommandLineInterfaceTest {
 		new CommandLineClient(initArgs).start();
 
 		assertTrue("Repo file in repository should exist.", new File(clientA.get("repopath")+"/syncany").exists());
-		assertTrue("Repo file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO).exists());
-		assertTrue("Config file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG).exists());
+		assertTrue("Repo file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_REPO).exists());
+		assertTrue("Config file in local client should exist.", new File(clientA.get("localdir")+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG).exists());
 				
 		// Connect
 		String[] connectArgs = new String[] { 			 
@@ -69,8 +69,8 @@ public class CommandLineInterfaceTest {
 		logger.log(Level.INFO, "Running syncany with argument: "+StringUtil.join(connectArgs, " "));		
 		new CommandLineClient(connectArgs).start();
 
-		assertTrue("Repo file in local client should exist.", new File(clientB.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_REPO).exists());
-		assertTrue("Config file in local client should exist.", new File(clientB.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION+"/"+Config.DEFAULT_FILE_CONFIG).exists());
+		assertTrue("Repo file in local client should exist.", new File(clientB.get("localdir")+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_REPO).exists());
+		assertTrue("Config file in local client should exist.", new File(clientB.get("localdir")+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG).exists());
 
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);		
@@ -93,10 +93,10 @@ public class CommandLineInterfaceTest {
 		
 		
 		// Test folder existence
-		File appFolder = new File(clientA.get("localdir")+"/"+Config.DEFAULT_DIR_APPLICATION);
-		File logFolder = new File(appFolder+"/"+Config.DEFAULT_DIR_LOG);
-		File dbFolder = new File(appFolder+"/"+Config.DEFAULT_DIR_DATABASE);
-		File cacheFolder = new File(appFolder+"/"+Config.DEFAULT_DIR_CACHE);
+		File appFolder = new File(clientA.get("localdir")+"/"+Config.DIR_APPLICATION);
+		File logFolder = new File(appFolder+"/"+Config.DIR_LOG);
+		File dbFolder = new File(appFolder+"/"+Config.DIR_DATABASE);
+		File cacheFolder = new File(appFolder+"/"+Config.DIR_CACHE);
 		
 		assertTrue("App folder should exist", appFolder.exists());
 		assertTrue("Logs folder should exist", logFolder.exists());

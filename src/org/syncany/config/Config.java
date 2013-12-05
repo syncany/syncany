@@ -40,17 +40,23 @@ import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 /**
+ * The config class is the central point to configure a Syncany instance. It is mainly
+ * used in the operations, but parts of it are also used in other parts of the 
+ * application -- especially file locations and names.
  * 
- * @author Philipp C. Heckel
+ * <p>An instance of the <tt>Config</tt> class must be created through the transfer 
+ * objects {@link ConfigTO} and {@link RepoTO}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Config {
-	public static final String DEFAULT_DIR_APPLICATION = ".syncany";
-	public static final String DEFAULT_DIR_CACHE = "cache";
-	public static final String DEFAULT_DIR_DATABASE = "db";
-	public static final String DEFAULT_DIR_LOG = "logs";
-	public static final String DEFAULT_FILE_CONFIG = "config.xml";
-	public static final String DEFAULT_FILE_REPO = "repo";
-	public static final String DEFAULT_FILE_MASTER = "master";
+	public static final String DIR_APPLICATION = ".syncany";
+	public static final String DIR_CACHE = "cache";
+	public static final String DIR_DATABASE = "db";
+	public static final String DIR_LOG = "logs";
+	public static final String FILE_CONFIG = "config.xml";
+	public static final String FILE_REPO = "repo";
+	public static final String FILE_MASTER = "master";
 	
 	private byte[] repoId;
 	private String machineName;
@@ -70,12 +76,6 @@ public class Config {
     private Transformer transformer;
       
     static {    	    	
-        // Dynamically load logging config from logging.properties instead of having to provide the
-    	// Java property at runtime: -Djava.util.logging.config.file=logging.properties
-    	
-        // This code is HERE because the Config class is used almost everywhere
-        // and initialized in the beginning.
-    	
     	Logging.init();
     }
     
@@ -107,10 +107,10 @@ public class Config {
 		}
 		
 		localDir = FileUtil.getCanonicalFile(aLocalDir);		
-		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DEFAULT_DIR_APPLICATION));
-		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_CACHE));
-		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_DATABASE));
-		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DEFAULT_DIR_LOG));
+		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DIR_APPLICATION));
+		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_CACHE));
+		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_DATABASE));
+		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_LOG));
 	}
 	
 	private void initCache() {
@@ -119,9 +119,17 @@ public class Config {
 
 	private void initRepo(RepoTO repoTO) throws Exception {
 		// TODO [feature request] make chunking options configurable
-		
+		initRepoId(repoTO);
+		initChunker(repoTO);
+		initMultiChunker(repoTO);
+		initTransformers(repoTO);								
+	}
+	
+	private void initRepoId(RepoTO repoTO) {
 		repoId = repoTO.getRepoId();
-		
+	}
+
+	private void initChunker(RepoTO repoTO) throws Exception {
 		chunker = new MimeTypeChunker(
 			new FixedChunker(16*1024, "SHA1"),
 			new FixedChunker(2*1024*1024, "SHA1"),
@@ -138,10 +146,13 @@ public class Config {
 				"video/.+",				
 			})
 		);
-		
-		// FixedChunker(16*1024); //new TTTDChunker(16*1024);// 
+	}
+
+	private void initMultiChunker(RepoTO repoTO) {
 		multiChunker = new ZipMultiChunker(2*1024*1024);
-		
+	}
+
+	private void initTransformers(RepoTO repoTO) throws Exception {
 		if (repoTO.getTransformerTOs() == null || repoTO.getTransformerTOs().size() == 0) {
 			transformer = new NoTransformer();
 		}
@@ -174,7 +185,7 @@ public class Config {
 			transformer = lastTransformer;
 		}
 	}
-	
+
 	private void initConnection(ConfigTO configTO) throws Exception {
 		if (configTO.getConnectionTO() != null) {
 			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());

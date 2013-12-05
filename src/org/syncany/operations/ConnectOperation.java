@@ -107,9 +107,9 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Success, now do the work!
 		File appDir = createAppDirs(options.getLocalDir());	
-		File configFile = new File(appDir+"/"+Config.DEFAULT_FILE_CONFIG);
-		File repoFile = new File(appDir+"/"+Config.DEFAULT_FILE_REPO);
-		File masterFile = new File(appDir+"/"+Config.DEFAULT_FILE_MASTER);
+		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);
+		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
+		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
 		
 		writeXmlFile(options.getConfigTO(), configFile);
 		FileUtils.copyFile(tmpRepoFile, repoFile);

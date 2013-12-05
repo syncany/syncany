@@ -84,9 +84,9 @@ public class InitOperation extends AbstractInitOperation {
 		
 		// Create local .syncany directory
 		File appDir = createAppDirs(options.getLocalDir());	
-		File configFile = new File(appDir+"/"+Config.DEFAULT_FILE_CONFIG);
-		File repoFile = new File(appDir+"/"+Config.DEFAULT_FILE_REPO);
-		File masterFile = new File(appDir+"/"+Config.DEFAULT_FILE_MASTER);
+		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);
+		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
+		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
 		
 		// Save config.xml and repo file
 		

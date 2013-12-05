@@ -22,11 +22,15 @@ import java.io.IOException;
 
 import org.syncany.util.StringUtil;
 
-
 /**
- *
+ * The cache class represents the local disk cache. It is used for storing multichunks
+ * or other metadata files before upload, and as a download location for the same
+ * files. 
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+// TODO [low] Add cache cleanup methods
+// TODO [low] Cache: maybe make a more sensible structure, add timestamp?! LRU cache?!
 public class Cache {
 	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-%s";
 	private static String FILE_FORMAT_MULTICHUNK_DECRYPTED = "multichunk-%s-decrypted";
@@ -49,10 +53,6 @@ public class Cache {
 	public File getDatabaseFile(String name) {
 		return getFileInCache(FILE_FORMAT_DATABASE_FILE_ENCRYPTED, name);		
 	}    
-
-    public File createTempFile() throws Exception {
-        return createTempFile("temp");
-    }
 
     public File createTempFile(String name) throws Exception {
        try {

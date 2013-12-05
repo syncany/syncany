@@ -22,6 +22,19 @@ import java.util.Map;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementMap;
 
+/**
+ * The typed property list is a helper data structure that allows storing an
+ * object of a certain type with its properties . 
+ * 
+ * <p>It is used in the {@link RepoTO} for chunker, multichunker and transformer,
+ * and in the {@link ConfigTO} for the connection settings.
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class TypedPropertyListTO {
 	@Attribute(required=true)
 	private String type;

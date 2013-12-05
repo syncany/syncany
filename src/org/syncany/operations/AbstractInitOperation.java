@@ -66,10 +66,10 @@ public abstract class AbstractInitOperation extends Operation {
 			throw new Exception("Unable to create app dir, local dir is null.");
 		}
 		
-		File appDir = new File(localDir+"/"+Config.DEFAULT_DIR_APPLICATION);
-		File logDir = new File(appDir+"/"+Config.DEFAULT_DIR_LOG);
-		File cacheDir = new File(appDir+"/"+Config.DEFAULT_DIR_CACHE);
-		File databaseDir = new File(appDir+"/"+Config.DEFAULT_DIR_DATABASE);
+		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
+		File logDir = new File(appDir+"/"+Config.DIR_LOG);
+		File cacheDir = new File(appDir+"/"+Config.DIR_CACHE);
+		File databaseDir = new File(appDir+"/"+Config.DIR_DATABASE);
 		
 		appDir.mkdir();
 		logDir.mkdir();
