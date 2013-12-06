@@ -200,7 +200,7 @@ public class RestoreOperation extends Operation {
 					MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
 					
 					if (multiChunkForChunk == null) {
-						throw new Exception("Cannot find multichunk "+StringUtil.toHex(chunkChecksum.getArray())); 
+						throw new Exception("Cannot find multichunk for chunk " + chunkChecksum); 
 					}
 					
 					if (!multiChunksToDownload.contains(multiChunkForChunk)) {

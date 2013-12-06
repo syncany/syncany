@@ -27,7 +27,7 @@ import java.util.Arrays;
 public class ObjectId {
 	private static SecureRandom secureRng;
 
-	private byte[] array;
+	protected byte[] array;
 
 	/**
 	 * @param array

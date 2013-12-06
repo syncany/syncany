@@ -19,38 +19,37 @@ package org.syncany.database;
 
 import java.util.Arrays;
 
-import org.syncany.util.ByteArray;
+import org.syncany.util.ObjectId;
 import org.syncany.util.StringUtil;
-
 
 /**
  *
  * @author pheckel
  */
 public class ChunkEntry {
-    private byte[] checksum;      
-    private int size;    
+	private byte[] checksum;
+	private int size;
 
-    public ChunkEntry(byte[] checksum, int size) {
-        this.checksum = checksum;
-        this.size = size;
-    }    
+	public ChunkEntry(byte[] checksum, int size) {
+		this.checksum = checksum;
+		this.size = size;
+	}
 
-    public void setSize(int chunksize) {
-        this.size = chunksize;
-    }
+	public void setSize(int chunksize) {
+		this.size = chunksize;
+	}
 
-    public int getSize() {
-        return size;
-    }   
-    
-    public byte[] getChecksum() {
-        return checksum;
-    }
+	public int getSize() {
+		return size;
+	}
 
-    public void setChecksum(byte[] checksum) {
-        this.checksum = checksum;
-    }
+	public byte[] getChecksum() {
+		return checksum;
+	}
+
+	public void setChecksum(byte[] checksum) {
+		this.checksum = checksum;
+	}
 
 	@Override
 	public String toString() {
@@ -80,23 +79,23 @@ public class ChunkEntry {
 		if (size != other.size)
 			return false;
 		return true;
-	}   
-	
+	}
+
 	/**
 	 * Identifies a chunk entry (= chunk checksum)
 	 * TODO [low] Cleanup chunk entry id usage in application. What about a MultiChunkEntryId, FileContentId, ...
 	 */
-	public static class ChunkEntryId extends ByteArray {
-		public ChunkEntryId() {
-			super();
-		}
-
-		public ChunkEntryId(byte[] array, int offset, int length) {
-			super(array, offset, length);
-		}
-
+	public static class ChunkEntryId extends ObjectId {
 		public ChunkEntryId(byte[] array) {
 			super(array);
+		}
+
+		public static ChunkEntryId parseChunkEntryId(String s) {
+			return new ChunkEntryId(ObjectId.parseBytes(s));
+		}
+		
+		public byte[] getChecksum() {
+			return array;
 		}
 	}
 }

@@ -183,7 +183,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				Collection<ChunkEntryId> multiChunkChunks = multiChunk.getChunks();
 				for (ChunkEntryId chunkChecksum : multiChunkChunks) {
 					xmlOut.writeEmptyElement("chunkRef");
-					xmlOut.writeAttribute("ref", StringUtil.toHex(chunkChecksum.getArray()));
+					xmlOut.writeAttribute("ref", chunkChecksum.toString());
 				}			
 				
 				xmlOut.writeEndElement(); // </chunkRefs>
@@ -208,7 +208,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				Collection<ChunkEntryId> fileContentChunkChunks = fileContent.getChunks();
 				for (ChunkEntryId chunkChecksum : fileContentChunkChunks) {
 					xmlOut.writeEmptyElement("chunkRef");
-					xmlOut.writeAttribute("ref", StringUtil.toHex(chunkChecksum.getArray()));
+					xmlOut.writeAttribute("ref", chunkChecksum.toString());
 				}			
 
 				xmlOut.writeEndElement(); // </chunkRefs>
@@ -490,9 +490,8 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRefs/chunkRef")) {
 					String chunkChecksumStr = attributes.getValue("ref");
-					byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
 	
-					fileContent.addChunk(new ChunkEntryId(chunkChecksum));
+					fileContent.addChunk(ChunkEntryId.parseChunkEntryId(chunkChecksumStr));
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk")) {
 					String multChunkIdStr = attributes.getValue("id");
@@ -506,9 +505,8 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				}			
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRefs/chunkRef")) {
 					String chunkChecksumStr = attributes.getValue("ref");
-					byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
 	
-					multiChunk.addChunk(new ChunkEntryId(chunkChecksum));
+					multiChunk.addChunk(ChunkEntryId.parseChunkEntryId(chunkChecksumStr));
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
 					String fileHistoryIdStr = attributes.getValue("id");
