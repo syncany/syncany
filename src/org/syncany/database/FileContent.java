@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.util.ObjectId;
 
 /**
  * A file content represents the content of a file. It contains a list of 
@@ -130,10 +129,6 @@ public class FileContent {
 			else {
 				return checksum1 == null && checksum2 == null;
 			}
-		}
-		
-		public byte[] getChecksum() {
-			return array;
-		}
+		}		
 	}
 }

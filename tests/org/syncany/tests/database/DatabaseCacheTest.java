@@ -35,6 +35,7 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.tests.util.TestDatabaseUtil;
@@ -51,32 +52,32 @@ public class DatabaseCacheTest {
 		// Round 1: Add chunk to new database version, then add database version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
 
-		ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }, 12);
+		ChunkEntry chunkA1 = new ChunkEntry(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }), 12);
 		databaseVersion1.addChunk(chunkA1);
 
 		database.addDatabaseVersion(databaseVersion1);
-		assertEquals(chunkA1, database.getChunk(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }));
+		assertEquals(chunkA1, database.getChunk(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 })));
 
 		// Round 2: Add chunk to new database version, then add database version
 		DatabaseVersion databaseVersion2 = TestDatabaseUtil.createDatabaseVersion(databaseVersion1);
 
-		ChunkEntry chunkA2 = new ChunkEntry(new byte[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 }, 112);
+		ChunkEntry chunkA2 = new ChunkEntry(new ChunkChecksum(new byte[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 }), 112);
 		databaseVersion2.addChunk(chunkA2);
 
 		database.addDatabaseVersion(databaseVersion2);
-		assertEquals(chunkA1, database.getChunk(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(chunkA2, database.getChunk(new byte[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 }));
+		assertEquals(chunkA1, database.getChunk(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(chunkA2, database.getChunk(new ChunkChecksum(new byte[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 })));
 
 		// Round 3: Add chunk to new database version, then add database version
 		DatabaseVersion databaseVersion3 = TestDatabaseUtil.createDatabaseVersion(databaseVersion2);
 
-		ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 }, 192);
+		ChunkEntry chunkA3 = new ChunkEntry(new ChunkChecksum(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 }), 192);
 		databaseVersion3.addChunk(chunkA3);
 
 		database.addDatabaseVersion(databaseVersion3);
-		assertEquals(chunkA1, database.getChunk(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(chunkA2, database.getChunk(new byte[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 }));
-		assertEquals(chunkA3, database.getChunk(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
+		assertEquals(chunkA1, database.getChunk(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(chunkA2, database.getChunk(new ChunkChecksum(new byte[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 })));
+		assertEquals(chunkA3, database.getChunk(new ChunkChecksum(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 })));
 	}
 
 	@Test
@@ -86,31 +87,31 @@ public class DatabaseCacheTest {
 		// Round 1: Add chunk to multichunk
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
 
-		MultiChunkEntry multiChunkP1 = new MultiChunkEntry(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 });
-		ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }, 12);
+		MultiChunkEntry multiChunkP1 = new MultiChunkEntry(new MultiChunkId(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 }));
+		ChunkEntry chunkA1 = new ChunkEntry(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }), 12);
 
-		multiChunkP1.addChunk(new ChunkChecksum(chunkA1.getChecksum()));
+		multiChunkP1.addChunk(chunkA1.getChecksum());
 		databaseVersion1.addChunk(chunkA1);
 		databaseVersion1.addMultiChunk(multiChunkP1);
 
 		database.addDatabaseVersion(databaseVersion1);
 
-		assertEquals(chunkA1, database.getChunk(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(multiChunkP1, database.getMultiChunk(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 }));
+		assertEquals(chunkA1, database.getChunk(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(multiChunkP1, database.getMultiChunk(new MultiChunkId(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 })));
 
 		// Round 2: Add chunk to multichunk
 		DatabaseVersion databaseVersion2 = TestDatabaseUtil.createDatabaseVersion(databaseVersion1);
 
-		MultiChunkEntry multiChunkP2 = new MultiChunkEntry(new byte[] { 7, 7, 7, 7, 7, 7, 7, 7, 7 });
-		MultiChunkEntry multiChunkP3 = new MultiChunkEntry(new byte[] { 5, 5, 5, 5, 5, 5, 5, 5, 5 });
+		MultiChunkEntry multiChunkP2 = new MultiChunkEntry(new MultiChunkId(new byte[] { 7, 7, 7, 7, 7, 7, 7, 7, 7 }));
+		MultiChunkEntry multiChunkP3 = new MultiChunkEntry(new MultiChunkId(new byte[] { 5, 5, 5, 5, 5, 5, 5, 5, 5 }));
 
-		ChunkEntry chunkA2 = new ChunkEntry(new byte[] { 9, 2, 3, 4, 5, 7, 8, 9, 0 }, 912);
-		ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 8, 2, 3, 4, 5, 7, 8, 9, 0 }, 812);
-		ChunkEntry chunkA4 = new ChunkEntry(new byte[] { 7, 2, 3, 4, 5, 7, 8, 9, 0 }, 712);
+		ChunkEntry chunkA2 = new ChunkEntry(new ChunkChecksum(new byte[] { 9, 2, 3, 4, 5, 7, 8, 9, 0 }), 912);
+		ChunkEntry chunkA3 = new ChunkEntry(new ChunkChecksum(new byte[] { 8, 2, 3, 4, 5, 7, 8, 9, 0 }), 812);
+		ChunkEntry chunkA4 = new ChunkEntry(new ChunkChecksum(new byte[] { 7, 2, 3, 4, 5, 7, 8, 9, 0 }), 712);
 
-		multiChunkP2.addChunk(new ChunkChecksum(chunkA2.getChecksum()));
-		multiChunkP2.addChunk(new ChunkChecksum(chunkA3.getChecksum()));
-		multiChunkP3.addChunk(new ChunkChecksum(chunkA4.getChecksum()));
+		multiChunkP2.addChunk(chunkA2.getChecksum());
+		multiChunkP2.addChunk(chunkA3.getChecksum());
+		multiChunkP3.addChunk(chunkA4.getChecksum());
 
 		databaseVersion2.addChunk(chunkA2);
 		databaseVersion2.addChunk(chunkA3);
@@ -123,13 +124,13 @@ public class DatabaseCacheTest {
 
 		// fail("xx");
 
-		assertEquals(chunkA1, database.getChunk(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(chunkA2, database.getChunk(new byte[] { 9, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(chunkA3, database.getChunk(new byte[] { 8, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(chunkA4, database.getChunk(new byte[] { 7, 2, 3, 4, 5, 7, 8, 9, 0 }));
-		assertEquals(multiChunkP1, database.getMultiChunk(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 }));
-		assertEquals(multiChunkP2, database.getMultiChunk(new byte[] { 7, 7, 7, 7, 7, 7, 7, 7, 7 }));
-		assertEquals(multiChunkP3, database.getMultiChunk(new byte[] { 5, 5, 5, 5, 5, 5, 5, 5, 5 }));
+		assertEquals(chunkA1, database.getChunk(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(chunkA2, database.getChunk(new ChunkChecksum(new byte[] { 9, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(chunkA3, database.getChunk(new ChunkChecksum(new byte[] { 8, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(chunkA4, database.getChunk(new ChunkChecksum(new byte[] { 7, 2, 3, 4, 5, 7, 8, 9, 0 })));
+		assertEquals(multiChunkP1, database.getMultiChunk(new MultiChunkId(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 })));
+		assertEquals(multiChunkP2, database.getMultiChunk(new MultiChunkId(new byte[] { 7, 7, 7, 7, 7, 7, 7, 7, 7 })));
+		assertEquals(multiChunkP3, database.getMultiChunk(new MultiChunkId(new byte[] { 5, 5, 5, 5, 5, 5, 5, 5, 5 })));
 	}
 
 	@Test

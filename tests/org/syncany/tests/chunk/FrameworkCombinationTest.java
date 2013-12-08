@@ -56,8 +56,9 @@ import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -85,14 +86,13 @@ public class FrameworkCombinationTest {
 		
 		// Test
 		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempDir, 10*1024, 5);
-		Map<File, ByteArray> inputFilesWithChecksums = TestFileUtil.createChecksums(inputFiles);
 		
 		for(FrameworkCombination combination : combinations) {
 			logger.info("");
 			logger.info("Testing framework combination "+combination.name+" ...");
 			logger.info("---------------------------------------------------------------");
 			
-			testBlackBoxCombination(inputFilesWithChecksums, combination);
+			testBlackBoxCombination(inputFiles, combination);
 		}
 		
 		// Tear down (if success)
@@ -160,14 +160,12 @@ public class FrameworkCombinationTest {
 		TestFileUtil.deleteDirectory(tempDir);
 	}
 		
-	private void testBlackBoxCombination(Map<File, ByteArray> inputFilesWithChecksums, FrameworkCombination combination) throws Exception {		
-		final List<File> inputFiles = new ArrayList<File>(inputFilesWithChecksums.keySet());
-		
+	private void testBlackBoxCombination(List<File> inputFiles, FrameworkCombination combination) throws Exception {		
 		// Deduplicate
 		ChunkIndex chunkIndex = deduplicateAndCreateChunkIndex(inputFiles, combination);
 		
 		// Assemble
-		Map<ByteArray, File> extractedChunkIDToChunkFile = extractChunksFromMultiChunks(chunkIndex.outputMultiChunkFiles, combination);
+		Map<ChunkChecksum, File> extractedChunkIDToChunkFile = extractChunksFromMultiChunks(chunkIndex.outputMultiChunkFiles, combination);
 		Map<File, File> inputFilesToReassembledOutputFiles = reassembleFiles(chunkIndex.inputFileToChunkIDs, extractedChunkIDToChunkFile);		
 		
 		// Compare checksums of files
@@ -193,25 +191,25 @@ public class FrameworkCombinationTest {
 			@Override
 			public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
 				logger.log(Level.INFO, "    - Adding chunk "+StringUtil.toHex(chunk.getChecksum())+" to multichunk "+StringUtil.toHex(multiChunk.getId())+" ...");
-				chunkIndex.chunkIDToMultiChunkID.put(new ByteArray(chunk.getChecksum()), new ByteArray(multiChunk.getId()));				
+				chunkIndex.chunkIDToMultiChunkID.put(new ChunkChecksum(chunk.getChecksum()), new MultiChunkId(multiChunk.getId()));				
 			}								
 			
 			@Override
 			public void onFileAddChunk(File file, Chunk chunk) {
 				logger.log(Level.INFO, "    - Adding chunk "+StringUtil.toHex(chunk.getChecksum())+" to inputFileToChunkIDs-map for file "+file+" ...");
-				List<ByteArray> chunkIDsForFile = chunkIndex.inputFileToChunkIDs.get(file);
+				List<ChunkChecksum> chunkIDsForFile = chunkIndex.inputFileToChunkIDs.get(file);
 				
 				if (chunkIDsForFile == null) {
-					chunkIDsForFile = new ArrayList<ByteArray>();
+					chunkIDsForFile = new ArrayList<ChunkChecksum>();
 				}
 				
-				chunkIDsForFile.add(new ByteArray(chunk.getChecksum()));
+				chunkIDsForFile.add(new ChunkChecksum(chunk.getChecksum()));
 				chunkIndex.inputFileToChunkIDs.put(file, chunkIDsForFile);
 			}
 			
 			@Override
 			public boolean onChunk(Chunk chunk) {
-				if (chunkIndex.chunkIDToMultiChunkID.containsKey(new ByteArray(chunk.getChecksum()))) {
+				if (chunkIndex.chunkIDToMultiChunkID.containsKey(new ChunkChecksum(chunk.getChecksum()))) {
 					logger.log(Level.INFO, "  + Known chunk "+StringUtil.toHex(chunk.getChecksum()));
 					return false;
 				}
@@ -246,8 +244,8 @@ public class FrameworkCombinationTest {
 	}
 	
 
-	private Map<ByteArray, File> extractChunksFromMultiChunks(List<File> outputMultiChunkFiles, FrameworkCombination combination) throws IOException {
-		Map<ByteArray, File> extractedChunks = new HashMap<ByteArray, File>();
+	private Map<ChunkChecksum, File> extractChunksFromMultiChunks(List<File> outputMultiChunkFiles, FrameworkCombination combination) throws IOException {
+		Map<ChunkChecksum, File> extractedChunks = new HashMap<ChunkChecksum, File>();
 		
 		for (File outputMultiChunkFile : outputMultiChunkFiles) {
 			logger.log(Level.INFO, "- Extracting multichunk "+outputMultiChunkFile+" ...");
@@ -263,7 +261,7 @@ public class FrameworkCombinationTest {
 				logger.log(Level.INFO, "  + Writing chunk "+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+" to "+extractedChunkFile+" ...");
 				FileUtil.writeToFile(outputChunkInMultiChunk.getContent(), extractedChunkFile);
 
-				extractedChunks.put(new ByteArray(outputChunkInMultiChunk.getChecksum()), extractedChunkFile);
+				extractedChunks.put(new ChunkChecksum(outputChunkInMultiChunk.getChecksum()), extractedChunkFile);
 			}
 		}		
 		
@@ -271,19 +269,19 @@ public class FrameworkCombinationTest {
 	}
 	
 
-	private Map<File, File> reassembleFiles(Map<File, List<ByteArray>> inputFileToChunkIDs, Map<ByteArray, File> extractedChunkIDToChunkFile) throws IOException {
+	private Map<File, File> reassembleFiles(Map<File, List<ChunkChecksum>> inputFileToChunkIDs, Map<ChunkChecksum, File> extractedChunkIDToChunkFile) throws IOException {
 		Map<File, File> inputFileToOutputFile = new HashMap<File, File>();
 		
-		for (Map.Entry<File, List<ByteArray>> inputFileToChunkIDsEntry : inputFileToChunkIDs.entrySet()) {
+		for (Map.Entry<File, List<ChunkChecksum>> inputFileToChunkIDsEntry : inputFileToChunkIDs.entrySet()) {
 			File inputFile = inputFileToChunkIDsEntry.getKey();			
-			List<ByteArray> chunkIDs = inputFileToChunkIDsEntry.getValue();
+			List<ChunkChecksum> chunkIDs = inputFileToChunkIDsEntry.getValue();
 			
 			File outputFile = new File(tempDir+"/reassembledfile-"+inputFile.getName());
 			FileOutputStream outputFileOutputStream = new FileOutputStream(outputFile);
 			
 			logger.log(Level.INFO, "- Reassemble file "+inputFile+" to "+outputFile+" ...");				
 			
-			for (ByteArray chunkID : chunkIDs) {
+			for (ChunkChecksum chunkID : chunkIDs) {
 				File extractedChunkFile = extractedChunkIDToChunkFile.get(chunkID);
 
 				logger.log(Level.INFO, "  + Appending "+chunkID+" (file: "+extractedChunkFile+") to "+outputFile+" ...");				
@@ -311,8 +309,8 @@ public class FrameworkCombinationTest {
 	}
 	
 	private class ChunkIndex {
-		private Map<File, List<ByteArray>> inputFileToChunkIDs = new HashMap<File, List<ByteArray>>();
-		private Map<ByteArray, ByteArray> chunkIDToMultiChunkID = new HashMap<ByteArray, ByteArray>();
+		private Map<File, List<ChunkChecksum>> inputFileToChunkIDs = new HashMap<File, List<ChunkChecksum>>();
+		private Map<ChunkChecksum, MultiChunkId> chunkIDToMultiChunkID = new HashMap<ChunkChecksum, MultiChunkId>();
 		private List<File> outputMultiChunkFiles = new ArrayList<File>();
 	}
 

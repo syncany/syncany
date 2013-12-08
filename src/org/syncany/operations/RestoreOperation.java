@@ -53,32 +53,32 @@ import org.syncany.util.StringUtil;
  * 
  */
 public class RestoreOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());	
+	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
 	private RestoreOperationOptions options;
-	
+
 	public RestoreOperation() {
 		super(null);
 		this.options = new RestoreOperationOptions();
-	}	
+	}
 
 	public RestoreOperation(Config config) {
 		this(config, null);
-	}	
-	
+	}
+
 	public RestoreOperation(Config config, RestoreOperationOptions options) {
-		super(config);		
+		super(config);
 		this.options = options;
-	}	
-		
+	}
+
 	@Override
 	public RestoreOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Restore' at client "+config.getMachineName()+" ...");
+		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-		
-		Database database = loadLocalDatabase();		
+
+		Database database = loadLocalDatabase();
 		DatabaseVersion currentDatabaseVersion = database.getLastDatabaseVersion();
-		
+
 		if (currentDatabaseVersion == null) {
 			throw new Exception("No database versions yet locally. Nothing to revert.");
 		}
@@ -86,10 +86,10 @@ public class RestoreOperation extends Operation {
 		List<String> restoreFilePaths = options.getRestoreFilePaths();
 		List<FileVersion> restoreFileVersions = null;
 		Set<MultiChunkEntry> multiChunksToDownload = null;
-		
+
 		if (options.getStrategy() == RestoreOperationStrategy.DATABASE_DATE) {
 			Database databaseBeforeRestoreTime = getDatabaseBeforeRestoreTime(database, options.getDatabaseBeforeDate());
-		
+
 			restoreFileVersions = getLastFileVersionsByPath(restoreFilePaths, databaseBeforeRestoreTime);
 			multiChunksToDownload = getMultiChunksToDownload(restoreFileVersions, databaseBeforeRestoreTime);
 		}
@@ -97,190 +97,193 @@ public class RestoreOperation extends Operation {
 			restoreFileVersions = getPreviousFileVersionsByPath(database, restoreFilePaths, options.getFileVersionNumber());
 			multiChunksToDownload = getMultiChunksToDownload(restoreFileVersions, database);
 		}
-		
+
 		downloadAndDecryptMultiChunks(multiChunksToDownload);
-		
+
 		for (FileVersion restoreFileVersion : restoreFileVersions) {
-			logger.log(Level.INFO, "- Restore to: "+restoreFileVersion);
-			
+			logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
+
 			FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, database, new Database());
-			logger.log(Level.INFO, "  --> "+newFileSystemAction);
-			
+			logger.log(Level.INFO, "  --> " + newFileSystemAction);
+
 			newFileSystemAction.execute();
-		}		
-		
+		}
+
 		return new RestoreOperationResult();
-	}			
-	
+	}
+
 	private List<FileVersion> getPreviousFileVersionsByPath(Database database, List<String> restoreFilePaths, Integer restoreVersionNumber) {
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-	
+
 		for (String filePath : restoreFilePaths) {
 			PartialFileHistory fileHistory = database.getFileHistory(filePath);
-			
+
 			if (fileHistory != null) {
 				// Go back <versionNumber> versions
 				if (restoreVersionNumber < 0) {
 					int fileVersionCount = fileHistory.getFileVersions().size();
-					int indexOfRestoreFileVersion = fileVersionCount+restoreVersionNumber;
-					
+					int indexOfRestoreFileVersion = fileVersionCount + restoreVersionNumber;
+
 					if (indexOfRestoreFileVersion < 0) {
-						logger.log(Level.INFO, "- Cannot find spec. version for file history "+fileHistory.getFileId()+", only has "+fileVersionCount+" versions (going back "+restoreVersionNumber+" not possible), file "+filePath);
+						logger.log(Level.INFO, "- Cannot find spec. version for file history " + fileHistory.getFileId() + ", only has "
+								+ fileVersionCount + " versions (going back " + restoreVersionNumber + " not possible), file " + filePath);
 					}
-					else {						
+					else {
 						ArrayList<FileVersion> fileVersions = new ArrayList<FileVersion>(fileHistory.getFileVersions().values());
 						FileVersion restoreFileVersion = fileVersions.get(indexOfRestoreFileVersion);
-										
+
 						restoreFileVersions.add(restoreFileVersion);
-						logger.log(Level.INFO, "- "+restoreFileVersion);
+						logger.log(Level.INFO, "- " + restoreFileVersion);
 					}
 				}
-				
-				// Choose exact version <versionNumber> 
+
+				// Choose exact version <versionNumber>
 				else {
 					FileVersion restoreFileVersion = fileHistory.getFileVersion(restoreVersionNumber);
-					
+
 					if (restoreFileVersion == null) {
-						logger.log(Level.INFO, "- Cannot find spec. version for file history "+fileHistory.getFileId()+", version "+restoreVersionNumber+" does not exist, file "+filePath);
+						logger.log(Level.INFO, "- Cannot find spec. version for file history " + fileHistory.getFileId() + ", version "
+								+ restoreVersionNumber + " does not exist, file " + filePath);
 					}
 					else {
 						restoreFileVersions.add(restoreFileVersion);
-						logger.log(Level.INFO, "- "+restoreFileVersion);	
-					}					
+						logger.log(Level.INFO, "- " + restoreFileVersion);
+					}
 				}
 			}
 			else {
-				logger.log(Level.INFO, "Cannot find file history for file "+filePath);
+				logger.log(Level.INFO, "Cannot find file history for file " + filePath);
 			}
 		}
-		
+
 		return restoreFileVersions;
 	}
 
 	private Set<MultiChunkEntry> getMultiChunksToDownload(List<FileVersion> restoreFileVersions, Database databaseBeforeRestoreTime) throws Exception {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
-		
+
 		for (FileVersion restoreFileVersion : restoreFileVersions) {
 			multiChunksToDownload.addAll(determineMultiChunksToDownload(restoreFileVersion, databaseBeforeRestoreTime));
 		}
-		
+
 		return multiChunksToDownload;
 	}
 
 	private List<FileVersion> getLastFileVersionsByPath(List<String> restoreFilePaths, Database databaseBeforeRestoreTime) {
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-		
+
 		for (String restoreFilePath : restoreFilePaths) {
 			PartialFileHistory restoreFileHistory = databaseBeforeRestoreTime.getFileHistory(restoreFilePath);
-			
+
 			if (restoreFileHistory != null) {
 				restoreFileVersions.add(restoreFileHistory.getLastVersion());
 			}
 			else {
-				logger.log(Level.INFO, "Cannot find file history for file "+restoreFilePath);
+				logger.log(Level.INFO, "Cannot find file history for file " + restoreFilePath);
 			}
 		}
-		
+
 		return restoreFileVersions;
 	}
 
 	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, Database database) throws Exception {
 		// TODO [medium] Duplicate code in DownOperation
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();		
-		
+		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
+
 		if (fileVersion.getSize() != null && fileVersion.getSize() > 0) {
 			FileContent fileContent = database.getContent(fileVersion.getChecksum());
-			
+
 			boolean fileHasContent = fileContent != null;
-			
-			if (fileHasContent) { // File can be empty!					
-				Collection<ChunkChecksum> fileChunks = fileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
-				
+
+			if (fileHasContent) { // File can be empty!
+				Collection<ChunkChecksum> fileChunks = fileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download
+																				// here, we should look for chunks in local files as well and return
+																				// the chunk positions in the local files ChunkPosition (chunk123 at
+																				// file12, offset 200, size 250)
+
 				for (ChunkChecksum chunkChecksum : fileChunks) {
 					MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
-					
+
 					if (multiChunkForChunk == null) {
-						throw new Exception("Cannot find multichunk for chunk " + chunkChecksum); 
+						throw new Exception("Cannot find multichunk for chunk " + chunkChecksum);
 					}
-					
+
 					if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-						logger.log(Level.INFO, "  + Adding multichunk "+StringUtil.toHex(multiChunkForChunk.getId())+" to download list ...");
+						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
 						multiChunksToDownload.add(multiChunkForChunk);
 					}
 				}
-			}			
+			}
 		}
-		
+
 		return multiChunksToDownload;
 	}
-	
 
 	private void downloadAndDecryptMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
 		// TODO [medium] Duplicate code in DownOperation
-		
+
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
 		TransferManager transferManager = config.getConnection().createTransferManager();
-		
+
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId()); 
-			
-			logger.log(Level.INFO, "  + Downloading multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId().getRaw());
+
+			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkEntry.getId() + " ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-			
-			logger.log(Level.INFO, "  + Decrypting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
-			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));			
-			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile); 			
+
+			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkEntry.getId() + " ...");
+			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
+			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
 
 			// TODO [medium] Calculate checksum while writing file, to verify correct content
 			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
-			
+
 			decryptedMultiChunkOutputStream.close();
 			multiChunkInputStream.close();
-			
-			logger.log(Level.FINE, "  + Locally deleting multichunk "+StringUtil.toHex(multiChunkEntry.getId())+" ...");
+
+			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkEntry.getId() + " ...");
 			localEncryptedMultiChunkFile.delete();
 		}
-		
+
 		transferManager.disconnect();
 	}
 
 	private Database getDatabaseBeforeRestoreTime(Database database, Date restoreDate) {
 		Database databaseBeforeRestoreTime = new Database();
-		
+
 		for (DatabaseVersion compareDatabaseVersion : database.getDatabaseVersions()) {
 			if (compareDatabaseVersion.getTimestamp().equals(restoreDate) || compareDatabaseVersion.getTimestamp().before(restoreDate)) {
 				databaseBeforeRestoreTime.addDatabaseVersion(compareDatabaseVersion);
 			}
-		}		
-		
+		}
+
 		return databaseBeforeRestoreTime;
 	}
 
 	public static enum RestoreOperationStrategy {
-		DATABASE_DATE,
-		FILE_VERSION
+		DATABASE_DATE, FILE_VERSION
 	}
-	
+
 	public static class RestoreOperationOptions implements OperationOptions {
-		private RestoreOperationStrategy strategy;		
+		private RestoreOperationStrategy strategy;
 		private Date databaseBeforeDate;
 		private Integer fileVersionNumber;
 		private List<String> restoreFilePaths;
-		
+
 		public Date getDatabaseBeforeDate() {
 			return databaseBeforeDate;
 		}
-		
+
 		public void setDatabaseBeforeDate(Date databaseBeforeDate) {
 			this.databaseBeforeDate = databaseBeforeDate;
 		}
-		
+
 		public List<String> getRestoreFilePaths() {
 			return restoreFilePaths;
 		}
-		
+
 		public void setRestoreFilePaths(List<String> restoreFiles) {
 			this.restoreFilePaths = restoreFiles;
 		}
@@ -299,9 +302,9 @@ public class RestoreOperation extends Operation {
 
 		public void setFileVersionNumber(Integer fileVersionNumber) {
 			this.fileVersionNumber = fileVersionNumber;
-		}				
+		}
 	}
-	
+
 	public class RestoreOperationResult implements OperationResult {
 		// Fressen
 	}

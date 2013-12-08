@@ -42,10 +42,10 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock.VectorClockComparison;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -164,7 +164,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 								
 			for (ChunkEntry chunk : chunks) {
 				xmlOut.writeEmptyElement("chunk");
-				xmlOut.writeAttribute("checksum", StringUtil.toHex(chunk.getChecksum()));
+				xmlOut.writeAttribute("checksum", chunk.getChecksum().toString());
 				xmlOut.writeAttribute("size", chunk.getSize());
 			}
 			
@@ -178,7 +178,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			
 			for (MultiChunkEntry multiChunk : multiChunks) {
 				xmlOut.writeStartElement("multiChunk");
-				xmlOut.writeAttribute("id", StringUtil.toHex(multiChunk.getId()));
+				xmlOut.writeAttribute("id", multiChunk.getId().toString());
 			
 				xmlOut.writeStartElement("chunkRefs");
 				
@@ -475,7 +475,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			else if (!headersOnly) {
 				if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/chunks/chunk")) {
 					String chunkChecksumStr = attributes.getValue("checksum");
-					byte[] chunkChecksum = StringUtil.fromHex(chunkChecksumStr);
+					ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(chunkChecksumStr);
 					int chunkSize = Integer.parseInt(attributes.getValue("size"));
 					
 					ChunkEntry chunkEntry = new ChunkEntry(chunkChecksum, chunkSize);
@@ -492,11 +492,11 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRefs/chunkRef")) {
 					String chunkChecksumStr = attributes.getValue("ref");
 	
-					fileContent.addChunk(ChunkChecksum.parseChunkEntryId(chunkChecksumStr));
+					fileContent.addChunk(ChunkChecksum.parseChunkChecksum(chunkChecksumStr));
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk")) {
 					String multChunkIdStr = attributes.getValue("id");
-					byte[] multiChunkId = StringUtil.fromHex(multChunkIdStr);
+					MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(multChunkIdStr);							
 					
 					if (multiChunkId == null) {
 						throw new SAXException("Cannot read ID from multichunk " + multChunkIdStr);
@@ -507,7 +507,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRefs/chunkRef")) {
 					String chunkChecksumStr = attributes.getValue("ref");
 	
-					multiChunk.addChunk(ChunkChecksum.parseChunkEntryId(chunkChecksumStr));
+					multiChunk.addChunk(ChunkChecksum.parseChunkChecksum(chunkChecksumStr));
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
 					String fileHistoryIdStr = attributes.getValue("id");

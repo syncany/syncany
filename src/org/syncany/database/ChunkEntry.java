@@ -17,20 +17,16 @@
  */
 package org.syncany.database;
 
-import java.util.Arrays;
-
-import org.syncany.util.ObjectId;
-import org.syncany.util.StringUtil;
 
 /**
  *
  * @author pheckel
  */
 public class ChunkEntry {
-	private byte[] checksum;
+	private ChunkChecksum checksum;
 	private int size;
 
-	public ChunkEntry(byte[] checksum, int size) {
+	public ChunkEntry(ChunkChecksum checksum, int size) {
 		this.checksum = checksum;
 		this.size = size;
 	}
@@ -43,24 +39,24 @@ public class ChunkEntry {
 		return size;
 	}
 
-	public byte[] getChecksum() {
+	public ChunkChecksum getChecksum() {
 		return checksum;
 	}
 
-	public void setChecksum(byte[] checksum) {
+	public void setChecksum(ChunkChecksum checksum) {
 		this.checksum = checksum;
 	}
 
 	@Override
 	public String toString() {
-		return "ChunkEntry [checksum=" + StringUtil.toHex(checksum) + ", size=" + size + "]";
-	}
+		return "ChunkEntry [checksum=" + checksum + ", size=" + size + "]";
+	}	
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(checksum);
+		result = prime * result + ((checksum == null) ? 0 : checksum.hashCode());
 		result = prime * result + size;
 		return result;
 	}
@@ -74,28 +70,24 @@ public class ChunkEntry {
 		if (getClass() != obj.getClass())
 			return false;
 		ChunkEntry other = (ChunkEntry) obj;
-		if (!Arrays.equals(checksum, other.checksum))
+		if (checksum == null) {
+			if (other.checksum != null)
+				return false;
+		}
+		else if (!checksum.equals(other.checksum))
 			return false;
 		if (size != other.size)
 			return false;
 		return true;
 	}
 
-	/**
-	 * Identifies a chunk entry (= chunk checksum)
-	 * TODO [low] Cleanup chunk entry id usage in application. What about a MultiChunkEntryId, FileContentId, ...
-	 */
 	public static class ChunkChecksum extends ObjectId {
 		public ChunkChecksum(byte[] array) {
 			super(array);
 		}
 
-		public static ChunkChecksum parseChunkEntryId(String s) {
+		public static ChunkChecksum parseChunkChecksum(String s) {
 			return new ChunkChecksum(ObjectId.parseBytes(s));
-		}
-		
-		public byte[] getChecksum() {
-			return array;
-		}
+		}		
 	}
 }

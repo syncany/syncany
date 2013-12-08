@@ -43,6 +43,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.FileUtil;
@@ -509,13 +510,13 @@ public class Indexer {
 		@Override
 		public void onMultiChunkOpen(MultiChunk multiChunk) {
 			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
-			multiChunkEntry = new MultiChunkEntry(multiChunk.getId());
+			multiChunkEntry = new MultiChunkEntry(new MultiChunkId(multiChunk.getId()));
 		}
 
 		@Override
 		public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
 			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
-			multiChunkEntry.addChunk(new ChunkChecksum(chunkEntry.getChecksum()));				
+			multiChunkEntry.addChunk(chunkEntry.getChecksum());				
 		}
 		
 		@Override
@@ -553,15 +554,16 @@ public class Indexer {
 		 */
 		@Override
 		public boolean onChunk(Chunk chunk) {
-			chunkEntry = database.getChunk(chunk.getChecksum());
+			ChunkChecksum chunkChecksum = new ChunkChecksum(chunk.getChecksum());
+			chunkEntry = database.getChunk(chunkChecksum);
 
 			if (chunkEntry == null) {
-				chunkEntry = newDatabaseVersion.getChunk(chunk.getChecksum());
+				chunkEntry = newDatabaseVersion.getChunk(chunkChecksum);
 				
 				if (chunkEntry == null) {
-					logger.log(Level.FINER, "- Chunk new: {0}", StringUtil.toHex(chunk.getChecksum()));
+					logger.log(Level.FINER, "- Chunk new: {0}", chunkChecksum.toString());
 					
-					chunkEntry = new ChunkEntry(chunk.getChecksum(), chunk.getSize());
+					chunkEntry = new ChunkEntry(chunkChecksum, chunk.getSize());
 					newDatabaseVersion.addChunk(chunkEntry);
 					
 					return true;	

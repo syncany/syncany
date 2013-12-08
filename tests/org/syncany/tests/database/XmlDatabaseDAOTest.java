@@ -43,6 +43,7 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
@@ -75,10 +76,10 @@ public class XmlDatabaseDAOTest {
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
-        ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
-        ChunkEntry chunkA2 = new ChunkEntry(new byte[] { 9,8,7,6,5,4,3,2,1}, 34);
-        ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 1,1,1,1,1,1,1,1,1}, 56);
-        ChunkEntry chunkA4 = new ChunkEntry(new byte[] { 2,2,2,2,2,2,2,2,2}, 78);
+        ChunkEntry chunkA1 = new ChunkEntry(new ChunkChecksum(new byte[] { 1,2,3,4,5,7,8,9,0}), 12);
+        ChunkEntry chunkA2 = new ChunkEntry(new ChunkChecksum(new byte[] { 9,8,7,6,5,4,3,2,1}), 34);
+        ChunkEntry chunkA3 = new ChunkEntry(new ChunkChecksum(new byte[] { 1,1,1,1,1,1,1,1,1}), 56);
+        ChunkEntry chunkA4 = new ChunkEntry(new ChunkChecksum(new byte[] { 2,2,2,2,2,2,2,2,2}), 78);
         
         newDatabaseVersion.addChunk(chunkA1);
         newDatabaseVersion.addChunk(chunkA2);
@@ -122,13 +123,13 @@ public class XmlDatabaseDAOTest {
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
-        ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
-        ChunkEntry chunkA2 = new ChunkEntry(new byte[] { 9,8,7,6,5,4,3,2,1}, 34);
-        ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 1,1,1,1,1,1,1,1,1}, 56);
-        ChunkEntry chunkA4 = new ChunkEntry(new byte[] { 2,2,2,2,2,2,2,2,2}, 78);
+        ChunkEntry chunkA1 = new ChunkEntry(new ChunkChecksum(new byte[] { 1,2,3,4,5,7,8,9,0}), 12);
+        ChunkEntry chunkA2 = new ChunkEntry(new ChunkChecksum(new byte[] { 9,8,7,6,5,4,3,2,1}), 34);
+        ChunkEntry chunkA3 = new ChunkEntry(new ChunkChecksum(new byte[] { 1,1,1,1,1,1,1,1,1}), 56);
+        ChunkEntry chunkA4 = new ChunkEntry(new ChunkChecksum(new byte[] { 2,2,2,2,2,2,2,2,2}), 78);
 
-        ChunkEntry chunkB1 = new ChunkEntry(new byte[] { 3,3,3,3,3,3,3,3,3}, 910);
-        ChunkEntry chunkB2 = new ChunkEntry(new byte[] { 4,4,4,4,4,4,4,4,4}, 1112);
+        ChunkEntry chunkB1 = new ChunkEntry(new ChunkChecksum(new byte[] { 3,3,3,3,3,3,3,3,3}), 910);
+        ChunkEntry chunkB2 = new ChunkEntry(new ChunkChecksum(new byte[] { 4,4,4,4,4,4,4,4,4}), 1112);
         
         newDatabaseVersion.addChunk(chunkA1);
         newDatabaseVersion.addChunk(chunkA2);
@@ -138,16 +139,16 @@ public class XmlDatabaseDAOTest {
         newDatabaseVersion.addChunk(chunkB2);        
         
         // Distribute chunks to multichunks
-        MultiChunkEntry multiChunkA = new MultiChunkEntry(new byte[] {6,6,6,6,6,6,6,6,6});
-        multiChunkA.addChunk(new ChunkChecksum(chunkA1.getChecksum())); 
-        multiChunkA.addChunk(new ChunkChecksum(chunkA2.getChecksum())); 
-        multiChunkA.addChunk(new ChunkChecksum(chunkA3.getChecksum()));
+        MultiChunkEntry multiChunkA = new MultiChunkEntry(new MultiChunkId(new byte[] {6,6,6,6,6,6,6,6,6}));
+        multiChunkA.addChunk(chunkA1.getChecksum()); 
+        multiChunkA.addChunk(chunkA2.getChecksum()); 
+        multiChunkA.addChunk(chunkA3.getChecksum());
         newDatabaseVersion.addMultiChunk(multiChunkA);
         
-        MultiChunkEntry multiChunkB = new MultiChunkEntry(new byte[] {7,7,7,7,7,7,7,7,7});
-        multiChunkB.addChunk(new ChunkChecksum(chunkA4.getChecksum()));
-        multiChunkB.addChunk(new ChunkChecksum(chunkB1.getChecksum()));
-        multiChunkB.addChunk(new ChunkChecksum(chunkB2.getChecksum()));
+        MultiChunkEntry multiChunkB = new MultiChunkEntry(new MultiChunkId(new byte[] {7,7,7,7,7,7,7,7,7}));
+        multiChunkB.addChunk(chunkA4.getChecksum());
+        multiChunkB.addChunk(chunkB1.getChecksum());
+        multiChunkB.addChunk(chunkB2.getChecksum());
         newDatabaseVersion.addMultiChunk(multiChunkB);        
         		
         // Add database version
@@ -183,13 +184,13 @@ public class XmlDatabaseDAOTest {
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
-        ChunkEntry chunkA1 = new ChunkEntry(new byte[] { 1,2,3,4,5,7,8,9,0}, 12);
-        ChunkEntry chunkA2 = new ChunkEntry(new byte[] { 9,8,7,6,5,4,3,2,1}, 34);
-        ChunkEntry chunkA3 = new ChunkEntry(new byte[] { 1,1,1,1,1,1,1,1,1}, 56);
-        ChunkEntry chunkA4 = new ChunkEntry(new byte[] { 2,2,2,2,2,2,2,2,2}, 78);
+        ChunkEntry chunkA1 = new ChunkEntry(new ChunkChecksum(new byte[] { 1,2,3,4,5,7,8,9,0}), 12);
+        ChunkEntry chunkA2 = new ChunkEntry(new ChunkChecksum(new byte[] { 9,8,7,6,5,4,3,2,1}), 34);
+        ChunkEntry chunkA3 = new ChunkEntry(new ChunkChecksum(new byte[] { 1,1,1,1,1,1,1,1,1}), 56);
+        ChunkEntry chunkA4 = new ChunkEntry(new ChunkChecksum(new byte[] { 2,2,2,2,2,2,2,2,2}), 78);
 
-        ChunkEntry chunkB1 = new ChunkEntry(new byte[] { 3,3,3,3,3,3,3,3,3}, 910);
-        ChunkEntry chunkB2 = new ChunkEntry(new byte[] { 4,4,4,4,4,4,4,4,4}, 1112);
+        ChunkEntry chunkB1 = new ChunkEntry(new ChunkChecksum(new byte[] { 3,3,3,3,3,3,3,3,3}), 910);
+        ChunkEntry chunkB2 = new ChunkEntry(new ChunkChecksum(new byte[] { 4,4,4,4,4,4,4,4,4}), 1112);
         
         newDatabaseVersion.addChunk(chunkA1);
         newDatabaseVersion.addChunk(chunkA2);
@@ -200,16 +201,16 @@ public class XmlDatabaseDAOTest {
         
         // Distribute chunks to file contents    	
         FileContent contentA = new FileContent();        
-        contentA.addChunk(new ChunkChecksum(chunkA1.getChecksum()));
-        contentA.addChunk(new ChunkChecksum(chunkA2.getChecksum()));
-        contentA.addChunk(new ChunkChecksum(chunkA3.getChecksum()));
-        contentA.addChunk(new ChunkChecksum(chunkA4.getChecksum()));
+        contentA.addChunk(chunkA1.getChecksum());
+        contentA.addChunk(chunkA2.getChecksum());
+        contentA.addChunk(chunkA3.getChecksum());
+        contentA.addChunk(chunkA4.getChecksum());
         contentA.setChecksum(new FileChecksum(new byte[]{5,5,5,4,4,5,5,5,5}));              
         newDatabaseVersion.addFileContent(contentA);
                 
         FileContent contentB = new FileContent();
-        contentB.addChunk(new ChunkChecksum(chunkB1.getChecksum()));
-        contentB.addChunk(new ChunkChecksum(chunkB2.getChecksum())); 
+        contentB.addChunk(chunkB1.getChecksum());
+        contentB.addChunk(chunkB2.getChecksum()); 
         contentB.setChecksum(new FileChecksum(new byte[]{1,1,1,3,3,5,5,5,5}));                      
         newDatabaseVersion.addFileContent(contentB);
         		
@@ -351,9 +352,9 @@ public class XmlDatabaseDAOTest {
 			DatabaseVersion newDatabaseVersion = createDatabaseVersion(basedOnDatabaseVersion);
 			
 			// Some random chunks
-			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
-			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
-			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(new ChunkChecksum(TestFileUtil.createRandomArray(20)), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(new ChunkChecksum(TestFileUtil.createRandomArray(20)), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(new ChunkChecksum(TestFileUtil.createRandomArray(20)), 32*1024));
 			
 			// Add to database
 			writtenDatabase.addDatabaseVersion(newDatabaseVersion);
@@ -376,9 +377,9 @@ public class XmlDatabaseDAOTest {
 			DatabaseVersion newDatabaseVersion = createDatabaseVersion(basedOnDatabaseVersion);
 			
 			// Some random chunks
-			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
-			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
-			newDatabaseVersion.addChunk(new ChunkEntry(TestFileUtil.createRandomArray(20), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(new ChunkChecksum(TestFileUtil.createRandomArray(20)), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(new ChunkChecksum(TestFileUtil.createRandomArray(20)), 32*1024));
+			newDatabaseVersion.addChunk(new ChunkEntry(new ChunkChecksum(TestFileUtil.createRandomArray(20)), 32*1024));
 			
 			// Add to database
 			writtenDatabase.addDatabaseVersion(newDatabaseVersion);

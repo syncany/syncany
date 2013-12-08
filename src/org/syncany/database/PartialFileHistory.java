@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.syncany.util.ObjectId;
-
 /**
  * A <tt>PartialFileHistory</tt> represents a single file in a repository over a 
  * certain period of time/versions. Whenever a file is updated or deleted, a new  

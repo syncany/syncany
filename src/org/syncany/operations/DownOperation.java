@@ -57,7 +57,6 @@ import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 /**
  * The down operation implements a central part of Syncany's business logic. It determines
@@ -267,9 +266,12 @@ public class DownOperation extends Operation {
 		DatabaseBranches allStitchedBranches = databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 
 		DatabaseVersionHeader lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);
-		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);
-		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);
-		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
+		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(
+				lastCommonHeader, allStitchedBranches);
+		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseReconciliator
+				.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);
+		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseReconciliator
+				.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
 
 		if (logger.isLoggable(Level.FINEST)) {
 			logger.log(Level.FINEST, "- Database reconciliation results:");
@@ -315,7 +317,9 @@ public class DownOperation extends Operation {
 		boolean winningFileHasContent = winningFileContent != null;
 
 		if (winningFileHasContent) { // File can be empty!
-			Collection<ChunkChecksum> fileChunks = winningFileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local
+			Collection<ChunkChecksum> fileChunks = winningFileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to
+																					// download here, we should look for chunks in local files as well
+																					// and return the chunk positions in the local
 																					// files ChunkPosition (chunk123 at file12, offset 200, size 250)
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
@@ -326,7 +330,7 @@ public class DownOperation extends Operation {
 				}
 
 				if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-					logger.log(Level.INFO, "  + Adding multichunk " + StringUtil.toHex(multiChunkForChunk.getId()) + " to download list ...");
+					logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
 					multiChunksToDownload.add(multiChunkForChunk);
 				}
 			}
@@ -369,15 +373,15 @@ public class DownOperation extends Operation {
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
 
 		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId().getRaw());
 
-			logger.log(Level.INFO, "  + Downloading multichunk " + StringUtil.toHex(multiChunkEntry.getId()) + " ...");
+			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkEntry.getId() + " ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
 			result.downloadedMultiChunks.add(multiChunkEntry);
 
-			logger.log(Level.INFO, "  + Decrypting multichunk " + StringUtil.toHex(multiChunkEntry.getId()) + " ...");
+			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkEntry.getId() + " ...");
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
 
@@ -387,7 +391,7 @@ public class DownOperation extends Operation {
 			decryptedMultiChunkOutputStream.close();
 			multiChunkInputStream.close();
 
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + StringUtil.toHex(multiChunkEntry.getId()) + " ...");
+			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkEntry.getId() + " ...");
 			localEncryptedMultiChunkFile.delete();
 		}
 
@@ -474,7 +478,8 @@ public class DownOperation extends Operation {
 		return (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
 	}
 
-	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> unknownRemoteDatabases) throws StorageException {
+	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> unknownRemoteDatabases)
+			throws StorageException {
 		logger.log(Level.INFO, "Downloading unknown databases.");
 		List<File> unknownRemoteDatabasesInCache = new ArrayList<File>();
 

@@ -27,6 +27,7 @@ import java.util.Map;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
@@ -94,11 +95,11 @@ public class Database {
 		return (checksum != null) ? fullDatabaseVersionCache.getFileContent(checksum) : null;
 	}
 	
-	public ChunkEntry getChunk(byte[] checksum) {
+	public ChunkEntry getChunk(ChunkChecksum checksum) {
 		return fullDatabaseVersionCache.getChunk(checksum);
 	}
 	
-	public MultiChunkEntry getMultiChunk(byte[] id) {
+	public MultiChunkEntry getMultiChunk(MultiChunkId id) {
 		return fullDatabaseVersionCache.getMultiChunk(id);
 	}	
 	

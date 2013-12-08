@@ -91,10 +91,10 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
 				}
 				
-				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId());
+				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId().getRaw());
 
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
-				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getChecksum());
+				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
 				
 				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
 			}

@@ -34,7 +34,6 @@ import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.util.ByteArray;
 import org.syncany.util.FileUtil;
 
 /**
@@ -284,16 +283,6 @@ public class TestFileUtil {
 
 	public static byte[] createChecksum(File file) throws Exception {
 		return FileUtil.createChecksum(file, "SHA1");
-	}
-	
-	public static Map<File, ByteArray> createChecksums(List<File> inputFiles) throws Exception {
-		Map<File, ByteArray> inputFilesWithChecksums = new HashMap<File, ByteArray>();
-		
-		for (File inputFile : inputFiles) {
-			inputFilesWithChecksums.put(inputFile, new ByteArray(createChecksum(inputFile)));
-		}
-		
-		return inputFilesWithChecksums;
 	}
 	
 	public static Map<String, File> getLocalFiles(File root) throws FileNotFoundException {
