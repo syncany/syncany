@@ -147,11 +147,7 @@ public class DatabaseVersion {
         
     public Collection<PartialFileHistory> getFileHistories() {
         return fileHistories.values();
-    }  
-    
-    public void addFileVersionToHistory(FileId fileHistoryID, FileVersion fileVersion) {
-    	fileHistories.get(fileHistoryID).addFileVersion(fileVersion);
-    }  
+    }     
     
     @Override
   	public int hashCode() {

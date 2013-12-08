@@ -257,7 +257,7 @@ public class XmlDatabaseDAOTest {
         versionA1.setStatus(FileStatus.NEW);
         versionA1.setSize(0L);
         versionA1.setLastModified(new Date());
-        newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA1);
+        fileHistoryA.addFileVersion(versionA1);        
         
         FileVersion versionA2 = new FileVersion();
         versionA2.setVersion(2L);
@@ -266,7 +266,7 @@ public class XmlDatabaseDAOTest {
         versionA2.setStatus(FileStatus.RENAMED);
         versionA2.setSize(0L);
         versionA2.setLastModified(new Date());
-        newDatabaseVersion.addFileVersionToHistory(fileHistoryA.getFileId(), versionA2);	
+        fileHistoryA.addFileVersion(versionA2);
 		       
         // File B
 		PartialFileHistory fileHistoryB = new PartialFileHistory(FileId.secureRandomFileId());
@@ -279,7 +279,7 @@ public class XmlDatabaseDAOTest {
         versionB1.setStatus(FileStatus.NEW);
         versionB1.setSize(0L);
         versionB1.setLastModified(new Date());
-        newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB1);
+        fileHistoryB.addFileVersion(versionB1);
         
         FileVersion versionB2 = new FileVersion();
         versionB2.setVersion(2L);
@@ -288,8 +288,8 @@ public class XmlDatabaseDAOTest {
         versionB2.setStatus(FileStatus.RENAMED);
         versionB2.setSize(0L);
         versionB2.setLastModified(new Date());
-        newDatabaseVersion.addFileVersionToHistory(fileHistoryB.getFileId(), versionB2);	        	
-        		
+        fileHistoryB.addFileVersion(versionB2);
+        
         // Add database version
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		

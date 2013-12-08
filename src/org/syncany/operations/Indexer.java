@@ -160,8 +160,8 @@ public class Indexer {
 				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion()+1);
 				
 				logger.log(Level.FINER, "  + Deleted: {0}, adding deleted version {1}", new Object[] { lastLocalVersion, deletedVersion });
-				newDatabaseVersion.addFileHistory(deletedFileHistory);
-				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), deletedVersion);
+				deletedFileHistory.addFileVersion(deletedVersion);
+				newDatabaseVersion.addFileHistory(deletedFileHistory);			
 			}
 		}				
 	}
@@ -356,8 +356,8 @@ public class Indexer {
 				&& hasIdenticalLinkTarget;
 			
 			if (!isIdenticalToLastVersion) {
+				fileHistory.addFileVersion(fileVersion);
 				newDatabaseVersion.addFileHistory(fileHistory);
-				newDatabaseVersion.addFileVersionToHistory(fileHistory.getFileId(), fileVersion);
 				
 				logger.log(Level.INFO, "   * Added file version:    "+fileVersion);
 				logger.log(Level.INFO, "     based on file version: "+lastFileVersion);

@@ -142,8 +142,8 @@ public class DatabaseCacheTest {
 		FileId idFile1 = FileId.parseFileId("1111111111111111");
 		PartialFileHistory fileHistory1 = new PartialFileHistory(idFile1);		
 		
+		fileHistory1.addFileVersion(fileVersion1);
 		databaseVersion1.addFileHistory(fileHistory1);
-		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
 		
 		database.addDatabaseVersion(databaseVersion1);     
 		
@@ -156,8 +156,8 @@ public class DatabaseCacheTest {
 		FileId idFile2 = FileId.parseFileId("1111111111111111"); // same ID
 		PartialFileHistory fileHistory2 = new PartialFileHistory(idFile2); 		
 		
+		fileHistory2.addFileVersion(fileVersion2);
 		databaseVersion2.addFileHistory(fileHistory2);
-		databaseVersion2.addFileVersionToHistory(fileHistory2.getFileId(), fileVersion2);
 		
 		database.addDatabaseVersion(databaseVersion2);   
 		
@@ -174,8 +174,8 @@ public class DatabaseCacheTest {
 		FileId idFile3 = FileId.parseFileId("1111111111111111"); // same ID
 		PartialFileHistory fileHistory3 = new PartialFileHistory(idFile3); // same ID		
 		
+		fileHistory3.addFileVersion(fileVersion3);
 		databaseVersion3.addFileHistory(fileHistory3);
-		databaseVersion3.addFileVersionToHistory(fileHistory3.getFileId(), fileVersion3);
 		
 		database.addDatabaseVersion(databaseVersion3);   
 		
@@ -193,8 +193,8 @@ public class DatabaseCacheTest {
 		FileId idFile1 = FileId.parseFileId("1111111111111111");
 		PartialFileHistory fileHistory1 = new PartialFileHistory(idFile1);		
 		
+		fileHistory1.addFileVersion(fileVersion1);
 		databaseVersion1.addFileHistory(fileHistory1);
-		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
 		
 		database.addDatabaseVersion(databaseVersion1);     
 		
@@ -210,8 +210,8 @@ public class DatabaseCacheTest {
 		FileId idFile2 = FileId.parseFileId("1111111111111111"); // same ID
 		PartialFileHistory fileHistory2 = new PartialFileHistory(idFile2); 		
 		
+		fileHistory2.addFileVersion(fileVersion2);
 		databaseVersion2.addFileHistory(fileHistory2);
-		databaseVersion2.addFileVersionToHistory(fileHistory2.getFileId(), fileVersion2);
 		
 		// - add file1.jpg (as FOLDER!)
 		FileVersion fileVersion3 = TestDatabaseUtil.createFileVersion("file1.jpg"); // new file!
@@ -220,11 +220,13 @@ public class DatabaseCacheTest {
 		FileId idFile3 = FileId.parseFileId("1111111111111111"); // same ID
 		PartialFileHistory fileHistory3 = new PartialFileHistory(idFile3); // same ID		
 		
+		fileHistory3.addFileVersion(fileVersion3);
 		databaseVersion2.addFileHistory(fileHistory3);
-		databaseVersion2.addFileVersionToHistory(fileHistory3.getFileId(), fileVersion3);
 		
 		// - add database version
 		database.addDatabaseVersion(databaseVersion2);   
+		
+		// TODO [high] This seems to be a bug in the database cache!!
 		
         assertNotNull(database.getFileHistory("file1.jpg"));
         assertEquals(1, database.getFileHistory("file1.jpg").getFileVersions().size());
@@ -245,8 +247,8 @@ public class DatabaseCacheTest {
 		FileId idFile1 = FileId.parseFileId("1111111111111111");
 		PartialFileHistory fileHistory1 = new PartialFileHistory(idFile1);		
 		
+		fileHistory1.addFileVersion(fileVersion1);
 		databaseVersion1.addFileHistory(fileHistory1);
-		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
 		
 		database.addDatabaseVersion(databaseVersion1);     
 		
@@ -264,8 +266,8 @@ public class DatabaseCacheTest {
 		FileId idFile11 = FileId.parseFileId("1111111111111111");
 		PartialFileHistory fileHistory11 = new PartialFileHistory(idFile11); // same ID as above		
 		
+		fileHistory11.addFileVersion(fileVersion11);
 		databaseVersion2.addFileHistory(fileHistory11);
-		databaseVersion2.addFileVersionToHistory(fileHistory11.getFileId(), fileVersion11);
         
         // - history 2, version 1
 		FileVersion fileVersion2 = TestDatabaseUtil.createFileVersion("samechecksum2.jpg");
@@ -274,8 +276,8 @@ public class DatabaseCacheTest {
 		FileId idFile2 = FileId.parseFileId("1111111122222222"); // different ID
 		PartialFileHistory fileHistory2 = new PartialFileHistory(idFile2); 		
 		
+		fileHistory2.addFileVersion(fileVersion2);
 		databaseVersion2.addFileHistory(fileHistory2);
-		databaseVersion2.addFileVersionToHistory(fileHistory2.getFileId(), fileVersion2);
 
 		// - history 3, version 1
 		FileVersion fileVersion3 = TestDatabaseUtil.createFileVersion("samechecksum3.jpg");
@@ -284,8 +286,8 @@ public class DatabaseCacheTest {
 		FileId idFile3 = FileId.parseFileId("aaaaaaaa22222222"); // different ID
 		PartialFileHistory fileHistory3 = new PartialFileHistory(idFile3); // different ID		
 		
+		fileHistory3.addFileVersion(fileVersion3);
 		databaseVersion2.addFileHistory(fileHistory3);
-		databaseVersion2.addFileVersionToHistory(fileHistory3.getFileId(), fileVersion3);
 		
 		database.addDatabaseVersion(databaseVersion2);   
 		
@@ -307,8 +309,8 @@ public class DatabaseCacheTest {
 		FileId idFile1 = FileId.parseFileId("1111111111111111");
 		PartialFileHistory fileHistory1 = new PartialFileHistory(idFile1);		
 		
+		fileHistory1.addFileVersion(fileVersion1);
 		databaseVersion1.addFileHistory(fileHistory1);
-		databaseVersion1.addFileVersionToHistory(fileHistory1.getFileId(), fileVersion1);
 		
 		database.addDatabaseVersion(databaseVersion1);     
 		
@@ -327,8 +329,8 @@ public class DatabaseCacheTest {
 		FileId idFile11 = FileId.parseFileId("1111111111111111"); // same ID
 		PartialFileHistory fileHistory11 = new PartialFileHistory(idFile11); 		
 		
+		fileHistory11.addFileVersion(fileVersion11);
 		databaseVersion2.addFileHistory(fileHistory11);
-		databaseVersion2.addFileVersionToHistory(fileHistory11.getFileId(), fileVersion11);
 		
 		database.addDatabaseVersion(databaseVersion2);     
 		

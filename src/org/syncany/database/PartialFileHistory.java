@@ -80,7 +80,7 @@ public class PartialFileHistory {
     	return Collections.unmodifiableSet(versions.descendingKeySet()).iterator();
     }
     
-    /* package */ void addFileVersion(FileVersion fileVersion) {
+    public void addFileVersion(FileVersion fileVersion) {
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
     
