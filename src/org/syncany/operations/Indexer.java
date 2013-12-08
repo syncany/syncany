@@ -196,7 +196,7 @@ public class Indexer {
 		
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
-		
+
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 			this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
