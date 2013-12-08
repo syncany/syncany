@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.util.StringUtil;
 
 /**
@@ -36,14 +36,14 @@ import org.syncany.util.StringUtil;
  */
 public class MultiChunkEntry  {
     private byte[] id;    
-    private List<ChunkEntryId> chunks;
+    private List<ChunkChecksum> chunks;
         
     public MultiChunkEntry(byte[] id) {
-        this.chunks = new ArrayList<ChunkEntryId>();
+        this.chunks = new ArrayList<ChunkChecksum>();
         this.id = id;
     }
     
-    public void addChunk(ChunkEntryId chunk) {
+    public void addChunk(ChunkChecksum chunk) {
         chunks.add(chunk);
     }    
 
@@ -55,7 +55,7 @@ public class MultiChunkEntry  {
         this.id = id;
     }
 
-    public List<ChunkEntryId> getChunks() {
+    public List<ChunkChecksum> getChunks() {
         return chunks;
     }
 

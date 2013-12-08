@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.syncany.tests.util.TestAssertUtil.*;
+import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
+import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;

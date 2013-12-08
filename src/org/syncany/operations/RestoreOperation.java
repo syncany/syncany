@@ -36,7 +36,7 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
@@ -194,9 +194,9 @@ public class RestoreOperation extends Operation {
 			boolean fileHasContent = fileContent != null;
 			
 			if (fileHasContent) { // File can be empty!					
-				Collection<ChunkEntryId> fileChunks = fileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
+				Collection<ChunkChecksum> fileChunks = fileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
 				
-				for (ChunkEntryId chunkChecksum : fileChunks) {
+				for (ChunkChecksum chunkChecksum : fileChunks) {
 					MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
 					
 					if (multiChunkForChunk == null) {

@@ -27,10 +27,10 @@ import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileId;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupStrategy;
@@ -78,7 +78,7 @@ public class CleanupOperationTest {
 			databaseVersion = TestDatabaseUtil.createDatabaseVersion(databaseVersion, databaseVersionDate);
 			
 			for (int j = 10; j < 20; j++) {
-				PartialFileHistory fileHistory = new PartialFileHistory(FileId.parseFileId(""+j));
+				PartialFileHistory fileHistory = new PartialFileHistory(FileHistoryId.parseFileId(""+j));
 				
 				for (int k = 0; k < 3; k++) {
 					FileVersion fileVersion = new FileVersion();

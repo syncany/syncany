@@ -29,11 +29,12 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
-import org.syncany.database.XmlDatabaseDAO;
-import org.syncany.database.VectorClock;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.VectorClock;
+import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.DatabaseBranch;
 
 public class TestDatabaseUtil {
@@ -121,7 +122,7 @@ public class TestDatabaseUtil {
 	public static FileVersion createFileVersion(String path) {
 		FileVersion fileVersion = new FileVersion();
 		
-		fileVersion.setChecksum(TestFileUtil.createRandomArray(20));
+		fileVersion.setChecksum(new FileChecksum(TestFileUtil.createRandomArray(20)));
 		fileVersion.setCreatedBy("A");		
 		fileVersion.setLastModified(new Date());
 		fileVersion.setPath(path);

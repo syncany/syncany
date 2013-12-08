@@ -30,13 +30,10 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileId;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.util.ByteArray;
-
-import com.google.common.io.FileBackedOutputStream;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
  * TODO [low] Cleanup is not implemented. This class is a stub.
@@ -106,7 +103,7 @@ public class CleanupOperation extends Operation {
 	}
 
 	private List<PartialFileHistory> identifyOutdatedFileHistories(Date expiration, List<DatabaseVersion> olderDatabaseVersions) {
-		Map<FileId, PartialFileHistory> outdatedFileHistories = new HashMap<FileId, PartialFileHistory>();
+		Map<FileHistoryId, PartialFileHistory> outdatedFileHistories = new HashMap<FileHistoryId, PartialFileHistory>();
 		
 		for (DatabaseVersion databaseVersion : olderDatabaseVersions) {
 			for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {

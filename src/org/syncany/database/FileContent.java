@@ -18,13 +18,12 @@
 package org.syncany.database;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.syncany.database.ChunkEntry.ChunkEntryId;
-import org.syncany.util.StringUtil;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.util.ObjectId;
 
 /**
  * A file content represents the content of a file. It contains a list of 
@@ -41,24 +40,24 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileContent {
-    private byte[] checksum;
+    private FileChecksum checksum;
     private long contentSize;
     
-    private List<ChunkEntryId> chunks;
+    private List<ChunkChecksum> chunks;
     
     public FileContent() {
-        this.chunks = new ArrayList<ChunkEntryId>();
+        this.chunks = new ArrayList<ChunkChecksum>();
     }
        
-    public void addChunk(ChunkEntryId chunk) {
+    public void addChunk(ChunkChecksum chunk) {
         chunks.add(chunk);        
     }    
 
-    public byte[] getChecksum() {
+    public FileChecksum getChecksum() {
         return checksum;
     }
 
-    public void setChecksum(byte[] checksum) {
+    public void setChecksum(FileChecksum checksum) {
         this.checksum = checksum;
     }
 
@@ -70,7 +69,7 @@ public class FileContent {
         this.contentSize = contentSize;
     }
 
-    public Collection<ChunkEntryId> getChunks() {
+    public Collection<ChunkChecksum> getChunks() {
     	return Collections.unmodifiableCollection(chunks);
     }
 
@@ -78,7 +77,7 @@ public class FileContent {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(checksum);
+		result = prime * result + ((checksum == null) ? 0 : checksum.hashCode());
 		result = prime * result + ((chunks == null) ? 0 : chunks.hashCode());
 		result = prime * result + (int) (contentSize ^ (contentSize >>> 32));
 		return result;
@@ -93,12 +92,17 @@ public class FileContent {
 		if (getClass() != obj.getClass())
 			return false;
 		FileContent other = (FileContent) obj;
-		if (!Arrays.equals(checksum, other.checksum))
+		if (checksum == null) {
+			if (other.checksum != null)
+				return false;
+		}
+		else if (!checksum.equals(other.checksum))
 			return false;
 		if (chunks == null) {
 			if (other.chunks != null)
 				return false;
-		} else if (!chunks.equals(other.chunks))
+		}
+		else if (!chunks.equals(other.chunks))
 			return false;
 		if (contentSize != other.contentSize)
 			return false;
@@ -107,7 +111,29 @@ public class FileContent {
 
 	@Override
 	public String toString() {
-		return "FileContent [checksum=" + StringUtil.toHex(checksum) + ", contentSize=" + contentSize + ", chunks=" + chunks + "]";
+		return "FileContent [checksum=" + checksum + ", contentSize=" + contentSize + ", chunks=" + chunks + "]";
 	}
-            
+       
+	public static class FileChecksum extends ObjectId {
+		public FileChecksum(byte[] array) {
+			super(array);
+		}
+
+		public static FileChecksum parseFileChecksum(String s) {
+			return new FileChecksum(ObjectId.parseBytes(s));
+		}
+		
+		public static boolean fileChecksumEquals(FileChecksum checksum1, FileChecksum checksum2) {
+			if (checksum1 != null && checksum2 != null) {
+				return checksum1.equals(checksum2);
+			}
+			else {
+				return checksum1 == null && checksum2 == null;
+			}
+		}
+		
+		public byte[] getChecksum() {
+			return array;
+		}
+	}
 }

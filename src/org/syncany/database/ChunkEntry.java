@@ -85,13 +85,13 @@ public class ChunkEntry {
 	 * Identifies a chunk entry (= chunk checksum)
 	 * TODO [low] Cleanup chunk entry id usage in application. What about a MultiChunkEntryId, FileContentId, ...
 	 */
-	public static class ChunkEntryId extends ObjectId {
-		public ChunkEntryId(byte[] array) {
+	public static class ChunkChecksum extends ObjectId {
+		public ChunkChecksum(byte[] array) {
 			super(array);
 		}
 
-		public static ChunkEntryId parseChunkEntryId(String s) {
-			return new ChunkEntryId(ObjectId.parseBytes(s));
+		public static ChunkChecksum parseChunkEntryId(String s) {
+			return new ChunkChecksum(ObjectId.parseBytes(s));
 		}
 		
 		public byte[] getChecksum() {

@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.syncany.util.ObjectId;
+
 /**
  * A <tt>PartialFileHistory</tt> represents a single file in a repository over a 
  * certain period of time/versions. Whenever a file is updated or deleted, a new  
@@ -38,21 +40,18 @@ import java.util.TreeMap;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class PartialFileHistory {
-    //TODO [medium] switch to a 128 or 160 bit id to limit the collision risk
-    private FileId fileId;
+    private static final byte FILE_HISTORY_ID_LENGTH = 20;
+    
+    private FileHistoryId fileId;
     private TreeMap<Long, FileVersion> versions;
     
-    public PartialFileHistory(FileId fileId) {
+    public PartialFileHistory(FileHistoryId fileId) {
         this.fileId = fileId;
         this.versions = new TreeMap<Long, FileVersion>();    	
     }
 
-    public FileId getFileId() {
+    public FileHistoryId getFileId() {
         return fileId;
-    }
-
-    /* package */  void setFileId(FileId fileId) {
-        this.fileId = fileId;
     }
 
     public Map<Long, FileVersion> getFileVersions() {
@@ -126,5 +125,22 @@ public class PartialFileHistory {
 		} else if (!versions.equals(other.versions))
 			return false;
 		return true;
+	}
+	
+	/**
+	 * @author Fabrice Rossi
+	 */
+	public static class FileHistoryId extends ObjectId {
+		private FileHistoryId(byte[] array) {
+			super(array);
+		}
+		
+		public static FileHistoryId secureRandomFileId() {
+			return new FileHistoryId(ObjectId.secureRandomBytes(FILE_HISTORY_ID_LENGTH));
+		}
+		
+		public static FileHistoryId parseFileId(String s) {
+			return new FileHistoryId(ObjectId.parseBytes(s));
+		}
 	}
 }

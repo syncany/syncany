@@ -20,7 +20,6 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -33,11 +32,11 @@ import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
-import org.syncany.database.FileId;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
@@ -45,6 +44,7 @@ import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -233,11 +233,12 @@ public class Indexer {
 		}
 
 		@Override
-		public void onFileEnd(File file, byte[] checksum) {
+		public void onFileEnd(File file, byte[] rawFileChecksum) {
 			// Get file attributes (get them while file exists)
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part, 
-			//       because the file could vanish! 
-			endFileProperties = fileVersionHelper.captureFileProperties(file, checksum, false);
+			//       because the file could vanish!
+			FileChecksum fileChecksum = (rawFileChecksum != null) ? new FileChecksum(rawFileChecksum) : null; 
+			endFileProperties = fileVersionHelper.captureFileProperties(file, fileChecksum, false);
 			
 			// Check if file has vanished			
 			boolean fileIsLocked = endFileProperties.isLocked();
@@ -262,7 +263,7 @@ public class Indexer {
 		
 		private void addFileVersion(FileProperties fileProperties) {
 			if (fileProperties.getChecksum() != null) {
-				logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] {  fileProperties.getRelativePath(), StringUtil.toHex(fileProperties.getChecksum()) });
+				logger.log(Level.FINER, "- /File: {0} (checksum {1})", new Object[] {  fileProperties.getRelativePath(), fileProperties.getChecksum() });
 			}
 			else {
 				logger.log(Level.FINER, "- /File: {0} (directory/symlink/0-byte-file)", fileProperties.getRelativePath());
@@ -278,7 +279,7 @@ public class Indexer {
 			
 			if (lastFileVersion == null) {				
 				// TODO [low] move this generation to a better place. Where?
-				FileId newFileHistoryId = generateNewFileHistoryId();
+				FileHistoryId newFileHistoryId = generateNewFileHistoryId();
 				
 				fileHistory = new PartialFileHistory(newFileHistoryId);
 				
@@ -304,7 +305,7 @@ public class Indexer {
 			
 			// Determine status
 			if (lastFileVersion != null) {
-				if (fileVersion.getType() == FileType.FILE && !Arrays.equals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
+				if (fileVersion.getType() == FileType.FILE && FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
 					fileVersion.setStatus(FileStatus.CHANGED);
 				}
 				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
@@ -350,7 +351,7 @@ public class Indexer {
 				&& lastFileVersion.getPath().equals(fileVersion.getPath())
 				&& lastFileVersion.getType().equals(fileVersion.getType())
 				&& lastFileVersion.getSize().equals(fileVersion.getSize())
-				&& Arrays.equals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
+				&& FileChecksum.fileChecksumEquals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
 				&& lastFileVersion.getLastModified().equals(fileVersion.getLastModified())
 				&& hasIdenticalPermsAndAttributes
 				&& hasIdenticalLinkTarget;
@@ -378,14 +379,14 @@ public class Indexer {
 					newDatabaseVersion.addFileContent(fileContent);
 				}
 			}						
-		}
+		}	
 
-		private FileId generateNewFileHistoryId() {
+		private FileHistoryId generateNewFileHistoryId() {
 			int nbAttempts = 0;
-			FileId newFileHistoryId = null;
+			FileHistoryId newFileHistoryId = null;
 			//TODO[low]: this is probably useless as the collision probability should be super tiny
 			do {
-				newFileHistoryId = FileId.secureRandomFileId();
+				newFileHistoryId = FileHistoryId.secureRandomFileId();
 				
 				if (database.getFileHistory(newFileHistoryId) == null 
 					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {
@@ -485,17 +486,17 @@ public class Indexer {
 				}
 				
 				if (lastFileHistory == null) {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+StringUtil.toHex(fileProperties.getChecksum())+")");
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+fileProperties.getChecksum()+")");
 					return null;
 				}
 				else {
-					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+StringUtil.toHex(fileProperties.getChecksum())+"), appending new version.");
+					logger.log(Level.FINER, "   * Found old file history "+lastFileHistory.getFileId()+" (by checksum: "+fileProperties.getChecksum()+"), appending new version.");
 					return lastFileHistory;
 				}
 			}
 			else {
 				if (fileProperties.getType() != lastFileHistory.getLastVersion().getType()) {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+StringUtil.toHex(fileProperties.getChecksum())+")");
+					logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", checksum: "+fileProperties.getChecksum()+")");
 					return null;
 				}
 				else {
@@ -514,7 +515,7 @@ public class Indexer {
 		@Override
 		public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
 			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
-			multiChunkEntry.addChunk(new ChunkEntryId(chunkEntry.getChecksum()));				
+			multiChunkEntry.addChunk(new ChunkChecksum(chunkEntry.getChecksum()));				
 		}
 		
 		@Override
@@ -541,7 +542,7 @@ public class Indexer {
 		@Override
 		public void onFileAddChunk(File file, Chunk chunk) {			
 			logger.log(Level.FINER, "- Chunk > FileContent: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), file });
-			fileContent.addChunk(new ChunkEntryId(chunk.getChecksum()));				
+			fileContent.addChunk(new ChunkChecksum(chunk.getChecksum()));				
 		}		
 
 		/*

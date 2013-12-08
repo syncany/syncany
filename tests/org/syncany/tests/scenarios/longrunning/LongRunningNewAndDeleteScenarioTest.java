@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.scenarios.longrunning;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 

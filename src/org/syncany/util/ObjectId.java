@@ -25,8 +25,7 @@ import java.util.Arrays;
  *
  */
 public class ObjectId {
-	private static SecureRandom secureRng;
-
+	private static SecureRandom secureRng = new SecureRandom();
 	protected byte[] array;
 
 	/**
@@ -46,13 +45,13 @@ public class ObjectId {
 	}
 
 	public static byte[] secureRandomBytes(int size) {
-		// TODO [low]: this is not thread safe
-		if (secureRng == null) {
-			secureRng = new SecureRandom();
+		byte[] newRandomBytes = new byte[size];	
+		
+		synchronized (secureRng) {
+			secureRng.nextBytes(newRandomBytes);			
 		}
-		byte[] tmp = new byte[size];
-		secureRng.nextBytes(tmp);
-		return tmp;
+		
+		return newRandomBytes;
 	}
 	
 	@Override

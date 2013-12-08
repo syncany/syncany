@@ -18,10 +18,9 @@
 package org.syncany.database;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Date;
 
-import org.syncany.util.StringUtil;
+import org.syncany.database.FileContent.FileChecksum;
 
 /**
  * A file version represents a version of a file at a certain time and captures
@@ -51,7 +50,7 @@ public class FileVersion implements Cloneable {
     
     // Optional
     private String createdBy;
-    private byte[] checksum;
+    private FileChecksum checksum;
     private Date updated;
     private String posixPermissions;
     private String dosAttributes;
@@ -120,11 +119,11 @@ public class FileVersion implements Cloneable {
 		this.path = path;
 	}
     
-    public byte[] getChecksum() {
+    public FileChecksum getChecksum() {
 		return checksum;
 	}
 
-	public void setChecksum(byte[] checksum) {
+	public void setChecksum(FileChecksum checksum) {
 		this.checksum = checksum;
 	}
 
@@ -163,7 +162,7 @@ public class FileVersion implements Cloneable {
 	@Override
 	public String toString() {
 		return "FileVersion [version=" + version + ", path=" + path + ", type=" + type + ", status=" + status + ", size=" + size + ", lastModified="
-				+ lastModified + ", linkTarget=" + linkTarget + ", createdBy=" + createdBy + ", checksum=" + StringUtil.toHex(checksum) + ", updated="
+				+ lastModified + ", linkTarget=" + linkTarget + ", createdBy=" + createdBy + ", checksum=" + checksum + ", updated="
 				+ updated + ", posixPermissions=" + posixPermissions + ", dosAttributes=" + dosAttributes + "]";
 	}
 
@@ -190,16 +189,19 @@ public class FileVersion implements Cloneable {
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }        
-    }
-
+    }	
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(checksum);
+		result = prime * result + ((checksum == null) ? 0 : checksum.hashCode());
 		result = prime * result + ((createdBy == null) ? 0 : createdBy.hashCode());
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((dosAttributes == null) ? 0 : dosAttributes.hashCode());
 		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
+		result = prime * result + ((linkTarget == null) ? 0 : linkTarget.hashCode());
+		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((posixPermissions == null) ? 0 : posixPermissions.hashCode());
 		result = prime * result + ((size == null) ? 0 : size.hashCode());
 		result = prime * result + ((status == null) ? 0 : status.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
@@ -217,27 +219,53 @@ public class FileVersion implements Cloneable {
 		if (getClass() != obj.getClass())
 			return false;
 		FileVersion other = (FileVersion) obj;
-		if (!Arrays.equals(checksum, other.checksum))
+		if (checksum == null) {
+			if (other.checksum != null)
+				return false;
+		}
+		else if (!checksum.equals(other.checksum))
 			return false;
 		if (createdBy == null) {
 			if (other.createdBy != null)
 				return false;
-		} else if (!createdBy.equals(other.createdBy))
+		}
+		else if (!createdBy.equals(other.createdBy))
 			return false;
-		if (path == null) {
-			if (other.path != null)
+		if (dosAttributes == null) {
+			if (other.dosAttributes != null)
 				return false;
-		} else if (!path.equals(other.path))
+		}
+		else if (!dosAttributes.equals(other.dosAttributes))
 			return false;
 		if (lastModified == null) {
 			if (other.lastModified != null)
 				return false;
-		} else if (!lastModified.equals(other.lastModified))
+		}
+		else if (!lastModified.equals(other.lastModified))
+			return false;
+		if (linkTarget == null) {
+			if (other.linkTarget != null)
+				return false;
+		}
+		else if (!linkTarget.equals(other.linkTarget))
+			return false;
+		if (path == null) {
+			if (other.path != null)
+				return false;
+		}
+		else if (!path.equals(other.path))
+			return false;
+		if (posixPermissions == null) {
+			if (other.posixPermissions != null)
+				return false;
+		}
+		else if (!posixPermissions.equals(other.posixPermissions))
 			return false;
 		if (size == null) {
 			if (other.size != null)
 				return false;
-		} else if (!size.equals(other.size))
+		}
+		else if (!size.equals(other.size))
 			return false;
 		if (status != other.status)
 			return false;
@@ -246,12 +274,14 @@ public class FileVersion implements Cloneable {
 		if (updated == null) {
 			if (other.updated != null)
 				return false;
-		} else if (!updated.equals(other.updated))
+		}
+		else if (!updated.equals(other.updated))
 			return false;
 		if (version == null) {
 			if (other.version != null)
 				return false;
-		} else if (!version.equals(other.version))
+		}
+		else if (!version.equals(other.version))
 			return false;
 		return true;
 	}

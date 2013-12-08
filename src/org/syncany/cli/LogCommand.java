@@ -37,7 +37,6 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.LogOperation;
 import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
-import org.syncany.util.StringUtil;
 
 public class LogCommand extends Command {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
@@ -93,7 +92,7 @@ public class LogCommand extends Command {
 
 		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
 				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
-				StringUtil.toHex(fileVersion.getChecksum()));
+				fileVersion.getChecksum());
 	}
 
 	private int longestPath(List<PartialFileHistory> fileHistories, boolean lastOnly) {

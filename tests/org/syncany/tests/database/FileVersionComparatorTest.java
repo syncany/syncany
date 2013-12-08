@@ -17,7 +17,6 @@
  */
 package org.syncany.tests.database;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -34,6 +33,7 @@ import java.util.Date;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
@@ -110,7 +110,7 @@ public class FileVersionComparatorTest {
 		FileVersion fileVersion = new FileVersion();
 		fileVersion.setVersion(3L);
 
-		fileVersion.setChecksum(new byte[] { 0x11, 0x22, 0x33 });
+		fileVersion.setChecksum(new FileChecksum(new byte[] { 0x11, 0x22, 0x33 }));
 		fileVersion.setLastModified(new Date(123456789));
 		fileVersion.setPath("folder/file");
 		fileVersion.setSize(999*1024L);
@@ -129,7 +129,7 @@ public class FileVersionComparatorTest {
 		FileProperties fileProperties = versionComparator.captureFileProperties(fileVersion);
 		
 		// Test
-		assertArrayEquals(new byte[] { 0x11, 0x22, 0x33}, fileProperties.getChecksum());
+		assertEquals(new FileChecksum(new byte[] { 0x11, 0x22, 0x33 }), fileProperties.getChecksum());
 		assertEquals(123456789, fileProperties.getLastModified());
 		assertEquals("folder/file", fileProperties.getRelativePath());
 		assertEquals(999*1024, fileProperties.getSize());
@@ -184,7 +184,7 @@ public class FileVersionComparatorTest {
 		FileVersion fileVersion = new FileVersion();
 		fileVersion.setVersion(100L);
 
-		fileVersion.setChecksum(new byte[] { 0x11, 0x22, 0x33 }); // << definitely differs
+		fileVersion.setChecksum(new FileChecksum(new byte[] { 0x11, 0x22, 0x33 })); // << definitely differs
 		fileVersion.setLastModified(new Date(1182196000));
 		fileVersion.setPath("file1");
 		fileVersion.setSize(130*1024L);

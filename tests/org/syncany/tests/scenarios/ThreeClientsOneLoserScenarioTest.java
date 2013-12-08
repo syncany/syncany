@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;

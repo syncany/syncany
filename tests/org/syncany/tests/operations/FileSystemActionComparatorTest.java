@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.util.ArrayList;

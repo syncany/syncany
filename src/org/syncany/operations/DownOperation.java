@@ -43,7 +43,7 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
@@ -315,10 +315,10 @@ public class DownOperation extends Operation {
 		boolean winningFileHasContent = winningFileContent != null;
 
 		if (winningFileHasContent) { // File can be empty!
-			Collection<ChunkEntryId> fileChunks = winningFileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local
+			Collection<ChunkChecksum> fileChunks = winningFileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well and return the chunk positions in the local
 																					// files ChunkPosition (chunk123 at file12, offset 200, size 250)
 
-			for (ChunkEntryId chunkChecksum : fileChunks) {
+			for (ChunkChecksum chunkChecksum : fileChunks) {
 				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
 
 				if (multiChunkForChunk == null) {

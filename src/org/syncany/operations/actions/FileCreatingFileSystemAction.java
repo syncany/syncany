@@ -28,12 +28,12 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
-import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
@@ -82,9 +82,9 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
 
 		if (fileContent != null) { // File can be empty!
-			Collection<ChunkEntryId> fileChunks = fileContent.getChunks();
+			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 			
-			for (ChunkEntryId chunkChecksum : fileChunks) {
+			for (ChunkChecksum chunkChecksum : fileChunks) {
 				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
 				
 				if (multiChunkForChunk == null) {

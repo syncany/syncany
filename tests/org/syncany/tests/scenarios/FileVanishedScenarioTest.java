@@ -17,7 +17,10 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 

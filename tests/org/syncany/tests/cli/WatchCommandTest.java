@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEqualsExcludeLockedAndNoRead;
 
 import java.io.File;
 import java.util.Map;
@@ -27,9 +29,6 @@ import org.syncany.cli.CommandLineClient;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
-
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEqualsExcludeLockedAndNoRead;
-import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 
 public class WatchCommandTest {	
 	@Test

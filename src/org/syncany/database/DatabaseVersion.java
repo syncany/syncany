@@ -22,7 +22,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.ByteArray;
 
 public class DatabaseVersion {
@@ -31,11 +33,11 @@ public class DatabaseVersion {
     // Full DB in RAM
     private Map<ByteArray, ChunkEntry> chunks;
     private Map<ByteArray, MultiChunkEntry> multiChunks;
-    private Map<ByteArray, FileContent> fileContents;
-    private Map<FileId, PartialFileHistory> fileHistories;
+    private Map<FileChecksum, FileContent> fileContents;
+    private Map<FileHistoryId, PartialFileHistory> fileHistories;
 
     // Quick access cache
-    private Map<ChunkEntryId, MultiChunkEntry> chunkMultiChunkCache;    
+    private Map<ChunkChecksum, MultiChunkEntry> chunkMultiChunkCache;    
 
     public DatabaseVersion() {
     	header = new DatabaseVersionHeader();
@@ -43,11 +45,11 @@ public class DatabaseVersion {
         // Full DB in RAM
         chunks = new HashMap<ByteArray, ChunkEntry>();
         multiChunks = new HashMap<ByteArray, MultiChunkEntry>();
-        fileContents = new HashMap<ByteArray, FileContent>();
-        fileHistories = new HashMap<FileId, PartialFileHistory>();          
+        fileContents = new HashMap<FileChecksum, FileContent>();
+        fileHistories = new HashMap<FileHistoryId, PartialFileHistory>();          
 
         // Quick access cache
-        chunkMultiChunkCache = new HashMap<ChunkEntryId, MultiChunkEntry>();
+        chunkMultiChunkCache = new HashMap<ChunkChecksum, MultiChunkEntry>();
     }
     
 	public DatabaseVersionHeader getHeader() {
@@ -98,7 +100,7 @@ public class DatabaseVersion {
         multiChunks.put(new ByteArray(multiChunk.getId()), multiChunk);
         
         // Populate cache
-        for (ChunkEntryId chunkChecksum : multiChunk.getChunks()) {
+        for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
         	chunkMultiChunkCache.put(chunkChecksum, multiChunk);
         }
     }
@@ -110,7 +112,7 @@ public class DatabaseVersion {
     /**
      * Get a multichunk that this chunk is contained in.
      */
-    public MultiChunkEntry getMultiChunk(ChunkEntryId chunk) {
+    public MultiChunkEntry getMultiChunk(ChunkChecksum chunk) {
     	return chunkMultiChunkCache.get(chunk);
     }
     
@@ -123,12 +125,12 @@ public class DatabaseVersion {
 	
 	// Content
 
-	public FileContent getFileContent(byte[] checksum) {
-		return fileContents.get(new ByteArray(checksum));
+	public FileContent getFileContent(FileChecksum checksum) {
+		return fileContents.get(checksum);
 	}
 
 	public void addFileContent(FileContent content) {
-		fileContents.put(new ByteArray(content.getChecksum()), content);
+		fileContents.put(content.getChecksum(), content);
 	}
 
 	public Collection<FileContent> getFileContents() {
@@ -141,7 +143,7 @@ public class DatabaseVersion {
         fileHistories.put(history.getFileId(), history);
     }
     
-    public PartialFileHistory getFileHistory(FileId fileId) {
+    public PartialFileHistory getFileHistory(FileHistoryId fileId) {
         return fileHistories.get(fileId);
     }
         

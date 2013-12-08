@@ -34,16 +34,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
-import org.syncany.database.FileId;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.tests.util.TestAssertUtil;
@@ -138,15 +139,15 @@ public class XmlDatabaseDAOTest {
         
         // Distribute chunks to multichunks
         MultiChunkEntry multiChunkA = new MultiChunkEntry(new byte[] {6,6,6,6,6,6,6,6,6});
-        multiChunkA.addChunk(new ChunkEntryId(chunkA1.getChecksum())); 
-        multiChunkA.addChunk(new ChunkEntryId(chunkA2.getChecksum())); 
-        multiChunkA.addChunk(new ChunkEntryId(chunkA3.getChecksum()));
+        multiChunkA.addChunk(new ChunkChecksum(chunkA1.getChecksum())); 
+        multiChunkA.addChunk(new ChunkChecksum(chunkA2.getChecksum())); 
+        multiChunkA.addChunk(new ChunkChecksum(chunkA3.getChecksum()));
         newDatabaseVersion.addMultiChunk(multiChunkA);
         
         MultiChunkEntry multiChunkB = new MultiChunkEntry(new byte[] {7,7,7,7,7,7,7,7,7});
-        multiChunkB.addChunk(new ChunkEntryId(chunkA4.getChecksum()));
-        multiChunkB.addChunk(new ChunkEntryId(chunkB1.getChecksum()));
-        multiChunkB.addChunk(new ChunkEntryId(chunkB2.getChecksum()));
+        multiChunkB.addChunk(new ChunkChecksum(chunkA4.getChecksum()));
+        multiChunkB.addChunk(new ChunkChecksum(chunkB1.getChecksum()));
+        multiChunkB.addChunk(new ChunkChecksum(chunkB2.getChecksum()));
         newDatabaseVersion.addMultiChunk(multiChunkB);        
         		
         // Add database version
@@ -199,17 +200,17 @@ public class XmlDatabaseDAOTest {
         
         // Distribute chunks to file contents    	
         FileContent contentA = new FileContent();        
-        contentA.addChunk(new ChunkEntryId(chunkA1.getChecksum()));
-        contentA.addChunk(new ChunkEntryId(chunkA2.getChecksum()));
-        contentA.addChunk(new ChunkEntryId(chunkA3.getChecksum()));
-        contentA.addChunk(new ChunkEntryId(chunkA4.getChecksum()));
-        contentA.setChecksum(new byte[]{5,5,5,4,4,5,5,5,5});              
+        contentA.addChunk(new ChunkChecksum(chunkA1.getChecksum()));
+        contentA.addChunk(new ChunkChecksum(chunkA2.getChecksum()));
+        contentA.addChunk(new ChunkChecksum(chunkA3.getChecksum()));
+        contentA.addChunk(new ChunkChecksum(chunkA4.getChecksum()));
+        contentA.setChecksum(new FileChecksum(new byte[]{5,5,5,4,4,5,5,5,5}));              
         newDatabaseVersion.addFileContent(contentA);
                 
         FileContent contentB = new FileContent();
-        contentB.addChunk(new ChunkEntryId(chunkB1.getChecksum()));
-        contentB.addChunk(new ChunkEntryId(chunkB2.getChecksum())); 
-        contentB.setChecksum(new byte[]{1,1,1,3,3,5,5,5,5});                      
+        contentB.addChunk(new ChunkChecksum(chunkB1.getChecksum()));
+        contentB.addChunk(new ChunkChecksum(chunkB2.getChecksum())); 
+        contentB.setChecksum(new FileChecksum(new byte[]{1,1,1,3,3,5,5,5,5}));                      
         newDatabaseVersion.addFileContent(contentB);
         		
         // Add database version
@@ -247,7 +248,7 @@ public class XmlDatabaseDAOTest {
 		// Create directories (no content!)
 
 		// File A
-		PartialFileHistory fileHistoryA = new PartialFileHistory(FileId.secureRandomFileId());
+		PartialFileHistory fileHistoryA = new PartialFileHistory(FileHistoryId.secureRandomFileId());
 		newDatabaseVersion.addFileHistory(fileHistoryA);
 		
         FileVersion versionA1 = new FileVersion();
@@ -269,7 +270,7 @@ public class XmlDatabaseDAOTest {
         fileHistoryA.addFileVersion(versionA2);
 		       
         // File B
-		PartialFileHistory fileHistoryB = new PartialFileHistory(FileId.secureRandomFileId());
+		PartialFileHistory fileHistoryB = new PartialFileHistory(FileHistoryId.secureRandomFileId());
 		newDatabaseVersion.addFileHistory(fileHistoryB);
 		
         FileVersion versionB1 = new FileVersion();

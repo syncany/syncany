@@ -24,9 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.util.ByteArray;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
  * The database represents the internal file and chunk index of the application. It
@@ -53,7 +54,7 @@ public class Database {
     private DatabaseVersion fullDatabaseVersionCache;
     private Map<String, PartialFileHistory> filenameHistoryCache;
     private Map<VectorClock, DatabaseVersion> databaseVersionIdCache;
-    private Map<ByteArray, List<PartialFileHistory>> contentChecksumFileHistoriesCache;
+    private Map<FileChecksum, List<PartialFileHistory>> contentChecksumFileHistoriesCache;
 
     public Database() {
     	databaseVersions = new ArrayList<DatabaseVersion>();    	
@@ -62,7 +63,7 @@ public class Database {
     	fullDatabaseVersionCache = new DatabaseVersion();    	
     	filenameHistoryCache = new HashMap<String, PartialFileHistory>();
     	databaseVersionIdCache = new HashMap<VectorClock, DatabaseVersion>();
-    	contentChecksumFileHistoriesCache = new HashMap<ByteArray, List<PartialFileHistory>>();
+    	contentChecksumFileHistoriesCache = new HashMap<FileChecksum, List<PartialFileHistory>>();
     }   	
 	
 	public DatabaseVersion getLastDatabaseVersion() {
@@ -89,7 +90,7 @@ public class Database {
 		return databaseVersionIdCache.get(vectorClock);
 	}	
 
-	public FileContent getContent(byte[] checksum) {
+	public FileContent getContent(FileChecksum checksum) {
 		return (checksum != null) ? fullDatabaseVersionCache.getFileContent(checksum) : null;
 	}
 	
@@ -104,7 +105,7 @@ public class Database {
 	/**
      * Get a multichunk that this chunk is contained in.
      */
-	public MultiChunkEntry getMultiChunkForChunk(ChunkEntryId chunk) {
+	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunk) {
 		return fullDatabaseVersionCache.getMultiChunk(chunk);
 	}	
 	
@@ -112,11 +113,11 @@ public class Database {
 		return filenameHistoryCache.get(relativeFilePath); 
 	}
 	
-	public List<PartialFileHistory> getFileHistories(byte[] fileContentChecksum) {
-		return contentChecksumFileHistoriesCache.get(new ByteArray(fileContentChecksum));
+	public List<PartialFileHistory> getFileHistories(FileChecksum fileContentChecksum) {
+		return contentChecksumFileHistoriesCache.get(fileContentChecksum);
 	}	
 	
-	public PartialFileHistory getFileHistory(FileId fileId) {
+	public PartialFileHistory getFileHistory(FileHistoryId fileId) {
 		return fullDatabaseVersionCache.getFileHistory(fileId); 
 	}	
 
@@ -157,11 +158,10 @@ public class Database {
 		contentChecksumFileHistoriesCache.clear();
 		
 		for (PartialFileHistory fullFileHistory : fullDatabaseVersionCache.getFileHistories()) {
-			byte[] lastVersionChecksum = fullFileHistory.getLastVersion().getChecksum();
+			FileChecksum lastVersionChecksum = fullFileHistory.getLastVersion().getChecksum();
 			
 			if (lastVersionChecksum != null) {
-				ByteArray lastVersionChecksumByteArray = new ByteArray(lastVersionChecksum);
-				List<PartialFileHistory> historiesWithVersionsWithSameChecksum = contentChecksumFileHistoriesCache.get(lastVersionChecksumByteArray);
+				List<PartialFileHistory> historiesWithVersionsWithSameChecksum = contentChecksumFileHistoriesCache.get(lastVersionChecksum);
 				
 				// Create if it does not exist
 				if (historiesWithVersionsWithSameChecksum == null) {
@@ -170,7 +170,7 @@ public class Database {
 				
 				// Add to cache
 				historiesWithVersionsWithSameChecksum.add(fullFileHistory);
-				contentChecksumFileHistoriesCache.put(lastVersionChecksumByteArray, historiesWithVersionsWithSameChecksum);
+				contentChecksumFileHistoriesCache.put(lastVersionChecksum, historiesWithVersionsWithSameChecksum);
 			}
 		}
 				

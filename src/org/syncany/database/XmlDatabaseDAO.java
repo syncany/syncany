@@ -38,9 +38,11 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.syncany.chunk.Transformer;
-import org.syncany.database.ChunkEntry.ChunkEntryId;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock.VectorClockComparison;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -180,8 +182,8 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			
 				xmlOut.writeStartElement("chunkRefs");
 				
-				Collection<ChunkEntryId> multiChunkChunks = multiChunk.getChunks();
-				for (ChunkEntryId chunkChecksum : multiChunkChunks) {
+				Collection<ChunkChecksum> multiChunkChunks = multiChunk.getChunks();
+				for (ChunkChecksum chunkChecksum : multiChunkChunks) {
 					xmlOut.writeEmptyElement("chunkRef");
 					xmlOut.writeAttribute("ref", chunkChecksum.toString());
 				}			
@@ -200,13 +202,13 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			
 			for (FileContent fileContent : fileContents) {
 				xmlOut.writeStartElement("fileContent");
-				xmlOut.writeAttribute("checksum", StringUtil.toHex(fileContent.getChecksum()));
+				xmlOut.writeAttribute("checksum", fileContent.getChecksum().toString());
 				xmlOut.writeAttribute("size", fileContent.getSize());
 				
 				xmlOut.writeStartElement("chunkRefs");
 				
-				Collection<ChunkEntryId> fileContentChunkChunks = fileContent.getChunks();
-				for (ChunkEntryId chunkChecksum : fileContentChunkChunks) {
+				Collection<ChunkChecksum> fileContentChunkChunks = fileContent.getChunks();
+				for (ChunkChecksum chunkChecksum : fileContentChunkChunks) {
 					xmlOut.writeEmptyElement("chunkRef");
 					xmlOut.writeAttribute("ref", chunkChecksum.toString());
 				}			
@@ -261,7 +263,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				}
 				
 				if (fileVersion.getChecksum() != null) {
-					xmlOut.writeAttribute("checksum", StringUtil.toHex(fileVersion.getChecksum()));
+					xmlOut.writeAttribute("checksum", fileVersion.getChecksum().toString());
 				}
 				
 				if (fileVersion.getDosAttributes() != null) {
@@ -481,17 +483,16 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent")) {
 					String checksumStr = attributes.getValue("checksum");
-					byte[] checksum = StringUtil.fromHex(checksumStr);
 					long size = Long.parseLong(attributes.getValue("size"));
 	
 					fileContent = new FileContent();
-					fileContent.setChecksum(checksum);
+					fileContent.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
 					fileContent.setSize(size);							
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent/chunkRefs/chunkRef")) {
 					String chunkChecksumStr = attributes.getValue("ref");
 	
-					fileContent.addChunk(ChunkEntryId.parseChunkEntryId(chunkChecksumStr));
+					fileContent.addChunk(ChunkChecksum.parseChunkEntryId(chunkChecksumStr));
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk")) {
 					String multChunkIdStr = attributes.getValue("id");
@@ -506,11 +507,11 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRefs/chunkRef")) {
 					String chunkChecksumStr = attributes.getValue("ref");
 	
-					multiChunk.addChunk(ChunkEntryId.parseChunkEntryId(chunkChecksumStr));
+					multiChunk.addChunk(ChunkChecksum.parseChunkEntryId(chunkChecksumStr));
 				}
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
 					String fileHistoryIdStr = attributes.getValue("id");
-					FileId fileId = FileId.parseFileId(fileHistoryIdStr);
+					FileHistoryId fileId = FileHistoryId.parseFileId(fileHistoryIdStr);
 					fileHistory = new PartialFileHistory(fileId);
 				}	
 				else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
@@ -549,7 +550,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					}
 					
 					if (checksumStr != null) {
-						fileVersion.setChecksum(StringUtil.fromHex(checksumStr));							
+						fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));							
 					}
 					
 					if (linkTarget != null) {

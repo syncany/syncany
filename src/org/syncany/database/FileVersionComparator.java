@@ -27,17 +27,16 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 /**
  * The file version comparator is a helper class to compare {@link FileVersion}s with each 
@@ -123,7 +122,7 @@ public class FileVersionComparator {
 	 * @param actualFileForceChecksum Force a checksum comparison if necessary (if size does not differ)
 	 * @return Returns a file version comparison object, indicating if there are differences between the file versions
 	 */
-	public FileVersionComparison compare(FileVersion expectedLocalFileVersion, File actualLocalFile, byte[] actualFileKnownChecksum,
+	public FileVersionComparison compare(FileVersion expectedLocalFileVersion, File actualLocalFile, FileChecksum actualFileKnownChecksum,
 			boolean actualFileForceChecksum) {
 
 		FileProperties expectedLocalFileVersionProperties = captureFileProperties(expectedLocalFileVersion);
@@ -191,16 +190,16 @@ public class FileVersionComparator {
 	}
 
 	private void compareChecksum(FileVersionComparison fileComparison) {
-		boolean isChecksumEqual = Arrays.equals(fileComparison.expectedFileProperties.getChecksum(),
+		boolean isChecksumEqual = FileChecksum.fileChecksumEquals(fileComparison.expectedFileProperties.getChecksum(),
 				fileComparison.actualFileProperties.getChecksum());
 
 		if (!isChecksumEqual) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_CHECKSUM);
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
-					+ ": Local file DIFFERS from file version, expected CHECKSUM = {0}, but actual CHECKSUM = {1}, for file {2}", new Object[] {
-					StringUtil.toHex(fileComparison.expectedFileProperties.checksum), StringUtil.toHex(fileComparison.actualFileProperties.checksum),
-					fileComparison.actualFileProperties.getRelativePath() });
+					+ ": Local file DIFFERS from file version, expected CHECKSUM = {0}, but actual CHECKSUM = {1}, for file {2}",
+					new Object[] { fileComparison.expectedFileProperties.checksum, fileComparison.actualFileProperties.checksum,
+							fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
 
@@ -349,7 +348,7 @@ public class FileVersionComparator {
 		return false;
 	}
 
-	public FileProperties captureFileProperties(File file, byte[] knownChecksum, boolean forceChecksum) {
+	public FileProperties captureFileProperties(File file, FileChecksum knownChecksum, boolean forceChecksum) {
 		Path filePath = Paths.get(file.getAbsolutePath());
 
 		FileProperties fileProperties = new FileProperties();
@@ -405,7 +404,7 @@ public class FileVersionComparator {
 				if (fileProperties.type == FileType.FILE && forceChecksum) {
 					try {
 						if (fileProperties.size > 0) {
-							fileProperties.checksum = FileUtil.createChecksum(file, checksumAlgorithm);
+							fileProperties.checksum = new FileChecksum(FileUtil.createChecksum(file, checksumAlgorithm));
 						}
 						else {
 							fileProperties.checksum = null;
@@ -490,7 +489,7 @@ public class FileVersionComparator {
 		private long size = -1;
 		private String relativePath;
 		private String linkTarget;
-		private byte[] checksum = null;
+		private FileChecksum checksum = null;
 		private boolean locked = true;
 		private boolean exists = false;
 
@@ -517,7 +516,7 @@ public class FileVersionComparator {
 			return linkTarget;
 		}
 
-		public byte[] getChecksum() {
+		public FileChecksum getChecksum() {
 			return checksum;
 		}
 
