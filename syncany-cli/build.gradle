@@ -9,7 +9,7 @@ dependencies {
 	compile			project(':syncany-lib')
 	compile			project(':syncany-plugin-ftp')
 	compile			project(':syncany-plugin-rest')    
-   	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
+	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
    	
 	testCompile		project(path: ':syncany-lib', configuration: 'tests')
 	testCompile		"junit:junit:4.3"   	      
