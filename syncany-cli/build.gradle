@@ -58,8 +58,8 @@ task fakeuninstall << {
 	if (osName.startsWith('windows')){
 		new File(System.getenv()['windir'] + "/syncany.bat").delete()
 	}
-	else{
-   		new File("/usr/local/bin/syncany").delete()
+	else {
+		new File("/usr/local/bin/syncany").delete()
 		new File("/usr/local/bin/sy").delete()
 	}
 }
