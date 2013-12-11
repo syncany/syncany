@@ -1,18 +1,26 @@
 Syncany
 =======
-> **Please note:** We have not had any release yet, so the code is still alpha-code!
+> **Important:** Please be aware that this is still ALPHA code! Do not use it
+                 for important files.
 
-Syncany is an open-source cloud storage and filesharing application. It allows users to backup and share certain folders of their workstations using any kind of storage, e.g. FTP, Amazon S3 or Google Storage.
+Syncany is an open-source cloud storage and filesharing application. It allows
+users to backup and share certain folders of their workstations using any kind
+of storage, e.g. FTP, Amazon S3 or Google Storage.
 
-While the basic idea is similar to Dropbox and JungleDisk, Syncany is open-source and additionally provides data encryption and more flexibility in terms of storage type and provider:
+While the basic idea is similar to Dropbox and JungleDisk, Syncany is
+open-source and additionally provides data encryption and more flexibility in
+terms of storage type and provider:
 
-- Data encryption: Syncany encrypts the files locally, so that any online storage can be used even for sensitive data.
-- Arbitrary storage: Syncany uses a plug-in based storage system. It can be used with any type of remote storage.
+- **Data encryption**: Syncany encrypts the files locally, so that any online
+  storage can be used even for sensitive data.  
+- **Any storage**: Syncany uses a plug-in based storage system. It can
+  be used with any type of remote storage.
+
 
 **Directly jump to ...**
 
 - [Documentation, diagrams and screencasts](#documentation-diagrams-and-screencasts)
-- [Build and installation](#build-and-installation)
+- [Build and test Syncany](#build-and-test-syncany)
 - [Sample usage](#sample-usage)
 - [Setup Eclipse IDE for development](#setup-eclipse-ide-for-development)
 - [How can I help?](#how-can-i-help)
@@ -49,35 +57,51 @@ We have a quite exhaustive JavaDoc (or at least we're trying to build it up). If
 - Cryptography / Encryption: [MultiCipherOutputStream.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/MultiCipherOutputStream.java), [CipherSpec.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSpec.java), [CipherSession.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSession.java)
 
 
-Build and installation
+Build and test Syncany
 ----------------------
 
-**Requirements**: Syncany is based on Java 7, so you need that installed. We use Ivy for dependency management, and Ant as a build tool. If you have those things, it should be pretty easy.
+**Requirements**: Syncany is based on Java 7, so you need that installed. We use
+Gradle for dependency management and as build tool. Gradle does all the
+dependency magic. It should work out of the box.
 
-**1. Install requirements, checkout code and build**
+**1. Checkout code and build**
 
-        apt-get install git ivy ant
         git clone http://github.com/binwiederhier/syncany
-        cd syncany
-        ant
+        cd syncany        
+        ./gradlew installApp         (on Linux / Mac OS)
+        gradlew installApp            (on Windows)
 
-**2. Install on your system, as 'root' (Linux) or 'Administrator' (Windows)**
+This compiles and installs the Syncany command line client to 
+`syncany-cli/build/install/syncany-cli`. You can run it from there.
 
-        ant install
+**2. Install command line client (to run `syncany` from anywhere)**
+
+To be able to run `syncany` (or short: `sy`) from anywhere, you can install a 
+symbolic link on your system. On Linux, the link is placed in `/usr/local/bin`,
+on Windows, a batch file is placed in `C:\Windows`. To do this, run the
+following commands:
+
+*On Linux / Mac OS:*
+
+        sudo ./gradlew fakeinstall   (on Linux / Mac OS)
         
-If you do not want to permanently install Syncany on your system, but just try it out, you can use `ant fakeinstall` to only link to the current folder. 
+*On Windows:*
+  - Click *Start*, type `cmd`, and then press CTRL+SHIFT+ENTER. If a warning appear, click *Yes*.
+  - In the command box, `cd` to your checkout directory and run `gradlew fakeinstall`
+        
+Please note: There is no easy way to permanently install Syncany on your system, 
+yet. We're working on an installer for Windows, and packages for Linux.
         
 **3. Run it!**
 
-        syncany --help
-        
-On Windows, it is necessary to open a new terminal window to be able to call the `syncany` command. Linux additionally allows you to use `sy` instead of `syncany` as an abbreviation.
+        syncany --help        
  
 
 Sample usage
 ------------
 
-Usage is pretty similar to a version control system. If you have used Git or SVN, it should feel a lot alike.
+Usage is pretty similar to a version control system. If you have used Git or
+SVN, it should feel a lot alike.
 
 **1. Initialize a local directory**
 
@@ -98,7 +122,9 @@ Usage is pretty similar to a version control system. If you have used Git or SVN
         Password: (secret password)
         Confirm: (repeat it)
         
-This sets up a new repository on the given remote storage and initializes the local folder. You can now use `syncany connect` to connect to this repository from other clients.
+This sets up a new repository on the given remote storage and initializes the
+local folder. You can now use `syncany connect` to connect to this repository
+from other clients.
 
 **2. Add files and synchronize**
 
@@ -117,40 +143,33 @@ For a detailed demo, please refer to a [screencast](#documentation-diagrams-and-
 Setup Eclipse IDE for development
 ---------------------------------
 
-1. Be sure to install Git, Ivy and Ant on your system. On Debian-based systems, for instance:
-
-        apt-get install git ivy ant
-
-2. Open Eclipse and create a new workplace, e.g. at "/home/user/workplace"
-
-3. Checkout Syncany on the command line: 
+1. Checkout Syncany on the command line: 
 
         cd /home/user/workplace
         git clone http://github.com/binwiederhier/syncany
-        mv syncany SyncanyCore                        <<< Important!
+        cd syncany
+        
+2. Generate Eclipse project files and download dependencies:
+
+        ./gradlew eclipse      (on Linux / Mac OS)
+        gradlew eclipse        (on Windows)   
+
+3. Open Eclipse and create a new workplace, e.g. at "/home/user/workplace"
    
-4. In Eclipse, go to Help -> Install New Software -> Add ...
-   Location: http://www.apache.org/dist/ant/ivyde/updatesite
+4. In Eclipse, go to File -> Import ... -> Existing Projects Into Workplace
+   -> Select Root Directory --> Browse ...
    
-5. Install plugin "Apache Ivy library" and "Apache IvyDE" 
+   - Select "/home/user/workplace/syncany"
+   - [x] Mark the *Search nested projects* checkbox 
 
-6. In Eclipse, go to File -> Import ... -> Existing Projects Into Workplace
-   -> Select Root Directory -> Select "/home/user/workplace/SyncanyCore"
-
-7. Add ivy.xml to Ivy Library:
-   Right-click on ivy.xml -> Add Ivy Library...
-
-8. Add ivysettings.xml to Ivy settings path:
-   Windows -> Preferences -> Ivy -> Settings ... Chose "Workspace..." 
-   below "Ivy settings path:" and add the ivysettings.xml within the workspace
-
-9. Run the build.xml as Ant Build
 
 
 How can I help?
 ---------------
 Check out the <a href="TODO.md">TODO list</a> for starting points. If you have questions,
 don't hesitate to ask!
+
+We're **actively** discussing stuff on the [Syncany mailing list](https://launchpad.net/~syncany-team), 
 
  
 Licensing, website and contact

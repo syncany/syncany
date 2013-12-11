@@ -1,0 +1,4 @@
+include 'syncany-lib'
+include 'syncany-cli'
+include 'syncany-plugin-ftp'
+include 'syncany-plugin-rest'

@@ -1,9 +1,8 @@
-libs
-syncanyData
 bin
-lib
 build
-SyncanyCore.jar
 sandbox/results
-.bzr
-.bzrignore
+.gradle
+.settings
+.classpath
+.project
+.metadata

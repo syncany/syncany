@@ -1,0 +1,4 @@
+dependencies {
+    compile			project(':syncany-lib')
+	compile			"commons-net:commons-net:2.2"          
+}

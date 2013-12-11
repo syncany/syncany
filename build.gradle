@@ -1,0 +1,114 @@
+apply plugin: 'eclipse'
+
+project.ext {
+	applicationVersion = new Version(major: 1, minor: 1, revision: 1)
+}
+
+// Helper class for Version definition /////////////////////////////////////////
+
+class Version {
+	int major, minor, revision
+ 
+	String toString() {
+		"$major.$minor.$revision"
+	}
+}
+
+// Sub-Project Settings and Hooks //////////////////////////////////////////////
+
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+	
+	group = 'org.syncany'
+	
+	jar.baseName = "${project.name}"
+	jar.version  = "$applicationVersion"
+	
+	sourceCompatibility = 1.7
+	targetCompatibility = 1.7
+	
+	repositories {
+		mavenCentral()
+	}
+	
+	sourceSets {
+		main {
+			java      { srcDir 'src/main/java'}
+			resources { srcDir 'src/main/resources'}
+		}
+		
+		test {
+			java      { srcDir 'src/test/java'}
+			resources { srcDir 'src/test/resources'}
+		}
+	}
+	
+	test {
+		ignoreFailures = true
+	}
+	
+	
+	// Test JARs ///////////////////////////////////////////////////////////////
+	
+	task testJar(type: Jar, dependsOn: testClasses) {
+		baseName = "test-${project.archivesBaseName}"
+		from sourceSets.test.output
+	}
+
+	configurations {
+		tests
+	}
+
+	artifacts {
+		tests testJar
+	}	
+	
+
+	// Eclipse Settings and Hooks //////////////////////////////////////////////
+	
+	eclipse {
+		classpath {
+			downloadSources = true
+		}
+		
+		jdt {
+			sourceCompatibility = 1.7
+			targetCompatibility = 1.7			
+		}		
+	}
+	
+	task eclipseSettings(type: Copy) {
+		from rootProject.files(
+			"gradle/eclipse/org.eclipse.jdt.ui.prefs",			
+			"gradle/eclipse/org.eclipse.jdt.core.prefs"
+		)
+		
+		into project.file('.settings/')
+		
+		outputs.upToDateWhen { 
+			false 
+		}
+	}
+	
+	task cleanEclipseJdtUi(type: Delete) {
+		delete project.file(".settings/")
+	}	
+	
+	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)
+	tasks["eclipse"].dependsOn(eclipseSettings)
+}
+
+
+// Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '1.9'
+	jarFile = 'gradle/wrapper/wrapper.jar'
+}
+
+// Task to clean build folder on project root///////////////////////////////////	
+
+task clean(type: Delete){
+		delete 'build'
+}

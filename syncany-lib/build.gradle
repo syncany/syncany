@@ -1,0 +1,11 @@
+dependencies {
+	compile			"commons-io:commons-io:2.4"	
+	compile			"org.bouncycastle:bcprov-ext-jdk15on:1.49"            
+	compile			"org.simpleframework:simple-xml:2.7.1"
+	compile			"com.google.guava:guava:15.0"
+	compile			"commons-codec:commons-codec:1.8"            
+	compile			"org.reflections:reflections:0.9.8"
+	compile			"org.slf4j:slf4j-api:1.6.0" // for reflections
+            
+	testCompile     "junit:junit:4.3"
+}
