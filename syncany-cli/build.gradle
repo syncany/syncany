@@ -7,13 +7,14 @@ String osName = System.getProperty("os.name").toLowerCase();
 
 dependencies {
 	compile			project(':syncany-lib')
-    compile			project(':syncany-plugin-ftp')
-    compile			project(':syncany-plugin-rest')    
+	compile			project(':syncany-plugin-ftp')
+	compile			project(':syncany-plugin-rest')    
    	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
    	
 	testCompile		project(path: ':syncany-lib', configuration: 'tests')
-	testCompile     "junit:junit:4.3"   	      
+	testCompile		"junit:junit:4.3"   	      
 }
+
 
 // Application Plugin Settings and Hooks ///////////////////////////////////////	
 
@@ -33,7 +34,9 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 	include "README.md", "LICENSE.md"
 }
 
+
 // CLI-specific Tasks //////////////////////////////////////////////////////////
+
 task fakeinstall(dependsOn: ['fakeuninstall']) << {
 	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
 	// running fakeinstall as 'root'; manually calling installApp required
@@ -46,9 +49,9 @@ task fakeinstall(dependsOn: ['fakeuninstall']) << {
 		}
 	}
 	else{
-    	ant.symlink(resource: "${buildDir}/install/syncany-cli/bin/syncany-cli", link: "/usr/local/bin/syncany")
-    	ant.symlink(resource: "${buildDir}/install/syncany-cli/bin/syncany-cli", link: "/usr/local/bin/sy")
-    }
+    		ant.symlink(resource: "${buildDir}/install/syncany-cli/bin/syncany-cli", link: "/usr/local/bin/syncany")
+    		ant.symlink(resource: "${buildDir}/install/syncany-cli/bin/syncany-cli", link: "/usr/local/bin/sy")
+	}
 }
 
 task fakeuninstall << {
@@ -57,8 +60,8 @@ task fakeuninstall << {
 	}
 	else{
    		new File("/usr/local/bin/syncany").delete()
-    	new File("/usr/local/bin/sy").delete()
-    }
+		new File("/usr/local/bin/sy").delete()
+	}
 }
 
 task(runCli, dependsOn: 'classes', type: JavaExec) {
