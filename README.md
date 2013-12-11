@@ -19,42 +19,12 @@ terms of storage type and provider:
 
 **Directly jump to ...**
 
-- [Documentation, diagrams and screencasts](#documentation-diagrams-and-screencasts)
 - [Build and test Syncany](#build-and-test-syncany)
 - [Sample usage](#sample-usage)
+- [Documentation, diagrams and screencasts](#documentation-diagrams-and-screencasts)
 - [Setup Eclipse IDE for development](#setup-eclipse-ide-for-development)
 - [How can I help?](#how-can-i-help)
 - [Licensing, website and contact](#licensing-website-and-contact)
-
-
-Documentation, diagrams and screencasts
----------------------------------------
-
-There is quite a bit of reading material on Syncany already. Check out the following links:
-
-**Posts and papers**
-- [Blog post: Syncany explained: idea, progress, development and future (part 1)](http://blog.philippheckel.com/2013/10/18/syncany-explained-idea-progress-development-future/) (Oct 2013)
-- [Master's thesis: Minimizing remote storage usage and synchronization time using deduplication and multichunking: Syncany as an example](http://blog.philippheckel.com/2013/05/20/minimizing-remote-storage-usage-and-synchronization-time-using-deduplication-and-multichunking-syncany-as-an-example/) (2011)
-
-**Screencasts**
-- [Screencast: Developer How-to - Checkout code, compile and run two clients on Linux, using FTP plugin](http://www.youtube.com/watch?v=xE8nGL8U4Gg) (14 minutes)
-- [Screencast: Conflict handling on Linux, using local plugin](http://www.youtube.com/watch?v=tvsZcuhVH8c) (2 minutes)
-- [Screencast: Setup Amazon S3 for two users, and sync two clients with Syncany](http://www.youtube.com/watch?v=skKzqID_Zrc) (9 minutes)
-
-**Diagrams**
-- [Diagram: Syncany application flow example](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Application%20Flow%202.png)
-- [Diagram: Chunking framework class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Chunking%20Framework.png)
-- [Diagram: Storage plugins class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Connection%20Plugins.png)
-- [Diagram: Database class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Database.png)
-
-**JavaDoc**
-
-We have a quite exhaustive JavaDoc (or at least we're trying to build it up). If you're a developer, be sure to check that out. A few starting points:
-
-- Command line interface: [Syncany.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/Syncany.java), [Command.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/cli/Command.java)
-- Chunking framework: [Deduper.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/Deduper.java), [Chunker.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/Chunker.java), [MultiChunker.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/MultiChunker.java)
-- Storage plugins: [Plugins.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/connection/plugins/Plugins.java), [Connection.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/connection/plugins/Connection.java)
-- Cryptography / Encryption: [MultiCipherOutputStream.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/MultiCipherOutputStream.java), [CipherSpec.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSpec.java), [CipherSession.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSession.java)
 
 
 Build and test Syncany
@@ -69,7 +39,7 @@ dependency magic. It should work out of the box.
         git clone http://github.com/binwiederhier/syncany
         cd syncany        
         ./gradlew installApp         (on Linux / Mac OS)
-        gradlew installApp            (on Windows)
+        gradlew installApp           (on Windows)
 
 This compiles and installs the Syncany command line client to 
 `syncany-cli/build/install/syncany-cli`. You can run it from there.
@@ -140,6 +110,36 @@ You can also manually trigger the upload of your local files or the download of 
 For a detailed demo, please refer to a [screencast](#documentation-diagrams-and-screencasts). 
 
 
+Documentation, diagrams and screencasts
+---------------------------------------
+
+There is quite a bit of reading material on Syncany already. Check out the following links:
+
+**Posts and papers**
+- [Blog post: Syncany explained: idea, progress, development and future (part 1)](http://blog.philippheckel.com/2013/10/18/syncany-explained-idea-progress-development-future/) (Oct 2013)
+- [Master's thesis: Minimizing remote storage usage and synchronization time using deduplication and multichunking: Syncany as an example](http://blog.philippheckel.com/2013/05/20/minimizing-remote-storage-usage-and-synchronization-time-using-deduplication-and-multichunking-syncany-as-an-example/) (2011)
+
+**Screencasts**
+- [Screencast: Developer How-to - Checkout code, compile and run two clients on Linux, using FTP plugin](http://www.youtube.com/watch?v=xE8nGL8U4Gg) (14 minutes)
+- [Screencast: Conflict handling on Linux, using local plugin](http://www.youtube.com/watch?v=tvsZcuhVH8c) (2 minutes)
+- [Screencast: Setup Amazon S3 for two users, and sync two clients with Syncany](http://www.youtube.com/watch?v=skKzqID_Zrc) (9 minutes)
+
+**Diagrams**
+- [Diagram: Syncany application flow example](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Application%20Flow%202.png)
+- [Diagram: Chunking framework class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Chunking%20Framework.png)
+- [Diagram: Storage plugins class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Connection%20Plugins.png)
+- [Diagram: Database class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Database.png)
+
+**JavaDoc**
+
+We have a quite exhaustive JavaDoc (or at least we're trying to build it up). If you're a developer, be sure to check that out. A few starting points:
+
+- Command line interface: [Syncany.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/Syncany.java), [Command.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/cli/Command.java)
+- Chunking framework: [Deduper.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/Deduper.java), [Chunker.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/Chunker.java), [MultiChunker.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/MultiChunker.java)
+- Storage plugins: [Plugins.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/connection/plugins/Plugins.java), [Connection.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/connection/plugins/Connection.java)
+- Cryptography / Encryption: [MultiCipherOutputStream.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/MultiCipherOutputStream.java), [CipherSpec.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSpec.java), [CipherSession.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSession.java)
+
+
 Setup Eclipse IDE for development
 ---------------------------------
 
@@ -156,12 +156,14 @@ Setup Eclipse IDE for development
 
 3. Open Eclipse and create a new workplace, e.g. at "/home/user/workplace"
    
-4. In Eclipse, go to File -> Import ... -> Existing Projects Into Workplace
-   -> Select Root Directory --> Browse ...
+4. In Eclipse: File -> Import -> Existing Projects Into Workplace
+   -> Select Root Directory --> Browse 
    
    - Select "/home/user/workplace/syncany"
-   - [x] Mark the *Search nested projects* checkbox 
+   - [x] Tick the *Search nested projects* checkbox 
+   - [ ] Untick the *syncany* main project from the list view
 
+5. Click "Finish"
 
 
 How can I help?
