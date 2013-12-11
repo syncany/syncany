@@ -16,18 +16,6 @@ core. If you have questions, feel free to ask.
   a few platform specific commands in there. We still need people trying out the Mac OS 
   support, and (if it does not work) make it work.
 
-* **Modulization:** Currently Syncany is just one [Ivy][1] module and includes the plugins
-   and the command line client. To allow easier plugin-development and module separation, the
-   project should be split in the following modules: 
-     
-    * *syncany-lib*: Main library -- operations, chunking, crypto stuff, database, etc.
-    * *syncany-cli*: Command line interface classes (cli-package)
-    * *syncany-plugin-xy*: Each plugin in a separate module, with separate dependencies
-     
-   I already tried doing that with [Ivy on Launchpad][2], based on the 
-   [Ivy multi-module demo][3]. I am not convinced that Ivy is the right way to go. You can
-   also try using [Maven][4].
-
 * **Packaging**: Possibly connected to the modulization, Syncany should be releasable -- 
   meaning that there's an EXE file for Windows, a DEB-/RPM-package for Linux, etc. Starting 
   point could be the [installers made by StackSync][5] or [by iqbox][6].
@@ -47,10 +35,6 @@ core. If you have questions, feel free to ask.
   daemon. The [liferay-nativity][9] is a good starting point. It offers file manager 
   integration on all platforms.
 
-  [1]: http://ant.apache.org/ivy/
-  [2]: http://bazaar.launchpad.net/~syncany-team/syncany/core3/files
-  [3]: http://ant.apache.org/ivy/history/latest-milestone/tutorial/multiproject.html
-  [4]: http://maven.apache.org/
   [5]: https://github.com/stacksync/desktop/tree/master/installers
   [6]: https://code.google.com/p/iqbox-ftp/source/browse/#git/Installer-Linux%253Fstate%253Dclosed
   [7]: http://bazaar.launchpad.net/~syncany-team/syncany/trunk/files/head:/syncany/src/org/syncany/gui/
