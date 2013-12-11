@@ -157,11 +157,11 @@ Setup Eclipse IDE for development
 3. Open Eclipse and create a new workplace, e.g. at "/home/user/workplace"
    
 4. In Eclipse: File -> Import -> Existing Projects Into Workplace
-   -> Select Root Directory --> Browse 
+   -> Select Root Directory --> Browse
    
    - Select "/home/user/workplace/syncany"
-   - [x] Tick the *Search nested projects* checkbox 
-   - [ ] Untick the *syncany* main project from the list view
+   - [x] Tick the *Search nested projects* checkbox (only available in *Eclipse Kepler*)
+   - [_] Untick the *syncany* main project from the list view
 
 5. Click "Finish"
 
@@ -169,9 +169,9 @@ Setup Eclipse IDE for development
 How can I help?
 ---------------
 Check out the <a href="TODO.md">TODO list</a> for starting points. If you have questions,
-don't hesitate to ask!
-
+don't hesitate to ask!  
 We're **actively** discussing stuff on the [Syncany mailing list](https://launchpad.net/~syncany-team), 
+feel free to join!
 
  
 Licensing, website and contact
