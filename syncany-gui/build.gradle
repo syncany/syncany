@@ -1,0 +1,21 @@
+apply plugin: 'application'
+
+mainClassName = "org.syncany.gui.MainGUI"
+
+dependencies {
+    compile			project(':syncany-plugin-ftp')
+    compile			project(':syncany-plugin-rest')  
+	
+	compile			"com.miglayout:miglayout-swing:4.2"
+	compile			"org.swinglabs:swingx:1.6.1"
+	compile			"com.google.code.gson:gson:2.2.4"
+	compile			"org.java-websocket:Java-WebSocket:1.3.0"
+    
+    runtime			"com.jgoodies:looks:2.2.2"
+}
+
+
+task(runGui, dependsOn: 'classes', type: JavaExec) {
+	main = 'org.syncany.gui.MainGUI'
+	classpath = sourceSets.main.runtimeClasspath
+}	
