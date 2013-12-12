@@ -17,10 +17,16 @@
  */
 package org.syncany.database;
 
-
 /**
- *
- * @author pheckel
+ * The chunk entry represents a single chunk reference in the database model
+ * and is identified by the chunk's checksum. Due to the fact that the chunk 
+ * entry is a reference, it does not contain the chunk's actual data.
+ *  
+ * <p>A chunk can appear in a {@link MultiChunkEntry} and in a {@link FileContent}.
+ * 
+ * @see MultiChunkEntry
+ * @see FileContent 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChunkEntry {
 	private ChunkChecksum checksum;

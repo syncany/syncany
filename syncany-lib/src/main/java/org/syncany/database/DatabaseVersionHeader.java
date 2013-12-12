@@ -19,11 +19,19 @@ package org.syncany.database;
 
 import java.util.Date;
 
+/**
+ * The database version header identifies a {@link DatabaseVersion} using 
+ * a {@link VectorClock}, a local timestamp and the client's machine name.
+ * 
+ * <p>The database version header plays a significant role in the 
+ * reconciliation process, in particular when trying to find a winning 
+ * branch. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class DatabaseVersionHeader {
-
-    // DB Version and versions of other users (= DB basis)
     private Date date;
-    private VectorClock vectorClock; // vector clock, machine name to database version map
+    private VectorClock vectorClock;
     private String client;
     
     public DatabaseVersionHeader() {
@@ -104,6 +112,5 @@ public class DatabaseVersionHeader {
 		sb.append(date.getTime());
 		
 		return sb.toString();
-	}
-  
+	}  
 }

@@ -23,10 +23,13 @@ import java.util.Arrays;
 import org.syncany.util.StringUtil;
 
 /**
- * @author fabrice rossi
- *
+ * The object ID is a generic identifier used by the database entities.
+ * As of now, it uses a byte array internally, but could also use different
+ * more memory-preserving methods (such as two longs).  
+ * 
+ * @author Fabrice Rossi <fabrice.rossi@apiacoa.org>
  */
-public class ObjectId {
+public abstract class ObjectId {
 	private static SecureRandom secureRng = new SecureRandom();
 	protected byte[] array;
 	
@@ -83,5 +86,4 @@ public class ObjectId {
 		}
 		return true;
 	}
-
 }
