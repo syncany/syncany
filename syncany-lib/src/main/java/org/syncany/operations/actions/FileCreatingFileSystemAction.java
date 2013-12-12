@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -41,41 +42,41 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		super(config, localDatabase, winningDatabase, file1, file2);
 	}
 
-	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {		
+	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
 		if (reconstructedFileVersion.getType() == FileType.FILE) {
-			createFile(reconstructedFileVersion);			
+			createFile(reconstructedFileVersion);
 		}
 		else if (reconstructedFileVersion.getType() == FileType.FOLDER) {
-			createFolder(reconstructedFileVersion);			
-		}	
+			createFolder(reconstructedFileVersion);
+		}
 		else if (reconstructedFileVersion.getType() == FileType.SYMLINK) {
 			createSymlink(reconstructedFileVersion);
-		}		
+		}
 		else {
-			logger.log(Level.INFO, "     - Unknown file type: "+reconstructedFileVersion.getType());
-			throw new Exception("Unknown file type: "+reconstructedFileVersion.getType());
+			logger.log(Level.INFO, "     - Unknown file type: " + reconstructedFileVersion.getType());
+			throw new Exception("Unknown file type: " + reconstructedFileVersion.getType());
 		}
 	}
-	
+
 	protected void createFolder(FileVersion reconstructedFileVersion) throws IOException {
 		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
-		logger.log(Level.INFO, "     - Creating folder at "+reconstructedFilesAtFinalLocation+" ...");
-		
-		reconstructedFilesAtFinalLocation.mkdirs();		
-		setFileAttributes(reconstructedFileVersion);		
+		logger.log(Level.INFO, "     - Creating folder at " + reconstructedFilesAtFinalLocation + " ...");
+
+		reconstructedFilesAtFinalLocation.mkdirs();
+		setFileAttributes(reconstructedFileVersion);
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
 		File reconstructedFileAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
-		File reconstructedFileInCache = config.getCache().createTempFile("file-"+reconstructedFileVersion.getName()+"-"+reconstructedFileVersion.getVersion());
-		logger.log(Level.INFO, "     - Creating file "+reconstructedFileVersion.getPath()+" to "+reconstructedFileInCache+" ...");				
+		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
+		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");
 
-		FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum()); 
-		
+		FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum());
+
 		if (fileContent == null) {
 			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
 		}
-		
+
 		// Create file
 		// TODO [low] Create an assembler/reconstructor class to package re-assembly in the chunk-package
 		MultiChunker multiChunker = config.getMultiChunker();
@@ -83,40 +84,76 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 
 		if (fileContent != null) { // File can be empty!
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
-			
+
 			for (ChunkChecksum chunkChecksum : fileChunks) {
 				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
-				
+
 				if (multiChunkForChunk == null) {
 					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
 				}
-				
+
 				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId().getRaw());
 
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
-				
+
 				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
 			}
 		}
-		
-		reconstructedFileOutputStream.close();		
-							
+
+		reconstructedFileOutputStream.close();
+
 		// Make directory if it does not exist
 		File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
-		
+
 		if (!FileUtil.exists(reconstructedFileParentDir)) {
-			logger.log(Level.INFO, "     - Parent folder does not exist, creating "+reconstructedFileParentDir+" ...");
+			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + reconstructedFileParentDir + " ...");
 			reconstructedFileParentDir.mkdirs();
 		}
-		
+
 		// Okay. Now move to real place
-		logger.log(Level.INFO, "     - Okay, now moving to "+reconstructedFileAtFinalLocation+" ...");
-		
-		FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
-		
+		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
+
+		if (isLegalFilename(reconstructedFileAtFinalLocation)) {
+			FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
+		}
+		else {
+			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
+		}
+
 		// Set attributes & timestamp
-		setFileAttributes(reconstructedFileVersion);			
-		setLastModified(reconstructedFileVersion);		
+		setFileAttributes(reconstructedFileVersion, reconstructedFileAtFinalLocation);
+		setLastModified(reconstructedFileVersion);
+	}
+
+	private boolean isLegalFilename(File file) throws IOException {
+		try {
+			file.createNewFile();
+			file.delete();
+
+			return true;
+		}
+		catch (IOException e) {
+			return false;
+		}
+	}
+
+	private File cleanFilename(File conflictFile) {
+		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
+		String conflictBasename = FileUtil.getBasename(conflictFile);
+		String conflictFileExtension = FileUtil.getExtension(conflictBasename, false);
+
+		boolean conflictFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
+
+		String newFullName;
+
+		if (conflictFileHasExtension) {
+			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);
+		}
+		else {
+			newFullName = String.format("%s (filename conflict)", conflictBasename);
+		}
+
+		return new File(conflictDirectory+File.separator+newFullName);
 	}
 }

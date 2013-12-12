@@ -45,157 +45,156 @@ import java.util.List;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileUtil {
-    public static String getRelativePath(File base, File file) {
-    	Path baseFilePath = Paths.get(base.getAbsolutePath());
-    	Path filePath = Paths.get(file.getAbsolutePath());
-    	
-    	Path relativeFilePath = baseFilePath.relativize(filePath);
-    	
-    	return relativeFilePath.toString().replaceAll("\\\\", "/");       
-    }
+	public static String getRelativePath(File base, File file) {
+		Path baseFilePath = Paths.get(base.getAbsolutePath());
+		Path filePath = Paths.get(file.getAbsolutePath());
 
-    public static String getAbsoluteParentDirectory(File file) {
-        return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
-    }
+		Path relativeFilePath = baseFilePath.relativize(filePath);
 
-    public static String getAbsoluteParentDirectory(String absFilePath) {
-        return absFilePath.substring(0, absFilePath.lastIndexOf(File.separator));
-    }
+		return relativeFilePath.toString().replaceAll("\\\\", "/");
+	}
 
-    public static String getRelativeParentDirectory(File base, File file) {
-    	return getRelativePath(base, new File(getAbsoluteParentDirectory(file)));
-    }
+	public static String getAbsoluteParentDirectory(File file) {
+		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
+	}
 
-    public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {
-        return getRecursiveFileList(root, false, false);
-    }
+	public static String getAbsoluteParentDirectory(String absFilePath) {
+		return absFilePath.substring(0, absFilePath.lastIndexOf(File.separator));
+	}
 
-    public static List<File> getRecursiveFileList(File root, boolean includeDirectories, boolean followSymlinkDirectories) throws FileNotFoundException {
-        if (!root.isDirectory() || !root.canRead() || !root.exists()) {
-            throw new FileNotFoundException("Invalid directory " + root);
-        }
+	public static String getRelativeParentDirectory(File base, File file) {
+		return getRelativePath(base, new File(getAbsoluteParentDirectory(file)));
+	}
 
-        List<File> result = getRecursiveFileListNoSort(root, includeDirectories, followSymlinkDirectories);
-        Collections.sort(result);
+	public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {
+		return getRecursiveFileList(root, false, false);
+	}
 
-        return result;
-    }
+	public static List<File> getRecursiveFileList(File root, boolean includeDirectories, boolean followSymlinkDirectories)
+			throws FileNotFoundException {
+		if (!root.isDirectory() || !root.canRead() || !root.exists()) {
+			throw new FileNotFoundException("Invalid directory " + root);
+		}
 
-    private static List<File> getRecursiveFileListNoSort(File root, boolean includeDirectories, boolean followSymlinkDirectories) {
-        List<File> result = new ArrayList<File>();
-        List<File> filesDirs = Arrays.asList(root.listFiles());
+		List<File> result = getRecursiveFileListNoSort(root, includeDirectories, followSymlinkDirectories);
+		Collections.sort(result);
 
-        for (File file : filesDirs) {
-        	boolean isDirectory = file.isDirectory();
-        	boolean isSymlinkDirectory = isDirectory && FileUtil.isSymlink(file);
-        	boolean includeFile = !isDirectory || includeDirectories; 
-        	boolean followDirectory = (isSymlinkDirectory && followSymlinkDirectories)
-        			|| (isDirectory && !isSymlinkDirectory); 
-        			
-            if (includeFile) {
-                result.add(file);
-            }
+		return result;
+	}
 
-            if (followDirectory) {
-                List<File> deeperList = getRecursiveFileListNoSort(file, includeDirectories, followSymlinkDirectories);
-                result.addAll(deeperList);
-            }
-        }
+	private static List<File> getRecursiveFileListNoSort(File root, boolean includeDirectories, boolean followSymlinkDirectories) {
+		List<File> result = new ArrayList<File>();
+		List<File> filesDirs = Arrays.asList(root.listFiles());
 
-        return result;
-    }
+		for (File file : filesDirs) {
+			boolean isDirectory = file.isDirectory();
+			boolean isSymlinkDirectory = isDirectory && FileUtil.isSymlink(file);
+			boolean includeFile = !isDirectory || includeDirectories;
+			boolean followDirectory = (isSymlinkDirectory && followSymlinkDirectories) || (isDirectory && !isSymlinkDirectory);
 
-    /**
-     * Retrieves the extension of a file.
-     * Example: "html" in the case of "/htdocs/index.html"
-     *
-     * @param file
-     * @return
-     */
-    public static String getExtension(File file) {
-        return getExtension(file.getName(), false);
-    }
+			if (includeFile) {
+				result.add(file);
+			}
 
-    public static String getExtension(File file, boolean includeDot) {
-        return getExtension(file.getName(), includeDot);
-    }
+			if (followDirectory) {
+				List<File> deeperList = getRecursiveFileListNoSort(file, includeDirectories, followSymlinkDirectories);
+				result.addAll(deeperList);
+			}
+		}
 
-    public static String getExtension(String filename, boolean includeDot) {
-        int dot = filename.lastIndexOf(".");
+		return result;
+	}
 
-        if (dot == -1) {
-            return "";
-        }
+	/**
+	 * Retrieves the extension of a file.
+	 * Example: "html" in the case of "/htdocs/index.html"
+	 *
+	 * @param file
+	 * @return
+	 */
+	public static String getExtension(File file) {
+		return getExtension(file.getName(), false);
+	}
 
-        return ((includeDot) ? "." : "")
-                + filename.substring(dot + 1, filename.length());
-    }
+	public static String getExtension(File file, boolean includeDot) {
+		return getExtension(file.getName(), includeDot);
+	}
 
-    /**
-     * Retrieves the basename of a file.
-     * Example: "index" in the case of "/htdocs/index.html"
-     * 
-     * @param file
-     * @return
-     */
-    public static String getBasename(File file) {
-        return getBasename(file.getName());
-    }
+	public static String getExtension(String filename, boolean includeDot) {
+		int dot = filename.lastIndexOf(".");
 
-    public static String getBasename(String filename) {
-        int dot = filename.lastIndexOf(".");
+		if (dot == -1) {
+			return "";
+		}
 
-        if (dot == -1) {
-            return filename;
-        }
+		return ((includeDot) ? "." : "") + filename.substring(dot + 1, filename.length());
+	}
 
-        return filename.substring(0, dot);
-    }
+	/**
+	 * Retrieves the basename of a file.
+	 * Example: "index" in the case of "/htdocs/index.html"
+	 * 
+	 * @param file
+	 * @return
+	 */
+	public static String getBasename(File file) {
+		return getBasename(file.getName());
+	}
 
-    public static File getCanonicalFile(File file) {
-        try {
-            return file.getCanonicalFile();
-        } catch (IOException ex) {
-            return file;
-        }
-    }
-    
+	public static String getBasename(String filename) {
+		int dot = filename.lastIndexOf(".");
 
-    public static void writeToFile(byte[] bytes, File file) throws IOException {
-        writeToFile(new ByteArrayInputStream(bytes), file);
-    }
+		if (dot == -1) {
+			return filename;
+		}
 
-    public static void writeToFile(InputStream is, File file) throws IOException {
-        FileOutputStream fos = new FileOutputStream(file);
+		return filename.substring(0, dot);
+	}
 
-        int read = 0;
-        byte[] bytes = new byte[4096];
+	public static File getCanonicalFile(File file) {
+		try {
+			return file.getCanonicalFile();
+		}
+		catch (IOException ex) {
+			return file;
+		}
+	}
 
-        while ((read = is.read(bytes)) != -1) {
-            fos.write(bytes, 0, read);
-        }
+	public static void writeToFile(byte[] bytes, File file) throws IOException {
+		writeToFile(new ByteArrayInputStream(bytes), file);
+	}
 
-        is.close();
-        fos.close();
-    }
-    
-    public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
-    	appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
-    }
-    
-    public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream) throws IOException {    
-        byte[] buf = new byte[4096];
+	public static void writeToFile(InputStream is, File file) throws IOException {
+		FileOutputStream fos = new FileOutputStream(file);
 
-        int len;
-        while ((len = inputStream.read(buf)) > 0) {
-            outputStream.write(buf, 0, len);
-        }
+		int read = 0;
+		byte[] bytes = new byte[4096];
 
-        inputStream.close();
-    }
-	
+		while ((read = is.read(bytes)) != -1) {
+			fos.write(bytes, 0, read);
+		}
+
+		is.close();
+		fos.close();
+	}
+
+	public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
+		appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
+	}
+
+	public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream) throws IOException {
+		byte[] buf = new byte[4096];
+
+		int len;
+		while ((len = inputStream.read(buf)) > 0) {
+			outputStream.write(buf, 0, len);
+		}
+
+		inputStream.close();
+	}
+
 	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {
-		FileInputStream fis =  new FileInputStream(filename);
+		FileInputStream fis = new FileInputStream(filename);
 
 		byte[] buffer = new byte[1024];
 		MessageDigest complete = MessageDigest.getInstance(digestAlgorithm);
@@ -211,85 +210,91 @@ public class FileUtil {
 		fis.close();
 		return complete.digest();
 	}
-	
+
 	public static String toDatabaseFilePath(String path) {
 		return path.replaceAll("\\\\", "/");
-	}	
-	
+	}
+
 	public static boolean isFileLocked(File file) {
 		if (!file.exists()) {
 			return false;
 		}
-		
+
 		if (file.isDirectory()) {
-			return false; 
+			return false;
 		}
-		
+
 		if (isSymlink(file)) {
 			return false;
 		}
-		
+
 		RandomAccessFile randomAccessFile = null;
 		boolean fileLocked = false;
-		
+
 		try {
 			// Test 1 missing permissions or locked file parts. If File is not readable == locked
 			randomAccessFile = new RandomAccessFile(file, "r");
 			randomAccessFile.close();
 		}
 		catch (Exception e) {
-		    fileLocked = true;
+			fileLocked = true;
 		}
-		
-		if(!fileLocked && file.canWrite()) {
+
+		if (!fileLocked && file.canWrite()) {
 			try {
 				// Test 2:Locked file parts
 				randomAccessFile = new RandomAccessFile(file, "rw");
-	
+
 				// Test 3: Set lock and release it again
 				FileLock fileLock = randomAccessFile.getChannel().tryLock();
-	
+
 				if (fileLock == null) {
 					fileLocked = true;
-				} else {
+				}
+				else {
 					try {
 						fileLock.release();
-					} catch (Exception e) { /* Nothing */
+					}
+					catch (Exception e) { /* Nothing */
 					}
 				}
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				fileLocked = true;
 			}
-			
-		    if (randomAccessFile != null) {
-				try { randomAccessFile.close(); }
-				catch (IOException e) { /* Nothing */ }
-		    }
+
+			if (randomAccessFile != null) {
+				try {
+					randomAccessFile.close();
+				}
+				catch (IOException e) { /* Nothing */
+				}
+			}
 		}
-		
+
 		return fileLocked;
 	}
 
 	public static String getName(String fullName) {
 		return new File(fullName).getName();
 	}
-	
+
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
-	}	
-	
+	}
+
 	public static boolean isUnixLikeOperatingSystem() {
 		return File.separatorChar == '/';
 	}
-	
+
 	public static boolean isWindows() {
 		return File.separatorChar == '\\';
 	}
-	
+
 	public static boolean isSymlink(File file) {
 		return Files.isSymbolicLink(Paths.get(file.getAbsolutePath()));
 	}
-	
+
 	public static String readSymlinkTarget(File file) {
 		try {
 			return Files.readSymbolicLink(Paths.get(file.getAbsolutePath())).toString();
@@ -298,57 +303,92 @@ public class FileUtil {
 			return null;
 		}
 	}
-	
+
 	public static void createSymlink(String targetPathStr, File symlinkFile) throws Exception {
 		Path targetPath = Paths.get(targetPathStr);
 		Path symlinkPath = Paths.get(symlinkFile.getPath());
-		
+
 		Files.createSymbolicLink(symlinkPath, targetPath);
 	}
-	
+
 	public static String dosAttrsToString(DosFileAttributes dosAttrs) {
 		StringBuilder sb = new StringBuilder();
-		
+
 		sb.append(dosAttrs.isReadOnly() ? "r" : "-");
-		sb.append(dosAttrs.isHidden()   ? "h" : "-");
-		sb.append(dosAttrs.isArchive()  ? "a" : "-");
-		sb.append(dosAttrs.isSystem()   ? "s" : "-");
-		
+		sb.append(dosAttrs.isHidden() ? "h" : "-");
+		sb.append(dosAttrs.isArchive() ? "a" : "-");
+		sb.append(dosAttrs.isSystem() ? "s" : "-");
+
 		return sb.toString();
 	}
 
 	public static DosFileAttributes dosAttrsFromString(final String dosAttributes) {
-		return new DosFileAttributes() {						
+		return new DosFileAttributes() {
 			@Override
 			public boolean isReadOnly() {
 				return dosAttributes.charAt(0) == 'r';
-			}				
-			
+			}
+
 			@Override
 			public boolean isHidden() {
 				return dosAttributes.charAt(1) == 'h';
 			}
-			
+
 			@Override
 			public boolean isArchive() {
 				return dosAttributes.charAt(2) == 'a';
 			}
-			
+
 			@Override
 			public boolean isSystem() {
 				return dosAttributes.charAt(3) == 's';
-			}								
-			
-			@Override public long size() { return 0; }		
-			@Override public FileTime lastModifiedTime() { return null; }
-			@Override public FileTime lastAccessTime() { return null; }
-			@Override public boolean isSymbolicLink() { return false; }			
-			@Override public boolean isRegularFile() { return false; }			
-			@Override public boolean isOther() { return false; }			
-			@Override public boolean isDirectory() { return false; }			
-			@Override public Object fileKey() { return null; }			
-			@Override public FileTime creationTime() { return null; }			
-		};		
+			}
+
+			@Override
+			public long size() {
+				return 0;
+			}
+
+			@Override
+			public FileTime lastModifiedTime() {
+				return null;
+			}
+
+			@Override
+			public FileTime lastAccessTime() {
+				return null;
+			}
+
+			@Override
+			public boolean isSymbolicLink() {
+				return false;
+			}
+
+			@Override
+			public boolean isRegularFile() {
+				return false;
+			}
+
+			@Override
+			public boolean isOther() {
+				return false;
+			}
+
+			@Override
+			public boolean isDirectory() {
+				return false;
+			}
+
+			@Override
+			public Object fileKey() {
+				return null;
+			}
+
+			@Override
+			public FileTime creationTime() {
+				return null;
+			}
+		};
 	}
 
 	/**
@@ -383,4 +423,3 @@ public class FileUtil {
 		}
 	}
 }
-

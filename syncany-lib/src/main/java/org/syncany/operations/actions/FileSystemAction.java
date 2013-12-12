@@ -101,6 +101,10 @@ public abstract class FileSystemAction {
 	
 	protected void setLastModified(FileVersion reconstructedFileVersion) {
 		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		setLastModified(reconstructedFileVersion, reconstructedFilesAtFinalLocation);
+	}
+	
+	protected void setLastModified(FileVersion reconstructedFileVersion, File reconstructedFilesAtFinalLocation) {		
 		reconstructedFilesAtFinalLocation.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
 	}
 
@@ -158,7 +162,10 @@ public abstract class FileSystemAction {
 	
 	protected void setFileAttributes(FileVersion reconstructedFileVersion) throws IOException {
 		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
-		
+		setFileAttributes(reconstructedFileVersion, reconstructedFilesAtFinalLocation);
+	}
+	
+	protected void setFileAttributes(FileVersion reconstructedFileVersion, File reconstructedFilesAtFinalLocation) throws IOException {
 		if (FileUtil.isWindows()) {
 			if (reconstructedFileVersion.getDosAttributes() != null) {
 				logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
