@@ -1,10 +1,5 @@
 import java.io.File;
 
-apply plugin: 'application'
-
-mainClassName = "org.syncany.Syncany"
-String osName = System.getProperty("os.name").toLowerCase();
-
 dependencies {
 	compile			project(':syncany-lib')
 	compile			project(':syncany-plugin-ftp')
@@ -17,6 +12,11 @@ dependencies {
 
 
 // Application Plugin Settings and Hooks ///////////////////////////////////////	
+
+apply plugin: 'application'
+
+applicationName = "syncany"
+mainClassName = "org.syncany.Syncany"
 
 startScripts {
 	defaultJvmOpts = [ '-Xmx1024m', '-Dfile.encoding=utf-8' ]
@@ -31,11 +31,25 @@ startScripts {
 }
 
 applicationDistribution.from("${rootProject.projectDir}/") {
-	include "README.md", "LICENSE.md"
+	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
+}
+
+distTar {
+	basename = "syncany"
+	version = "$applicationVersion"
+	compression = Compression.GZIP
+	extension = "tar.gz"	
+}
+
+distZip {
+	basename = "syncany"
+	version = "$applicationVersion"
 }
 
 
 // CLI-specific Tasks //////////////////////////////////////////////////////////
+
+String osName = System.getProperty("os.name").toLowerCase();
 
 task fakeinstall(dependsOn: ['fakeuninstall']) << {
 	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
@@ -45,12 +59,12 @@ task fakeinstall(dependsOn: ['fakeuninstall']) << {
 		copy {
 			from '../gradle/windows/syncany.bat'
 			into System.getenv()['windir']
-			expand(appBinary: "${buildDir}/install/syncany-cli/bin/syncany-cli.bat")
+			expand(appBinary: "${buildDir}/install/${applicationName}/bin/${applicationName}.bat")
 		}
 	}
 	else{
-    		ant.symlink(resource: "${buildDir}/install/syncany-cli/bin/syncany-cli", link: "/usr/local/bin/syncany")
-    		ant.symlink(resource: "${buildDir}/install/syncany-cli/bin/syncany-cli", link: "/usr/local/bin/sy")
+    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/syncany")
+    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/sy")
 	}
 }
 

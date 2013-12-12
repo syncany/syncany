@@ -1,17 +1,7 @@
 apply plugin: 'eclipse'
 
 project.ext {
-	applicationVersion = new Version(major: 1, minor: 1, revision: 1)
-}
-
-// Helper class for Version definition /////////////////////////////////////////
-
-class Version {
-	int major, minor, revision
- 
-	String toString() {
-		"$major.$minor.$revision"
-	}
+	applicationVersion = "0.1-SNAPSHOT"
 }
 
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
