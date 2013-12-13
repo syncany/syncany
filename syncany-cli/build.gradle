@@ -35,14 +35,14 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 }
 
 distTar {
-	basename = "syncany"
+	baseName = "syncany"
 	version = "$applicationVersion"
 	compression = Compression.GZIP
 	extension = "tar.gz"	
 }
 
 distZip {
-	basename = "syncany"
+	baseName = "syncany"
 	version = "$applicationVersion"
 }
 

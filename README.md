@@ -56,7 +56,7 @@ following commands:
         sudo ./gradlew fakeinstall   (on Linux / Mac OS)
         
 *On Windows:*
-  - Click *Start*, type `cmd`, and then press CTRL+SHIFT+ENTER. If a warning appear, click *Yes*.
+  - Click *Start*, type `cmd`, and then press CTRL+SHIFT+ENTER. If a warning appears, click *Yes*.
   - In the command box, `cd` to your checkout directory and run `gradlew fakeinstall`
         
 Please note: There is no easy way to permanently install Syncany on your system, 
