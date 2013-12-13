@@ -20,8 +20,8 @@ package org.syncany.gui.util;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * @author vincent
@@ -33,7 +33,6 @@ public class JsonHelper {
 		return text;
 	}
 
-	@SuppressWarnings("serial")
 	public static Map<String, ?> fromStringToMap(String s){
 		Type mapType = new TypeToken<Map<String, ?>>() {}.getType();
 		Map<String, String> parameters = new Gson().fromJson(s, mapType);

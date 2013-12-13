@@ -46,7 +46,6 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 /**
  * TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation

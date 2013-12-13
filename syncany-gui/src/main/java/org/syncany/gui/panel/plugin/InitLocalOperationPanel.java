@@ -15,62 +15,67 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
+package org.syncany.gui.panel.plugin;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.syncany.gui.panel.PluginPanel;
+import org.syncany.gui.util.FileChooserHelper;
+import org.syncany.gui.util.ImageResources.Image;
+
 /**
  * @author vincent
  *
  */
-public class InitAmazonS3OperationPanel extends PluginPanel {
+public class InitLocalOperationPanel extends PluginPanel implements ActionListener {
 	private static final long serialVersionUID = 4154765239652744563L;
 
-	private JTextField accessKeyTF = new JTextField();
-	private JTextField secretKeyTF = new JTextField();
-	private JTextField bucketTF = new JTextField();
-	private JTextField locationTF = new JTextField();
-
-	private final JLabel accessKeyLabel = new JLabel("Access Key");
-	private final JLabel secretKeyLabel = new JLabel("Secret Key");
-	private final JLabel bucketLabel = new JLabel("Bucket");
-	private final JLabel locationLabel = new JLabel("Location");
-
+	private final JTextField localRepoTextfield = new JTextField();
+	private final JLabel localRepoLabel = new JLabel("Local repository :");
+	private final JButton chooseFolderButton = new JButton(Image.FOLDER_SMALL.asIcon());
+	
+	
 	/**
 	 * Create the panel.
 	 */
-	public InitAmazonS3OperationPanel() {
+	public InitLocalOperationPanel() {
+		chooseFolderButton.addActionListener(this);;
+		
 		initGui();
 	}
 	
 	public void initGui(){
 		setBorder(new TitledBorder("Local Plugin"));
-		setLayout(new MigLayout("", "[][grow]", "[][][][]"));
+		setLayout(new MigLayout("", "[][grow,fill][]", "[]"));
 		
-		add(accessKeyLabel, "cell 0 0,alignx trailing");
-		add(accessKeyTF, "cell 1 0,growx");
-		add(secretKeyLabel, "cell 0 1,alignx trailing");
-		add(secretKeyTF, "cell 1 1,growx");
-		add(bucketLabel, "cell 0 2,alignx trailing");
-		add(bucketTF, "cell 1 2,growx");
-		add(locationLabel, "cell 0 3,alignx trailing");
-		add(locationTF, "cell 1 3,growx");
+		add(localRepoLabel, "cell 0 0,alignx trailing");
+		add(localRepoTextfield, "cell 1 0,growx");
+		
+		add(chooseFolderButton, "cell 2 0");
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == chooseFolderButton){
+			String folder = FileChooserHelper.show(this);
+			localRepoTextfield.setText(folder);
+		}
 	}
 
 	@Override
 	public Map<String, String> getPluginParameters() {
 		Map<String, String> params = new HashMap<String, String>();
-		params.put("location", locationTF.getText());
-		params.put("accessKey", accessKeyTF.getText());
-		params.put("secretKey", secretKeyTF.getText());
-		params.put("bucket", bucketTF.getText());
+		params.put("path", localRepoTextfield.getText());
 		return params;
 	}
 }

@@ -19,12 +19,15 @@ package org.syncany.gui.websocket;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.NotYetConnectedException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.handshake.ServerHandshake;
+import org.syncany.gui.MainGUI;
 import org.syncany.gui.util.JsonHelper;
 
 /**
@@ -33,15 +36,29 @@ import org.syncany.gui.util.JsonHelper;
  */
 public class WSClient {
 	private static final Logger log = Logger.getLogger(WSClient.class.getSimpleName());
+	private static final String DEFAULT_WS_SERVER = "ws://localhost:8887";
+
 	private static WSClient instance;
-	
+
+	private String location;
 	private WebSocketClient client;
 
-	public WSClient(String defaultlocation) throws URISyntaxException {
-		client = new WebSocketClient(new URI(defaultlocation), new Draft_17()) {
+	public WSClient() throws URISyntaxException {
+		this.location = DEFAULT_WS_SERVER;
+	}
+	
+	public WSClient(String location) throws URISyntaxException {
+		this.location = location;
+	}
+	
+	private WebSocketClient createClient(String defaultlocation) throws URISyntaxException{
+		Map<String, String> map = new HashMap<>();
+		map.put("client_id", MainGUI.clientIdentification);
+		
+		return new WebSocketClient(new URI(defaultlocation), new Draft_17(), map, 3000) {
 			@Override
 			public void onOpen(ServerHandshake handshakedata) {
-				log.fine("You are connected to ChatServer: " + getURI() + "\n");
+				log.fine("You are connected to ChatServer: " + getURI());
 			}
 
 			@Override
@@ -52,7 +69,7 @@ public class WSClient {
 
 			@Override
 			public void onClose(int code, String reason, boolean remote) {
-				log.fine("You have been disconnected from: " + getURI() + "; Code: " + code + " " + reason + "\n");
+				log.fine("You have been disconnected from: " + getURI() + "; Code: " + code + " " + reason);
 			}
 
 			@Override
@@ -62,29 +79,56 @@ public class WSClient {
 		};
 	}
 
+	/**
+	 * @return the client
+	 */
+	private WebSocketClient getClient() {
+		if (client == null || !client.getConnection().isOpen()){
+			try {
+				client = createClient(this.location);
+			}
+			catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+		}
+		return client;
+	}
+	
 	public static void startWebSocketConnection() {
-		instance().client.connect();
+		instance().getClient().connect();
 	}
 	
 	public static void stop(){
-		instance().client.close();
+		instance().getClient().close();
 	}
 
 	public void handleReceivedMessage(String message) {
 		Map<String, ?> parameters = JsonHelper.fromStringToMap(message);
-
+		@SuppressWarnings("unused")
 		String action = (String)parameters.get("action");
 	}
 
 	public void handleCommand(Map<String, String> parameters) {
-		String text = JsonHelper.fromMapToString(parameters);
-		client.send(text);
+		if (!getClient().getConnection().isOpen()){
+			startWebSocketConnection();
+		}
+		
+		try{
+			String text = JsonHelper.fromMapToString(parameters);
+			client.send(text);
+		}
+		catch (NotYetConnectedException e){
+			log.warning("Not yet connected " + e.getMessage());
+		}
+		catch (Exception e){
+			log.warning("Exception " + e.toString());
+		}
 	}
 
 	public static WSClient instance() {
 		if (instance == null)
 			try {
-				instance = new WSClient("ws://localhost:8887");
+				instance = new WSClient();
 			}
 			catch (URISyntaxException e) {
 				e.printStackTrace();

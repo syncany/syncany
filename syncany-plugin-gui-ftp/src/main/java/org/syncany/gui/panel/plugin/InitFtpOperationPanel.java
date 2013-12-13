@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
+package org.syncany.gui.panel.plugin;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +25,8 @@ import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+
+import org.syncany.gui.panel.PluginPanel;
 
 import net.miginfocom.swing.MigLayout;
 

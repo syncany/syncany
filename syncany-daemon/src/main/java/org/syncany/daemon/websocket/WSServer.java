@@ -45,28 +45,24 @@ public class WSServer {
 		delegate = new WebSocketServer(new InetSocketAddress(port)) {
 			@Override
 			public void onOpen(WebSocket conn, ClientHandshake handshake) {
-				sendToAll("new connection: " + handshake.getResourceDescriptor());
-				log.fine(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
+				String id = handshake.getFieldValue("client_id");
+				log.fine(String.format("Client with id '{0}' connected", id));
 			}
 			
 			@Override
 			public void onMessage(WebSocket conn, String message) {
 				DaemonCommandHandler.handle(message);
-				log.fine(conn + ": " + message);
+				log.fine(conn.getRemoteSocketAddress().toString() + ": " + message);
 			}
 			
 			@Override
 			public void onError(WebSocket conn, Exception ex) {
-				ex.printStackTrace();
-				if (conn != null) {
-					// some errors like port binding failed may not be assignable to a specific websocket
-				}
+				log.fine("Client " + conn.getRemoteSocketAddress().toString() + " errored");
 			}
 			
 			@Override
 			public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-				sendToAll(conn + " has left the room!");
-				log.fine(conn + " has left the room!");
+				log.fine(conn.getRemoteSocketAddress().toString() + " disconnected");
 			}
 		};
 	}

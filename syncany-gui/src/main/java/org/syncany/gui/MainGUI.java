@@ -11,12 +11,12 @@ import java.awt.TrayIcon;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 
-import org.syncany.config.Logging;
 import org.syncany.gui.panel.MainFrame;
 import org.syncany.gui.util.ImageResources;
 import org.syncany.gui.util.OS;
@@ -26,13 +26,10 @@ public class MainGUI {
 	private static final Logger log = Logger.getLogger(MainGUI.class.getSimpleName());
 
 	public static MainGUI instance;
+	public static String clientIdentification = UUID.randomUUID().toString();
 	
 	private MainFrame mf;
 	
-	static {
-		Logging.init();
-	}
-
 	/**
 	 * Launch the application.
 	 * @throws Exception 

@@ -45,7 +45,8 @@ public class ClientCommandFactory {
 	
 	private static Map<String, String> buildParameters(){
 		Map<String, String> parameters = new HashMap<>();
-		parameters.put("sourceId", "syncany_client");
+		parameters.put("client_id", MainGUI.clientIdentification);
+		parameters.put("client_type", "syncany-gui");
 		parameters.put("timestamp", ""+System.nanoTime());
 		return parameters;
 	}

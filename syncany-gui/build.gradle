@@ -3,8 +3,12 @@ apply plugin: 'application'
 mainClassName = "org.syncany.gui.MainGUI"
 
 dependencies {
-    compile			project(':syncany-plugin-ftp')
-    compile			project(':syncany-plugin-rest')  
+	compile			project(':syncany-plugin-gui')
+    
+    runtime			project(':syncany-plugin-ftp')
+    runtime			project(':syncany-plugin-rest')  
+	runtime			project(':syncany-plugin-gui-ftp')
+    runtime			project(':syncany-plugin-gui-rest')  
 	
 	compile			"com.miglayout:miglayout-swing:4.2"
 	compile			"org.swinglabs:swingx:1.6.1"
@@ -14,8 +18,7 @@ dependencies {
     runtime			"com.jgoodies:looks:2.2.2"
 }
 
-
 task(runGui, dependsOn: 'classes', type: JavaExec) {
 	main = 'org.syncany.gui.MainGUI'
 	classpath = sourceSets.main.runtimeClasspath
-}	
+}

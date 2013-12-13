@@ -20,11 +20,7 @@ package org.syncany.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.gui.panel.InitAmazonS3OperationPanel;
-import org.syncany.gui.panel.InitFtpOperationPanel;
-import org.syncany.gui.panel.InitLocalOperationPanel;
+import org.syncany.gui.panel.plugin.InitLocalOperationPanel;
 
 /**
  * @author vincent
@@ -40,22 +36,11 @@ public class PluginGui {
 	}
 	
 	public static List<PluginGui> getAvailablePlugins() {
-		List<Plugin> plugins = Plugins.list();
 		List<PluginGui> list = new ArrayList<>();
 
-		for (Plugin p : plugins){
-			switch (p.getName().toLowerCase()){
-				case "ftp":
-					list.add(new PluginGui(p.getName(), InitFtpOperationPanel.class.getCanonicalName()));
-					break;
-				case "local":
-					list.add(new PluginGui(p.getName(), InitLocalOperationPanel.class.getCanonicalName()));
-					break;
-				case "amazon s3":
-					list.add(new PluginGui(p.getName(), InitAmazonS3OperationPanel.class.getCanonicalName()));
-					break;					
-			}
-		}
+		list.add(new PluginGui("ftp", "org.syncany.gui.panel.plugin.InitFtpOperationPanel"));
+		list.add(new PluginGui("amazon s3","org.syncany.gui.panel.plugin.InitAmazonS3OperationPanel"));
+		list.add(new PluginGui("local", InitLocalOperationPanel.class.getCanonicalName()));
 		
 		return list;
 	}
