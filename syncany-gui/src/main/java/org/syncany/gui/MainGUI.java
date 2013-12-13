@@ -65,6 +65,13 @@ public class MainGUI {
 		mf.pack();
 		installSystemTray();
 	}
+	
+	/**
+	 * @return the mf
+	 */
+	public MainFrame getMf() {
+		return mf;
+	}
 
 	protected static Image createImage(String path, String description) {
 		URL imageURL = MainGUI.class.getResource("/" + path);

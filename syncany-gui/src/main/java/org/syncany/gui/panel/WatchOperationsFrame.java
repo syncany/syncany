@@ -8,7 +8,7 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
@@ -44,7 +44,6 @@ public class WatchOperationsFrame extends JPanel implements ActionListener {
 						Thread.sleep(2000);
 					}
 					catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -53,27 +52,6 @@ public class WatchOperationsFrame extends JPanel implements ActionListener {
 		t.start();
 	}
 
-	private void uu(String s){
-		log.log(Level.INFO, "list="+s);
-		if (s != null && s.length()>0){
-			String[] a = s.split("@");
-			
-			list.clear();
-			for (String ss : a){
-				String[] aaa = ss.split(";");
-				list.add(aaa);
-			}
-			((DefaultTableModel)table.getModel()).fireTableDataChanged();
-		}
-		
-		try {
-			Thread.sleep(1000);
-		} 
-		catch (InterruptedException e) {
-			log.log(Level.WARNING, "InterruptedException", e);
-		}
-	}
-	
 	/**
 	 * Create the application.
 	 */
@@ -164,5 +142,23 @@ public class WatchOperationsFrame extends JPanel implements ActionListener {
 				ClientCommandFactory.watch(selectedRow[1]);
 			}
 		});
+	}
+
+	public void updateFolders(final Map<String, Map<String, String>> folders) {
+		SwingUtils.dispatchOnSwingThread(new Runnable() {
+			@Override
+			public void run() {
+				uu(folders);
+			}
+		});
+	}
+	
+	private void uu(Map<String, Map<String, String>> folders){
+		list.clear();
+		for (String key : folders.keySet()){
+			Map<String, String> f = folders.get(key);
+			list.add(new String[]{f.get("key"), f.get("folder"), f.get("status")});
+		}
+		((DefaultTableModel)table.getModel()).fireTableDataChanged();
 	}
 }

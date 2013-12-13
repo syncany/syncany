@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -44,8 +45,7 @@ public class MainFrame extends JFrame implements WindowFocusListener, ActionList
 	private final JButton quitButton = new JButton("Quit");
 	private final JButton initButton = new JButton("Init");
 	private final JButton connectButton = new JButton("Connect");
-			
-
+	private final WatchOperationsFrame watchPanel = new WatchOperationsFrame();	
 	/**
 	 * Create the frame.
 	 */
@@ -77,7 +77,6 @@ public class MainFrame extends JFrame implements WindowFocusListener, ActionList
 		
 		panel_1.add(initButton, "cell 2 0,grow");
 		
-		JPanel watchPanel = new WatchOperationsFrame();
 		watchPanel.setBackground(Color.WHITE);
 		contentPane.add(watchPanel, "cell 0 1,grow");
 		watchPanel.setLayout(new MigLayout("", "[]", "[]"));
@@ -138,5 +137,9 @@ public class MainFrame extends JFrame implements WindowFocusListener, ActionList
 				}
 			});
 		}
+	}
+
+	public void updateFolders(Map<String, Map<String, String>> folders) {
+		watchPanel.updateFolders(folders);
 	}
 }

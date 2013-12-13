@@ -76,7 +76,8 @@ public class DaemonCommandHandler {
 	private static void handleGetWatchedFolders() {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		
-		Map<String, Map<String, String>> root = new HashMap<>();
+		Map<String, Map<String, String>> folders = new HashMap<>();
+		Map<String, Object> res = new HashMap<>();
 		
 		if (commands.size() > 0){
 			for (String key : commands.keySet()){
@@ -87,11 +88,13 @@ public class DaemonCommandHandler {
 					element.put("key", key);
 					element.put("folder", wc.getLocalFolder());
 					element.put("status", wc.getStatus().toString());
-					root.put(key, element);
+					folders.put(key, element);
 				}
 			}
 		}
-		String a = JsonHelper.fromMapToString(root);
+		res.put("folders", folders);
+		res.put("action", "update_watched_folders");
+		String a = JsonHelper.fromMapToString(res);
 		WSServer.sendToAll(a);
 	}
 

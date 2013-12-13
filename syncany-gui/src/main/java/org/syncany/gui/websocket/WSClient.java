@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
+import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.util.JsonHelper;
@@ -58,18 +59,18 @@ public class WSClient {
 		return new WebSocketClient(new URI(defaultlocation), new Draft_17(), map, 3000) {
 			@Override
 			public void onOpen(ServerHandshake handshakedata) {
-				log.fine("You are connected to ChatServer: " + getURI());
+				log.fine("Connection to syncany daemon server: " + getURI());
 			}
 
 			@Override
 			public void onMessage(String message) {
-				log.fine("got: " + message);
+				log.fine("Received: " + message);
 				handleReceivedMessage(message);
 			}
 
 			@Override
 			public void onClose(int code, String reason, boolean remote) {
-				log.fine("You have been disconnected from: " + getURI() + "; Code: " + code + " " + reason);
+				log.fine(String.format("You have been disconnected from {0} for reaseon {1}", getURI(), reason));
 			}
 
 			@Override
@@ -104,8 +105,14 @@ public class WSClient {
 
 	public void handleReceivedMessage(String message) {
 		Map<String, ?> parameters = JsonHelper.fromStringToMap(message);
-		@SuppressWarnings("unused")
 		String action = (String)parameters.get("action");
+		Map<String, Map<String, String>> folders =(Map<String, Map<String, String>>)parameters.get("folders");
+		
+		switch (action){
+			case "update_watched_folders":
+				MainGUI.instance.getMf().updateFolders(folders);
+			break;
+		}
 	}
 
 	public void handleCommand(Map<String, String> parameters) {
@@ -120,8 +127,8 @@ public class WSClient {
 		catch (NotYetConnectedException e){
 			log.warning("Not yet connected " + e.getMessage());
 		}
-		catch (Exception e){
-			log.warning("Exception " + e.toString());
+		catch (WebsocketNotConnectedException e){
+			log.warning("Websocket not connected");
 		}
 	}
 
