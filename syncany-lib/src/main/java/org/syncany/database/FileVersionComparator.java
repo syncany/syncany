@@ -349,7 +349,7 @@ public class FileVersionComparator {
 	}
 
 	public FileProperties captureFileProperties(File file, FileChecksum knownChecksum, boolean forceChecksum) {
-		Path filePath = Paths.get(file.getAbsolutePath());
+		Path filePath = Paths.get(file.getAbsolutePath()); // TODO [HIGH] This throws an exception if the filename is invalid (e.g. colon in filename on windows "file:name")
 
 		FileProperties fileProperties = new FileProperties();
 		fileProperties.relativePath = FileUtil.getRelativePath(rootFolder, file);
