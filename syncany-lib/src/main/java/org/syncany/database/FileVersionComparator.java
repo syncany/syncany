@@ -20,6 +20,7 @@ package org.syncany.database;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -349,11 +350,22 @@ public class FileVersionComparator {
 	}
 
 	public FileProperties captureFileProperties(File file, FileChecksum knownChecksum, boolean forceChecksum) {
-		Path filePath = Paths.get(file.getAbsolutePath()); // TODO [HIGH] This throws an exception if the filename is invalid (e.g. colon in filename on windows "file:name")
-
 		FileProperties fileProperties = new FileProperties();
 		fileProperties.relativePath = FileUtil.getRelativePath(rootFolder, file);
-		fileProperties.exists = Files.exists(filePath, LinkOption.NOFOLLOW_LINKS);
+
+		Path filePath = null;
+		
+		try {
+			filePath = Paths.get(file.getAbsolutePath());
+			fileProperties.exists = Files.exists(filePath, LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (InvalidPathException e) {
+			// This throws an exception if the filename is invalid,
+			// e.g. colon in filename on windows "file:name"
+			
+			fileProperties.exists = false;
+			return fileProperties;
+		}
 
 		if (!fileProperties.exists) {
 			return fileProperties;
