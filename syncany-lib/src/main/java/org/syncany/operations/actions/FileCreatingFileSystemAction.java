@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -112,14 +111,15 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 
 		// Okay. Now move to real place
-		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
-
-		if (isLegalFilename(reconstructedFileAtFinalLocation)) {
-			FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
-		}
-		else {
+		if (!isLegalFilename(reconstructedFileAtFinalLocation)) {
+			File illegalFile = reconstructedFileAtFinalLocation;
 			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
+			
+			logger.log(Level.SEVERE, "     - Filename was ILLEGAL, cleaned from {0} to {1}", new Object[] { illegalFile.getName(), reconstructedFileAtFinalLocation.getName() });
 		}
+
+		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
+		FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
 
 		// Set attributes & timestamp
 		setFileAttributes(reconstructedFileVersion, reconstructedFileAtFinalLocation);
@@ -134,6 +134,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			return true;
 		}
 		catch (IOException e) {
+			logger.log(Level.SEVERE, "WARNING: Illegal file: "+file);
 			return false;
 		}
 	}
