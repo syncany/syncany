@@ -218,7 +218,7 @@ public abstract class FileSystemAction {
 	
 	protected boolean fileExists(FileVersion expectedLocalFileVersion) {
 		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
-		return Files.exists(Paths.get(actualLocalFile.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+		return FileUtil.exists(actualLocalFile);	
 	}	
 	
 	protected void deleteFile(FileVersion deleteFileVersion) {
