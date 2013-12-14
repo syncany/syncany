@@ -137,24 +137,37 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			logger.log(Level.SEVERE, "WARNING: Illegal file: "+file);
 			return false;
 		}
-	}
+	}	
 
 	private File cleanFilename(File conflictFile) {
-		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
-		String conflictBasename = FileUtil.getBasename(conflictFile);
-		String conflictFileExtension = FileUtil.getExtension(conflictBasename, false);
-
-		boolean conflictFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
+		String originalDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
+		String originalBasename = FileUtil.getBasename(conflictFile);
+		String originalFileExtension = FileUtil.getExtension(originalBasename, false);
+				
+		boolean originalFileHasExtension = originalFileExtension != null && !"".equals(originalFileExtension);
 
 		String newFullName;
 
-		if (conflictFileHasExtension) {
-			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);
+		if (originalFileHasExtension) {
+			String conflictBasename = cleanOsSpecificString(originalBasename);
+			String conflictFileExtension = cleanOsSpecificString(originalFileExtension);
+			
+			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);						
 		}
 		else {
+			String conflictBasename = cleanOsSpecificString(originalBasename);
 			newFullName = String.format("%s (filename conflict)", conflictBasename);
 		}
 
-		return new File(conflictDirectory+File.separator+newFullName);
+		return new File(originalDirectory+File.separator+newFullName);
 	}
+
+	private String cleanOsSpecificString(String originalBasename) {
+		if (FileUtil.isWindows()) {
+			return originalBasename.replaceAll("[\\/:*?\"<>|]","");
+		}
+		else {
+			return originalBasename.replaceAll("[/]","");
+		}
+	}	 
 }
