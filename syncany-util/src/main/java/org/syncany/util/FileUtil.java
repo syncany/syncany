@@ -46,11 +46,7 @@ import java.util.List;
  */
 public class FileUtil {
 	public static String getRelativePath(File base, File file) {
-		Path baseFilePath = Paths.get(base.getAbsolutePath());
-		Path filePath = Paths.get(file.getAbsolutePath());
-
-		Path relativeFilePath = baseFilePath.relativize(filePath);
-
+		String relativeFilePath = base.toURI().relativize(file.toURI()).getPath();		
 		return relativeFilePath.toString().replaceAll("\\\\", "/");
 	}
 
