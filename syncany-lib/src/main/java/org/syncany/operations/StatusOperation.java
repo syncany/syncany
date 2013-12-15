@@ -48,7 +48,7 @@ import org.syncany.util.FileUtil;
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
-	private FileVersionComparator fileVersionHelper; 
+	private FileVersionComparator fileVersionComparator; 
 	private Database loadedDatabase;
 	private StatusOperationOptions options;
 	
@@ -59,7 +59,7 @@ public class StatusOperation extends Operation {
 	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
 		super(config);		
 		
-		this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
+		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.loadedDatabase = database;
 		this.options = options;
 	}	
@@ -175,7 +175,7 @@ public class StatusOperation extends Operation {
 				
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
-				FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
+				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
 				// TODO [lowest] Performance: Attrs are already read, compare() reads them again.  
 				
 				if (fileVersionComparison.equals()) {

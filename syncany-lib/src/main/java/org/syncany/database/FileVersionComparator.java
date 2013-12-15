@@ -235,7 +235,7 @@ public class FileVersionComparator {
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
 					+ ": Local file DIFFERS from file version, expected POSIX ATTRS = {0}, but actual POSIX ATTRS = {1}, for file {2}", new Object[] {
-					fileComparison.actualFileProperties.getPosixPermissions(), fileComparison.expectedFileProperties.getPosixPermissions(),
+					fileComparison.expectedFileProperties.getPosixPermissions(), fileComparison.actualFileProperties.getPosixPermissions(),
 					fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
@@ -248,7 +248,7 @@ public class FileVersionComparator {
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
 					+ ": Local file DIFFERS from file version, expected DOS ATTRS = {0}, but actual DOS ATTRS = {1}, for file {2}", new Object[] {
-					fileComparison.actualFileProperties.getDosAttributes(), fileComparison.expectedFileProperties.getDosAttributes(),
+					fileComparison.expectedFileProperties.getDosAttributes(), fileComparison.actualFileProperties.getDosAttributes(),
 					fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
@@ -259,7 +259,7 @@ public class FileVersionComparator {
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
 					+ ": Local file DIFFERS from file version, expected SIZE = {0}, but actual SIZE = {1}, for file {2}", new Object[] {
-					fileComparison.actualFileProperties.getSize(), fileComparison.expectedFileProperties.getSize(),
+					fileComparison.expectedFileProperties.getSize(), fileComparison.actualFileProperties.getSize(),
 					fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
@@ -270,8 +270,8 @@ public class FileVersionComparator {
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
 					+ ": Local file DIFFERS from file version, expected MOD. DATE = {0}, but actual MOD. DATE = {1}, for file {2}", new Object[] {
-					new Date(fileComparison.actualFileProperties.getLastModified()),
-					new Date(fileComparison.expectedFileProperties.getLastModified()), fileComparison.actualFileProperties.getRelativePath() });
+					new Date(fileComparison.expectedFileProperties.getLastModified()), new Date(fileComparison.actualFileProperties.getLastModified()),
+					fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
 
@@ -288,7 +288,13 @@ public class FileVersionComparator {
 
 	private boolean performCancellingTests(FileVersionComparison fileComparison) {
 		// Check null
-		if (fileComparison.actualFileProperties == null) {
+		if (fileComparison.actualFileProperties == null && fileComparison.expectedFileProperties == null) {
+			throw new RuntimeException("actualFileProperties and expectedFileProperties cannot be null.");
+		}
+		else if (fileComparison.actualFileProperties != null && fileComparison.expectedFileProperties == null) {
+			throw new RuntimeException("expectedFileProperties cannot be null.");			
+		}
+		else if (fileComparison.actualFileProperties == null && fileComparison.expectedFileProperties != null) {
 			if (!fileComparison.expectedFileProperties.exists()) {
 				logger.log(Level.INFO, "     - " + fileComparison.fileChanges
 						+ ": Local file does not exist, and expected file was deleted, for file {0}",
@@ -362,6 +368,8 @@ public class FileVersionComparator {
 		catch (InvalidPathException e) {
 			// This throws an exception if the filename is invalid,
 			// e.g. colon in filename on windows "file:name"
+			
+			logger.log(Level.WARNING, "- Path '{0}' is invalid on this file system. It cannot exist. ", file.getAbsolutePath());
 			
 			fileProperties.exists = false;
 			return fileProperties;
