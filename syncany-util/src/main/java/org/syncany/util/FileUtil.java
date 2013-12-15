@@ -47,8 +47,13 @@ import java.util.List;
  */
 public class FileUtil {
 	public static String getRelativePath(File base, File file) {
-		String relativeFilePath = base.toURI().relativize(file.toURI()).getPath();		
-		return relativeFilePath.toString().replaceAll("\\\\", "/");
+		String relativeFilePath = base.toURI().relativize(file.toURI()).getPath();
+		
+		if (relativeFilePath.endsWith(File.separator)) {
+			relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length() - 1);
+		}
+		
+		return relativeFilePath.toString().replaceAll("\\\\", "/"); // TODO [high] This causes issues on Linux with files with backslashes "black\white.jpg"
 	}
 
 	public static String getAbsoluteParentDirectory(File file) {
