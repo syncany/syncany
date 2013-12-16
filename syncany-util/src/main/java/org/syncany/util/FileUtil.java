@@ -53,7 +53,23 @@ public class FileUtil {
 			relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length() - 1);
 		}
 		
-		return relativeFilePath.toString().replaceAll("\\\\", "/"); // TODO [high] This causes issues on Linux with files with backslashes "black\white.jpg"
+		return relativeFilePath;
+	}
+	
+	public static String getRelativeDatabasePath(File base, File file) {
+		String relativeFilePath = getRelativePath(base, file);
+		
+		// Note: This is more important than it seems. Unix paths may contain backslashes
+		//       so that 'black\white.jpg' is a perfectly valid file path. Windows file names
+		//       may never contain backslashes, so that '\' can be safely transformed to the
+		//       '/'-separated database path!
+		
+		if (isWindows()) {
+			return relativeFilePath.toString().replaceAll("\\\\", "/"); 
+		}
+		else {
+			return relativeFilePath;
+		}
 	}
 
 	public static String getAbsoluteParentDirectory(File file) {

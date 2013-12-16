@@ -183,8 +183,8 @@ public class AllFilePossibilitiesScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
 		
-		//clientA.cleanup();
-		//clientB.cleanup();
+		clientA.cleanup();
+		clientB.cleanup();
 	}
 	
 }

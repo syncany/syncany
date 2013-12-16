@@ -357,7 +357,7 @@ public class FileVersionComparator {
 
 	public FileProperties captureFileProperties(File file, FileChecksum knownChecksum, boolean forceChecksum) {
 		FileProperties fileProperties = new FileProperties();
-		fileProperties.relativePath = FileUtil.getRelativePath(rootFolder, file);
+		fileProperties.relativePath = FileUtil.getRelativeDatabasePath(rootFolder, file);
 
 		Path filePath = null;
 		

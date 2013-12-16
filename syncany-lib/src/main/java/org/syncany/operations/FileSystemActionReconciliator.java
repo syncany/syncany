@@ -279,7 +279,7 @@ public class FileSystemActionReconciliator {
 					FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, localDatabase, winnersDatabase);
 					fileSystemActions.add(action);
 
-					logger.log(Level.INFO, "  + (14) Content changed: Local file differs from winning version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+					logger.log(Level.INFO, "  + (14) Content changed: Local file differs from last version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
 					logger.log(Level.INFO, "    --> "+action);	
 					
 					changeSet.getChangedFiles().add(winningLastVersion.getPath());

@@ -111,7 +111,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 
 		// Okay. Now move to real place
-		if (!isLegalFilename(reconstructedFileAtFinalLocation)) {
+		if (isIllegalFilename(reconstructedFileAtFinalLocation)) {
 			File illegalFile = reconstructedFileAtFinalLocation;
 			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
 			
@@ -126,48 +126,54 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		setLastModified(reconstructedFileVersion);
 	}
 
-	private boolean isLegalFilename(File file) throws IOException {
+	private boolean isIllegalFilename(File file) throws IOException {
 		try {
 			file.createNewFile();
 			file.delete();
 
-			return true;
+			return false;
 		}
 		catch (IOException e) {
 			logger.log(Level.SEVERE, "WARNING: Illegal file: "+file);
-			return false;
+			return true;
 		}
 	}	
 
 	private File cleanFilename(File conflictFile) {
 		String originalDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
-		String originalBasename = FileUtil.getBasename(conflictFile);
-		String originalFileExtension = FileUtil.getExtension(originalBasename, false);
+		String originalName = conflictFile.getName();
+		
+		String conflictName = cleanOsSpecificIllegalFilenames(originalName);
 				
-		boolean originalFileHasExtension = originalFileExtension != null && !"".equals(originalFileExtension);
+		String conflictBasename = FileUtil.getBasename(conflictName);
+		String conflictFileExtension = FileUtil.getExtension(conflictName, false);
+				
+		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
 
 		String newFullName;
 
 		if (originalFileHasExtension) {
-			String conflictBasename = cleanOsSpecificString(originalBasename);
-			String conflictFileExtension = cleanOsSpecificString(originalFileExtension);
-			
 			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);						
 		}
 		else {
-			String conflictBasename = cleanOsSpecificString(originalBasename);
 			newFullName = String.format("%s (filename conflict)", conflictBasename);
 		}
 
 		return new File(originalDirectory+File.separator+newFullName);
 	}
-
-	private String cleanOsSpecificString(String originalBasename) {
+	
+	private String cleanOsSpecificIllegalFilenames(String originalFilename) {
 		if (FileUtil.isWindows()) {
-			return originalBasename.replaceAll("[\\/:*?\"<>|]","");
+			String cleanedFilePath = originalFilename.replaceAll("[\\/:*?\"<>|]","");
+			
+			if (originalFilename.endsWith(".")) {
+				cleanedFilePath = cleanedFilePath.substring(0, cleanedFilePath.length()-1);
+			}			
+			
+			return cleanedFilePath;
 		}
 		else {
-			return originalBasename.replaceAll("[/]","");
+			return originalFilename.replaceAll("[/]","");
 		}
-	}	 
+	}		
 }
