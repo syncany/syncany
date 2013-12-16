@@ -176,7 +176,6 @@ public class StatusOperation extends Operation {
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
 				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
-				// TODO [lowest] Performance: Attrs are already read, compare() reads them again.  
 				
 				if (fileVersionComparison.equals()) {
 					changeSet.getUnchangedFiles().add(relativeFilePath);
