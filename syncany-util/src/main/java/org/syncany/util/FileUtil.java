@@ -65,10 +65,20 @@ public class FileUtil {
 		//       '/'-separated database path!
 		
 		if (isWindows()) {
-			return relativeFilePath.toString().replaceAll("\\\\", "/"); 
+			String databasePath = relativeFilePath.toString().replaceAll("\\\\", "/");
+			return removeTrailingSlash(databasePath); 
 		}
 		else {
-			return relativeFilePath;
+			return removeTrailingSlash(relativeFilePath);
+		}
+	}
+	
+	public static String removeTrailingSlash(String filename) {
+		if ("/".equals(filename.substring(filename.length()-1))) {
+			return filename.substring(0, filename.length()-1);
+		}
+		else {
+			return filename;
 		}
 	}
 

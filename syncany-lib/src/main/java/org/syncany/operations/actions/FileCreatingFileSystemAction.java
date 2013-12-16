@@ -168,7 +168,9 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			
 			if (originalFilename.endsWith(".")) {
 				cleanedFilePath = cleanedFilePath.substring(0, cleanedFilePath.length()-1);
-			}			
+			}	
+			
+			// TODO [medium] Many Windows special cases missing: COM, (empty), ...
 			
 			return cleanedFilePath;
 		}

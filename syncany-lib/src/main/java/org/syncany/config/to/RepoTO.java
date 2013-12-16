@@ -23,6 +23,10 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Complete;
+import org.simpleframework.xml.core.Persist;
+import org.syncany.util.StringUtil;
 
 /**
  * The repo transfer object is used to create and load the repo file
@@ -40,6 +44,7 @@ import org.simpleframework.xml.Root;
 @Namespace(reference="http://syncany.org/repo/1")
 public class RepoTO {
 	@Element(name="repoid", required=true)
+	private String repoIdEncoded;
 	private byte[] repoId;
 	
 	@Element(name="chunker", required=false)
@@ -57,6 +62,21 @@ public class RepoTO {
 
 	public void setRepoId(byte[] repoId) {
 		this.repoId = repoId;
+	}
+	
+	@Persist
+	public void prepare() {
+		repoIdEncoded = (repoId != null) ? StringUtil.toHex(repoId) : null;
+	}
+
+	@Complete
+	public void release() {
+		repoIdEncoded = null;
+	}
+	
+	@Commit
+	public void commit() {
+		repoId = (repoIdEncoded != null) ? StringUtil.fromHex(repoIdEncoded) : null;
 	}
 
 	public ChunkerTO getChunker() {
