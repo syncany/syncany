@@ -102,20 +102,20 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 
 		reconstructedFileOutputStream.close();
 
-		// Make directory if it does not exist
-		File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
-
-		if (!FileUtil.exists(reconstructedFileParentDir)) {
-			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + reconstructedFileParentDir + " ...");
-			reconstructedFileParentDir.mkdirs();
-		}
-
 		// Okay. Now move to real place
 		if (isIllegalFilename(reconstructedFileAtFinalLocation)) {
 			File illegalFile = reconstructedFileAtFinalLocation;
 			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
 			
 			logger.log(Level.SEVERE, "     - Filename was ILLEGAL, cleaned from {0} to {1}", new Object[] { illegalFile.getName(), reconstructedFileAtFinalLocation.getName() });
+		}
+
+		// Make directory if it does not exist
+		File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
+
+		if (!FileUtil.exists(reconstructedFileParentDir)) {
+			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + reconstructedFileParentDir + " ...");
+			reconstructedFileParentDir.mkdirs();
 		}
 
 		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
