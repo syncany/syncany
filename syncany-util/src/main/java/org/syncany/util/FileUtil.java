@@ -67,7 +67,7 @@ public class FileUtil {
 	}
 	
 	public static String removeTrailingSlash(String filename) {
-		if (filename.endsWith(File.separator)) {
+		if (filename.endsWith("/")) {
 			return filename.substring(0, filename.length() - 1);
 		}
 		else {
