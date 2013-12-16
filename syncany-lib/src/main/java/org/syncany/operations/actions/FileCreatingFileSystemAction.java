@@ -107,7 +107,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			File illegalFile = reconstructedFileAtFinalLocation;
 			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
 			
-			logger.log(Level.SEVERE, "     - Filename was ILLEGAL, cleaned from {0} to {1}", new Object[] { illegalFile.getName(), reconstructedFileAtFinalLocation.getName() });
+			logger.log(Level.SEVERE, "     - Filename was ILLEGAL, cleaned from {0} to {1}", new Object[] { illegalFile, reconstructedFileAtFinalLocation });
 		}
 
 		// Make directory if it does not exist
