@@ -29,10 +29,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.syncany.util.EnvUtil;
+import org.syncany.util.EnvUtil.OperatingSystem;
 import org.syncany.util.FileUtil;
 
 public class FileUtilTests {
+	private OperatingSystem operatingSystem;
+	
+	@Before
+	public void storeOperatingSystem() {
+		operatingSystem = EnvUtil.getOperatingSystem();
+	}
+	
+	@After
+	public void resetOperatingSystem() {
+		// Important: Restore the actual operating systems, 
+		//            or other tests might fail.
+		
+		EnvUtil.setOperatingSystem(operatingSystem);
+	}
+	
 	@Test
 	public void testGetRelativeFilePath() {
 		String expectedResult = "somefile";
@@ -104,4 +123,18 @@ public class FileUtilTests {
 		TestFileUtil.deleteDirectory(tempDir);
 	}
 	
+	@Test
+	public void testBackslashPaths() {
+		EnvUtil.setOperatingSystem(OperatingSystem.WINDOWS);
+		String someWindowsFile = "C:\\Users\\Philipp\\März.jpg";
+		
+		assertEquals("C:/Users/Philipp/März.jpg", FileUtil.toDatabasePath(someWindowsFile));
+		assertEquals("C:/Users/Philipp", FileUtil.getDatabaseParentDirectory(someWindowsFile));
+		assertEquals("März.jpg", FileUtil.getDatabaseBasename(someWindowsFile));
+		
+		EnvUtil.setOperatingSystem(OperatingSystem.UNIX_LIKE);
+		String someLinuxFile = "/home/philipp/A \"black\\white\" ☎ telephone.jpg";
+		assertEquals("/home/philipp", FileUtil.getDatabaseParentDirectory(someLinuxFile));
+		assertEquals("A \"black\\white\" ☎ telephone.jpg", FileUtil.getDatabaseBasename(someLinuxFile));		
+	}
 }

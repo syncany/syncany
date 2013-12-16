@@ -107,7 +107,8 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			File illegalFile = reconstructedFileAtFinalLocation;
 			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
 			
-			logger.log(Level.SEVERE, "     - Filename was ILLEGAL, cleaned from {0} to {1}", new Object[] { illegalFile, reconstructedFileAtFinalLocation });
+			logger.log(Level.SEVERE, "     - Filename was ILLEGAL: "+illegalFile);
+			logger.log(Level.SEVERE, "                 cleaned to: "+reconstructedFileAtFinalLocation);
 		}
 
 		// Make directory if it does not exist
@@ -140,12 +141,12 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}	
 
 	private File cleanFilename(File conflictFile) {
-		String originalDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
+		String originalDirectory = FileUtil.getDatabaseParentDirectory(conflictFile.getAbsolutePath());
 		String originalName = FileUtil.getDatabaseBasename(conflictFile.getAbsolutePath());
 		
 		String conflictName = cleanOsSpecificIllegalFilenames(originalName);
 				
-		String conflictBasename = FileUtil.getBasename(conflictName);
+		String conflictBasename = FileUtil.getDatabaseBasename(conflictName);
 		String conflictFileExtension = FileUtil.getExtension(conflictName, false);
 				
 		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);

@@ -76,13 +76,35 @@ public class FileUtil {
 	}
 	
 	public static String getDatabaseBasename(String filename) {
-		int lastIndexOfSlash = filename.lastIndexOf("/");
+		String databaseFilename = toDatabasePath(filename);
+		int lastIndexOfSlash = toDatabasePath(databaseFilename).lastIndexOf("/");
 		
 		if (lastIndexOfSlash == -1) {
-			return filename;
+			return databaseFilename;
 		}
 		else {
-			return filename.substring(lastIndexOfSlash+1);
+			return databaseFilename.substring(lastIndexOfSlash+1);
+		}
+	}
+	
+	public static String getDatabaseParentDirectory(String filename) {
+		String databaseFilename = toDatabasePath(filename);
+		int lastIndexOfSlash = toDatabasePath(databaseFilename).lastIndexOf("/");
+		
+		if (lastIndexOfSlash == -1) {
+			return databaseFilename;
+		}
+		else {
+			return databaseFilename.substring(0, lastIndexOfSlash);
+		}
+	}
+	
+	public static String toDatabasePath(String path) {
+		if (EnvUtil.isWindows()) {
+			return path.toString().replaceAll("\\\\", "/");
+		}
+		else {
+			return path;
 		}
 	}
 
