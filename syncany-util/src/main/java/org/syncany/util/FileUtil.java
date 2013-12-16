@@ -74,6 +74,17 @@ public class FileUtil {
 			return filename;
 		}
 	}
+	
+	public static String getDatabaseBasename(String filename) {
+		int lastIndexOfSlash = filename.lastIndexOf("/");
+		
+		if (lastIndexOfSlash == -1) {
+			return filename;
+		}
+		else {
+			return filename.substring(lastIndexOfSlash+1);
+		}
+	}
 
 	public static String getAbsoluteParentDirectory(File file) {
 		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
