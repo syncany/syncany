@@ -47,13 +47,7 @@ import java.util.List;
  */
 public class FileUtil {
 	public static String getRelativePath(File base, File file) {
-		String relativeFilePath = base.toURI().relativize(file.toURI()).getPath();
-		
-		if (relativeFilePath.endsWith(File.separator)) {
-			relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length() - 1);
-		}
-		
-		return relativeFilePath;
+		return removeTrailingSlash(base.toURI().relativize(file.toURI()).getPath());
 	}
 	
 	public static String getRelativeDatabasePath(File base, File file) {
@@ -65,17 +59,16 @@ public class FileUtil {
 		//       '/'-separated database path!
 		
 		if (isWindows()) {
-			String databasePath = relativeFilePath.toString().replaceAll("\\\\", "/");
-			return removeTrailingSlash(databasePath); 
+			return relativeFilePath.toString().replaceAll("\\\\", "/");
 		}
 		else {
-			return removeTrailingSlash(relativeFilePath);
+			return relativeFilePath;
 		}
 	}
 	
 	public static String removeTrailingSlash(String filename) {
-		if ("/".equals(filename.substring(filename.length()-1))) {
-			return filename.substring(0, filename.length()-1);
+		if (filename.endsWith(File.separator)) {
+			return filename.substring(0, filename.length() - 1);
 		}
 		else {
 			return filename;
@@ -237,10 +230,6 @@ public class FileUtil {
 
 		fis.close();
 		return complete.digest();
-	}
-
-	public static String toDatabaseFilePath(String path) {
-		return path.replaceAll("\\\\", "/");
 	}
 
 	public static boolean isFileLocked(File file) {

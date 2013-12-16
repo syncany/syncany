@@ -140,7 +140,7 @@ public class StatusOperation extends Operation {
 		
 		@Override
 		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
-			String relativeFilePath = FileUtil.getRelativePath(root.toFile(), actualLocalFile.toFile()); //root.relativize(actualLocalFile).toString();
+			String relativeFilePath = FileUtil.getRelativeDatabasePath(root.toFile(), actualLocalFile.toFile()); //root.relativize(actualLocalFile).toString();
 			
 			// Skip Syncany root folder
 			if (actualLocalFile.toFile().equals(config.getLocalDir())) {
