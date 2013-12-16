@@ -141,11 +141,11 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 
 	private File cleanFilename(File conflictFile) {
 		String originalDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
-		String originalName = conflictFile.getName();
+		String originalName = FileUtil.getDatabaseBasename(conflictFile.getAbsolutePath());
 		
 		String conflictName = cleanOsSpecificIllegalFilenames(originalName);
 				
-		String conflictBasename = FileUtil.getDatabaseBasename(conflictName);
+		String conflictBasename = FileUtil.getBasename(conflictName);
 		String conflictFileExtension = FileUtil.getExtension(conflictName, false);
 				
 		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
