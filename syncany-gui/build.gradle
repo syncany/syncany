@@ -34,7 +34,8 @@ switch(getOsName()) {
 }
 
 dependencies {
-	compile			project(':syncany-plugin-gui')
+	compile			project(':syncany-lib')
+    compile			project(':syncany-plugin-gui')
     runtime			project(':syncany-plugin-ftp')
     runtime			project(':syncany-plugin-rest')  
 	runtime			project(':syncany-plugin-gui-ftp')
