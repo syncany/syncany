@@ -17,6 +17,8 @@
  */
 package org.syncany.gui.wizard;
 
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -27,6 +29,8 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.util.I18n;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
 import org.syncany.gui.wizard.core.WizardAction;
@@ -41,6 +45,7 @@ public class NewDialog extends DefaultWizardPanel {
 	private Button ftpOptionRadio;
 	private Button otherPluginRadio;
 	private Combo pluginSelectionCombo;
+	private List<Plugin> pluginList = Plugins.list();
 	
 	/**
 	 * Create the dialog.
@@ -90,7 +95,9 @@ public class NewDialog extends DefaultWizardPanel {
 		otherPluginRadio.setText(I18n.getString("NewDialog.dialog.option.otherPlugin"));
 		
 		pluginSelectionCombo = new Combo(composite, SWT.NONE);
-		pluginSelectionCombo.setItems(new String[] {"Rest", "Amazon S3"});
+		for (Plugin p : pluginList){
+			pluginSelectionCombo.add(p.getName());
+		}
 		pluginSelectionCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		pluginSelectionCombo.setEnabled(false);
 		
