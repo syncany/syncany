@@ -26,6 +26,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.util.I18n;
 
 /**
+ * <code>DefaultDialog</code> subclasses SWT <code>Dialog</code> 
+ * and implements basics usefull features
+ * 
+ * All SWT dialog for the application should subclass <code>DefaultDialog</code>
+ * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
@@ -41,8 +46,12 @@ public abstract class DefaultDialog extends Dialog {
 	}
 	
 	/**
-	 * @param parent
-	 * @param style
+	 * 
+	 * @param parent <code>Shell</code> parent of this dialog
+	 * @param style styles to be applied to the dialog
+	 * @param title title of the dialog. By default. If title argument
+	 * 		is null then, <code>DefaultDialog</code> looks for 
+	 * 	<code>this.getCLass().getSimpleName() + ".dialog.title"</code> into i18n properties files
 	 */
 	public DefaultDialog(Shell parent, int style, String title) {
 		super(parent, style);
@@ -54,6 +63,10 @@ public abstract class DefaultDialog extends Dialog {
 		}
 	}
 	
+	/**
+	 * This method centers the dialog on the screen using
+	 * <code>Display.getCurrent().getPrimaryManitor()</code>
+	 */
 	protected void centerOnScreen(){
 		Monitor primary = Display.getCurrent().getPrimaryMonitor();
 		Rectangle bounds = primary.getBounds ();
