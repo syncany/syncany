@@ -35,7 +35,7 @@ public class PluginsTest {
 	public void testPluginsList() {
 		Collection<Plugin> pluginList = Plugins.list();		
 		
-		List<String> expectedPluginIds = Arrays.asList(new String[] { "local", "ftp", "s3", "unreliable_local" });
+		List<String> expectedPluginIds = Arrays.asList(new String[] { "local", "unreliable_local" });
 		List<String> actualPluginIds = new ArrayList<String>();
 		
 		for (Plugin plugin : pluginList) {
@@ -53,6 +53,6 @@ public class PluginsTest {
 	
 	@Test
 	public void testExistingPlugin() {
-		assertNotNull(Plugins.get("ftp"));
+		assertNotNull(Plugins.get("local"));
 	}
 }

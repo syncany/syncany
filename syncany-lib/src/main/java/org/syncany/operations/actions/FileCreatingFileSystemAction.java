@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -112,14 +111,15 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 
 		// Okay. Now move to real place
-		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
-
-		if (isLegalFilename(reconstructedFileAtFinalLocation)) {
-			FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
-		}
-		else {
+		if (!isLegalFilename(reconstructedFileAtFinalLocation)) {
+			File illegalFile = reconstructedFileAtFinalLocation;
 			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
+			
+			logger.log(Level.SEVERE, "     - Filename was ILLEGAL, cleaned from {0} to {1}", new Object[] { illegalFile.getName(), reconstructedFileAtFinalLocation.getName() });
 		}
+
+		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
+		FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
 
 		// Set attributes & timestamp
 		setFileAttributes(reconstructedFileVersion, reconstructedFileAtFinalLocation);
@@ -134,26 +134,40 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			return true;
 		}
 		catch (IOException e) {
+			logger.log(Level.SEVERE, "WARNING: Illegal file: "+file);
 			return false;
 		}
-	}
+	}	
 
 	private File cleanFilename(File conflictFile) {
-		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
-		String conflictBasename = FileUtil.getBasename(conflictFile);
-		String conflictFileExtension = FileUtil.getExtension(conflictBasename, false);
-
-		boolean conflictFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
+		String originalDirectory = FileUtil.getAbsoluteParentDirectory(conflictFile);
+		String originalBasename = FileUtil.getBasename(conflictFile);
+		String originalFileExtension = FileUtil.getExtension(originalBasename, false);
+				
+		boolean originalFileHasExtension = originalFileExtension != null && !"".equals(originalFileExtension);
 
 		String newFullName;
 
-		if (conflictFileHasExtension) {
-			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);
+		if (originalFileHasExtension) {
+			String conflictBasename = cleanOsSpecificString(originalBasename);
+			String conflictFileExtension = cleanOsSpecificString(originalFileExtension);
+			
+			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);						
 		}
 		else {
+			String conflictBasename = cleanOsSpecificString(originalBasename);
 			newFullName = String.format("%s (filename conflict)", conflictBasename);
 		}
 
-		return new File(conflictDirectory+File.separator+newFullName);
+		return new File(originalDirectory+File.separator+newFullName);
 	}
+
+	private String cleanOsSpecificString(String originalBasename) {
+		if (FileUtil.isWindows()) {
+			return originalBasename.replaceAll("[\\/:*?\"<>|]","");
+		}
+		else {
+			return originalBasename.replaceAll("[/]","");
+		}
+	}	 
 }

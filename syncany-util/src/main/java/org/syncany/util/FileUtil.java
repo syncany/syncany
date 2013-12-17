@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,12 +47,13 @@ import java.util.List;
  */
 public class FileUtil {
 	public static String getRelativePath(File base, File file) {
-		Path baseFilePath = Paths.get(base.getAbsolutePath());
-		Path filePath = Paths.get(file.getAbsolutePath());
-
-		Path relativeFilePath = baseFilePath.relativize(filePath);
-
-		return relativeFilePath.toString().replaceAll("\\\\", "/");
+		String relativeFilePath = base.toURI().relativize(file.toURI()).getPath();
+		
+		if (relativeFilePath.endsWith(File.separator)) {
+			relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length() - 1);
+		}
+		
+		return relativeFilePath.toString().replaceAll("\\\\", "/"); // TODO [high] This causes issues on Linux with files with backslashes "black\white.jpg"
 	}
 
 	public static String getAbsoluteParentDirectory(File file) {
@@ -403,7 +405,12 @@ public class FileUtil {
 	 * @return Returns <tt>true</tt> if a file exists (even if its symlink target does not), <tt>false</tt> otherwise
 	 */
 	public static boolean exists(File file) {
-		return Files.exists(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+		try {
+			return Files.exists(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (InvalidPathException e) {
+			return false;
+		}
 	}
 
 	/**

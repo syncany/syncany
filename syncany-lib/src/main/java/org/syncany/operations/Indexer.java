@@ -42,6 +42,7 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
+import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
@@ -188,7 +189,7 @@ public class Indexer {
 		}
 	}
 	private class IndexerDeduperListener implements DeduperListener {
-		private FileVersionComparator fileVersionHelper;
+		private FileVersionComparator fileVersionComparator;
 		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
 		private ChunkEntry chunkEntry;		
@@ -199,7 +200,7 @@ public class Indexer {
 		private FileProperties endFileProperties;		
 
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
-			this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
+			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 		}				
@@ -208,7 +209,7 @@ public class Indexer {
 		public boolean onFileFilter(File file) {
 			logger.log(Level.FINER, "- +File {0}", file); 
 			
-			startFileProperties = fileVersionHelper.captureFileProperties(file, null, false);
+			startFileProperties = fileVersionComparator.captureFileProperties(file, null, false);
 			
 			// Check if file has vanished
 			if (!startFileProperties.exists() || startFileProperties.isLocked()) {
@@ -239,7 +240,7 @@ public class Indexer {
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part, 
 			//       because the file could vanish!
 			FileChecksum fileChecksum = (rawFileChecksum != null) ? new FileChecksum(rawFileChecksum) : null; 
-			endFileProperties = fileVersionHelper.captureFileProperties(file, fileChecksum, false);
+			endFileProperties = fileVersionComparator.captureFileProperties(file, fileChecksum, false);
 			
 			// Check if file has vanished			
 			boolean fileIsLocked = endFileProperties.isLocked();
@@ -304,6 +305,13 @@ public class Indexer {
 			fileVersion.setUpdated(new Date());
 			fileVersion.setCreatedBy(config.getMachineName());
 			
+			if (FileUtil.isWindows()) {
+				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
+			}
+			else if (FileUtil.isUnixLikeOperatingSystem()) {
+				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
+			}
+
 			// Determine status
 			if (lastFileVersion != null) {
 				if (fileVersion.getType() == FileType.FILE && FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
@@ -317,47 +325,14 @@ public class Indexer {
 				}						
 			}	
 			
-			// Overwrite permissions/attributes only on the system we are on
-			boolean hasIdenticalPermsAndAttributes = true;
+			// Compare new and last version 
+			FileProperties lastFileVersionProperties = fileVersionComparator.captureFileProperties(lastFileVersion);
+			FileVersionComparison lastToNewFileVersionComparison = fileVersionComparator.compare(fileProperties, lastFileVersionProperties, true);
 			
-			if (FileUtil.isWindows()) {
-				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
-				
-				hasIdenticalPermsAndAttributes = 
-					   lastFileVersion != null
-					&& fileVersion.getPosixPermissions() != null
-					&& fileVersion.getPosixPermissions().equals(lastFileVersion.getPosixPermissions());
-			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
-				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
-				
-				hasIdenticalPermsAndAttributes = 
-					   lastFileVersion != null
-					&& fileVersion.getDosAttributes() != null
-					&& fileVersion.getDosAttributes().equals(lastFileVersion.getDosAttributes());							
-			}			
+			boolean newVersionDiffersFromToLastVersion = !lastToNewFileVersionComparison.equals();
 			
-			// Check identical link target
-			boolean hasIdenticalLinkTarget = true;
-			
-			if (lastFileVersion != null && lastFileVersion.getType() == FileType.SYMLINK
-				&& fileVersion.getType() == FileType.SYMLINK) {
-				
-				hasIdenticalLinkTarget = fileVersion.getLinkTarget().equals(lastFileVersion.getLinkTarget());
-			}
-											
-			// Only add if not identical
-			boolean isIdenticalToLastVersion = 
-				   lastFileVersion != null 
-				&& lastFileVersion.getPath().equals(fileVersion.getPath())
-				&& lastFileVersion.getType().equals(fileVersion.getType())
-				&& lastFileVersion.getSize().equals(fileVersion.getSize())
-				&& FileChecksum.fileChecksumEquals(lastFileVersion.getChecksum(), fileVersion.getChecksum())
-				&& lastFileVersion.getLastModified().equals(fileVersion.getLastModified())
-				&& hasIdenticalPermsAndAttributes
-				&& hasIdenticalLinkTarget;
-			
-			if (!isIdenticalToLastVersion) {
+			// Only add new version if it differs!			
+			if (newVersionDiffersFromToLastVersion) {
 				fileHistory.addFileVersion(fileVersion);
 				newDatabaseVersion.addFileHistory(fileHistory);
 				
@@ -365,7 +340,8 @@ public class Indexer {
 				logger.log(Level.INFO, "     based on file version: "+lastFileVersion);
 			}
 			else {
-				logger.log(Level.INFO, "   * NOT ADDING file version (identical to previous!): "+fileVersion+" IDENTICAL TO "+lastFileVersion);
+				logger.log(Level.INFO, "   * NOT ADDING file version: "+fileVersion);
+				logger.log(Level.INFO, "         b/c IDENTICAL prev.: "+lastFileVersion);
 			}
 			
 			// 3. Add file content (if not a directory)			

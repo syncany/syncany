@@ -1,0 +1,43 @@
+@startuml
+hide empty methods
+hide empty fields
+class Database
+Database "1" *- "1..*" DatabaseVersion
+class DatabaseVersion {
+      Date timestamp
+      VectorClock version
+      String owner
+}
+DatabaseVersion "1" *- "1..*" PartialFileHistory
+class PartialFileHistory {
+      RandomId id
+}
+PartialFileHistory "1" *- "1..*" FileVersion
+class FileVersion {
+      int version
+      String path
+      FileType type
+      FileStatus status
+      long size
+      Date lastModified
+      String linkTarget
+      String createdBy
+      Date updated
+      String posixPermissions
+      String dosAttributes
+}
+FileVersion "0..1" *- FileContent
+class FileContent {
+      Checksum checksum
+      long size
+}
+FileContent "1..*" o-- "1..*" ChunkEntry
+class ChunkEntry {
+      Checksum checksum
+      int size
+}
+MultiChunkEntry "1" *-- "1..*" ChunkEntry
+class MultiChunkEntry {
+      RandomId id
+}
+@enduml

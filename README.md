@@ -42,7 +42,7 @@ dependency magic. It should work out of the box.
         gradlew installApp           (on Windows)
 
 This compiles and installs the Syncany command line client to 
-`syncany/build/install/syncany`. You can run it from there.
+`syncany-cli/build/install/syncany/bin/syncany`. You can run it from there.
 
 **2. Install command line client (to run `syncany` from anywhere)**
 
