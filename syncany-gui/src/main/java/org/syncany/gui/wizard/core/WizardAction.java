@@ -15,26 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
-
-import java.util.Map;
-
-import org.eclipse.swt.widgets.Composite;
-
+package org.syncany.gui.wizard.core;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class PluginPanel extends Composite {
-
-	/**
-	 * @param parent
-	 * @param style
-	 */
-	public PluginPanel(Composite parent, int style) {
-		super(parent, style);
-	}
-
-	public abstract Map<String, String> getParameters();
+public enum WizardAction {
+	NEXT, 
+	PREVIOUS,
+	CONNECT, 
+	CREATE,
+	CANCEL;
 }

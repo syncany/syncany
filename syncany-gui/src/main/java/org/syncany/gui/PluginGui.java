@@ -20,8 +20,6 @@ package org.syncany.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.syncany.gui.panel.plugin.InitLocalOperationPanel;
-
 /**
  * @author vincent
  *
@@ -40,7 +38,6 @@ public class PluginGui {
 
 		list.add(new PluginGui("ftp", "org.syncany.gui.panel.plugin.InitFtpOperationPanel"));
 		list.add(new PluginGui("amazon s3","org.syncany.gui.panel.plugin.InitAmazonS3OperationPanel"));
-		list.add(new PluginGui("local", InitLocalOperationPanel.class.getCanonicalName()));
 		
 		return list;
 	}

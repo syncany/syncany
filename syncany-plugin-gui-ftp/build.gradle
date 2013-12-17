@@ -1,5 +1,3 @@
 dependencies {
 	compile			project(':syncany-plugin-gui')
-	
-	compile			"com.miglayout:miglayout-swing:4.2"
 }

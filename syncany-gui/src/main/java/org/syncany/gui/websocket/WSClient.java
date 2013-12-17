@@ -28,7 +28,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
-import org.syncany.gui.MainGUI;
+import org.syncany.gui.main.MainGUI;
 import org.syncany.gui.util.JsonHelper;
 
 /**
@@ -38,8 +38,6 @@ import org.syncany.gui.util.JsonHelper;
 public class WSClient {
 	private static final Logger log = Logger.getLogger(WSClient.class.getSimpleName());
 	private static final String DEFAULT_WS_SERVER = "ws://localhost:8887";
-
-	private static WSClient instance;
 
 	private String location;
 	private WebSocketClient client;
@@ -54,7 +52,7 @@ public class WSClient {
 	
 	private WebSocketClient createClient(String defaultlocation) throws URISyntaxException{
 		Map<String, String> map = new HashMap<>();
-		map.put("client_id", MainGUI.clientIdentification);
+		map.put("client_id", MainGUI.getClientIdentification());
 		
 		return new WebSocketClient(new URI(defaultlocation), new Draft_17(), map, 3000) {
 			@Override
@@ -95,12 +93,12 @@ public class WSClient {
 		return client;
 	}
 	
-	public static void startWebSocketConnection() {
-		instance().getClient().connect();
+	public void startWebSocketConnection() {
+		getClient().connect();
 	}
 	
-	public static void stop(){
-		instance().getClient().close();
+	public void stop(){
+		getClient().close();
 	}
 
 	public void handleReceivedMessage(String message) {
@@ -110,7 +108,7 @@ public class WSClient {
 		
 		switch (action){
 			case "update_watched_folders":
-				MainGUI.instance.getMf().updateFolders(folders);
+				//TODO
 			break;
 		}
 	}
@@ -130,16 +128,5 @@ public class WSClient {
 		catch (WebsocketNotConnectedException e){
 			log.warning("Websocket not connected");
 		}
-	}
-
-	public static WSClient instance() {
-		if (instance == null)
-			try {
-				instance = new WSClient();
-			}
-			catch (URISyntaxException e) {
-				e.printStackTrace();
-			}
-		return instance;
 	}
 }

@@ -102,3 +102,12 @@ task wrapper(type: Wrapper) {
 task clean(type: Delete){
 		delete 'build'
 }
+
+public String getOsName() {
+	String osDefinition;
+	String os = System.getProperty('os.name').toLowerCase().split()[0]; 
+	String arch = System.getProperty("os.arch");
+	String realArch = arch.substring(arch.length()-2, arch.length());
+
+	return os + "_" + realArch;
+}
