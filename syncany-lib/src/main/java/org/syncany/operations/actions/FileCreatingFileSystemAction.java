@@ -131,9 +131,8 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	private String cleanIllegalChars(String pathPart) {
-		if (FileUtil.isWindows()) {
-			String cleanedFilePath = pathPart.replaceAll("[\\/:*?\"<>|]","");						
-			return cleanedFilePath;
+		if (EnvUtil.isWindows()) {
+			return pathPart.replaceAll("[\\/:*?\"<>|]","");						
 		}
 		else {
 			return pathPart.replaceAll("[/]","");
@@ -172,7 +171,6 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
-		File reconstructedFileAtFinalLocation = getAbsolutePathFile(targetFileVersion.getPath());
 		NormalizedPath relativeNormalizedTargetPath = new NormalizedPath(targetFileVersion.getPath());
 		
 		// Create cleaned path

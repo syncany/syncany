@@ -529,7 +529,7 @@ public class FileUtil {
 		}
 		
 		public List<String> getParts() {
-			return Arrays.asList(normalizedPath.split("/"));
+			return Arrays.asList(normalizedPath.split("[/]"));
 		}
 		
 		public String getRelativePathTo(NormalizedPath base) {
