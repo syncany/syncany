@@ -530,17 +530,6 @@ public class FileUtil {
 		
 		public List<String> getParts() {
 			return Arrays.asList(normalizedPath.split("[/]"));
-		}
-		
-		public String getRelativePathTo(NormalizedPath base) {
-			String normalizedBasePath = base.toString();
-			
-			if (normalizedPath.startsWith(normalizedBasePath)) { // TODO [high] Windows case insensitive!
-				 return normalizedPath.substring(normalizedBasePath.length()+1);
-			}
-			else {
-				return null;
-			}
 		}		
 	}	
 }
