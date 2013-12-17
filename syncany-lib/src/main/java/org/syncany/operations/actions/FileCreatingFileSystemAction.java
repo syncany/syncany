@@ -120,7 +120,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 
 	
 	private boolean hasIllegalChars(String pathPart) {
-		if (EnvUtil.isWindows() && pathPart.matches(".*[\\/:*?\"<>|].*")) {
+		if (EnvUtil.isWindows() && pathPart.matches(".*[\\\\/:*?\"<>|].*")) {
 			return true;
 		}
 		else if (pathPart.matches(".*[/].*")) {
@@ -132,7 +132,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	
 	private String cleanIllegalChars(String pathPart) {
 		if (EnvUtil.isWindows()) {
-			return pathPart.replaceAll("[\\/:*?\"<>|]","");						
+			return pathPart.replaceAll("[\\\\/:*?\"<>|]","");						
 		}
 		else {
 			return pathPart.replaceAll("[/]","");

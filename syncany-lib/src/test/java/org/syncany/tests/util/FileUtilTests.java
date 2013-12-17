@@ -183,7 +183,7 @@ public class FileUtilTests {
 		// Does not depend on OS
 		
 		assertEquals("Philipp", new NormalizedPath("Philipp").getName());
-		assertEquals("", new NormalizedPath("Philipp").getParent()); 
+		assertEquals("", new NormalizedPath("Philipp").getParent()); 		
 	}
 	
 	@Test
