@@ -18,6 +18,8 @@
 package org.syncany.gui.wizard;
 
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -29,6 +31,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.gui.command.ClientCommandFactory;
 import org.syncany.gui.util.I18n;
 import org.syncany.gui.util.SWTResourceManager;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
@@ -118,18 +121,22 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		urlTextField.setSize(131, 21);
 		urlTextField.addModifyListener(this);
 		
-		urlMessageLabel = new Label(urlComposite, SWT.NONE);
-		urlMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		urlMessageLabel = new Label(urlComposite, SWT.WRAP);
+		urlMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		urlMessageLabel.setForeground(SWTResourceManager.getColor(SWT.COLOR_RED));
 
 		Composite messageComposite = new Composite(composite, SWT.NONE);
-		messageComposite.setLayout(new GridLayout(1, false));
-		messageComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		GridLayout gl_messageComposite = new GridLayout(1, false);
+		gl_messageComposite.marginWidth = 0;
+		gl_messageComposite.marginHeight = 0;
+		gl_messageComposite.verticalSpacing = 0;
+		messageComposite.setLayout(gl_messageComposite);
+		messageComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		
-		messageLabel = new Label(messageComposite, SWT.WRAP);
-		messageLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		messageLabel = new Label(messageComposite, SWT.BORDER | SWT.WRAP);
+		messageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		messageLabel.setSize(175, 15);
-		messageLabel.setText(I18n.getString("ConnectDialog.dialog.baseFolder", (String)System.getProperties().get("user.home")+"\\Syncany"));
+		messageLabel.setText(I18n.getString("ConnectDialog.dialog.baseFolder", getBaseFolder()));
 		
 		return composite;
 	}
@@ -141,12 +148,8 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 			boolean isUrlValid = validateUrlInput();
 			
 			if (isFolderValid && isUrlValid){
-				String folderName = folderTextField.getText();
-				String fullFolderPath = (String)System.getProperties().get("user.home") + File.separator + "Syncany" +File.separator + folderName;
-				
-				File f = new File(fullFolderPath);
-				f.mkdir();
-				
+				String fullFolderPath = getFolderName();
+				ClientCommandFactory.connect(urlTextField.getText(), fullFolderPath);
 				shell.dispose();
 			}
 		}
@@ -168,11 +171,16 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		folderMessageLabel.update();
 	}
 	
+	
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+	
 	private boolean validateUrlInput(){
 		String url = urlTextField.getText();
 		
-		if (url == null || url.length() < 5){
-			urlMessageLabel.setText("Entered URL is invalid");
+		Matcher linkMatcher = LINK_PATTERN.matcher(url);
+		
+		if (!linkMatcher.matches()) {
+			urlMessageLabel.setText("Invalid link provided, must start with syncany:// and match link pattern.");
 			return false;
 		}
 		else{
@@ -181,15 +189,25 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		}
 	}
 	
+	private String getFolderName(){
+		String folderName = folderTextField.getText();
+		return getBaseFolder() + File.separator + folderName;
+	}
+	
+	private String getBaseFolder(){
+		return (String)System.getProperties().get("user.home") + File.separator + "Syncany" +File.separator;
+	}
+	
 	private boolean validateFolderInput(){
 		String folderName = folderTextField.getText();
-		String fullFolderPath = (String)System.getProperties().get("user.home") + File.separator + "Syncany" +File.separator + folderName;
+		String fullFolderPath = getFolderName();
 		
 		if (folderName != null && folderName.length() > 0){
 			File f = new File(fullFolderPath);
 			if (f.exists()){
 				getConnectButton().setEnabled(false);
 				folderMessageLabel.setText(I18n.getString("ConnectDialog.dialog.folderAlreadyExists", folderName));
+				getParent().layout();
 				return false;
 			}
 			else{
