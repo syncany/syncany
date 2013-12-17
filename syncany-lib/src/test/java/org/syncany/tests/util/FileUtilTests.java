@@ -35,13 +35,14 @@ import org.junit.Test;
 import org.syncany.util.EnvUtil;
 import org.syncany.util.EnvUtil.OperatingSystem;
 import org.syncany.util.FileUtil;
+import org.syncany.util.FileUtil.NormalizedPath;
 
 public class FileUtilTests {
-	private OperatingSystem operatingSystem;
+	private OperatingSystem originalOperatingSystem;
 	
 	@Before
 	public void storeOperatingSystem() {
-		operatingSystem = EnvUtil.getOperatingSystem();
+		originalOperatingSystem = EnvUtil.getOperatingSystem();
 	}
 	
 	@After
@@ -49,7 +50,7 @@ public class FileUtilTests {
 		// Important: Restore the actual operating systems, 
 		//            or other tests might fail.
 		
-		EnvUtil.setOperatingSystem(operatingSystem);
+		EnvUtil.setOperatingSystem(originalOperatingSystem);
 	}
 	
 	@Test
@@ -137,4 +138,77 @@ public class FileUtilTests {
 		assertEquals("/home/philipp", FileUtil.getDatabaseParentDirectory(someLinuxFile));
 		assertEquals("A \"black\\white\" ☎ telephone.jpg", FileUtil.getDatabaseBasename(someLinuxFile));		
 	}
+	
+	@Test
+	public void testNameAndParentPathForNormalizedPathsOnWindows() {		
+		testNameAndParentPathForNormalizedPaths(OperatingSystem.WINDOWS);
+	}
+	
+	@Test
+	public void testNameAndParentPathForNormalizedPathsOnUnixLikeSystems() {		
+		testNameAndParentPathForNormalizedPaths(OperatingSystem.UNIX_LIKE);
+	}
+
+	private void testNameAndParentPathForNormalizedPaths(OperatingSystem operatingSystem) {		
+		EnvUtil.setOperatingSystem(operatingSystem);
+		
+		// Test 1: For a file called 'A black\white telephone ☎.jpg' 
+		//         Note: "A black" is NOT a directory, it's part of the filename (invalid on Windows!)		
+		String alreadyNormalizedRelativePathFileStr = "Pictures/A black\\white telephone ☎.jpg";
+		NormalizedPath normalizedPathFile = new NormalizedPath(alreadyNormalizedRelativePathFileStr);
+		
+		assertEquals("Pictures/A black\\white telephone ☎.jpg", normalizedPathFile.toString());
+		assertEquals("A black\\white telephone ☎.jpg", normalizedPathFile.getName());
+		assertEquals("Pictures", normalizedPathFile.getParent());
+
+		// Test 2: For directory called 'black\\white telephones ☎' 		
+		String alreadyNormalizedRelativePathDirStr = "Pictures/black\\white telephones ☎";
+		NormalizedPath normalizedPathDir = new NormalizedPath(alreadyNormalizedRelativePathDirStr);
+		
+		assertEquals("Pictures/black\\white telephones ☎", normalizedPathDir.toString());
+		assertEquals("black\\white telephones ☎", normalizedPathDir.getName());
+		assertEquals("Pictures", normalizedPathDir.getParent());
+		
+		// Test 3: For directory called 'black\\white telephones ☎' 		
+		String alreadyNormalizedRelativePathFileWithBackslashesDirStr = "Pictures/Black\\White Pictures/Mostly\\Black Pictures/blacky.jpg";
+		NormalizedPath normalizedPathWithBackslashesDir = new NormalizedPath(alreadyNormalizedRelativePathFileWithBackslashesDirStr);
+		
+		assertEquals("Pictures/Black\\White Pictures/Mostly\\Black Pictures/blacky.jpg", normalizedPathWithBackslashesDir.toString());
+		assertEquals("blacky.jpg", normalizedPathWithBackslashesDir.getName());
+		assertEquals("Pictures/Black\\White Pictures/Mostly\\Black Pictures", normalizedPathWithBackslashesDir.getParent());		
+	}
+	
+	@Test
+	public void testNameAndParentPathForNormalizedPathsMoreTests() {		
+		// Does not depend on OS
+		
+		assertEquals("Philipp", new NormalizedPath("Philipp").getName());
+		assertEquals("", new NormalizedPath("Philipp").getParent()); 
+	}
+	
+	@Test
+	public void testNormalizationOnWindows() {		
+		EnvUtil.setOperatingSystem(OperatingSystem.WINDOWS);
+		
+		assertEquals("C:/Philipp", NormalizedPath.get("C:\\Philipp\\").toString());
+		assertEquals("C:/Philipp", NormalizedPath.get("C:\\Philipp").toString());
+		assertEquals("C:/Philipp/image.jpg", NormalizedPath.get("C:\\Philipp\\image.jpg").toString());
+		assertEquals("C:/Philipp/image", NormalizedPath.get("C:\\Philipp\\image").toString());
+		assertEquals("C:/Philipp/file:with:colons.txt", NormalizedPath.get("C:\\Philipp\\file:with:colons.txt").toString()); // Cannot happen on Windows 
+		assertEquals("C:/Philipp/file/with/backslashes.txt", NormalizedPath.get("C:\\Philipp\\file\\with\\backslashes.txt").toString()); 
+		assertEquals("C:/Philipp/folder/with/backslashes", NormalizedPath.get("C:\\Philipp\\folder\\with\\backslashes\\").toString()); 
+	}
+	
+	@Test
+	public void testNormalizationOnUnixLikeSystems() {
+		EnvUtil.setOperatingSystem(OperatingSystem.UNIX_LIKE);
+
+		assertEquals("/home/philipp", NormalizedPath.get("/home/philipp/").toString());
+		assertEquals("/home/philipp", NormalizedPath.get("/home/philipp").toString());
+		assertEquals("/home/philipp/image.jpg", NormalizedPath.get("/home/philipp/image.jpg").toString());
+		assertEquals("/home/philipp/image", NormalizedPath.get("/home/philipp/image").toString());
+		assertEquals("/home/philipp/file:with:colons", NormalizedPath.get("/home/philipp/file:with:colons").toString());
+		assertEquals("/home/philipp/file\\with\\backslashes.txt", NormalizedPath.get("/home/philipp/file\\with\\backslashes.txt").toString());
+		assertEquals("/home/philipp/folder\\with\\backslashes", NormalizedPath.get("/home/philipp/folder\\with\\backslashes/").toString());		
+	}	
 }

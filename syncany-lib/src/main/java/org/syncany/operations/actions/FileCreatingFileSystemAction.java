@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.apache.commons.io.FileUtils;
@@ -34,7 +36,10 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.util.EnvUtil;
 import org.syncany.util.FileUtil;
+import org.syncany.util.FileUtil.NormalizedPath;
+import org.syncany.util.StringUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	public FileCreatingFileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
@@ -66,7 +71,11 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
-		File reconstructedFileAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+		File reconstructedFileInCache = assembleFileToCache(reconstructedFileVersion);		
+		moveFileToFinalLocation(reconstructedFileInCache, reconstructedFileVersion);	
+	}
+	
+	private File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
 		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");
 
@@ -101,30 +110,119 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 
 		reconstructedFileOutputStream.close();
+		
+		// Set attributes & timestamp
+		setFileAttributes(reconstructedFileVersion, reconstructedFileInCache);
+		setLastModified(reconstructedFileVersion, reconstructedFileInCache);
+		
+		return reconstructedFileInCache;
+	}
 
-		// Okay. Now move to real place
-		if (isIllegalFilename(reconstructedFileAtFinalLocation)) {
-			File illegalFile = reconstructedFileAtFinalLocation;
-			reconstructedFileAtFinalLocation = cleanFilename(reconstructedFileAtFinalLocation);
-			
-			logger.log(Level.SEVERE, "     - Filename was ILLEGAL: "+illegalFile);
-			logger.log(Level.SEVERE, "                 cleaned to: "+reconstructedFileAtFinalLocation);
+	
+	private boolean hasIllegalChars(String pathPart) {
+		if (EnvUtil.isWindows() && pathPart.matches("[\\/:*?\"<>|]")) {
+			return true;
 		}
+		else if (pathPart.matches("[/]")) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private String cleanIllegalChars(String pathPart) {
+		if (FileUtil.isWindows()) {
+			String cleanedFilePath = pathPart.replaceAll("[\\/:*?\"<>|]","");						
+			return cleanedFilePath;
+		}
+		else {
+			return pathPart.replaceAll("[/]","");
+		}
+	}	
+	
+	private String cleanAsciiOnly(String pathPart) {
+		return pathPart.replaceAll("[^a-zA-Z0-9., ]","");
+	}	
+	
+	private String addFilenameConflictSuffix(String pathPart) {
+		String conflictFileExtension = FileUtil.getExtension(pathPart, false);		
+		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
+
+		if (originalFileHasExtension) {
+			return String.format("%s (filename conflict).%s", pathPart, conflictFileExtension);						
+		}
+		else {
+			return String.format("%s (filename conflict)", pathPart);
+		}
+	}
+	
+	private boolean canCreate(String pathPart) {
+		File tmpFile = new File(config.getCacheDir()+File.separator+pathPart);
+
+		try {
+			tmpFile.createNewFile();
+			tmpFile.delete();
+
+			return true;
+		}
+		catch (IOException e) {
+			logger.log(Level.SEVERE, "WARNING: Cannot create file: "+tmpFile);
+			return false;
+		}
+	}
+	
+	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
+		File reconstructedFileAtFinalLocation = getAbsolutePathFile(targetFileVersion.getPath());
+		NormalizedPath relativeNormalizedTargetPath = new NormalizedPath(targetFileVersion.getPath());
+		
+		// Create cleaned path
+		List<String> cleanedRelativePathParts = new ArrayList<String>();
+		
+		for (String pathPart : relativeNormalizedTargetPath.getParts()) {
+			if (hasIllegalChars(pathPart)) {
+				String cleanedParentPart = addFilenameConflictSuffix(cleanIllegalChars(pathPart));
+				
+				if (canCreate(cleanedParentPart)) {
+					pathPart = cleanedParentPart;
+				}
+				else {
+					pathPart = addFilenameConflictSuffix(cleanAsciiOnly(pathPart));
+				}				
+			}
+			
+			cleanedRelativePathParts.add(pathPart);			
+		}
+		
+		String cleanedRelativeTargetPath = StringUtil.join(cleanedRelativePathParts, File.separator);
+		NormalizedPath normalizedCleanedRelativeTargetPath = new NormalizedPath(cleanedRelativeTargetPath);
+		
+		File absoluteTargetDir = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath.getParent());
+		File absoluteTargetFile = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath);
+			
 
 		// Make directory if it does not exist
-		File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
 
-		if (!FileUtil.exists(reconstructedFileParentDir)) {
-			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + reconstructedFileParentDir + " ...");
-			reconstructedFileParentDir.mkdirs();
+		if (!FileUtil.exists(absoluteTargetDir)) {
+			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + absoluteTargetDir + " ...");
+			absoluteTargetDir.mkdirs();
 		}
 
-		logger.log(Level.INFO, "     - Okay, now moving to " + reconstructedFileAtFinalLocation + " ...");
-		FileUtils.moveFile(reconstructedFileInCache, reconstructedFileAtFinalLocation); // TODO [medium] This should be in a try/catch block
+		logger.log(Level.INFO, "     - Okay, now moving to " + absoluteTargetFile + " ...");
+		FileUtils.moveFile(reconstructedFileInCache, absoluteTargetFile); // TODO [medium] This should be in a try/catch block
 
-		// Set attributes & timestamp
-		setFileAttributes(reconstructedFileVersion, reconstructedFileAtFinalLocation);
-		setLastModified(reconstructedFileVersion);
+		
+	
+		
+		/*     pictures/
+		 *       some/
+		 *         folder/
+		 *           file.jpg
+		 *       some\\folder/
+		 * ->       file.jpg
+		 * 
+		 *  relativeNormalizedPath = pictures/some\\folder/file.jpg
+		 */
+		
 	}
 
 	private boolean isIllegalFilename(File file) throws IOException {
