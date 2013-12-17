@@ -1,0 +1,113 @@
+Syncany, v%VERSION%, copyright (c) 2011-2013 Philipp C. Heckel
+Usage: sy [-l|--localdir=<path>] [--log=<path>]
+          [--loglevel=OFF|SEVERE|..] [--print-log]
+          [-d|--debug] [-h|--help] <command> [<args>]
+
+Global options:
+  -l, --localdir=<path>
+      Use <path> instead of the current directory as local sync folder. 
+      Syncany searches for a '.syncany' folder in the given and all parent
+      directories.
+
+  -d, --debug
+      Sets the log level to ALL, and print the log to the console.
+      Alias to: --loglevel=ALL --print-log
+
+  -h, --help
+      Print this help screen
+
+  --log=<path>
+      Log output to the file given by <path>. If - is given, the
+      output will be logged to STDOUT (default).
+
+  --loglevel=<level>
+      Change log level to <level>. Level can be either of the
+      following: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL
+
+  --print
+      Print the log to the console (in addition to the log file).
+
+Commands:
+  init [<args>]
+      Initialize the current folder as a Syncany folder (interactive).		
+      Currently loaded plugins: %PLUGINS%
+
+      Arguments:
+      -p, --plugin=<plugin>            Specify a plugin to use for storage 
+      -P, --plugin-option=<key=value>  Set plugin settings (multi-option)
+      -e, --no-encryption              Do not encrypt new repo
+      -a, --no-gzip                    Do not use gzip-compression in new repo
+      -a, --advanced                   Asks more questions about encryption
+
+  connect [<args>] [<syncany link>]
+      Connect the current folder to an existing Syncany repository. To
+      initialize the connection a Syncany link (syncany://..) can be used.
+
+      Arguments:
+      -p, --plugin=<plugin>            Specify a plugin to use for storage 
+      -P, --plugin-option=<key=value>  Set plugin settings (multi-option)
+
+  up [<args>]
+      Detect local changes and upload to repo (commit)
+
+      Arguments:
+      -F, --force-upload               Force upload even if remote changes exist
+      -c, --no-cleanup                 Do not merge own databases in repo
+
+      In addition to these arguments, all arguments of the 'status' command
+      can be used.
+
+  down
+      Detect remote changes and apply locally (update)
+
+  sync [<args>]
+      Synchronizes the local folder with the remote repository by calling the
+      down command and the up command. All arguments of the up, down, status, 
+      ls-remote commands can be used.
+
+  status [<args>]
+      Detect local changes and print to STDOUT.
+
+      Arguments:
+      -f, --force-checksum             Force checksum comparison, if not enabled
+                                       mod. date/size is used
+
+  ls-remote
+      Detect remote changes and print to STDOUT.
+
+  watch [<args>]
+      Performs the sync-command in a loop. In future releases, this command will
+      watch the file system.
+
+      Arguments:
+      -i, --interval=<sec>             Sync every <sec> seconds (default is 120)
+      -s, --delay=<sec>                Watcher: Wait for <sec> seconds for file
+                                       system watcher to settle before starting 
+                                       to sync (default: 3)
+      -W, --no-watcher                 No file system watch (rely on interval)
+      -a, --announce=<host>:<port>     Hostname and port to fanout pub/sub 
+                                       server (default: notify.syncany.org:8080)
+      -N, --no-announcements           Don't connect to fanout pub/sub server;
+                                       disables instant sync
+
+      In addition to these arguments, all arguments of the up, down, status, 
+      ls-remote commands can be used.
+		
+  restore [<args>] <paths>
+      Restore the given file paths from the remote repository.
+      This command is EXPERIMENTAL!
+      
+      Arguments:
+      -D, --date=<unit(smhDMWY)>       Restore versions prior a relative date
+      -D, --date=<dd-mm-yy>            Restore versions prior an absolute date
+      -v, --version=<[-]version>       Restore <version> or go back <version>s 
+
+  log [<args>] [<paths>]
+      Print to STDOUT information stored in the local database about the given
+      file paths or all paths known by the database if no path is given. The
+      output format is unstable and might change in future releases.
+
+      Arguments:
+      -f, --format=<format>            Specifies format to use for printing log.
+                                       Recognized formats: %LOGFORMATS%
+

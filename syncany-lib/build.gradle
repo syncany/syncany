@@ -11,3 +11,25 @@ dependencies {
             
 	testCompile     "junit:junit:4.3"
 }
+
+
+def getRevision = { ->
+    def stdout = new ByteArrayOutputStream()
+    
+    exec {
+		workingDir rootProject.projectDir
+        commandLine 'git rev-parse --short HEAD'.split()
+        standardOutput = stdout
+    }
+    
+    return stdout.toString().trim()
+}
+
+processResources {
+	String revision = getRevision()
+		
+	filter{ String line -> line.replaceAll('%RELEASE%', "${applicationRelease}") }        	            
+	filter{ String line -> line.replaceAll('%VERSION%', "${applicationVersion}") }        	            
+	filter{ String line -> line.replaceAll('%REVISION%', "${revision}") }        	            
+}
+	

@@ -24,6 +24,7 @@ import static org.syncany.cli.CommandScope.UNINITIALIZED_LOCALDIR;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
@@ -41,6 +42,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
@@ -59,6 +61,10 @@ import org.syncany.util.StringUtil.StringJoinListener;
 
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
+	private static final String HELP_TEXT_SKEL_RESOURCE = "/help.skel";
+	private static final String HELP_TEXT_VAR_VERSION= "%VERSION%";
+	private static final String HELP_TEXT_VAR_PLUGINS = "%PLUGINS%";
+	private static final String HELP_TEXT_VAR_LOGFORMATS = "%LOGFORMATS%";
 	
 	private String[] args;	
 	private File localDir;
@@ -109,7 +115,7 @@ public class CommandLineClient extends Client {
 		}
 	}	
 
-	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) {
+	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws IOException {
 		if (options.has(optionHelp) || nonOptions.size() == 0) {
 			showUsageAndExit();
 		}
@@ -295,7 +301,20 @@ public class CommandLineClient extends Client {
 		return exitCode;	
 	}
 	
-	private void showUsageAndExit() {
+	private void showUsageAndExit() throws IOException {
+		// Application Version
+		String versionStr = Client.getApplicationVersion();
+		
+		if (!Client.isApplicationRelease()) {
+			if (Client.getApplicationRevision() != null && !"".equals(Client.getApplicationRevision())) {
+				versionStr += ", rev. "+Client.getApplicationRevision();
+			}
+			else {
+				versionStr += ", no rev.";
+			}
+		}
+				
+		// Plugins
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
 		
 		String pluginsStr = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
@@ -305,115 +324,19 @@ public class CommandLineClient extends Client {
 			}			
 		});		
 		
-		String logCommandFormat = StringUtil.join(LogCommand.getSupportedFormats(), ", ");
+		// Log formats
+		String logCommandFormatsStr = StringUtil.join(LogCommand.getSupportedFormats(), ", ");
 		
-		out.println("Syncany, version 0.1, copyright (c) 2011-2013 Philipp C. Heckel");
-		out.println("Usage: sy [-l|--localdir=<path>] [--log=<path>]");
-		out.println("          [--loglevel=OFF|SEVERE|..] [--print-log]");
-		out.println("          [-d|--debug] [-h|--help] <command> [<args>]");
-		out.println();
-		out.println("Global options:");
-		out.println("  -l, --localdir=<path>");
-		out.println("      Use <path> instead of the current directory as local sync folder. ");
-		out.println("      Syncany searches for a '.syncany' folder in the given and all parent");
-		out.println("      directories.");
-		out.println();
-		out.println("  -d, --debug");
-		out.println("      Sets the log level to ALL, and print the log to the console.");
-		out.println("      Alias to: --loglevel=ALL --print-log");
-		out.println();
-		out.println("  -h, --help");
-		out.println("      Print this help screen");
-		out.println();
-		out.println("  --log=<path>");
-		out.println("      Log output to the file given by <path>. If - is given, the");
-		out.println("      output will be logged to STDOUT (default).");
-		out.println();
-		out.println("  --loglevel=<level>");
-		out.println("      Change log level to <level>. Level can be either of the");
-		out.println("      following: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL");
-		out.println();
-		out.println("  --print");
-		out.println("      Print the log to the console (in addition to the log file).");
-		out.println();
-		out.println("Commands:");
-		out.println("  init [<args>]");
-		out.println("      Initialize the current folder as a Syncany folder (interactive).");		
-		out.println("      Currently loaded plugins: "+pluginsStr);
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above)");
-		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times");
-		out.println("      -e, --no-encryption              The new repo will not be encrypted (no password, DON'T USE THIS)");
-		out.println("      -a, --no-gzip                    The new repo will not use gzip to compress files");
-		out.println("      -a, --advanced                   Asks more questions in the interactive dialog (pick cipher, etc.)");
-		out.println();
-		out.println("  connect [<args>] [<syncany link>]");
-		out.println("      Connect the current folder to an existing Syncany repository. To initialize the connection");
-		out.println("      a Syncany link (syncany://..) can be used.");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -p, --plugin=<plugin>            Specify a plugin to use for storage (see list above)");
-		out.println("      -P, --plugin-option=<key=value>  Set plugin settings, can/must be used multiple times");
-		out.println();
-		out.println("  up [<args>]");
-		out.println("      Detect local changes and upload to repo (commit)");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -F, --force-upload               Force upload even if remote changes exist (will conflict!)");
-		out.println("      -c, --no-cleanup                 Do not merge own databases in repo");
-		out.println();
-		out.println("      In addition to these arguments, all arguments of the 'status' command can be used.");
-		out.println();
-		out.println("  down");
-		out.println("      Detect remote changes and apply locally (update)");
-		out.println();
-		out.println("  sync [<args>]");
-		out.println("      Synchronizes the local folder with the remote repository by calling the down command");	
-		out.println("      and the up command. All arguments of the up/down/status/ls-remote commands can be used.");
-		out.println();
-		out.println("  status [<args>]");
-		out.println("      Detect local changes and print to STDOUT.");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -f, --force-checksum             Force checksum comparison, if not enabled mod. date/size is used");
-		out.println();
-		out.println("  ls-remote");
-		out.println("      Detect remote changes and print to STDOUT.");
-		out.println();
-		out.println("  watch [<args>]");
-		out.println("      Performs the sync-command in a loop. In future releases, this command will");
-		out.println("      watch the file system.");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -i, --interval=<sec>             Repeat sync every <sec> seconds (default is 120)");
-		out.println("      -s, --delay=<sec>                Watcher: Wait for <sec> seconds for file system watcher to");
-		out.println("                                       settle before starting to sync (default: 3)");
-		out.println("      -W, --no-watcher                 Don't watch the file system (rely on periodic sync)");
-		out.println("      -a, --announce=<host>:<port>     Hostname and port to fanout pub/sub server");
-		out.println("                                       (default: notify.syncany.org:8080)");
-		out.println("      -N, --no-announcements           Don't connect to fanout pub/sub server (no instant sync)");
-		out.println();
-		out.println("      In addition to these arguments, all arguments from the up/down/status/ls-remote commands");
-		out.println("      can be used.");
-		out.println();		
-		out.println("  restore [<args>] <paths>");
-		out.println("      Restore the given file paths from the remote repository.");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -D, --date=<unit(smhDMWY)>       Restore versions prior to the given relative date");
-		out.println("      -D, --date=<dd-mm-yy>            Restore versions prior to the given absolute date");
-		out.println("      -v, --version=<[-]version>       Restore <version> or go back <version> versions");
-		out.println();
-		out.println("  log [<args>] [<paths>]");
-		out.println("      Print to STDOUT information stored in the local database about the given file paths or");
-		out.println("      all paths known by the database if no path is given. The output format is unstable and");
-		out.println("      might change in future releases.");
-		out.println();
-		out.println("      Arguments:");
-		out.println("      -f, --format=<format>            Specifies the format to use for printing the log.");
-		out.println("                                       Recognized formats: " + logCommandFormat);
-		out.println();
+		// Print help text		
+		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(HELP_TEXT_SKEL_RESOURCE);
+		
+		for (String line : IOUtils.readLines(helpTextInputStream)) {
+			line = line.replace(HELP_TEXT_VAR_VERSION, versionStr);
+			line = line.replace(HELP_TEXT_VAR_PLUGINS, pluginsStr);
+			line = line.replace(HELP_TEXT_VAR_LOGFORMATS, logCommandFormatsStr);
+			
+			out.println(line);
+		}
 		
 		out.close();		
 		System.exit(0);
