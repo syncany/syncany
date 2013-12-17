@@ -172,11 +172,14 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	
 	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
 		NormalizedPath relativeNormalizedTargetPath = new NormalizedPath(targetFileVersion.getPath());
+		logger.log(Level.INFO, "     - Processing file (rel./norm.): "+relativeNormalizedTargetPath);
 		
 		// Create cleaned path
 		List<String> cleanedRelativePathParts = new ArrayList<String>();
 		
 		for (String pathPart : relativeNormalizedTargetPath.getParts()) {
+			logger.log(Level.INFO, "       + Part: "+pathPart);
+
 			if (hasIllegalChars(pathPart)) {
 				String cleanedParentPart = addFilenameConflictSuffix(cleanIllegalChars(pathPart));
 				
@@ -186,6 +189,8 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 				else {
 					pathPart = addFilenameConflictSuffix(cleanAsciiOnly(pathPart));
 				}				
+				
+				logger.log(Level.INFO, "       + WAS ILLEGAL: Now: "+pathPart);
 			}
 			
 			cleanedRelativePathParts.add(pathPart);			
