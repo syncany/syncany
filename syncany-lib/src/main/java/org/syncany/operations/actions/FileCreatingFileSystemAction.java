@@ -62,12 +62,14 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 	}
 
-	protected void createFolder(FileVersion reconstructedFileVersion) throws IOException {
-		File reconstructedFilesAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
+	protected void createFolder(FileVersion targetFileVersion) throws IOException {
+		NormalizedPath normalizedCleanedRelativeTargetPath = createCreatableTargetPath(targetFileVersion.getPath());
+		File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath);
+		
 		logger.log(Level.INFO, "     - Creating folder at " + reconstructedFilesAtFinalLocation + " ...");
 
 		reconstructedFilesAtFinalLocation.mkdirs();
-		setFileAttributes(reconstructedFileVersion);
+		setFileAttributes(targetFileVersion, reconstructedFilesAtFinalLocation);
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
@@ -170,16 +172,23 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 	}
 	
-	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
-		NormalizedPath relativeNormalizedTargetPath = new NormalizedPath(targetFileVersion.getPath());
+	/*     pictures/
+	 *       some/
+	 *         folder/
+	 *           file.jpg
+	 *       some\\folder/
+	 * ->       file.jpg
+	 * 
+	 *  relativeNormalizedPath = pictures/some\\folder/file.jpg
+	 */
+	private NormalizedPath createCreatableTargetPath(String fullTargetPath) {
+		NormalizedPath relativeNormalizedTargetPath = new NormalizedPath(fullTargetPath);
 		logger.log(Level.INFO, "     - Processing file (rel./norm.): "+relativeNormalizedTargetPath);
 		
 		// Create cleaned path
 		List<String> cleanedRelativePathParts = new ArrayList<String>();
 		
 		for (String pathPart : relativeNormalizedTargetPath.getParts()) {
-			logger.log(Level.INFO, "       + Part: "+pathPart);
-
 			if (hasIllegalChars(pathPart)) {
 				String cleanedParentPart = addFilenameConflictSuffix(cleanIllegalChars(pathPart));
 				
@@ -197,87 +206,23 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 		
 		String cleanedRelativeTargetPath = StringUtil.join(cleanedRelativePathParts, File.separator);
-		NormalizedPath normalizedCleanedRelativeTargetPath = new NormalizedPath(cleanedRelativeTargetPath);
+		return new NormalizedPath(cleanedRelativeTargetPath);		
+	}
+	
+	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
+		NormalizedPath normalizedCleanedRelativeTargetPath = createCreatableTargetPath(targetFileVersion.getPath());		
 		
-		File absoluteTargetDir = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath.getParent());
-		File absoluteTargetFile = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath);
-			
-
 		// Make directory if it does not exist
+		File absoluteTargetDir = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath.getParent());
 
 		if (!FileUtil.exists(absoluteTargetDir)) {
 			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + absoluteTargetDir + " ...");
 			absoluteTargetDir.mkdirs();
 		}
-
+		
+		// And actually move the file
+		File absoluteTargetFile = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath);
 		logger.log(Level.INFO, "     - Okay, now moving to " + absoluteTargetFile + " ...");
 		FileUtils.moveFile(reconstructedFileInCache, absoluteTargetFile); // TODO [medium] This should be in a try/catch block
-
-		
-	
-		
-		/*     pictures/
-		 *       some/
-		 *         folder/
-		 *           file.jpg
-		 *       some\\folder/
-		 * ->       file.jpg
-		 * 
-		 *  relativeNormalizedPath = pictures/some\\folder/file.jpg
-		 */
-		
 	}
-
-	private boolean isIllegalFilename(File file) throws IOException {
-		try {
-			file.createNewFile();
-			file.delete();
-
-			return false;
-		}
-		catch (IOException e) {
-			logger.log(Level.SEVERE, "WARNING: Illegal file: "+file);
-			return true;
-		}
-	}	
-
-	private File cleanFilename(File conflictFile) {
-		String originalDirectory = FileUtil.getDatabaseParentDirectory(conflictFile.getAbsolutePath());
-		String originalName = FileUtil.getDatabaseBasename(conflictFile.getAbsolutePath());
-		
-		String conflictName = cleanOsSpecificIllegalFilenames(originalName);
-				
-		String conflictBasename = FileUtil.getDatabaseBasename(conflictName);
-		String conflictFileExtension = FileUtil.getExtension(conflictName, false);
-				
-		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
-
-		String newFullName;
-
-		if (originalFileHasExtension) {
-			newFullName = String.format("%s (filename conflict).%s", conflictBasename, conflictFileExtension);						
-		}
-		else {
-			newFullName = String.format("%s (filename conflict)", conflictBasename);
-		}
-
-		return new File(originalDirectory+File.separator+newFullName);
-	}
-	
-	private String cleanOsSpecificIllegalFilenames(String originalFilename) {
-		if (FileUtil.isWindows()) {
-			String cleanedFilePath = originalFilename.replaceAll("[\\/:*?\"<>|]","");
-			
-			if (originalFilename.endsWith(".")) {
-				cleanedFilePath = cleanedFilePath.substring(0, cleanedFilePath.length()-1);
-			}	
-			
-			// TODO [medium] Many Windows special cases missing: COM, (empty), ...
-			
-			return cleanedFilePath;
-		}
-		else {
-			return originalFilename.replaceAll("[/]","");
-		}
-	}		
 }
