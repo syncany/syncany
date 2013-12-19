@@ -34,7 +34,7 @@ public class NewFileSystemAction extends FileCreatingFileSystemAction {
 				// Nothing to do
 			}
 			else {
-				createConflictFile(fileVersion2);
+				moveToConflictFile(fileVersion2);
 				createFileFolderOrSymlink(fileVersion2);				
 			}
 		}

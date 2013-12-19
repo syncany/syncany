@@ -21,11 +21,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Level;
 
+import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
@@ -36,10 +35,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.util.EnvUtil;
 import org.syncany.util.FileUtil;
-import org.syncany.util.FileUtil.NormalizedPath;
-import org.syncany.util.StringUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	public FileCreatingFileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
@@ -62,14 +58,25 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 	}
 
-	protected void createFolder(FileVersion targetFileVersion) throws IOException {
-		NormalizedPath normalizedCleanedRelativeTargetPath = createCreatableTargetPath(targetFileVersion.getPath());
-		File reconstructedFilesAtFinalLocation = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath);
+	protected void createFolder(FileVersion targetFileVersion) throws Exception {
+		NormalizedPath targetDirPath = new NormalizedPath(config.getLocalDir(), targetFileVersion.getPath());
 		
-		logger.log(Level.INFO, "     - Creating folder at " + reconstructedFilesAtFinalLocation + " ...");
+		logger.log(Level.INFO, "     - Creating folder at " + targetFileVersion + " ...");
+		
+		try {
+			// Clean filename
+			if (targetDirPath.hasIllegalChars()) {
+				targetDirPath = targetDirPath.toCreatable("filename conflict", true);
+				logger.log(Level.INFO, "     - Had illegal chars, cleaned to "+targetDirPath);
+			}
 
-		reconstructedFilesAtFinalLocation.mkdirs();
-		setFileAttributes(targetFileVersion, reconstructedFilesAtFinalLocation);
+			// Try creating it
+			createFolder(targetDirPath);
+			setFileAttributes(targetFileVersion, targetDirPath.toFile());
+		}
+		catch (Exception e) {
+			throw new RuntimeException("What to do here?!", e);
+		}
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
@@ -118,111 +125,50 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		setLastModified(reconstructedFileVersion, reconstructedFileInCache);
 		
 		return reconstructedFileInCache;
-	}
-
-	
-	private boolean hasIllegalChars(String pathPart) {
-		if (EnvUtil.isWindows() && pathPart.matches(".*[\\\\/:*?\"<>|].*")) {
-			return true;
-		}
-		else if (pathPart.matches(".*[/].*")) {
-			return true;
-		}
-		
-		return false;
-	}
-	
-	private String cleanIllegalChars(String pathPart) {
-		if (EnvUtil.isWindows()) {
-			return pathPart.replaceAll("[\\\\/:*?\"<>|]","");						
-		}
-		else {
-			return pathPart.replaceAll("[/]","");
-		}
 	}	
-	
-	private String cleanAsciiOnly(String pathPart) {
-		return pathPart.replaceAll("[^a-zA-Z0-9., ]","");
-	}	
-	
-	private String addFilenameConflictSuffix(String pathPart) {
-		String conflictFileExtension = FileUtil.getExtension(pathPart, false);		
-		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
-
-		if (originalFileHasExtension) {
-			return String.format("%s (filename conflict).%s", pathPart, conflictFileExtension);						
-		}
-		else {
-			return String.format("%s (filename conflict)", pathPart);
-		}
-	}
-	
-	private boolean canCreate(String pathPart) {
-		File tmpFile = new File(config.getCacheDir()+File.separator+pathPart);
-
-		try {
-			tmpFile.createNewFile();
-			tmpFile.delete();
-
-			return true;
-		}
-		catch (IOException e) {
-			logger.log(Level.SEVERE, "WARNING: Cannot create file: "+tmpFile);
-			return false;
-		}
-	}
-	
-	/*     pictures/
-	 *       some/
-	 *         folder/
-	 *           file.jpg
-	 *       some\\folder/
-	 * ->       file.jpg
-	 * 
-	 *  relativeNormalizedPath = pictures/some\\folder/file.jpg
-	 */
-	private NormalizedPath createCreatableTargetPath(String fullTargetPath) {
-		NormalizedPath relativeNormalizedTargetPath = new NormalizedPath(fullTargetPath);
-		logger.log(Level.INFO, "     - Processing file (rel./norm.): "+relativeNormalizedTargetPath);
-		
-		// Create cleaned path
-		List<String> cleanedRelativePathParts = new ArrayList<String>();
-		
-		for (String pathPart : relativeNormalizedTargetPath.getParts()) {
-			if (hasIllegalChars(pathPart)) {
-				String cleanedParentPart = addFilenameConflictSuffix(cleanIllegalChars(pathPart));
-				
-				if (canCreate(cleanedParentPart)) {
-					pathPart = cleanedParentPart;
-				}
-				else {
-					pathPart = addFilenameConflictSuffix(cleanAsciiOnly(pathPart));
-				}				
-				
-				logger.log(Level.INFO, "       + WAS ILLEGAL: Now: "+pathPart);
-			}
-			
-			cleanedRelativePathParts.add(pathPart);			
-		}
-		
-		String cleanedRelativeTargetPath = StringUtil.join(cleanedRelativePathParts, File.separator);
-		return new NormalizedPath(cleanedRelativeTargetPath);		
-	}
 	
 	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
-		NormalizedPath normalizedCleanedRelativeTargetPath = createCreatableTargetPath(targetFileVersion.getPath());		
-		
-		// Make directory if it does not exist
-		File absoluteTargetDir = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath.getParent());
+		NormalizedPath originalPath = new NormalizedPath(config.getLocalDir(), targetFileVersion.getPath());
+		NormalizedPath targetPath = originalPath;
+				
+		try {
+			// Clean filename
+			if (targetPath.hasIllegalChars()) {
+				targetPath = targetPath.toCreatable("filename conflict", true);
+			}
 
-		if (!FileUtil.exists(absoluteTargetDir)) {
-			logger.log(Level.INFO, "     - Parent folder does not exist, creating " + absoluteTargetDir + " ...");
-			absoluteTargetDir.mkdirs();
+			// Try creating folder
+			createFolder(targetPath.getParent());
+		}
+		catch (Exception e) {
+			throw new RuntimeException("What to do here?!");
 		}
 		
-		// And actually move the file
-		File absoluteTargetFile = new File(config.getLocalDir()+File.separator+normalizedCleanedRelativeTargetPath);
-		logger.log(Level.INFO, "     - Okay, now moving to " + absoluteTargetFile + " ...");
-		FileUtils.moveFile(reconstructedFileInCache, absoluteTargetFile); // TODO [medium] This should be in a try/catch block
+		// Try moving file to final destination 
+		try {
+			FileUtils.moveFile(reconstructedFileInCache, targetPath.toFile());
+		}
+		catch (FileExistsException e) {
+			moveToConflictFile(targetPath);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("What to do here?!");
+		}		
+	}
+	
+	protected void createFolder(NormalizedPath targetDir) throws Exception {		
+		if (!FileUtil.exists(targetDir.toFile())) {
+			logger.log(Level.INFO, "     - Creating folder at " + targetDir.toFile() + " ...");
+			boolean targetDirCreated = targetDir.toFile().mkdirs();
+			
+			if (!targetDirCreated) {
+				throw new Exception("Cannot create target dir: "+targetDir);
+			}
+		}
+		else if (!FileUtil.isDirectory(targetDir.toFile())) {
+			logger.log(Level.INFO, "     - Expected a folder at " + targetDir.toFile() + " ...");
+			//throw new FileExistsException("Cannot create target parent directory: "+targetDir);
+			moveToConflictFile(targetDir);
+		}
 	}
 }

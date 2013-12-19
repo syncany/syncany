@@ -19,7 +19,7 @@ package org.syncany.util;
 
 import java.io.File;
 
-public class EnvUtil {
+public class EnvironmentUtil {
 	public enum OperatingSystem { WINDOWS, UNIX_LIKE };
 	private static OperatingSystem operatingSystem;
 	

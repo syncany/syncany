@@ -59,7 +59,7 @@ public class RenameFileSystemAction extends FileSystemAction {
 					else {
 						logger.log(Level.INFO, "     - (4) File at destination differs, creating conflict file for "+toFileOnDisk+" ...");
 						
-						createConflictFile(fileVersion2);
+						moveToConflictFile(fileVersion2);
 						FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);
 					}
 				}

@@ -40,8 +40,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.syncany.util.EnvUtil.OperatingSystem;
-
 /**
  * A file utility class
  * 
@@ -102,7 +100,7 @@ public class FileUtil {
 	}
 	
 	public static String toDatabasePath(String path) {
-		if (EnvUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			return path.toString().replaceAll("\\\\", "/");
 		}
 		else {
@@ -462,6 +460,16 @@ public class FileUtil {
 			return false;
 		}
 	}
+	
+	public static boolean isDirectory(File file) {
+		try {
+			return Files.isDirectory(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (InvalidPathException e) {
+			return false;
+		}
+	}
+	
 
 	/**
 	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
@@ -479,57 +487,7 @@ public class FileUtil {
 			return file.canRead();
 		}
 	}
-	
 
-	public static class NormalizedPath {
-		protected String normalizedPath;
-		
-		public NormalizedPath(String normalizedPath) {
-			this.normalizedPath = normalizedPath;
-		}		
-		
-		public static NormalizedPath get(String path) {
-			return get(path, EnvUtil.getOperatingSystem());
-		}
-		
-		public static NormalizedPath get(String path, OperatingSystem operatingSystem) {
-			if (operatingSystem == OperatingSystem.WINDOWS) {
-				return new NormalizedPath(path.replaceAll("\\\\$",  "").replaceAll("\\\\", "/"));
-			}
-			else {
-				return new NormalizedPath(path.replaceAll("/$", ""));
-			}
-		}
-		
-		@Override
-		public String toString() {
-			return normalizedPath;
-		}
-		
-		public String getName() {
-			int lastIndexOfSlash = normalizedPath.lastIndexOf("/");
-			
-			if (lastIndexOfSlash == -1) {
-				return normalizedPath;
-			}
-			else {
-				return normalizedPath.substring(lastIndexOfSlash+1);
-			}
-		}
-		
-		public String getParent() {
-			int lastIndexOfSlash = normalizedPath.lastIndexOf("/");
-			
-			if (lastIndexOfSlash == -1) {
-				return "";
-			}
-			else {
-				return normalizedPath.substring(0, lastIndexOfSlash);
-			}
-		}
-		
-		public List<String> getParts() {
-			return Arrays.asList(normalizedPath.split("[/]"));
-		}		
-	}	
+
+	
 }
