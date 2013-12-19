@@ -1,7 +1,8 @@
 package org.syncany.gui.main;
 
-import java.net.URISyntaxException;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -20,20 +21,26 @@ import org.eclipse.swt.widgets.TrayItem;
 import org.syncany.gui.command.ClientCommandFactory;
 import org.syncany.gui.util.I18n;
 import org.syncany.gui.util.SWTResourceManager;
-import org.syncany.gui.websocket.WSClient;
 import org.syncany.gui.wizard.StartDialog;
 
 public class MainGUI {
 	private static final Logger log = Logger.getLogger(MainGUI.class.getSimpleName());
-	
 	private static String clientIdentification = UUID.randomUUID().toString();
-
+	
+	public static MainGUI window;
+	private Display display = Display.getDefault();
+	
+	
 	private Shell shell;
 	
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		start();
+	}
+	
+	private static void start(){
 		//Register messages bundles
 		I18n.registerBundleName("i18n/messages");
 
@@ -45,44 +52,52 @@ public class MainGUI {
 			}
 		});
 		
-		// Websocket client start
-		WSClient client;
-		try {
-			client = new WSClient();
-			client.startWebSocketConnection();
-			ClientCommandFactory.setClient(client);
-		}
-		catch (URISyntaxException e) {
-			log.warning("URISyntaxException :"+e);
-		}
+		ClientCommandFactory.list();
 		
 		log.info("Starting Graphical User Interface");
 		
-		MainGUI window = new MainGUI();
+		window = new MainGUI();
+		
 		window.open();
 	}
 	
 	public void open() {
 		shell = new Shell();
 		installSystemTray();
-		Display display = Display.getCurrent();
+		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
 		}
 	}
+
+	private List<MenuItem> items = new ArrayList<>();
+	public void updateTray(Map<String, Map<String, String>> folders){
+		for (MenuItem mi : items){
+			mi.dispose();
+		}
+
+		items.clear();
+		
+		for (String key : folders.keySet()){
+			MenuItem mi = new MenuItem(menu, SWT.PUSH);
+			mi.setText(folders.get(key).get("folder")+" ["+ folders.get(key).get("status") + "]");
+			items.add(mi);
+		}
+	}
+	
+	private TrayItem item;
+	private Menu menu;
 	
 	private void installSystemTray() {
-		Display display = Display.getDefault();
-		Tray tray = display.getSystemTray();
-		
+		Tray tray = Display.getDefault().getSystemTray();
 		if(tray != null) {
-			TrayItem item = new TrayItem(tray, SWT.NONE);
+			item = new TrayItem(tray, SWT.NONE);
 			Image image = SWTResourceManager.getResizedImage("/images/tray/tray.png", 16, 16);
 			item.setImage(image);
 
-			final Menu menu = new Menu(shell, SWT.POP_UP);
+			menu = new Menu(shell, SWT.POP_UP);
 			
 			MenuItem connectItem = new MenuItem(menu, SWT.PUSH);
 			connectItem.setText("Set-up a new connection");
@@ -100,6 +115,8 @@ public class MainGUI {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					shell.dispose();
+					display.dispose();
+					ClientCommandFactory.close();
 				}
 			});
 

@@ -34,19 +34,13 @@ public class WSServer {
 	private static WSServer instance;
 	
 	private WebSocketServer delegate;
-	private int port;
 	
 	public WSServer() {
-		this(DEFAULT_PORT);
-	}
-	
-	public WSServer(int port) {
-		this.port = port;
-		delegate = new WebSocketServer(new InetSocketAddress(port)) {
+		delegate = new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
 			public void onOpen(WebSocket conn, ClientHandshake handshake) {
 				String id = handshake.getFieldValue("client_id");
-				log.fine(String.format("Client with id '{0}' connected", id));
+				log.fine("Client with id '" + id + "' connected");
 			}
 			
 			@Override

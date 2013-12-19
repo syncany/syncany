@@ -1,5 +1,6 @@
 package org.syncany.gui.command;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -11,8 +12,18 @@ public class ClientCommandFactory {
 	private static final Logger log = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
 	private static WSClient client;
 	
-	public static void setClient(WSClient client) {
-		ClientCommandFactory.client = client;
+	static {
+		try {
+			client = new WSClient();
+			client.startWebSocketConnection();
+		}
+		catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void close(){
+		client.stop();
 	}
 	
 	public static void watch(String folder) {
@@ -48,16 +59,8 @@ public class ClientCommandFactory {
 		parameters.put("url", url);
 		client.handleCommand(parameters);
 	}
-	
-	private static Map<String, String> buildParameters(){
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("client_id", MainGUI.getClientIdentification());
-		parameters.put("client_type", "syncany-gui");
-		parameters.put("timestamp", ""+System.nanoTime());
-		return parameters;
-	}
 
-	public static void init(String folder, String plugin, String password, Map<String, String> params) {
+	private static void init(String folder, String plugin, String password, Map<String, String> params) {
 		Map<String, String> parameters = buildParameters();
 		parameters.put("action", "init");
 		parameters.put("folder", folder);
@@ -73,5 +76,17 @@ public class ClientCommandFactory {
 		}
 		
 		client.handleCommand(parameters);
+	}
+	
+	/**
+	 * Created default Map<String, String> parameters
+	 * with client_id, client_type and timestamp
+	 */
+	private static Map<String, String> buildParameters(){
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("client_id", MainGUI.getClientIdentification());
+		parameters.put("client_type", "syncany-gui");
+		parameters.put("timestamp", ""+System.nanoTime());
+		return parameters;
 	}
 }

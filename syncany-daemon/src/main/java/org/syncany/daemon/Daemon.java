@@ -27,7 +27,6 @@ public class Daemon {
 	private static boolean quitting = false;
 	private static Daemon instance = null;
 	
-//	private WSServer webServer; 
 	private Map<String, Command> commands = new HashMap<>(); 
 		
 	/**
@@ -106,6 +105,11 @@ public class Daemon {
 				parameters.put("action", "watch");
 				DaemonCommandHandler.handle(parameters);
 			}
+			
+			Map<String, String> parameters = new HashMap<>();
+			parameters.put("action", "get_watched");
+			
+			DaemonCommandHandler.handle(parameters);
 		} 
 		catch (Exception e) {
 			log.log(Level.WARNING, "errors in loading properties file");

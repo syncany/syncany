@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.eclipse.swt.widgets.Display;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
@@ -43,18 +44,19 @@ public class WSClient {
 	private WebSocketClient client;
 
 	public WSClient() throws URISyntaxException {
-		this.location = DEFAULT_WS_SERVER;
+		this(DEFAULT_WS_SERVER);
 	}
 	
 	public WSClient(String location) throws URISyntaxException {
 		this.location = location;
+		client = createClient();
 	}
 	
-	private WebSocketClient createClient(String defaultlocation) throws URISyntaxException{
+	private WebSocketClient createClient() throws URISyntaxException{
 		Map<String, String> map = new HashMap<>();
 		map.put("client_id", MainGUI.getClientIdentification());
 		
-		return new WebSocketClient(new URI(defaultlocation), new Draft_17(), map, 3000) {
+		return new WebSocketClient(new URI(location), new Draft_17(), map, 3000) {
 			@Override
 			public void onOpen(ServerHandshake handshakedata) {
 				log.fine("Connection to syncany daemon server: " + getURI());
@@ -82,14 +84,6 @@ public class WSClient {
 	 * @return the client
 	 */
 	private WebSocketClient getClient() {
-		if (client == null || !client.getConnection().isOpen()){
-			try {
-				client = createClient(this.location);
-			}
-			catch (URISyntaxException e) {
-				e.printStackTrace();
-			}
-		}
 		return client;
 	}
 	
@@ -98,26 +92,29 @@ public class WSClient {
 	}
 	
 	public void stop(){
+		log.info("closing client");
 		getClient().close();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void handleReceivedMessage(String message) {
 		Map<String, ?> parameters = JsonHelper.fromStringToMap(message);
 		String action = (String)parameters.get("action");
-		Map<String, Map<String, String>> folders =(Map<String, Map<String, String>>)parameters.get("folders");
 		
 		switch (action){
 			case "update_watched_folders":
-				//TODO
-			break;
+				final Map<String, Map<String, String>> folders = (Map<String, Map<String, String>>)parameters.get("folders");
+				
+				Display.getDefault().asyncExec(new Runnable() {
+			        public void run() {
+		               MainGUI.window.updateTray(folders);
+		            }
+			    });
+				break;
 		}
 	}
 
 	public void handleCommand(Map<String, String> parameters) {
-		if (!getClient().getConnection().isOpen()){
-			startWebSocketConnection();
-		}
-		
 		try{
 			String text = JsonHelper.fromMapToString(parameters);
 			client.send(text);
