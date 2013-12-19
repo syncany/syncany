@@ -17,11 +17,14 @@
  */
 package org.syncany.gui.wizard;
 
+import java.awt.TextField;
 import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
@@ -99,13 +102,19 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		folderTextField.setSize(131, 21);
 		folderTextField.setText("New Synced Folder");
 		folderTextField.addModifyListener(this);
+		folderTextField.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				folderTextField.selectAll();
+			}
+		});
 		
-		folderMessageLabel = new Label(folderComposite, SWT.NONE);
-		folderMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+		folderMessageLabel = new Label(folderComposite, SWT.WRAP);
+		folderMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		folderMessageLabel.setForeground(SWTResourceManager.getColor(SWT.COLOR_RED));
 		
 		Composite urlComposite = new Composite(composite, SWT.NONE);
-		urlComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		urlComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		GridLayout gl_urlComposite = new GridLayout(2, false);
 		gl_urlComposite.verticalSpacing = 0;
 		urlComposite.setLayout(gl_urlComposite);
@@ -120,9 +129,15 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		urlTextField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		urlTextField.setSize(131, 21);
 		urlTextField.addModifyListener(this);
+		urlTextField.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				urlTextField.selectAll();
+			}
+		});
 		
 		urlMessageLabel = new Label(urlComposite, SWT.WRAP);
-		urlMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
+		urlMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		urlMessageLabel.setForeground(SWTResourceManager.getColor(SWT.COLOR_RED));
 
 		Composite messageComposite = new Composite(composite, SWT.NONE);
@@ -133,7 +148,7 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		messageComposite.setLayout(gl_messageComposite);
 		messageComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		
-		messageLabel = new Label(messageComposite, SWT.BORDER | SWT.WRAP);
+		messageLabel = new Label(messageComposite, SWT.WRAP);
 		messageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		messageLabel.setSize(175, 15);
 		messageLabel.setText(I18n.getString("ConnectDialog.dialog.baseFolder", getBaseFolder()));
@@ -168,25 +183,36 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		else if (e.widget == folderTextField){
 			validateFolderInput();
 		}
-		folderMessageLabel.update();
+		
+		boolean isFolderValid = validateFolderInput();
+		boolean isUrlValid = validateUrlInput();
+		
+		if (!isFolderValid || !isUrlValid){
+			getConnectButton().setEnabled(false);
+		}
+		else{
+			getConnectButton().setEnabled(true);
+		}
 	}
-	
 	
 	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
 	
 	private boolean validateUrlInput(){
 		String url = urlTextField.getText();
 		
-		Matcher linkMatcher = LINK_PATTERN.matcher(url);
-		
-		if (!linkMatcher.matches()) {
-			urlMessageLabel.setText("Invalid link provided, must start with syncany:// and match link pattern.");
-			return false;
+		if (url != null && url.length() > 0){
+			Matcher linkMatcher = LINK_PATTERN.matcher(url);
+			
+			if (!linkMatcher.matches()) {
+				urlMessageLabel.setText("Invalid link provided, must start with syncany:// and match link pattern.");
+				return false;
+			}
+			else{
+				urlMessageLabel.setText("");
+				return true;
+			}
 		}
-		else{
-			urlMessageLabel.setText("");
-			return true;
-		}
+		return false;
 	}
 	
 	private String getFolderName(){
