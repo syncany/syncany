@@ -34,9 +34,10 @@ public class MainGUI {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		Locale.setDefault(Locale.ITALIAN);
-		
+		//Register messages bundles
 		I18n.registerBundleName("i18n/messages");
+
+		//Shutdown hook to release swt resources
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
 				log.info("Releasing SWT Resources");
@@ -44,11 +45,7 @@ public class MainGUI {
 			}
 		});
 		
-		log.info("Starting Graphical User Interface");
-		
-		MainGUI window = new MainGUI();
-		window.open();
-		
+		// Websocket client start
 		WSClient client;
 		try {
 			client = new WSClient();
@@ -58,6 +55,11 @@ public class MainGUI {
 		catch (URISyntaxException e) {
 			log.warning("URISyntaxException :"+e);
 		}
+		
+		log.info("Starting Graphical User Interface");
+		
+		MainGUI window = new MainGUI();
+		window.open();
 	}
 	
 	public void open() {
