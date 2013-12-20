@@ -230,7 +230,7 @@ public abstract class FileSystemAction {
 	}	
 	
 	protected FileVersionComparison fileChanges(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath()); // TODO [medium] This does not work for 'some\file' on windows!						
 		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
 		
 		return fileVersionComparison;
