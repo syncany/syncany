@@ -68,7 +68,6 @@ public class Config {
 	private File databaseDir;
 	private File logDir;
 	
-	private boolean encrypted;
 	private SaltedSecretKey masterKey;
 
 	private Cache cache;	
@@ -100,7 +99,6 @@ public class Config {
 	}
 	
 	private void initMasterKey(ConfigTO configTO) {
-		encrypted = configTO.getMasterKey() != null;
 		masterKey = configTO.getMasterKey(); // can be null			
 	}
 
@@ -307,10 +305,6 @@ public class Config {
 
 	public void setMasterKey(SaltedSecretKey masterKey) {
 		this.masterKey = masterKey;
-	}
-
-	public boolean isEncrypted() {
-		return encrypted;
 	}
 
 	public File getDatabaseFile() {

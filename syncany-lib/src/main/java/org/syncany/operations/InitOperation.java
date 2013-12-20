@@ -33,6 +33,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 
 /**
  * The init operation initializes a new repository at a given remote storage
@@ -82,30 +83,19 @@ public class InitOperation extends AbstractInitOperation {
 		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
 		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
 		
-		// Save config.xml and repo file
-		
-		String shareLink = null;
-		boolean shareLinkEncrypted = false;
-		
+		// Save config.xml and repo file		
 		if (options.isEncryptionEnabled()) {
 			SaltedSecretKey masterKey = createMasterKeyFromPassword(options.getPassword()); // This takes looong!			
 			options.getConfigTO().setMasterKey(masterKey);
 			
 			writeXmlFile(new MasterTO(masterKey.getSalt()), masterFile);
 			writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), masterKey);				
-			
-			shareLink = getEncryptedLink(options.getConfigTO().getConnectionTO(), options.getCipherSpecs(), masterKey);
-			shareLinkEncrypted = true;
 		}	
 		else {
 			writeXmlFile(options.getRepoTO(), repoFile);
-			
-			shareLink = getPlaintextLink(options.getConfigTO().getConnectionTO());
-			shareLinkEncrypted = false;
 		}	
 		
 		writeXmlFile(options.getConfigTO(), configFile);
-		writeXmlFile(options.getRepoTO(), new File(repoFile+"-NOT-USED.xml")); // TODO [low] Remove this, not used
 
 		// Make remote changes
 		transferManager.init();
@@ -115,10 +105,17 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		
 		uploadRepoFile(repoFile, transferManager);
+		
+		// Make link		
+		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
 					
-		return new InitOperationResult(shareLink, shareLinkEncrypted);
+		return new InitOperationResult(genlinkOperationResult);
     }          
     
+	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
+		return new GenlinkOperation(options.getConfigTO()).execute();
+	}
+
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
 		if (listener != null) {
 			listener.notifyGenerateMasterKey();
@@ -214,20 +211,14 @@ public class InitOperation extends AbstractInitOperation {
     }
     
     public class InitOperationResult implements OperationResult {
-        private String shareLink;
-    	private boolean shareLinkEncrypted;
-        
-		public InitOperationResult(String shareLink, boolean shareLinkEncrypted) {
-			this.shareLink = shareLink;
-			this.shareLinkEncrypted = shareLinkEncrypted;
+        private GenlinkOperationResult genLinkResult;
+
+		public InitOperationResult(GenlinkOperationResult genLinkResult) {
+			this.genLinkResult = genLinkResult;
 		}
 
-		public String getShareLink() {
-			return shareLink;
-		}
-
-		public boolean isShareLinkEncrypted() {
-			return shareLinkEncrypted;
-		}   				
+		public GenlinkOperationResult getGenLinkResult() {
+			return genLinkResult;
+		}              
     }
 }

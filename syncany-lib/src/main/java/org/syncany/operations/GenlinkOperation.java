@@ -28,10 +28,16 @@ import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 
 public class GenlinkOperation extends AbstractInitOperation {
-    private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());        
+    private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());            
+    private ConfigTO configTO;
     
     public GenlinkOperation(Config config) {
         super(config);
+    }
+    
+    public GenlinkOperation(ConfigTO configTO) {
+        super(null);
+        this.configTO = configTO;
     }        
             
     @Override
@@ -40,15 +46,17 @@ public class GenlinkOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'GenLink'");
 		logger.log(Level.INFO, "--------------------------------------------");                      
 
-		ConfigTO configTO = ConfigHelper.loadConfigTO(config.getLocalDir());
+		if (configTO == null) {
+			configTO = ConfigHelper.loadConfigTO(config.getLocalDir());
+		}
 
 		String shareLink = null;
 		boolean shareLinkEncrypted = false;
 		
-		if (config.isEncrypted()) {
+		if (configTO.getMasterKey() != null) {
 			List<CipherSpec> cipherSpecs = CipherSpecs.getDefaultCipherSpecs(); // TODO [low] Shouldn't this be the same as the application?!
 			
-			shareLink = getEncryptedLink(configTO.getConnectionTO(), cipherSpecs, config.getMasterKey());
+			shareLink = getEncryptedLink(configTO.getConnectionTO(), cipherSpecs, configTO.getMasterKey());
 			shareLinkEncrypted = true;
 		}	
 		else {

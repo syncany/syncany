@@ -162,7 +162,7 @@ public class Client {
 		new WatchOperation(config, options).execute();		
 	}	
 	
-	public GenlinkOperationResult genLink() throws Exception {
+	public GenlinkOperationResult genlink() throws Exception {
 		return new GenlinkOperation(config).execute();
 	}
 	

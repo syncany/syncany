@@ -37,6 +37,7 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
 
 public abstract class AbstractInitCommand extends Command {
@@ -209,5 +210,36 @@ public abstract class AbstractInitCommand extends Command {
 
 	protected String getDefaultDisplayName() throws UnknownHostException {
 		return System.getProperty("user.name");		
+	}
+	
+	protected void printLink(GenlinkOperationResult operationResult, boolean shortOutput) {
+		if (shortOutput) {
+			out.println(operationResult.getShareLink());
+		}
+		else {
+			out.println();
+			out.println("Repository created, and local folder initialized. To share the same repository");
+			out.println("with others, you can share this link:");
+			out.println();		
+			out.println("   "+operationResult.getShareLink());
+			out.println();
+			
+			if (operationResult.isShareLinkEncrypted()) {
+				out.println("This link is encrypted with the given password, so you can safely share it.");
+				out.println("using unsecure communication (chat, e-mail, etc.)");
+				out.println();
+				out.println("WARNING: The link contains the details of your repo connection which typically");
+				out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
+			}
+			else {
+				out.println("WARNING: This link is NOT ENCRYPTED and might contain connection credentials");
+				out.println("         Do NOT share this link unless you know what you are doing!");
+				out.println();
+				out.println("         The link contains the details of your repo connection which typically");
+				out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
+			}
+
+			out.println();
+		}			
 	}
 }

@@ -33,7 +33,7 @@ public class GenlinkCommand extends AbstractInitCommand {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		GenlinkCommandOptions commandOptions = parseGenlinkOptions(operationArgs);
-		GenlinkOperationResult operationResult = client.genLink();		
+		GenlinkOperationResult operationResult = client.genlink();		
 		printResults(operationResult, commandOptions);
 		
 		return 0;		
@@ -52,36 +52,9 @@ public class GenlinkCommand extends AbstractInitCommand {
 		
 		return commandOptions;
 	}
-
+	
 	private void printResults(GenlinkOperationResult operationResult, GenlinkCommandOptions commandOptions) {
-		if (commandOptions.isShortOutput()) {
-			out.println(operationResult.getShareLink());
-		}
-		else {
-			out.println();
-			out.println("Repository created, and local folder initialized. To share the same repository");
-			out.println("with others, you can share this link:");
-			out.println();		
-			out.println("   "+operationResult.getShareLink());
-			out.println();
-			
-			if (operationResult.isShareLinkEncrypted()) {
-				out.println("This link is encrypted with the given password, so you can safely share it.");
-				out.println("using unsecure communication (chat, e-mail, etc.)");
-				out.println();
-				out.println("WARNING: The link contains the details of your repo connection which typically");
-				out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
-			}
-			else {
-				out.println("WARNING: This link is NOT ENCRYPTED and might contain connection credentials");
-				out.println("         Do NOT share this link unless you know what you are doing!");
-				out.println();
-				out.println("         The link contains the details of your repo connection which typically");
-				out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
-			}
-
-			out.println();
-		}			
+		printLink(operationResult, commandOptions.isShortOutput());			
 	}
 	
 	private class GenlinkCommandOptions {
