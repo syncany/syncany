@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.EnvironmentUtil.OperatingSystem;
@@ -34,7 +35,10 @@ import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class NormalizedPath {
-	protected static final Logger logger = Logger.getLogger(NormalizedPath.class.getSimpleName());
+	protected static final Logger logger = Logger.getLogger(NormalizedPath.class.getSimpleName());	
+	private static final Pattern ILLEGAL_CHARS_PATTERN_WINDOWS = Pattern.compile("[\\\\/:*?\"<>|\0]");
+	private static final Pattern ILLEGAL_CHARS_PATTERN_UNIX_LIKE = Pattern.compile("[\0]");
+	private static final Pattern ILLEGAL_NON_ASCII_CHARS_PATTERN = Pattern.compile("[^a-zA-Z0-9., ]");
 	
 	protected File root;
 	protected String normalizedPath;
@@ -165,9 +169,12 @@ public class NormalizedPath {
 	}
 	
 	private boolean hasIllegalChars(String pathPart) {
-		if (EnvironmentUtil.isWindows() && pathPart.matches(".*[\\\\:*?\"<>|].*")) {
+		if (EnvironmentUtil.isWindows() && ILLEGAL_CHARS_PATTERN_WINDOWS.matcher(pathPart).find()) {
 			return true;
 		}		
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem() && ILLEGAL_CHARS_PATTERN_UNIX_LIKE.matcher(pathPart).find()) {
+			return true;
+		}
 		else {
 			return false;
 		}
@@ -175,15 +182,15 @@ public class NormalizedPath {
 	
 	private String cleanIllegalChars(String pathPart) {
 		if (EnvironmentUtil.isWindows()) {
-			return pathPart.replaceAll("[\\\\/:*?\"<>|]","");						
+			return ILLEGAL_CHARS_PATTERN_WINDOWS.matcher(pathPart).replaceAll("");						
 		}
 		else {
-			return pathPart.replaceAll("[/]","");
+			return ILLEGAL_CHARS_PATTERN_UNIX_LIKE.matcher(pathPart).replaceAll("");
 		}
 	}	
 	
 	private String cleanAsciiOnly(String pathPart) {
-		return pathPart.replaceAll("[^a-zA-Z0-9., ]","");
+		return ILLEGAL_NON_ASCII_CHARS_PATTERN.matcher(pathPart).replaceAll("");
 	}	
 	
 	private String addFilenameConflictSuffix(String pathPart, String filenameSuffix) {
@@ -199,6 +206,27 @@ public class NormalizedPath {
 		}
 	}
 
+	public NormalizedPath withSuffix(String filenameSuffix, boolean canExist) throws Exception {
+		if (canExist) {
+			return toCreatable(filenameSuffix, 0);
+		}
+		else {
+			NormalizedPath creatableNormalizedPath = null;
+			int attempt = 0;
+			
+			do {
+				String aFilenameSuffix = (attempt > 0) ? filenameSuffix + " " + attempt : filenameSuffix;
+				creatableNormalizedPath = new NormalizedPath(root, addFilenameConflictSuffix(normalizedPath.toString(), aFilenameSuffix));
+				boolean exists = FileUtil.exists(creatableNormalizedPath.toFile());
+				
+				if (!exists) {
+					return creatableNormalizedPath;
+				}
+			} while (attempt++ < 10);
+			
+			throw new Exception("Cannot create path with suffix; "+attempt+" attempts: "+creatableNormalizedPath);
+		}
+	}
 	
 	/*     pictures/
 	 *       some/
@@ -221,14 +249,16 @@ public class NormalizedPath {
 			NormalizedPath creatableNormalizedPath = null;
 			int attempt = 0;
 			
-			while (attempt++ < 10) {
+			do {
 				creatableNormalizedPath = toCreatable(filenameSuffix, attempt);
 				boolean exists = FileUtil.exists(creatableNormalizedPath.toFile());
+				
+				// TODO [medium] The exists-check should be in the pathPart-loop, b/c what if fileB is a FILE in this path: folderA/fileB/folderC/file1.jpg
 				
 				if (!exists) {
 					return creatableNormalizedPath;
 				}
-			} 
+			} while (attempt++ < 10);
 			
 			throw new Exception("Cannot create creatable path; "+attempt+" attempts: "+creatableNormalizedPath);
 		}
@@ -236,7 +266,7 @@ public class NormalizedPath {
 	
 	private NormalizedPath toCreatable(String filenameSuffix, int attempt) {		
 		List<String> cleanedRelativePathParts = new ArrayList<String>();
-		filenameSuffix = (attempt > 0) ? filenameSuffix + " " + attempt : filenameSuffix;
+		String attemptedFilenameSuffix = (attempt > 0) ? filenameSuffix + " " + attempt : filenameSuffix;
 		
 		for (String pathPart : getParts()) {
 			boolean needsCleansing = false;
@@ -256,13 +286,14 @@ public class NormalizedPath {
 			
 			// Clean if it is illegal
 			if (needsCleansing) {				
-				String cleanedParentPart = addFilenameConflictSuffix(cleanIllegalChars(pathPart), filenameSuffix);
+				String cleanedParentPart = addFilenameConflictSuffix(cleanIllegalChars(pathPart), attemptedFilenameSuffix); // TODO [low] attempt does not make sense hree
 				
+				// Check if cleaned path actually can be created (creates local file!)
 				if (canCreate(cleanedParentPart)) {
 					pathPart = cleanedParentPart;
 				}
 				else {
-					pathPart = addFilenameConflictSuffix(cleanAsciiOnly(pathPart), filenameSuffix);
+					pathPart = addFilenameConflictSuffix(cleanAsciiOnly(pathPart), attemptedFilenameSuffix); // TODO [low] attempt does not make sense hree
 				}				
 				
 				logger.log(Level.INFO, "       + WAS ILLEGAL: Now: "+pathPart);

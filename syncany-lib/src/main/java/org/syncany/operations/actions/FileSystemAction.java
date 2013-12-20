@@ -18,6 +18,7 @@
 package org.syncany.operations.actions;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -135,9 +136,15 @@ public abstract class FileSystemAction {
 				else {
 					FileUtils.moveFile(conflictingPath.toFile(), conflictedCopyPath.toFile());
 				}
+				
+				// Success!
+				break;
 			}
 			catch (FileExistsException e) {
 				logger.log(Level.SEVERE, "     - Cannot create conflict file; attempt = "+attempts+" for file: "+conflictedCopyPath);
+			}
+			catch (FileNotFoundException e) {
+				logger.log(Level.INFO, "     - Conflict file vanished. Don't care!");
 			}
 			catch (Exception e) {
 				throw new RuntimeException("What to do here?", e);
@@ -159,7 +166,7 @@ public abstract class FileSystemAction {
 			conflictFilenameSuffix = String.format("%s's conflicted copy, %s", conflictUserName, conflictDate);				
 		}
 					
-		return conflictingPath.toCreatable(conflictFilenameSuffix, false);
+		return conflictingPath.withSuffix(conflictFilenameSuffix, false);
 	}
 	
 	protected void setFileAttributes(FileVersion reconstructedFileVersion) throws IOException {
