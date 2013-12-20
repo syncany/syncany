@@ -12,7 +12,6 @@ dependencies {
 	testCompile     "junit:junit:4.3"
 }
 
-
 def getRevision = { ->
     def stdout = new ByteArrayOutputStream()
     
