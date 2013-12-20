@@ -17,6 +17,8 @@
  */
 package org.syncany.crypto;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -43,35 +45,34 @@ import java.util.TreeMap;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CipherSpecs {
-	private static final Map<Integer, CipherSpec> cipherSpecs = new TreeMap<Integer, CipherSpec>();	
-	
+	private static final Map<Integer, CipherSpec> cipherSpecs = new TreeMap<Integer, CipherSpec>();
+
 	/*
-	 * WARNING:
-	 *   The cipher spec identifiers are written to the MultiCipherOutputStream and read
-	 *   by the MultiCipherInputStream. The identifiers MUST NOT be changed, because this will 
-	 *   make decryption of already encrypted data impossible! 
+	 * WARNING: The cipher spec identifiers are written to the MultiCipherOutputStream and read by the MultiCipherInputStream. The identifiers MUST
+	 * NOT be changed, because this will make decryption of already encrypted data impossible!
 	 */
-	public static final int AES_128_GCM     = 0x01;
+	public static final int AES_128_GCM = 0x01;
 	public static final int TWOFISH_128_GCM = 0x02;
-	public static final int AES_256_GCM     = 0x03;
+	public static final int AES_256_GCM = 0x03;
 	public static final int TWOFISH_256_GCM = 0x04;
-	
+
+	public static final int[] DEFAULT_CIPHER_SPECS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
+
 	static {
 		CipherSpec[] tmpCipherSpecs = new CipherSpec[] {
-			// Standard
-			new CipherSpec(AES_128_GCM, "AES/GCM/NoPadding", 128, 128, false),
-			new CipherSpec(TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false),
-			
-			// Unlimited crypto
-			new CipherSpec(AES_256_GCM, "AES/GCM/NoPadding", 256, 128, true),
-			new CipherSpec(TWOFISH_256_GCM, "Twofish/GCM/NoPadding", 256, 128, true)
-		};		
-		
+				// Standard
+				new CipherSpec(AES_128_GCM, "AES/GCM/NoPadding", 128, 128, false),
+				new CipherSpec(TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false),
+
+				// Unlimited crypto
+				new CipherSpec(AES_256_GCM, "AES/GCM/NoPadding", 256, 128, true),
+				new CipherSpec(TWOFISH_256_GCM, "Twofish/GCM/NoPadding", 256, 128, true) };
+
 		for (CipherSpec cipherSpec : tmpCipherSpecs) {
 			registerCipherSpec(cipherSpec.getId(), cipherSpec);
 		}
 	}
-	
+
 	/**
 	 * Returns a list of available/registered {@link CipherSpec}s. Refer to the 
 	 * {@link CipherSpecs class description} for a more detailed explanation.
@@ -80,6 +81,19 @@ public class CipherSpecs {
 		return cipherSpecs;
 	}
 	
+	/**
+	 * Returns the default {@link CipherSpec}s used by the application.
+	 */
+	public static List<CipherSpec> getDefaultCipherSpecs() {
+		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
+		
+		for (int cipherSpecId : DEFAULT_CIPHER_SPECS) { 
+			cipherSpecs.add(getCipherSpec(cipherSpecId));
+		}	
+		
+		return cipherSpecs;
+	}
+
 	/**
 	 * Retrieves an available/registered {@link CipherSpec} using the cipher spec identifier
 	 * defined in this class.
@@ -90,7 +104,7 @@ public class CipherSpecs {
 	public static CipherSpec getCipherSpec(int id) {
 		return cipherSpecs.get(id);
 	}
-	
+
 	/**
 	 * Register a new cipher spec.
 	 * 

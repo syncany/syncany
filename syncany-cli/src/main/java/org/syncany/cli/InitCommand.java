@@ -51,7 +51,6 @@ import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand implements InitOperationListener {
 	public static final int REPO_ID_LENGTH = 32;
-	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
 	public static final int PASSWORD_MIN_LENGTH = 8;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
@@ -155,20 +154,18 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	}
 
 	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
-		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
+		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
 			if (advancedModeEnabled) { 			
-				cipherSuites = askCipherSpecs();				
+				cipherSpecs = askCipherSpecs();				
 			}
 			else { // Default
-				for (int cipherSuiteId : DEFAULT_CIPHER_SUITE_IDS) { 
-					cipherSuites.add(CipherSpecs.getCipherSpec(cipherSuiteId));
-				}								
+				cipherSpecs = CipherSpecs.getDefaultCipherSpecs();					
 			}			
 		}
 		
-		return cipherSuites;
+		return cipherSpecs;
 	}
 
 	private List<CipherSpec> askCipherSpecs() throws Exception {

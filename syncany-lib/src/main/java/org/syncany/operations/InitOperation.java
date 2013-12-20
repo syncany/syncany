@@ -17,20 +17,14 @@
  */
 package org.syncany.operations;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.MasterRemoteFile;
@@ -157,31 +151,6 @@ public class InitOperation extends AbstractInitOperation {
 	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {    		
 		transferManager.upload(repoFile, new RepoRemoteFile());
 	}    	
-
-	private String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
-		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(connectionTO, plaintextOutputStream);
-		
-		byte[] masterKeySalt = masterKey.getSalt();
-		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
-		
-		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
-		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
-		
-		return "syncany://storage/1/"+masterKeySaltEncodedStr+"-"+encryptedEncodedStorageXml;				
-	}
-	
-	private String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
-		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(connectionTO, plaintextOutputStream);
-		
-		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
-		
-		return "syncany://storage/1/not-encrypted/"+plaintextEncodedStorageXml;			
-	}
 	
 	public static interface InitOperationListener {
 		public void notifyGenerateMasterKey();

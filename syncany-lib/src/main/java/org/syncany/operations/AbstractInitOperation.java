@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -94,5 +95,30 @@ public abstract class AbstractInitOperation extends Operation {
 		serializer.write(repoTO, plaintextRepoOutputStream);
 		
 		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
-	}		
+	}	
+	
+	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
+		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
+		Serializer serializer = new Persister();
+		serializer.write(connectionTO, plaintextOutputStream);
+		
+		byte[] masterKeySalt = masterKey.getSalt();
+		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
+		
+		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
+		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
+		
+		return "syncany://storage/1/"+masterKeySaltEncodedStr+"-"+encryptedEncodedStorageXml;				
+	}
+	
+	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
+		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
+		Serializer serializer = new Persister();
+		serializer.write(connectionTO, plaintextOutputStream);
+		
+		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
+		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
+		
+		return "syncany://storage/1/not-encrypted/"+plaintextEncodedStorageXml;			
+	}
 }
