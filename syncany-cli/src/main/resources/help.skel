@@ -11,7 +11,7 @@ Global options:
 
   -d, --debug
       Sets the log level to ALL, and print the log to the console.
-      Alias to: --loglevel=ALL --print-log
+      Alias to: --loglevel=ALL --print
 
   -h, --help
       Print this help screen
@@ -109,4 +109,11 @@ Commands:
     Arguments:
     -f, --format=<format>            Specifies format to use for printing log.
                                      Recognized formats: %LOGFORMATS%
+                                     
+  genlink [<args>]
+    Create a Syncany link (syncany://..) from an existing local folder. This
+    link can then be sent to someone else to connect to the repository.
+    
+    Arguments:
+    -s, --short                      Don't display help text 
                                    
