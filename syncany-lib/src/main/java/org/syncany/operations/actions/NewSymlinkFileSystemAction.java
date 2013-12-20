@@ -42,7 +42,7 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 				createSymlink(fileVersion2);
 			}
 			else {
-				createConflictFile(fileVersion2);
+				moveToConflictFile(fileVersion2);
 				createSymlink(fileVersion2);
 			}
 		}

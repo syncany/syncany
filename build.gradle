@@ -1,9 +1,5 @@
 apply plugin: 'eclipse'
 
-project.ext {
-	applicationVersion = "0.1-SNAPSHOT"
-}
-
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
 
 subprojects {
@@ -12,9 +8,11 @@ subprojects {
 	
 	group = 'org.syncany'
 	
-	jar.baseName = "${project.name}"
-	jar.version  = "$applicationVersion"
-	
+	project.ext {
+		applicationRelease = false
+		applicationVersion = "0.1-SNAPSHOT"
+	}
+		
 	sourceCompatibility = 1.7
 	targetCompatibility = 1.7
 	
@@ -38,6 +36,14 @@ subprojects {
 		ignoreFailures = true
 	}
 	
+	
+	// JAR /////////////////////////////////////////////////////////////////////
+	
+	jar {
+		baseName = "${project.name}"
+		version  = "$applicationVersion"				
+	}
+
 	
 	// Test JARs ///////////////////////////////////////////////////////////////
 	
@@ -97,10 +103,11 @@ task wrapper(type: Wrapper) {
 	jarFile = 'gradle/wrapper/wrapper.jar'
 }
 
-// Task to clean build folder on project root///////////////////////////////////	
 
-task clean(type: Delete){
-		delete 'build'
+// Task to clean build folder on project root //////////////////////////////////	
+
+task clean(type: Delete) {
+	delete 'build'	
 }
 
 public String getOsName() {

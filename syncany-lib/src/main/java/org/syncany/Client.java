@@ -17,6 +17,9 @@
  */
 package org.syncany;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.syncany.config.Config;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.ConnectOperation;
@@ -62,8 +65,41 @@ import org.syncany.operations.WatchOperation.WatchOperationOptions;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
-	protected Config config;
+	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
+	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "release";
+	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "version";
+	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "revision";	
+	private static final Properties applicationProperties = new Properties();
 	
+	protected Config config;
+
+	static {
+		InputStream globalPropertiesInputStream = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_RESOURCE);
+		
+		try {
+			applicationProperties.load(globalPropertiesInputStream);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot load application properties.", e);
+		}
+	}
+	
+	public static Properties getApplicationProperties() {
+		return applicationProperties;
+	}
+	
+	public static boolean isApplicationRelease() {
+		return Boolean.parseBoolean(applicationProperties.getProperty(APPLICATION_PROPERTIES_RELEASE_KEY));
+	}
+
+	public static String getApplicationVersion() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
+	}
+	
+	public static String getApplicationRevision() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
+	}
+		
 	public Client() {
 		// Fressen
 	}

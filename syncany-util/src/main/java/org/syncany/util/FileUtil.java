@@ -47,13 +47,65 @@ import java.util.List;
  */
 public class FileUtil {
 	public static String getRelativePath(File base, File file) {
-		String relativeFilePath = base.toURI().relativize(file.toURI()).getPath();
+		return removeTrailingSlash(base.toURI().relativize(file.toURI()).getPath());
+	}
+	
+	public static String getRelativeDatabasePath(File base, File file) {
+		String relativeFilePath = getRelativePath(base, file);
 		
-		if (relativeFilePath.endsWith(File.separator)) {
-			relativeFilePath = relativeFilePath.substring(0, relativeFilePath.length() - 1);
+		// Note: This is more important than it seems. Unix paths may contain backslashes
+		//       so that 'black\white.jpg' is a perfectly valid file path. Windows file names
+		//       may never contain backslashes, so that '\' can be safely transformed to the
+		//       '/'-separated database path!
+		
+		if (isWindows()) {
+			return relativeFilePath.toString().replaceAll("\\\\", "/");
 		}
+		else {
+			return relativeFilePath;
+		}
+	}
+	
+	public static String removeTrailingSlash(String filename) {
+		if (filename.endsWith("/")) {
+			return filename.substring(0, filename.length() - 1);
+		}
+		else {
+			return filename;
+		}
+	}
+	
+	public static String getDatabaseBasename(String filename) {
+		String databaseFilename = toDatabasePath(filename);
+		int lastIndexOfSlash = toDatabasePath(databaseFilename).lastIndexOf("/");
 		
-		return relativeFilePath.toString().replaceAll("\\\\", "/"); // TODO [high] This causes issues on Linux with files with backslashes "black\white.jpg"
+		if (lastIndexOfSlash == -1) {
+			return databaseFilename;
+		}
+		else {
+			return databaseFilename.substring(lastIndexOfSlash+1);
+		}
+	}
+	
+	public static String getDatabaseParentDirectory(String filename) {
+		String databaseFilename = toDatabasePath(filename);
+		int lastIndexOfSlash = toDatabasePath(databaseFilename).lastIndexOf("/");
+		
+		if (lastIndexOfSlash == -1) {
+			return databaseFilename;
+		}
+		else {
+			return databaseFilename.substring(0, lastIndexOfSlash);
+		}
+	}
+	
+	public static String toDatabasePath(String path) {
+		if (EnvironmentUtil.isWindows()) {
+			return path.toString().replaceAll("\\\\", "/");
+		}
+		else {
+			return path;
+		}
 	}
 
 	public static String getAbsoluteParentDirectory(File file) {
@@ -211,10 +263,6 @@ public class FileUtil {
 
 		fis.close();
 		return complete.digest();
-	}
-
-	public static String toDatabaseFilePath(String path) {
-		return path.replaceAll("\\\\", "/");
 	}
 
 	public static boolean isFileLocked(File file) {
@@ -412,6 +460,16 @@ public class FileUtil {
 			return false;
 		}
 	}
+	
+	public static boolean isDirectory(File file) {
+		try {
+			return Files.isDirectory(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (InvalidPathException e) {
+			return false;
+		}
+	}
+	
 
 	/**
 	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
@@ -429,4 +487,7 @@ public class FileUtil {
 			return file.canRead();
 		}
 	}
+
+
+	
 }

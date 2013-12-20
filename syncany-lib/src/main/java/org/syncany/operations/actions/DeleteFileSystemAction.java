@@ -31,7 +31,7 @@ public class DeleteFileSystemAction extends FileSystemAction {
 		// Special case: locally unknown file to be deleted (= nothing to do!)
 		if (fileVersion1 == null) {
 			if (fileExists(fileVersion2)) {
-				createConflictFile(fileVersion2);				
+				moveToConflictFile(fileVersion2);				
 			}
 		}
 		
@@ -39,7 +39,7 @@ public class DeleteFileSystemAction extends FileSystemAction {
 		else {
 			if (!fileAsExpected(fileVersion1)) {
 				if (fileExists(fileVersion1)) {
-					createConflictFile(fileVersion2);	
+					moveToConflictFile(fileVersion2);	
 				}
 			}
 		}

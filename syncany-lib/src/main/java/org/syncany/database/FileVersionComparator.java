@@ -228,9 +228,21 @@ public class FileVersionComparator {
 	}
 
 	private void comparePosixPermissions(FileVersionComparison fileComparison) {
-		if (fileComparison.actualFileProperties.getPosixPermissions() != null
-				&& !fileComparison.actualFileProperties.getPosixPermissions().equals(fileComparison.expectedFileProperties.getPosixPermissions())) {
+		boolean posixPermsDiffer = false;
 
+		boolean actualIsNull = fileComparison.actualFileProperties == null || fileComparison.actualFileProperties.getPosixPermissions() == null;
+		boolean expectedIsNull = fileComparison.expectedFileProperties == null || fileComparison.expectedFileProperties.getPosixPermissions() == null;
+				
+		if (!actualIsNull && !expectedIsNull) {
+			if (!fileComparison.actualFileProperties.getPosixPermissions().equals(fileComparison.expectedFileProperties.getPosixPermissions())) {
+				posixPermsDiffer = true;
+			}
+		}
+		else if ((actualIsNull && !expectedIsNull) || (!actualIsNull && expectedIsNull)) {
+			posixPermsDiffer = true;
+		}
+		
+		if (posixPermsDiffer) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_ATTRIBUTES);
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
@@ -241,9 +253,21 @@ public class FileVersionComparator {
 	}
 
 	private void compareDosAttributes(FileVersionComparison fileComparison) {
-		if (fileComparison.actualFileProperties.getDosAttributes() != null
-				&& !fileComparison.actualFileProperties.getDosAttributes().equals(fileComparison.expectedFileProperties.getDosAttributes())) {
+		boolean dosAttrsDiffer = false;
 
+		boolean actualIsNull = fileComparison.actualFileProperties == null || fileComparison.actualFileProperties.getDosAttributes() == null;
+		boolean expectedIsNull = fileComparison.expectedFileProperties == null || fileComparison.expectedFileProperties.getDosAttributes() == null;
+			
+		if (!actualIsNull && !expectedIsNull) {
+			if (!fileComparison.actualFileProperties.getDosAttributes().equals(fileComparison.expectedFileProperties.getDosAttributes())) {
+				dosAttrsDiffer = true;
+			}
+		}
+		else if ((actualIsNull && !expectedIsNull) || (!actualIsNull && expectedIsNull)) {
+			dosAttrsDiffer = true;
+		}
+		
+		if (dosAttrsDiffer) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_ATTRIBUTES);
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
@@ -357,7 +381,7 @@ public class FileVersionComparator {
 
 	public FileProperties captureFileProperties(File file, FileChecksum knownChecksum, boolean forceChecksum) {
 		FileProperties fileProperties = new FileProperties();
-		fileProperties.relativePath = FileUtil.getRelativePath(rootFolder, file);
+		fileProperties.relativePath = FileUtil.getRelativeDatabasePath(rootFolder, file);
 
 		Path filePath = null;
 		

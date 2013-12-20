@@ -140,7 +140,7 @@ public class StatusOperation extends Operation {
 		
 		@Override
 		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
-			String relativeFilePath = root.relativize(actualLocalFile).toString();
+			String relativeFilePath = FileUtil.getRelativeDatabasePath(root.toFile(), actualLocalFile.toFile()); //root.relativize(actualLocalFile).toString();
 			
 			// Skip Syncany root folder
 			if (actualLocalFile.toFile().equals(config.getLocalDir())) {
@@ -176,7 +176,6 @@ public class StatusOperation extends Operation {
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
 				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
-				// TODO [lowest] Performance: Attrs are already read, compare() reads them again.  
 				
 				if (fileVersionComparison.equals()) {
 					changeSet.getUnchangedFiles().add(relativeFilePath);

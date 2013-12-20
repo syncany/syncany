@@ -359,9 +359,10 @@ public class Indexer {
 		}	
 
 		private FileHistoryId generateNewFileHistoryId() {
-			int nbAttempts = 0;
+			int newFileHistoryIdAttempts = 0;
 			FileHistoryId newFileHistoryId = null;
-			//TODO[low]: this is probably useless as the collision probability should be super tiny
+			
+			// TODO[low]: this is probably useless as the collision probability should be super tiny
 			do {
 				newFileHistoryId = FileHistoryId.secureRandomFileId();
 				
@@ -371,10 +372,10 @@ public class Indexer {
 					break;
 				}
 				
-				nbAttempts++;
-			} while (nbAttempts < 10);
+				newFileHistoryIdAttempts++;
+			} while (newFileHistoryIdAttempts < 10);
 			
-			if (nbAttempts >= 10) {
+			if (newFileHistoryIdAttempts >= 10) {
 				throw new IndexerException("Cannot generate a unique file id, aborting");
 			}
 			

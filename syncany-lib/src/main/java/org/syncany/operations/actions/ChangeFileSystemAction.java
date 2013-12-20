@@ -52,7 +52,7 @@ public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 				logger.log(Level.INFO, "     - (2) Original file matches, target file does NOT match (EXISTS!): deleting original file, creating conflict file and creating target file at: "+fileVersion2);
 				
 				deleteFile(fileVersion1);	
-				createConflictFile(fileVersion2);
+				moveToConflictFile(fileVersion2);
 				createFileFolderOrSymlink(fileVersion2);										
 			}				
 		}
@@ -81,7 +81,7 @@ public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 			if (toFileExists) {
 				logger.log(Level.INFO, "     - (6) Original does NOT match, target file does NOT match, but exists: Creating conflict file, and creating file at: "+fileVersion2);
 				
-				createConflictFile(fileVersion2);
+				moveToConflictFile(fileVersion2);
 				createFileFolderOrSymlink(fileVersion2);	
 			}
 			else {

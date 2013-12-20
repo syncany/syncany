@@ -246,12 +246,12 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 				xmlOut.writeAttribute("version", fileVersion.getVersion());
 				xmlOut.writeAttribute("type", fileVersion.getType().toString());
 				xmlOut.writeAttribute("status", fileVersion.getStatus().toString());
-				xmlOut.writeAttribute("path", FileUtil.toDatabaseFilePath(fileVersion.getPath()));
+				xmlOut.writeAttribute("path", fileVersion.getPath());
 				xmlOut.writeAttribute("size", fileVersion.getSize());
 				xmlOut.writeAttribute("lastModified", fileVersion.getLastModified().getTime());						
 				
 				if (fileVersion.getLinkTarget() != null) {
-					xmlOut.writeAttribute("linkTarget", FileUtil.toDatabaseFilePath(fileVersion.getLinkTarget()));
+					xmlOut.writeAttribute("linkTarget", fileVersion.getLinkTarget());
 				}
 
 				if (fileVersion.getCreatedBy() != null) {

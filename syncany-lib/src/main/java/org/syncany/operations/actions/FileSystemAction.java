@@ -18,19 +18,21 @@
 package org.syncany.operations.actions;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.database.Database;
@@ -108,56 +110,63 @@ public abstract class FileSystemAction {
 		reconstructedFilesAtFinalLocation.setLastModified(reconstructedFileVersion.getLastModified().getTime());			
 	}
 
-	protected void createConflictFile(FileVersion conflictingLocalVersion) throws IOException {
-		File conflictingLocalFile = getAbsolutePathFile(conflictingLocalVersion.getPath());
-		
-		if (!conflictingLocalFile.exists()) {
-			logger.log(Level.INFO, "     - Creation of conflict file not necessary. Locally conflicting file vanished from "+conflictingLocalFile);
+	protected void moveToConflictFile(FileVersion targetFileVersion) throws IOException {		
+		NormalizedPath targetConflictingFile = new NormalizedPath(config.getLocalDir(), targetFileVersion.getPath());
+		moveToConflictFile(targetConflictingFile);
+	}	
+
+	protected void moveToConflictFile(NormalizedPath conflictingPath) throws IOException {
+		if (!FileUtil.exists(conflictingPath.toFile())) {
+			logger.log(Level.INFO, "     - Creation of conflict file not necessary. Locally conflicting file vanished from "+conflictingPath);
 			return;
 		}
 		
-		String conflictDirectory = FileUtil.getAbsoluteParentDirectory(conflictingLocalFile);
-		String conflictBasename = FileUtil.getBasename(conflictingLocalFile);
-		String conflictFileExtension = FileUtil.getExtension(conflictingLocalFile);		
-		String conflictUserName = (config.getDisplayName() != null) ? config.getDisplayName() : config.getMachineName();
-		String conflictDate = new SimpleDateFormat("d MMM yy, h-mm a").format(conflictingLocalVersion.getLastModified()); 
+		int attempts = 0;
+		
+		while (attempts++ < 10) {
+			NormalizedPath conflictedCopyPath = null;
+			
+			try {
+				conflictedCopyPath = findConflictFilename(conflictingPath);
+				logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingPath+" to "+conflictedCopyPath+" ...");
+
+				if (conflictingPath.toFile().isDirectory()) {
+					FileUtils.moveDirectory(conflictingPath.toFile(), conflictedCopyPath.toFile()); 
+				}
+				else {
+					FileUtils.moveFile(conflictingPath.toFile(), conflictedCopyPath.toFile());
+				}
 				
-		boolean conflictCreatedByEndsWithS = conflictingLocalVersion.getCreatedBy().endsWith("s");
-		boolean conflictFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
-		
-		String newFullName;
-		
-		if (conflictFileHasExtension) {
-			if (conflictCreatedByEndsWithS) {
-				newFullName = String.format("%s (%s' conflicted copy, %s).%s", 
-						conflictBasename, conflictUserName, conflictDate, conflictFileExtension);
+				// Success!
+				break;
 			}
-			else {
-				newFullName = String.format("%s (%s's conflicted copy, %s).%s", 
-						conflictBasename, conflictUserName, conflictDate, conflictFileExtension);				
+			catch (FileExistsException e) {
+				logger.log(Level.SEVERE, "     - Cannot create conflict file; attempt = "+attempts+" for file: "+conflictedCopyPath);
 			}
+			catch (FileNotFoundException e) {
+				logger.log(Level.INFO, "     - Conflict file vanished. Don't care!");
+			}
+			catch (Exception e) {
+				throw new RuntimeException("What to do here?", e);
+			}
+		} 		
+	}
+	
+	private NormalizedPath findConflictFilename(NormalizedPath conflictingPath) throws Exception {
+		String conflictUserName = (config.getDisplayName() != null) ? config.getDisplayName() : config.getMachineName();
+		boolean conflictUserNameEndsWithS = conflictUserName.endsWith("s");
+		String conflictDate = new SimpleDateFormat("d MMM yy, h-mm a").format(new Date()); 				
+		
+		String conflictFilenameSuffix;
+		
+		if (conflictUserNameEndsWithS) {
+			conflictFilenameSuffix = String.format("%s' conflicted copy, %s", conflictUserName, conflictDate);
 		}
 		else {
-			if (conflictCreatedByEndsWithS) {
-				newFullName = String.format("%s (%s' conflicted copy, %s)", 
-						conflictBasename, conflictUserName, conflictDate);
-			}
-			else {
-				newFullName = String.format("%s (%s's conflicted copy, %s)", 
-						conflictBasename, conflictUserName, conflictDate);				
-			}
+			conflictFilenameSuffix = String.format("%s's conflicted copy, %s", conflictUserName, conflictDate);				
 		}
 					
-		File newConflictFile = new File(conflictDirectory+File.separator+newFullName);
-		
-		logger.log(Level.INFO, "     - Local version conflicts, moving local file "+conflictingLocalFile+" to "+newConflictFile+" ...");
-		
-		if (conflictingLocalFile.isDirectory()) {
-			conflictingLocalFile.renameTo(newConflictFile); 
-		}
-		else {
-			FileUtils.moveFile(conflictingLocalFile, newConflictFile);
-		}
+		return conflictingPath.withSuffix(conflictFilenameSuffix, false);
 	}
 	
 	protected void setFileAttributes(FileVersion reconstructedFileVersion) throws IOException {
@@ -173,10 +182,15 @@ public abstract class FileSystemAction {
 				DosFileAttributes dosAttrs = FileUtil.dosAttrsFromString(reconstructedFileVersion.getDosAttributes());					
 				Path filePath = Paths.get(reconstructedFilesAtFinalLocation.getAbsolutePath());
 				
-				Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
-				Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
-				Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
-				Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
+				try {
+					Files.setAttribute(filePath, "dos:readonly", dosAttrs.isReadOnly());
+					Files.setAttribute(filePath, "dos:hidden", dosAttrs.isHidden());
+					Files.setAttribute(filePath, "dos:archive", dosAttrs.isArchive());
+					Files.setAttribute(filePath, "dos:system", dosAttrs.isSystem());
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "     - WARNING: Cannot set file attributes for "+filePath);					
+				}				
 			}
 		}
 		else if (FileUtil.isUnixLikeOperatingSystem()) {
@@ -186,7 +200,13 @@ public abstract class FileSystemAction {
 				Set<PosixFilePermission> posixPerms = PosixFilePermissions.fromString(reconstructedFileVersion.getPosixPermissions());
 				
 				Path filePath = Paths.get(reconstructedFilesAtFinalLocation.getAbsolutePath());
-				Files.setPosixFilePermissions(filePath, posixPerms);
+				
+				try {
+					Files.setPosixFilePermissions(filePath, posixPerms);
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "     - WARNING: Cannot set file permissions for "+filePath);					
+				}
 			}
 		}		
 	}
@@ -210,7 +230,7 @@ public abstract class FileSystemAction {
 	}	
 	
 	protected FileVersionComparison fileChanges(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());						
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath()); // TODO [medium] This does not work for 'some\file' on windows!						
 		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
 		
 		return fileVersionComparison;
