@@ -27,6 +27,25 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+/**
+ * The log formatter implements a {@link Formatter}. It is used by the application's
+ * logging functionality to pretty-print the log output.
+ * 
+ * <p>Log format:
+ * <ul>
+ *   <li>Date/time</li>
+ *   <li>Logger name</li>
+ *   <li>Thread name</li>
+ *   <li>Log level</li>
+ *   <li>Log message</li>
+ * </ul>
+ * 
+ * <p><b>Note</b>: This class might not be directly referenced through code
+ * Instead, it can be referenced (and instantiated) using a logging.properties 
+ * file.
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class LogFormatter extends Formatter {
   private DateFormat dateFormat;
 

@@ -34,7 +34,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -43,20 +42,16 @@ import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
 import org.syncany.Client;
-import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
-import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class CommandLineClient extends Client {
-	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
 	private static final String HELP_TEXT_SKEL_RESOURCE = "/help.skel";
 	private static final String HELP_TEXT_VAR_VERSION= "%VERSION%";
 	private static final String HELP_TEXT_VAR_PLUGINS = "%PLUGINS%";
@@ -189,19 +184,7 @@ public class CommandLineClient extends Client {
 		}			
 		
 		// Load config
-		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
-		
-		if (appDir.exists()) {
-			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
-
-			ConfigTO configTO = ConfigHelper.loadConfigTO(localDir);
-			RepoTO repoTO = ConfigHelper.loadRepoTO(localDir, configTO);
-			
-			config = new Config(localDir, configTO, repoTO);
-		}		
-		else {
-			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
-		}
+		config = ConfigHelper.loadConfig(localDir);
 	}					
 	
 	private int runCommand(OptionSet options, List<?> nonOptions) throws Exception {
@@ -275,7 +258,7 @@ public class CommandLineClient extends Client {
 			line = line.replace(HELP_TEXT_VAR_PLUGINS, pluginsStr);
 			line = line.replace(HELP_TEXT_VAR_LOGFORMATS, logCommandFormatsStr);
 			
-			out.println(line);
+			out.println(line.replaceAll("\\s$", ""));			
 		}
 		
 		out.close();		

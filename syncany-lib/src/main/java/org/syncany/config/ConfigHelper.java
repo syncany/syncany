@@ -31,8 +31,10 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
 /**
- * @author pheckel
- *
+ * The config helper provides convenience functions to load the configuration from
+ * the local application repo.
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
