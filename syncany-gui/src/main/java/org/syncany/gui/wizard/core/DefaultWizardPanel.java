@@ -17,6 +17,8 @@
  */
 package org.syncany.gui.wizard.core;
 
+import java.util.Map;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -28,8 +30,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.util.I18n;
 import org.syncany.gui.util.SWTResourceManager;
+import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -38,19 +40,31 @@ import org.syncany.gui.util.SWTResourceManager;
 public abstract class DefaultWizardPanel extends DefaultDialog implements SelectionListener {
 	private int type;
 	
+	private Map<String, Object> wizardParameters; 
+	
 	private Button cancelButton;
 	private Button previousButton;
 	private Button nextButton;
 	private Button connectButton;
+	private Button createButton;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DefaultWizardPanel(int type, Shell parent, int style) {
+	public DefaultWizardPanel( Map<String, Object> wizardParameters, int type, Shell parent, int style) {
 		super(parent, style);
 		this.type = type;
+		this.wizardParameters = wizardParameters;
 	}
+	
+	/**
+	 * @return the wizardParameters
+	 */
+	public Map<String, Object> getWizardParameters() {
+		return wizardParameters;
+	}
+	
 
 	/**
 	 * @return the type
@@ -113,6 +127,13 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 			connectButton.addSelectionListener(this);
 		}
 		
+		if ((type & WizardType.CREATE) == WizardType.CREATE){
+			createButton = new Button(buttonComposite, SWT.NONE);
+			createButton.setLayoutData(new RowData(80, 30));
+			createButton.setText(I18n.getString(DefaultWizardPanel.class.getSimpleName()+".dialog.create"));
+			createButton.addSelectionListener(this);
+		}
+		
 		centerOnScreen();
 	}
 	
@@ -142,6 +163,13 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 	 */
 	public Button getConnectButton() {
 		return connectButton;
+	}
+	
+	/**
+	 * @return the createButton
+	 */
+	public Button getCreateButton() {
+		return createButton;
 	}
 	
 	protected abstract Composite createComposite(Shell shell);

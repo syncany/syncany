@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.util.I18n;
+import org.syncany.util.I18n;
 
 /**
  * <code>DefaultDialog</code> subclasses SWT <code>Dialog</code> 

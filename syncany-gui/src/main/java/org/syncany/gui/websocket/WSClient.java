@@ -114,7 +114,7 @@ public class WSClient {
 		}
 	}
 
-	public void handleCommand(Map<String, String> parameters) {
+	public void handleCommand(Map<String, ?> parameters) {
 		try{
 			String text = JsonHelper.fromMapToString(parameters);
 			client.send(text);

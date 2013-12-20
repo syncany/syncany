@@ -17,24 +17,39 @@
  */
 package org.syncany.gui.panel.plugin;
 
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Label;
+import java.io.IOException;
+import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import org.apache.commons.net.ftp.FTPClient;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
+import org.syncany.gui.panel.PluginPanel;
+import org.syncany.util.I18n;
 
 /**
  * @author vincent
  *
  */
-public class FTPComposite extends Composite {
-	private Text text;
-	private Text text_1;
-	private Text text_2;
-	private Text text_3;
-	private Text text_4;
+public class FTPComposite extends PluginPanel {
+	private static final Logger log = Logger.getLogger(FTPComposite.class.getSimpleName());
+	private static final int TIMEOUT_CONNECT = 5000;
+	
+	private Text hostText;
+	private Text usernameText;
+	private Text passwordText;
+	private Text pathText;
+	private Text portText;
 
 	/**
 	 * Create the composite.
@@ -43,53 +58,125 @@ public class FTPComposite extends Composite {
 	 */
 	public FTPComposite(Composite parent, int style) {
 		super(parent, style);
-		setLayout(new GridLayout(2, false));
-		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
+		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		GridLayout gl_composite = new GridLayout(2, false);
+		gl_composite.verticalSpacing = 15;
+		setLayout(gl_composite);
 		
-		Label lblNewLabel = new Label(this, SWT.NONE);
-		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		lblNewLabel.setText("New Label");
+		Label hostLabel = new Label(this, SWT.NONE);
+		hostLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		hostLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.host"));
 		
-		text = new Text(this, SWT.BORDER);
-		text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		hostText = new Text(this, SWT.BORDER);
+		hostText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		Label lblNewLabel_1 = new Label(this, SWT.NONE);
-		lblNewLabel_1.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		lblNewLabel_1.setText("New Label");
+		Label usernameLabel = new Label(this, SWT.NONE);
+		usernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		usernameLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.username"));
 		
-		text_2 = new Text(this, SWT.BORDER);
-		text_2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		passwordText = new Text(this, SWT.BORDER);
+		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		Label lblNewLabel_3 = new Label(this, SWT.NONE);
-		lblNewLabel_3.setText("New Label");
+		Label passwordLabel = new Label(this, SWT.NONE);
+		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		passwordLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.password"));
 		
-		text_1 = new Text(this, SWT.BORDER);
-		text_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		usernameText = new Text(this, SWT.BORDER);
+		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		Label lblNewLabel_2 = new Label(this, SWT.NONE);
-		lblNewLabel_2.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		lblNewLabel_2.setText("New Label");
+		Label pathLabel = new Label(this, SWT.NONE);
+		pathLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		pathLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.path"));
 		
-		text_3 = new Text(this, SWT.BORDER);
-		text_3.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		pathText = new Text(this, SWT.BORDER);
+		pathText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		Label lblNewLabel_4 = new Label(this, SWT.NONE);
-		lblNewLabel_4.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		lblNewLabel_4.setText("New Label");
+		Label portLabel = new Label(this, SWT.NONE);
+		portLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		portLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.port"));
 		
-		text_4 = new Text(this, SWT.BORDER);
-		text_4.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		new Label(this, SWT.NONE);
+		portText = new Text(this, SWT.BORDER);
+		portText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		Button btnNewButton = new Button(this, SWT.NONE);
-		btnNewButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		btnNewButton.setText("New Button");
+		Composite buttonComposite = new Composite(this, SWT.NONE);
+		GridLayout gl_buttonComposite = new GridLayout(2, false);
+		gl_buttonComposite.horizontalSpacing = 0;
+		gl_buttonComposite.verticalSpacing = 0;
+		gl_buttonComposite.marginWidth = 0;
+		gl_buttonComposite.marginHeight = 0;
+		buttonComposite.setLayout(gl_buttonComposite);
+		GridData gd_buttonComposite = new GridData(SWT.FILL, SWT.TOP, true, true, 2, 1);
+		gd_buttonComposite.minimumHeight = 30;
+		buttonComposite.setLayoutData(gd_buttonComposite);
+		
+		final Label testResultLabel = new Label(buttonComposite, SWT.NONE);
+		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
+		testResultLabel.setAlignment(SWT.CENTER);
+		
+		final Button testFtpButton = new Button(buttonComposite, SWT.NONE);
 
+		GridData gd_testFtpButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
+		gd_testFtpButton.heightHint = 30;
+		gd_testFtpButton.widthHint = 80;
+		testFtpButton.setLayoutData(gd_testFtpButton);
+		testFtpButton.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.test"));
+		testFtpButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				testFtpButton.setEnabled(false);
+				final boolean test = testFtpConnection();
+				testFtpButton.setEnabled(true);
+				
+				Display.getCurrent().syncExec(new Runnable() {
+				    public void run() {
+				    	if (test){
+				    		testResultLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.testSucceed"));
+				    	}
+				    	else{
+				    		testResultLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.testFails"));
+				    	}
+				    }
+				});
+			}
+		});
+	}
+
+	protected boolean testFtpConnection() {
+		FTPClient ftp = new FTPClient();
+
+		ftp.setConnectTimeout(TIMEOUT_CONNECT);
+
+		try{
+			ftp.connect(hostText.getText(), Integer.parseInt(portText.getText()));
+			boolean success = ftp.login(usernameText.getText(), passwordText.getText());
+			ftp.disconnect();
+			return success;
+		}
+		catch (NumberFormatException e){
+			log.warning("NumberFormatException "+e.toString());
+		}
+		catch (SocketException e) {
+			log.warning("SocketException "+e.toString());
+		}
+		catch (IOException e) {
+			log.warning("IOException "+e.toString());
+		}
+		return false;
 	}
 
 	@Override
 	protected void checkSubclass() {
-		// Disable the check that prevents subclassing of SWT components
+		
 	}
 
+	@Override
+	public Map<String, String> getParameters() {
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("host", hostText.getText());
+		parameters.put("username", usernameText.getText());
+		parameters.put("password", passwordText.getText());
+		parameters.put("path", pathText.getText());
+		parameters.put("port", portText.getText());
+		return parameters;
+	}
 }

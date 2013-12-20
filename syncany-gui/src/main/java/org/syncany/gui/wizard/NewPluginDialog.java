@@ -18,12 +18,13 @@
 package org.syncany.gui.wizard;
 
 import java.lang.reflect.Constructor;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
+import org.syncany.gui.panel.PluginPanel;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
 import org.syncany.gui.wizard.core.WizardAction;
 import org.syncany.gui.wizard.core.WizardType;
@@ -33,18 +34,15 @@ import org.syncany.gui.wizard.core.WizardType;
  *
  */
 public class NewPluginDialog extends DefaultWizardPanel {
-	private Text emailTextField;
-	private Text passwordTextField;
-	private String className;
+	private PluginPanel composite = null;
 	
 	/**
 	 * Create the dialog.
 	 * @param parent
 	 * @param style
 	 */
-	public NewPluginDialog(String className, Shell parent, int style) {
-		super(WizardType.NEXT | WizardType.PREVIOUS, parent, style);
-		this.className = className;
+	public NewPluginDialog(Map<String, Object> params, Shell parent, int style) {
+		super(params, WizardType.NEXT | WizardType.PREVIOUS, parent, style);
 	}
 	
 	/**
@@ -65,13 +63,14 @@ public class NewPluginDialog extends DefaultWizardPanel {
 	}
 	
 	protected Composite createComposite(Shell shell){
-		Composite composite = null;
+		
+		String className = (String)getWizardParameters().get("pluginGuiClassName");
 		try{
-			Class[] type = { Composite.class, int.class};
-			Class classDefinition = Class.forName(className); 
-			Constructor cons = classDefinition.getConstructor(type);
+			Class<?>[] type = { Composite.class, int.class};
+			Class<?> classDefinition = Class.forName(className); 
+			Constructor<?> cons = classDefinition.getConstructor(type);
 			Object[] obj = { shell, SWT.NONE};
-			composite = (Composite)cons.newInstance(obj);
+			composite = (PluginPanel)cons.newInstance(obj);
 		}
 		catch (Exception e){
 			
@@ -83,13 +82,16 @@ public class NewPluginDialog extends DefaultWizardPanel {
 	@Override
 	protected void handleAction(WizardAction action) {
 		if (action == WizardAction.NEXT){
+			if (composite != null){
+				getWizardParameters().put("pluginParameters", composite.getParameters());
+			}
 			this.shell.dispose();
-			NewLocalFolders sd = new NewLocalFolders(className, getParent(), SWT.APPLICATION_MODAL);
+			NewLocalFolders sd = new NewLocalFolders(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
 		else if (action == WizardAction.PREVIOUS){
 			this.shell.dispose();
-			NewDialog sd = new NewDialog(getParent(), SWT.APPLICATION_MODAL);
+			NewDialog sd = new NewDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
 	}

@@ -18,6 +18,7 @@
 package org.syncany.gui.wizard;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -31,10 +32,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.gui.util.I18n;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
 import org.syncany.gui.wizard.core.WizardAction;
 import org.syncany.gui.wizard.core.WizardType;
+import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -52,8 +53,8 @@ public class NewDialog extends DefaultWizardPanel {
 	 * @param parent
 	 * @param style
 	 */
-	public NewDialog(Shell parent, int style) {
-		super(WizardType.NEXT | WizardType.PREVIOUS, parent, style);
+	public NewDialog(Map<String, Object> params, Shell parent, int style) {
+		super(params, WizardType.NEXT | WizardType.PREVIOUS, parent, style);
 	}
 	
 	/**
@@ -79,27 +80,35 @@ public class NewDialog extends DefaultWizardPanel {
 		GridLayout gl_composite = new GridLayout(2, false);
 		gl_composite.verticalSpacing = 15;
 		composite.setLayout(gl_composite);
-
+		
 		emailOptionRadio = new Button(composite, SWT.RADIO);
-		emailOptionRadio.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		GridData gd_emailOptionRadio = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+		gd_emailOptionRadio.minimumHeight = 30;
+		emailOptionRadio.setLayoutData(gd_emailOptionRadio);
 		emailOptionRadio.setBounds(0, 0, 90, 16);
 		emailOptionRadio.setText(I18n.getString("NewDialog.dialog.option.email"));
 		emailOptionRadio.setSelection(true);
 		
 		ftpOptionRadio = new Button(composite, SWT.RADIO);
-		ftpOptionRadio.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		GridData gd_ftpOptionRadio = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+		gd_ftpOptionRadio.minimumHeight = 30;
+		ftpOptionRadio.setLayoutData(gd_ftpOptionRadio);
 		ftpOptionRadio.setBounds(0, 0, 90, 16);
 		ftpOptionRadio.setText(I18n.getString("NewDialog.dialog.option.ftp"));
 		
 		otherPluginRadio = new Button(composite, SWT.RADIO);
+		GridData gd_otherPluginRadio = new GridData(SWT.LEFT, SWT.FILL, false, true, 1, 1);
+		gd_otherPluginRadio.minimumHeight = 30;
+		otherPluginRadio.setLayoutData(gd_otherPluginRadio);
 		otherPluginRadio.setText(I18n.getString("NewDialog.dialog.option.otherPlugin"));
 		
 		pluginSelectionCombo = new Combo(composite, SWT.NONE);
 		for (Plugin p : pluginList){
 			pluginSelectionCombo.add(p.getName());
 		}
-		pluginSelectionCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		pluginSelectionCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
 		pluginSelectionCombo.setEnabled(false);
+		pluginSelectionCombo.select(0);
 		
 		otherPluginRadio.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -115,35 +124,34 @@ public class NewDialog extends DefaultWizardPanel {
 		if (action == WizardAction.NEXT){
 			if (emailOptionRadio.getSelection()){
 				this.shell.dispose();
-				NewEmailDialog sd = new NewEmailDialog(getParent(), SWT.APPLICATION_MODAL);
+				NewEmailDialog sd = new NewEmailDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
 			else if (ftpOptionRadio.getSelection()){
 				this.shell.dispose();
-				String className = "org.syncany.gui.panel.plugin.FTPComposite";
-				NewPluginDialog sd = new NewPluginDialog(className, getParent(), SWT.APPLICATION_MODAL);
+				getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.FTPComposite");
+				NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
 			else if (otherPluginRadio.getSelection()){
 				String selectedPlugin = pluginSelectionCombo.getItem(pluginSelectionCombo.getSelectionIndex());
-				String className = null;
 				switch (selectedPlugin.toLowerCase()){
 					case "rest":
-						className = "org.syncany.gui.panel.plugin.RestComposite";
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.RestComposite");
 						break;
 					case "amazon s3":
-						className = "org.syncany.gui.panel.plugin.AmazonComposite";
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.AmazonComposite");
 						break;
 				}
 
 				this.shell.dispose();
-				NewPluginDialog sd = new NewPluginDialog(className, getParent(), SWT.APPLICATION_MODAL);
+				NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
 		}
 		else if (action == WizardAction.PREVIOUS){
 			this.shell.dispose();
-			StartDialog sd = new StartDialog(getParent(), SWT.APPLICATION_MODAL);
+			StartDialog sd = new StartDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
 	}

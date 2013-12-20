@@ -1,4 +1,4 @@
-package org.syncany.gui.util;
+package org.syncany.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;

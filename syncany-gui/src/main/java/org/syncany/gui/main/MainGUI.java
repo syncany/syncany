@@ -1,6 +1,7 @@
 package org.syncany.gui.main;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,9 +20,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.syncany.gui.command.ClientCommandFactory;
-import org.syncany.gui.util.I18n;
+import org.syncany.gui.util.OS;
 import org.syncany.gui.util.SWTResourceManager;
 import org.syncany.gui.wizard.StartDialog;
+import org.syncany.util.I18n;
 
 public class MainGUI {
 	private static final Logger log = Logger.getLogger(MainGUI.class.getSimpleName());
@@ -37,6 +39,9 @@ public class MainGUI {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		if (OS.isMacOS()){
+			System.setProperty("apple.awt.UIElement", "true");
+		}
 		start();
 	}
 	
@@ -104,7 +109,7 @@ public class MainGUI {
 			connectItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					StartDialog sd = new StartDialog(shell, SWT.APPLICATION_MODAL);
+					StartDialog sd = new StartDialog(new HashMap<String, Object>(), shell, SWT.APPLICATION_MODAL);
 					sd.open();
 				}
 			});
@@ -119,12 +124,15 @@ public class MainGUI {
 					ClientCommandFactory.close();
 				}
 			});
-
-			item.addListener (SWT.MenuDetect, new Listener () {
+			
+			Listener showMenuListener = new Listener () {
 				public void handleEvent (Event event) {
 					menu.setVisible (true);
 				}
-			});
+			};
+			
+			item.addListener (SWT.MenuDetect, showMenuListener);
+			item.addListener (SWT.Selection, showMenuListener);
 		}
 	}
 	

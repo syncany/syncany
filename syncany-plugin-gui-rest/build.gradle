@@ -31,5 +31,6 @@ switch(getOsName()) {
 
 dependencies {
 	compile			project(':syncany-plugin-gui')
+	compile			project(':syncany-util')
 	compile			"org.eclipse.swt:org.eclipse.swt.${swtJarName}:4.3"
 }

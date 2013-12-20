@@ -17,8 +17,8 @@
  */
 package org.syncany.gui.wizard;
 
-import java.awt.TextField;
 import java.io.File;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,11 +35,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.command.ClientCommandFactory;
-import org.syncany.gui.util.I18n;
 import org.syncany.gui.util.SWTResourceManager;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
 import org.syncany.gui.wizard.core.WizardAction;
 import org.syncany.gui.wizard.core.WizardType;
+import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -57,8 +57,8 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 	 * @param parent
 	 * @param style
 	 */
-	public ConnectDialog(Shell parent, int style) {
-		super(WizardType.CONNECT | WizardType.PREVIOUS, parent, style);
+	public ConnectDialog(Map<String, Object> params, Shell parent, int style) {
+		super(params, WizardType.CONNECT | WizardType.PREVIOUS, parent, style);
 	}
 	
 	/**
@@ -170,7 +170,7 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		}
 		else if (action == WizardAction.PREVIOUS){
 			this.shell.dispose();
-			StartDialog sd = new StartDialog(getParent(), SWT.APPLICATION_MODAL);
+			StartDialog sd = new StartDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
 	}

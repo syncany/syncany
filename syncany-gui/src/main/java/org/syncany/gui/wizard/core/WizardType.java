@@ -21,6 +21,7 @@ package org.syncany.gui.wizard.core;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
+
 public class WizardType {
 	public static int NEXT = 1 << 2; 
 	public static int PREVIOUS =  1 << 3; 

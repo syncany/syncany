@@ -28,13 +28,13 @@ import com.google.gson.reflect.TypeToken;
  *
  */
 public class JsonHelper {
-	public static String fromMapToString(Map<String, String> params){
+	public static String fromMapToString(Map<String, ?> params){
 		String text = new Gson().toJson(params).toString();
 		return text;
 	}
 
-	public static Map<String, ?> fromStringToMap(String s){
-		Type mapType = new TypeToken<Map<String, ?>>() {}.getType();
+	public static Map<String, String> fromStringToMap(String s){
+		Type mapType = new TypeToken<Map<String, String>>() {}.getType();
 		Map<String, String> parameters = new Gson().fromJson(s, mapType);
 		return parameters;
 	}

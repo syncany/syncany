@@ -31,4 +31,8 @@ public class OS {
 	public static boolean isMacOS(){
 		return osName.startsWith("mac os");
 	}
+
+	public static boolean isLinux() {
+		return osName.startsWith("linux");
+	}
 }
