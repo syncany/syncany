@@ -29,6 +29,8 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
+import org.syncany.gui.event.InterfaceUpdate;
+import org.syncany.gui.main.Launcher;
 import org.syncany.gui.main.MainGUI;
 import org.syncany.gui.util.JsonHelper;
 
@@ -107,7 +109,8 @@ public class WSClient {
 				
 				Display.getDefault().asyncExec(new Runnable() {
 			        public void run() {
-		               MainGUI.window.updateTray(folders);
+			        	InterfaceUpdate iu = new InterfaceUpdate(folders);
+			        	Launcher.eventbus.post(iu);
 		            }
 			    });
 				break;

@@ -1,6 +1,6 @@
 apply plugin: 'application'
 
-mainClassName = "org.syncany.gui.main.MainGUI"
+mainClassName = "org.syncany.gui.main.Launcher"
 
 repositories {
     maven {
