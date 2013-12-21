@@ -17,8 +17,17 @@
  */
 package org.syncany.connection.plugins.webdav;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
@@ -27,6 +36,9 @@ public class WebdavConnection implements Connection {
 	private String url;
 	private String username;
 	private String password;
+
+	private boolean secure;
+	private SSLSocketFactory sslSocketFactory;
 
 	@Override
 	public TransferManager createTransferManager() {
@@ -47,6 +59,39 @@ public class WebdavConnection implements Connection {
 		this.url = url;
 		this.username = username;
 		this.password = password;
+
+		// SSL
+		if (url.toLowerCase().startsWith("https")) {
+			try {
+				initSsl();
+			}
+			catch (Exception e) {
+				throw new StorageException(e);
+			}
+		}
+	}
+
+	private void initSsl() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, UnrecoverableKeyException {
+		this.secure = true;
+
+		/*String keyStoreFilename = "/tmp/mystore";
+		File keystoreFile = new File(keyStoreFilename);
+		FileInputStream fis = new FileInputStream(keystoreFile);
+		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); // JKS
+		keyStore.load(fis, null);*/
+
+		TrustStrategy trustStrategy = new TrustStrategy() {			
+			@Override
+			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+				for (X509Certificate cert : chain) {
+					System.out.println(cert);
+				}
+				 
+				return true; // TODO [high] WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible!
+			}
+		};
+		
+		this.sslSocketFactory = new SSLSocketFactory(trustStrategy);
 	}
 
 	@Override
@@ -90,5 +135,13 @@ public class WebdavConnection implements Connection {
 
 	public String getURL(String filename) {
 		return (url.endsWith("/") ? "" : "/") + filename;
+	}
+
+	public boolean isSecure() {
+		return secure;
+	}
+
+	public SSLSocketFactory getSslSocketFactory() {
+		return sslSocketFactory;
 	}
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
@@ -37,6 +38,7 @@ import org.syncany.util.FileUtil;
 import com.github.sardine.DavResource;
 import com.github.sardine.Sardine;
 import com.github.sardine.SardineFactory;
+import com.github.sardine.impl.SardineImpl;
 
 public class WebdavTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(WebdavTransferManager.class.getSimpleName());
@@ -63,8 +65,22 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	@Override
 	public void connect() throws StorageException {
 		if (sardine == null) {
-			sardine = SardineFactory.begin(getConnection().getUsername(), getConnection().getPassword());
-		}
+			if (getConnection().isSecure()) {
+				final SSLSocketFactory sslSocketFactory = getConnection().getSslSocketFactory();
+				
+				sardine = new SardineImpl() {
+			        @Override
+			        protected SSLSocketFactory createDefaultSecureSocketFactory() {
+			        	return sslSocketFactory;
+			        }                       
+				};
+				
+				sardine.setCredentials(getConnection().getUsername(), getConnection().getPassword());
+			}
+			else {
+				sardine = SardineFactory.begin(getConnection().getUsername(), getConnection().getPassword());
+			}
+		}		
 	}
 
 	@Override
