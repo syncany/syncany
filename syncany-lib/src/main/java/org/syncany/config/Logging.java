@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -28,11 +29,33 @@ import java.util.logging.Logger;
 
 import org.reflections.Reflections;
 
+/**
+ * The logging class offers convenience functions to initialize and update the
+ * application's log options. 
+ * 
+ * <p>In particular, it can load the log properties either from a resource or a
+ * local file on the file system (<tt>logging.properties</tt>. If a local file is
+ * present, it is preferred over the JAR resource.
+ * 
+ * <p>To initialize logging, the {@link #init()} method can be called in the 
+ * <tt>static</tt> block of a class, e.g.
+ * 
+ * <pre>
+ *   static {
+ *     Logging.init();
+ *   }
+ * </pre>
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class Logging {
-	private static boolean loggingInitialized = false;
+	private static final String LOG_PROPERTIES_JAR_RESOURCE = "/logging.properties";
+	private static final File LOG_PROPERTIES_LOCAL_FILE = new File("logging.properties");
+	
+	private static AtomicBoolean loggingInitialized = new AtomicBoolean(false);
 	
 	public synchronized static void init() {
-		if (loggingInitialized) {
+		if (loggingInitialized.get()) {
 			return;
 		}
 
@@ -42,21 +65,20 @@ public class Logging {
 		// Load logging.properties
     	try {
     		// Use file if exists, else use file embedded in JAR
-    		File logConfig = new File("logging.properties");
     		InputStream logConfigInputStream;
     		
-    		if (logConfig.exists() && logConfig.canRead()) {
-    			logConfigInputStream = new FileInputStream(new File("logging.properties"));
+    		if (LOG_PROPERTIES_LOCAL_FILE.exists() && LOG_PROPERTIES_LOCAL_FILE.canRead()) {
+    			logConfigInputStream = new FileInputStream(LOG_PROPERTIES_LOCAL_FILE);
     		}
     		else {
-    			logConfigInputStream = Config.class.getResourceAsStream("/logging.properties");
+    			logConfigInputStream = Config.class.getResourceAsStream(LOG_PROPERTIES_JAR_RESOURCE);
     		}
     		
     	    if (logConfigInputStream != null) {
     	    	LogManager.getLogManager().readConfiguration(logConfigInputStream);
     	    }
     	    
-    	    loggingInitialized = true;
+    	    loggingInitialized.set(true);
     	}
     	catch (Exception e) {
     	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");

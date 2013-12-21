@@ -35,6 +35,7 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -79,7 +80,7 @@ public class Config {
     	Logging.init();
     }
     
-	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws Exception {		
+	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {		
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
@@ -97,8 +98,8 @@ public class Config {
 		displayName = configTO.getDisplayName();
 	}
 	
-	private void initMasterKey(ConfigTO configTO) throws Exception {
-		masterKey = configTO.getMasterKey(); // can be null		
+	private void initMasterKey(ConfigTO configTO) {
+		masterKey = configTO.getMasterKey(); // can be null			
 	}
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
@@ -117,12 +118,16 @@ public class Config {
 		cache = new Cache(cacheDir);
 	}	
 
-	private void initRepo(RepoTO repoTO) throws Exception {
-		// TODO [feature request] make chunking options configurable
-		initRepoId(repoTO);
-		initChunker(repoTO);
-		initMultiChunker(repoTO);
-		initTransformers(repoTO);								
+	private void initRepo(RepoTO repoTO) throws ConfigException {
+		try {
+			initRepoId(repoTO);
+			initChunker(repoTO);
+			initMultiChunker(repoTO);
+			initTransformers(repoTO);
+		}
+		catch (Exception e) {
+			throw new ConfigException(e);
+		}
 	}
 	
 	private void initRepoId(RepoTO repoTO) {
@@ -130,6 +135,7 @@ public class Config {
 	}
 
 	private void initChunker(RepoTO repoTO) throws Exception {
+		// TODO [feature request] make chunking options configurable
 		chunker = new MimeTypeChunker(
 			new FixedChunker(16*1024, "SHA1"),
 			new FixedChunker(2*1024*1024, "SHA1"),
@@ -186,16 +192,21 @@ public class Config {
 		}
 	}
 
-	private void initConnection(ConfigTO configTO) throws Exception {
+	private void initConnection(ConfigTO configTO) throws ConfigException {
 		if (configTO.getConnectionTO() != null) {
 			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());
 	    	
 	    	if (plugin == null) {
-	    		throw new Exception("Plugin not supported: " + configTO.getConnectionTO().getType());
+	    		throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
 	    	}
 	    	
-	    	connection = plugin.createConnection();
-	    	connection.init(configTO.getConnectionTO().getSettings());
+	    	try {
+		    	connection = plugin.createConnection();
+		    	connection.init(configTO.getConnectionTO().getSettings());
+	    	}
+	    	catch (StorageException e) {
+	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);
+	    	}
 		}
 	}
 	

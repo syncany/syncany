@@ -37,7 +37,7 @@ import org.syncany.cli.CommandLineClient;
  * 
  * <p>The Syncany class is the central entry point for the command line client and
  * the only class to expose a main method. It does not offer any functionality
- * on its own, but rather ust instantiates a {@link CommandLineClient} and passes
+ * on its own, but rather just instantiates a {@link CommandLineClient} and passes
  * the command line arguments to it.  
  * 
  * <p>Many thanks to all the people who have supported the project over the years and who have

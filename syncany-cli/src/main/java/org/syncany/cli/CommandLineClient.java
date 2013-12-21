@@ -22,7 +22,6 @@ import static org.syncany.cli.CommandScope.INITIALIZED_LOCALDIR;
 import static org.syncany.cli.CommandScope.UNINITIALIZED_LOCALDIR;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,7 +34,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -43,24 +41,17 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
-import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
-import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.crypto.CipherUtil;
-import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class CommandLineClient extends Client {
-	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());	
 	private static final String HELP_TEXT_SKEL_RESOURCE = "/help.skel";
 	private static final String HELP_TEXT_VAR_VERSION= "%VERSION%";
 	private static final String HELP_TEXT_VAR_PLUGINS = "%PLUGINS%";
@@ -189,80 +180,12 @@ public class CommandLineClient extends Client {
 			localDir = options.valueOf(optionLocalDir);
 		}
 		else {
-			localDir = findLocalDirInPath();
+			localDir = ConfigHelper.findLocalDirInPath(new File("."));
 		}			
 		
 		// Load config
-		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
-		
-		if (appDir.exists()) {
-			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
-
-			ConfigTO configTO = loadConfigTO(localDir);
-			RepoTO repoTO = loadRepoTO(localDir, configTO);
-			
-			config = new Config(localDir, configTO, repoTO);
-		}		
-		else {
-			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
-		}
-	}		
-	
-	private ConfigTO loadConfigTO(File localDir) throws Exception {
-		File configFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG);
-		
-		if (!configFile.exists()) {
-			throw new Exception("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
-		}
-		
-		return ConfigTO.load(configFile);
-	}
-
-	private RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws Exception {
-		File repoFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_REPO);
-		
-		if (!repoFile.exists()) {
-			throw new Exception("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
-		}
-		
-		if (CipherUtil.isEncrypted(repoFile)) {
-			logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
-
-			SaltedSecretKey masterKey = configTO.getMasterKey();
-			
-			if (masterKey == null) {
-				throw new Exception("Repo file is encrypted, but master key not set in config file.");
-			}
-			
-			String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
-			
-			Serializer serializer = new Persister();
-			return serializer.read(RepoTO.class, repoFileStr);			
-		}
-		else {
-			logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
-			
-			Serializer serializer = new Persister();
-			return serializer.read(RepoTO.class, repoFile);
-		}
-	}
-	
-	private File findLocalDirInPath() throws IOException {
-		File currentSearchFolder = new File(".").getCanonicalFile();
-		
-		while (currentSearchFolder != null) {
-			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DIR_APPLICATION);
-			File possibleConfigFile = new File(possibleAppDir+"/"+Config.FILE_CONFIG);
-			
-			if (possibleAppDir.exists() && possibleConfigFile.exists()) {
-				return possibleAppDir.getParentFile().getCanonicalFile();
-			}
-			
-			currentSearchFolder = currentSearchFolder.getParentFile();
-		}
-		 
-		return new File(".").getCanonicalFile(); 
-	}
+		config = ConfigHelper.loadConfig(localDir);
+	}					
 	
 	private int runCommand(OptionSet options, List<?> nonOptions) throws Exception {
 		if (nonOptions.size() == 0) {
@@ -335,7 +258,7 @@ public class CommandLineClient extends Client {
 			line = line.replace(HELP_TEXT_VAR_PLUGINS, pluginsStr);
 			line = line.replace(HELP_TEXT_VAR_LOGFORMATS, logCommandFormatsStr);
 			
-			out.println(line);
+			out.println(line.replaceAll("\\s$", ""));			
 		}
 		
 		out.close();		

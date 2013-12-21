@@ -29,6 +29,7 @@ import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 import org.syncany.operations.DownOperation;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
+import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationListener;
 import org.syncany.operations.InitOperation.InitOperationOptions;
@@ -38,6 +39,7 @@ import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.GenlinkOperation;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -159,6 +161,10 @@ public class Client {
 	public void watch(WatchOperationOptions options) throws Exception {
 		new WatchOperation(config, options).execute();		
 	}	
+	
+	public GenlinkOperationResult genlink() throws Exception {
+		return new GenlinkOperation(config).execute();
+	}
 	
 	public InitOperationResult init(InitOperationOptions options) throws Exception {
         return init(options, null);              

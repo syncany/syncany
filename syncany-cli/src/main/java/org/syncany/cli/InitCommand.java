@@ -51,7 +51,6 @@ import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand implements InitOperationListener {
 	public static final int REPO_ID_LENGTH = 32;
-	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
 	public static final int PASSWORD_MIN_LENGTH = 8;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
@@ -113,30 +112,8 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return operationOptions;
 	}		
 
-	private void printResults(InitOperationResult operationResult) {	
-		out.println();
-		out.println("Repository created, and local folder initialized. To share the same repository");
-		out.println("with others, you can share this link:");
-		out.println();		
-		out.println("   "+operationResult.getShareLink());
-		out.println();
-		
-		if (operationResult.isShareLinkEncrypted()) {
-			out.println("This link is encrypted with the given password, so you can safely share it.");
-			out.println("using unsecure communication (chat, e-mail, etc.)");
-			out.println();
-			out.println("WARNING: The link contains the details of your repo connection which typically");
-			out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
-		}
-		else {
-			out.println("WARNING: This link is NOT ENCRYPTED and might contain connection credentials");
-			out.println("         Do NOT share this link unless you know what you are doing!");
-			out.println();
-			out.println("         The link contains the details of your repo connection which typically");
-			out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
-		}
-
-		out.println();
+	private void printResults(InitOperationResult operationResult) {
+		printLink(operationResult.getGenLinkResult(), false);
 	}
 
 	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
@@ -155,20 +132,18 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	}
 
 	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
-		List<CipherSpec> cipherSuites = new ArrayList<CipherSpec>();
+		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
 			if (advancedModeEnabled) { 			
-				cipherSuites = askCipherSpecs();				
+				cipherSpecs = askCipherSpecs();				
 			}
 			else { // Default
-				for (int cipherSuiteId : DEFAULT_CIPHER_SUITE_IDS) { 
-					cipherSuites.add(CipherSpecs.getCipherSpec(cipherSuiteId));
-				}								
+				cipherSpecs = CipherSpecs.getDefaultCipherSpecs();					
 			}			
 		}
 		
-		return cipherSuites;
+		return cipherSpecs;
 	}
 
 	private List<CipherSpec> askCipherSpecs() throws Exception {
