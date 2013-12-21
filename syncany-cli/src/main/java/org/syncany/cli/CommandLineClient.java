@@ -51,6 +51,13 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
+/**
+ * The command line client implements a typical CLI. It represents the first entry
+ * point for the Syncany command line application and can be used to run all of the
+ * supported commands. 
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class CommandLineClient extends Client {
 	private static final String HELP_TEXT_SKEL_RESOURCE = "/help.skel";
 	private static final String HELP_TEXT_VAR_VERSION= "%VERSION%";

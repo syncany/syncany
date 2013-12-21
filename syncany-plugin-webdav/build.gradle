@@ -1,0 +1,4 @@
+dependencies {
+    compile			project(':syncany-lib')
+	compile			"com.github.lookfirst:sardine:5.0.1"          
+}

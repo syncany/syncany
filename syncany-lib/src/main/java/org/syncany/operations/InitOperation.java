@@ -98,7 +98,7 @@ public class InitOperation extends AbstractInitOperation {
 		writeXmlFile(options.getConfigTO(), configFile);
 
 		// Make remote changes
-		transferManager.init();
+		transferManager.init(); // TODO [high] If this fails, the local repo is initialized!!
 		
 		if (masterFile.exists()) {
 			uploadMasterFile(masterFile, transferManager);
