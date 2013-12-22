@@ -8,6 +8,7 @@ project.ext {
 	applicationDate = new Date()
 }
 
+
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
 
 subprojects {
@@ -92,6 +93,7 @@ subprojects {
 	
 	task cleanEclipseJdtUi(type: Delete) {
 		delete project.file(".settings/")
+		delete project.file("bin/")
 	}	
 	
 	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)

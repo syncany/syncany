@@ -1,6 +1,7 @@
 include 'syncany-lib'
 include 'syncany-cli'
-include 'syncany-plugin-ftp'
-include 'syncany-plugin-rest'
-include 'syncany-plugin-webdav'
 include 'syncany-util'
+
+include 'syncany-plugins:syncany-plugin-ftp'
+include 'syncany-plugins:syncany-plugin-rest'
+include 'syncany-plugins:syncany-plugin-webdav'
