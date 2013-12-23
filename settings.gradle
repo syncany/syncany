@@ -1,5 +1,6 @@
 include 'syncany-lib'
 include 'syncany-cli'
+
 include 'syncany-plugin-gui'
 include 'syncany-plugin-ftp'
 include 'syncany-plugin-rest'
@@ -7,4 +8,9 @@ include 'syncany-plugin-gui-rest'
 include 'syncany-plugin-gui-ftp'
 include 'syncany-gui'
 include 'syncany-daemon'
+
 include 'syncany-util'
+
+include 'syncany-plugins:syncany-plugin-ftp'
+include 'syncany-plugins:syncany-plugin-rest'
+include 'syncany-plugins:syncany-plugin-webdav'

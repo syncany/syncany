@@ -28,9 +28,9 @@ import java.util.Map;
  * {@code StorageException} if they fail. The implementations have to make sure
  * that 
  * <ul>
- * <li>the repository is not corrupted, e.g. duplicate files or corrupt files
- * <li>files matching the specified file format are complete, i.e. fully uploaded
- * <li>methods that need an established connections re-connect if necessary
+ *   <li>the repository is not corrupted, e.g. duplicate files or corrupt files
+ *   <li>files matching the specified file format are complete, i.e. fully uploaded
+ *   <li>methods that need an established connections re-connect if necessary
  * </ul>
  * 
  * <p>A transfer manager may organize files according to their type or name as

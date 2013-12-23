@@ -98,7 +98,7 @@ public class InitOperation extends AbstractInitOperation {
 		writeXmlFile(options.getConfigTO(), configFile);
 
 		// Make remote changes
-		transferManager.init();
+		transferManager.init(); // TODO [high] If this fails, the local repo is initialized!!
 		
 		if (masterFile.exists()) {
 			uploadMasterFile(masterFile, transferManager);
@@ -127,14 +127,8 @@ public class InitOperation extends AbstractInitOperation {
 
 	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
 		try {
-			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);
-			
-			if (repoFileList.containsKey("repo")) {
-				return true;
-			}			
-			else {
-				return false;
-			}
+			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);			
+			return repoFileList.size() > 0;
 		}
 		catch (Exception e) {
 			throw new Exception("Unable to connect to repository.", e);

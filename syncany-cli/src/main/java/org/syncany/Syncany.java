@@ -51,8 +51,6 @@ import org.syncany.cli.CommandLineClient;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Syncany {
-	// TODO [medium] Unsufficient exception handling in the entire application!
-	// TODO [low] Ivy-fy project, ad tried in http://bazaar.launchpad.net/~syncany-team/syncany/core3/files/head:/
 	// TODO [feature request] Add ignore operation and .ignore file
 
 	public static void main(String[] args) throws Exception {
