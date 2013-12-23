@@ -38,7 +38,7 @@ public class Launcher {
 		Logging.init();
 	}
 
-	public static EventBus eventbus = new EventBus();
+	public static EventBus eventbus = new EventBus("syncany-gui");
 	
 	public static void main(String[] args) {
 		if (OS.isMacOS()){

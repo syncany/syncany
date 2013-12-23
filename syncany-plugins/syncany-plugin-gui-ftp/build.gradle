@@ -1,0 +1,6 @@
+dependencies {
+	compile			project(':syncany-plugins:syncany-plugin-gui')
+	compile			project(':syncany-util')
+	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
+	compile			"commons-net:commons-net:2.2"     
+}

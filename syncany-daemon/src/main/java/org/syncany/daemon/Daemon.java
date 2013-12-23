@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.Logging;
 import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.CommandStatus;
 import org.syncany.daemon.command.WatchCommand;
@@ -28,7 +29,11 @@ public class Daemon {
 	private static Daemon instance = null;
 	
 	private Map<String, Command> commands = new HashMap<>(); 
-		
+	
+	static{
+		Logging.init();
+	}
+
 	/**
 	 * @return the commands
 	 */
