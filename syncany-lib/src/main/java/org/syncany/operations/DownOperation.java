@@ -127,7 +127,7 @@ public class DownOperation extends Operation {
 		initOperationVariables();
 
 		// 1. Check which remote databases to download based on the last local vector clock
-		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(localDatabase, transferManager);
+		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager);
 
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
@@ -474,8 +474,8 @@ public class DownOperation extends Operation {
 		return unknownRemoteBranches;
 	}
 
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(Database database, TransferManager transferManager) throws Exception {
-		return (new LsRemoteOperation(config, database, transferManager).execute()).getUnknownRemoteDatabases();
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager) throws Exception {
+		return (new LsRemoteOperation(config, transferManager).execute()).getUnknownRemoteDatabases();
 	}
 
 	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> unknownRemoteDatabases)

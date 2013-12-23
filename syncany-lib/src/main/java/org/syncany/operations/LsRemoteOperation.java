@@ -32,7 +32,8 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.Database;
+import org.syncany.database.BasicDatabaseDAO;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 
 /**
@@ -47,20 +48,20 @@ import org.syncany.database.VectorClock;
  */
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
-	private Database loadedDatabase;
 	private TransferManager loadedTransferManager;
 	private Set<String> alreadyDownloadedRemoteDatabases;
+	private BasicDatabaseDAO basicDatabaseDAO;
 	
 	public LsRemoteOperation(Config config) {
-		this(config, null, null);
+		this(config, null);
 	}	
 	
-	public LsRemoteOperation(Config config, Database database, TransferManager transferManager) {
+	public LsRemoteOperation(Config config, TransferManager transferManager) {
 		super(config);		
 		
-		this.loadedDatabase = database;
 		this.loadedTransferManager = transferManager;
 		this.alreadyDownloadedRemoteDatabases = new HashSet<String>();
+		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
 	}	
 	
 	@Override
@@ -69,14 +70,12 @@ public class LsRemoteOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Remote Status' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();		
-		
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
 				: config.getConnection().createTransferManager();
 		
 		alreadyDownloadedRemoteDatabases = readAlreadyDownloadedDatabasesListFromFile();
-		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(database, transferManager, alreadyDownloadedRemoteDatabases);		
+		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, alreadyDownloadedRemoteDatabases);		
 		
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
@@ -99,21 +98,24 @@ public class LsRemoteOperation extends Operation {
 		return alreadyDownloadedRemoteDatabases;
 	}
 
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(Database db, TransferManager transferManager, Set<String> alreadyDownloadedRemoteDatabases) throws StorageException {
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, Set<String> alreadyDownloadedRemoteDatabases) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
 		List<DatabaseRemoteFile> unknownRemoteDatabasesList = new ArrayList<DatabaseRemoteFile>();
 
+		// List all remote database files
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
 		
+		DatabaseVersionHeader lastDatabaseVersionHeader = basicDatabaseDAO.getLastDatabaseVersionHeader();
+		
 		// No local database yet
-		if (db.getLastDatabaseVersion() == null) {
+		if (lastDatabaseVersionHeader == null) {
 			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
 		}
 		
 		// At least one local database version exists
 		else {
-			VectorClock knownDatabaseVersions = db.getLastDatabaseVersion().getVectorClock();
+			VectorClock knownDatabaseVersions = lastDatabaseVersionHeader.getVectorClock();
 			
 			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 				String clientName = remoteDatabaseFile.getClientName();

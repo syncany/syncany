@@ -18,6 +18,8 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -59,6 +61,9 @@ public class Config {
 	public static final String FILE_REPO = "repo";
 	public static final String FILE_MASTER = "master";
 	
+	public static final String DATABASE_DRIVER = "com.mysql.jdbc.Driver";
+	public static final String DATABASE_CONNECTION_STRING = "jdbc:mysql://localhost/mydb?user=mydb&password=mydb";
+	
 	private byte[] repoId;
 	private String machineName;
 	private String displayName;
@@ -84,10 +89,24 @@ public class Config {
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
+		initDatabase(configTO);
 		initCache();
 		initRepo(repoTO);
     	initConnection(configTO);    
 	}		
+
+	private void initDatabase(ConfigTO configTO) throws ConfigException {
+		try {
+			Class.forName(DATABASE_DRIVER);
+			
+			java.sql.Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_STRING);			
+			connection.createStatement().execute("select count(*) from fileversion");
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot load database driver or test query failed.", e);
+		}
+
+	}
 
 	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
@@ -213,6 +232,18 @@ public class Config {
 	public void setCacheDir(File file) {
 		cacheDir = file;
 		cache = new Cache(cacheDir);
+	}
+	
+	public java.sql.Connection createDatabaseConnection() {
+		try {
+			java.sql.Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_STRING);
+			connection.setAutoCommit(false);
+			
+			return connection;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException("Cannot create new connection; database down?", e);
+		}
 	}
 
 	public File getCacheDir() {

@@ -74,14 +74,6 @@ public class Database {
 		
 		return databaseVersions.get(databaseVersions.size()-1);
 	}
-	
-	public DatabaseVersion getFirstDatabaseVersion() {
-		if (databaseVersions.size() == 0) {
-			return null;
-		}
-		
-		return databaseVersions.get(0);
-	}		
 		
 	public List<DatabaseVersion> getDatabaseVersions() {
 		return Collections.unmodifiableList(databaseVersions);

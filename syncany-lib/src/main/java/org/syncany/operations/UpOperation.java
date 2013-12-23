@@ -37,17 +37,22 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.WriteDatabaseDAO;
 import org.syncany.database.VectorClock;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+
+import com.sun.swing.internal.plaf.basic.resources.basic;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -77,7 +82,7 @@ public class UpOperation extends Operation {
 	private UpOperationOptions options;
 	private UpOperationResult result;
 	private TransferManager transferManager;
-	private Database loadedDatabase;
+	private BasicDatabaseDAO basicDatabaseDAO;
 	private Database dirtyDatabase;
 
 	public UpOperation(Config config) {
@@ -94,7 +99,7 @@ public class UpOperation extends Operation {
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.transferManager = config.getConnection().createTransferManager();
-		this.loadedDatabase = database;
+		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
 	}
 
 	@Override
@@ -104,7 +109,7 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		// Load database
-		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();
+		//Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();
 
 		// Load dirty database (if existent)
 		if (config.getDirtyDatabaseFile().exists()) {
@@ -112,7 +117,7 @@ public class UpOperation extends Operation {
 		}
 
 		// Find local changes
-		ChangeSet statusChangeSet = (new StatusOperation(config, database, options.getStatusOptions()).execute()).getChangeSet();
+		ChangeSet statusChangeSet = (new StatusOperation(config, options.getStatusOptions()).execute()).getChangeSet();
 		result.getStatusResult().setChangeSet(statusChangeSet);
 
 		if (!statusChangeSet.hasChanges()) {
@@ -126,7 +131,7 @@ public class UpOperation extends Operation {
 
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
-			List<DatabaseRemoteFile> unknownRemoteDatabases = (new LsRemoteOperation(config, database, transferManager).execute())
+			List<DatabaseRemoteFile> unknownRemoteDatabases = (new LsRemoteOperation(config, transferManager).execute())
 					.getUnknownRemoteDatabases();
 
 			if (unknownRemoteDatabases.size() > 0) {
@@ -149,7 +154,7 @@ public class UpOperation extends Operation {
 		statusChangeSet = null; // allow GC to clean up
 
 		// Index
-		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles, database);
+		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles);
 
 		if (newDatabaseVersion.getFileHistories().size() == 0) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
@@ -182,14 +187,19 @@ public class UpOperation extends Operation {
 
 			// Save local database
 			logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
-			database.addDatabaseVersion(newDatabaseVersion);
+			//database.addDatabaseVersion(newDatabaseVersion);
 
 			if (options.cleanupEnabled()) {
-				cleanupOldDatabases(database, newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation
+				// TODO [high] Cleanup disabled for now!!
+				logger.log(Level.SEVERE, "CLEANUP disabled for now!!");
+				//cleanupOldDatabases(newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation
 			}
 
 			logger.log(Level.INFO, "Saving local database to file " + config.getDatabaseFile() + " ...");
-			saveLocalDatabase(database, config.getDatabaseFile());
+			//saveLocalDatabase(database, config.getDatabaseFile());
+			WriteDatabaseDAO writeSqlDao = new WriteDatabaseDAO(config.createDatabaseConnection());
+			writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
+			//testSqlDao.save(null, fromVersion, toVersion, null);
 
 			logger.log(Level.INFO, "Sync up done.");
 		}
@@ -269,16 +279,10 @@ public class UpOperation extends Operation {
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
 	}
 
-	private DatabaseVersion index(List<File> localFiles, Database database) throws FileNotFoundException, IOException {
+	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
 		// Get last vector clock
-		VectorClock lastVectorClock = null;
-
-		if (database.getLastDatabaseVersion() != null) {
-			lastVectorClock = database.getLastDatabaseVersion().getVectorClock();
-		}
-		else {
-			lastVectorClock = new VectorClock();
-		}
+		DatabaseVersionHeader lastDatabaseVersionHeader = basicDatabaseDAO.getLastDatabaseVersionHeader();
+		VectorClock lastVectorClock = (lastDatabaseVersionHeader != null) ? lastDatabaseVersionHeader.getVectorClock() : new VectorClock();
 
 		// New vector clock
 		VectorClock newVectorClock = lastVectorClock.clone();
@@ -306,7 +310,7 @@ public class UpOperation extends Operation {
 
 		// Index
 		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		Indexer indexer = new Indexer(config, deduper, database, dirtyDatabase);
+		Indexer indexer = new Indexer(config, deduper, dirtyDatabase);
 
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
 

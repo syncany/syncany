@@ -30,12 +30,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
+import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.util.FileUtil;
 
 /**
@@ -49,19 +48,19 @@ public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
 	private FileVersionComparator fileVersionComparator; 
-	private Database loadedDatabase;
+	private BasicDatabaseDAO basicDatabaseDAO;
 	private StatusOperationOptions options;
 	
 	public StatusOperation(Config config) {
-		this(config, null, new StatusOperationOptions());
+		this(config, new StatusOperationOptions());
 	}	
 	
-	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
+	public StatusOperation(Config config, StatusOperationOptions options) {
 		super(config);		
 		
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
-		this.loadedDatabase = database;
-		this.options = options;
+		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		this.options = options;		
 	}	
 	
 	@Override
@@ -74,14 +73,11 @@ public class StatusOperation extends Operation {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
 		
-		// Load database, or use already loaded database
-		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();		
-		
 		// Find changed and deleted files
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
 		
-		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir(), database);
-		changeSet = findDeletedFiles(changeSet, database);
+		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir());
+		changeSet = findDeletedFiles(changeSet);
 		
 		if (!changeSet.hasChanges()) {
 			logger.log(Level.INFO, "- No changes to local database");
@@ -94,19 +90,20 @@ public class StatusOperation extends Operation {
 		return statusResult;
 	}		
 
-	private ChangeSet findChangedAndNewFiles(final File root, final Database database) throws FileNotFoundException, IOException {
+	private ChangeSet findChangedAndNewFiles(final File root) throws FileNotFoundException, IOException {
 		Path rootPath = Paths.get(root.getAbsolutePath());
 		
-		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, database);		
+		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath);		
 		Files.walkFileTree(rootPath, fileVisitor);
 		
 		return fileVisitor.getChangeSet();		
 	}
 	
-	private ChangeSet findDeletedFiles(ChangeSet changeSet, Database database) {
-		for (PartialFileHistory fileHistory : database.getFileHistories()) {
+	private ChangeSet findDeletedFiles(ChangeSet changeSet) {
+		for (FileVersion lastLocalVersion : basicDatabaseDAO.getCurrentFileTree()) {
+			System.out.println("DATABASE RETURNED (file tree): "+lastLocalVersion);
+			
 			// Check if file exists, remove if it doesn't
-			FileVersion lastLocalVersion = fileHistory.getLastVersion();
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
 			// Ignore this file history if the last version is marked "DELETED"
@@ -125,12 +122,10 @@ public class StatusOperation extends Operation {
 	
 	private class StatusFileVisitor implements FileVisitor<Path> {
 		private Path root;
-		private Database database;
 		private ChangeSet changeSet;
 		
-		public StatusFileVisitor(Path root, Database database) {
+		public StatusFileVisitor(Path root) {
 			this.root = root;
-			this.database = database;
 			this.changeSet = new ChangeSet();
 		}
 
@@ -168,11 +163,11 @@ public class StatusOperation extends Operation {
 			}				
 			
 			// Check database by file path
-			PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
+			//PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
+			FileVersion expectedLastFileVersion = basicDatabaseDAO.getFileVersionByPath(relativeFilePath);
+			System.out.println("DATABASE RETURNED: "+expectedLastFileVersion);
 			
-			if (expectedFileHistory != null) {
-				FileVersion expectedLastFileVersion = expectedFileHistory.getLastVersion();
-				
+			if (expectedLastFileVersion != null) {				
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
 				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 

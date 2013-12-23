@@ -43,6 +43,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.IndexDatabaseDAO;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
@@ -72,13 +73,13 @@ public class Indexer {
 	
 	private Config config;
 	private Deduper deduper;
-	private Database database;
+	private IndexDatabaseDAO indexDatabaseDAO;
 	private Database dirtyDatabase;
 	
-	public Indexer(Config config, Deduper deduper, Database database, Database dirtyDatabase) {
+	public Indexer(Config config, Deduper deduper, Database dirtyDatabase) {
 		this.config = config;
 		this.deduper = deduper;
-		this.database = database;
+		this.indexDatabaseDAO = new IndexDatabaseDAO(config.createDatabaseConnection());
 		this.dirtyDatabase = dirtyDatabase;
 	}
 	
@@ -136,7 +137,7 @@ public class Indexer {
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
-		for (PartialFileHistory fileHistory : database.getFileHistories()) {
+		for (PartialFileHistory fileHistory : indexDatabaseDAO.getFileHistoriesWithLastVersion()) {
 			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
 			if (newDatabaseVersion.getFileHistory(fileHistory.getFileId()) != null) {
 				continue;
@@ -349,7 +350,7 @@ public class Indexer {
 				fileContent.setChecksum(fileProperties.getChecksum());
 
 				// Check if content already exists, throw gathered content away if it does!
-				FileContent existingContent = database.getContent(fileProperties.getChecksum());
+				FileContent existingContent = indexDatabaseDAO.getFileContentByChecksum(fileProperties.getChecksum());
 				
 				if (existingContent == null) { 
 					newDatabaseVersion.addFileContent(fileContent);
@@ -365,7 +366,7 @@ public class Indexer {
 			do {
 				newFileHistoryId = FileHistoryId.secureRandomFileId();
 				
-				if (database.getFileHistory(newFileHistoryId) == null 
+				if (indexDatabaseDAO.getFileHistoryWithLastVersion(newFileHistoryId) == null 
 					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {
 					
 					break;
@@ -411,7 +412,7 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistoryForFolderOrSymlink(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
+			PartialFileHistory lastFileHistory = indexDatabaseDAO.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", "+fileProperties.getType()+")");
@@ -435,12 +436,12 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = null;
 			
 			// 1a. by path
-			lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
+			lastFileHistory = indexDatabaseDAO.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				// 1b. by checksum
 				if (fileProperties.getChecksum() != null) {
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(fileProperties.getChecksum());
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = indexDatabaseDAO.getFileHistoriesWithLastVersionByChecksum(fileProperties.getChecksum());
 					
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!
@@ -531,7 +532,7 @@ public class Indexer {
 		@Override
 		public boolean onChunk(Chunk chunk) {
 			ChunkChecksum chunkChecksum = new ChunkChecksum(chunk.getChecksum());
-			chunkEntry = database.getChunk(chunkChecksum);
+			chunkEntry = indexDatabaseDAO.getChunk(chunkChecksum);
 
 			if (chunkEntry == null) {
 				chunkEntry = newDatabaseVersion.getChunk(chunkChecksum);

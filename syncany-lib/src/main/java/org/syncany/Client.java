@@ -143,7 +143,7 @@ public class Client {
 	}
 	
 	public ChangeSet status(StatusOperationOptions options) throws Exception {
-		return (new StatusOperation(config, null, options).execute()).getChangeSet();		
+		return (new StatusOperation(config, options).execute()).getChangeSet();		
 	}	
 
 	public LsRemoteOperationResult lsRemote() throws Exception {

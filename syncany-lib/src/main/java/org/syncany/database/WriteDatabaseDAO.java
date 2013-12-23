@@ -17,10 +17,8 @@
  */
 package org.syncany.database;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,7 +26,6 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
@@ -37,27 +34,14 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * @author pheckel
  *
  */
-public class SqlDatabaseDAO implements DatabaseDAO {
-	private static final Logger logger = Logger.getLogger(SqlDatabaseDAO.class.getSimpleName());
-
-	@Override
-	public void save(Database db, File destinationFile) throws IOException {
-		save(db, null, null, destinationFile);
+public class WriteDatabaseDAO extends BasicDatabaseDAO {
+	public WriteDatabaseDAO(Connection connection) {
+		super(connection);
 	}
-
-	@Override
-	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {
-		Connection connection = null;
-
+	
+	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException {
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			connection = DriverManager.getConnection("jdbc:mysql://localhost/mydb?user=mydb&password=mydb");
-			connection.setAutoCommit(false);
-
-			for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
-				writeDatabaseVersion(connection, databaseVersion);
-			}
-
+			writeDatabaseVersion(connection, databaseVersion);
 			connection.commit();
 		}
 		catch (Exception e) {
@@ -82,7 +66,6 @@ public class SqlDatabaseDAO implements DatabaseDAO {
 				}
 			}
 		}
-
 	}
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {		
@@ -222,25 +205,5 @@ public class SqlDatabaseDAO implements DatabaseDAO {
 				preparedStatement.executeUpdate();
 			}
 		}
-	}
-
-	@Override
-	public void load(Database db, File databaseFile) throws IOException {
-		throw new RuntimeException("Not supported");
-	}
-
-	@Override
-	public void load(Database db, File databaseFile, boolean headersOnly) throws IOException {
-		throw new RuntimeException("Not supported");
-	}
-
-	@Override
-	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
-		throw new RuntimeException("Not supported");
-	}
-
-	@Override
-	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) throws IOException {
-		throw new RuntimeException("Not supported");
 	}
 }

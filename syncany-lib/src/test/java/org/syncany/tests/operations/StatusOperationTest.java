@@ -108,7 +108,7 @@ public class StatusOperationTest {
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison
-		ChangeSet changeSet = (new StatusOperation(config, null, statusOptions).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config, statusOptions).execute()).getChangeSet();						
 		assertEquals(changeSet.getChangedFiles().size(), 1);
 				
 		// Cleanup 
