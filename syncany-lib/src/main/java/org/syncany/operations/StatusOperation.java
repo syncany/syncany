@@ -101,8 +101,6 @@ public class StatusOperation extends Operation {
 	
 	private ChangeSet findDeletedFiles(ChangeSet changeSet) {
 		for (FileVersion lastLocalVersion : basicDatabaseDAO.getCurrentFileTree()) {
-			System.out.println("DATABASE RETURNED (file tree): "+lastLocalVersion);
-			
 			// Check if file exists, remove if it doesn't
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
@@ -163,9 +161,7 @@ public class StatusOperation extends Operation {
 			}				
 			
 			// Check database by file path
-			//PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
 			FileVersion expectedLastFileVersion = basicDatabaseDAO.getFileVersionByPath(relativeFilePath);
-			System.out.println("DATABASE RETURNED: "+expectedLastFileVersion);
 			
 			if (expectedLastFileVersion != null) {				
 				// Compare

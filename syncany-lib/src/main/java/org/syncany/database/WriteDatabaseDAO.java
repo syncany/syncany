@@ -42,7 +42,9 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException {
 		try {
 			writeDatabaseVersion(connection, databaseVersion);
+			
 			connection.commit();
+			connection.close();
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "SQL Error: ", e);
@@ -70,7 +72,7 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {		
 		PreparedStatement preparedStatement = connection.prepareStatement(
-				"insert into databaseversion set `date`=?, client=?", Statement.RETURN_GENERATED_KEYS);
+				"insert into databaseversion (localtime, client) values (?, ?)", Statement.RETURN_GENERATED_KEYS);
 
 		preparedStatement.setDate(1, new java.sql.Date(databaseVersion.getHeader().getDate().getTime()));
 		preparedStatement.setString(2, databaseVersion.getHeader().getClient());
@@ -98,14 +100,14 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 	private void writeMultiChunks(Connection connection, Collection<MultiChunkEntry> multiChunks) throws SQLException {
 		for (MultiChunkEntry multiChunk : multiChunks) {
 			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into multichunk set id=?");
+					"insert into multichunk (id) values (?)");
 
 			preparedStatement.setString(1, multiChunk.getId().toString());
 			preparedStatement.executeUpdate();
 						
 			for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
 				PreparedStatement preparedStatement1 = connection.prepareStatement(
-						"insert into multichunk_chunk set multichunk_id=?, chunk_checksum=?");
+						"insert into multichunk_chunk (multichunk_id, chunk_checksum) values (?, ?)");
 
 				preparedStatement1.setString(1, multiChunk.getId().toString());
 				preparedStatement1.setString(2, chunkChecksum.toString());
@@ -118,7 +120,7 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 	private void writeFileContents(Connection connection, Collection<FileContent> fileContents) throws SQLException {
 		for (FileContent fileContent : fileContents) {
 			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into filecontent set checksum=?, size=?");
+					"insert into filecontent (checksum, size) values (?, ?)");
 
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
 			preparedStatement.setLong(2, fileContent.getSize());
@@ -128,7 +130,7 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 			int order = 0;
 			for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
 				PreparedStatement preparedStatement1 = connection.prepareStatement(
-						"insert into filecontent_chunk set filecontent_checksum=?, chunk_checksum=?, `order`=?");
+						"insert into filecontent_chunk (filecontent_checksum, chunk_checksum, num) values (?, ?, ?)");
 
 				preparedStatement1.setString(1, fileContent.getChecksum().toString());
 				preparedStatement1.setString(2, chunkChecksum.toString());
@@ -144,7 +146,7 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 	private void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
 		for (PartialFileHistory fileHistory : fileHistories) {
 			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into filehistory set id=?, databaseversion_id=?");
+					"insert into filehistory (id, databaseversion_id) values (?, ?)");
 
 			preparedStatement.setString(1, fileHistory.getFileId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
@@ -160,9 +162,9 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  
 			
 			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into fileversion set "
-					+ "filehistory_id=?, version=?, path=?, type=?, status=?, size=?, lastmodified=?, linktarget=?, "
-					+ "filecontent_checksum=?, updated=?, posixperms=?, dosattrs=?");
+					"insert into fileversion "
+					+ "(filehistory_id, version, path, type, status, size, lastmodified, linktarget, filecontent_checksum, updated, posixperms, dosattrs) "
+					+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			preparedStatement.setString(1, fileHistoryId.toString());
 			preparedStatement.setInt(2, Integer.parseInt(""+fileVersion.getVersion()));
@@ -184,7 +186,7 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {			
 		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
 			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into vectorclock set databaseversion_id=?, client=?, logicaltime=?");
+					"insert into vectorclock (databaseversion_id, client, logicaltime) values (?, ?, ?)");
 
 			preparedStatement.setLong(1, databaseVersionId);
 			preparedStatement.setString(2, vectorClockEntry.getKey());
@@ -197,7 +199,7 @@ public class WriteDatabaseDAO extends BasicDatabaseDAO {
 	private void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
 		if (chunks.size() > 0) {
 			for (ChunkEntry chunk : chunks) {
-				PreparedStatement preparedStatement = connection.prepareStatement("insert into chunk set checksum=?, size=?");
+				PreparedStatement preparedStatement = connection.prepareStatement("insert into chunk (checksum, size) values (?, ?)");
 
 				preparedStatement.setString(1, chunk.getChecksum().toString());
 				preparedStatement.setInt(2, chunk.getSize());

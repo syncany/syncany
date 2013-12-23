@@ -45,14 +45,12 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.WriteDatabaseDAO;
 import org.syncany.database.VectorClock;
+import org.syncany.database.WriteDatabaseDAO;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
-
-import com.sun.swing.internal.plaf.basic.resources.basic;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local

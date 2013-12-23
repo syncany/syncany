@@ -146,7 +146,7 @@ public class BasicDatabaseDAO {
 				DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
 
 				databaseVersionHeader.setClient(resultSet.getString("client"));
-				databaseVersionHeader.setDate(new Date(resultSet.getDate("date").getTime()));
+				databaseVersionHeader.setDate(new Date(resultSet.getDate("localtime").getTime()));
 				databaseVersionHeader.setVectorClock(getVectorClockByDatabaseVersionId(resultSet.getInt("id")));
 
 				return databaseVersionHeader;
@@ -182,7 +182,7 @@ public class BasicDatabaseDAO {
 		fileVersion.setType(FileType.valueOf(resultSet.getString("type")));
 		fileVersion.setStatus(FileStatus.valueOf(resultSet.getString("status")));
 		fileVersion.setSize(resultSet.getLong("size"));
-		fileVersion.setLastModified(new Date(resultSet.getDate("lastmodified").getTime()));
+		fileVersion.setLastModified(new Date(resultSet.getTimestamp("lastmodified").getTime()));
 
 		if (resultSet.getString("linktarget") != null) {
 			fileVersion.setLinkTarget(resultSet.getString("linktarget"));
@@ -194,7 +194,7 @@ public class BasicDatabaseDAO {
 		}
 
 		if (resultSet.getString("updated") != null) {
-			fileVersion.setUpdated(new Date(resultSet.getDate("updated").getTime()));
+			fileVersion.setUpdated(new Date(resultSet.getTimestamp("updated").getTime()));
 		}
 
 		if (resultSet.getString("posixperms") != null) {
