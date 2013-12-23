@@ -45,7 +45,6 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock.VectorClockComparison;
-import org.syncany.util.FileUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -254,10 +253,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					xmlOut.writeAttribute("linkTarget", fileVersion.getLinkTarget());
 				}
 
-				if (fileVersion.getCreatedBy() != null) {
-					xmlOut.writeAttribute("createdBy", fileVersion.getCreatedBy());
-				}
-				
 				if (fileVersion.getUpdated() != null) {
 					xmlOut.writeAttribute("updated", fileVersion.getUpdated().getTime());
 				}
@@ -522,7 +517,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					String statusStr = attributes.getValue("status");
 					String lastModifiedStr = attributes.getValue("lastModified");
 					String updatedStr = attributes.getValue("updated");
-					String createdBy = attributes.getValue("createdBy");
 					String checksumStr = attributes.getValue("checksum");
 					String linkTarget = attributes.getValue("linkTarget");
 					String dosAttributes = attributes.getValue("dosattrs");
@@ -543,10 +537,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					
 					if (updatedStr != null) {
 						fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
-					}
-					
-					if (createdBy != null) {
-						fileVersion.setCreatedBy(createdBy);
 					}
 					
 					if (checksumStr != null) {

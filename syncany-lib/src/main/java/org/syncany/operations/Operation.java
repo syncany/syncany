@@ -26,6 +26,7 @@ import org.syncany.config.Config;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.SqlDatabaseDAO;
 import org.syncany.database.XmlDatabaseDAO;
 
 /**
@@ -69,6 +70,10 @@ public abstract class Operation {
 		
 		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);
+		
+		// TODO Testing sql database
+		DatabaseDAO testSqlDao = new SqlDatabaseDAO();
+		testSqlDao.save(db, fromVersion, toVersion, null);
 	}		
 	
 	protected Database loadLocalDatabase() throws IOException {

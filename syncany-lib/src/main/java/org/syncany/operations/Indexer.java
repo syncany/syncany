@@ -303,7 +303,6 @@ public class Indexer {
 			fileVersion.setChecksum(fileProperties.getChecksum());
 			fileVersion.setLastModified(new Date(fileProperties.getLastModified()));
 			fileVersion.setUpdated(new Date());
-			fileVersion.setCreatedBy(config.getMachineName());
 			
 			if (FileUtil.isWindows()) {
 				fileVersion.setDosAttributes(fileProperties.getDosAttributes());

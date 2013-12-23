@@ -123,7 +123,6 @@ public class TestDatabaseUtil {
 		FileVersion fileVersion = new FileVersion();
 		
 		fileVersion.setChecksum(new FileChecksum(TestFileUtil.createRandomArray(20)));
-		fileVersion.setCreatedBy("A");		
 		fileVersion.setLastModified(new Date());
 		fileVersion.setPath(path);
 		fileVersion.setStatus(FileStatus.NEW);
