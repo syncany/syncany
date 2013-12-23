@@ -110,7 +110,7 @@ public class WSClient {
 				Display.getDefault().asyncExec(new Runnable() {
 			        public void run() {
 			        	InterfaceUpdate iu = new InterfaceUpdate(folders);
-			        	Launcher.eventbus.post(iu);
+			        	Launcher.getEventBus().post(iu);
 		            }
 			    });
 				break;

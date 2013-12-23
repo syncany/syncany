@@ -14,6 +14,7 @@ public class ClientCommandFactory {
 	
 	static {
 		try {
+			log.info("Starting websocket server");
 			client = new WSClient();
 			client.startWebSocketConnection();
 		}

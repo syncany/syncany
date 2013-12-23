@@ -28,17 +28,29 @@ import org.syncany.util.I18n;
 import com.google.common.eventbus.EventBus;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
 	
+	// Event Bus and Accessor
+	private static EventBus eventBus = new EventBus("syncany-gui");
+	
+	/**
+	 * @return the eventBus
+	 */
+	public static EventBus getEventBus() {
+		return eventBus;
+	}
+
+	
 	static{
 		Logging.init();
 	}
+	
 
-	public static EventBus eventbus = new EventBus("syncany-gui");
+
 	
 	public static void main(String[] args) {
 		if (OS.isMacOS()){
@@ -61,7 +73,7 @@ public class Launcher {
 		log.info("Starting Graphical User Interface");
 		
 		MainGUI window = new MainGUI();
-		eventbus.register(window);
+		Launcher.getEventBus().register(window);
 		window.open();
 	}
 }

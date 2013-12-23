@@ -20,12 +20,23 @@ package org.syncany.gui.event;
 import java.util.Map;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class InterfaceUpdate extends ApplicationEvent {
+public abstract class ApplicationEvent {
+	private Map<String, Map<String, String>> data;
 	
-	public InterfaceUpdate(Map<String, Map<String, String>> data){
-		super(data);
+	/**
+	 * @param data2
+	 */
+	public ApplicationEvent(Map<String, Map<String, String>> data) {
+		this.data = data;
+	}
+	
+	/**
+	 * @return the data
+	 */
+	public Map<String, Map<String, String>> getData() {
+		return data;
 	}
 }
