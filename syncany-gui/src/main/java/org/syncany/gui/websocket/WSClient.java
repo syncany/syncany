@@ -32,7 +32,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.event.InterfaceUpdate;
 import org.syncany.gui.main.Launcher;
 import org.syncany.gui.main.MainGUI;
-import org.syncany.gui.util.JsonHelper;
+import org.syncany.util.JsonHelper;
 
 /**
  * @author vincent

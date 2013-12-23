@@ -105,13 +105,13 @@ public class Daemon {
 			String[] folders = ((String)p.get("watched_folders")).split(";");
 			
 			for (final String folder : folders){
-				Map<String, String> parameters = new HashMap<>();
+				Map<String, Object> parameters = new HashMap<>();
 				parameters.put("localfolder", folder);
 				parameters.put("action", "watch");
 				DaemonCommandHandler.handle(parameters);
 			}
 			
-			Map<String, String> parameters = new HashMap<>();
+			Map<String, Object> parameters = new HashMap<>();
 			parameters.put("action", "get_watched");
 			
 			DaemonCommandHandler.handle(parameters);
