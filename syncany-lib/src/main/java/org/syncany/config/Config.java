@@ -69,8 +69,7 @@ public class Config {
 	//public static final String DATABASE_DRIVER = "com.mysql.jdbc.Driver";
 	//public static final String DATABASE_CONNECTION_STRING = "jdbc:mysql://localhost/mydb?user=mydb&password=mydb";
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_STRING = "jdbc:hsqldb:file:%FILE;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
-	
+	public static final String DATABASE_CONNECTION_STRING = "jdbc:hsqldb:file:%DATABASEDIR;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
 	
 	private byte[] repoId;
 	private String machineName;
@@ -131,7 +130,7 @@ public class Config {
 	
 	public java.sql.Connection createDatabaseConnection() {
 		try {
-			String connectionString = DATABASE_CONNECTION_STRING.replaceAll("%FILE", databaseDir+"/db");			
+			String connectionString = DATABASE_CONNECTION_STRING.replaceAll("%DATABASEDIR", databaseDir+"/db");			
 
 			java.sql.Connection connection = DriverManager.getConnection(connectionString);			
 			connection.setAutoCommit(false);
