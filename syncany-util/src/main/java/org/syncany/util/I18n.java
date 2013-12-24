@@ -1,9 +1,7 @@
 package org.syncany.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +18,7 @@ import net.sf.corn.cps.ResourceFilter;
 
 /**
  * Internationalisation Class
- * @author Vincent Wiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class I18n implements Serializable {
@@ -68,15 +66,11 @@ public class I18n implements Serializable {
 			boolean containsRequiredLocaleFile = false;
 			
 			for (URL url : resources){
-				try {
-					File f = new File(url.toURI());
-					String fileName = f.getName();
-					if (fileName.contains(l.toString())){
-						containsRequiredLocaleFile = true;
-					}
-				}
-				catch (URISyntaxException e) {
-					log.warning("error loading file " + url.toString());
+				String[] tokens = url.getFile().split("/");
+				String fileName = tokens[tokens.length-1];
+				
+				if (fileName.contains(l.toString())){
+					containsRequiredLocaleFile = true;
 				}
 			}
 			
@@ -97,21 +91,16 @@ public class I18n implements Serializable {
 	private static void buildResourceBundle(URL url, Locale defaultLocale, Locale originalLocale) {
 		Properties ap = new Properties();
 		
-		try {
-			File file = new File(url.toURI());
-			String fileName = file.getName();
-			
-			if (fileName.contains(defaultLocale.toString())){
-				try {
-					ap.load(url.openStream());
-				}
-				catch (IOException e) {
-					log.warning("error loading file " + url.toString());
-				}
+		String[] tokens = url.getFile().split("/");
+		String fileName = tokens[tokens.length-1];
+		
+		if (fileName.contains(defaultLocale.toString())){
+			try {
+				ap.load(url.openStream());
 			}
-		}
-		catch (URISyntaxException e1) {
-			log.warning("URISyntaxException in " + url.toString());
+			catch (IOException e) {
+				log.warning("error loading file " + url.toString());
+			}
 		}
 		
 		if (getBundles().containsKey(originalLocale)){
