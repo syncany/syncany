@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,6 +52,8 @@ public class StatusOperation extends Operation {
 	private BasicDatabaseDAO basicDatabaseDAO;
 	private StatusOperationOptions options;
 	
+	private Map<String, FileVersion> currentFileTree;
+	
 	public StatusOperation(Config config) {
 		this(config, new StatusOperationOptions());
 	}	
@@ -61,6 +64,8 @@ public class StatusOperation extends Operation {
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
 		this.options = options;		
+		
+		this.currentFileTree = null;
 	}	
 	
 	@Override
@@ -72,9 +77,14 @@ public class StatusOperation extends Operation {
 		if (options != null && options.isForceChecksum()) {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
+
 		
+		// Get local databse
+		logger.log(Level.INFO, "Querying current file tree from database ...");				
+		currentFileTree = basicDatabaseDAO.getCurrentFileTree();
+
 		// Find changed and deleted files
-		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
+		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");						
 		
 		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir());
 		changeSet = findDeletedFiles(changeSet);
@@ -100,7 +110,7 @@ public class StatusOperation extends Operation {
 	}
 	
 	private ChangeSet findDeletedFiles(ChangeSet changeSet) {
-		for (FileVersion lastLocalVersion : basicDatabaseDAO.getCurrentFileTree()) {
+		for (FileVersion lastLocalVersion : currentFileTree.values()) {
 			// Check if file exists, remove if it doesn't
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
@@ -120,7 +130,7 @@ public class StatusOperation extends Operation {
 	
 	private class StatusFileVisitor implements FileVisitor<Path> {
 		private Path root;
-		private ChangeSet changeSet;
+		private ChangeSet changeSet;		
 		
 		public StatusFileVisitor(Path root) {
 			this.root = root;

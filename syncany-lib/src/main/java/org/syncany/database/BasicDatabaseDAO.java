@@ -21,9 +21,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.database.FileContent.FileChecksum;
@@ -43,8 +43,8 @@ public class BasicDatabaseDAO {
 		this.connection = connection;
 	}
 
-	public List<FileVersion> getCurrentFileTree() {
-		List<FileVersion> currentFileTree = new ArrayList<FileVersion>();
+	public Map<String, FileVersion> getCurrentFileTree() {
+		Map<String, FileVersion> currentFileTree = new HashMap<String, FileVersion>();
 
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(
@@ -56,7 +56,7 @@ public class BasicDatabaseDAO {
 
 			while (resultSet.next()) {
 				FileVersion fileVersion = createFileVersionFromRow(resultSet);
-				currentFileTree.add(fileVersion);
+				currentFileTree.put(fileVersion.getPath(), fileVersion);
 			}
 
 			return currentFileTree;
