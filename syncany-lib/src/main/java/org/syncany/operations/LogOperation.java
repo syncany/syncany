@@ -23,69 +23,39 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseVersion;
+import org.syncany.database.IndexDatabaseDAO;
 import org.syncany.database.PartialFileHistory;
 
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
 	private LogOperationOptions options;
-	
-	public LogOperation() {
-		super(null);
-		this.options = new LogOperationOptions();
-	}	
-
-	public LogOperation(Config config) {
-		this(config, null);
-	}	
-	
+	private IndexDatabaseDAO databaseDAO;
+		
 	public LogOperation(Config config, LogOperationOptions options) {
 		super(config);		
+		
 		this.options = options;
+		this.databaseDAO = new IndexDatabaseDAO(config.createDatabaseConnection());
 	}	
 		
 	@Override
 	public LogOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Log' at client "+config.getMachineName()+" ...");
-		logger.log(Level.INFO, "--------------------------------------------");
-		
-		Database database = loadLocalDatabase();		
-		DatabaseVersion currentDatabaseVersion = database.getLastDatabaseVersion();
-		
-		if (currentDatabaseVersion == null) {
-			throw new Exception("No database versions yet locally. Nothing to show here.");
-		}
+		logger.log(Level.INFO, "--------------------------------------------");		
 
 		List<PartialFileHistory> fileHistories = null;
 		
 		if (options.getPaths().isEmpty()) {
-			fileHistories = new ArrayList<PartialFileHistory>(database.getFileHistories());			
+			fileHistories = new ArrayList<PartialFileHistory>(databaseDAO.getFileHistoriesWithLastVersion());			
 		}
 		else {
-			fileHistories = getFileHistoriesByPath(options.getPaths(), database);
+			throw new Exception("Not supported yet.");
+			//fileHistories = getFileHistoriesByPath(options.getPaths(), database);
 		}
 		
-		return new LogOperationResult(fileHistories,options.getFormat());
-	}			
-	
-	private List<PartialFileHistory> getFileHistoriesByPath(List<String> filePaths, Database database) {				
-		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
-
-		for (String filePath : filePaths) {
-			PartialFileHistory fileHistory = database.getFileHistory(filePath);
-			
-			if (fileHistory != null) {
-				fileHistories.add(fileHistory);
-			}
-			else {
-				logger.log(Level.INFO, "Cannot find file history for file "+filePath);
-			}
-		}
-		
-		return fileHistories;
-	}
+		return new LogOperationResult(fileHistories, options.getFormat());
+	}				
 	
 	public static class LogOperationOptions implements OperationOptions {
 		private List<String> paths;		
@@ -107,8 +77,6 @@ public class LogOperation extends Operation {
 		public void setFormat(String format) {
 			this.format = format;
 		}
-		
-		
 	}
 	
 	public class LogOperationResult implements OperationResult {
