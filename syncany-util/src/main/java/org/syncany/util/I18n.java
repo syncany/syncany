@@ -23,7 +23,7 @@ public class I18n implements Serializable {
     private static final HashMap<Locale, Properties> bundles = new HashMap<Locale, Properties>();
 	private static final List<String> BUNDLE_NAMES = new ArrayList<String>();
 	private static final String defaultBundleLauguage = "en";
-	private static final String defaultBundleCountry = "GB";
+	private static final String defaultBundleCountry = "US";
 	
 	public static void registerBundleName(String bundle){
 		BUNDLE_NAMES.add(bundle);

@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.main;
+package org.syncany.gui;
 
 import java.util.logging.Logger;
 
 import org.syncany.config.Logging;
-import org.syncany.gui.command.ClientCommandFactory;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.util.OS;
 import org.syncany.gui.util.SWTResourceManager;
 import org.syncany.util.I18n;
@@ -33,45 +33,36 @@ import com.google.common.eventbus.EventBus;
  */
 public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
-	
-	// Event Bus and Accessor
 	private static EventBus eventBus = new EventBus("syncany-gui");
-	
-	/**
-	 * @return the eventBus
-	 */
-	public static EventBus getEventBus() {
-		return eventBus;
-	}
 
-	
-	static{
+	static {
 		Logging.init();
 	}
 	
+	public static EventBus getEventBus() {
+		return eventBus;
+	}	
 
-
-	
 	public static void main(String[] args) {
-		if (OS.isMacOS()){
+		if (OS.isMacOS()) {
 			System.setProperty("apple.awt.UIElement", "true");
 		}
-		
-		//Register messages bundles
+
+		// Register messages bundles
 		I18n.registerBundleName("i18n/messages");
 
-		//Shutdown hook to release swt resources
-		Runtime.getRuntime().addShutdownHook(new Thread(){
-			public void run(){
+		// Shutdown hook to release swt resources
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
 				log.info("Releasing SWT Resources");
 				SWTResourceManager.dispose();
 			}
 		});
-		
+
 		ClientCommandFactory.list();
-		
+
 		log.info("Starting Graphical User Interface");
-		
+
 		MainGUI window = new MainGUI();
 		Launcher.getEventBus().register(window);
 		window.open();

@@ -26,10 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.command.ClientCommandFactory;
-import org.syncany.gui.wizard.core.DefaultWizardPanel;
-import org.syncany.gui.wizard.core.WizardAction;
-import org.syncany.gui.wizard.core.WizardType;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.eclipse.swt.browser.Browser;
 
 /**

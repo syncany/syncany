@@ -32,9 +32,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.gui.wizard.core.DefaultWizardPanel;
-import org.syncany.gui.wizard.core.WizardAction;
-import org.syncany.gui.wizard.core.WizardType;
 import org.syncany.util.I18n;
 
 /**
@@ -122,12 +119,7 @@ public class NewDialog extends DefaultWizardPanel {
 	@Override
 	protected void handleAction(WizardAction action) {
 		if (action == WizardAction.NEXT){
-			if (emailOptionRadio.getSelection()){
-				this.shell.dispose();
-				NewEmailDialog sd = new NewEmailDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
-				sd.open();
-			}
-			else if (ftpOptionRadio.getSelection()){
+			if (ftpOptionRadio.getSelection()){
 				this.shell.dispose();
 				getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.FTPComposite");
 				NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.wizard.core;
+package org.syncany.gui.wizard;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;

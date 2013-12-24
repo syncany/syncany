@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.wizard.core;
+package org.syncany.gui.wizard;
 
 import java.util.Map;
 
@@ -78,7 +78,7 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 	 */
 	protected void createContents() {
 		super.createContents();
-		shell.setSize(450, 330);
+		shell.setSize(550, 430);
 		shell.setText(getText());
 		GridLayout gl_shell = new GridLayout(2, false);
 		gl_shell.horizontalSpacing = 0;

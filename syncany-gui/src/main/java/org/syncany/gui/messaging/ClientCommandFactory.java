@@ -1,12 +1,11 @@
-package org.syncany.gui.command;
+package org.syncany.gui.messaging;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.syncany.gui.main.MainGUI;
-import org.syncany.gui.websocket.WSClient;
+import org.syncany.gui.MainGUI;
 
 public class ClientCommandFactory {
 	private static final Logger log = Logger.getLogger(ClientCommandFactory.class.getSimpleName());

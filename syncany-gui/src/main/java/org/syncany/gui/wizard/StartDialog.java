@@ -26,9 +26,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.wizard.core.DefaultWizardPanel;
-import org.syncany.gui.wizard.core.WizardAction;
-import org.syncany.gui.wizard.core.WizardType;
 import org.syncany.util.I18n;
 
 /**
@@ -47,7 +44,7 @@ public class StartDialog extends DefaultWizardPanel {
 	 * @param style
 	 */
 	public StartDialog(Map<String, Object> params, Shell parent, int style) {
-		super(params, WizardType.NEXT, parent, style);
+		super(params, WizardType.CANCEL | WizardType.NEXT, parent, style);
 	}
 	
 	/**
@@ -96,17 +93,22 @@ public class StartDialog extends DefaultWizardPanel {
 
 	@Override
 	protected void handleAction(WizardAction action) {
-		if (action == WizardAction.NEXT){
+		if (action == WizardAction.NEXT) {
 			if (createStorageRadio.getSelection()){
-				this.shell.dispose();
+				shell.dispose();
+				
 				NewDialog sd = new NewDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
 			else if (connectStorageRadio.getSelection()){
-				this.shell.dispose();
+				shell.dispose();
+				
 				ConnectDialog sd = new ConnectDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
+		}
+		else if (action == WizardAction.CANCEL) {
+			shell.dispose();
 		}
 	}
 }

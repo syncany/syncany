@@ -34,11 +34,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.command.ClientCommandFactory;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.util.SWTResourceManager;
-import org.syncany.gui.wizard.core.DefaultWizardPanel;
-import org.syncany.gui.wizard.core.WizardAction;
-import org.syncany.gui.wizard.core.WizardType;
 import org.syncany.util.I18n;
 
 /**
@@ -58,7 +55,7 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 	 * @param style
 	 */
 	public ConnectDialog(Map<String, Object> params, Shell parent, int style) {
-		super(params, WizardType.CONNECT | WizardType.PREVIOUS, parent, style);
+		super(params, WizardType.CANCEL | WizardType.CONNECT | WizardType.PREVIOUS, parent, style);
 	}
 	
 	/**

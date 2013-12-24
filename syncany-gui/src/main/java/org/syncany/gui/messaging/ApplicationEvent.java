@@ -15,16 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.wizard.core;
+package org.syncany.gui.messaging;
+
+import java.util.Map;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public enum WizardAction {
-	NEXT, 
-	PREVIOUS,
-	CONNECT, 
-	CREATE,
-	CANCEL;
+public abstract class ApplicationEvent {
+	private Map<String, Map<String, String>> data;
+	
+	/**
+	 * @param data2
+	 */
+	public ApplicationEvent(Map<String, Map<String, String>> data) {
+		this.data = data;
+	}
+	
+	/**
+	 * @return the data
+	 */
+	public Map<String, Map<String, String>> getData() {
+		return data;
+	}
 }

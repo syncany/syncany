@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.wizard.core.DefaultDialog;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
