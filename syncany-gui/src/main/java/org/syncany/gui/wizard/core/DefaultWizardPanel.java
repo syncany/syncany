@@ -18,6 +18,7 @@
 package org.syncany.gui.wizard.core;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -38,6 +39,8 @@ import org.syncany.util.I18n;
  *
  */
 public abstract class DefaultWizardPanel extends DefaultDialog implements SelectionListener {
+	private static final Logger log = Logger.getLogger(DefaultWizardPanel.class.getSimpleName());
+	
 	private int type;
 	
 	private Map<String, Object> wizardParameters; 
@@ -52,12 +55,17 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 	 * @param parent
 	 * @param style
 	 */
-	public DefaultWizardPanel( Map<String, Object> wizardParameters, int type, Shell parent, int style) {
+	public DefaultWizardPanel(Map<String, Object> wizardParameters, int type, Shell parent, int style) {
 		super(parent, style);
 		this.type = type;
 		this.wizardParameters = wizardParameters;
 	}
 	
+	public DefaultWizardPanel(Map<String, Object> wizardParameters, int type, Shell parent, int style, String title) {
+		super(parent, style, title);
+		this.type = type;
+		this.wizardParameters = wizardParameters;
+	}
 	/**
 	 * @return the wizardParameters
 	 */
@@ -90,6 +98,7 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 		Label wizardImageLabel = new Label(shell, SWT.NONE);
 		wizardImageLabel.setImage(SWTResourceManager.getImage("/images/panel.png"));
 		
+		//Call to subclass abstract method
 		createComposite(shell);
 		
 		Label label = new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL);
@@ -146,10 +155,20 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 			handleAction(WizardAction.PREVIOUS);
 		}
 		else if (e.widget == nextButton){
-			handleAction(WizardAction.NEXT);
+			if (validate()){
+				handleAction(WizardAction.NEXT);
+			}
+			else {
+				log.warning("wizard validation fails before 'NEXT' action");
+			}
 		}
 		else if (e.widget == connectButton){
-			handleAction(WizardAction.CONNECT);
+			if (validate()){
+				handleAction(WizardAction.CONNECT);
+			}
+			else {
+				log.warning("wizard validation fails before 'CONNECT' action");
+			}
 		}
 	}
 
@@ -175,4 +194,6 @@ public abstract class DefaultWizardPanel extends DefaultDialog implements Select
 	protected abstract Composite createComposite(Shell shell);
 	
 	protected abstract void handleAction(WizardAction action);
+	
+	protected abstract boolean validate();
 }

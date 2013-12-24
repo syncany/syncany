@@ -18,6 +18,7 @@
 package org.syncany.gui.wizard;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -40,6 +41,8 @@ import org.syncany.util.I18n;
  *
  */
 public class NewLocalFolders extends DefaultWizardPanel {
+	private static final Logger log = Logger.getLogger(NewLocalFolders.class.getSimpleName());
+	
 	/**
 	 * Create the dialog.
 	 * @param parent
@@ -54,6 +57,7 @@ public class NewLocalFolders extends DefaultWizardPanel {
 	 * @return the result
 	 */
 	public Object open() {
+		log.fine("creating NewLocalFolders wizard panel");
 		super.createContents();
 		shell.open();
 		shell.layout();
@@ -128,5 +132,11 @@ public class NewLocalFolders extends DefaultWizardPanel {
 				sd.open();
 			}
 		}
+	}
+
+	@Override
+	protected boolean validate() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

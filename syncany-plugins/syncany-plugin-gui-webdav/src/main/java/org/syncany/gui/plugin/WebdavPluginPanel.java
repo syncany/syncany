@@ -15,15 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel.plugin;
+package org.syncany.gui.plugin;
 
-import java.io.IOException;
-import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.net.ftp.FTPClient;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -31,7 +28,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.panel.PluginPanel;
@@ -41,8 +37,8 @@ import org.syncany.util.I18n;
  * @author vincent
  *
  */
-public class FTPComposite extends PluginPanel {
-	private static final Logger log = Logger.getLogger(FTPComposite.class.getSimpleName());
+public class WebdavPluginPanel extends PluginPanel {
+	private static final Logger log = Logger.getLogger(WebdavPluginPanel.class.getSimpleName());
 	private static final int TIMEOUT_CONNECT = 5000;
 	
 	private Text hostText;
@@ -56,7 +52,7 @@ public class FTPComposite extends PluginPanel {
 	 * @param parent
 	 * @param style
 	 */
-	public FTPComposite(Composite parent, int style) {
+	public WebdavPluginPanel(Composite parent, int style) {
 		super(parent, style);
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
@@ -123,45 +119,8 @@ public class FTPComposite extends PluginPanel {
 		testFtpButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				testFtpButton.setEnabled(false);
-				final boolean test = testFtpConnection();
-				testFtpButton.setEnabled(true);
-				
-				Display.getCurrent().syncExec(new Runnable() {
-				    public void run() {
-				    	if (test){
-				    		testResultLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.testSucceed"));
-				    	}
-				    	else{
-				    		testResultLabel.setText(I18n.getString("NewPluginDialog.dialog.ftpcomposite.testFails"));
-				    	}
-				    }
-				});
 			}
 		});
-	}
-
-	protected boolean testFtpConnection() {
-		FTPClient ftp = new FTPClient();
-
-		ftp.setConnectTimeout(TIMEOUT_CONNECT);
-
-		try{
-			ftp.connect(hostText.getText(), Integer.parseInt(portText.getText()));
-			boolean success = ftp.login(usernameText.getText(), passwordText.getText());
-			ftp.disconnect();
-			return success;
-		}
-		catch (NumberFormatException e){
-			log.warning("NumberFormatException "+e.toString());
-		}
-		catch (SocketException e) {
-			log.warning("SocketException "+e.toString());
-		}
-		catch (IOException e) {
-			log.warning("IOException "+e.toString());
-		}
-		return false;
 	}
 
 	@Override

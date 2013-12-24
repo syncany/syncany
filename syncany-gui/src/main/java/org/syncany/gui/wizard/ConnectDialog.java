@@ -244,4 +244,10 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		}
 		return false;
 	}
+
+	@Override
+	protected boolean validate() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

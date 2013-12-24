@@ -18,6 +18,7 @@
 package org.syncany.gui.wizard;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -27,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
+import org.syncany.gui.wizard.core.GuiActions;
 import org.syncany.gui.wizard.core.WizardAction;
 import org.syncany.gui.wizard.core.WizardType;
 import org.syncany.util.I18n;
@@ -36,6 +38,7 @@ import org.syncany.util.I18n;
  *
  */
 public class StartDialog extends DefaultWizardPanel {
+	private static final Logger log = Logger.getLogger(StartDialog.class.getSimpleName());
 	protected Object result;
 
 	private Button createStorageRadio;
@@ -55,6 +58,7 @@ public class StartDialog extends DefaultWizardPanel {
 	 * @return the result
 	 */
 	public Object open() {
+		log.fine("creating StartDialog wizard panel");
 		super.createContents();
 		shell.open();
 		shell.layout();
@@ -99,14 +103,23 @@ public class StartDialog extends DefaultWizardPanel {
 		if (action == WizardAction.NEXT){
 			if (createStorageRadio.getSelection()){
 				this.shell.dispose();
+				getWizardParameters().put("action", GuiActions.START_ONLINE_STORAGE_CREATE);
 				NewDialog sd = new NewDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
 			else if (connectStorageRadio.getSelection()){
 				this.shell.dispose();
+				getWizardParameters().put("action",  GuiActions.START_ONLINE_STORAGE_CONNECT);
 				ConnectDialog sd = new ConnectDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
 		}
+	}
+	
+	@Override
+	protected boolean validate() {
+		return 
+			connectStorageRadio.getSelection() ||
+			createStorageRadio.getSelection();
 	}
 }

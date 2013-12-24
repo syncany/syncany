@@ -8,9 +8,11 @@ dependencies {
     
     runtime			project(':syncany-plugins:syncany-plugin-ftp')
     runtime			project(':syncany-plugins:syncany-plugin-rest')  
+	runtime			project(':syncany-plugins:syncany-plugin-webdav')  
 	
 	runtime			project(':syncany-plugins:syncany-plugin-gui-ftp')
     runtime			project(':syncany-plugins:syncany-plugin-gui-rest')  
+	runtime			project(':syncany-plugins:syncany-plugin-gui-webdav')  
 	
     compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
 	compile			"com.google.code.gson:gson:2.2.4"

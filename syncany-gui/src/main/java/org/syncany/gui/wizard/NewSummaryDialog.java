@@ -18,6 +18,7 @@
 package org.syncany.gui.wizard;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -30,13 +31,14 @@ import org.syncany.gui.command.ClientCommandFactory;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
 import org.syncany.gui.wizard.core.WizardAction;
 import org.syncany.gui.wizard.core.WizardType;
-import org.eclipse.swt.browser.Browser;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class NewSummaryDialog extends DefaultWizardPanel {
+	private static final Logger log = Logger.getLogger(NewSummaryDialog.class.getSimpleName());
+	
 	private Label contentLabel;
 	
 	/**
@@ -53,6 +55,7 @@ public class NewSummaryDialog extends DefaultWizardPanel {
 	 * @return the result
 	 */
 	public Object open() {
+		log.fine("creating NewSummaryDialog wizard panel");
 		super.createContents();
 		
 		updateContent();
@@ -102,5 +105,10 @@ public class NewSummaryDialog extends DefaultWizardPanel {
 			NewLocalFolders dialog = new NewLocalFolders(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			dialog.open();
 		}
+	}
+	
+	@Override
+	protected boolean validate() {
+		return true;
 	}
 }

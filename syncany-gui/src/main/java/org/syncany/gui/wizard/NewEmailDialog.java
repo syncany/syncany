@@ -18,6 +18,7 @@
 package org.syncany.gui.wizard;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -30,6 +31,7 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.wizard.core.DefaultWizardPanel;
 import org.syncany.gui.wizard.core.WizardAction;
 import org.syncany.gui.wizard.core.WizardType;
+import org.syncany.util.EmailValidator;
 import org.syncany.util.I18n;
 
 /**
@@ -37,6 +39,8 @@ import org.syncany.util.I18n;
  *
  */
 public class NewEmailDialog extends DefaultWizardPanel {
+	private static final Logger log = Logger.getLogger(NewEmailDialog.class.getSimpleName());
+	
 	private Text emailTextField;
 	private Text passwordTextField;
 	
@@ -54,6 +58,7 @@ public class NewEmailDialog extends DefaultWizardPanel {
 	 * @return the result
 	 */
 	public Object open() {
+		log.fine("creating NewEmailDialog wizard panel");
 		super.createContents();
 		shell.open();
 		shell.layout();
@@ -102,5 +107,19 @@ public class NewEmailDialog extends DefaultWizardPanel {
 			NewDialog sd = new NewDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
+	}
+	
+	@Override
+	protected boolean validate() {
+		return validateEmail() && validatePassword();
+	}
+		
+	private boolean validatePassword(){
+		return passwordTextField.getText().length() > 4;
+	}
+	
+	private boolean validateEmail(){
+		EmailValidator emailValidator = new EmailValidator();
+		return emailValidator.validate(emailTextField.getText());
 	}
 }

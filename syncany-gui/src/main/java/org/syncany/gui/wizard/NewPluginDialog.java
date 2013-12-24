@@ -42,7 +42,11 @@ public class NewPluginDialog extends DefaultWizardPanel {
 	 * @param style
 	 */
 	public NewPluginDialog(Map<String, Object> params, Shell parent, int style) {
-		super(params, WizardType.NEXT | WizardType.PREVIOUS, parent, style);
+		super(
+			params, 
+			WizardType.NEXT | WizardType.PREVIOUS, 
+			parent, style, 
+			"NewPluginDialog.dialog.title");
 	}
 	
 	/**
@@ -94,5 +98,11 @@ public class NewPluginDialog extends DefaultWizardPanel {
 			NewDialog sd = new NewDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
+	}
+
+	@Override
+	protected boolean validate() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

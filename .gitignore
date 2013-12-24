@@ -6,3 +6,6 @@ sandbox/results
 .classpath
 .project
 .metadata
+syncany-util/.gitignore
+syncany-plugins/syncany-plugin-gui/.gitignore
+syncany-lib/.gitignore

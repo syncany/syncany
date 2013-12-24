@@ -15,43 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.syncany.gui.plugin;
 
 /**
  * @author vincent
  *
  */
-public class PluginGui {
-	private String code;
-	private String className;
-	
-	public PluginGui(String code, String className){
-		this.code = code;
-		this.className = className;
-	}
-	
-	public static List<PluginGui> getAvailablePlugins() {
-		List<PluginGui> list = new ArrayList<>();
+public class LocalPluginPanel {
 
-		list.add(new PluginGui("ftp", "org.syncany.gui.panel.plugin.InitFtpOperationPanel"));
-		list.add(new PluginGui("amazon s3","org.syncany.gui.panel.plugin.InitAmazonS3OperationPanel"));
-		
-		return list;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public String getClassName() {
-		return className;
-	}
-	
-	@Override
-	public String toString() {
-		return code;
-	}
 }

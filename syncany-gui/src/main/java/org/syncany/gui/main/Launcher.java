@@ -17,6 +17,7 @@
  */
 package org.syncany.gui.main;
 
+import java.util.Locale;
 import java.util.logging.Logger;
 
 import org.syncany.config.Logging;
@@ -49,16 +50,15 @@ public class Launcher {
 		Logging.init();
 	}
 	
-
-
-	
 	public static void main(String[] args) {
+		Locale.setDefault(Locale.ITALIAN);
 		if (OS.isMacOS()){
 			System.setProperty("apple.awt.UIElement", "true");
 		}
 		
 		//Register messages bundles
 		I18n.registerBundleName("i18n/messages");
+		I18n.registerBundleFilter("plugin_messages*");
 
 		//Shutdown hook to release swt resources
 		Runtime.getRuntime().addShutdownHook(new Thread(){

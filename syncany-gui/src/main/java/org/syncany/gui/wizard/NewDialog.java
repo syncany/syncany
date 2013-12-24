@@ -19,6 +19,7 @@ package org.syncany.gui.wizard;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -42,6 +43,8 @@ import org.syncany.util.I18n;
  *
  */
 public class NewDialog extends DefaultWizardPanel {
+	private static final Logger log = Logger.getLogger(NewDialog.class.getSimpleName());
+	
 	private Button emailOptionRadio;
 	private Button ftpOptionRadio;
 	private Button otherPluginRadio;
@@ -62,6 +65,7 @@ public class NewDialog extends DefaultWizardPanel {
 	 * @return the result
 	 */
 	public Object open() {
+		log.fine("creating NewDialog wizard panel");
 		super.createContents();
 		shell.open();
 		shell.layout();
@@ -129,7 +133,7 @@ public class NewDialog extends DefaultWizardPanel {
 			}
 			else if (ftpOptionRadio.getSelection()){
 				this.shell.dispose();
-				getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.FTPComposite");
+				getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.plugin.FTPPluginPanel");
 				NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 				sd.open();
 			}
@@ -137,10 +141,19 @@ public class NewDialog extends DefaultWizardPanel {
 				String selectedPlugin = pluginSelectionCombo.getItem(pluginSelectionCombo.getSelectionIndex());
 				switch (selectedPlugin.toLowerCase()){
 					case "rest":
-						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.RestComposite");
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.plugin.RestPluginPanel");
 						break;
 					case "amazon s3":
-						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.panel.plugin.AmazonComposite");
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.plugin.AmazonPluginPanel");
+						break;
+					case "webdav":
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.plugin.WebdavPluginPanel");
+						break;
+					case "local":
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.plugin.LocalPluginPanel");
+						break;
+					case "ftp":
+						getWizardParameters().put("pluginGuiClassName", "org.syncany.gui.plugin.FTPPluginPanel");
 						break;
 				}
 
@@ -154,5 +167,12 @@ public class NewDialog extends DefaultWizardPanel {
 			StartDialog sd = new StartDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
 			sd.open();
 		}
+	}
+	
+	@Override
+	protected boolean validate() {
+		return emailOptionRadio.getSelection() || 
+				ftpOptionRadio.getSelection() ||
+				otherPluginRadio.getSelection(); 
 	}
 }

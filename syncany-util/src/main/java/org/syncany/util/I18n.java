@@ -1,6 +1,10 @@
 package org.syncany.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +13,9 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
+
+import net.sf.corn.cps.CPScanner;
+import net.sf.corn.cps.ResourceFilter;
 
 
 /**
@@ -22,6 +29,7 @@ public class I18n implements Serializable {
     
     private static final HashMap<Locale, Properties> bundles = new HashMap<Locale, Properties>();
 	private static final List<String> BUNDLE_NAMES = new ArrayList<String>();
+	private static final List<String> BUNDLE_FILTERS= new ArrayList<String>();
 	private static final String defaultBundleLauguage = "en";
 	private static final String defaultBundleCountry = "GB";
 	
@@ -29,14 +37,19 @@ public class I18n implements Serializable {
 		BUNDLE_NAMES.add(bundle);
 	}
 	
+	public static void registerBundleFilter(String filter) {
+		BUNDLE_FILTERS.add(filter);
+	}
+	
 	private static HashMap<Locale, Properties> getBundles() {
 		return bundles;
 	}
 
 	private static void loadBundle(Locale l) {
+		//Build resources for bundle names
 		for (String bundleName : BUNDLE_NAMES){
 			ResourceBundle bun;
-			
+
 			try{
 				bun = ResourceBundle.getBundle(bundleName, l, ClassLoader.getSystemClassLoader());
 				buildResourceBundle(bun, l);
@@ -47,6 +60,70 @@ public class I18n implements Serializable {
 				buildResourceBundle(bun, l);
 			}
 		}
+		
+		//Build resources for bundle filters
+		for (String filter : BUNDLE_FILTERS){
+			List<URL> resources = CPScanner.scanResources(new ResourceFilter().resourceName(filter + ".properties"));
+
+			boolean containsRequiredLocaleFile = false;
+			
+			for (URL url : resources){
+				try {
+					File f = new File(url.toURI());
+					String fileName = f.getName();
+					if (fileName.contains(l.toString())){
+						containsRequiredLocaleFile = true;
+					}
+				}
+				catch (URISyntaxException e) {
+					log.warning("error loading file " + url.toString());
+				}
+			}
+			
+			if (containsRequiredLocaleFile){
+				for (URL url : resources){
+					buildResourceBundle(url, l);
+				}
+			}
+			else{
+				Locale defaultLocale = new Locale(defaultBundleLauguage, defaultBundleCountry);
+				for (URL url : resources){
+					buildResourceBundle(url, defaultLocale, l);
+				}
+			}
+		}
+	}
+	
+	private static void buildResourceBundle(URL url, Locale defaultLocale, Locale originalLocale) {
+		Properties ap = new Properties();
+		
+		try {
+			File file = new File(url.toURI());
+			String fileName = file.getName();
+			
+			if (fileName.contains(defaultLocale.toString())){
+				try {
+					ap.load(url.openStream());
+				}
+				catch (IOException e) {
+					log.warning("error loading file " + url.toString());
+				}
+			}
+		}
+		catch (URISyntaxException e1) {
+			log.warning("URISyntaxException in " + url.toString());
+		}
+		
+		if (getBundles().containsKey(originalLocale)){
+			Properties oldProperties = getBundles().get(originalLocale);
+			ap.putAll(oldProperties);
+		}
+		
+		getBundles().put(originalLocale, ap);
+	}
+
+	private static void buildResourceBundle(URL url, Locale l){
+		buildResourceBundle(url, l, l);
 	}
 	
 	private static void buildResourceBundle(ResourceBundle bun, Locale l) {
