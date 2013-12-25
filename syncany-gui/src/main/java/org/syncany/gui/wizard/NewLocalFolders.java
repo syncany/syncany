@@ -31,9 +31,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.wizard.core.DefaultWizardPanel;
-import org.syncany.gui.wizard.core.WizardAction;
-import org.syncany.gui.wizard.core.WizardType;
 import org.syncany.util.I18n;
 
 /**
@@ -123,14 +120,8 @@ public class NewLocalFolders extends DefaultWizardPanel {
 		else if (action == WizardAction.PREVIOUS){
 			this.shell.dispose();
 			String pluginClassName = (String)getWizardParameters().get("pluginGuiClassName");
-			if (pluginClassName != null){
-				NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
-				sd.open();
-			}
-			else {
-				NewEmailDialog sd = new NewEmailDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
-				sd.open();
-			}
+			NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
+			sd.open();
 		}
 	}
 

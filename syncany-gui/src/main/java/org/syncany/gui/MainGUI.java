@@ -1,4 +1,4 @@
-package org.syncany.gui.main;
+package org.syncany.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,8 +19,9 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
-import org.syncany.gui.command.ClientCommandFactory;
-import org.syncany.gui.event.InterfaceUpdate;
+import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.messaging.InterfaceUpdate;
+import org.syncany.gui.util.OS;
 import org.syncany.gui.util.SWTResourceManager;
 import org.syncany.gui.wizard.StartDialog;
 
@@ -29,15 +30,19 @@ import com.google.common.eventbus.Subscribe;
 public class MainGUI {
 	private static final Logger log = Logger.getLogger(MainGUI.class.getSimpleName());
 	private static String clientIdentification = UUID.randomUUID().toString();
-	
+
 	private Display display = Display.getDefault();
-	
 	private Shell shell;
 	
+	private Menu menu;
+	private List<MenuItem> items = new ArrayList<>();
+	
+	private TrayItem item;
+
 	public void open() {
 		shell = new Shell();
 		installSystemTray();
-		
+
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -45,36 +50,39 @@ public class MainGUI {
 		}
 	}
 
-	private List<MenuItem> items = new ArrayList<>();
-	
-	private void updateTray(Map<String, Map<String, String>> folders){
-		for (MenuItem mi : items){
+	private void updateTray(Map<String, Map<String, String>> folders) {
+		for (MenuItem mi : items) {
 			mi.dispose();
 		}
 
 		items.clear();
-		
-		for (String key : folders.keySet()){
+
+		for (String key : folders.keySet()) {
 			MenuItem mi = new MenuItem(menu, SWT.PUSH);
-			mi.setText(folders.get(key).get("folder")+" ["+ folders.get(key).get("status") + "]");
+			mi.setText(folders.get(key).get("folder") + " [" + folders.get(key).get("status") + "]");
 			items.add(mi);
 		}
 	}
-	
-	private TrayItem item;
-	private Menu menu;
-	
+
 	private void installSystemTray() {
 		Tray tray = Display.getDefault().getSystemTray();
-		if(tray != null) {
+		
+		if (tray != null) {
 			item = new TrayItem(tray, SWT.NONE);
-			Image image = SWTResourceManager.getResizedImage("/images/tray/tray.png", 16, 16);
-			item.setImage(image);
+
+			if (OS.isLinux()) {
+				Image image = SWTResourceManager.getImage("/images/tray/tray.png");
+				item.setImage(image);
+			}
+			else {
+				Image image = SWTResourceManager.getResizedImage("/images/tray/tray.png", 16, 16);
+				item.setImage(image);
+			}
 
 			menu = new Menu(shell, SWT.POP_UP);
-			
+
 			MenuItem connectItem = new MenuItem(menu, SWT.PUSH);
-			connectItem.setText("Set-up a new connection");
+			connectItem.setText("New connection");
 			connectItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -82,9 +90,9 @@ public class MainGUI {
 					sd.open();
 				}
 			});
-			
+
 			MenuItem quitMenu = new MenuItem(menu, SWT.PUSH);
-			quitMenu.setText("Exit syncany");
+			quitMenu.setText("Quit");
 			quitMenu.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -93,22 +101,24 @@ public class MainGUI {
 					ClientCommandFactory.close();
 				}
 			});
-			
-			Listener showMenuListener = new Listener () {
-				public void handleEvent (Event event) {
-					menu.setVisible (true);
+
+			Listener showMenuListener = new Listener() {
+				public void handleEvent(Event event) {
+					menu.setVisible(true);
 				}
 			};
-			
-			item.addListener (SWT.MenuDetect, showMenuListener);
-			item.addListener (SWT.Selection, showMenuListener);
+
+			item.addListener(SWT.MenuDetect, showMenuListener);
+			item.addListener(SWT.Selection, showMenuListener);
 		}
 	}
-	
-	@Subscribe public void updateInterface(InterfaceUpdate update) {
+
+	@Subscribe
+	public void updateInterface(InterfaceUpdate update) {
 		log.info("Update Interface Event");
+		updateTray(update.getData());
 	}
-	
+
 	/**
 	 * @return the clientIdentification
 	 */

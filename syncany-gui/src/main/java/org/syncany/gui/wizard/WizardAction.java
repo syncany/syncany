@@ -15,27 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.util;
+package org.syncany.gui.wizard;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class PasswordChecker {
-
-	public static int check(char[] pwd) {
-		if (pwd.length < 5){
-			return 0;
-		}
-		else if (pwd.length < 8){
-			return 30;
-		}
-		else if (pwd.length < 12){
-			return 60;
-		}
-		else {
-			return 100;
-		}
-	}
-
+public enum WizardAction {
+	NEXT, 
+	PREVIOUS,
+	CONNECT, 
+	CREATE,
+	CANCEL;
 }

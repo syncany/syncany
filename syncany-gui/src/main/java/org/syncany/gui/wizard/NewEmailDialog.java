@@ -28,9 +28,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.wizard.core.DefaultWizardPanel;
-import org.syncany.gui.wizard.core.WizardAction;
-import org.syncany.gui.wizard.core.WizardType;
 import org.syncany.util.EmailValidator;
 import org.syncany.util.I18n;
 
