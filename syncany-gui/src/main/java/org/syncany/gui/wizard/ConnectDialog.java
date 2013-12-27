@@ -30,19 +30,16 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.util.SWTResourceManager;
+import org.syncany.gui.panel.SWTResourceManager;
 import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class ConnectDialog extends DefaultWizardPanel implements ModifyListener {
+public class ConnectDialog extends WizardPanelComposite implements ModifyListener {
 	private Text folderTextField;
 	private Text urlTextField;
 	private Label messageLabel;
@@ -54,35 +51,18 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 	 * @param parent
 	 * @param style
 	 */
-	public ConnectDialog(Map<String, Object> params, Shell parent, int style) {
-		super(params, WizardType.CANCEL | WizardType.CONNECT | WizardType.PREVIOUS, parent, style);
+	public ConnectDialog(Composite parent, int style) {
+		super(parent, style);
+		initComposite();
 	}
 	
-	/**
-	 * Open the dialog.
-	 * @return the result
-	 */
-	public Object open() {
-		super.createContents();
-		shell.open();
-		shell.layout();
-		Display display = getParent().getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-		return null;
-	}
-	
-	protected Composite createComposite(Shell shell){
-		Composite composite = new Composite(shell, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+	private void initComposite(){
+		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
 		gl_composite.verticalSpacing = 15;
-		composite.setLayout(gl_composite);
+		setLayout(gl_composite);
 		
-		Composite folderComposite = new Composite(composite, SWT.NONE);
+		Composite folderComposite = new Composite(this, SWT.NONE);
 		folderComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		GridLayout gl_folderComposite = new GridLayout(2, false);
 		gl_folderComposite.verticalSpacing = 0;
@@ -110,7 +90,7 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		folderMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		folderMessageLabel.setForeground(SWTResourceManager.getColor(SWT.COLOR_RED));
 		
-		Composite urlComposite = new Composite(composite, SWT.NONE);
+		Composite urlComposite = new Composite(this, SWT.NONE);
 		urlComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1));
 		GridLayout gl_urlComposite = new GridLayout(2, false);
 		gl_urlComposite.verticalSpacing = 0;
@@ -137,7 +117,7 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		urlMessageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		urlMessageLabel.setForeground(SWTResourceManager.getColor(SWT.COLOR_RED));
 
-		Composite messageComposite = new Composite(composite, SWT.NONE);
+		Composite messageComposite = new Composite(this, SWT.NONE);
 		GridLayout gl_messageComposite = new GridLayout(1, false);
 		gl_messageComposite.marginWidth = 0;
 		gl_messageComposite.marginHeight = 0;
@@ -149,27 +129,6 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		messageLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		messageLabel.setSize(175, 15);
 		messageLabel.setText(I18n.getString("ConnectDialog.dialog.baseFolder", getBaseFolder()));
-		
-		return composite;
-	}
-
-	@Override
-	protected void handleAction(WizardAction action) {
-		if (action == WizardAction.CONNECT){
-			boolean isFolderValid = validateFolderInput();
-			boolean isUrlValid = validateUrlInput();
-			
-			if (isFolderValid && isUrlValid){
-				String fullFolderPath = getFolderName();
-				ClientCommandFactory.connect(urlTextField.getText(), fullFolderPath);
-				shell.dispose();
-			}
-		}
-		else if (action == WizardAction.PREVIOUS){
-			this.shell.dispose();
-			StartDialog sd = new StartDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
-			sd.open();
-		}
 	}
 
 	@Override
@@ -185,10 +144,10 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		boolean isUrlValid = validateUrlInput();
 		
 		if (!isFolderValid || !isUrlValid){
-			getConnectButton().setEnabled(false);
+			//getConnectButton().setEnabled(false);
 		}
 		else{
-			getConnectButton().setEnabled(true);
+			//getConnectButton().setEnabled(true);
 		}
 	}
 	
@@ -228,13 +187,11 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 		if (folderName != null && folderName.length() > 0){
 			File f = new File(fullFolderPath);
 			if (f.exists()){
-				getConnectButton().setEnabled(false);
 				folderMessageLabel.setText(I18n.getString("ConnectDialog.dialog.folderAlreadyExists", folderName));
 				getParent().layout();
 				return false;
 			}
 			else{
-				getConnectButton().setEnabled(true);
 				folderMessageLabel.setText("");
 				return true;
 			}
@@ -243,8 +200,14 @@ public class ConnectDialog extends DefaultWizardPanel implements ModifyListener 
 	}
 
 	@Override
-	protected boolean validate() {
+	public boolean isValid() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public Map<String, String> getUserSelection() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

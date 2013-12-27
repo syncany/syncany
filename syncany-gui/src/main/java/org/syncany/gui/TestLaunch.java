@@ -15,24 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.util;
+package org.syncany.gui;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Shell;
+import org.syncany.gui.wizard.WizardDialog;
+import org.syncany.util.I18n;
 
 /**
  * @author vwiencek
  *
  */
-public class OS {
-	private static final String osName = System.getProperty("os.name").toLowerCase();
-	
-	public static boolean isWindows(){
-		return osName.startsWith("windows");
-	}
-	
-	public static boolean isMacOS(){
-		return osName.startsWith("mac os");
-	}
+public class TestLaunch {
+	public static void main(String[] args) {
+		// Register messages bundles
+		I18n.registerBundleName("i18n/messages");
+		I18n.registerBundleFilter("plugin_messages*");
 
-	public static boolean isLinux() {
-		return osName.startsWith("linux");
+		Shell shell = new Shell();
+		WizardDialog wd = new WizardDialog(shell, SWT.APPLICATION_MODAL);
+		wd.open();
 	}
 }

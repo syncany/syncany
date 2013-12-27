@@ -17,15 +17,20 @@
  */
 package org.syncany.gui.wizard;
 
+import java.util.Map;
+
+import org.eclipse.swt.widgets.Composite;
+
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author vwiencek
  *
  */
+public abstract class WizardPanelComposite extends Composite {
+	public WizardPanelComposite(Composite parent, int style) {
+		super(parent, style);
+	}
 
-public class WizardType {
-	public static int NEXT = 1 << 2; 
-	public static int PREVIOUS =  1 << 3; 
-	public static int CANCEL = 1 << 4;
-	public static int CONNECT = 1 << 5;
-	public static int CREATE = 1 << 6;
+	public abstract Map<String, String> getUserSelection();
+	
+	public abstract boolean isValid();
 }

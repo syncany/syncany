@@ -129,6 +129,14 @@ public class I18n implements Serializable {
 		getBundles().put(l, ap);
 	}
 
+	public static String getString(String key){
+		return getString(key, false);
+	}
+	
+	public static String getString(String key, String...args){
+		return getString(key, false, args);
+	}
+	
 	/**
 	 * Returns the translation for the key String, given the selected
 	 * defaultLocale
@@ -136,14 +144,14 @@ public class I18n implements Serializable {
 	 * @param key
 	 * @return the localised value corresponding to the key
 	 */
-	public static String getString(String key) {
+	public static String getString(String key, boolean semicolon) {
         if (!getBundles().containsKey(Locale.getDefault())){
             loadBundle(Locale.getDefault());
         }
 
         try {
         	Properties ap = bundles.get(Locale.getDefault());
-			return ap == null ? key : ap.getProperty(key).trim();
+			return ap == null ? key : ap.getProperty(key).trim() + (semicolon ? " :" : "");
 		} 
         catch (NullPointerException e) {
 			if (key != null && !key.isEmpty()) {
@@ -153,8 +161,8 @@ public class I18n implements Serializable {
 		}
 	}
 	
-	public static String getString(String key, String...args){
-		String s = getString(key);
+	public static String getString(String key, boolean semicolon, String...args){
+		String s = getString(key, semicolon);
 		String tmp;
 		
 		for (int i = 0 ; i < args.length ; i ++){

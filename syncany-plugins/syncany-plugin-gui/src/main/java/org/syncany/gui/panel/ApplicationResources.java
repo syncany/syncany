@@ -15,13 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.wizard.core;
+package org.syncany.gui.panel;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 
 /**
- * @author vincent
+ * @author vwiencek
  *
  */
-public enum GuiActions {
-	START_ONLINE_STORAGE_CREATE, 
-	START_ONLINE_STORAGE_CONNECT;
+public class ApplicationResources {
+	public static Font FONT_NORMAL = SWTResourceManager.getFont("Lucida Grande", 11, SWT.NORMAL);
+	public static Font FONT_BOLD = SWTResourceManager.getFont("Lucida Grande", 11, SWT.BOLD);
+	
 }

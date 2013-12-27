@@ -15,16 +15,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.wizard;
+package org.syncany.gui.util;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public enum WizardAction {
-	NEXT, 
-	PREVIOUS,
-	CONNECT, 
-	CREATE,
-	CANCEL;
+public class EmailValidator {
+	private Pattern pattern;
+	private Matcher matcher;
+ 
+	private static final String EMAIL_PATTERN = 
+		  "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*" 
+		+ "@"
+		+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+ 
+	public EmailValidator() {
+		pattern = Pattern.compile(EMAIL_PATTERN);
+	}
+ 
+	/**
+	 * Validate hex with regular expression
+	 * 
+	 * @param email
+	 *            email to be validated
+	 * @return true valid email, false invalid email
+	 */
+	public boolean validate(final String email) {
+		matcher = pattern.matcher(email);
+		return matcher.matches();
+	}
 }

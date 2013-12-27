@@ -17,9 +17,6 @@
  */
 package org.syncany.gui.wizard;
 
-import java.util.Map;
-import java.util.logging.Logger;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -28,58 +25,32 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.swt.widgets.Shell;
 import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class NewLocalFolders extends DefaultWizardPanel {
-	private static final Logger log = Logger.getLogger(NewLocalFolders.class.getSimpleName());
-	
-	/**
-	 * Create the dialog.
-	 * @param parent
-	 * @param style
-	 */
-	public NewLocalFolders(Map<String, Object> params, Shell parent, int style) {
-		super(params, WizardType.NEXT | WizardType.PREVIOUS, parent, style);
-	}
-	
-	/**
-	 * Open the dialog.
-	 * @return the result
-	 */
-	public Object open() {
-		log.fine("creating NewLocalFolders wizard panel");
-		super.createContents();
-		shell.open();
-		shell.layout();
-		Display display = getParent().getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-		return null;
-	}
+public class NewLocalFolders extends Composite {
 	private List list;
 	
-	protected Composite createComposite(Shell shell){
-		Composite composite = new Composite(shell, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+	public NewLocalFolders(Composite parent, int style) {
+		super(parent, style);
+		initComposite();
+	}
+	
+	private void initComposite(){
+		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(1, false);
 		gl_composite.verticalSpacing = 15;
-		composite.setLayout(gl_composite);
+		setLayout(gl_composite);
 		
-		list = new List(composite, SWT.BORDER | SWT.V_SCROLL);
+		list = new List(this, SWT.BORDER | SWT.V_SCROLL);
 		list.setItems(I18n.getString(NewLocalFolders.class.getSimpleName()+".dialog.foldersList").split(","));
 		list.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		
-		Composite composite_1 = new Composite(composite, SWT.NONE);
+		Composite composite_1 = new Composite(this, SWT.NONE);
 		composite_1.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		composite_1.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
@@ -95,39 +66,5 @@ public class NewLocalFolders extends DefaultWizardPanel {
 		
 		Button addButton = new Button(composite_1, SWT.NONE);
 		addButton.setText(I18n.getString(NewLocalFolders.class.getSimpleName()+".dialog.addFolder"));
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				NewAddLocalFolders na = new NewAddLocalFolders(getParent(), SWT.APPLICATION_MODAL);
-				String name = (String)na.open();
-				
-				if (name != null && name.length() > 0) {
-					list.add(name);
-				}
-			}
-		});
-		
-		return composite;
-	}
-
-	@Override
-	protected void handleAction(WizardAction action) {
-		if (action == WizardAction.NEXT){
-			this.shell.dispose();
-			NewSummaryDialog dialog = new NewSummaryDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
-			dialog.open();
-		}
-		else if (action == WizardAction.PREVIOUS){
-			this.shell.dispose();
-			String pluginClassName = (String)getWizardParameters().get("pluginGuiClassName");
-			NewPluginDialog sd = new NewPluginDialog(getWizardParameters(), getParent(), SWT.APPLICATION_MODAL);
-			sd.open();
-		}
-	}
-
-	@Override
-	protected boolean validate() {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

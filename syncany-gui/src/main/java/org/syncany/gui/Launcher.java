@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Logging;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.util.SWTResourceManager;
+import org.syncany.gui.panel.SWTResourceManager;
 import org.syncany.util.I18n;
 
 import com.google.common.eventbus.EventBus;

@@ -1,7 +1,6 @@
 package org.syncany.gui;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,9 +20,9 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.InterfaceUpdate;
-import org.syncany.gui.util.OS;
-import org.syncany.gui.util.SWTResourceManager;
-import org.syncany.gui.wizard.StartDialog;
+import org.syncany.gui.panel.SWTResourceManager;
+import org.syncany.gui.wizard.WizardDialog;
+import org.syncany.util.EnvironmentUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -70,7 +69,7 @@ public class MainGUI {
 		if (tray != null) {
 			item = new TrayItem(tray, SWT.NONE);
 
-			if (OS.isLinux()) {
+			if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				Image image = SWTResourceManager.getImage("/images/tray/tray.png");
 				item.setImage(image);
 			}
@@ -86,8 +85,8 @@ public class MainGUI {
 			connectItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					StartDialog sd = new StartDialog(new HashMap<String, Object>(), shell, SWT.APPLICATION_MODAL);
-					sd.open();
+					WizardDialog wd = new WizardDialog(shell, SWT.APPLICATION_MODAL);
+					wd.open();
 				}
 			});
 

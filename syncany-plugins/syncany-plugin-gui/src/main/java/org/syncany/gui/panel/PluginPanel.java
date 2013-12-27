@@ -37,4 +37,6 @@ public abstract class PluginPanel extends Composite {
 	}
 
 	public abstract Map<String, String> getParameters();
+	
+	public abstract boolean isValid();
 }

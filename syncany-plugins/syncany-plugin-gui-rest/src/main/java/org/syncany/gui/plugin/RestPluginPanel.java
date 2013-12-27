@@ -138,4 +138,10 @@ public class RestPluginPanel extends PluginPanel {
 		parameters.put("port", portText.getText());
 		return parameters;
 	}
+	
+	@Override
+	public boolean isValid() {
+		// TODO Auto-generated method stub
+		return true;
+	}
 }
