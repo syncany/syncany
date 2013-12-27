@@ -17,6 +17,7 @@
  */
 package org.syncany.gui.wizard;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -82,7 +83,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		passwordLabel.setText(I18n.getString("repository.encryption.password", true));
 		passwordLabel.setFont(fontNormal);
 		
-		password = new Text(this, SWT.BORDER);
+		password = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		password.setFont(fontNormal);
 		password.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
@@ -90,7 +91,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		passwordLabelAgain.setText(I18n.getString("repository.encryption.passwordAgain", true));
 		passwordLabelAgain.setFont(fontNormal);
 		
-		passwordAgain = new Text(this, SWT.BORDER);
+		passwordAgain = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		passwordAgain.setFont(fontNormal);
 		passwordAgain.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
@@ -99,7 +100,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
 		gd_enableEncryption.verticalIndent = 20;
 		enableEncryption.setLayoutData(gd_enableEncryption);
-		enableEncryption.setText("Check Button");
+		enableEncryption.setText(I18n.getString("repository.encryption.enable"));
 		enableEncryption.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -117,29 +118,33 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		GridData gd_lblNewLabel_4 = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_lblNewLabel_4.horizontalIndent = 30;
 		lblNewLabel_4.setLayoutData(gd_lblNewLabel_4);
-		lblNewLabel_4.setText("New Label");
+		lblNewLabel_4.setText(I18n.getString("repository.encryption.algorithm", true));
 		lblNewLabel_4.setFont(fontNormal);
 		
 		cypherCombo = new Combo(composite, SWT.NONE);
 		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		cypherCombo.setFont(fontNormal);
+		cypherCombo.setItems(new String[]{"AES", "TwoFish"});
+		cypherCombo.select(0);
 		
 		lblNewLabel_5 = new Label(composite, SWT.NONE);
 		GridData gd_lblNewLabel_5 = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_lblNewLabel_5.horizontalIndent = 30;
 		lblNewLabel_5.setLayoutData(gd_lblNewLabel_5);
-		lblNewLabel_5.setText("New Label");
+		lblNewLabel_5.setText(I18n.getString("repository.encryption.keylength", true));
 		lblNewLabel_5.setFont(fontNormal);
 		
 		keylengthCombo = new Combo(composite, SWT.NONE);
 		keylengthCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		keylengthCombo.setFont(fontNormal);
+		keylengthCombo.setItems(new String[]{"128", "256"});
+		keylengthCombo.select(0);
 		
 		lblNewLabel_6 = new Label(composite, SWT.NONE);
 		GridData gd_lblNewLabel_6 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_lblNewLabel_6.horizontalIndent = 30;
 		lblNewLabel_6.setLayoutData(gd_lblNewLabel_6);
-		lblNewLabel_6.setText("New Label");
+		lblNewLabel_6.setText(I18n.getString("repository.encryption.chunckSize", true));
 		lblNewLabel_6.setFont(fontNormal);
 		
 		chunckSize = new Spinner(composite, SWT.BORDER);
@@ -166,13 +171,21 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 
 	@Override
 	public boolean isValid() {
-		// TODO Auto-generated method stub
-		return false;
+		return 
+			password.getText().length() > 6 && 
+			password.getText().equals(passwordAgain.getText()); 
 	}
 
 	@Override
 	public Map<String, String> getUserSelection() {
-		// TODO Auto-generated method stub
-		return null;
+		Map<String, String> userInput = new HashMap<>();
+		userInput.put("password", password.getText());
+		
+		if (enableEncryption.getSelection()){
+			userInput.put("encryption", enableEncryption.getSelection() ? "yes" : "no");
+			userInput.put("algotirhm", cypherCombo.getItem(cypherCombo.getSelectionIndex()));
+			userInput.put("keylength", keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
+		}
+		return userInput;
 	}
 }

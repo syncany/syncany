@@ -137,16 +137,18 @@ public class WizardDialog extends Dialog {
 		shell.setLayout(gl_shell);
 
 		Label imageLabel = new Label(shell, SWT.NONE);
-		imageLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, true, 1, 2));
+		imageLabel.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true, 1, 2));
 		imageLabel.setImage(SWTResourceManager.getImage("/images/wizard-left.png"));
 
 		stackComposite = new Composite(shell, SWT.NONE);
 		stackLayout = new StackLayout();
 		stackComposite.setLayout(stackLayout);
-		stackComposite.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true, 1, 1));
+		stackComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, true, true, 1, 1));
 
 		Composite buttonComposite = new Composite(shell, SWT.NONE);
 		RowLayout rl_buttonComposite = new RowLayout(SWT.HORIZONTAL);
+		rl_buttonComposite.marginBottom = 20;
+		rl_buttonComposite.marginRight = 30;
 		buttonComposite.setLayout(rl_buttonComposite);
 		buttonComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false, 1, 1));
 
@@ -233,6 +235,17 @@ public class WizardDialog extends Dialog {
 					userInput.putAll(panel.getUserSelection());
 					showPanel(Panel.REPOSITORY_ENCRYPTION);
 				}
+				break;
+			case REPOSITORY_ENCRYPTION:
+				panel = panels.get(Panel.REPOSITORY_ENCRYPTION);
+				if (panel.isValid()){
+					userInput.putAll(panel.getUserSelection());
+					showPanel(Panel.CREATE_SUMMARY);
+				}
+				break;
+			case CREATE_SUMMARY:
+				
+				break;
 		}
 	}
 
@@ -244,6 +257,9 @@ public class WizardDialog extends Dialog {
 			case CREATE_REPOSITORY_EMAIL:
 			case CREATE_REPOSITORY_PLUGIN:
 				showPanel(Panel.CREATE_REPOSITORY);
+				break;
+			case REPOSITORY_ENCRYPTION:
+				showPanel(Panel.CREATE_REPOSITORY_PLUGIN);
 				break;
 			}
 	}
