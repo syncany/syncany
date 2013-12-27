@@ -26,8 +26,8 @@ import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 
 public class RenameFileSystemAction extends FileSystemAction {
-	public RenameFileSystemAction(Config config, FileVersion from, FileVersion to, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase, from, to);
+	public RenameFileSystemAction(Config config, FileVersion from, FileVersion to, Database winningDatabase) {
+		super(config, winningDatabase, from, to);
 	}
 
 	@Override

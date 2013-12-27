@@ -25,8 +25,8 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.util.CollectionUtil;
 
 public class NewSymlinkFileSystemAction extends FileSystemAction {
-	public NewSymlinkFileSystemAction(Config config, FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase, null, newFileVersion);
+	public NewSymlinkFileSystemAction(Config config, FileVersion newFileVersion, Database winningDatabase) {
+		super(config, winningDatabase, null, newFileVersion);
 	}
 	
 	@Override

@@ -38,8 +38,8 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
-	public FileCreatingFileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
-		super(config, localDatabase, winningDatabase, file1, file2);
+	public FileCreatingFileSystemAction(Config config, Database winningDatabase, FileVersion file1, FileVersion file2) {
+		super(config, winningDatabase, file1, file2);
 	}
 
 	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {

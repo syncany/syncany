@@ -48,10 +48,12 @@ import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DownDatabaseDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
+import org.syncany.database.WriteDatabaseDAO;
 import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
@@ -92,7 +94,8 @@ import org.syncany.util.FileUtil;
 public class DownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 
-	private Database localDatabase;
+	//private Database localDatabase;
+	private DownDatabaseDAO downDatabaseDAO;
 	@SuppressWarnings("unused")
 	private DownOperationOptions options;
 	private DownOperationResult result;
@@ -112,7 +115,6 @@ public class DownOperation extends Operation {
 	public DownOperation(Config config, Database database, DownOperationOptions options) {
 		super(config);
 
-		this.localDatabase = database;
 		this.options = options;
 		this.result = new DownOperationResult();
 	}
@@ -145,7 +147,7 @@ public class DownOperation extends Operation {
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 
 		// 4. Determine winner branch
-		DatabaseBranch winnersBranch = determineWinnerBranch(localDatabase, unknownRemoteBranches);
+		DatabaseBranch winnersBranch = determineWinnerBranch(unknownRemoteBranches);
 		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
 
 		// 5. Prune local stuff (if local conflicts exist)
@@ -175,7 +177,7 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "- Loading winners database ...");
 			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
 
-			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, localDatabase, result);
+			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
 			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
 
 			Set<MultiChunkEntry> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
@@ -185,23 +187,22 @@ public class DownOperation extends Operation {
 
 			// Add winners database to local database
 			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!
+			WriteDatabaseDAO writeDatabaseDAO = new WriteDatabaseDAO(config.createDatabaseConnection());
+			
 			for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
 
-				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());
-				localDatabase.addDatabaseVersion(applyDatabaseVersion);
+				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());				
+				writeDatabaseDAO.persistDatabaseVersion(applyDatabaseVersion);
 			}
-
-			logger.log(Level.INFO, "- Saving local database to " + config.getDatabaseFile() + " ...");
-			saveLocalDatabase(localDatabase, config.getDatabaseFile());
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
 	}
 
 	private void initOperationVariables() throws Exception {
-		localDatabase = (localDatabase != null) ? localDatabase : loadLocalDatabase();
-		localBranch = new DatabaseBranch(localDatabase);
+		downDatabaseDAO = new DownDatabaseDAO(config.createDatabaseConnection());
+		localBranch = downDatabaseDAO.getLocalDatabaseBranch();
 
 		transferManager = config.getConnection().createTransferManager();
 		databaseReconciliator = new DatabaseReconciliator();
@@ -258,7 +259,7 @@ public class DownOperation extends Operation {
 	 * @return Returns the branch of the winner 
 	 * @throws Exception If any kind of error occurs (...)
 	 */
-	private DatabaseBranch determineWinnerBranch(Database localDatabase, DatabaseBranches unknownRemoteBranches) throws Exception {
+	private DatabaseBranch determineWinnerBranch(DatabaseBranches unknownRemoteBranches) throws Exception {
 		logger.log(Level.INFO, "Detect updates and conflicts ...");
 		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
 
@@ -305,7 +306,7 @@ public class DownOperation extends Operation {
 		return multiChunksToDownload;
 	}
 
-	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, Database localDatabase, Database winnersDatabase) {
+	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, Database winnersDatabase) {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		FileContent winningFileContent = localDatabase.getContent(fileVersion.getChecksum());

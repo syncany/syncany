@@ -22,8 +22,8 @@ import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 
 public class DeleteFileSystemAction extends FileSystemAction {
-	public DeleteFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toDeleteFileVersion, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase, fromFileVersion, toDeleteFileVersion);
+	public DeleteFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toDeleteFileVersion, Database winningDatabase) {
+		super(config, winningDatabase, fromFileVersion, toDeleteFileVersion);
 	}
 	
 	@Override

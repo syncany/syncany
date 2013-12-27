@@ -25,8 +25,8 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 
 public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
-	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase, fromFileVersion, toFileVersion);
+	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, Database winningDatabase) {
+		super(config, winningDatabase, fromFileVersion, toFileVersion);
 	}
 	
 	@Override

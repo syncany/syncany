@@ -24,8 +24,8 @@ import org.syncany.database.FileVersionComparator.FileChange;
 
 public class SetAttributesFileSystemAction extends FileSystemAction {
 
-	public SetAttributesFileSystemAction(Config config, FileVersion newFileVersion, Database localDatabase, Database winningDatabase) {
-		super(config, localDatabase, winningDatabase, null, newFileVersion);
+	public SetAttributesFileSystemAction(Config config, FileVersion newFileVersion, Database winningDatabase) {
+		super(config, winningDatabase, null, newFileVersion);
 	}
 	
 	@Override

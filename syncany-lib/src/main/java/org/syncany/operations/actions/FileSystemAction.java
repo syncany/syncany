@@ -48,15 +48,13 @@ public abstract class FileSystemAction {
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName()); 
 	
 	protected Config config;
-	protected Database localDatabase;
 	protected Database winningDatabase;
 	protected FileVersion fileVersion1;
 	protected FileVersion fileVersion2;
 	protected FileVersionComparator fileVersionHelper;
 	
-	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
+	public FileSystemAction(Config config, Database winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
-		this.localDatabase = localDatabase;
 		this.winningDatabase = winningDatabase;
 		this.fileVersion1 = file1;
 		this.fileVersion2 = file2;
