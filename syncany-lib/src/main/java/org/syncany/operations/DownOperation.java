@@ -43,12 +43,12 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.DownDatabaseDAO;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
@@ -95,7 +95,7 @@ public class DownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 
 	//private Database localDatabase;
-	private DownDatabaseDAO downDatabaseDAO;
+	private BasicDatabaseDAO basicDatabaseDAO;
 	@SuppressWarnings("unused")
 	private DownOperationOptions options;
 	private DownOperationResult result;
@@ -201,8 +201,8 @@ public class DownOperation extends Operation {
 	}
 
 	private void initOperationVariables() throws Exception {
-		downDatabaseDAO = new DownDatabaseDAO(config.createDatabaseConnection());
-		localBranch = downDatabaseDAO.getLocalDatabaseBranch();
+		basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		localBranch = basicDatabaseDAO.getLocalDatabaseBranch();
 
 		transferManager = config.getConnection().createTransferManager();
 		databaseReconciliator = new DatabaseReconciliator();
@@ -222,12 +222,12 @@ public class DownOperation extends Operation {
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 				// Database version
-				DatabaseVersion databaseVersion = localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock());
+				DatabaseVersion databaseVersion = basicDatabaseDAO.getDatabaseVersion(databaseVersionHeader.getVectorClock());
 				dirtyDatabase.addDatabaseVersion(databaseVersion);
 
 				// Remove database version locally
 				logger.log(Level.INFO, "    * Removing " + databaseVersionHeader + " ...");
-				localDatabase.removeDatabaseVersion(databaseVersion);
+				basicDatabaseDAO.removeDatabaseVersion(databaseVersion);
 
 				String remoteFileToPruneClientName = config.getMachineName();
 				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
@@ -299,7 +299,7 @@ public class DownOperation extends Operation {
 
 		for (FileSystemAction action : actions) {
 			if (action instanceof FileCreatingFileSystemAction) { // TODO [low] This adds ALL multichunks even though some might be available locally
-				multiChunksToDownload.addAll(determineMultiChunksToDownload(action.getFile2(), localDatabase, winnersDatabase));
+				multiChunksToDownload.addAll(determineMultiChunksToDownload(action.getFile2(), winnersDatabase));
 			}
 		}
 
@@ -309,34 +309,39 @@ public class DownOperation extends Operation {
 	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, Database winnersDatabase) {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
-		FileContent winningFileContent = localDatabase.getContent(fileVersion.getChecksum());
-
-		if (winningFileContent == null) {
-			winningFileContent = winnersDatabase.getContent(fileVersion.getChecksum());
+		// First: Check if we know this file locally!
+		List<MultiChunkEntry> multiChunkEntries = basicDatabaseDAO.getMultiChunksForFileChecksum(fileVersion.getChecksum());
+		
+		if (multiChunkEntries.size() > 0) {
+			multiChunksToDownload.addAll(multiChunkEntries);
 		}
+		else {
+			// Second: We don't know it locally; must be from the winners database
+			FileContent winningFileContent = winnersDatabase.getContent(fileVersion.getChecksum());			
+			boolean winningFileHasContent = winningFileContent != null;
 
-		boolean winningFileHasContent = winningFileContent != null;
+			if (winningFileHasContent) { // File can be empty!
+				Collection<ChunkChecksum> fileChunks = winningFileContent.getChunks(); 
+				
+				// TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well
+				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
 
-		if (winningFileHasContent) { // File can be empty!
-			Collection<ChunkChecksum> fileChunks = winningFileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to
-																					// download here, we should look for chunks in local files as well
-																					// and return the chunk positions in the local
-																					// files ChunkPosition (chunk123 at file12, offset 200, size 250)
+				for (ChunkChecksum chunkChecksum : fileChunks) {
+					MultiChunkEntry multiChunkForChunk = basicDatabaseDAO.getMultiChunkForChunk(chunkChecksum);
+					// TODO [high] Performance: This queries the database for every chunk, SLOWWW!
+					
+					if (multiChunkForChunk == null) {
+						multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum);
+					}
 
-			for (ChunkChecksum chunkChecksum : fileChunks) {
-				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
-
-				if (multiChunkForChunk == null) {
-					multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum);
-				}
-
-				if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-					logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
-					multiChunksToDownload.add(multiChunkForChunk);
+					if (!multiChunksToDownload.contains(multiChunkForChunk)) {
+						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
+						multiChunksToDownload.add(multiChunkForChunk);
+					}
 				}
 			}
 		}
-
+		
 		return multiChunksToDownload;
 	}
 

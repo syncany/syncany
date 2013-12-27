@@ -46,7 +46,6 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 /**
  * TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation
@@ -103,7 +102,7 @@ public class RestoreOperation extends Operation {
 		for (FileVersion restoreFileVersion : restoreFileVersions) {
 			logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
 
-			FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, database, new Database());
+			FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, new Database());
 			logger.log(Level.INFO, "  --> " + newFileSystemAction);
 
 			newFileSystemAction.execute();

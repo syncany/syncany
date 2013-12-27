@@ -80,19 +80,19 @@ public class FileSystemActionComparatorTest {
 		FileVersion firstFileVersion = createFileVersion(path, type);
 		FileVersion secondFileVersion = createFileVersion(path, type, firstFileVersion);
 		
-		return new DeleteFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null, null);
+		return new DeleteFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null);
 	}	
 
 	private NewFileSystemAction createNewFileSystemAction(String path, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(path, type);
-		return new NewFileSystemAction(createDummyConfig(), firstFileVersion, null, null);
+		return new NewFileSystemAction(createDummyConfig(), firstFileVersion, null);
 	}
 	
 	private RenameFileSystemAction createRenameFileSystemAction(String fromPath, String toPath, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(fromPath, type);
 		FileVersion secondFileVersion = createFileVersion(toPath, type, firstFileVersion);
 		
-		return new RenameFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null, null);
+		return new RenameFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null);
 	}
 
 	private FileVersion createFileVersion(String path, FileType type) {

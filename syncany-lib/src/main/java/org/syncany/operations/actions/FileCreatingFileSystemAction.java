@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
+import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.Database;
 import org.syncany.database.FileContent;
@@ -39,7 +40,7 @@ import org.syncany.util.FileUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	public FileCreatingFileSystemAction(Config config, Database winningDatabase, FileVersion file1, FileVersion file2) {
-		super(config, winningDatabase, file1, file2);
+		super(config, winningDatabase, file1, file2);		
 	}
 
 	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
@@ -85,13 +86,20 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	private File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
+		BasicDatabaseDAO basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
 		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");
 
-		FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum());
+		FileContent fileContent = basicDatabaseDAO.getFileContentByChecksum(reconstructedFileVersion.getChecksum(), true);
 
 		if (fileContent == null) {
 			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
+		}
+		
+		// Check consistency!
+		if (fileContent == null && reconstructedFileVersion.getChecksum() != null) {
+			throw new Exception("Cannot determine file content for checksum "+reconstructedFileVersion.getChecksum());
 		}
 
 		// Create file
@@ -103,7 +111,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
-				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
+				MultiChunkEntry multiChunkForChunk = basicDatabaseDAO.getMultiChunkForChunk(chunkChecksum);
 
 				if (multiChunkForChunk == null) {
 					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);

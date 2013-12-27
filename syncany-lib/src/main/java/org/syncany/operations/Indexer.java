@@ -350,7 +350,7 @@ public class Indexer {
 				fileContent.setChecksum(fileProperties.getChecksum());
 
 				// Check if content already exists, throw gathered content away if it does!
-				FileContent existingContent = indexDatabaseDAO.getFileContentByChecksum(fileProperties.getChecksum());
+				FileContent existingContent = indexDatabaseDAO.getFileContentByChecksum(fileProperties.getChecksum(), false);
 				
 				if (existingContent == null) { 
 					newDatabaseVersion.addFileContent(fileContent);

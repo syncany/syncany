@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator;
@@ -124,10 +125,12 @@ public class FileSystemActionReconciliator {
 
 	private Config config; 
 	private ChangeSet changeSet;
+	private BasicDatabaseDAO basicDatabaseDAO;
 	
 	public FileSystemActionReconciliator(Config config, DownOperationResult result) {
 		this.config = config; 
 		this.changeSet = result.getChangeSet();
+		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
 	}
 	
 	public List<FileSystemAction> determineFileSystemActions(Database winnersDatabase) throws Exception {
@@ -142,9 +145,7 @@ public class FileSystemActionReconciliator {
 			File winningLastFile = new File(config.getLocalDir()+File.separator+winningLastVersion.getPath());
 			
 			// Get local file version and content
-			PartialFileHistory localFileHistory = localDatabase.getFileHistory(winningFileHistory.getFileId());
-			
-			FileVersion localLastVersion = (localFileHistory != null) ? localFileHistory.getLastVersion() : null;
+			FileVersion localLastVersion = basicDatabaseDAO.getFileVersionByFileHistoryId(winningFileHistory.getFileId());
 			File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir()+File.separator+localLastVersion.getPath()) : null;
 			
 			logger.log(Level.INFO, "   + Comparing local version: "+localLastVersion);			

@@ -47,7 +47,7 @@ public class LogOperation extends Operation {
 		List<PartialFileHistory> fileHistories = null;
 		
 		if (options.getPaths().isEmpty()) {
-			fileHistories = new ArrayList<PartialFileHistory>(databaseDAO.getFileHistoriesWithLastVersion());			
+			fileHistories = new ArrayList<PartialFileHistory>(databaseDAO.getFileHistoriesWithFileVersions());			
 		}
 		else {
 			throw new Exception("Not supported yet.");
