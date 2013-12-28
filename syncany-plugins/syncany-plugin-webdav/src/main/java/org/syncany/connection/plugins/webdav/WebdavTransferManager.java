@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,9 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	public WebdavTransferManager(WebdavConnection connection) {
 		super(connection);
 
-		this.repoPath = connection.getUrl();
+		this.repoPath = connection.getUrl().replaceAll("/$", "");
 		this.multichunkPath = connection.getUrl() + "/multichunks";
-		this.databasePath = connection.getUrl() + "/databases";
+		this.databasePath = connection.getUrl() + "/databases";				
 	}
 
 	@Override
@@ -147,18 +148,27 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			// List folder
 			String remoteFileUrl = getRemoteFilePath(remoteFileClass);
 			List<DavResource> resources = sardine.list(remoteFileUrl);
-
+			
 			// Create RemoteFile objects
+			String rootPath = repoPath.substring(0, repoPath.length() - new URI(repoPath).getRawPath().length());
 			Map<String, T> remoteFiles = new HashMap<String, T>();
-
+			
 			for (DavResource res : resources) {
-				try {
-					T remoteFile = RemoteFile.createRemoteFile(res.getName(), remoteFileClass);
-					remoteFiles.put(res.getName(), remoteFile);
-				}
-				catch (Exception e) {
-					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for object " + res.getName()
-							+ "; maybe invalid file name pattern. Ignoring file.");
+				// WebDAV returns the parent resource itself; ignore it
+				String fullResourceUrl = rootPath+res.getPath().replaceAll("/$", "");
+				boolean isParentResource = remoteFileUrl.equals(fullResourceUrl.toString());
+				
+				if (!isParentResource) {				
+					try {
+						T remoteFile = RemoteFile.createRemoteFile(res.getName(), remoteFileClass);
+						remoteFiles.put(res.getName(), remoteFile);
+						
+						logger.log(Level.FINE, "- Matching WebDAV resource: "+res);
+					}
+					catch (Exception e) {
+						logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for object " + res.getName()
+								+ "; maybe invalid file name pattern. Ignoring file.");
+					}
 				}
 			}
 
