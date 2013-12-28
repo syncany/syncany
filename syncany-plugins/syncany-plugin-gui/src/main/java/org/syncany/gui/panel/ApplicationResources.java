@@ -19,13 +19,15 @@ package org.syncany.gui.panel;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
+import org.syncany.util.EnvironmentUtil;
 
 /**
  * @author vwiencek
  *
  */
 public class ApplicationResources {
-	public static Font FONT_NORMAL = SWTResourceManager.getFont("Lucida Grande", 11, SWT.NORMAL);
-	public static Font FONT_BOLD = SWTResourceManager.getFont("Lucida Grande", 11, SWT.BOLD);
+	public static int FONT_SIZE = EnvironmentUtil.isLinux() ? 9 : 11;
+	public static Font FONT_NORMAL = SWTResourceManager.getFont("Lucida Grande", FONT_SIZE, SWT.NORMAL);
+	public static Font FONT_BOLD = SWTResourceManager.getFont("Lucida Grande", FONT_SIZE, SWT.BOLD);
 	
 }
