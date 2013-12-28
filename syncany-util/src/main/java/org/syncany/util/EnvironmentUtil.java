@@ -20,11 +20,14 @@ package org.syncany.util;
 import java.io.File;
 
 public class EnvironmentUtil {
+	private static final String osName;
 	public enum OperatingSystem { WINDOWS, UNIX_LIKE };
+
 	private static OperatingSystem operatingSystem;
 	
 	static {
 		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : OperatingSystem.UNIX_LIKE;
+		osName = System.getProperty("os.name").toLowerCase();
 	}		
 
 	public static void setOperatingSystem(OperatingSystem aOperatingSystem) {
@@ -42,4 +45,12 @@ public class EnvironmentUtil {
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
+	
+	public static boolean isMacOS(){
+		return osName.startsWith("mac os");
+	}
+
+	public static boolean isLinux() {
+		return osName.startsWith("linux");
+	}
 }
