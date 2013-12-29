@@ -24,10 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,13 +36,11 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileContent;
+import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.PartialFileHistory;
+import org.syncany.database.dao.RestoreSqlDatabaseDAO;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
@@ -54,19 +52,18 @@ import org.syncany.util.FileUtil;
 public class RestoreOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
 	private RestoreOperationOptions options;
-
-	public RestoreOperation() {
-		super(null);
-		this.options = new RestoreOperationOptions();
-	}
+	
+	private RestoreSqlDatabaseDAO restoreDatabaseDao;
 
 	public RestoreOperation(Config config) {
-		this(config, null);
+		this(config, new RestoreOperationOptions());
 	}
 
 	public RestoreOperation(Config config, RestoreOperationOptions options) {
 		super(config);
+		
 		this.options = options;
+		this.restoreDatabaseDao = new RestoreSqlDatabaseDAO(config.createDatabaseConnection());
 	}
 
 	@Override
@@ -75,26 +72,23 @@ public class RestoreOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		MemoryDatabase database = loadLocalDatabase();
-		DatabaseVersion currentDatabaseVersion = database.getLastDatabaseVersion();
-
-		if (currentDatabaseVersion == null) {
-			throw new Exception("No database versions yet locally. Nothing to revert.");
-		}
-
 		List<String> restoreFilePaths = options.getRestoreFilePaths();
-		List<FileVersion> restoreFileVersions = null;
-		Set<MultiChunkEntry> multiChunksToDownload = null;
+		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
+		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		if (options.getStrategy() == RestoreOperationStrategy.DATABASE_DATE) {
-			MemoryDatabase databaseBeforeRestoreTime = getDatabaseBeforeRestoreTime(database, options.getDatabaseBeforeDate());
-
-			restoreFileVersions = getLastFileVersionsByPath(restoreFilePaths, databaseBeforeRestoreTime);
-			multiChunksToDownload = getMultiChunksToDownload(restoreFileVersions, databaseBeforeRestoreTime);
+			restoreFileVersions = getFileTreeAtDate(options.getDatabaseBeforeDate(), restoreFilePaths);
+			
+			for (FileVersion restoreFileVersion : restoreFileVersions) {
+				FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
+				
+				if (restoreFileChecksum != null) {
+					multiChunksToDownload.addAll(restoreDatabaseDao.getMultiChunksForFileChecksum(restoreFileChecksum));
+				}
+			}
 		}
-		else if (options.getStrategy() == RestoreOperationStrategy.FILE_VERSION) {
-			restoreFileVersions = getPreviousFileVersionsByPath(database, restoreFilePaths, options.getFileVersionNumber());
-			multiChunksToDownload = getMultiChunksToDownload(restoreFileVersions, database);
+		else {
+			throw new Exception("Strategy "+options.getStrategy()+" not supported yet.");
 		}
 
 		downloadAndDecryptMultiChunks(multiChunksToDownload);
@@ -111,111 +105,22 @@ public class RestoreOperation extends Operation {
 		return new RestoreOperationResult();
 	}
 
-	private List<FileVersion> getPreviousFileVersionsByPath(MemoryDatabase database, List<String> restoreFilePaths, Integer restoreVersionNumber) {
+	private List<FileVersion> getFileTreeAtDate(Date databaseBeforeDate, List<String> restoreFilePaths) {
+		Map<String, FileVersion> entireFileTreeAtDate = restoreDatabaseDao.getFileTreeAtDate(databaseBeforeDate);
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-
-		for (String filePath : restoreFilePaths) {
-			PartialFileHistory fileHistory = database.getFileHistory(filePath);
-
-			if (fileHistory != null) {
-				// Go back <versionNumber> versions
-				if (restoreVersionNumber < 0) {
-					int fileVersionCount = fileHistory.getFileVersions().size();
-					int indexOfRestoreFileVersion = fileVersionCount + restoreVersionNumber;
-
-					if (indexOfRestoreFileVersion < 0) {
-						logger.log(Level.INFO, "- Cannot find spec. version for file history " + fileHistory.getFileId() + ", only has "
-								+ fileVersionCount + " versions (going back " + restoreVersionNumber + " not possible), file " + filePath);
-					}
-					else {
-						ArrayList<FileVersion> fileVersions = new ArrayList<FileVersion>(fileHistory.getFileVersions().values());
-						FileVersion restoreFileVersion = fileVersions.get(indexOfRestoreFileVersion);
-
-						restoreFileVersions.add(restoreFileVersion);
-						logger.log(Level.INFO, "- " + restoreFileVersion);
-					}
-				}
-
-				// Choose exact version <versionNumber>
-				else {
-					FileVersion restoreFileVersion = fileHistory.getFileVersion(restoreVersionNumber);
-
-					if (restoreFileVersion == null) {
-						logger.log(Level.INFO, "- Cannot find spec. version for file history " + fileHistory.getFileId() + ", version "
-								+ restoreVersionNumber + " does not exist, file " + filePath);
-					}
-					else {
-						restoreFileVersions.add(restoreFileVersion);
-						logger.log(Level.INFO, "- " + restoreFileVersion);
-					}
-				}
+		
+		for (FileVersion restoreFileVersion : entireFileTreeAtDate.values()) {			
+			if (restoreFilePaths.size() > 0) {
+				if (restoreFilePaths.contains(restoreFileVersion.getPath())) {
+					restoreFileVersions.add(restoreFileVersion);	
+				}				
 			}
 			else {
-				logger.log(Level.INFO, "Cannot find file history for file " + filePath);
-			}
+				restoreFileVersions.add(restoreFileVersion);
+			}			
 		}
-
+		
 		return restoreFileVersions;
-	}
-
-	private Set<MultiChunkEntry> getMultiChunksToDownload(List<FileVersion> restoreFileVersions, MemoryDatabase databaseBeforeRestoreTime) throws Exception {
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
-
-		for (FileVersion restoreFileVersion : restoreFileVersions) {
-			multiChunksToDownload.addAll(determineMultiChunksToDownload(restoreFileVersion, databaseBeforeRestoreTime));
-		}
-
-		return multiChunksToDownload;
-	}
-
-	private List<FileVersion> getLastFileVersionsByPath(List<String> restoreFilePaths, MemoryDatabase databaseBeforeRestoreTime) {
-		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-
-		for (String restoreFilePath : restoreFilePaths) {
-			PartialFileHistory restoreFileHistory = databaseBeforeRestoreTime.getFileHistory(restoreFilePath);
-
-			if (restoreFileHistory != null) {
-				restoreFileVersions.add(restoreFileHistory.getLastVersion());
-			}
-			else {
-				logger.log(Level.INFO, "Cannot find file history for file " + restoreFilePath);
-			}
-		}
-
-		return restoreFileVersions;
-	}
-
-	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase database) throws Exception {
-		// TODO [medium] Duplicate code in DownOperation
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
-
-		if (fileVersion.getSize() != null && fileVersion.getSize() > 0) {
-			FileContent fileContent = database.getContent(fileVersion.getChecksum());
-
-			boolean fileHasContent = fileContent != null;
-
-			if (fileHasContent) { // File can be empty!
-				Collection<ChunkChecksum> fileChunks = fileContent.getChunks(); // TODO [medium] Instead of just looking for multichunks to download
-																				// here, we should look for chunks in local files as well and return
-																				// the chunk positions in the local files ChunkPosition (chunk123 at
-																				// file12, offset 200, size 250)
-
-				for (ChunkChecksum chunkChecksum : fileChunks) {
-					MultiChunkEntry multiChunkForChunk = database.getMultiChunkForChunk(chunkChecksum);
-
-					if (multiChunkForChunk == null) {
-						throw new Exception("Cannot find multichunk for chunk " + chunkChecksum);
-					}
-
-					if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
-						multiChunksToDownload.add(multiChunkForChunk);
-					}
-				}
-			}
-		}
-
-		return multiChunksToDownload;
 	}
 
 	private void downloadAndDecryptMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
@@ -247,18 +152,6 @@ public class RestoreOperation extends Operation {
 		}
 
 		transferManager.disconnect();
-	}
-
-	private MemoryDatabase getDatabaseBeforeRestoreTime(MemoryDatabase database, Date restoreDate) {
-		MemoryDatabase databaseBeforeRestoreTime = new MemoryDatabase();
-
-		for (DatabaseVersion compareDatabaseVersion : database.getDatabaseVersions()) {
-			if (compareDatabaseVersion.getTimestamp().equals(restoreDate) || compareDatabaseVersion.getTimestamp().before(restoreDate)) {
-				databaseBeforeRestoreTime.addDatabaseVersion(compareDatabaseVersion);
-			}
-		}
-
-		return databaseBeforeRestoreTime;
 	}
 
 	public static enum RestoreOperationStrategy {

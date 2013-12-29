@@ -17,6 +17,7 @@
  */
 package org.syncany.config.to;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.simpleframework.xml.Element;
@@ -54,7 +55,7 @@ public class RepoTO {
 	private MultiChunkerTO multiChunker;
 	
 	@ElementList(name="transformers", required=false, entry="transformer")
-	private List<TransformerTO> transformers;
+	private ArrayList<TransformerTO> transformers;
 	
 	public byte[] getRepoId() {
 		return repoId;
@@ -100,7 +101,7 @@ public class RepoTO {
 	}
 
 	public void setTransformers(List<TransformerTO> transformers) {
-		this.transformers = transformers;
+		this.transformers = new ArrayList<TransformerTO>(transformers);
 	}
 
 	public static class ChunkerTO extends TypedPropertyListTO {

@@ -46,35 +46,18 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 		super(connection);
 	}
 	
-	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException {
+	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException, SQLException {
 		try {
-			writeDatabaseVersion(connection, databaseVersion);
-			
+			writeDatabaseVersion(connection, databaseVersion);			
 			connection.commit();
-			connection.close();
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "SQL Error: ", e);
 			
 			if (connection != null) {
-				try {
-					connection.rollback();
-				}
-				catch (SQLException e1) {
-					// Don't care!
-				}
+				connection.rollback();
 			}
-		}
-		finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				}
-				catch (SQLException e) {
-					// Don't care!
-				}
-			}
-		}
+		}		
 	}
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {		

@@ -73,13 +73,13 @@ public class Indexer {
 	
 	private Config config;
 	private Deduper deduper;
-	private IndexSqlDatabaseDAO indexDatabaseDAO;
+	private IndexSqlDatabaseDAO localDatabase;
 	private MemoryDatabase dirtyDatabase;
 	
 	public Indexer(Config config, Deduper deduper, MemoryDatabase dirtyDatabase) {
 		this.config = config;
 		this.deduper = deduper;
-		this.indexDatabaseDAO = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
 		this.dirtyDatabase = dirtyDatabase;
 	}
 	
@@ -137,7 +137,7 @@ public class Indexer {
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
-		for (PartialFileHistory fileHistory : indexDatabaseDAO.getFileHistoriesWithLastVersion()) {
+		for (PartialFileHistory fileHistory : localDatabase.getFileHistoriesWithLastVersion()) {
 			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
 			if (newDatabaseVersion.getFileHistory(fileHistory.getFileId()) != null) {
 				continue;
@@ -350,7 +350,7 @@ public class Indexer {
 				fileContent.setChecksum(fileProperties.getChecksum());
 
 				// Check if content already exists, throw gathered content away if it does!
-				FileContent existingContent = indexDatabaseDAO.getFileContentByChecksum(fileProperties.getChecksum(), false);
+				FileContent existingContent = localDatabase.getFileContentByChecksum(fileProperties.getChecksum(), false);
 				
 				if (existingContent == null) { 
 					newDatabaseVersion.addFileContent(fileContent);
@@ -366,7 +366,7 @@ public class Indexer {
 			do {
 				newFileHistoryId = FileHistoryId.secureRandomFileId();
 				
-				if (indexDatabaseDAO.getFileHistoryWithLastVersion(newFileHistoryId) == null 
+				if (localDatabase.getFileHistoryWithLastVersion(newFileHistoryId) == null 
 					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {
 					
 					break;
@@ -412,7 +412,7 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistoryForFolderOrSymlink(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = indexDatabaseDAO.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
+			PartialFileHistory lastFileHistory = localDatabase.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", "+fileProperties.getType()+")");
@@ -436,12 +436,12 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = null;
 			
 			// 1a. by path
-			lastFileHistory = indexDatabaseDAO.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
+			lastFileHistory = localDatabase.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				// 1b. by checksum
 				if (fileProperties.getChecksum() != null) {
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = indexDatabaseDAO.getFileHistoriesWithLastVersionByChecksum(fileProperties.getChecksum());
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = localDatabase.getFileHistoriesWithLastVersionByChecksum(fileProperties.getChecksum());
 					
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!
@@ -532,7 +532,7 @@ public class Indexer {
 		@Override
 		public boolean onChunk(Chunk chunk) {
 			ChunkChecksum chunkChecksum = new ChunkChecksum(chunk.getChecksum());
-			chunkEntry = indexDatabaseDAO.getChunk(chunkChecksum);
+			chunkEntry = localDatabase.getChunk(chunkChecksum);
 
 			if (chunkEntry == null) {
 				chunkEntry = newDatabaseVersion.getChunk(chunkChecksum);

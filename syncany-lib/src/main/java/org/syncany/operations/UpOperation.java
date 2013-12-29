@@ -177,17 +177,18 @@ public class UpOperation extends Operation {
 
 			// Save local database
 			logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
-
-			if (options.cleanupEnabled()) {
-				// TODO [high] Cleanup disabled for now!!
-				logger.log(Level.SEVERE, "CLEANUP disabled for now!!");
-				cleanupOldDatabases(newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation
-			}
-
+			
 			logger.log(Level.INFO, "Saving local database to file " + config.getDatabaseFile() + " ...");
 			WriteSqlDatabaseDAO writeSqlDao = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
 			writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
 
+			if (options.cleanupEnabled()) {
+				// TODO [high] Cleanup disabled for now!!
+				logger.log(Level.SEVERE, "CLEANUP disabled for now!!");
+				//cleanupOldDatabases(newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation
+				//throw new RuntimeException("Cleanup not implemented yet.");
+			}
+			
 			logger.log(Level.INFO, "Sync up done.");
 		}
 

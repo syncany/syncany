@@ -28,20 +28,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.syncany.database.ChunkEntry;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
-import org.syncany.database.FileVersion;
-import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.VectorClock;
-import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.VectorClock;
 import org.syncany.operations.DatabaseBranch;
 
 /**
@@ -256,7 +255,7 @@ public class SqlDatabaseDAO {
 				DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
 
 				databaseVersionHeader.setClient(resultSet.getString("client"));
-				databaseVersionHeader.setDate(new Date(resultSet.getDate("localtime").getTime()));
+				databaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
 				databaseVersionHeader.setVectorClock(getVectorClockByDatabaseVersionId(resultSet.getInt("id")));
 
 				return databaseVersionHeader;
@@ -324,7 +323,7 @@ public class SqlDatabaseDAO {
 					// Make a new database version header
 					currentDatabaseVersionHeader = new DatabaseVersionHeader();					
 					currentDatabaseVersionHeader.setClient(resultSet.getString("client"));
-					currentDatabaseVersionHeader.setDate(new Date(resultSet.getDate("localtime").getTime()));					
+					currentDatabaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));					
 
 					currentDatabaseVersionHeaderId = databaseVersionHeaderId;
 				}

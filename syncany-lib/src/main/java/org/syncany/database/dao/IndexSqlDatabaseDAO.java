@@ -27,11 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.syncany.database.ChunkEntry;
-import org.syncany.database.FileContent;
-import org.syncany.database.FileVersion;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
