@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.database;
+package org.syncany.database.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,6 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.syncany.database.ChunkEntry;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.FileContent;
+import org.syncany.database.FileVersion;
+import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.database.VectorClock;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
@@ -40,11 +48,11 @@ import org.syncany.operations.DatabaseBranch;
  * @author pheckel
  *
  */
-public class BasicDatabaseDAO {
-	protected static final Logger logger = Logger.getLogger(BasicDatabaseDAO.class.getSimpleName());
+public class SqlDatabaseDAO {
+	protected static final Logger logger = Logger.getLogger(SqlDatabaseDAO.class.getSimpleName());
 	protected Connection connection;
 
-	public BasicDatabaseDAO(Connection connection) {
+	public SqlDatabaseDAO(Connection connection) {
 		this.connection = connection;
 	}
 

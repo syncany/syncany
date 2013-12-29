@@ -32,9 +32,9 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
+import org.syncany.database.dao.SqlDatabaseDAO;
 
 /**
  * The list remote operation queries the transfer manager for any unknown 
@@ -50,7 +50,7 @@ public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
 	private TransferManager loadedTransferManager;
 	private Set<String> alreadyDownloadedRemoteDatabases;
-	private BasicDatabaseDAO basicDatabaseDAO;
+	private SqlDatabaseDAO basicDatabaseDAO;
 	
 	public LsRemoteOperation(Config config) {
 		this(config, null);
@@ -61,7 +61,7 @@ public class LsRemoteOperation extends Operation {
 		
 		this.loadedTransferManager = transferManager;
 		this.alreadyDownloadedRemoteDatabases = new HashSet<String>();
-		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}	
 	
 	@Override

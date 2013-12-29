@@ -33,7 +33,7 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
@@ -43,11 +43,11 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
-import org.syncany.database.IndexDatabaseDAO;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.dao.IndexSqlDatabaseDAO;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -62,7 +62,7 @@ import org.syncany.util.StringUtil;
  * added/changed/removed files. This functionality is entirely implemented by the
  * {@link #index(List) index()} method.
  * 
- * <p>The class uses the currently loaded {@link Database} as well as a potential  
+ * <p>The class uses the currently loaded {@link MemoryDatabase} as well as a potential  
  * dirty database into account. Lookups for chunks and file histories are performed 
  * on both databases.
  * 
@@ -73,13 +73,13 @@ public class Indexer {
 	
 	private Config config;
 	private Deduper deduper;
-	private IndexDatabaseDAO indexDatabaseDAO;
-	private Database dirtyDatabase;
+	private IndexSqlDatabaseDAO indexDatabaseDAO;
+	private MemoryDatabase dirtyDatabase;
 	
-	public Indexer(Config config, Deduper deduper, Database dirtyDatabase) {
+	public Indexer(Config config, Deduper deduper, MemoryDatabase dirtyDatabase) {
 		this.config = config;
 		this.deduper = deduper;
-		this.indexDatabaseDAO = new IndexDatabaseDAO(config.createDatabaseConnection());
+		this.indexDatabaseDAO = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
 		this.dirtyDatabase = dirtyDatabase;
 	}
 	

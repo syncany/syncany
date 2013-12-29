@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
@@ -47,7 +47,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testChunkCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add chunk to new database version, then add database version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -82,7 +82,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testMultiChunkCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add chunk to multichunk
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -135,7 +135,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testFilenameCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -186,7 +186,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testFilenameCacheDeleteAndNewOfSameFileInOneDatabaseVersion() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -237,7 +237,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testContentChecksumCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -299,7 +299,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testGetFileHistory() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();

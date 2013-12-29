@@ -28,7 +28,7 @@ import java.util.TimeZone;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
@@ -98,7 +98,7 @@ public class CleanupOperationTest {
 	public void testIdentifyDatabaseVersions() throws Exception {
 		Config config = TestConfigUtil.createTestLocalConfig();
 
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		List<DatabaseVersion> olderDatabaseVersions = createConsistentDatabaseVersions(5, 5, -40, null);
 		List<DatabaseVersion> newerDatabaseVersions = createConsistentDatabaseVersions(5, 5, 40,

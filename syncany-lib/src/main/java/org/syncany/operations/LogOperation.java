@@ -23,19 +23,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.IndexDatabaseDAO;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.dao.IndexSqlDatabaseDAO;
 
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
 	private LogOperationOptions options;
-	private IndexDatabaseDAO databaseDAO;
+	private IndexSqlDatabaseDAO databaseDAO;
 		
 	public LogOperation(Config config, LogOperationOptions options) {
 		super(config);		
 		
 		this.options = options;
-		this.databaseDAO = new IndexDatabaseDAO(config.createDatabaseConnection());
+		this.databaseDAO = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
 	}	
 		
 	@Override

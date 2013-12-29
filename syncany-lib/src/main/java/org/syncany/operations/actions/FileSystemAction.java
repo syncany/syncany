@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
@@ -48,12 +48,12 @@ public abstract class FileSystemAction {
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName()); 
 	
 	protected Config config;
-	protected Database winningDatabase;
+	protected MemoryDatabase winningDatabase;
 	protected FileVersion fileVersion1;
 	protected FileVersion fileVersion2;
 	protected FileVersionComparator fileVersionHelper;
 	
-	public FileSystemAction(Config config, Database winningDatabase, FileVersion file1, FileVersion file2) {
+	public FileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
 		this.winningDatabase = winningDatabase;
 		this.fileVersion1 = file1;

@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 /**
  * From: http://allstarnix.blogspot.de/2013/03/how-to-execute-sql-script-file-using.html
- * Needs polishing/stripping of useless stuff.
+ * TODO [low] Needs polishing/stripping of useless stuff.
  *
  */
 public class SqlRunner {

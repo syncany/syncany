@@ -23,11 +23,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.WriteDatabaseDAO;
-import org.syncany.database.XmlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDAO;
 
 /**
  * Operations represent and implement Syncany's business logic. They typically
@@ -61,24 +59,20 @@ public abstract class Operation {
 	 */
 	public abstract OperationResult execute() throws Exception;
 
-	protected void saveLocalDatabase(Database db, File localDatabaseFile) throws IOException {
+	protected void saveLocalDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {
 		saveLocalDatabase(db, null, null, localDatabaseFile);
 	}	
 	
-	protected void saveLocalDatabase(Database db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
+	protected void saveLocalDatabase(MemoryDatabase db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
 		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
 		
-		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);		
 	}		
 	
-	protected Database loadLocalDatabase() throws IOException {
-		return loadLocalDatabase(config.getDatabaseFile());
-	}
-	
-	protected Database loadLocalDatabase(File localDatabaseFile) throws IOException {
-		Database db = new Database();
-		DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
+	protected MemoryDatabase loadLocalDatabase(File localDatabaseFile) throws IOException {
+		MemoryDatabase db = new MemoryDatabase();
+		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		
 		if (localDatabaseFile.exists()) {
 			logger.log(Level.INFO, "- Loading database from "+localDatabaseFile+" ...");

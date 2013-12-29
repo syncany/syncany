@@ -29,7 +29,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
  * The database version represents an incremental addition to the local database of 
- * a client. A user's {@link Database} consists of many incremental database versions.
+ * a client. A user's {@link MemoryDatabase} consists of many incremental database versions.
  * 
  * <p>A <tt>DatabaseVersion</tt> is identified by a {@link DatabaseVersionHeader}, a 
  * combination of a {@link VectorClock}, a local timestamp and the original client name.

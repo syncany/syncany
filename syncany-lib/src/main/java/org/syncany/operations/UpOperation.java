@@ -37,17 +37,16 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.BasicDatabaseDAO;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.database.WriteDatabaseDAO;
-import org.syncany.database.XmlDatabaseDAO;
+import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.dao.WriteSqlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
@@ -65,7 +64,7 @@ import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
  *   <li>If there are changes, use the {@link Deduper} and {@link Indexer} to create a new {@link DatabaseVersion} 
  *       (including new chunks, multichunks, file contents and file versions).</li>
  *   <li>Upload new multichunks (if any) using a {@link TransferManager}</li>
- *   <li>Save new {@link DatabaseVersion} to a new (delta) {@link Database} and upload it</li>
+ *   <li>Save new {@link DatabaseVersion} to a new (delta) {@link MemoryDatabase} and upload it</li>
  *   <li>Add delta database to local database and store it locally</li>
  * </ol>
  * 
@@ -80,24 +79,20 @@ public class UpOperation extends Operation {
 	private UpOperationOptions options;
 	private UpOperationResult result;
 	private TransferManager transferManager;
-	private BasicDatabaseDAO basicDatabaseDAO;
-	private Database dirtyDatabase;
+	private SqlDatabaseDAO basicDatabaseDAO;
+	private MemoryDatabase dirtyDatabase;
 
 	public UpOperation(Config config) {
-		this(config, null, new UpOperationOptions());
+		this(config, new UpOperationOptions());
 	}
 
-	public UpOperation(Config config, Database database) {
-		this(config, database, new UpOperationOptions());
-	}
-
-	public UpOperation(Config config, Database database, UpOperationOptions options) {
+	public UpOperation(Config config, UpOperationOptions options) {
 		super(config);
 
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.transferManager = config.getConnection().createTransferManager();
-		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}
 
 	@Override
@@ -105,9 +100,6 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		// Load database
-		//Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();
 
 		// Load dirty database (if existent)
 		if (config.getDirtyDatabaseFile().exists()) {
@@ -173,7 +165,7 @@ public class UpOperation extends Operation {
 			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
 			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
-			Database newDeltaDatabase = new Database();
+			MemoryDatabase newDeltaDatabase = new MemoryDatabase();
 			newDeltaDatabase.addDatabaseVersion(newDatabaseVersion);
 
 			logger.log(Level.INFO, "Saving local delta database, version " + newDatabaseVersion.getHeader() + " to file " + localDeltaDatabaseFile
@@ -185,19 +177,16 @@ public class UpOperation extends Operation {
 
 			// Save local database
 			logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
-			//database.addDatabaseVersion(newDatabaseVersion);
 
 			if (options.cleanupEnabled()) {
 				// TODO [high] Cleanup disabled for now!!
 				logger.log(Level.SEVERE, "CLEANUP disabled for now!!");
-				//cleanupOldDatabases(newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation
+				cleanupOldDatabases(newestLocalDatabaseVersion); // TODO [high] This should be moved to the new 'cleanup' operation
 			}
 
 			logger.log(Level.INFO, "Saving local database to file " + config.getDatabaseFile() + " ...");
-			//saveLocalDatabase(database, config.getDatabaseFile());
-			WriteDatabaseDAO writeSqlDao = new WriteDatabaseDAO(config.createDatabaseConnection());
+			WriteSqlDatabaseDAO writeSqlDao = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
 			writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
-			//testSqlDao.save(null, fromVersion, toVersion, null);
 
 			logger.log(Level.INFO, "Sync up done.");
 		}
@@ -332,7 +321,7 @@ public class UpOperation extends Operation {
 		return ownDatabaseRemoteFiles;
 	}
 
-	private void cleanupOldDatabases(Database database, long newestLocalDatabaseVersion) throws Exception {
+	private void cleanupOldDatabases(MemoryDatabase database, long newestLocalDatabaseVersion) throws Exception {
 		// Retrieve and sort machine's database versions
 		Map<String, DatabaseRemoteFile> ownRemoteDatabaseFiles = retrieveOwnRemoteDatabaseFiles();
 		List<DatabaseRemoteFile> ownDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
@@ -392,7 +381,7 @@ public class UpOperation extends Operation {
 				"   + Writing new merge file (from " + firstMergeDatabaseVersion.getHeader() + ", to " + lastMergeDatabaseVersion.getHeader()
 						+ ") to file " + localMergeDatabaseVersionFile + " ...");
 
-		DatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
 		databaseDAO.save(database, null/* firstMergeDatabaseVersion */, lastMergeDatabaseVersion, localMergeDatabaseVersionFile);
 
 		logger.log(Level.INFO, "   + Uploading new file " + remoteMergeDatabaseVersionFile + " from local file " + localMergeDatabaseVersionFile

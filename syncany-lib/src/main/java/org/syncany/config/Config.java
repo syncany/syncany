@@ -17,13 +17,7 @@
  */
 package org.syncany.config;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -43,8 +37,8 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.util.FileUtil;
-import org.syncany.util.SqlRunner;
 import org.syncany.util.StringUtil;
 
 /**
@@ -65,12 +59,7 @@ public class Config {
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "repo";
 	public static final String FILE_MASTER = "master";
-	
-	//public static final String DATABASE_DRIVER = "com.mysql.jdbc.Driver";
-	//public static final String DATABASE_CONNECTION_STRING = "jdbc:mysql://localhost/mydb?user=mydb&password=mydb";
-	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_STRING = "jdbc:hsqldb:file:%DATABASEDIR;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
-	
+		
 	private byte[] repoId;
 	private String machineName;
 	private String displayName;
@@ -96,71 +85,11 @@ public class Config {
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
-		initDatabase(configTO);
 		initCache();
 		initRepo(repoTO);
     	initConnection(configTO);    
 	}		
-
-	private void initDatabase(ConfigTO configTO) throws ConfigException {
-		initDatabaseDriver();
-		initDatabaseTables();
-	}
 	
-	private void initDatabaseTables() throws ConfigException {
-		try {
-			java.sql.Connection connection = createDatabaseConnection();
-			
-			try {
-				// Test if table exists
-				ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
-				
-				if (!resultSet.next()) {
-					initDatabaseCreateTables(connection);
-				}
-			}
-			catch (SQLException e) {
-				initDatabaseCreateTables(connection);
-			}
-		}
-		catch (SQLException e2) {
-			throw new ConfigException("Cannot initialize database tables.", e2);
-		}
-	}
-	
-	public java.sql.Connection createDatabaseConnection() {
-		try {
-			String connectionString = DATABASE_CONNECTION_STRING.replaceAll("%DATABASEDIR", databaseDir+"/db");			
-
-			java.sql.Connection connection = DriverManager.getConnection(connectionString);			
-			connection.setAutoCommit(false);
-			
-			return connection;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException("Cannot create new connection; database down?", e);
-		}
-	}
-
-	private void initDatabaseCreateTables(java.sql.Connection sqlConnection) throws SQLException {
-		InputStream inputStream = Config.class.getResourceAsStream("/createtables.sql");
-		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-		
-		sqlConnection.setAutoCommit(true);
-		new SqlRunner(sqlConnection, true).runScript(reader);
-		
-		sqlConnection.commit();
-	}
-
-	private void initDatabaseDriver() throws ConfigException {
-		try {
-			Class.forName(DATABASE_DRIVER);
-		}
-		catch (Exception e) {
-			throw new ConfigException("Cannot load database driver: "+DATABASE_DRIVER, e);
-		}
-	}
-
 	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
 			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
@@ -280,6 +209,10 @@ public class Config {
 	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);
 	    	}
 		}
+	}
+	
+	public java.sql.Connection createDatabaseConnection() {
+		return DatabaseConnectionFactory.createFileConnection(getDatabaseFile());
 	}
 	
 	public void setCacheDir(File file) {

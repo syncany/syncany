@@ -25,16 +25,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.chunk.Transformer;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
+import org.syncany.database.MemoryDatabase;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.database.VectorClock;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.DatabaseBranch;
 
 public class TestDatabaseUtil {
@@ -105,17 +105,17 @@ public class TestDatabaseUtil {
 		return branch;
 	}
 	
-	public static Database readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
-		Database db = new Database();
+	public static MemoryDatabase readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
+		MemoryDatabase db = new MemoryDatabase();
 		
-		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
+		XmlDatabaseDAO dao = new XmlDatabaseDAO(transformer);
 		dao.load(db, databaseFile);
 		
 		return db;
 	}
 	
-	public static void writeDatabaseFileToDisk(Database db, File writtenDatabaseFile, Transformer transformer) throws IOException {
-		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
+	public static void writeDatabaseFileToDisk(MemoryDatabase db, File writtenDatabaseFile, Transformer transformer) throws IOException {
+		XmlDatabaseDAO dao = new XmlDatabaseDAO(transformer);
 		dao.save(db, writtenDatabaseFile);
 	}
 	

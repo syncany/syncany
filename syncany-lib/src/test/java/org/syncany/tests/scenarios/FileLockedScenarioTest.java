@@ -39,7 +39,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -126,7 +126,7 @@ public class FileLockedScenarioTest {
 		assertTrue("File should be uploaded while it is read-only.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		Database database = client.loadLocalDatabase();
+		MemoryDatabase database = client.loadLocalDatabase();
 		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
 
 		assertNotNull("There should be a new database version, because file should have been added.", databaseVersion);
@@ -145,7 +145,7 @@ public class FileLockedScenarioTest {
 		assertFalse("File should NOT be uploaded while it is locked.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		Database database = client.loadLocalDatabase();
+		MemoryDatabase database = client.loadLocalDatabase();
 		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
 
 		assertNull("File should NOT be uploaded while it is locked.", database.getFileHistory("large-test-file"));		

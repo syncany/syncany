@@ -20,12 +20,12 @@ package org.syncany.operations.actions;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 
 public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
-	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, Database winningDatabase) {
+	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, MemoryDatabase winningDatabase) {
 		super(config, winningDatabase, fromFileVersion, toFileVersion);
 	}
 	

@@ -30,12 +30,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.XmlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -74,9 +73,9 @@ public class SyncUpOperationTest {
 		assertTrue(localDatabaseFile.exists());
 		assertTrue(remoteDatabaseFile.exists());
 		
-		DatabaseDAO dDAO = new XmlDatabaseDAO(testConfig.getTransformer());
-		Database localDatabase = new Database();
-		Database remoteDatabase = new Database();
+		XmlDatabaseDAO dDAO = new XmlDatabaseDAO(testConfig.getTransformer());
+		MemoryDatabase localDatabase = new MemoryDatabase();
+		MemoryDatabase remoteDatabase = new MemoryDatabase();
 		dDAO.load(localDatabase, localDatabaseFile);
 		dDAO.load(remoteDatabase, remoteDatabaseFile);
 		

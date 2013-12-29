@@ -31,11 +31,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.util.FileUtil;
 
 /**
@@ -49,7 +49,7 @@ public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
 	private FileVersionComparator fileVersionComparator; 
-	private BasicDatabaseDAO basicDatabaseDAO;
+	private SqlDatabaseDAO basicDatabaseDAO;
 	private StatusOperationOptions options;
 	
 	private Map<String, FileVersion> currentFileTree;
@@ -62,7 +62,7 @@ public class StatusOperation extends Operation {
 		super(config);		
 		
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
-		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 		this.options = options;		
 		
 		this.currentFileTree = null;

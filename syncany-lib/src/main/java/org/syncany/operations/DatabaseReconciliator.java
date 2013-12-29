@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
@@ -40,7 +40,7 @@ import org.syncany.operations.DatabaseBranch.BranchIterator;
  * The database reconciliator implements various parts of the sync down algorithm (see also:
  * {@link DownOperation}). Its main responsibility is to compare the local database to the
  * other clients' delta databases. The final goal of the algorithms described in this class is
- * to determine a winning {@link Database} (or better: a winning database {@link DatabaseBranch}) of
+ * to determine a winning {@link MemoryDatabase} (or better: a winning database {@link DatabaseBranch}) of
  * a client.
  * 
  * <p>All algorithm parts largely rely on the comparison of a client's database branch, i.e. its

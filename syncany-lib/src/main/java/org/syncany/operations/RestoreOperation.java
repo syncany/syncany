@@ -37,7 +37,7 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -75,7 +75,7 @@ public class RestoreOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		Database database = loadLocalDatabase();
+		MemoryDatabase database = loadLocalDatabase();
 		DatabaseVersion currentDatabaseVersion = database.getLastDatabaseVersion();
 
 		if (currentDatabaseVersion == null) {
@@ -87,7 +87,7 @@ public class RestoreOperation extends Operation {
 		Set<MultiChunkEntry> multiChunksToDownload = null;
 
 		if (options.getStrategy() == RestoreOperationStrategy.DATABASE_DATE) {
-			Database databaseBeforeRestoreTime = getDatabaseBeforeRestoreTime(database, options.getDatabaseBeforeDate());
+			MemoryDatabase databaseBeforeRestoreTime = getDatabaseBeforeRestoreTime(database, options.getDatabaseBeforeDate());
 
 			restoreFileVersions = getLastFileVersionsByPath(restoreFilePaths, databaseBeforeRestoreTime);
 			multiChunksToDownload = getMultiChunksToDownload(restoreFileVersions, databaseBeforeRestoreTime);
@@ -102,7 +102,7 @@ public class RestoreOperation extends Operation {
 		for (FileVersion restoreFileVersion : restoreFileVersions) {
 			logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
 
-			FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, new Database());
+			FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, new MemoryDatabase());
 			logger.log(Level.INFO, "  --> " + newFileSystemAction);
 
 			newFileSystemAction.execute();
@@ -111,7 +111,7 @@ public class RestoreOperation extends Operation {
 		return new RestoreOperationResult();
 	}
 
-	private List<FileVersion> getPreviousFileVersionsByPath(Database database, List<String> restoreFilePaths, Integer restoreVersionNumber) {
+	private List<FileVersion> getPreviousFileVersionsByPath(MemoryDatabase database, List<String> restoreFilePaths, Integer restoreVersionNumber) {
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
 
 		for (String filePath : restoreFilePaths) {
@@ -158,7 +158,7 @@ public class RestoreOperation extends Operation {
 		return restoreFileVersions;
 	}
 
-	private Set<MultiChunkEntry> getMultiChunksToDownload(List<FileVersion> restoreFileVersions, Database databaseBeforeRestoreTime) throws Exception {
+	private Set<MultiChunkEntry> getMultiChunksToDownload(List<FileVersion> restoreFileVersions, MemoryDatabase databaseBeforeRestoreTime) throws Exception {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		for (FileVersion restoreFileVersion : restoreFileVersions) {
@@ -168,7 +168,7 @@ public class RestoreOperation extends Operation {
 		return multiChunksToDownload;
 	}
 
-	private List<FileVersion> getLastFileVersionsByPath(List<String> restoreFilePaths, Database databaseBeforeRestoreTime) {
+	private List<FileVersion> getLastFileVersionsByPath(List<String> restoreFilePaths, MemoryDatabase databaseBeforeRestoreTime) {
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
 
 		for (String restoreFilePath : restoreFilePaths) {
@@ -185,7 +185,7 @@ public class RestoreOperation extends Operation {
 		return restoreFileVersions;
 	}
 
-	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, Database database) throws Exception {
+	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase database) throws Exception {
 		// TODO [medium] Duplicate code in DownOperation
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
@@ -249,8 +249,8 @@ public class RestoreOperation extends Operation {
 		transferManager.disconnect();
 	}
 
-	private Database getDatabaseBeforeRestoreTime(Database database, Date restoreDate) {
-		Database databaseBeforeRestoreTime = new Database();
+	private MemoryDatabase getDatabaseBeforeRestoreTime(MemoryDatabase database, Date restoreDate) {
+		MemoryDatabase databaseBeforeRestoreTime = new MemoryDatabase();
 
 		for (DatabaseVersion compareDatabaseVersion : database.getDatabaseVersions()) {
 			if (compareDatabaseVersion.getTimestamp().equals(restoreDate) || compareDatabaseVersion.getTimestamp().before(restoreDate)) {

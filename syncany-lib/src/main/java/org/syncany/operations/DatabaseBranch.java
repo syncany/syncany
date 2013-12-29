@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
@@ -44,7 +44,7 @@ public class DatabaseBranch {
 		this.branch = new ArrayList<DatabaseVersionHeader>();
 	}
 		
-	public DatabaseBranch(Database database) {
+	public DatabaseBranch(MemoryDatabase database) {
 		this();
 		
 		for (DatabaseVersion databaseVersion : database.getDatabaseVersions()) {

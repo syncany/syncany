@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.database;
+package org.syncany.database.dao;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,6 +38,14 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.syncany.chunk.Transformer;
+import org.syncany.database.ChunkEntry;
+import org.syncany.database.MemoryDatabase;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileContent;
+import org.syncany.database.FileVersion;
+import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.database.VectorClock;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
@@ -49,7 +57,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class XmlDatabaseDAO implements DatabaseDAO {
+public class XmlDatabaseDAO {
 	private static final Logger logger = Logger.getLogger(XmlDatabaseDAO.class.getSimpleName());
 	private static final int XML_FORMAT_VERSION = 1;
 
@@ -63,13 +71,11 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		this.transformer = transformer;
 	}
 	
-	@Override
-	public void save(Database db, File destinationFile) throws IOException {
+	public void save(MemoryDatabase db, File destinationFile) throws IOException {
 		save(db, null, null, destinationFile);
 	}
 
-	@Override
-	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {				 
+	public void save(MemoryDatabase db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {				 
 		try {
 			PrintWriter out;
 			
@@ -317,23 +323,19 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		return vectorClockInRange(vectorClock, vectorClockRangeFrom, vectorClockRangeTo);
 	}	
 
-	@Override
-	public void load(Database db, File databaseFile) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile) throws IOException {
         load(db, databaseFile, false);
 	}
 	
-	@Override
-	public void load(Database db, File databaseFile, boolean headersOnly) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, boolean headersOnly) throws IOException {
         load(db, databaseFile, null, null, headersOnly);
 	}
 	
-	@Override
-	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
 		load(db, databaseFile, fromVersion, toVersion, false);
 	}
 	
-	@Override
-	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) throws IOException {
         InputStream is;
         
 		if (transformer == null) {
@@ -420,7 +422,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 	}
 	
 	public class DatabaseXmlHandler extends DefaultHandler {
-		private Database database;
+		private MemoryDatabase database;
 		private VectorClock versionFrom;
 		private VectorClock versionTo;
 		private boolean headersOnly;
@@ -433,7 +435,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		private MultiChunkEntry multiChunk;
 		private PartialFileHistory fileHistory;
 		
-		public DatabaseXmlHandler(Database database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) {
+		public DatabaseXmlHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) {
 			this.elementPath = "";
 			this.database = database;
 			this.versionFrom = fromVersion;

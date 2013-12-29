@@ -43,18 +43,17 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
+import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.dao.WriteSqlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
-import org.syncany.database.WriteDatabaseDAO;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
@@ -69,7 +68,7 @@ import org.syncany.util.FileUtil;
  * <p>The general operation flow is as follows:
  * <ol>
  *  <li>List all database versions on the remote storage using the {@link LsRemoteOperation}
- *      (implemented in {@link #listUnknownRemoteDatabases(Database, TransferManager) listUnknownRemoteDatabases()}</li>
+ *      (implemented in {@link #listUnknownRemoteDatabases(MemoryDatabase, TransferManager) listUnknownRemoteDatabases()}</li>
  *  <li>Download unknown databases using a {@link TransferManager} (if any), skip the rest down otherwise
  *      (implemented in {@link #downloadUnknownRemoteDatabases(TransferManager, List) downloadUnknownRemoteDatabases()}</li>
  *  <li>Load remote database headers (branches) and compare them to the local database to determine a winner
@@ -80,7 +79,7 @@ import org.syncany.util.FileUtil;
  *  <li>Determine whether the local branch needs to be updated (new database versions); if so, determine
  *      local {@link FileSystemAction}s</li>
  *  <li>Determine, download and decrypt required multi chunks from remote storage from file actions
- *      (implemented in {@link #determineMultiChunksToDownload(FileVersion, Database, Database) determineMultiChunksToDownload()},
+ *      (implemented in {@link #determineMultiChunksToDownload(FileVersion, MemoryDatabase, MemoryDatabase) determineMultiChunksToDownload()},
  *      and {@link #downloadAndDecryptMultiChunks(Set) downloadAndDecryptMultiChunks()})</li>
  *  <li>Apply file system actions locally, creating conflict files where necessary if local file does
  *      not match the expected file (implemented in {@link #applyFileSystemActions(List) applyFileSystemActions()} </li>
@@ -93,26 +92,20 @@ import org.syncany.util.FileUtil;
  */
 public class DownOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
-
-	//private Database localDatabase;
-	private BasicDatabaseDAO basicDatabaseDAO;
-	@SuppressWarnings("unused")
+	
 	private DownOperationOptions options;
 	private DownOperationResult result;
 
+	private SqlDatabaseDAO basicDatabaseDAO;
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
 
 	public DownOperation(Config config) {
-		this(config, null, new DownOperationOptions());
+		this(config, new DownOperationOptions());
 	}
 
-	public DownOperation(Config config, Database database) {
-		this(config, database, new DownOperationOptions());
-	}
-
-	public DownOperation(Config config, Database database, DownOperationOptions options) {
+	public DownOperation(Config config, DownOperationOptions options) {
 		super(config);
 
 		this.options = options;
@@ -125,6 +118,14 @@ public class DownOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Sync down' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		// Check strategies
+		if (options.getConflictStrategy() != DownConflictStrategy.AUTO_RENAME) {
+			logger.log(Level.INFO, "Conflict strategy "+options.getConflictStrategy()+" not yet implemented.");
+			result.setResultCode(DownResultCode.NOK);
+			
+			return result;
+		}
+		
 		// 0. Load database and create TM
 		initOperationVariables();
 
@@ -175,7 +176,7 @@ public class DownOperation extends Operation {
 		}
 		else {
 			logger.log(Level.INFO, "- Loading winners database ...");
-			Database winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
 
 			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
 			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
@@ -187,7 +188,7 @@ public class DownOperation extends Operation {
 
 			// Add winners database to local database
 			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!
-			WriteDatabaseDAO writeDatabaseDAO = new WriteDatabaseDAO(config.createDatabaseConnection());
+			WriteSqlDatabaseDAO writeDatabaseDAO = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
 			
 			for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
@@ -201,7 +202,7 @@ public class DownOperation extends Operation {
 	}
 
 	private void initOperationVariables() throws Exception {
-		basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 		localBranch = basicDatabaseDAO.getLocalDatabaseBranch();
 
 		transferManager = config.getConnection().createTransferManager();
@@ -218,7 +219,7 @@ public class DownOperation extends Operation {
 		else {
 			// Load dirty database (if existent)
 			logger.log(Level.INFO, "  + Pruning databases locally ...");
-			Database dirtyDatabase = new Database();
+			MemoryDatabase dirtyDatabase = new MemoryDatabase();
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 				// Database version
@@ -294,7 +295,7 @@ public class DownOperation extends Operation {
 		return winnersBranch;
 	}
 
-	private Set<MultiChunkEntry> determineRequiredMultiChunks(List<FileSystemAction> actions, Database winnersDatabase) {
+	private Set<MultiChunkEntry> determineRequiredMultiChunks(List<FileSystemAction> actions, MemoryDatabase winnersDatabase) {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		for (FileSystemAction action : actions) {
@@ -306,7 +307,7 @@ public class DownOperation extends Operation {
 		return multiChunksToDownload;
 	}
 
-	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, Database winnersDatabase) {
+	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase winnersDatabase) {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		// First: Check if we know this file locally!
@@ -404,7 +405,7 @@ public class DownOperation extends Operation {
 		transferManager.disconnect();
 	}
 
-	private Database readWinnersDatabase(DatabaseBranch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
+	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
 		// Make map 'short filename' -> 'full filename'
 		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
 
@@ -413,8 +414,8 @@ public class DownOperation extends Operation {
 		}
 
 		// Load individual databases for branch ranges
-		DatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
-		Database winnerBranchDatabase = new Database(); // Database cannot be reused, since these might be different clients
+		XmlDatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
+		MemoryDatabase winnerBranchDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 		String clientName = null;
 		VectorClock clientVersionFrom = null;
@@ -459,10 +460,10 @@ public class DownOperation extends Operation {
 
 		// Read database files
 		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
-		DatabaseDAO dbDAO = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDAO dbDAO = new XmlDatabaseDAO(config.getTransformer());
 
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
-			Database remoteDatabase = new Database(); // Database cannot be reused, since these might be different clients
+			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 			DatabaseRemoteFile remoteDatabaseFile = new DatabaseRemoteFile(remoteDatabaseFileInCache.getName());
 			dbDAO.load(remoteDatabase, remoteDatabaseFileInCache, true); // only load headers!
@@ -522,8 +523,20 @@ public class DownOperation extends Operation {
 		}
 	}
 
+	public enum DownConflictStrategy {
+		AUTO_RENAME, ASK_USER
+	}
+	
 	public static class DownOperationOptions implements OperationOptions {
-		// Nothing here yet.
+		private DownConflictStrategy conflictStrategy = DownConflictStrategy.AUTO_RENAME;
+
+		public DownConflictStrategy getConflictStrategy() {
+			return conflictStrategy;
+		}
+
+		public void setConflictStrategy(DownConflictStrategy conflictStrategy) {
+			this.conflictStrategy = conflictStrategy;
+		}				
 	}
 
 	public enum DownResultCode {

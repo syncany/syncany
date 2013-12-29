@@ -29,17 +29,17 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
-import org.syncany.database.BasicDatabaseDAO;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
-	public FileCreatingFileSystemAction(Config config, Database winningDatabase, FileVersion file1, FileVersion file2) {
+	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
 		super(config, winningDatabase, file1, file2);		
 	}
 
@@ -86,7 +86,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	private File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
-		BasicDatabaseDAO basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		SqlDatabaseDAO basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
 		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");

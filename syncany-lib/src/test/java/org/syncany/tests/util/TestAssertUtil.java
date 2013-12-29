@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 import org.junit.internal.ArrayComparisonFailure;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersionComparator;
@@ -167,13 +167,13 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
-		Database expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
-		Database actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
+		MemoryDatabase expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
+		MemoryDatabase actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
 		
 		assertDatabaseEquals(expectedDatabase, actualDatabase);
 	}
 
-	public static void assertDatabaseEquals(Database expectedDatabase, Database actualDatabase) {
+	public static void assertDatabaseEquals(MemoryDatabase expectedDatabase, MemoryDatabase actualDatabase) {
 		logger.log(Level.INFO, "--");
 		logger.log(Level.INFO, "Now comparing two databases.");
 		logger.log(Level.INFO, "DON'T WORRY. This can take a long time or even overload the heap space.");

@@ -17,11 +17,18 @@
  */
 package org.syncany.cli;
 
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.DownOperation.DownConflictStrategy;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
 
@@ -42,7 +49,21 @@ public class DownCommand extends Command {
 	}
 
 	public DownOperationOptions parseOptions(String[] operationArguments) {
-		return new DownOperationOptions();
+		DownOperationOptions operationOptions = new DownOperationOptions();
+
+		OptionParser parser = new OptionParser();
+		parser.allowsUnrecognizedOptions();
+
+		OptionSpec<String> optionConflictStrategy = parser.acceptsAll(asList("C", "conflict-strategy")).withRequiredArg();
+
+		OptionSet options = parser.parse(operationArguments);
+
+		// --conflict-strategy=<strategy>
+		if (options.has(optionConflictStrategy)) {
+			operationOptions.setConflictStrategy(DownConflictStrategy.valueOf(options.valueOf(optionConflictStrategy)));
+		}
+
+		return operationOptions;
 	}
 
 	public void printResults(DownOperationResult operationResult) {

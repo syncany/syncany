@@ -18,12 +18,12 @@
 package org.syncany.operations.actions;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 
 public class NewFileSystemAction extends FileCreatingFileSystemAction {
 
-	public NewFileSystemAction(Config config, FileVersion newFileVersion, Database winningDatabase) {
+	public NewFileSystemAction(Config config, FileVersion newFileVersion, MemoryDatabase winningDatabase) {
 		super(config, winningDatabase, null, newFileVersion);
 	}
 	

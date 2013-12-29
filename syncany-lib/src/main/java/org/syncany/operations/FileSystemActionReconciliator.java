@@ -24,12 +24,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.BasicDatabaseDAO;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.actions.ChangeFileSystemAction;
@@ -125,15 +125,15 @@ public class FileSystemActionReconciliator {
 
 	private Config config; 
 	private ChangeSet changeSet;
-	private BasicDatabaseDAO basicDatabaseDAO;
+	private SqlDatabaseDAO basicDatabaseDAO;
 	
 	public FileSystemActionReconciliator(Config config, DownOperationResult result) {
 		this.config = config; 
 		this.changeSet = result.getChangeSet();
-		this.basicDatabaseDAO = new BasicDatabaseDAO(config.createDatabaseConnection());
+		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}
 	
-	public List<FileSystemAction> determineFileSystemActions(Database winnersDatabase) throws Exception {
+	public List<FileSystemAction> determineFileSystemActions(MemoryDatabase winnersDatabase) throws Exception {
 		FileVersionComparator fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
