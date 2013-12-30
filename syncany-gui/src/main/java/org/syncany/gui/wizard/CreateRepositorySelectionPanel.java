@@ -45,7 +45,7 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 	private Button ftpOptionRadio;
 	private Button otherPluginRadio;
 	private Combo pluginSelectionCombo;
-	private List<Plugin> pluginList = Plugins.list();
+	private List<Plugin> pluginList;
 	private Label lblNewLabel;
 	private Label lblNewLabel_1;
 	
@@ -56,6 +56,9 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 	 */
 	public CreateRepositorySelectionPanel(Composite parent, int style) {
 		super(parent, style);
+		
+		this.pluginList = Plugins.list();
+		
 		initComposite();
 	}
 	
@@ -133,15 +136,17 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 	@Override
 	public Map<String, String> getUserSelection() {
 		Map<String, String> userInput = new HashMap<>();
+		
 		if (emailOptionRadio.getSelection()){
 			userInput.put("repositoryType", "email");
 		}
 		else if (ftpOptionRadio.getSelection()){
 			userInput.put("repositoryType", "ftp");
 		}
-		else{
-			userInput.put("repositoryType", pluginSelectionCombo.getItem(pluginSelectionCombo.getSelectionIndex()).toLowerCase());
+		else {
+			userInput.put("repositoryType", pluginList.get(pluginSelectionCombo.getSelectionIndex()).getId());
 		}
+		
 		return userInput;
 	}
 }

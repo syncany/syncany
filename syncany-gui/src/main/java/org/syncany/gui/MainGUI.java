@@ -101,7 +101,7 @@ public class MainGUI {
 			});
 
 			MenuItem quitMenu = new MenuItem(menu, SWT.PUSH);
-			quitMenu.setText("Quit");
+			quitMenu.setText("Exit");
 			quitMenu.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -120,7 +120,13 @@ public class MainGUI {
 			};
 
 			item.addListener(SWT.MenuDetect, showMenuListener);
-			item.addListener(SWT.Selection, showMenuListener);
+			
+			if (!EnvironmentUtil.isLinux()) {
+				// Tray icon popup menu positioning in Linux is off,
+				// Disable it for now.
+				
+				item.addListener(SWT.Selection, showMenuListener);
+			}
 		}
 	}
 

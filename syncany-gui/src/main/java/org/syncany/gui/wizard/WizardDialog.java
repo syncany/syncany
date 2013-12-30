@@ -42,6 +42,7 @@ import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
+import org.syncany.util.StringUtil;
 
 /**
  * @author vwiencek
@@ -114,7 +115,7 @@ public class WizardDialog extends Dialog {
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
 		shell.setToolTipText("");
 		shell.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		shell.setSize(560, 350);
+		shell.setSize(670, 500);
 		shell.setText(getText());
 		GridLayout gl_shell = new GridLayout(2, false);
 		gl_shell.marginLeft = -2;
@@ -180,7 +181,6 @@ public class WizardDialog extends Dialog {
 		finishButton.setText(I18n.getString("dialog.default.finish"));
 	}
 	
-	@SuppressWarnings("incomplete-switch")
 	private void handleNext() {
 		WizardPanelComposite panel;
 		
@@ -203,17 +203,10 @@ public class WizardDialog extends Dialog {
 					}
 					else {
 						RepositoryPluginPanel pluginPanel = (RepositoryPluginPanel) panels.get(Panel.CREATE_REPOSITORY_PLUGIN);
-						switch (repositoryType){
-							case "ftp":
-								pluginPanel.setClassName("org.syncany.gui.plugin.FTPPluginPanel");
-								break;
-							case "amazon s3":
-								pluginPanel.setClassName("org.syncany.gui.plugin.AmazonPluginPanel");
-								break;
-							case "webdav":
-								pluginPanel.setClassName("org.syncany.gui.plugin.WebdavPluginPanel");
-								break;
-						}
+						
+						String pluginPanelClassName = String.format("org.syncany.gui.plugin.%sPluginPanel", StringUtil.toCamelCase(repositoryType));
+						pluginPanel.setClassName(pluginPanelClassName);
+						
 						showPanel(Panel.CREATE_REPOSITORY_PLUGIN);
 					}
 				}
@@ -242,6 +235,8 @@ public class WizardDialog extends Dialog {
 			case CREATE_SUMMARY:
 				
 				break;
+		default:
+			throw new RuntimeException("Invalid user selection: "+selectedPanel);
 		}
 	}
 

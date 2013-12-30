@@ -37,8 +37,8 @@ import org.syncany.util.I18n;
  * @author vincent
  * 
  */
-public class AmazonPluginPanel extends PluginPanel {
-	private static final Logger log = Logger.getLogger(AmazonPluginPanel.class.getSimpleName());
+public class S3PluginPanel extends PluginPanel {
+	private static final Logger log = Logger.getLogger(S3PluginPanel.class.getSimpleName());
 	
 	private Text accessKey;
 	private Text secretKey;
@@ -50,7 +50,7 @@ public class AmazonPluginPanel extends PluginPanel {
 	 * @param parent
 	 * @param style
 	 */
-	public AmazonPluginPanel(Composite parent, int style) {
+	public S3PluginPanel(Composite parent, int style) {
 		super(parent, style);
 		
 		initComposite();

@@ -23,9 +23,6 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Complete;
-import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Persister;
 
 /**
@@ -71,21 +68,6 @@ public class ApplicationConfigurationTO {
 		serializer.write(data, f);
 	}
 	
-	@Persist
-	public void prepare() {
-		
-	}
-
-	@Complete
-	public void release() {
-	}
-	
-	
-	@Commit
-	public void commit() {
-
-	}
-
 	public String getProxyHost() {
 		return proxyHost;
 	}
