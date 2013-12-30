@@ -24,12 +24,6 @@ core. If you have questions, feel free to ask.
   connect a GUI to it. A REST-based server to control and query Syncany is required. Clients
   will be a wizard-based GUI for the setup, and the file manager integration.
 
-* **Graphical user interface:** We need a platform-independent GUI, i.e. a few wizard-like
-  setup screens and a corresponding tray icon. It would be very nice to have a Java-based
-  GUI, but if Python or a Qt-based frontend is easier, that's also okay. The GUI should 
-  connect to the daemon (as described above). A starting point could be the
-  [desktop code I created 2 years ago][7], or the evolved code as [implemented in StackSync][8].
-
 * **File manager integration:** The little icons for the Windows Explorer, Nautilus and
   Finder need to be managed by separate native applications communicating with the Syncany
   daemon. The [liferay-nativity][9] is a good starting point. It offers file manager 
@@ -37,6 +31,4 @@ core. If you have questions, feel free to ask.
 
   [5]: https://github.com/stacksync/desktop/tree/master/installers
   [6]: https://code.google.com/p/iqbox-ftp/source/browse/#git/Installer-Linux%253Fstate%253Dclosed
-  [7]: http://bazaar.launchpad.net/~syncany-team/syncany/trunk/files/head:/syncany/src/org/syncany/gui/
-  [8]: https://github.com/stacksync/desktop/tree/master/src/com/stacksync/desktop/gui
   [9]: https://github.com/liferay/liferay-nativity

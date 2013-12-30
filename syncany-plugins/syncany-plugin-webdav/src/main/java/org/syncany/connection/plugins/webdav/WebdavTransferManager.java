@@ -42,6 +42,7 @@ import com.github.sardine.SardineFactory;
 import com.github.sardine.impl.SardineImpl;
 
 public class WebdavTransferManager extends AbstractTransferManager {
+	private static final String APPLICATION_CONTENT_TYPE = "application/x-syncany";
 	private static final Logger logger = Logger.getLogger(WebdavTransferManager.class.getSimpleName());
 
 	private Sardine sardine;
@@ -131,7 +132,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			logger.log(Level.INFO, " - Uploading local file " + localFile + " to " + remoteURL + " ...");
 			InputStream localFileInputStream = new FileInputStream(localFile);
 
-			sardine.put(remoteURL, localFileInputStream);
+			sardine.put(remoteURL, localFileInputStream, APPLICATION_CONTENT_TYPE);
 			localFileInputStream.close();
 		}
 		catch (Exception ex) {
