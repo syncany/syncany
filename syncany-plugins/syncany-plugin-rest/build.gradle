@@ -1,4 +1,5 @@
 dependencies {
-    compile			project(':syncany-lib')
+	compile			project(':syncany-lib')
+
 	compile			"net.java.dev.jets3t:jets3t:0.9.0"          
 }

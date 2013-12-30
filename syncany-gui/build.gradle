@@ -1,0 +1,27 @@
+apply plugin: 'application'
+
+mainClassName = "org.syncany.gui.Launcher"
+
+dependencies {
+	compile			project(':syncany-lib')
+	compile			project(':syncany-plugins:syncany-plugin-gui')
+    
+    runtime			project(':syncany-plugins:syncany-plugin-ftp')
+    runtime			project(':syncany-plugins:syncany-plugin-rest')  
+	runtime			project(':syncany-plugins:syncany-plugin-webdav')  
+	
+	runtime			project(':syncany-plugins:syncany-plugin-gui-ftp')
+    runtime			project(':syncany-plugins:syncany-plugin-gui-rest')  
+	runtime			project(':syncany-plugins:syncany-plugin-gui-webdav')  
+	
+	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
+	compile			"com.google.code.gson:gson:2.2.4"
+	compile			"org.java-websocket:Java-WebSocket:1.3.0"
+}
+
+task(runGui, dependsOn: 'classes', type: JavaExec) {
+	main = "${mainClassName}"
+	//SWT need -XStartOnFirstThread to run on OSX
+	jvmArgs = [getOsName().startsWith("mac") ? '-XstartOnFirstThread' : '']	
+	classpath = sourceSets.main.runtimeClasspath
+}
