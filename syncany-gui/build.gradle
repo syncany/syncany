@@ -22,6 +22,6 @@ dependencies {
 task(runGui, dependsOn: 'classes', type: JavaExec) {
 	main = "${mainClassName}"
 	//SWT need -XStartOnFirstThread to run on OSX
-	jvmArgs = [getOsName().startsWith("mac") ? '-XstartOnFirstThread' : '']	
+	jvmArgs = getOsName().startsWith("mac") ? ['-XstartOnFirstThread'] : []	
 	classpath = sourceSets.main.runtimeClasspath
 }
