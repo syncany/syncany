@@ -17,13 +17,15 @@
  */
 package org.syncany.gui.wizard;
 
+import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
+import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -35,10 +37,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.panel.ApplicationResources;
-import org.syncany.gui.panel.SWTResourceManager;
+import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
 
 /**
@@ -56,36 +58,22 @@ public class WizardDialog extends Dialog {
 		REPOSITORY_ENCRYPTION,
 		CONNECT_REPOSITORY_EMAIL, 
 		CONNECT_REPOSITORY_PLUGIN;
-
-		String className;
-
-		Panel() {
-			className = null;
-		}
-
-		Panel(String className) {
-			this.className = className;
-		}
-
-		/**
-		 * @return the className
-		 */
-		public String getClassName() {
-			return className;
-		}
 	};
 
-	private Panel selectedPanel = Panel.START;
-	private Map<Panel, WizardPanelComposite> panels = new HashMap<>();
-	private Map<String, String> userInput = new HashMap<>();
+	//Widgets
 	private Button cancelButton;
 	private Button nextButton;
 	private Button previousButton;
-	private Object result;
+	private Button finishButton;
+	
 	private Shell shell;
 	private Composite stackComposite;
 	private StackLayout stackLayout;
 
+	private Panel selectedPanel = Panel.START;
+	private Map<Panel, WizardPanelComposite> panels = new HashMap<>();
+	private Map<String, String> userInput = new HashMap<>();
+	
 	/**
 	 * Create the dialog.
 	 * @param parent
@@ -93,7 +81,7 @@ public class WizardDialog extends Dialog {
 	 */
 	public WizardDialog(Shell parent, int style) {
 		super(parent, style);
-		setText("SWT Dialog");
+		setText(I18n.getString("dialog.wizard.title"));
 	}
 
 	/**
@@ -105,6 +93,7 @@ public class WizardDialog extends Dialog {
 		buildPanels();
 		showPanel(Panel.START);
 
+		DialogUtil.centerOnScreen(shell);
 		shell.open();
 		shell.layout();
 		Display display = getParent().getDisplay();
@@ -113,15 +102,14 @@ public class WizardDialog extends Dialog {
 				display.sleep();
 			}
 		}
-		return result;
+		return null;
 	}
 
 	/**
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		Font fontNormal = ApplicationResources.FONT_NORMAL;
-		Font fontBold = ApplicationResources.FONT_BOLD;
+		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
 		
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
 		shell.setToolTipText("");
@@ -147,15 +135,15 @@ public class WizardDialog extends Dialog {
 
 		Composite buttonComposite = new Composite(shell, SWT.NONE);
 		RowLayout rl_buttonComposite = new RowLayout(SWT.HORIZONTAL);
-		rl_buttonComposite.marginBottom = 20;
-		rl_buttonComposite.marginRight = 30;
+		rl_buttonComposite.marginBottom = 15;
+		rl_buttonComposite.marginRight = 20;
 		buttonComposite.setLayout(rl_buttonComposite);
 		buttonComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false, 1, 1));
 
 		cancelButton = new Button(buttonComposite, SWT.NONE);
-		cancelButton.setLayoutData(new RowData(100, 30));
+		cancelButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		cancelButton.setFont(fontNormal);
-		cancelButton.setText(I18n.getString("DefaultWizardPanel.dialog.cancel"));
+		cancelButton.setText(I18n.getString("dialog.default.cancel"));
 		cancelButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -164,9 +152,9 @@ public class WizardDialog extends Dialog {
 		});
 
 		previousButton = new Button(buttonComposite, SWT.NONE);
-		previousButton.setLayoutData(new RowData(100, 30));
+		previousButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		previousButton.setFont(fontNormal);
-		previousButton.setText(I18n.getString("DefaultWizardPanel.dialog.previous"));
+		previousButton.setText(I18n.getString("dialog.default.previous"));
 		previousButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -175,19 +163,27 @@ public class WizardDialog extends Dialog {
 		});
 
 		nextButton = new Button(buttonComposite, SWT.NONE);
-		nextButton.setLayoutData(new RowData(100, 30));
+		nextButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		nextButton.setFont(fontNormal);
-		nextButton.setText(I18n.getString("DefaultWizardPanel.dialog.next"));
+		nextButton.setText(I18n.getString("dialog.default.next"));
+		
 		nextButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				handleNext();
 			}
 		});
+		
+		finishButton = new Button(buttonComposite, SWT.NONE);
+		finishButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		finishButton.setFont(fontNormal);
+		finishButton.setText(I18n.getString("dialog.default.finish"));
 	}
-
+	
+	@SuppressWarnings("incomplete-switch")
 	private void handleNext() {
 		WizardPanelComposite panel;
+		
 		switch (selectedPanel) {
 			case START:
 				panel = panels.get(Panel.START);
@@ -249,6 +245,7 @@ public class WizardDialog extends Dialog {
 		}
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	private void handlePrevious() {
 		switch (selectedPanel) {
 			case CREATE_REPOSITORY:
@@ -277,12 +274,12 @@ public class WizardDialog extends Dialog {
 
 	private void toggleButtons(Panel panel) {
 		if (panel.equals(Panel.START)){
-			previousButton.setVisible(false);
-			cancelButton.setVisible(true);
+			previousButton.setEnabled(false);
+			cancelButton.setEnabled(true);
 		}
 		else{
-			previousButton.setVisible(true);
-			cancelButton.setVisible(false);
+			previousButton.setEnabled(true);
+			cancelButton.setEnabled(false);
 		}
 	}
 
@@ -294,18 +291,5 @@ public class WizardDialog extends Dialog {
 		panels.put(Panel.CREATE_SUMMARY, new CreateRepositorySummaryPanel(stackComposite, SWT.NONE));
 		panels.put(Panel.CONNECT_REPOSITORY, new ConnectDialog(stackComposite, SWT.NONE));
 		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(stackComposite, SWT.NONE));
-	}
-
-	/**
-	 * This method centers the dialog on the screen using
-	 * <code>Display.getCurrent().getPrimaryManitor()</code>
-	 */
-	protected void centerOnScreen() {
-		Monitor primary = Display.getCurrent().getPrimaryMonitor();
-		Rectangle bounds = primary.getBounds();
-		Rectangle rect = shell.getBounds();
-		int x = bounds.x + (bounds.width - rect.width) / 2;
-		int y = bounds.y + (bounds.height - rect.height) / 2;
-		shell.setLocation(x, y);
 	}
 }

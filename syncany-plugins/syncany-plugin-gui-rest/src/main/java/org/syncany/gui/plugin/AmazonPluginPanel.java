@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.panel.ApplicationResources;
+import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -57,8 +57,8 @@ public class AmazonPluginPanel extends PluginPanel {
 	}
 	
 	public void initComposite(){
-		Font fontNormal = ApplicationResources.FONT_NORMAL;
-		Font fontBold = ApplicationResources.FONT_BOLD;
+		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
+		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
 		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);

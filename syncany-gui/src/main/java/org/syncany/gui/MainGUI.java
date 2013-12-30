@@ -20,7 +20,7 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.InterfaceUpdate;
-import org.syncany.gui.panel.SWTResourceManager;
+import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.EnvironmentUtil;
 
@@ -89,6 +89,16 @@ public class MainGUI {
 					wd.open();
 				}
 			});
+			
+			MenuItem settingsItem = new MenuItem(menu, SWT.PUSH);
+			settingsItem.setText("Settings");
+			settingsItem.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
+					wd.open();
+				}
+			});
 
 			MenuItem quitMenu = new MenuItem(menu, SWT.PUSH);
 			quitMenu.setText("Quit");
@@ -97,7 +107,9 @@ public class MainGUI {
 				public void widgetSelected(SelectionEvent e) {
 					shell.dispose();
 					display.dispose();
-					ClientCommandFactory.close();
+					
+					ClientCommandFactory.closeWebSocketClient();
+					Launcher.daemon.shutdown();
 				}
 			});
 

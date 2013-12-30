@@ -33,8 +33,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.panel.ApplicationResources;
-import org.syncany.gui.panel.SWTResourceManager;
+import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTResourceManager;
 import org.syncany.util.I18n;
 
 /**
@@ -61,8 +61,8 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	}
 	
 	public void initComposite(){
-		Font fontNormal = ApplicationResources.FONT_NORMAL;
-		Font fontBold = ApplicationResources.FONT_BOLD;
+		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
+		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
 		
 		GridLayout gridLayout = new GridLayout(2, false);
 		gridLayout.marginRight = 30;

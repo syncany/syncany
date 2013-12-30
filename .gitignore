@@ -9,3 +9,11 @@ sandbox/results
 syncany-util/.gitignore
 syncany-plugins/syncany-plugin-gui/.gitignore
 syncany-lib/.gitignore
+syncany-cli/.gitignore
+syncany-daemon/.gitignore
+syncany-plugins/syncany-plugin-rest/.gitignore
+syncany-plugins/syncany-plugin-ftp/.gitignore
+syncany-plugins/syncany-plugin-gui-ftp/.gitignore
+syncany-plugins/syncany-plugin-gui-rest/.gitignore
+syncany-plugins/syncany-plugin-gui-webdav/.gitignore
+syncany-plugins/syncany-plugin-webdav/.gitignore

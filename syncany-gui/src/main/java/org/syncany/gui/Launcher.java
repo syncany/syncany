@@ -17,11 +17,14 @@
  */
 package org.syncany.gui;
 
+import java.io.File;
 import java.util.logging.Logger;
 
 import org.syncany.config.Logging;
-import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.panel.SWTResourceManager;
+import org.syncany.daemon.Daemon;
+import org.syncany.gui.config.ApplicationConfiguration;
+import org.syncany.gui.config.ApplicationConfigurationTO;
+import org.syncany.gui.config.ProxyController;
 import org.syncany.util.I18n;
 
 import com.google.common.eventbus.EventBus;
@@ -33,7 +36,10 @@ import com.google.common.eventbus.EventBus;
 public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
 	private static EventBus eventBus = new EventBus("syncany-gui");
-
+	public static ApplicationConfiguration applicationConfiguration;
+	
+	public static Daemon daemon;
+	
 	static {
 		Logging.init();
 	}
@@ -43,6 +49,33 @@ public class Launcher {
 	}	
 
 	public static void main(String[] args) {
+		startDaemon();
+		startGUI();
+	}
+	
+	private static void startDaemon(){
+		daemon = new Daemon();
+		daemon.start(true);
+	}
+	
+	private static void startGUI(){
+		applicationConfiguration = null;
+		try {
+			ApplicationConfigurationTO acto = loadApplicationConfiguration();
+			applicationConfiguration = ApplicationConfiguration.from(acto);
+		}
+		catch (Exception e) {
+			log.severe("Unable to load application configuration File");
+			return;
+		}
+		
+		try{
+			ProxyController.instance().initProxy(applicationConfiguration);
+		}
+		catch (Exception e){
+			log.severe("Unable to initiate proxy");
+		}
+		
 		// Register messages bundles
 		I18n.registerBundleName("i18n/messages");
 		I18n.registerBundleFilter("plugin_messages*");
@@ -55,12 +88,24 @@ public class Launcher {
 			}
 		});
 
-		ClientCommandFactory.list();
-
 		log.info("Starting Graphical User Interface");
 
 		MainGUI window = new MainGUI();
 		Launcher.getEventBus().register(window);
 		window.open();
+	}
+
+	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
+		String userHome = System.getProperty("user.home");
+		File f = new File(userHome + File.separator + ".syncany" + File.separator + "syncany-gui-config.xml");
+		
+		if (!f.exists()){ /** creates an empty ApplicationConfigurationTO file **/
+			ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
+			acto.setProxyType(ProxyController.ProxyType.NONE.toString());
+			ApplicationConfigurationTO.store(acto, f);
+		}
+		
+		ApplicationConfigurationTO acto = ApplicationConfigurationTO.load(f);
+		return acto;
 	}
 }

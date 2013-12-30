@@ -22,7 +22,7 @@ public class ClientCommandFactory {
 		}
 	}
 	
-	public static void close(){
+	public static void closeWebSocketClient(){
 		client.stop();
 	}
 	

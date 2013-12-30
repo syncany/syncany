@@ -32,7 +32,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.panel.SWTResourceManager;
+import org.syncany.gui.SWTResourceManager;
 import org.syncany.util.I18n;
 
 /**

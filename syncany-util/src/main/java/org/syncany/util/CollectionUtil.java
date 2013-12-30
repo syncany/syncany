@@ -78,4 +78,12 @@ public abstract class CollectionUtil {
 	public static <T> boolean containsExactly(Collection<T> list, Collection<T> mustHaveItems) {
 		return list.containsAll(mustHaveItems) && mustHaveItems.containsAll(list);
 	}		
+	
+	public static int indexOfElement(Object[] list, Object elmt){
+		if (elmt == null) return -1;
+		for (int i = 0 ; i < list.length ; i ++){
+			if (list[i] != null && list[i].equals(elmt)) return i;
+		}
+		return -1;
+	}
 }

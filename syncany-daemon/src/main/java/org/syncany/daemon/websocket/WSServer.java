@@ -51,7 +51,7 @@ public class WSServer {
 			
 			@Override
 			public void onError(WebSocket conn, Exception ex) {
-				log.fine("Client " + conn.getRemoteSocketAddress().toString() + " errored");
+				log.fine("Server error : " + ex.toString());
 			}
 			
 			@Override

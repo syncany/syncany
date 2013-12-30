@@ -8,7 +8,7 @@
  * Contributors:
  *    Google, Inc. - initial API and implementation
  *******************************************************************************/
-package org.syncany.gui.panel;
+package org.syncany.gui;
 
 import java.io.IOException;
 import java.io.InputStream;

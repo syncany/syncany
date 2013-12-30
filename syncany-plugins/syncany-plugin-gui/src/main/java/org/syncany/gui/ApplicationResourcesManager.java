@@ -15,19 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
+package org.syncany.gui;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.syncany.util.EnvironmentUtil;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class ApplicationResources {
-	public static int FONT_SIZE = EnvironmentUtil.isLinux() ? 9 : 11;
-	public static Font FONT_NORMAL = SWTResourceManager.getFont("Lucida Grande", FONT_SIZE, SWT.NORMAL);
-	public static Font FONT_BOLD = SWTResourceManager.getFont("Lucida Grande", FONT_SIZE, SWT.BOLD);
+public class ApplicationResourcesManager {
+	public static int DEFAULT_BUTTON_WIDTH = 80;
+	public static int DEFAULT_BUTTON_HEIGHT = 30;
+
+	public static String FONT_NAME = "Tahoma";
+	public static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 11 : 8;
 	
+	public static Font FONT_NORMAL = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.NORMAL);
+	public static Font FONT_BOLD = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.BOLD);
 }
