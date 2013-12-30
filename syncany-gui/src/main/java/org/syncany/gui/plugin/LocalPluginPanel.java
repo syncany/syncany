@@ -40,7 +40,7 @@ import org.syncany.gui.panel.PluginPanel;
  *
  */
 public class LocalPluginPanel extends PluginPanel {
-	private static final Logger log = Logger.getLogger(FtpPluginPanel.class.getSimpleName());	
+	private static final Logger log = Logger.getLogger(LocalPluginPanel.class.getSimpleName());	
 	private Text localDir;
 	
 	public LocalPluginPanel(Composite parent, int style) {
