@@ -35,12 +35,13 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.config.ApplicationConfiguration;
+import org.syncany.gui.config.ProxyController;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.I18n;
 
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class ProxySettingsPanel extends Composite {
@@ -62,6 +63,8 @@ public class ProxySettingsPanel extends Composite {
 	private Text proxyPasswordText;
 	
 	private String[] proxyAuthValues = new String[] {"HTTP", "Socket 4", "Socket 5"};
+	private Label lblNewLabel;
+	private Label lblNewLabel_1;
 	
 	/**
 	 * @param parent
@@ -73,8 +76,11 @@ public class ProxySettingsPanel extends Composite {
 	}
 	
 	public void setApplicationParameters(ApplicationConfiguration configuration){
-		proxyUsernameText.setText(configuration.getProxyUsername());
-		proxyPasswordText.setText(configuration.getProxyPassword());
+		if (configuration.getProxyUsername() != null)
+			proxyUsernameText.setText(configuration.getProxyUsername());
+		
+		if (configuration.getProxyPassword() != null)
+			proxyPasswordText.setText(configuration.getProxyPassword());
 		
 		//Set proxy auth type
 		int idx = CollectionUtil.indexOfElement(proxyAuthValues, configuration.getProxyAuthType());
@@ -96,8 +102,11 @@ public class ProxySettingsPanel extends Composite {
 				break;
 		}
 		
-		proxyHostText.setText(configuration.getProxyHost());
-		proxyPortText.setText(configuration.getProxyPort());
+		if (configuration.getProxyHost() != null)
+			proxyHostText.setText(configuration.getProxyHost());
+		
+		if (configuration.getProxyPort() != null)
+			proxyPortText.setText(configuration.getProxyPort());
 		
 		proxyAuthRadio.setSelection(configuration.isProxyAuth());
 		
@@ -110,27 +119,35 @@ public class ProxySettingsPanel extends Composite {
 		
 		setLayout(new GridLayout(2, false));
 		
+		lblNewLabel_1 = new Label(this, SWT.NONE);
+		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		lblNewLabel_1.setText(I18n.getString("dialog.settings.proxy.title", true));
+		lblNewLabel_1.setFont(fontBold);
+		
+		lblNewLabel = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		lblNewLabel.setText("New Label");
+		
 		proxyTypeLabel = new Label(this, SWT.NONE);
-		proxyTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyTypeLabel.setText(I18n.getString("dialog.proxy.type", true));
+		proxyTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false, 1, 3));
+		proxyTypeLabel.setFont(fontNormal);
+		proxyTypeLabel.setText(I18n.getString("dialog.settings.proxy.type", true));
 		
 		radioNoProxy = new Button(this, SWT.RADIO);
-		radioNoProxy.setText(I18n.getString("dialog.proxy.type.no"));
+		radioNoProxy.setText(I18n.getString("dialog.settings.proxy.type.no"));
 		radioNoProxy.setFont(fontNormal);
-		new Label(this, SWT.NONE);
 		
 		radioAutomaticProxy = new Button(this, SWT.RADIO);
-		radioAutomaticProxy.setText(I18n.getString("dialog.proxy.type.default"));
+		radioAutomaticProxy.setText(I18n.getString("dialog.settings.proxy.type.default"));
 		radioAutomaticProxy.setFont(fontNormal);
-		new Label(this, SWT.NONE);
 		
 		radioManualProxy = new Button(this, SWT.RADIO);
-		radioManualProxy.setText(I18n.getString("dialog.proxy.type.manual"));
+		radioManualProxy.setText(I18n.getString("dialog.settings.proxy.type.manual"));
 		radioManualProxy.setFont(fontNormal);
 		
 		proxyAuthTypeLabel = new Label(this, SWT.NONE);
 		proxyAuthTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyAuthTypeLabel.setText(I18n.getString("dialog.proxy.auth.type", true));
+		proxyAuthTypeLabel.setText(I18n.getString("dialog.settings.proxy.auth.type", true));
 		proxyAuthTypeLabel.setFont(fontNormal);
 		
 		proxyAuthTypeCombo = new Combo(this, SWT.NONE);
@@ -143,7 +160,7 @@ public class ProxySettingsPanel extends Composite {
 		proxyHostPortLabel = new Label(this, SWT.NONE);
 		proxyHostPortLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		proxyHostPortLabel.setFont(fontNormal);
-		proxyHostPortLabel.setText(I18n.getString("dialog.proxy.server", true));
+		proxyHostPortLabel.setText(I18n.getString("dialog.settings.proxy.server", true));
 		
 		composite_2 = new Composite(this, SWT.NONE);
 		GridLayout gl_composite_2 = new GridLayout(3, false);
@@ -188,7 +205,7 @@ public class ProxySettingsPanel extends Composite {
 		proxyUsernameLabel = new Label(this, SWT.NONE);
 		proxyUsernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		proxyUsernameLabel.setFont(fontNormal);
-		proxyUsernameLabel.setText(I18n.getString("dialog.proxy.username", true));
+		proxyUsernameLabel.setText(I18n.getString("dialog.settings.proxy.username", true));
 		
 		proxyUsernameText = new Text(this, SWT.BORDER);
 		proxyUsernameText.setFont(fontNormal);
@@ -199,7 +216,7 @@ public class ProxySettingsPanel extends Composite {
 		proxyPasswordLabel = new Label(this, SWT.NONE);
 		proxyPasswordLabel.setFont(fontNormal);
 		proxyPasswordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyPasswordLabel.setText(I18n.getString("dialog.proxy.password", true));
+		proxyPasswordLabel.setText(I18n.getString("dialog.settings.proxy.password", true));
 		
 		proxyPasswordText = new Text(this, SWT.BORDER |SWT.PASSWORD);
 		proxyPasswordText.setFont(fontNormal);
@@ -208,7 +225,11 @@ public class ProxySettingsPanel extends Composite {
 		proxyPasswordText.setLayoutData(gd_proxyPasswordText);	
 	}
 
-	protected void authToggle() {
+	/**
+	 * enables / disables username/password fields
+	 * depending on proxyAuthRadio selection
+	 */
+	private void authToggle() {
 		proxyPasswordText.setEnabled(proxyAuthRadio.getSelection());
 		proxyUsernameText.setEnabled(proxyAuthRadio.getSelection());
 		
@@ -225,7 +246,12 @@ public class ProxySettingsPanel extends Composite {
 		params.put("proxy.host", proxyHostText.getText());
 		params.put("proxy.username", proxyUsernameText.getText());
 		params.put("proxy.password", proxyPasswordText.getText());
-		params.put("proxy.type", proxyAuthTypeCombo.getItem(proxyAuthTypeCombo.getSelectionIndex()).toString());
+		params.put("proxy.type", 
+			radioNoProxy.getSelection() ? ProxyController.ProxyType.NONE.toString() :
+			radioAutomaticProxy.getSelection() ? ProxyController.ProxyType.DEFAULT.toString() :
+			ProxyController.ProxyType.PROXY.toString()
+		);
+		params.put("proxy.authType", proxyAuthTypeCombo.getItem(proxyAuthTypeCombo.getSelectionIndex()).toString());
 		params.put("proxy.port", proxyPortText.getText());
 		return params;
 	}

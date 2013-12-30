@@ -20,6 +20,7 @@ package org.syncany.gui;
 import java.io.File;
 import java.util.logging.Logger;
 
+import org.eclipse.swt.widgets.Display;
 import org.syncany.config.Logging;
 import org.syncany.daemon.Daemon;
 import org.syncany.gui.config.ApplicationConfiguration;
@@ -59,6 +60,7 @@ public class Launcher {
 	}
 	
 	private static void startGUI(){
+		Display.setAppName("Syncany");
 		applicationConfiguration = null;
 		try {
 			ApplicationConfigurationTO acto = loadApplicationConfiguration();

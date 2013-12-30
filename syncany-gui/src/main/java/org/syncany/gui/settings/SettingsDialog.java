@@ -123,22 +123,22 @@ public class SettingsDialog extends Dialog {
 		gd_tree.widthHint = 100;
 		tree.setLayoutData(gd_tree);
 		
-		trtmNewTreeitem = new TreeItem(tree, SWT.NONE);
-		trtmNewTreeitem.setText("Options");
+		menuItemOptions = new TreeItem(tree, SWT.NONE);
+		menuItemOptions.setText("Options");
 		
-		menuItemGeneral = new TreeItem(trtmNewTreeitem, SWT.NONE);
+		menuItemGeneral = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemGeneral.setText("General");
 		menuItemGeneral.setFont(fontNormal);
 		
-		menuItemProxy = new TreeItem(trtmNewTreeitem, SWT.NONE);
+		menuItemProxy = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemProxy.setText("Proxy");
 		menuItemProxy.setExpanded(true);
 		menuItemProxy.setFont(fontNormal);
 		
-		menuItemAccount = new TreeItem(trtmNewTreeitem, SWT.NONE);
+		menuItemAccount = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemAccount.setText("Account");
 		menuItemAccount.setFont(fontNormal);
-		trtmNewTreeitem.setExpanded(true);
+		menuItemOptions.setExpanded(true);
 		
 		lblNewLabel_1 = new Label(shell, SWT.SEPARATOR);
 		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true, 1, 1));
@@ -155,13 +155,13 @@ public class SettingsDialog extends Dialog {
 		
 		optionsMessageTitleLabel = new Label(defaultPanel, SWT.WRAP);
 		optionsMessageTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		optionsMessageTitleLabel.setText("New Label");
-		optionsMessageTitleLabel.setFont(fontNormal);
+		optionsMessageTitleLabel.setText(I18n.getString("dialog.settings.default.message.title"));
+		optionsMessageTitleLabel.setFont(fontBold);
 		
 		optionsMessageLabel = new Label(defaultPanel, SWT.WRAP);
 		optionsMessageLabel.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, true, 1, 1));
-		optionsMessageLabel.setText("New Label");
-		optionsMessageTitleLabel.setFont(fontNormal);
+		optionsMessageLabel.setText(I18n.getString("dialog.settings.default.message.title"));
+		optionsMessageLabel.setFont(fontNormal);
 		
 		generalSettingsPanel = new GeneralSettingsPanel(composite, SWT.NONE);
 		proxySettingsPanel = new ProxySettingsPanel(composite, SWT.NONE);
@@ -238,7 +238,7 @@ public class SettingsDialog extends Dialog {
 				stackLayout.topControl = accountSettingsPanel;
 				composite.layout();
 			}
-			else if (ti == trtmNewTreeitem){
+			else if (ti == menuItemOptions){
 				stackLayout.topControl = defaultPanel;
 				composite.layout();
 			}
@@ -251,7 +251,7 @@ public class SettingsDialog extends Dialog {
 	private TreeItem menuItemGeneral;
 	private TreeItem menuItemProxy;
 	private TreeItem menuItemAccount;
-	private TreeItem trtmNewTreeitem;
+	private TreeItem menuItemOptions;
 	
 	private Composite defaultPanel;
 	private Composite generalSettingsPanel;
