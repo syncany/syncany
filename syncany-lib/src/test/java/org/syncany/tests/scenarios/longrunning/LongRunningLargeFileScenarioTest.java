@@ -18,7 +18,7 @@
 package org.syncany.tests.scenarios.longrunning;
 
 import static junit.framework.Assert.assertEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.util.Date;
 
@@ -88,7 +88,7 @@ public class LongRunningLargeFileScenarioTest {
 		
 		try {
 			assertEquals("File checksum should be equal. ", checksumFileA, checksumFileB);
-			assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+			assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
 		}
 		finally {
 			// Tear down

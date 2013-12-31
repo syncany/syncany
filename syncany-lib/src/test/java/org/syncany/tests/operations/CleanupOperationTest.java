@@ -17,32 +17,8 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.junit.Test;
-import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.operations.CleanupOperation;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.CleanupOperation.CleanupStrategy;
-import org.syncany.tests.util.TestClient;
-import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestDatabaseUtil;
-
 public class CleanupOperationTest {
-
+/*
 	Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-1"));
 
 	@Test
@@ -150,5 +126,5 @@ public class CleanupOperationTest {
 			databaseVersions.add(databaseVersion);
 		}
 		return databaseVersions;
-	}
+	}*/
 }

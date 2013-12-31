@@ -24,9 +24,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
+import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
@@ -44,6 +46,19 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	public WriteSqlDatabaseDAO(Connection connection) {
 		super(connection);
+	}
+	
+	public void persistNewKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
+		PreparedStatement preparedStatement = connection.prepareStatement(
+				"insert into known_databases (database_name) values (?)");
+
+		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
+			preparedStatement.setString(1, databaseRemoteFile.getName());
+			preparedStatement.addBatch();
+		}
+		
+		preparedStatement.executeBatch();
+		connection.commit();
 	}
 	
 	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException, SQLException {
@@ -143,31 +158,32 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 			
 			preparedStatement.executeUpdate();
 			
-			writeFileVersions(connection, fileHistory.getFileId(), fileHistory.getFileVersions().values());
+			writeFileVersions(connection, fileHistory.getFileId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
 	}
 
-	private void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, Collection<FileVersion> fileVersions) throws SQLException {
+	private void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId, Collection<FileVersion> fileVersions) throws SQLException {
 		for (FileVersion fileVersion : fileVersions) {
 			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  
 			
 			PreparedStatement preparedStatement = connection.prepareStatement(
 					"insert into fileversion "
-					+ "(filehistory_id, version, path, type, status, size, lastmodified, linktarget, filecontent_checksum, updated, posixperms, dosattrs) "
-					+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					+ "(filehistory_id, version, databaseversion_id, path, type, status, size, lastmodified, linktarget, filecontent_checksum, updated, posixperms, dosattrs) "
+					+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			preparedStatement.setString(1, fileHistoryId.toString());
 			preparedStatement.setInt(2, Integer.parseInt(""+fileVersion.getVersion()));
-			preparedStatement.setString(3, fileVersion.getPath());
-			preparedStatement.setString(4, fileVersion.getType().toString());
-			preparedStatement.setString(5, fileVersion.getStatus().toString());
-			preparedStatement.setLong(6, fileVersion.getSize());
-			preparedStatement.setDate(7, new java.sql.Date(fileVersion.getLastModified().getTime()));
-			preparedStatement.setString(8, fileVersion.getLinkTarget());
-			preparedStatement.setString(9, fileContentChecksumStr);
-			preparedStatement.setDate(10, new java.sql.Date(fileVersion.getUpdated().getTime()));
-			preparedStatement.setString(11, fileVersion.getPosixPermissions());
-			preparedStatement.setString(12, fileVersion.getDosAttributes());
+			preparedStatement.setLong(3, databaseVersionId);
+			preparedStatement.setString(4, fileVersion.getPath());
+			preparedStatement.setString(5, fileVersion.getType().toString());
+			preparedStatement.setString(6, fileVersion.getStatus().toString());
+			preparedStatement.setLong(7, fileVersion.getSize());
+			preparedStatement.setDate(8, new java.sql.Date(fileVersion.getLastModified().getTime()));
+			preparedStatement.setString(9, fileVersion.getLinkTarget());
+			preparedStatement.setString(10, fileContentChecksumStr);
+			preparedStatement.setDate(11, new java.sql.Date(fileVersion.getUpdated().getTime()));
+			preparedStatement.setString(12, fileVersion.getPosixPermissions());
+			preparedStatement.setString(13, fileVersion.getDosAttributes());
 			
 			preparedStatement.executeUpdate();			
 		}				
@@ -176,7 +192,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {			
 		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
 			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into vectorclock (databaseversion_id, client, logicaltime) values (?, ?, ?)");
+					"insert into databaseversion_vectorclock (databaseversion_id, client, logicaltime) values (?, ?, ?)");
 
 			preparedStatement.setLong(1, databaseVersionId);
 			preparedStatement.setString(2, vectorClockEntry.getKey());

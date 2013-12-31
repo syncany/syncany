@@ -79,7 +79,7 @@ public class UpOperation extends Operation {
 	private UpOperationOptions options;
 	private UpOperationResult result;
 	private TransferManager transferManager;
-	private SqlDatabaseDAO basicDatabaseDAO;
+	private SqlDatabaseDAO localDatabase;
 	private MemoryDatabase dirtyDatabase;
 
 	public UpOperation(Config config) {
@@ -92,7 +92,7 @@ public class UpOperation extends Operation {
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.transferManager = config.getConnection().createTransferManager();
-		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "- Deleting dirty.db from: " + config.getDirtyDatabaseFile());
 			config.getDirtyDatabaseFile().delete();
 		}
-
+		
 		disconnectTransferManager();
 
 		// Result
@@ -269,7 +269,7 @@ public class UpOperation extends Operation {
 
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
 		// Get last vector clock
-		DatabaseVersionHeader lastDatabaseVersionHeader = basicDatabaseDAO.getLastDatabaseVersionHeader();
+		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 		VectorClock lastVectorClock = (lastDatabaseVersionHeader != null) ? lastDatabaseVersionHeader.getVectorClock() : new VectorClock();
 
 		// New vector clock

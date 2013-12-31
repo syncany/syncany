@@ -29,11 +29,11 @@ def getRevision = { ->
 
 processResources {
 	String applicationRevision = getRevision()
-	Date compileDate = new Date()
+	Date applicationCompileDate = new Date()
 	
 	filter{ String line -> line.replaceAll('%RELEASE%', "${applicationRelease}") }        	            
 	filter{ String line -> line.replaceAll('%VERSION%', "${applicationVersion}") }        	            
 	filter{ String line -> line.replaceAll('%REVISION%', "${applicationRevision}") }
-	filter{ String line -> line.replaceAll('%COMPILEDATE%', "${compileDate}") }          	            
+	filter{ String line -> line.replaceAll('%COMPILEDATE%', "${applicationCompileDate}") }          	            
 }
 	

@@ -1,4 +1,6 @@
-CREATE CACHED TABLE chunk(
+// Tables
+
+CREATE CACHED TABLE chunk (
   checksum varchar(40) NOT NULL,
   size bigint NOT NULL,
   PRIMARY KEY (checksum)
@@ -8,6 +10,14 @@ CREATE CACHED TABLE databaseversion (
   id int NOT NULL IDENTITY,
   localtime datetime NOT NULL,
   client varchar(45) NOT NULL  
+);
+
+CREATE CACHED TABLE databaseversion_vectorclock (
+  databaseversion_id int NOT NULL,
+  client varchar(45) NOT NULL,
+  logicaltime int NOT NULL,
+  PRIMARY KEY (databaseversion_id, client),
+  FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE CACHED TABLE filecontent (
@@ -35,6 +45,7 @@ CREATE CACHED TABLE filehistory (
 CREATE CACHED TABLE fileversion (
   filehistory_id varchar(40) NOT NULL,
   version int NOT NULL,
+  databaseversion_id int NOT NULL,
   path varchar(1024) NOT NULL,
   type varchar(45) NOT NULL,
   status varchar(45) NOT NULL,
@@ -46,13 +57,9 @@ CREATE CACHED TABLE fileversion (
   posixperms varchar(45) DEFAULT NULL,
   dosattrs varchar(45) DEFAULT NULL,
   PRIMARY KEY (filehistory_id, version),
+  FOREIGN KEY (filehistory_id, databaseversion_id) REFERENCES filehistory (id, databaseversion_id) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (filecontent_checksum) REFERENCES filecontent (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
-
-CREATE INDEX idx_fileversion_path ON fileversion (path);
-
-// Does not work, because filehistory.id is not UNIQUE
-//  FOREIGN KEY (filehistory_id) REFERENCES filehistory (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 
 CREATE CACHED TABLE multichunk (
   id varchar(40) NOT NULL,
@@ -67,11 +74,17 @@ CREATE CACHED TABLE multichunk_chunk (
   FOREIGN KEY (chunk_checksum) REFERENCES chunk (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE vectorclock (
-  databaseversion_id int NOT NULL,
-  client varchar(45) NOT NULL,
-  logicaltime int NOT NULL,
-  PRIMARY KEY (databaseversion_id, client),
-  FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
+CREATE CACHED TABLE known_databases (
+  id int NOT NULL IDENTITY,
+  database_name varchar(255) NOT NULL,
+  UNIQUE (database_name)
 );
+
+
+// Non-primary indices
+
+CREATE INDEX idx_fileversion_path ON fileversion (path);
+CREATE INDEX idx_fileversion_status ON fileversion (status);
+CREATE INDEX idx_fileversion_filecontent_checksum ON fileversion (filecontent_checksum);
+
 

@@ -18,7 +18,7 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		clientB.down();
 		assertEquals("There should be three files.", 3, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());	
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());	
 		
 		// Tear down
 		clientA.cleanup();
@@ -70,7 +70,7 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		clientB.down();
 		assertEquals("There should be three files.", 3, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());	
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());	
 		
 		// Tear down
 		clientA.cleanup();

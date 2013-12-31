@@ -87,6 +87,10 @@ public class MemoryDatabase {
 		return (checksum != null) ? fullDatabaseVersionCache.getFileContent(checksum) : null;
 	}	
 	
+	public Object getChunk(ChunkChecksum checksum) {
+		return (checksum != null) ? fullDatabaseVersionCache.getChunk(checksum) : null;
+	}
+	
 	public MultiChunkEntry getMultiChunk(MultiChunkId id) {
 		return fullDatabaseVersionCache.getMultiChunk(id);
 	}	

@@ -101,7 +101,7 @@ public class RepoTO {
 	}
 
 	public void setTransformers(List<TransformerTO> transformers) {
-		this.transformers = new ArrayList<TransformerTO>(transformers);
+		this.transformers = (transformers != null) ? new ArrayList<TransformerTO>(transformers) : null;
 	}
 
 	public static class ChunkerTO extends TypedPropertyListTO {

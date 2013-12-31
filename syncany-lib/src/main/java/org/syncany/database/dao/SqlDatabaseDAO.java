@@ -54,6 +54,10 @@ public class SqlDatabaseDAO {
 	public SqlDatabaseDAO(Connection connection) {
 		this.connection = connection;
 	}
+	
+	public Connection getConnection() {
+		return connection;
+	}
 
 	public Map<String, FileVersion> getCurrentFileTree() {
 		Map<String, FileVersion> currentFileTree = new HashMap<String, FileVersion>();
@@ -125,30 +129,35 @@ public class SqlDatabaseDAO {
 	}
 	
 	public List<MultiChunkEntry> getMultiChunksForFileChecksum(FileChecksum fileChecksum) {
-		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-				  "select distinct mcc.multichunk_id "
-				+ "from filecontent fc "
-				+ "join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum "
-				+ "join multichunk_chunk mcc on fcc.chunk_checksum=mcc.chunk_checksum "
-				+ "where fc.checksum=?");
-			
-			preparedStatement.setString(1, fileChecksum.toString());
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-			List<MultiChunkEntry> multiChunkEntries = new ArrayList<MultiChunkEntry>();
-			
-			while (resultSet.next()) {
-				MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
-				MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
-				
-				multiChunkEntries.add(multiChunkEntry);
-			}
-
-			return multiChunkEntries;
+		if (fileChecksum == null) {
+			return new ArrayList<MultiChunkEntry>();			
 		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
+		else {
+			try {
+				PreparedStatement preparedStatement = connection.prepareStatement(
+					  "select distinct mcc.multichunk_id "
+					+ "from filecontent fc "
+					+ "join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum "
+					+ "join multichunk_chunk mcc on fcc.chunk_checksum=mcc.chunk_checksum "
+					+ "where fc.checksum=?");
+				
+				preparedStatement.setString(1, fileChecksum.toString());
+	
+				ResultSet resultSet = preparedStatement.executeQuery();
+				List<MultiChunkEntry> multiChunkEntries = new ArrayList<MultiChunkEntry>();
+				
+				while (resultSet.next()) {
+					MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+					MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
+					
+					multiChunkEntries.add(multiChunkEntry);
+				}
+	
+				return multiChunkEntries;
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 	
@@ -302,7 +311,7 @@ public class SqlDatabaseDAO {
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				  "select dbv.id, dbv.localtime, dbv.client, vc.client as vc_client, vc.logicaltime as vc_logicaltime "
 				+ "from databaseversion dbv "
-				+ "join vectorclock vc on vc.databaseversion_id=dbv.id "
+				+ "join databaseversion_vectorclock vc on vc.databaseversion_id=dbv.id "
 				+ "order by dbv.id asc, vc.client");
 					
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -346,15 +355,51 @@ public class SqlDatabaseDAO {
 
 	public DatabaseVersion getDatabaseVersion(VectorClock vectorClock) {
 		throw new RuntimeException("Not implemented");
-	}
-	
+	}	
 
 	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {
 		throw new RuntimeException("Not implemented");
 	}
+
+	public List<String> getKnownDatabases() {
+		List<String> knownDatabases = new ArrayList<String>();
+		
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				  "select database_name from known_databases");
+					
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {
+				knownDatabases.add(resultSet.getString("database_name"));
+			}
+
+			return knownDatabases;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void shutdown() {
+		try {
+			connection.prepareStatement("shutdown").execute();
+		}
+		catch (SQLException e) {
+			// Don't care
+		}
+		finally {
+			try {
+				connection.close();
+			}
+			catch (SQLException e) {
+				// Don't care
+			}
+		}
+	}
 	
 	protected VectorClock getVectorClockByDatabaseVersionId(int databaseVersionId) throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement("select * from vectorclock where databaseversion_id=?");
+		PreparedStatement preparedStatement = connection.prepareStatement("select * from databaseversion_vectorclock where databaseversion_id=?");
 		preparedStatement.setInt(1, databaseVersionId);
 
 		ResultSet resultSet = preparedStatement.executeQuery();

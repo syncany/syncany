@@ -20,7 +20,6 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -44,16 +43,15 @@ import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.dao.SqlDatabaseDAO;
-import org.syncany.database.dao.WriteSqlDatabaseDAO;
-import org.syncany.database.dao.XmlDatabaseDAO;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.VectorClock;
+import org.syncany.database.dao.WriteSqlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
@@ -96,7 +94,7 @@ public class DownOperation extends Operation {
 	private DownOperationOptions options;
 	private DownOperationResult result;
 
-	private SqlDatabaseDAO basicDatabaseDAO;
+	private WriteSqlDatabaseDAO localDatabase;
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
@@ -158,7 +156,7 @@ public class DownOperation extends Operation {
 		applyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 
 		// 7. Write names of newly analyzed remote databases (so we don't download them again)
-		writeAlreadyDownloadedDatabasesListFromFile(unknownRemoteDatabases);
+		localDatabase.persistNewKnownRemoteDatabases(unknownRemoteDatabases);
 
 		disconnectTransferManager();
 
@@ -202,8 +200,8 @@ public class DownOperation extends Operation {
 	}
 
 	private void initOperationVariables() throws Exception {
-		basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
-		localBranch = basicDatabaseDAO.getLocalDatabaseBranch();
+		localDatabase = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
+		localBranch = localDatabase.getLocalDatabaseBranch();
 
 		transferManager = config.getConnection().createTransferManager();
 		databaseReconciliator = new DatabaseReconciliator();
@@ -223,12 +221,12 @@ public class DownOperation extends Operation {
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 				// Database version
-				DatabaseVersion databaseVersion = basicDatabaseDAO.getDatabaseVersion(databaseVersionHeader.getVectorClock());
+				DatabaseVersion databaseVersion = localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock());
 				dirtyDatabase.addDatabaseVersion(databaseVersion);
 
 				// Remove database version locally
 				logger.log(Level.INFO, "    * Removing " + databaseVersionHeader + " ...");
-				basicDatabaseDAO.removeDatabaseVersion(databaseVersion);
+				localDatabase.removeDatabaseVersion(databaseVersion);
 
 				String remoteFileToPruneClientName = config.getMachineName();
 				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
@@ -311,7 +309,7 @@ public class DownOperation extends Operation {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		// First: Check if we know this file locally!
-		List<MultiChunkEntry> multiChunkEntries = basicDatabaseDAO.getMultiChunksForFileChecksum(fileVersion.getChecksum());
+		List<MultiChunkEntry> multiChunkEntries = localDatabase.getMultiChunksForFileChecksum(fileVersion.getChecksum());
 		
 		if (multiChunkEntries.size() > 0) {
 			multiChunksToDownload.addAll(multiChunkEntries);
@@ -328,7 +326,7 @@ public class DownOperation extends Operation {
 				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
 
 				for (ChunkChecksum chunkChecksum : fileChunks) {
-					MultiChunkEntry multiChunkForChunk = basicDatabaseDAO.getMultiChunkForChunk(chunkChecksum);
+					MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
 					// TODO [high] Performance: This queries the database for every chunk, SLOWWW!
 					
 					if (multiChunkForChunk == null) {
@@ -501,17 +499,6 @@ public class DownOperation extends Operation {
 		}
 
 		return unknownRemoteDatabasesInCache;
-	}
-
-	// TODO [low] This should be in the local RDMS, not in a plain text file
-	private void writeAlreadyDownloadedDatabasesListFromFile(List<DatabaseRemoteFile> unknownRemoteDatabases) throws IOException {
-		FileWriter fr = new FileWriter(config.getKnownDatabaseListFile(), true);
-
-		for (RemoteFile newlyProcessedRemoteDatabase : unknownRemoteDatabases) {
-			fr.write(newlyProcessedRemoteDatabase.getName() + "\n");
-		}
-
-		fr.close();
 	}
 
 	private void disconnectTransferManager() {

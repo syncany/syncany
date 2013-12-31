@@ -19,7 +19,7 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -61,7 +61,7 @@ public class CreateSimilarFileParallelScenarioTest {
 		// A, should retrieve B's conflicting copy
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());				
 		
 		// Tear down
 		clientA.cleanup();

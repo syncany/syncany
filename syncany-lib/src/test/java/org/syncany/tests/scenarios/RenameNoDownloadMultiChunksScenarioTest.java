@@ -19,7 +19,7 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class RenameNoDownloadMultiChunksScenarioTest {
 		assertEquals("No multichunks should have been downloaded.", 0, downOperationResult.getDownloadedMultiChunks().size());
 		assertTrue("Moved files should exist.", clientB.getLocalFile("A-file-moved1").exists());		
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
 		
 		// Tear down
 		clientA.cleanup();

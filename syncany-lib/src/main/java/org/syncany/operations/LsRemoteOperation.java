@@ -17,14 +17,9 @@
  */
 package org.syncany.operations;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,8 +44,8 @@ import org.syncany.database.dao.SqlDatabaseDAO;
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
 	private TransferManager loadedTransferManager;
-	private Set<String> alreadyDownloadedRemoteDatabases;
-	private SqlDatabaseDAO basicDatabaseDAO;
+	private List<String> alreadyDownloadedRemoteDatabases;
+	private SqlDatabaseDAO localDatabase;
 	
 	public LsRemoteOperation(Config config) {
 		this(config, null);
@@ -60,8 +55,8 @@ public class LsRemoteOperation extends Operation {
 		super(config);		
 		
 		this.loadedTransferManager = transferManager;
-		this.alreadyDownloadedRemoteDatabases = new HashSet<String>();
-		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
+		this.alreadyDownloadedRemoteDatabases = new ArrayList<String>();
+		this.localDatabase = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}	
 	
 	@Override
@@ -74,31 +69,13 @@ public class LsRemoteOperation extends Operation {
 				? loadedTransferManager
 				: config.getConnection().createTransferManager();
 		
-		alreadyDownloadedRemoteDatabases = readAlreadyDownloadedDatabasesListFromFile();
+		alreadyDownloadedRemoteDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, alreadyDownloadedRemoteDatabases);		
 		
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 
-	private Set<String> readAlreadyDownloadedDatabasesListFromFile() throws IOException {
-		// TODO [low] This is dirty!
-		alreadyDownloadedRemoteDatabases.clear();
-		
-		if (config.getKnownDatabaseListFile().exists()) {
-			BufferedReader br = new BufferedReader(new FileReader(config.getKnownDatabaseListFile()));
-			
-			String line = null;
-			while (null != (line = br.readLine())) {
-				alreadyDownloadedRemoteDatabases.add(line);
-			}
-			
-			br.close();
-		}		
-		
-		return alreadyDownloadedRemoteDatabases;
-	}
-
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, Set<String> alreadyDownloadedRemoteDatabases) throws StorageException {
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<String> alreadyDownloadedRemoteDatabases) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
 		List<DatabaseRemoteFile> unknownRemoteDatabasesList = new ArrayList<DatabaseRemoteFile>();
@@ -106,7 +83,7 @@ public class LsRemoteOperation extends Operation {
 		// List all remote database files
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
 		
-		DatabaseVersionHeader lastDatabaseVersionHeader = basicDatabaseDAO.getLastDatabaseVersionHeader();
+		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 		
 		// No local database yet
 		if (lastDatabaseVersionHeader == null) {

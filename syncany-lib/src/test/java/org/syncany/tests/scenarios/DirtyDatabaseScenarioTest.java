@@ -20,7 +20,7 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
@@ -59,7 +59,7 @@ public class DirtyDatabaseScenarioTest {
 		
 		clientA.down(); // This pulls down the conflicting file
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
 		assertConflictingFileExists("A-file1.jpg", clientA.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down

@@ -18,7 +18,7 @@
 package org.syncany.tests.scenarios;
 
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class RenameToExistingFileScenarioTest {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
 		
 		// A moves, and up
 		clientA.moveFile("A-original", "A-moved");
@@ -59,7 +59,7 @@ public class RenameToExistingFileScenarioTest {
 		clientB.sync();		
 		clientA.sync();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());		
+		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());		
 		
 		// Tear down
 		clientA.cleanup();

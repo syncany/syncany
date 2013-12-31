@@ -27,6 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +44,7 @@ import java.util.regex.Pattern;
 import org.junit.internal.ArrayComparisonFailure;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
@@ -166,7 +172,85 @@ public class TestAssertUtil {
 		}		
 	}
 	
-	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
+	public static void assertSqlDatabaseEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException, SQLException {
+		String[] compareTables = new String[] { 
+			"chunk",
+			"databaseversion", 
+			"databaseversion_vectorclock",
+			"filecontent",
+			"filecontent_chunk",
+			"filehistory",
+			"fileversion",
+				// skipped known_databases
+			"multichunk",
+			"multichunk_chunk"
+		};
+		
+		assertSqlDatabaseTablesEqual(expectedDatabaseFile, actualDatabaseFile, compareTables);
+	}
+	
+	public static void assertSqlDatabaseTablesEqual(File expectedDatabaseFile, File actualDatabaseFile, String... compareTables) throws IOException, SQLException {
+		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createFileConnection(expectedDatabaseFile);
+		Connection actualDatabaseConnection = DatabaseConnectionFactory.createFileConnection(actualDatabaseFile);
+				
+		for (String tableName : compareTables) {
+			// Get table's primary keys
+			List<String> primaryKeys = new ArrayList<String>();			
+			ResultSet resultSet = actualDatabaseConnection.getMetaData().getPrimaryKeys(null, null, tableName.toUpperCase());
+			
+			while (resultSet.next()) {
+				primaryKeys.add(resultSet.getString("COLUMN_NAME"));
+			}
+			
+			// Get all entries of both tables, sorted by the primary keys
+			String primaryKeysOrderByClause = StringUtil.join(primaryKeys, " asc, ") + " asc";
+			String selectQuery = "select * from "+tableName+" order by "+primaryKeysOrderByClause;
+			
+			logger.log(Level.FINE, " Comparing database table: " + selectQuery);
+			
+			ResultSet expectedResultSet = expectedDatabaseConnection.prepareStatement(selectQuery).executeQuery();
+			ResultSet actualResultSet = actualDatabaseConnection.prepareStatement(selectQuery).executeQuery();
+			
+			while (true) {
+				boolean expectedNext = expectedResultSet.next();
+				boolean actualNext = actualResultSet.next();
+				
+				if (expectedNext && !actualNext) {
+					fail("Actual is missing the following row from expected: "+getFormattedColumn(expectedResultSet));
+				}
+				else if (!expectedNext && actualNext) {
+					fail("Actual has a row that was not expected: "+getFormattedColumn(actualResultSet));
+				}
+				else if (!expectedNext && !actualNext) {
+					break;
+				}
+				else {
+					String expectedFormattedColumn = getFormattedColumn(expectedResultSet);
+					String actualFormattedColumn = getFormattedColumn(actualResultSet);
+					
+					if (logger.isLoggable(Level.FINEST)) {
+						//logger.log(Level.FINEST, "  Expected: "+expectedFormattedColumn);
+						//logger.log(Level.FINEST, "  Actual:   "+actualFormattedColumn);
+					}
+					
+					assertEquals("Columns of actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
+				}								
+			}		
+		}
+	}
+	
+	private static String getFormattedColumn(ResultSet resultSet) throws SQLException {
+		ResultSetMetaData metaData = resultSet.getMetaData();
+		List<String> formattedColumnLine = new ArrayList<String>();
+		
+		for (int i=0; i<metaData.getColumnCount(); i++) {
+			formattedColumnLine.add(metaData.getColumnName(i+1) + "=" + resultSet.getString(i+1)); 
+		}
+		
+		return StringUtil.join(formattedColumnLine, ", ");
+	}
+
+	public static void assertXmlDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
 		MemoryDatabase expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
 		MemoryDatabase actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
 		
