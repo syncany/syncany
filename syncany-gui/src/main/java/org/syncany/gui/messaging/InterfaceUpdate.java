@@ -24,8 +24,23 @@ import java.util.Map;
  *
  */
 public class InterfaceUpdate extends ApplicationEvent {
+	public enum InterfaceUpdateAction {
+		UPDATE_WATCHED_FOLDERS,
+		START_SYSTEM_TRAY_SYNC,
+		STOP_SYSTEM_TRAY_SYNC;
+	}
 	
-	public InterfaceUpdate(Map<String, Map<String, String>> data){
+	private InterfaceUpdateAction action;
+	
+	public InterfaceUpdate(InterfaceUpdateAction action, Map<String, Map<String, String>> data){
 		super(data);
+		this.action = action;
+	}
+	
+	/**
+	 * @return the action
+	 */
+	public InterfaceUpdateAction getAction() {
+		return action;
 	}
 }

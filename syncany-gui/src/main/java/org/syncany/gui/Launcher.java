@@ -26,6 +26,7 @@ import org.syncany.daemon.Daemon;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.ProxyController;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.util.I18n;
 
 import com.google.common.eventbus.EventBus;
@@ -47,7 +48,7 @@ public class Launcher {
 	
 	public static EventBus getEventBus() {
 		return eventBus;
-	}	
+	}
 
 	public static void main(String[] args) {
 		startDaemon();
@@ -90,6 +91,7 @@ public class Launcher {
 			}
 		});
 
+		ClientCommandFactory.startWebSocketClient();
 		log.info("Starting Graphical User Interface");
 
 		MainGUI window = new MainGUI();

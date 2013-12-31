@@ -19,12 +19,15 @@ import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
 import org.syncany.daemon.websocket.WSServer;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 public class Daemon {
 	private static final Logger log = Logger.getLogger(Daemon.class.getSimpleName());
 
 	private static final SocketLock daemonSocketLock = new SocketLock();
+	private static EventBus eventBus = new EventBus("syncany-daemon");
+
 	private static final AtomicBoolean quit = new AtomicBoolean(false);
 	private static boolean quittingInProgress = false;
 	private static Daemon instance = null;
@@ -87,6 +90,37 @@ public class Daemon {
 	public void start(boolean startedWithGui) {
 		this.startedWithGui = startedWithGui;
 		
+		Thread t = new Thread(new Runnable() {
+			public void run() {
+				Map<String, Object> syncing = new HashMap<>();
+				syncing.put("action", "get_syncing_state");
+				syncing.put("syncing_state", "syncing");
+				
+				Map<String, Object> notSyncing = new HashMap<>();
+				notSyncing.put("action", "get_syncing_state");
+				notSyncing.put("syncing_state", "in-sync");
+				
+				while (true){
+					
+					DaemonCommandHandler.handle(syncing);
+					try {
+						Thread.sleep(5000);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					DaemonCommandHandler.handle(notSyncing);
+					try {
+						Thread.sleep(5000);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		t.start();
+		
 		//0- determine if gui is already launched
 		try{
 			daemonSocketLock.lock();
@@ -105,7 +139,6 @@ public class Daemon {
 	
 	private void restoreLastState() {
 		log.fine("Restoring last state of DaemonServer");
-		
 	}
 
 	public static Daemon getInstance() {

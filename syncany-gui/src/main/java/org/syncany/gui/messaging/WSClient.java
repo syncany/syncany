@@ -24,13 +24,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.eclipse.swt.widgets.Display;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.MainGUI;
+import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
 import org.syncany.util.JsonHelper;
 
 /**
@@ -103,15 +103,25 @@ public class WSClient {
 		String action = (String)parameters.get("action");
 		
 		switch (action){
+			case "update_syncing_state":
+				String syncingState = (String)parameters.get("syncing_state");
+				if (syncingState.equals("syncing")){
+					Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
+				}
+				else if (syncingState.equals("in-sync")){
+					Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
+				}
+				break;
+			case "start_syncing":
+			    Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
+				break;
+			case "stop_syncing":
+			    Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
+				break;
 			case "update_watched_folders":
 				final Map<String, Map<String, String>> folders = (Map<String, Map<String, String>>)parameters.get("folders");
-				
-				Display.getDefault().asyncExec(new Runnable() {
-			        public void run() {
-			        	InterfaceUpdate iu = new InterfaceUpdate(folders);
-			        	Launcher.getEventBus().post(iu);
-		            }
-			    });
+			    InterfaceUpdate iu = new InterfaceUpdate(InterfaceUpdateAction.UPDATE_WATCHED_FOLDERS, folders);
+			    Launcher.getEventBus().post(iu);
 				break;
 		}
 	}

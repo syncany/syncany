@@ -62,6 +62,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
+		gl_composite.marginRight = 30;
 		gl_composite.verticalSpacing = 10;
 		setLayout(gl_composite);
 		
@@ -72,7 +73,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label accessKeyLabel = new Label(this, SWT.NONE);
 		accessKeyLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		accessKeyLabel.setText(I18n.getString("plugin.amazon.accessKey"));
+		accessKeyLabel.setText(I18n.getString("plugin.amazon.accessKey", true));
 		accessKeyLabel.setFont(fontNormal);
 		
 		accessKey = new Text(this, SWT.BORDER);
@@ -83,7 +84,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label secretKeyLabel = new Label(this, SWT.NONE);
 		secretKeyLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		secretKeyLabel.setText(I18n.getString("plugin.amazon.secretKey"));
+		secretKeyLabel.setText(I18n.getString("plugin.amazon.secretKey", true));
 		secretKeyLabel.setFont(fontNormal);
 		
 		secretKey = new Text(this, SWT.BORDER);
@@ -92,7 +93,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label bucketLabel = new Label(this, SWT.NONE);
 		bucketLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		bucketLabel.setText(I18n.getString("plugin.amazon.bucket"));
+		bucketLabel.setText(I18n.getString("plugin.amazon.bucket", true));
 		bucketLabel.setFont(fontNormal);
 		
 		bucket = new Text(this, SWT.BORDER);
@@ -101,7 +102,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label locationLabel = new Label(this, SWT.NONE);
 		locationLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		locationLabel.setText(I18n.getString("plugin.amazon.location"));
+		locationLabel.setText(I18n.getString("plugin.amazon.location", true));
 		locationLabel.setFont(fontNormal);
 		
 		location = new Text(this, SWT.BORDER);

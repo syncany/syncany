@@ -11,7 +11,7 @@ public class ClientCommandFactory {
 	private static final Logger log = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
 	private static WSClient client;
 	
-	static {
+	public static void startWebSocketClient(){
 		try {
 			log.info("Starting websocket server");
 			client = new WSClient();

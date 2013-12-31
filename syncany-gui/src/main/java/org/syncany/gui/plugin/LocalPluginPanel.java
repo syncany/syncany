@@ -45,7 +45,6 @@ public class LocalPluginPanel extends PluginPanel {
 	
 	public LocalPluginPanel(Composite parent, int style) {
 		super(parent, style);
-		
 		initComposite();
 	}
 	
@@ -54,12 +53,12 @@ public class LocalPluginPanel extends PluginPanel {
 		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
 		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		GridLayout gl_composite = new GridLayout(4, false);
+		GridLayout gl_composite = new GridLayout(3, false);
 		gl_composite.verticalSpacing = 10;
 		setLayout(gl_composite);
 		
 		Label lblNewLabel = new Label(this, SWT.WRAP);
-		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
+		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		lblNewLabel.setText("Local repository");
 		lblNewLabel.setFont(fontBold);
 		
@@ -73,6 +72,7 @@ public class LocalPluginPanel extends PluginPanel {
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_hostText.minimumWidth = 200;
 		localDir.setLayoutData(gd_hostText);
+		new Label(this, SWT.NONE);
 		
 		Composite buttonComposite = new Composite(this, SWT.NONE);
 		GridLayout gl_buttonComposite = new GridLayout(2, false);
@@ -81,7 +81,7 @@ public class LocalPluginPanel extends PluginPanel {
 		gl_buttonComposite.marginWidth = 0;
 		gl_buttonComposite.marginHeight = 0;
 		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, true, 4, 1);
+		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, true, 3, 1);
 		gd_buttonComposite.minimumHeight = 30;
 		buttonComposite.setLayoutData(gd_buttonComposite);
 		
