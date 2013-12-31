@@ -118,7 +118,7 @@ public class DatabaseBranch {
 		}
 		
 		public boolean hasPrevious() {
-			return current > 0;
+			return current >= 0;
 		}
 
 		@Override
