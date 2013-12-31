@@ -63,21 +63,6 @@ public class DaemonConfigurationTO {
 	}
 
 
-	@Persist
-	public void prepare() {
-		
-	}
-
-	@Complete
-	public void release() {
-	}
-	
-	
-	@Commit
-	public void commit() {
-
-	}
-
 	public String getProxyHost() {
 		return proxyHost;
 	}

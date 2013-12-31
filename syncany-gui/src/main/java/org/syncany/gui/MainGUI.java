@@ -1,5 +1,9 @@
 package org.syncany.gui;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +52,31 @@ public class MainGUI {
 			}
 		}
 	}
+	
+	private boolean isUnity() {
+		if (!EnvironmentUtil.isLinux()) {
+			return false;
+		}
+		else {
+			ProcessBuilder processBuilder = new ProcessBuilder("/bin/ps", "--no-headers", "-C", "unity-panel-service");
+			
+			try {
+				Process process = processBuilder.start();
+				
+				BufferedReader processReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				
+				boolean isUnity = processReader.readLine() != null;
+				
+				process.destroy();
+				processReader.close();
+
+				return isUnity;
+			}
+			catch (IOException e) {
+				throw new RuntimeException("Unable to determine Linux desktop environment.", e);
+			}
+		}
+	}
 
 	private void updateTray(Map<String, Map<String, String>> folders) {
 		for (MenuItem mi : items) {
@@ -64,6 +93,30 @@ public class MainGUI {
 	}
 
 	private void installSystemTray() {
+		if (isUnity()) {
+			installUnitySystemTray();
+		}
+		else {
+			installDefaultSystemTray();
+		}
+	}
+		
+	private void installUnitySystemTray() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {				
+				try {
+					ProcessBuilder processBuilder = new ProcessBuilder("src/main/python/unitytray.py", "src/main/resources/images", "All folders in sync");
+					processBuilder.start();					
+				}
+				catch (IOException e) {
+					throw new RuntimeException("Unable to determine Linux desktop environment.", e);
+				}
+			}			
+		}).start();		
+	}
+
+	private void installDefaultSystemTray() {	
 		Tray tray = Display.getDefault().getSystemTray();
 		
 		if (tray != null) {
