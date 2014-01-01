@@ -152,7 +152,7 @@ task cleanJavadoc(type: Delete) {
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
 
 task wrapper(type: Wrapper) {
-	gradleVersion = '1.9'
+	gradleVersion = '1.10'
 	jarFile = 'gradle/wrapper/wrapper.jar'
 }
 
