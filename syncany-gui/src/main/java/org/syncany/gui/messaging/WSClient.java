@@ -39,7 +39,7 @@ import org.syncany.util.JsonHelper;
  */
 public class WSClient {
 	private static final Logger log = Logger.getLogger(WSClient.class.getSimpleName());
-	private static final String DEFAULT_WS_SERVER = "ws://localhost:8887";
+	public static final String DEFAULT_WS_SERVER = "ws://localhost:8887";
 
 	private String location;
 	private WebSocketClient client;
@@ -50,7 +50,7 @@ public class WSClient {
 	
 	public WSClient(String location) throws URISyntaxException {
 		this.location = location;
-		client = createClient();
+		this.client = createClient();
 	}
 	
 	private WebSocketClient createClient() throws URISyntaxException{

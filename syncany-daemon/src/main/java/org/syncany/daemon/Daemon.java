@@ -113,7 +113,8 @@ public class Daemon {
 		return instance;
 	}
 	
-	@Subscribe public void update(WatchEvent event){
+	@Subscribe 
+	public void update(WatchEvent event){
 		Map<String, Command> map = getCommands();
 		
 		String id = event.getId();

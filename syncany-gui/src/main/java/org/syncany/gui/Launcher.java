@@ -26,6 +26,7 @@ import org.syncany.daemon.Daemon;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.ProxyController;
+import org.syncany.gui.messaging.WSClient;
 import org.syncany.util.I18n;
 
 import com.google.common.eventbus.EventBus;
@@ -51,12 +52,22 @@ public class Launcher {
 
 	public static void main(String[] args) {
 		startDaemon();
-		startGUI();
+		startWebSocketClient();
+		startGUI();	
 	}
-	
+
 	private static void startDaemon(){
 		daemon = new Daemon();
 		daemon.start(true);
+	}
+	
+	private static void startWebSocketClient() {
+		try {
+			new WSClient().startWebSocketConnection();
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot start websocket client.", e);
+		}
 	}
 	
 	private static void startGUI(){

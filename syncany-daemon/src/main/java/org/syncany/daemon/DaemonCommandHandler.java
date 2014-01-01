@@ -15,12 +15,12 @@ import org.syncany.util.JsonHelper;
 
 
 public class DaemonCommandHandler {
-	private static Logger log = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
+	private static Logger logger = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
 		
 	private static String handleStopWatch(Map<String, Object> parameters) {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		String id = (String)parameters.get("id");
-		log.log(Level.INFO, "Stop watching folder with id {1}", new Object[]{id});
+		logger.log(Level.INFO, "Stop watching folder with id {1}", new Object[]{id});
 		Command cl = commands.get(id);
 		if (cl instanceof WatchCommand){
 			WatchCommand wc = (WatchCommand)cl;
@@ -32,7 +32,7 @@ public class DaemonCommandHandler {
 	private static String handleWatch(Map<String, Object> parameters) {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		String localDir = (String)parameters.get("localfolder");
-		log.log(Level.INFO, "Watching folder {0}", localDir);
+		logger.log(Level.INFO, "Watching folder {0}", localDir);
 		
 		WatchCommand wc = new WatchCommand(localDir, 3);
 		commands.put(wc.getId(), wc);
@@ -100,11 +100,7 @@ public class DaemonCommandHandler {
 
 	public static void handle(String message) {
 		Map<String, Object> params = JsonHelper.fromStringToMap(message);
-		handle(params);
-	}
-	
-	public static void handle(Map<String, Object> params) {
-		String action = ((String)params.get("action")).toLowerCase();
+		String action = ((String) params.get("action")).toLowerCase();
 		
 		switch (action){
 			case "get_watched":
@@ -124,6 +120,10 @@ public class DaemonCommandHandler {
 				break;
 			case "quit":
 				handleQuit(params);
+				break;
+			default:
+				logger.log(Level.WARNING, "Unknown action received; returning message: "+action);
+				WSServer.sendToAll(message);
 				break;
 		}
 	}

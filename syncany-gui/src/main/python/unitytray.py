@@ -34,21 +34,6 @@ import subprocess
 import websocket
 import appindicator
     
-def do_listen_for_event(request):
-	global event_queue	
-	
-	do_print("Listening for tray event ...")
-
-	event = event_queue.get()	
-	event_queue.task_done()
-		
-	do_print("Event '" + event + "' occurred. Passing on to client.")
-	return event
-	
-def do_nop(request):
-	do_print("Doing nothing. That's what I do best :-)")
-	return "OK"
-	
 def do_notify(request):
 	global resdir
 	
@@ -69,7 +54,7 @@ def do_notify(request):
 	notification.show()
 	gtk.gdk.threads_leave()
 
-	return "OK"		
+	return None		
 	
 def do_update_icon(request):
 	global indicator, updating_count, resdir
@@ -112,13 +97,13 @@ def do_update_text(request):
 	gtk.gdk.threads_enter()
 	
 	label = menu_item_status.get_child()
-	label.set_text(request["status"])
+	label.set_text(request["text"])
 	
 	menu_item_status.show()
 	
 	gtk.gdk.threads_leave()
 	
-	return "OK"			
+	return None			
 	
 def do_update_menu(request):
 	global menu, menu_item_status
@@ -129,7 +114,7 @@ def do_update_menu(request):
 	# Remove all children
 	for child in menu.get_children():
 		menu.remove(child)		
-
+	
 	'''Status'''
 	menu_item_status.child.set_text(status_text)
 	menu_item_status.set_can_default(0);	
@@ -139,6 +124,12 @@ def do_update_menu(request):
 
 	'''---'''
 	menu.append(gtk.SeparatorMenuItem())	
+
+	'''New connection'''
+	menu_item_new = gtk.MenuItem("New sync folder")	
+	menu_item_new.connect("activate", menu_item_clicked, "NEW")
+
+	menu.append(menu_item_new)
 
 	'''Profiles'''
 	if request is not None:
@@ -172,7 +163,7 @@ def do_update_menu(request):
 			menu.append(gtk.SeparatorMenuItem())	
 	
 	'''Preferences'''
-	menu_item_prefs = gtk.MenuItem("Preferences ...")
+	menu_item_prefs = gtk.MenuItem("Preferences")
 	menu_item_prefs.connect("activate", menu_item_clicked, "PREFERENCES")
 	
 	menu.append(menu_item_prefs)
@@ -181,13 +172,13 @@ def do_update_menu(request):
 	menu.append(gtk.SeparatorMenuItem())	
 	
 	'''Donate ...'''
-	menu_item_donate = gtk.MenuItem("Donate ...")
+	menu_item_donate = gtk.MenuItem("Donate")
 	menu_item_donate.connect("activate", menu_item_clicked, "DONATE")
 	
 	menu.append(menu_item_donate)	
 	
 	'''Website'''
-	menu_item_website = gtk.MenuItem("Website ...")
+	menu_item_website = gtk.MenuItem("Website")
 	menu_item_website.connect("activate", menu_item_clicked, "WEBSITE")
 	
 	menu.append(menu_item_website)	
@@ -196,14 +187,13 @@ def do_update_menu(request):
 	menu.append(gtk.SeparatorMenuItem())	
 
 	'''Quit'''
-	menu_item_quit = gtk.MenuItem("Quit")
+	menu_item_quit = gtk.MenuItem("Exit")
 	menu_item_quit.connect("activate", menu_item_clicked, "QUIT")
 	
 	menu.append(menu_item_quit)	
 	
 	'''Set as menu for indicator'''
-	if indicator is not None:
-		indicator.set_menu(menu)
+	indicator.set_menu(menu)
 
 	'''Show'''
 	menu.show_all()
@@ -219,7 +209,6 @@ def init_tray_icon():
 
 	# Default image
 	image = os.getcwd() + "/" + resdir + "/tray/tray.png"									
-	do_print(image)
 
 	# Go!
 	do_print("Initializing indicator ...")
@@ -230,13 +219,11 @@ def init_tray_icon():
 	
 def menu_item_clicked(widget, cmd):
 	do_print("Menu item '" + cmd + "' clicked.")
-	ws.send("{'action': 'tray_menu_clicked', 'command': '" + cmd + "'}")
-	event_queue.put(cmd)
+	ws.send("{'action': 'tray_menu_item_clicked', 'command': '" + cmd + "'}")
 
 def menu_item_folder_clicked(widget, folder):
 	do_print("Folder item '" + folder + "' clicked.")
-	event_queue.put("OPEN_FOLDER	{0}".format(folder))
-#	os.system('xdg-open "%s"' % foldername)
+	ws.send("{'action': 'tray_menu_folder_clicked', 'folder': '" + folder + "'}")
 
 def do_kill():
 	# Note: this method cannot contain any do_print() calls since it is called
@@ -254,59 +241,34 @@ def do_print(msg):
 		# An IOError happens when the calling process is killed unexpectedly		
 		do_kill()			
 
-def on_ws_message(ws, message):
-	print "WS message received"
-	print message
-
-	do_print("Client connected.")
-	
+def on_ws_message(ws, message):	
 	try:
-		request_str = self.rfile.readline().strip()
-		request = json.loads(request_str)
+		do_print("Received request: " + message)				
 
+		request = json.loads(message)
+		do_print("Received request: " + message)				
+		response = None
+		
 		last_request = time.time()
-		do_print("Received request: " + request_str)				
-
-		if request["request"] == "ListenForTrayEventRequest":
-			response = do_listen_for_event(request)
 		
-		elif request["request"] == "NopRequest":
-			response = do_nop(request)
-		
-		elif request["request"] == "NotifyRequest":
+		if request["action"] == "display_notification":
 			response = do_notify(request)
 		
-		elif request["request"] == "UpdateMenuRequest":
+		elif request["action"] == "update_tray_menu":
 			response = do_update_menu(request)
 		
-		elif request["request"] == "UpdateStatusIconRequest":
+		elif request["action"] == "update_tray_icon":
 			response = do_update_icon(request)
 		
-		elif request["request"] == "UpdateStatusTextRequest":
-			response = do_update_text(request)
-		
-		else:
-			response = "UNKNOWN_REQUEST"
+		elif request["action"] == "update_tray_status_text":
+			response = do_update_text(request)			
 
-#			gtk.gdk.threads_leave()
-
-	except ValueError:
-		response = "INVALID_REQUEST"	
-
-	except:
-		response = "REQUEST_ERROR"	
+	except:	
 		do_print("Unexpected error: {0}".format(sys.exc_info()[0]))
-#			raise	
 
-	do_print("Sending response: "+response)
-	try:
-		self.wfile.write(response+"\n")		
-		self.wfile.flush()
-	
-		self.request.close()
-	except:
-		# Do nothing.
-		dummy = 1
+	if response is not None:
+		do_print("Sending response: "+response)
+		ws.send(response)
 
 
 def on_ws_error(ws, error):
@@ -361,7 +323,6 @@ if __name__ == "__main__":
 	
 	updating_count = 0
 	indicator = None
-	event_queue = Queue.Queue()
 	ws = None
 	ws_server_thread = None
 	terminated = 0

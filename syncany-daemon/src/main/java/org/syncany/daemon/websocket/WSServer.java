@@ -45,8 +45,8 @@ public class WSServer {
 			
 			@Override
 			public void onMessage(WebSocket conn, String message) {
+				log.fine("Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
 				DaemonCommandHandler.handle(message);
-				log.fine(conn.getRemoteSocketAddress().toString() + ": " + message);
 			}
 			
 			@Override
