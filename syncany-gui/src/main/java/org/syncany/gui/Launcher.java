@@ -68,7 +68,7 @@ public class Launcher {
 			applicationConfiguration = ApplicationConfiguration.from(acto);
 		}
 		catch (Exception e) {
-			log.severe("Unable to load application configuration File");
+			log.severe("Unable to load application configuration File : "+e);
 			return;
 		}
 		
@@ -100,13 +100,15 @@ public class Launcher {
 	}
 
 	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
-		String userHome = System.getProperty("user.home");
-		File f = new File(userHome + File.separator + ".syncany" + File.separator + "syncany-gui-config.xml");
+		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File f = new File(saHome, "syncany-gui-config.xml");
 		
 		if (!f.exists()){ /** creates an empty ApplicationConfigurationTO file **/
-			ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
-			acto.setProxyType(ProxyController.ProxyType.NONE.toString());
-			ApplicationConfigurationTO.store(acto, f);
+			if (!saHome.exists()){
+				saHome.mkdir();
+			}
+			ApplicationConfigurationTO.store(ApplicationConfigurationTO.getDefault(), f);
+			log.info("Syncany gui configuration file created");
 		}
 		
 		ApplicationConfigurationTO acto = ApplicationConfigurationTO.load(f);

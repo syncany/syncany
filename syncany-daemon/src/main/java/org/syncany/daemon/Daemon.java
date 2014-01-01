@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Logging;
 import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.CommandStatus;
@@ -46,7 +44,7 @@ public class Daemon {
 			daemonConfiguration = DeamonConfiguration.from(acto);
 		}
 		catch (Exception e) {
-			log.severe("Unable to load application configuration File");
+			log.severe("Unable to load application configuration File : "+e);
 			return;
 		}
 	}
@@ -177,13 +175,15 @@ public class Daemon {
 	}
 	
 	private static DaemonConfigurationTO loadApplicationConfiguration() throws Exception {
-		String userHome = System.getProperty("user.home");
-		File f = new File(userHome + File.separator + ".syncany" + File.separator + "syncany-daemon-config.xml");
-		
+		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File f = new File(saHome, "syncany-daemon-config.xml");
+
 		if (!f.exists()){ /** creates an empty ApplicationConfigurationTO file **/
-			Serializer serializer = new Persister();
-			DaemonConfigurationTO acto = new DaemonConfigurationTO();
-			serializer.write(acto, f);
+			if (!saHome.exists()){
+				saHome.mkdir();
+			}
+			DaemonConfigurationTO.store(DaemonConfigurationTO.getDefault(), f);
+			log.info("Syncany daemon configuration file created");
 		}
 		
 		DaemonConfigurationTO acto = DaemonConfigurationTO.load(f);

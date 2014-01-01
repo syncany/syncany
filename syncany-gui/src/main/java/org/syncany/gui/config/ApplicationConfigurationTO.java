@@ -123,4 +123,10 @@ public class ApplicationConfigurationTO {
 	public void setProxyAuthType(String proxyAuthType) {
 		this.proxyAuthType = proxyAuthType;
 	}
+
+	public static ApplicationConfigurationTO getDefault() {
+		ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
+		acto.setProxyType(ProxyController.ProxyType.NONE.toString());
+		return acto;
+	}
 }

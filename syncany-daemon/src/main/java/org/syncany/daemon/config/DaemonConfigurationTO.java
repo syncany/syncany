@@ -20,38 +20,17 @@ package org.syncany.daemon.config;
 import java.io.File;
 import java.util.logging.Logger;
 
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Complete;
-import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-@Root(name="syncany-gui-config")
+@Root(name="syncany-daemon-config")
 public class DaemonConfigurationTO {
 	private static final Logger log = Logger.getLogger(DaemonConfigurationTO.class.getSimpleName());
 	
-	@Element(name="proxyHost", required=false)
-	private String proxyHost;
-	
-	@Element(name="proxyPort", required=false)
-	private String proxyPort;
-	
-	@Element(name="proxyUsername", required=false)
-	private String proxyUsername;
-	
-	@Element(name="proxyPassword", required=false)
-	private String proxyPassword;
-	
-	@Element(name="proxyAuth", required=false)
-	private boolean proxyAuth;
-
-	@Element(name="proxyType", required=true)
-	private String proxyType;
-
 	public static DaemonConfigurationTO load(File file) throws Exception {
 		try {
 			return new Persister().read(DaemonConfigurationTO.class, file);
@@ -62,67 +41,12 @@ public class DaemonConfigurationTO {
 		}
 	}
 
-
-	@Persist
-	public void prepare() {
-		
+	public static Object getDefault() {
+		return new DaemonConfigurationTO();
 	}
 
-	@Complete
-	public void release() {
-	}
-	
-	
-	@Commit
-	public void commit() {
-
-	}
-
-	public String getProxyHost() {
-		return proxyHost;
-	}
-
-	public void setProxyHost(String proxyHost) {
-		this.proxyHost = proxyHost;
-	}
-
-	public String getProxyPort() {
-		return proxyPort;
-	}
-
-	public void setProxyPort(String proxyPort) {
-		this.proxyPort = proxyPort;
-	}
-
-	public String getProxyUsername() {
-		return proxyUsername;
-	}
-
-	public void setProxyUsername(String proxyUsername) {
-		this.proxyUsername = proxyUsername;
-	}
-
-	public String getProxyPassword() {
-		return proxyPassword;
-	}
-
-	public void setProxyPassword(String proxyPassword) {
-		this.proxyPassword = proxyPassword;
-	}
-
-	public boolean isProxyAuth() {
-		return proxyAuth;
-	}
-
-	public void setProxyAuth(boolean proxyAuth) {
-		this.proxyAuth = proxyAuth;
-	}
-	
-	public void setProxyType(String proxyType) {
-		this.proxyType = proxyType;
-	}
-	
-	public String getProxyType(){
-		return proxyType;
+	public static void store(Object data, File file) throws Exception {
+		Serializer serializer = new Persister();
+		serializer.write(data, file);
 	}
 }
