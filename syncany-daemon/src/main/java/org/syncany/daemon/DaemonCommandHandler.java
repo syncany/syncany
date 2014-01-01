@@ -73,6 +73,14 @@ public class DaemonCommandHandler {
 		return null;
 	}
 	
+	private static void notifySyncingState(Map<String, Object> params){
+		Map<String, Object> res = new HashMap<>();
+		res.put("action", "update_syncing_state");
+		res.put("syncing_state", (String)params.get("syncing_state"));
+		String a = JsonHelper.fromMapToString(res);
+		WSServer.sendToAll(a);
+	}
+	
 	private static void handleGetWatchedFolders() {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		
@@ -100,9 +108,16 @@ public class DaemonCommandHandler {
 
 	public static void handle(String message) {
 		Map<String, Object> params = JsonHelper.fromStringToMap(message);
+		handle(params);
+	}
+	
+	public static void handle(Map<String, Object> params) {
 		String action = ((String) params.get("action")).toLowerCase();
 		
 		switch (action){
+			case "get_syncing_state":
+				notifySyncingState(params);
+				break;
 			case "get_watched":
 				handleGetWatchedFolders();
 				break;
@@ -123,7 +138,7 @@ public class DaemonCommandHandler {
 				break;
 			default:
 				logger.log(Level.WARNING, "Unknown action received; returning message: "+action);
-				WSServer.sendToAll(message);
+				WSServer.sendToAll(JsonHelper.fromMapToString(params));
 				break;
 		}
 	}

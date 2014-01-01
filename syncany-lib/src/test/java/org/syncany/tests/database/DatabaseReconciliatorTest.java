@@ -577,13 +577,13 @@ public class DatabaseReconciliatorTest {
 		
 		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A1)/T=1376074225169");
 		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1)/T=1376074225169",
+			"A", "A/(A2)/T=1376074225230",
 		});		
 		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1)/T=1376074225169",
+			"A", "A/(A2)/T=1376074225230",
 		});		
 		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A1)/T=1376074225169"
+			"A", "A/(A2)/T=1376074225230"
 		}).firstEntry();
 				
 		/// Perform test ///

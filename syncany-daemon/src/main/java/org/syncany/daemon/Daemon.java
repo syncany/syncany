@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Logging;
 import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.CommandStatus;
@@ -19,12 +17,15 @@ import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
 import org.syncany.daemon.websocket.WSServer;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 public class Daemon {
 	private static final Logger log = Logger.getLogger(Daemon.class.getSimpleName());
 
 	private static final SocketLock daemonSocketLock = new SocketLock();
+	private static EventBus eventBus = new EventBus("syncany-daemon");
+
 	private static final AtomicBoolean quit = new AtomicBoolean(false);
 	private static boolean quittingInProgress = false;
 	private static Daemon instance = null;
@@ -43,7 +44,7 @@ public class Daemon {
 			daemonConfiguration = DeamonConfiguration.from(acto);
 		}
 		catch (Exception e) {
-			log.severe("Unable to load application configuration File");
+			log.severe("Unable to load application configuration File : "+e);
 			return;
 		}
 	}
@@ -87,6 +88,37 @@ public class Daemon {
 	public void start(boolean startedWithGui) {
 		this.startedWithGui = startedWithGui;
 		
+		Thread t = new Thread(new Runnable() {
+			public void run() {
+				Map<String, Object> syncing = new HashMap<>();
+				syncing.put("action", "get_syncing_state");
+				syncing.put("syncing_state", "syncing");
+				
+				Map<String, Object> notSyncing = new HashMap<>();
+				notSyncing.put("action", "get_syncing_state");
+				notSyncing.put("syncing_state", "in-sync");
+				
+				while (true){
+					
+					DaemonCommandHandler.handle(syncing);
+					try {
+						Thread.sleep(5000);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					DaemonCommandHandler.handle(notSyncing);
+					try {
+						Thread.sleep(5000);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		t.start();
+		
 		//0- determine if gui is already launched
 		try{
 			daemonSocketLock.lock();
@@ -105,7 +137,6 @@ public class Daemon {
 	
 	private void restoreLastState() {
 		log.fine("Restoring last state of DaemonServer");
-		
 	}
 
 	public static Daemon getInstance() {
@@ -145,13 +176,15 @@ public class Daemon {
 	}
 	
 	private static DaemonConfigurationTO loadApplicationConfiguration() throws Exception {
-		String userHome = System.getProperty("user.home");
-		File f = new File(userHome + File.separator + ".syncany" + File.separator + "syncany-daemon-config.xml");
-		
+		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File f = new File(saHome, "syncany-daemon-config.xml");
+
 		if (!f.exists()){ /** creates an empty ApplicationConfigurationTO file **/
-			Serializer serializer = new Persister();
-			DaemonConfigurationTO acto = new DaemonConfigurationTO();
-			serializer.write(acto, f);
+			if (!saHome.exists()){
+				saHome.mkdir();
+			}
+			DaemonConfigurationTO.store(DaemonConfigurationTO.getDefault(), f);
+			log.info("Syncany daemon configuration file created");
 		}
 		
 		DaemonConfigurationTO acto = DaemonConfigurationTO.load(f);

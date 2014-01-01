@@ -30,7 +30,7 @@ public class ApplicationResourcesManager {
 	public static int DEFAULT_BUTTON_HEIGHT = 30;
 
 	public static String FONT_NAME = "Lucida Grande";
-	public static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 11 : 10;
+	public static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 12 : 10;
 	
 	public static Font FONT_NORMAL = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.NORMAL);
 	public static Font FONT_BOLD = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.BOLD);

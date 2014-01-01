@@ -22,10 +22,12 @@ public class MainGUI {
 	private Shell shell;
 	
 	private TrayIcon tray;
+	private SystemTrayManager sysTrayManager;
 	
 	public void open() {
 		shell = new Shell();	
 		tray = new TrayIconFactory(shell).createTrayIcon();
+		sysTrayManager = new SystemTrayManager(shell);
 
 		// Temporary
 		final TrayIcon finalTray = tray;		
@@ -42,12 +44,23 @@ public class MainGUI {
 				display.sleep();
 			}
 		}
-	}		
-
+	}
+	
 	@Subscribe
 	public void updateInterface(InterfaceUpdate update) {
-		log.info("Update Interface Event");
-		tray.updateFolders(update.getData());
+		log.info("Update Interface Event : "+ update.getAction());
+		
+		switch (update.getAction()){
+			case START_SYSTEM_TRAY_SYNC:
+				sysTrayManager.makeSystemTrayStartSync();
+				break;
+			case STOP_SYSTEM_TRAY_SYNC:
+				sysTrayManager.makeSystemTrayStopSync();
+				break;
+			case UPDATE_WATCHED_FOLDERS:
+				sysTrayManager.updateTray(update.getData());
+				break;
+		}
 	}
 
 	public static String getClientIdentification() {

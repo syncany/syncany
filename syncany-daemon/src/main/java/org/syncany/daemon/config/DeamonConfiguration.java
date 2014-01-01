@@ -22,69 +22,9 @@ package org.syncany.daemon.config;
  *
  */
 public class DeamonConfiguration {
-	private String proxyHost;
-	private String proxyPort;
-	private String proxyUsername;
-	private String proxyPassword;
-	private String proxyType;
-	private boolean proxyAuth;
-	
-	public String getProxyHost() {
-		return proxyHost;
-	}
-
-	public void setProxyHost(String proxyHost) {
-		this.proxyHost = proxyHost;
-	}
-
-	public String getProxyPort() {
-		return proxyPort;
-	}
-
-	public void setProxyPort(String proxyPort) {
-		this.proxyPort = proxyPort;
-	}
-
-	public String getProxyUsername() {
-		return proxyUsername;
-	}
-
-	public void setProxyUsername(String proxyUsername) {
-		this.proxyUsername = proxyUsername;
-	}
-
-	public String getProxyPassword() {
-		return proxyPassword;
-	}
-
-	public void setProxyPassword(String proxyPassword) {
-		this.proxyPassword = proxyPassword;
-	}
-
-	public boolean isProxyAuth() {
-		return proxyAuth;
-	}
-
-	public void setProxyAuth(boolean proxyAuth) {
-		this.proxyAuth = proxyAuth;
-	}
-	
-	public String getProxyType() {
-		return proxyType;
-	}
-	
-	public void setProxyType(String proxyType) {
-		this.proxyType = proxyType;
-	}
 	
 	public static DeamonConfiguration from(DaemonConfigurationTO acto) {
 		DeamonConfiguration ac = new DeamonConfiguration();
-		ac.setProxyAuth(acto.isProxyAuth());
-		ac.setProxyHost(acto.getProxyHost());
-		ac.setProxyPassword(acto.getProxyPassword());
-		ac.setProxyPort(acto.getProxyPort());
-		ac.setProxyType(acto.getProxyType());
-		ac.setProxyUsername(acto.getProxyUsername());
 		return ac;
 	}
 	
