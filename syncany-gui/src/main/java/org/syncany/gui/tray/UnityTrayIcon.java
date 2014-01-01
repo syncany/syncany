@@ -98,4 +98,16 @@ public class UnityTrayIcon implements TrayIcon {
 		
 		webSocketClient.send(JsonHelper.fromMapToString(parameters));		
 	}
+
+	@Override
+	public void makeSystemTrayStartSync() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void makeSystemTrayStopSync() {
+		// TODO Auto-generated method stub
+		
+	}
 }

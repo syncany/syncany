@@ -20,6 +20,7 @@ package org.syncany.gui.tray;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -54,7 +55,22 @@ public class DefaultTrayIcon implements TrayIcon {
 	
 	private Display display = Display.getDefault();
 	
+	private Shell shell;
+
+	private AtomicBoolean syncing = new AtomicBoolean(false);
+	private AtomicBoolean running = new AtomicBoolean(false);
+	
+	private String[] animation = new String[]{
+		"/images/tray/tray-syncing1.png",
+		"/images/tray/tray-syncing2.png",
+		"/images/tray/tray-syncing3.png",
+		"/images/tray/tray-syncing4.png",
+		"/images/tray/tray-syncing5.png",
+		"/images/tray/tray-syncing6.png",
+	};
+	
 	public DefaultTrayIcon(final Shell shell) {
+		this.shell = shell;
 		Tray tray = Display.getDefault().getSystemTray();
 		
 		if (tray != null) {
@@ -136,7 +152,57 @@ public class DefaultTrayIcon implements TrayIcon {
 				
 				item.addListener(SWT.Selection, showMenuListener);
 			}
+			
+			start();
 		}
+	}
+	
+	private Thread systemTrayAnimationThread = new Thread(new Runnable() {
+		@Override
+		public void run() {
+			while (true){
+				int i = 0;
+				
+				while (syncing.get()){
+					try {
+						final int idx = i;
+						Display.getDefault().asyncExec(new Runnable() {
+							public void run() {
+								item.setImage(SWTResourceManager.getImage(animation[idx]));
+							}
+						});
+						i++;
+						if (i == 6) i = 0;
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						item.setImage(SWTResourceManager.getImage("/images/tray/tray-in-sync.png"));
+					}
+				});
+				
+				running.set(false);
+				
+				while (!running.get()){
+
+				}
+			}
+		}
+	});
+	
+	@Override
+	public void makeSystemTrayStartSync(){
+		syncing.set(true);
+		running.set(true);
+	}
+	
+	@Override
+	public void makeSystemTrayStopSync(){
+		syncing.set(false);
 	}
 
 	@Override
@@ -157,5 +223,9 @@ public class DefaultTrayIcon implements TrayIcon {
 	@Override
 	public void updateStatusText(String statusText) {
 		statusTextItem.setText(statusText);		
+	}
+	
+	private void start() {
+		systemTrayAnimationThread.start();
 	}
 }

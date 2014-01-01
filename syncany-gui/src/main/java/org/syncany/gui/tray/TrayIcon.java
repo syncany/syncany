@@ -26,4 +26,6 @@ import java.util.Map;
 public interface TrayIcon {
 	public abstract void updateFolders(Map<String, Map<String, String>> folders);
 	public abstract void updateStatusText(String statusText);
+	public abstract void makeSystemTrayStartSync();
+	public abstract void makeSystemTrayStopSync();
 }
