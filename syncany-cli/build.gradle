@@ -94,6 +94,31 @@ and incredible flexibility in terms of storage type and provider:
 	force = true
 }
 
+debian.dependsOn installApp
+rpm.dependsOn installApp
+
+
+// Windows Installer ///////////////////////////////////////////////////////////
+
+task exe(dependsOn: ["installApp"]) << {
+	def innoSetupDir = new File("${buildDir}/innosetup")
+
+	delete innoSetupDir	
+	innoSetupDir.mkdir();	
+	
+	copy {
+		from "${rootProject.projectDir}/gradle/innosetup/setup.iss"
+		into innoSetupDir
+		expand(applicationVersion: "${applicationVersionFull}")
+	}
+
+	exec {
+		workingDir rootProject.projectDir
+		commandLine "iscc ${innoSetupDir}/setup.iss".split()
+	}
+}
+
+
 // CLI-specific Tasks //////////////////////////////////////////////////////////
 
 String osName = System.getProperty("os.name").toLowerCase();
