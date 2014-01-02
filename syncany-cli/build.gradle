@@ -1,26 +1,26 @@
 import java.io.File;
 
 dependencies {
-	compile			project(':syncany-lib')
-	compile			project(':syncany-plugins:syncany-plugin-ftp')
-	compile			project(':syncany-plugins:syncany-plugin-rest')    
-	compile			project(':syncany-plugins:syncany-plugin-webdav')    	
+	compile			project(":syncany-lib")
+	compile			project(":syncany-plugins:syncany-plugin-ftp")
+	compile			project(":syncany-plugins:syncany-plugin-rest")    
+	compile			project(":syncany-plugins:syncany-plugin-webdav")    	
 	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
    	
-	testCompile		project(path: ':syncany-lib', configuration: 'tests')
+	testCompile		project(path: ":syncany-lib", configuration: "tests")
 	testCompile		"junit:junit:4.3"   	      
 }
 
 
 // Application Plugin Settings and Hooks ///////////////////////////////////////	
 
-apply plugin: 'application'
+apply plugin: "application"
 
 applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
 startScripts {
-	defaultJvmOpts = [ '-Xmx1024m', '-Dfile.encoding=utf-8' ]
+	defaultJvmOpts = [ "-Xmx1024m", "-Dfile.encoding=utf-8" ]
 	
 	doLast {
 		def wFile = file getWindowsScript()
@@ -37,29 +37,75 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 
 distTar {
 	baseName = "syncany"
-	version = "$applicationVersion"
+	version = "$applicationVersionFull"
 	compression = Compression.GZIP
 	extension = "tar.gz"	
 }
 
 distZip {
 	baseName = "syncany"
-	version = "$applicationVersion"
+	version = "$applicationVersionFull"
 }
 
+// Packaging ///////////////////////////////////////////////////////////////////
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath "com.kenshoo:gradle-fpm:0.4"
+	}
+}
+
+apply plugin: "fpm-packaging"
+
+packaging {
+	dependencies = ["openjdk-7-jre"] 
+	baseDir = "${buildDir}/install/${applicationName}"
+	prefix = "/usr/lib/syncany"
+	extraOptions = [ 
+		"--name": "syncany", 
+		"--architecture": "all",
+		"--license": "GPLv2",
+		"--version": "${applicationVersionFull}",
+		"--maintainer": "Philipp Heckel <philipp.heckel@gmail.com>",
+		"--vendor": "Philipp Heckel <philipp.heckel@gmail.com>",		
+		"--url": "http://www.syncany.org/",
+		"--description": 
+"""
+Syncany is an open-source cloud storage and filesharing application. 
+
+It allows users to backup and share certain folders of their workstations
+using any kind of storage. Syncany is open-source and provides data encryption
+and incredible flexibility in terms of storage type and provider:
+
+ - Data encryption: Syncany encrypts the files locally, so that any online 
+   storage can be used even for sensitive data.
+                   
+ - Arbitrary storage: Syncany uses a plug-in based storage system. It can be
+   used with any type of remote storage.
+""",
+		"--after-install": "${rootProject.projectDir}/gradle/fpm/postinst",
+		"--before-remove": "${rootProject.projectDir}/gradle/fpm/prerm",
+		"--exclude": "*.bat"
+	] 
+	filesArgs = ["."]
+	force = true
+}
 
 // CLI-specific Tasks //////////////////////////////////////////////////////////
 
 String osName = System.getProperty("os.name").toLowerCase();
 
-task fakeinstall(dependsOn: ['fakeuninstall']) << {
+task fakeinstall(dependsOn: ["fakeuninstall"]) << {
 	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
-	// running fakeinstall as 'root'; manually calling installApp required
+	// running fakeinstall as "root"; manually calling installApp required
 	
-	if (osName.startsWith('windows')){
+	if (osName.startsWith("windows")) {
 		copy {
-			from '../gradle/windows/syncany.bat'
-			into System.getenv()['windir']
+			from "../gradle/windows/syncany.bat"
+			into System.getenv()["windir"]
 			expand(appBinary: "${buildDir}/install/${applicationName}/bin/${applicationName}.bat")
 		}
 	}
@@ -70,8 +116,8 @@ task fakeinstall(dependsOn: ['fakeuninstall']) << {
 }
 
 task fakeuninstall << {
-	if (osName.startsWith('windows')){
-		new File(System.getenv()['windir'] + "/syncany.bat").delete()
+	if (osName.startsWith("windows")) {
+		new File(System.getenv()["windir"] + "/syncany.bat").delete()
 	}
 	else {
 		new File("/usr/local/bin/syncany").delete()
@@ -79,7 +125,7 @@ task fakeuninstall << {
 	}
 }
 
-task(runCli, dependsOn: 'classes', type: JavaExec) {
-	main = 'org.syncany.Syncany'
+task(runCli, dependsOn: "classes", type: JavaExec) {
+	main = "org.syncany.Syncany"
 	classpath = sourceSets.main.runtimeClasspath
 }	

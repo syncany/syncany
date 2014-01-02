@@ -19,20 +19,84 @@ terms of storage type and provider:
 
 **Directly jump to ...**
 
-- [Build and test Syncany](#build-and-test-syncany)
+- [Download and install daily snapshots](#download-and-install-daily-snapshots)
 - [Sample usage](#sample-usage)
+- [Build and test Syncany](#build-and-test-syncany)
 - [Documentation, diagrams and screencasts](#documentation-diagrams-and-screencasts)
 - [Setup Eclipse IDE for development](#setup-eclipse-ide-for-development)
 - [How can I help?](#how-can-i-help)
 - [Licensing, website and contact](#licensing-website-and-contact)
 
 
+Download and install daily snapshots
+------------------------------------
+We're building daily snapshots from the master branch from the latest commit (older commit
+builds are removed). You can check out the latest build at [syncany.org/dist](http://syncany.org/dist/).
+
+**Please note**: These builds are created from *unstable*, sometimes *erroneous* code. 
+Things might change very often and newer versions might not support older repositories.
+Please **do NOT** use these builds for important files.
+
+Sample usage
+------------
+
+Usage is pretty similar to a version control system. If you have used Git or
+SVN, it should feel a lot alike.
+
+**1. Initialize a local directory**
+
+        $ syncany init 
+        
+        Choose a storage plugin. Available plugins are: ftp, local, s3
+        Plugin: ftp
+        
+        Connection details for FTP connection:
+        - hostname: myhost.example.com
+        - username: myuser1
+        - password: somepassword1
+        - port (optional):
+
+        The password is used to encrypt data on the remote storage.
+        Please choose it wisely.
+
+        Password: (secret password)
+        Confirm: (repeat it)
+        
+This sets up a new repository on the given remote storage and initializes the
+local folder. You can now use `syncany connect` to connect to this repository
+from other clients.
+
+**2. Add files and synchronize**
+
+To let Syncany do everything automatically, simple use the `syncany watch` command. 
+This command will synchronize your local files in a given interval. 
+
+        $ syncany watch --interval=20
+
+You can also manually trigger the upload of your local files or the download of remote changes:
+
+        $ syncany up
+        $ syncany down
+
+For a detailed demo, please refer to a [screencast](#documentation-diagrams-and-screencasts). 
+
+
 Build and test Syncany
 ----------------------
 
-**Requirements**: Syncany is based on Java 7, so you need that installed. We use
-Gradle for dependency management and as build tool. Gradle does all the
-dependency magic. It should work out of the box.
+**0. Requirements**: Syncany is based on Java 7 and we use Gradle for dependency management
+and as build tool. Gradle does all the dependency magic. All you need to build Syncany
+is a **JDK 7**. If you like to create a Debian package (optional), you also need
+[fpm](https://github.com/jordansissel/fpm) installed.
+
+On a Debian-based system that would be:
+
+        $ sudo apt-get install openjdk-7-jdk
+   
+And optional for building Debian packages (*debian* task):
+
+        $ sudo apt-get install ruby ruby-dev build-essential rubygems
+        $ sudo gem install fpm
 
 **1. Checkout code and build**
 
@@ -66,49 +130,6 @@ yet. We're working on an installer for Windows, and packages for Linux.
 
         syncany --help        
  
-
-Sample usage
-------------
-
-Usage is pretty similar to a version control system. If you have used Git or
-SVN, it should feel a lot alike.
-
-**1. Initialize a local directory**
-
-        $ syncany init 
-        
-        Choose a storage plugin. Available plugins are: ftp, local, s3
-        Plugin: ftp
-        
-        Connection details for FTP connection:
-        - hostname: myhost.example.com
-        - username: myuser1
-        - password: somepassword1
-        - port (optional):
-
-        The password is used to encrypt data on the remote storage.
-        Please choose it wisely.
-
-        Password: (secret password)
-        Confirm: (repeat it)
-        
-This sets up a new repository on the given remote storage and initializes the
-local folder. You can now use `syncany connect` to connect to this repository
-from other clients.
-
-**2. Add files and synchronize**
-
-To let Syncany do everything automatically, simple use the `syncany watch` command. This command will synchronize your local files in a given interval. 
-
-        $ syncany watch --interval=20
-
-You can also manually trigger the upload of your local files or the download of remote changes:
-
-        $ syncany up
-        $ syncany down
-
-For a detailed demo, please refer to a [screencast](#documentation-diagrams-and-screencasts). 
-
 
 Documentation, diagrams and screencasts
 ---------------------------------------
@@ -161,7 +182,6 @@ Setup Eclipse IDE for development
    
    - Select "/home/user/workplace/syncany"
    - [x] Tick the *Search nested projects* checkbox (only available in *Eclipse Kepler*)
-   - [_] Untick the *syncany* main project from the list view
 
 5. Click "Finish"
 
