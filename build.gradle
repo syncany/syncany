@@ -1,11 +1,30 @@
-apply plugin: 'eclipse'
+//
+// Build script for main project
+//
 
-// Global Settings
+// Global Helpers //////////////////////////////////////////////////////////////
+
+def getRevision = { ->
+	def stdout = new ByteArrayOutputStream()
+
+	exec {
+		workingDir rootProject.projectDir
+		commandLine 'git rev-parse --short HEAD'.split()
+		standardOutput = stdout
+	}
+
+	return stdout.toString().trim()
+}
+
+
+// Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
 	applicationRelease = false
 	applicationVersion = "0.1-SNAPSHOT"
 	applicationDate = new Date()
+	applicationRevision = getRevision()
+	applicationVersionFull = "${applicationVersion}-${applicationDate.format('yyMMddHHmm')}-${applicationRevision}"
 }
 
 
@@ -104,50 +123,33 @@ subprojects {
 }
 
 
-// General Helpers /////////////////////////////////////////////////////////////
-
-def getRevision = { ->
-    def stdout = new ByteArrayOutputStream()
-    
-    exec {
-		workingDir rootProject.projectDir
-        commandLine 'git rev-parse --short HEAD'.split()
-        standardOutput = stdout
-    }
-    
-    return stdout.toString().trim()
-}
-
-
 // JavaDoc /////////////////////////////////////////////////////////////////////
 
 task javadocAll(type: Javadoc) {
-    source subprojects.collect { project -> project.sourceSets.main.allJava } 
-    classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
-    destinationDir = new File(projectDir, 'build/javadoc')
+	source subprojects.collect { project -> project.sourceSets.main.allJava } 
+	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
+	destinationDir = new File(projectDir, 'build/javadoc')
 
-    options.linkSource = true
+	options.linkSource = true
     
-	def genDate = new Date()
-	def genRevision = getRevision()
-    
-    configure(options) {
+	configure(options) {
 		windowTitle = 'Syncany API Documentation'
 		docTitle = "Syncany JavaDoc ($applicationVersion)"
 		bottom = " \
 			<span style=\"font-size: 13px\"><br /> \
 				<a href=\"http://www.syncany.org/\" target=\"_top\">Syncany</a> is an open-source cloud storage and filesharing application.<br /><br /> \
 				Code located at <a href=\"https://github.com/binwiederhier/syncany\" target=\"_top\">https://github.com/binwiederhier/syncany</a><br /> \
-				JavaDoc for version $applicationVersion generated based on commit <a href=\"https://github.com/binwiederhier/syncany/tree/$genRevision\" target=\"_top\">$genRevision</a> at $genDate<br /><br /> \
-				Copyright &copy; 2011-2013 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
+				JavaDoc for version $applicationVersion generated based on commit <a href=\"https://github.com/binwiederhier/syncany/tree/$applicationRevision\" target=\"_top\">$applicationRevision</a> at $applicationDate<br /><br /> \
+				Copyright &copy; 2011-2014 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
 			</span> \
 		"
-   }
+	}
 }
 
 task cleanJavadoc(type: Delete) {
 	delete 'build/javadoc'	
 }
+
 
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
 
