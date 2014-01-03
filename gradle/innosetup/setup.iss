@@ -18,6 +18,7 @@
 AppName=Syncany
 AppVersion=${applicationVersion}
 DefaultDirName={pf}\\Syncany
+PrivilegesRequired=none
 
 SourceDir=..\\install\\syncany
 OutputDir=..\\..\\innosetup
