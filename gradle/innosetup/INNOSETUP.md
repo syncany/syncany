@@ -30,7 +30,10 @@ In short:
 	wine is.exe
 	sudo cp iscc /usr/local/bin/iscc
 
-If the machine is a machien without display manager, Inno Setup cannot be installed. Instead, you can extract the is.exe file using [innoextract](http://constexpr.org/innoextract/). The innoextract tool is available in many distro repos (e.g. Ubuntu >= 12.10, Debian >= 7). So in most cases, the following commands are enough:
+If the machine is a machien without display manager, Inno Setup cannot be installed. Instead, you
+can extract the is.exe file using [innoextract](http://constexpr.org/innoextract/). The 
+innoextract tool is available in many distro repos (e.g. Ubuntu >= 12.10, Debian >= 7).
+So in most cases, the following commands are enough:
 
 	sudo apt-get install innoextact
 	innoextract is.exe
@@ -47,7 +50,7 @@ In case innoextract is not available, use the author's repo:
 
 #### 2. Create exe-installer with the Gradle "exe" task
 
-The Gradle task "exe" first copies the skeleton input script [setup.iss](setup.iss)
+The Gradle task "exe" first copies the skeleton input script [setup.iss.skel](setup.iss.skel)
 and replaces some variables (application version). It then calls the Inno Setup
 compiler (ISCC) with this script and generates an exe-file to 
 `syncany-cli/build/innosetup`.

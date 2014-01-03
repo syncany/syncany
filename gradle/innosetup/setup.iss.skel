@@ -16,17 +16,26 @@
 
 [Setup]
 AppName=Syncany
-AppVersion=${applicationVersion}
+AppId=Syncany
+AppVersion=${applicationVersionFull}
+AppVerName=Syncany ${applicationVersion}
+AppPublisher=Philipp Heckel
+AppPublisherURL=http://www.syncany.org/
+AppCopyright=Copyright (C) 2011-2013 Philipp Heckel
+
 DefaultDirName={pf}\\Syncany
 PrivilegesRequired=none
 
 SourceDir=..\\install\\syncany
 OutputDir=..\\..\\innosetup
-OutputBaseFilename=syncany-${applicationVersion}
+OutputBaseFilename=syncany-${applicationVersionFull}
 
-WizardImageFile=..\\..\\innosetup\\setup.bmp
-;WizardSmallImageFile=..\\..\\innosetup\\setup-small.bmp
+WizardImageFile=..\\..\\innosetup\\setup-left.bmp
+WizardSmallImageFile=..\\..\\innosetup\\setup-top.bmp
+InfoBeforeFile=..\\..\\innosetup\\setup-info-before.rtf
+InfoAfterFile=..\\..\\innosetup\\setup-info-after.rtf
 
 [Files]
+Source: "*"; DestDir: "{app}"
 Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany"
 Source: "lib\\*"; DestDir: "{app}\\lib"

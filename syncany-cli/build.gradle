@@ -107,14 +107,21 @@ task exe(dependsOn: ["installApp"]) << {
 	innoSetupDir.mkdir();	
 	
 	copy {
-		from "${rootProject.projectDir}/gradle/innosetup/setup.bmp"
-		into innoSetupDir
+		from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
+		from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
+		from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")		
+		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")		
+		into(innoSetupDir)
 	}
 
 	copy {
-		from "${rootProject.projectDir}/gradle/innosetup/setup.iss"
-		into innoSetupDir
-		expand(applicationVersion: "${applicationVersionFull}")
+		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
+		rename("setup.iss.skel", "setup.iss")
+		expand([
+			applicationVersion: "${applicationVersion}",
+			applicationVersionFull: "${applicationVersionFull}",			
+		])
+		into(innoSetupDir)
 	}
 
 	exec {
