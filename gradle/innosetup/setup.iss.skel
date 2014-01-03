@@ -30,6 +30,7 @@ SourceDir=..\\install\\syncany
 OutputDir=..\\..\\innosetup
 OutputBaseFilename=syncany-${applicationVersionFull}
 
+SetupIconFile=..\\..\\innosetup\\setup-icon.ico
 WizardImageFile=..\\..\\innosetup\\setup-left.bmp
 WizardSmallImageFile=..\\..\\innosetup\\setup-top.bmp
 InfoBeforeFile=..\\..\\innosetup\\setup-info-before.rtf

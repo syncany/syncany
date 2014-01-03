@@ -14,8 +14,8 @@
    height="510"
    id="svg4723"
    version="1.1"
-   inkscape:version="0.48.0 r9654"
-   sodipodi:docname="icon.svg"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="logo.svg"
    inkscape:export-filename="/home/pheckel/Coding/syncany/syncany/sfx/icon-syncing6.png"
    inkscape:export-xdpi="8.4700003"
    inkscape:export-ydpi="8.4700003"
@@ -369,8 +369,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="282.09658"
-     inkscape:cy="-2.2061793"
+     inkscape:cx="169.59658"
+     inkscape:cy="230.20683"
      inkscape:document-units="px"
      inkscape:current-layer="g3169"
      showgrid="false"
@@ -379,9 +379,9 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:window-width="1440"
-     inkscape:window-height="851"
+     inkscape:window-height="846"
      inkscape:window-x="0"
-     inkscape:window-y="24"
+     inkscape:window-y="25"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata4728">
@@ -455,7 +455,7 @@
      id="layer3"
      inkscape:label="in sync"
      transform="translate(0,26)"
-     style="display:inline">
+     style="display:none">
     <g
        transform="matrix(6.3116166,0,0,6.3116166,-68.808531,-92.1329)"
        id="layer4"
