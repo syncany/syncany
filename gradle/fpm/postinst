@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ln -s /usr/lib/syncany/bin/syncany /usr/bin/syncany
+ln -s /usr/lib/syncany/bin/syncany /usr/bin/sy
