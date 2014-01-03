@@ -23,6 +23,9 @@ SourceDir=..\\install\\syncany
 OutputDir=..\\..\\innosetup
 OutputBaseFilename=syncany-${applicationVersion}
 
+WizardImageFile=..\\..\\innosetup\\setup.bmp
+;WizardSmallImageFile=..\\..\\innosetup\\setup-small.bmp
+
 [Files]
 Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany"
 Source: "lib\\*"; DestDir: "{app}\\lib"

@@ -107,6 +107,11 @@ task exe(dependsOn: ["installApp"]) << {
 	innoSetupDir.mkdir();	
 	
 	copy {
+		from "${rootProject.projectDir}/gradle/innosetup/setup.bmp"
+		into innoSetupDir
+	}
+
+	copy {
 		from "${rootProject.projectDir}/gradle/innosetup/setup.iss"
 		into innoSetupDir
 		expand(applicationVersion: "${applicationVersionFull}")
