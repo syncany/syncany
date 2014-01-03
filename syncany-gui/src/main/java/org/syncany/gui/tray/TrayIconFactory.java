@@ -37,7 +37,7 @@ public class TrayIconFactory {
 	}
 	
 	public TrayIcon createTrayIcon() {
-		if (true || isUnity()) {
+		if (isUnity()) {
 			return new UnityTrayIcon();
 		}
 		else {

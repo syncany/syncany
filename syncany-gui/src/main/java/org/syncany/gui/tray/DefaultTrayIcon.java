@@ -221,8 +221,13 @@ public class DefaultTrayIcon implements TrayIcon {
 	}
 
 	@Override
-	public void updateStatusText(String statusText) {
-		statusTextItem.setText(statusText);		
+	public void updateStatusText(final String statusText) {
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+				statusTextItem.setText(statusText);
+			}
+		});
+		
 	}
 	
 	private void start() {
