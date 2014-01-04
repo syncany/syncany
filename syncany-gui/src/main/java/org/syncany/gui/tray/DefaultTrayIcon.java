@@ -45,7 +45,7 @@ import org.syncany.util.EnvironmentUtil;
  * @author pheckel
  *
  */
-public class DefaultTrayIcon implements TrayIcon {
+public class DefaultTrayIcon extends TrayIcon {
 	private static final String TRAY_ICON_IMAGE_RESOURCE = "/images/tray/tray.png";
 	private TrayItem item;
 	
@@ -121,7 +121,7 @@ public class DefaultTrayIcon implements TrayIcon {
 			websiteItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					System.out.println("website");
+					showDonate();
 				}
 			});
 

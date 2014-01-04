@@ -46,18 +46,19 @@ public class MainGUI {
 	
 	@Subscribe
 	public void updateInterface(InterfaceUpdate update) {
-		log.info("Update Interface Event : "+ update.getAction());
-		
-		switch (update.getAction()){
-			case START_SYSTEM_TRAY_SYNC:
-				tray.makeSystemTrayStartSync();
-				break;
-			case STOP_SYSTEM_TRAY_SYNC:
-				tray.makeSystemTrayStopSync();
-				break;
-			case UPDATE_WATCHED_FOLDERS:
-				tray.updateFolders(update.getData());
-				break;
+		if (tray != null){
+			log.info("Update Interface Event : " + update.getAction());
+			switch (update.getAction()){
+				case START_SYSTEM_TRAY_SYNC:
+					tray.makeSystemTrayStartSync();
+					break;
+				case STOP_SYSTEM_TRAY_SYNC:
+					tray.makeSystemTrayStopSync();
+					break;
+				case UPDATE_WATCHED_FOLDERS:
+					tray.updateFolders(update.getData());
+					break;
+			}
 		}
 	}
 

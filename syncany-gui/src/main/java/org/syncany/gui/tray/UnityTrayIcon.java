@@ -18,14 +18,15 @@
 package org.syncany.gui.tray;
 
 import java.io.IOException;
-import java.net.URI;
+import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft_17;
-import org.java_websocket.handshake.ServerHandshake;
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.WSClient;
 import org.syncany.util.JsonHelper;
@@ -34,60 +35,87 @@ import org.syncany.util.JsonHelper;
  * @author pheckel
  *
  */
-public class UnityTrayIcon implements TrayIcon {
-	private static final Logger logger = Logger.getLogger(WSClient.class.getSimpleName());	
-	private WebSocketClient webSocketClient;
+public class UnityTrayIcon extends TrayIcon {
+	private static final Logger logger = Logger.getLogger(WSClient.class.getSimpleName());
+	private WebSocketServer webSocketClient;
 
 	public UnityTrayIcon() {
 		try {
 			Map<String, String> map = new HashMap<>();
 			map.put("client_id", MainGUI.getClientIdentification());
-			
-			this.webSocketClient = new WebSocketClient(new URI(WSClient.DEFAULT_WS_SERVER), new Draft_17(), map, 3000) {
+
+			this.webSocketClient = new WebSocketServer(new InetSocketAddress(8882)) {
 				@Override
-				public void onOpen(ServerHandshake handshakedata) {
-					logger.fine("Connection to syncany daemon server: " + getURI());
+				public void onOpen(WebSocket conn, ClientHandshake handshake) {
+					String id = handshake.getFieldValue("client_id");
+					logger.fine("Client with id '" + id + "' connected");
 				}
 
 				@Override
-				public void onMessage(String message) {
-					logger.fine("Received by UnityTrayIcon: " + message);
+				public void onMessage(WebSocket conn, String message) {
+					logger.fine("Unity Received from " + conn.getRemoteSocketAddress().toString() + ": " + message);
+					handleCommand(JsonHelper.fromStringToMap(message));
 				}
 
 				@Override
-				public void onClose(int code, String reason, boolean remote) {
-					logger.fine(String.format("You have been disconnected from {0} for reaseon {1}", getURI(), reason));
+				public void onError(WebSocket conn, Exception ex) {
+					logger.fine("Server error : " + ex.toString());
 				}
 
 				@Override
-				public void onError(Exception ex) {
-					logger.fine("Exception occured ..." + ex.getMessage());
+				public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+					logger.fine(conn.getRemoteSocketAddress().toString() + " disconnected");
 				}
 			};
-			
-			webSocketClient.connect();
+
+			webSocketClient.start();
 
 			new Thread(new Runnable() {
 				@Override
-				public void run() {				
+				public void run() {
 					try {
-						ProcessBuilder processBuilder = new ProcessBuilder("src/main/python/unitytray.py", "src/main/resources/images", "All folders in sync");
-						processBuilder.start();					
+						ProcessBuilder processBuilder = new ProcessBuilder("src/main/python/unitytray.py", "src/main/resources/images",
+								"All folders in sync");
+						processBuilder.start();
 					}
 					catch (IOException e) {
 						throw new RuntimeException("Unable to determine Linux desktop environment.", e);
 					}
-				}			
-			}).start();		
+				}
+			}).start();
+
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
 		}
 	}
 
+	protected void handleCommand(Map<String, Object> map) {
+		String command = (String)map.get("command");
+		
+		switch (command){
+			case "DONATE":
+				showDonate();
+				break;
+		}
+	}
+
+	public void sendToAll(String text) {
+		Collection<WebSocket> con = webSocketClient.connections();
+		synchronized (con) {
+			for (WebSocket c : con) {
+				sendTo(c, text);
+			}
+		}
+	}
+
+	public void sendTo(WebSocket ws, String text) {
+		ws.send(text);
+	}
+
 	@Override
 	public void updateFolders(Map<String, Map<String, String>> folders) {
-		webSocketClient.send(JsonHelper.fromMapToString(folders));		
+		sendToAll(JsonHelper.fromMapToString(folders));
 	}
 
 	@Override
@@ -95,19 +123,23 @@ public class UnityTrayIcon implements TrayIcon {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("action", "update_tray_status_text");
 		parameters.put("text", statusText);
-		
-		webSocketClient.send(JsonHelper.fromMapToString(parameters));		
+
+		sendToAll(JsonHelper.fromMapToString(parameters));
 	}
 
 	@Override
 	public void makeSystemTrayStartSync() {
-		// TODO Auto-generated method stub
-		
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("action", "start_syncing");
+
+		sendToAll(JsonHelper.fromMapToString(parameters));
 	}
 
 	@Override
 	public void makeSystemTrayStopSync() {
-		// TODO Auto-generated method stub
-		
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("action", "stop_syncing");
+
+		sendToAll(JsonHelper.fromMapToString(parameters));
 	}
 }

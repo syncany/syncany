@@ -17,15 +17,31 @@
  */
 package org.syncany.gui.tray;
 
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 /**
  * @author pheckel
  *
  */
-public interface TrayIcon {
+public abstract class TrayIcon {
 	public abstract void updateFolders(Map<String, Map<String, String>> folders);
 	public abstract void updateStatusText(String statusText);
 	public abstract void makeSystemTrayStartSync();
 	public abstract void makeSystemTrayStopSync();
+	
+	protected void showDonate(){
+		try {
+			Desktop.getDesktop().browse(new URI("http://google.com"));
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+	}
 }
