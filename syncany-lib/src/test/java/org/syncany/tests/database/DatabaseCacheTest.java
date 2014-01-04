@@ -219,7 +219,7 @@ public class DatabaseCacheTest {
 		FileVersion fileVersion3 = TestDatabaseUtil.createFileVersion("file1.jpg"); // new file!
 		fileVersion3.setType(FileType.FOLDER);
 
-		FileHistoryId idFile3 = FileHistoryId.parseFileId("1111111111111111"); // same ID
+		FileHistoryId idFile3 = FileHistoryId.parseFileId("1111111111111112"); // different ID
 		PartialFileHistory fileHistory3 = new PartialFileHistory(idFile3); // same ID
 
 		fileHistory3.addFileVersion(fileVersion3);
@@ -227,8 +227,6 @@ public class DatabaseCacheTest {
 
 		// - add database version
 		database.addDatabaseVersion(databaseVersion2);
-
-		// TODO [high] This seems to be a bug in the database cache!!
 
 		assertNotNull(database.getFileHistory("file1.jpg"));
 		assertEquals(1, database.getFileHistory("file1.jpg").getFileVersions().size());
