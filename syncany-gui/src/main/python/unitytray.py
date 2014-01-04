@@ -26,11 +26,8 @@ import sys
 import time
 import gtk
 import pynotify
-import socket
 import threading
 import json
-import Queue
-import subprocess
 import websocket
 import appindicator
     
@@ -44,7 +41,6 @@ def do_notify(request):
 	else:
 		image = request["image"]
 
-	
 	# Alterantive using 'notify-send'
 	# os.system("notify-send -t 2000 -i '{0}' '{1}' '{2}'".format(image, request["summary"], request["body"]))
 
@@ -285,7 +281,8 @@ def on_ws_open(ws):
 def ws_start_client():
 	global ws
 
-	ws = websocket.WebSocketApp("ws://127.0.0.1:8887/",
+	websocket.enableTrace(True)
+	ws = websocket.WebSocketApp("ws://127.0.0.1:8882/",
 		on_message = on_ws_message,
 		on_error = on_ws_error,
 		on_close = on_ws_close,

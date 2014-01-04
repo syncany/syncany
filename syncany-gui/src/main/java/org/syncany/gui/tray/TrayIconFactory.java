@@ -20,7 +20,6 @@ package org.syncany.gui.tray;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Map;
 
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.util.EnvironmentUtil;
@@ -31,41 +30,37 @@ import org.syncany.util.EnvironmentUtil;
  */
 public class TrayIconFactory {
 	private Shell shell;
-	
+
 	public TrayIconFactory(Shell shell) {
 		this.shell = shell;
 	}
-	
+
 	public TrayIcon createTrayIcon() {
-		if (isUnity()) {
+		if (EnvironmentUtil.isLinux() && isUnity()) {
 			return new UnityTrayIcon();
 		}
 		else {
 			return new DefaultTrayIcon(shell);
 		}
 	}
-	
-	private boolean isUnity() {
-		if (!EnvironmentUtil.isLinux()) {
-			return false;
-		}
-		else {
-			ProcessBuilder processBuilder = new ProcessBuilder("/bin/ps", "--no-headers", "-C", "unity-panel-service");
-			
-			try {
-				Process process = processBuilder.start();				
-				BufferedReader processInputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				
-				boolean isUnity = processInputReader.readLine() != null;
-				
-				process.destroy();
-				processInputReader.close();
 
-				return isUnity;
-			}
-			catch (IOException e) {
-				throw new RuntimeException("Unable to determine Linux desktop environment.", e);
-			}
+	private boolean isUnity() {
+		ProcessBuilder processBuilder = new ProcessBuilder("/bin/ps", "--no-headers", "-C", "unity-panel-service");
+
+		try {
+			Process process = processBuilder.start();
+			BufferedReader processInputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String ss = processInputReader.readLine();
+
+			boolean isUnity = ss != null;
+
+			process.destroy();
+			processInputReader.close();
+
+			return isUnity;
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Unable to determine Linux desktop environment.", e);
 		}
 	}
 }
