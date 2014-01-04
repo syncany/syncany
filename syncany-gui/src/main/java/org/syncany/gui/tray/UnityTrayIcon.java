@@ -17,7 +17,9 @@
  */
 package org.syncany.gui.tray;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.WSClient;
+import org.syncany.gui.util.StaticResourcesWebServer;
 import org.syncany.util.JsonHelper;
 
 /**
@@ -74,9 +77,7 @@ public class UnityTrayIcon extends TrayIcon {
 				@Override
 				public void run() {
 					try {
-						ProcessBuilder processBuilder = new ProcessBuilder("src/main/python/unitytray.py", "src/main/resources/images",
-								"All folders in sync");
-						processBuilder.start();
+						startUnityProcess();
 					}
 					catch (IOException e) {
 						throw new RuntimeException("Unable to determine Linux desktop environment.", e);
@@ -109,6 +110,34 @@ public class UnityTrayIcon extends TrayIcon {
 		}
 	}
 
+	private static void startUnityProcess() throws IOException{
+		String scriptUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/unitytray.py";
+		ProcessBuilder processBuilder = new ProcessBuilder(new String[]{
+			"python", 
+			"-c", 
+			"import urllib2;" +
+			"exec urllib2.urlopen('" + scriptUrl + "').read()"
+		});
+		
+		Process process = processBuilder.start();
+		
+		BufferedReader is = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		
+		String ligne;
+
+        while ((ligne = is.readLine()) != null) {
+            System.out.println(ligne);
+        }
+        while ((ligne = es.readLine()) != null) {
+            System.out.println(ligne);
+        }
+	}
+	
+	public static void main(String[] args) throws IOException {
+		startUnityProcess();
+	}
+	
 	public void sendTo(WebSocket ws, String text) {
 		ws.send(text);
 	}
