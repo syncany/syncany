@@ -552,10 +552,8 @@ public class DatabaseReconciliatorTest {
 	
 	@Test
 	public void testOneLocalVersionDetermineLastCommon() throws Exception {
-		// TODO [high] Bug in last common determination
 		
 		/* Scenario: The local machine ("C") has only one local database version
-		 *           Determining the last common header went wrong in this scenario. 
 		 */
 		
 		/// Input data ///
