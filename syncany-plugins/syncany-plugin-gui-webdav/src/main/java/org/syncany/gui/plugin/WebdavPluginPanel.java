@@ -18,9 +18,8 @@ import org.syncany.util.I18n;
 
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  * 
- * "url", "username", "password"
  */
 public class WebdavPluginPanel extends PluginPanel {
 	private static final Logger log = Logger.getLogger(WebdavPluginPanel.class.getSimpleName());
@@ -116,15 +115,14 @@ public class WebdavPluginPanel extends PluginPanel {
 	@Override
 	public Map<String, String> getParameters() {
 		Map<String, String> parameters = new HashMap<>();
-		parameters.put("url", url.getText());
-		parameters.put("username", username.getText());
-		parameters.put("password", password.getText());
+		parameters.put("plugin.webdav.url", url.getText());
+		parameters.put("plugin.webdav.username", username.getText());
+		parameters.put("plugin.webdav.password", password.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 }

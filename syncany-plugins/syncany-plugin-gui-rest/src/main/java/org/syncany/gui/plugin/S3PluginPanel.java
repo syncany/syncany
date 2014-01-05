@@ -34,7 +34,7 @@ import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  * 
  */
 public class S3PluginPanel extends PluginPanel {
@@ -137,16 +137,15 @@ public class S3PluginPanel extends PluginPanel {
 	@Override
 	public Map<String, String> getParameters() {
 		Map<String, String> parameters = new HashMap<>();
-		parameters.put("accessKey", accessKey.getText());
-		parameters.put("secretKey", secretKey.getText());
-		parameters.put("bucket", bucket.getText());
-		parameters.put("location", location.getText());
+		parameters.put("plugin.s3.accessKey", accessKey.getText());
+		parameters.put("plugin.s3.secretKey", secretKey.getText());
+		parameters.put("plugin.s3.bucket", bucket.getText());
+		parameters.put("plugin.s3.location", location.getText());
 		return parameters;
 	}
 
 	@Override
 	public boolean isValid() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 }

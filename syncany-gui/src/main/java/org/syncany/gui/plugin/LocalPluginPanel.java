@@ -36,7 +36,7 @@ import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.panel.PluginPanel;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class LocalPluginPanel extends PluginPanel {
@@ -108,7 +108,7 @@ public class LocalPluginPanel extends PluginPanel {
 	@Override
 	public Map<String, String> getParameters() {
 		Map<String, String> parameters = new HashMap<>();
-		parameters.put("path", localDir.getText());
+		parameters.put("plugin.local.path", localDir.getText());
 		return parameters;
 	}
 	

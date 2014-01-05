@@ -41,7 +41,7 @@ import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class FtpPluginPanel extends PluginPanel {
@@ -202,17 +202,16 @@ public class FtpPluginPanel extends PluginPanel {
 	@Override
 	public Map<String, String> getParameters() {
 		Map<String, String> parameters = new HashMap<>();
-		parameters.put("host", hostText.getText());
-		parameters.put("username", usernameText.getText());
-		parameters.put("password", passwordText.getText());
-		parameters.put("path", pathText.getText());
-		parameters.put("port", spinner.getText());
+		parameters.put("plugin.ftp.host", hostText.getText());
+		parameters.put("plugin.ftp.username", usernameText.getText());
+		parameters.put("plugin.ftp.password", passwordText.getText());
+		parameters.put("plugin.ftp.path", pathText.getText());
+		parameters.put("plugin.ftp.port", spinner.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 }

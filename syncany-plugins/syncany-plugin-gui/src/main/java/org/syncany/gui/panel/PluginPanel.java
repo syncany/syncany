@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public abstract class PluginPanel extends Composite {

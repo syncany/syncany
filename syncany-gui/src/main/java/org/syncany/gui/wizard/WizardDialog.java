@@ -42,7 +42,6 @@ import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
-import org.syncany.util.StringUtil;
 
 /**
  * @author vwiencek
@@ -52,8 +51,6 @@ public class WizardDialog extends Dialog {
 	private enum Panel {
 		START, 
 		CREATE_REPOSITORY, 
-		CREATE_REPOSITORY_EMAIL, 
-		CREATE_REPOSITORY_PLUGIN, 
 		CREATE_SUMMARY, 
 		CONNECT_REPOSITORY, 
 		REPOSITORY_ENCRYPTION,
@@ -196,32 +193,6 @@ public class WizardDialog extends Dialog {
 				panel = panels.get(Panel.CREATE_REPOSITORY);
 				if (panel.isValid()) {
 					userInput.putAll(panel.getUserSelection());
-					String repositoryType = panel.getUserSelection().get("repositoryType").toLowerCase();
-	
-					if (repositoryType.equals("email")){
-						showPanel(Panel.CREATE_REPOSITORY_EMAIL);
-					}
-					else {
-						RepositoryPluginPanel pluginPanel = (RepositoryPluginPanel) panels.get(Panel.CREATE_REPOSITORY_PLUGIN);
-						
-						String pluginPanelClassName = String.format("org.syncany.gui.plugin.%sPluginPanel", StringUtil.toCamelCase(repositoryType));
-						pluginPanel.setClassName(pluginPanelClassName);
-						
-						showPanel(Panel.CREATE_REPOSITORY_PLUGIN);
-					}
-				}
-				break;
-			case CREATE_REPOSITORY_EMAIL:
-				panel = panels.get(Panel.CREATE_REPOSITORY_EMAIL);
-				if (panel.isValid()) {
-					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.CREATE_SUMMARY);
-				}
-				break;
-			case CREATE_REPOSITORY_PLUGIN:
-				panel = panels.get(Panel.CREATE_REPOSITORY_PLUGIN);
-				if (panel.isValid()) {
-					userInput.putAll(panel.getUserSelection());
 					showPanel(Panel.REPOSITORY_ENCRYPTION);
 				}
 				break;
@@ -246,12 +217,8 @@ public class WizardDialog extends Dialog {
 			case CREATE_REPOSITORY:
 				showPanel(Panel.START);
 				break;
-			case CREATE_REPOSITORY_EMAIL:
-			case CREATE_REPOSITORY_PLUGIN:
-				showPanel(Panel.CREATE_REPOSITORY);
-				break;
 			case REPOSITORY_ENCRYPTION:
-				showPanel(Panel.CREATE_REPOSITORY_PLUGIN);
+				showPanel(Panel.CREATE_REPOSITORY);
 				break;
 			}
 	}
@@ -281,8 +248,6 @@ public class WizardDialog extends Dialog {
 	private void buildPanels() {
 		panels.put(Panel.START, new StartPanel(stackComposite, SWT.NONE));
 		panels.put(Panel.CREATE_REPOSITORY, new CreateRepositorySelectionPanel(stackComposite, SWT.NONE));
-		panels.put(Panel.CREATE_REPOSITORY_EMAIL, new RepositoryEmailPanel(stackComposite, SWT.NONE));
-		panels.put(Panel.CREATE_REPOSITORY_PLUGIN, new RepositoryPluginPanel(stackComposite, SWT.NONE));
 		panels.put(Panel.CREATE_SUMMARY, new CreateRepositorySummaryPanel(stackComposite, SWT.NONE));
 		panels.put(Panel.CONNECT_REPOSITORY, new ConnectDialog(stackComposite, SWT.NONE));
 		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(stackComposite, SWT.NONE));
