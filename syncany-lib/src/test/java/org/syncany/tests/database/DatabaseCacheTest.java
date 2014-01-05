@@ -340,9 +340,57 @@ public class DatabaseCacheTest {
 	}
 
 	@Test
-	@Ignore
 	public void testRemoveDatabaseVersion() {
-		// TODO [medium] Implement this
+		Database database = new Database();
+
+		// Round 1: Add file history & version
+		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
+
+		// - history 1, version 1
+		FileVersion fileVersion1 = TestDatabaseUtil.createFileVersion("file.jpg");
+
+		FileHistoryId idFile1 = FileHistoryId.parseFileId("1111111111111111");
+		PartialFileHistory fileHistory1 = new PartialFileHistory(idFile1);
+
+		fileHistory1.addFileVersion(fileVersion1);
+		databaseVersion1.addFileHistory(fileHistory1);
+
+		database.addDatabaseVersion(databaseVersion1);
+		
+		// - history 2, version 2
+		
+		DatabaseVersion databaseVersion2 = TestDatabaseUtil.createDatabaseVersion(databaseVersion1);
+		FileVersion fileVersion2 = TestDatabaseUtil.createFileVersion("file.jpg", fileVersion1);
+
+		FileHistoryId idFile2 = FileHistoryId.parseFileId("1111111111111111");
+		PartialFileHistory fileHistory2 = new PartialFileHistory(idFile1);
+
+		fileHistory2.addFileVersion(fileVersion2);
+		databaseVersion2.addFileHistory(fileHistory2);
+
+		database.addDatabaseVersion(databaseVersion2);
+		//Database should have 2 versions of file
+		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
+		
+		database.removeDatabaseVersion(databaseVersion2);
+		//Second version removed, 1 version left
+		assertEquals(1, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(fileVersion1, database.getFileHistory(idFile1).getLastVersion());
+		
+		database.addDatabaseVersion(databaseVersion2);
+		//Second version added, 2 versions of file
+		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
+		
+		database.removeDatabaseVersion(databaseVersion1);
+		//First version removed, 1 version left
+		assertEquals(1, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(fileVersion2, database.getFileHistory(idFile1).getLastVersion());
+		
+		database.removeDatabaseVersion(databaseVersion2);
+		//Second version removed, none left
+		assertNull(database.getFileHistory(idFile1));
+		
+		
 	}
 
 }
