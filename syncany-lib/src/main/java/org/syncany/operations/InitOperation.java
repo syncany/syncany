@@ -29,6 +29,7 @@ import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
@@ -76,7 +77,7 @@ public class InitOperation extends AbstractInitOperation {
 		if (repoFileExistsOnRemoteStorage(transferManager)) {
 			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository."); 
 		}
-		
+		logger.log(Level.INFO, "Creating local repository");
 		// Create local .syncany directory
 		File appDir = createAppDirs(options.getLocalDir());	
 		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);
@@ -97,8 +98,22 @@ public class InitOperation extends AbstractInitOperation {
 		
 		writeXmlFile(options.getConfigTO(), configFile);
 
+		logger.log(Level.INFO, "Uploading local repository");
+		
 		// Make remote changes
-		transferManager.init(); // TODO [high] If this fails, the local repo is initialized!!
+		try {
+			transferManager.init();
+		}
+		catch (StorageException e) {
+			//Storing remotely failed. Remove all the directories and files we just created
+			try {
+				deleteAppDirs(options.getLocalDir());
+			}
+			catch (Exception e1) {
+				throw new Exception("StorageException for remote. Cleanup failed. There may be local directories left");
+			}
+			throw new Exception("StorageException for remote. Cleaned local repository.");
+ 		}
 		
 		if (masterFile.exists()) {
 			uploadMasterFile(masterFile, transferManager);
