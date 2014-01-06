@@ -25,14 +25,17 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginSetting;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.PluginSetting.ValueType;
 
 public class WebdavConnection implements Connection {
 	private String url;
@@ -96,21 +99,14 @@ public class WebdavConnection implements Connection {
 		this.sslSocketFactory = new SSLSocketFactory(trustStrategy);
 	}
 
-	@Override
-	public String[] getMandatorySettings() {
-		return new String[] { "url", "username", "password" };
-	}
-
-	@Override
-	public String[] getOptionalSettings() {
-		return new String[] {};
-	}
-	
-	@Override
-	public List<String> getSensitiveSettings() {
-		List<String> sensitive = new ArrayList<String>();
-		sensitive.add("password");
-		return sensitive;
+	@Override 
+	public List<PluginSetting> getSettings() {
+    	return Arrays.asList(new PluginSetting[]{
+    			new PluginSetting("url", ValueType.STRING, true, false),
+    			new PluginSetting("username", ValueType.STRING, true, false),
+    			new PluginSetting("password", ValueType.STRING, true, true),
+    			
+    	});
 	}
 	
 

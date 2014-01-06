@@ -22,11 +22,11 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -35,6 +35,7 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginSetting;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
@@ -104,9 +105,9 @@ public abstract class AbstractInitCommand extends Command {
 		Connection connection = plugin.createConnection();
 		
 		// Check if all mandatory are set
-		for (String mandatorySetting : connection.getMandatorySettings()) {
-			if (!pluginSettings.containsKey(mandatorySetting)) {
-				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getMandatorySettings(), ", ")+"). Use -Psettingname=.. to set it.");
+		for (PluginSetting setting : connection.getSettings()) {
+			if (setting.mandatory && !pluginSettings.containsKey(setting.name)) {
+				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getSettings(), ", ")+"). Use -Psettingname=.. to set it.");
 			}
 		}	
 				
@@ -126,60 +127,52 @@ public abstract class AbstractInitCommand extends Command {
 	}
 
 	protected Map<String, String> askPluginSettings(String pluginStr) throws StorageException {
-		Map<String, String> pluginSettings = new HashMap<String, String>();
-
 		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
 		Connection connection = plugin.createConnection();
 		
-		pluginSettings = new HashMap<String, String>();
-		
-		String[] mandatorySettings = connection.getMandatorySettings();
-		String[] optionalSettings = connection.getOptionalSettings();
-		List<String> sensitiveSettings = connection.getSensitiveSettings();
+		List<PluginSetting> pluginSettings = connection.getSettings();
+		Map<String, String> pluginSettingsMap = new TreeMap<String, String>();
 		
 		out.println();
 		out.println("Connection details for "+plugin.getName()+" connection:");
 		
-		for (String settingKey : mandatorySettings) {
-			String settingValue = null;
+		for (PluginSetting setting : pluginSettings) {
 			
-			while (settingValue == null) {
-				out.print("- "+settingKey+": ");
-				if (sensitiveSettings.contains(settingKey)) {
-					settingValue = String.copyValueOf(console.readPassword());
+			while (true) {
+				out.print("- "+setting.name+": ");
+				String value = null;
+				if (setting.sensitive) {
+					value = String.copyValueOf(console.readPassword());
 				}
 				else {
-					settingValue = console.readLine();
+					value = console.readLine();
 				}
-				if ("".equals(settingValue)) {
-					out.println("ERROR: This setting is mandatory.");
-					out.println();
-					
-					settingValue = null;
+				setting.setValue(value);
+				if (setting.mandatory) {
+					if ("".equals(setting.getString())) {
+						out.println("ERROR: This setting is mandatory.");
+						out.println();
+					}
+					else if (!setting.validate()) {
+						out.println(setting.getString() + " is not valid input for the setting " + setting.name);
+						out.println();
+					}
+					else {
+						break;
+					}
 				}
-			}
-			
-			pluginSettings.put(settingKey, settingValue);			
-		}
-
-		for (String settingKey : optionalSettings) {
-			out.print("- "+settingKey+" (optional): ");
-			String settingValue = "";
-			if (sensitiveSettings.contains(settingKey)) {
-				settingValue = String.copyValueOf(console.readPassword());
-			}
-			else {
-				settingValue = console.readLine();
-			}
-			
-			if (!"".equals(settingValue)) {
-				pluginSettings.put(settingKey, settingValue);
+				else {
+					break;
+				}
+			}	
+			if (setting.validate()) {
+				pluginSettingsMap.put(setting.name, setting.getString());
 			}
 		}
 
-		connection.init(pluginSettings); // To check for exceptions
+		connection.init(pluginSettingsMap); // To check for exceptions
 		
-		return pluginSettings;
+		return pluginSettingsMap;
 	}
 
 	protected String askPlugin() {

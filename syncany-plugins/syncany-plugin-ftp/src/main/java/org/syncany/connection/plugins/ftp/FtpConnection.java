@@ -17,11 +17,13 @@
  */
 package org.syncany.connection.plugins.ftp;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginSetting;
+import org.syncany.connection.plugins.PluginSetting.ValueType;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -117,22 +119,15 @@ public class FtpConnection implements Connection {
 		}
 	}
 
-
-	@Override
-	public String[] getMandatorySettings() {
-		return new String[] { "hostname", "username", "password", "path" };
-	}
-
-	@Override
-	public String[] getOptionalSettings() {
-		return new String[] { "port" };
-	}
-	
-	@Override
-	public List<String> getSensitiveSettings() {
-		List<String> sensitive = new ArrayList<String>();
-		sensitive.add("password");
-		return sensitive;
+	@Override 
+	public List<PluginSetting> getSettings() {
+		return Arrays.asList(new PluginSetting[]{
+				new PluginSetting("hostname", ValueType.STRING,  true, false),
+				new PluginSetting("username", ValueType.STRING,  true, false),
+				new PluginSetting("password", ValueType.STRING,  true, true),
+				new PluginSetting("path", ValueType.STRING,  true, false),
+				new PluginSetting("port", ValueType.STRING,  false, false),
+		});
 	}
 	
     @Override

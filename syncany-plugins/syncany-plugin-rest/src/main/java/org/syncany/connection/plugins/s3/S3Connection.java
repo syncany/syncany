@@ -60,23 +60,4 @@ public class S3Connection extends RestConnection {
         this.location = location;
     }
     
-    public String[] getMandatorySettings() {
-    	String[] superOptions = super.getMandatorySettings();
-    	String[] allOptions = new String[superOptions.length+1];
-    	
-    	System.arraycopy(superOptions, 0, allOptions, 0, superOptions.length);
-    	allOptions[allOptions.length-1] = "location";
-    	
-    	return allOptions;
-    }
-
-	@Override
-	public String[] getOptionalSettings() {
-		return super.getOptionalSettings();
-	}
-
-	@Override
-	public List<String> getSensitiveSettings() {
-		return super.getSensitiveSettings();
-	}
 }

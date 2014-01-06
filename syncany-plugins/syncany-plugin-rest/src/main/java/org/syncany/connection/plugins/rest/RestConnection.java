@@ -18,12 +18,15 @@
 package org.syncany.connection.plugins.rest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginSetting;
+import org.syncany.connection.plugins.PluginSetting.ValueType;
 import org.syncany.connection.plugins.StorageException;
 
 /**
@@ -56,18 +59,14 @@ public abstract class RestConnection implements Connection {
 		}
 	}   
     
-    public String[] getMandatorySettings() {    	
-    	return new String[] { "accessKey", "secretKey", "bucket" };
-    }
     
-    public String[] getOptionalSettings() {    	
-    	return new String[] { };
-    }
-    
-    public List<String> getSensitiveSettings() {
-    	List<String> sensitive = new ArrayList<String>();
-    	sensitive.add("secretKey");
-    	return sensitive;
+    @Override
+    public List<PluginSetting> getSettings() {
+    	return Arrays.asList(new PluginSetting[]{
+    			new PluginSetting("accessKey", ValueType.STRING, true, false),
+    			new PluginSetting("secretKey", ValueType.STRING, true, true),
+    			new PluginSetting("bucket", ValueType.STRING, true, false),
+    	});
     }
     
     public String getAccessKey() {

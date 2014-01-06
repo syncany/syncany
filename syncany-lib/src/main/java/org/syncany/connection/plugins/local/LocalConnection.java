@@ -18,11 +18,13 @@
 package org.syncany.connection.plugins.local;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginSetting;
+import org.syncany.connection.plugins.PluginSetting.ValueType;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -62,17 +64,9 @@ public class LocalConnection implements Connection {
     }
 
 	@Override
-	public String[] getMandatorySettings() {
-		return new String[] { "path" };
-	}
-
-	@Override
-	public String[] getOptionalSettings() {
-		return new String[] { };
-	}
-
-	@Override
-	public List<String> getSensitiveSettings() {
-		return new ArrayList<String>();
+	public List<PluginSetting> getSettings() {
+		return Arrays.asList(new PluginSetting[] {
+				new PluginSetting("path", ValueType.STRING, true, false)
+		});
 	}
 }
