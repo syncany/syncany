@@ -22,6 +22,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,6 +135,7 @@ public abstract class AbstractInitCommand extends Command {
 		
 		String[] mandatorySettings = connection.getMandatorySettings();
 		String[] optionalSettings = connection.getOptionalSettings();
+		List<String> sensitiveSettings = connection.getSensitiveSettings();
 		
 		out.println();
 		out.println("Connection details for "+plugin.getName()+" connection:");
@@ -143,8 +145,12 @@ public abstract class AbstractInitCommand extends Command {
 			
 			while (settingValue == null) {
 				out.print("- "+settingKey+": ");
-				settingValue = console.readLine();
-				
+				if (sensitiveSettings.contains(settingKey)) {
+					settingValue = String.copyValueOf(console.readPassword());
+				}
+				else {
+					settingValue = console.readLine();
+				}
 				if ("".equals(settingValue)) {
 					out.println("ERROR: This setting is mandatory.");
 					out.println();
@@ -158,7 +164,13 @@ public abstract class AbstractInitCommand extends Command {
 
 		for (String settingKey : optionalSettings) {
 			out.print("- "+settingKey+" (optional): ");
-			String settingValue = console.readLine();
+			String settingValue = "";
+			if (sensitiveSettings.contains(settingKey)) {
+				settingValue = String.copyValueOf(console.readPassword());
+			}
+			else {
+				settingValue = console.readLine();
+			}
 			
 			if (!"".equals(settingValue)) {
 				pluginSettings.put(settingKey, settingValue);

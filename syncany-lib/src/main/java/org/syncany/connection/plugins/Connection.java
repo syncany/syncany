@@ -17,6 +17,7 @@
  */
 package org.syncany.connection.plugins;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,5 +37,6 @@ public interface Connection {
     public void init(Map<String, String> map) throws StorageException;
     public String[] getMandatorySettings();
     public String[] getOptionalSettings();
+    public List<String> getSensitiveSettings();
 }
 
