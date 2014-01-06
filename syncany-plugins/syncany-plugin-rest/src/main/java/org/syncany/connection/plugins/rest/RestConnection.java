@@ -17,6 +17,8 @@
  */
 package org.syncany.connection.plugins.rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.jets3t.service.security.ProviderCredentials;
@@ -60,6 +62,10 @@ public abstract class RestConnection implements Connection {
     
     public String[] getOptionalSettings() {    	
     	return new String[] { };
+    }
+    
+    public List<String> getSensitiveSettings() {
+    	return new ArrayList<String>();
     }
     
     public String getAccessKey() {

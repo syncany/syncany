@@ -17,6 +17,8 @@
  */
 package org.syncany.connection.plugins.ftp;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
@@ -124,6 +126,13 @@ public class FtpConnection implements Connection {
 	@Override
 	public String[] getOptionalSettings() {
 		return new String[] { "port" };
+	}
+	
+	@Override
+	public List<String> getSensitiveSettings() {
+		List<String> sensitive = new ArrayList<String>();
+		sensitive.add("password");
+		return sensitive;
 	}
 	
     @Override

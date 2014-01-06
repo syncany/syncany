@@ -17,6 +17,8 @@
  */
 package org.syncany.connection.plugins.s3;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.jets3t.service.security.AWSCredentials;
@@ -72,5 +74,11 @@ public class S3Connection extends RestConnection {
 	@Override
 	public String[] getOptionalSettings() {
 		return super.getOptionalSettings();
+	}
+
+	@Override
+	public List<String> getSensitiveSettings() {
+		// TODO [medium] Which S3 settings should be hidden?
+		return new ArrayList<String>();
 	}
 }

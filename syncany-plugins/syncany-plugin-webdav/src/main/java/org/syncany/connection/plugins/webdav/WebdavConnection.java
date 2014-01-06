@@ -24,6 +24,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -103,6 +105,14 @@ public class WebdavConnection implements Connection {
 	public String[] getOptionalSettings() {
 		return new String[] {};
 	}
+	
+	@Override
+	public List<String> getSensitiveSettings() {
+		List<String> sensitive = new ArrayList<String>();
+		sensitive.add("password");
+		return sensitive;
+	}
+	
 
 	@Override
 	public String toString() {
