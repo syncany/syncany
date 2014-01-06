@@ -154,10 +154,14 @@ public class UnityTrayIcon extends TrayIcon {
 		Process process = processBuilder.start();
 		
 		BufferedReader is = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		
 		String line;
 
         while ((line = is.readLine()) != null) {
+        	logger.info(line);
+        }
+        while ((line = es.readLine()) != null) {
         	logger.info(line);
         }
 	}

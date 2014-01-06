@@ -33,7 +33,14 @@ import Queue
 import subprocess
 import websocket
 import appindicator
-    
+import urllib
+import tempfile
+
+def fetch_image(url):
+	tf = tempfile.NamedTemporaryFile(delete=True)
+	fname,x = urllib.urlretrieve(url, tf.name +".png")
+	return fname
+
 def do_notify(request):
 	global resdir
 	
@@ -65,7 +72,8 @@ def do_update_icon(request):
 		do_print("Update icon to DISCONNECTED.")
 		
 		updating_count = 0
-		image = resdir + "/tray/tray.png"
+		image = fetch_image("http://127.0.0.1:8081/tray/tray.png")									
+
 		indicator.set_icon(image)		
 			
 		return "OK"	
@@ -75,7 +83,8 @@ def do_update_icon(request):
 		
 		if updating_count == 1:
 			do_print("Update icon to UPDATING.")
-			image = resdir + "/tray/tray-updating1.png"			
+			
+			image = fetch_image("http://127.0.0.1:8081/tray/tray-syncing1.png")									
 			indicator.set_icon(image)		
 
 	elif request["status"] == "UPTODATE":
@@ -208,7 +217,7 @@ def init_tray_icon():
 	global resdir, indicator
 
 	# Default image
-	image = resdir + "/tray/tray.png"									
+	image = fetch_image("http://127.0.0.1:8081/tray/tray.png")									
 
 	# Go!
 	do_print("Initializing indicator ...")
