@@ -84,6 +84,30 @@ public abstract class AbstractInitOperation extends Operation {
 		return appDir;
 	}
 	
+	protected void deleteAppDirs(File localDir) throws Exception {
+		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
+		File logDir = new File(appDir+"/"+Config.DIR_LOG);
+		File cacheDir = new File(appDir+"/"+Config.DIR_CACHE);
+		File databaseDir = new File(appDir+"/"+Config.DIR_DATABASE);
+		for (File log : logDir.listFiles()) {
+			log.delete();
+		}
+		logDir.delete();
+		for (File cache : cacheDir.listFiles()) {
+			cache.delete();
+		}
+		cacheDir.delete();
+		for (File db : databaseDir.listFiles()) {
+			db.delete();
+		}
+		databaseDir.delete();
+		for (File file : appDir.listFiles()) {
+			file.delete();
+		}
+		appDir.delete();
+		
+	}
+	
 	protected void writeXmlFile(Object source, File file) throws Exception {
    		Serializer serializer = new Persister();
 		serializer.write(source, file);	
