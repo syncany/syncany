@@ -15,15 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
+package org.syncany.gui;
 
-import java.util.Map;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Text;
 
 /**
- * @author vwiencek
+ * @author vincent
  *
  */
-public interface UserParametersChecker {
-	public abstract Map<String, String> getUserSelection();
-	public abstract boolean isValid();
+public class SWTUtil {
+
+	public static boolean checkTextLength(Text text, int i) {
+		String value = text.getText();
+		boolean valid = true;
+		if (value == null || !(value.length() > i)){
+			text.setBackground(ApplicationResourcesManager.INVALID_TEXT_COLOR);
+			valid = false;
+		}
+		else{
+			text.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		}
+		return valid;
+	}
+
 }

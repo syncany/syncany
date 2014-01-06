@@ -53,8 +53,8 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	private Label lblNewLabel_4;
 	
 	
-	public RepositoryEncryptionPanel(Composite parent, int style) {
-		super(parent, style);
+	public RepositoryEncryptionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
+		super(wizardParentDialog, parent, style);
 		initComposite();
 		enableEncryption.setSelection(false);
 		toggleEncryptionSelection();
@@ -65,7 +65,6 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
 		
 		GridLayout gridLayout = new GridLayout(2, false);
-		gridLayout.marginRight = 30;
 		setLayout(gridLayout);
 		
 		Label introductionTextTitle = new Label(this, SWT.WRAP);
@@ -98,7 +97,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		enableEncryption = new Button(this, SWT.CHECK);
 		enableEncryption.setFont(fontNormal);
 		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
-		gd_enableEncryption.verticalIndent = 20;
+		gd_enableEncryption.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		enableEncryption.setLayoutData(gd_enableEncryption);
 		enableEncryption.setText(I18n.getString("repository.encryption.enable"));
 		enableEncryption.addSelectionListener(new SelectionAdapter() {
@@ -187,5 +186,26 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 			userInput.put("keylength", keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
 		}
 		return userInput;
+	}
+
+	@Override
+	public boolean hasNextButton() {
+		return true;
+	}
+
+	@Override
+	public boolean hasPreviousButton() {
+		return true;
+	}
+
+	@Override
+	public boolean hasFinishButton() {
+		return false;
+	}
+
+	@Override
+	public void updateData() {
+		// TODO Auto-generated method stub
+		
 	}
 }

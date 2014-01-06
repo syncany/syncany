@@ -56,8 +56,8 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	 * @param parent
 	 * @param style
 	 */
-	public RepositorySelectionPanel(Composite parent, int style) {
-		super(parent, style);
+	public RepositorySelectionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
+		super(wizardParentDialog, parent, style);
 		this.pluginList = Plugins.list();
 		initComposite();
 	}
@@ -82,17 +82,16 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		
 		chooseRepositoryLabel = new Label(this, SWT.NONE);
 		GridData gd_chooseRepositoryLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_chooseRepositoryLabel.verticalIndent = 20;
+		gd_chooseRepositoryLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		chooseRepositoryLabel.setLayoutData(gd_chooseRepositoryLabel);
 		chooseRepositoryLabel.setFont(fontNormal);
-		chooseRepositoryLabel.setText(I18n.getString("dialog.chooseRepository.choosePlugin"));
+		chooseRepositoryLabel.setText(I18n.getString("dialog.chooseRepository.choosePlugin", true));
 		
-		repositorySelectionCombo = new Combo(this, SWT.NONE);
+		repositorySelectionCombo = new Combo(this, SWT.READ_ONLY);
 		repositorySelectionCombo.setFont(fontNormal);
 		GridData gd_repositorySelectionCombo = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_repositorySelectionCombo.verticalIndent = 20;
+		gd_repositorySelectionCombo.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		repositorySelectionCombo.setLayoutData(gd_repositorySelectionCombo);
-		repositorySelectionCombo.select(0);
 		repositorySelectionCombo.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -130,21 +129,27 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 				log.warning("Unable to instanciate plugin gui panel " + pluginPanelClassName);
 			}
 		}
+		int idxSelectedPlugin = 0;
+		repositorySelectionCombo.select(idxSelectedPlugin);
+		showPLuginPanel(pluginList.get(idxSelectedPlugin).getId());
 	}
 	
 	private void showPLuginPanel(String id){
+		this.selectedPluginId = id;
 		PluginPanel ppanel = panels.get(id);
 		stackLayout.topControl = ppanel;
 		pluginStackComposite.layout();
 	}
 
+	private String selectedPluginId;
 	private Map<String, PluginPanel> panels = new HashMap<>();
 	private StackLayout stackLayout;
 	private Label chooseRepositoryLabel;
 	
 	@Override
 	public boolean isValid() {
-		return true;
+		PluginPanel ppanel = panels.get(selectedPluginId);
+		return ppanel.isValid(); 
 	}
 
 	@Override
@@ -154,5 +159,26 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		Map<String, String> pluginParameters = panels.get(id).getUserSelection();
 		userInput.putAll(pluginParameters);
 		return userInput;
+	}
+
+	@Override
+	public boolean hasNextButton() {
+		return true;
+	}
+
+	@Override
+	public boolean hasPreviousButton() {
+		return true;
+	}
+
+	@Override
+	public boolean hasFinishButton() {
+		return false;
+	}
+
+	@Override
+	public void updateData() {
+		// TODO Auto-generated method stub
+		
 	}
 }

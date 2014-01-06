@@ -40,8 +40,8 @@ public class StartPanel extends WizardPanelComposite {
 	private Button connectStorageRadio;
 	
 	//Constructor
-	public StartPanel(Composite composite, int style) {
-		super(composite, SWT.NONE);
+	public StartPanel(WizardDialog wizardParentDialog, Composite composite, int style) {
+		super(wizardParentDialog, composite, SWT.NONE);
 		initComposite();
 	}
 	
@@ -115,5 +115,26 @@ public class StartPanel extends WizardPanelComposite {
 			userInput.put("startAction", "connect");
 		}
 		return userInput;
+	}
+
+	@Override
+	public boolean hasNextButton() {
+		return true;
+	}
+
+	@Override
+	public boolean hasPreviousButton() {
+		return false;
+	}
+
+	@Override
+	public boolean hasFinishButton() {
+		return false;
+	}
+
+	@Override
+	public void updateData() {
+		// TODO Auto-generated method stub
+		
 	}
 }

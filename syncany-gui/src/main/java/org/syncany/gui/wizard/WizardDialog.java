@@ -22,6 +22,7 @@ import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -48,14 +49,13 @@ import org.syncany.util.I18n;
  *
  */
 public class WizardDialog extends Dialog {
+	private static final Logger log = Logger.getLogger(WizardDialog.class.getSimpleName());
+	
 	private enum Panel {
 		START, 
-		CREATE_REPOSITORY, 
-		CREATE_SUMMARY, 
-		CONNECT_REPOSITORY, 
+		REPOSITORY_SELECTION, 
 		REPOSITORY_ENCRYPTION,
-		CONNECT_REPOSITORY_EMAIL, 
-		CONNECT_REPOSITORY_PLUGIN;
+		SUMMARY;
 	};
 
 	//Widgets
@@ -164,7 +164,6 @@ public class WizardDialog extends Dialog {
 		nextButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		nextButton.setFont(fontNormal);
 		nextButton.setText(I18n.getString("dialog.default.next"));
-		
 		nextButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -176,6 +175,35 @@ public class WizardDialog extends Dialog {
 		finishButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		finishButton.setFont(fontNormal);
 		finishButton.setText(I18n.getString("dialog.default.finish"));
+		finishButton.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				handleFinish();
+			}
+		});
+	}
+	
+	private void handleFinish(){
+		Map<String, String> commonParameters = new HashMap<>();
+		Map<String, String> pluginParameters = new HashMap<>();
+		
+		for (String key : userInput.keySet()){
+			if (key.startsWith("plugin.")){
+				String[] tokens = key.split("\\."); // get username from plugin.webdav.username
+				if (tokens.length == 3){
+					String newKey = tokens[2];
+					pluginParameters.put(newKey, userInput.get(key));
+				}
+				else{
+					log.warning(String.format("Unknown user input key Value : [%s/%s]", key, userInput.get(key)));
+				}
+			}
+			else{
+				commonParameters.put(key, userInput.get(key));
+			}
+		}
+		
+		shell.dispose();
 	}
 	
 	private void handleNext() {
@@ -186,11 +214,11 @@ public class WizardDialog extends Dialog {
 				panel = panels.get(Panel.START);
 				if (panel.isValid()) {
 					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.CREATE_REPOSITORY);
+					showPanel(Panel.REPOSITORY_SELECTION);
 				}
 				break;
-			case CREATE_REPOSITORY:
-				panel = panels.get(Panel.CREATE_REPOSITORY);
+			case REPOSITORY_SELECTION:
+				panel = panels.get(Panel.REPOSITORY_SELECTION);
 				if (panel.isValid()) {
 					userInput.putAll(panel.getUserSelection());
 					showPanel(Panel.REPOSITORY_ENCRYPTION);
@@ -200,59 +228,60 @@ public class WizardDialog extends Dialog {
 				panel = panels.get(Panel.REPOSITORY_ENCRYPTION);
 				if (panel.isValid()){
 					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.CREATE_SUMMARY);
+					showPanel(Panel.SUMMARY);
 				}
-				break;
-			case CREATE_SUMMARY:
-				
 				break;
 		default:
 			throw new RuntimeException("Invalid user selection: "+selectedPanel);
 		}
 	}
 
-	@SuppressWarnings("incomplete-switch")
 	private void handlePrevious() {
 		switch (selectedPanel) {
-			case CREATE_REPOSITORY:
+			case REPOSITORY_SELECTION:
 				showPanel(Panel.START);
 				break;
 			case REPOSITORY_ENCRYPTION:
-				showPanel(Panel.CREATE_REPOSITORY);
+				showPanel(Panel.REPOSITORY_SELECTION);
 				break;
-			case CREATE_SUMMARY:
+			case SUMMARY:
 				showPanel(Panel.REPOSITORY_ENCRYPTION);
+				break;
+			case START:
+			default:
+				//No previous panel
 				break;
 		}
 	}
 
+	public Map<String, String> getUserInput() {
+		return userInput;
+	}
+	
 	private void handleCancel() {
 		shell.dispose();
 	}
 
 	private void showPanel(Panel panel) {
 		selectedPanel = panel;
-		stackLayout.topControl = panels.get(panel);
-		toggleButtons(panel);
+		WizardPanelComposite wizardPanel = panels.get(panel);
+		stackLayout.topControl = wizardPanel;
+		wizardPanel.updateData();
+		toggleButtons(wizardPanel);
 		stackComposite.layout();
 	}
 
-	private void toggleButtons(Panel panel) {
-		if (panel.equals(Panel.START)){
-			previousButton.setEnabled(false);
-			cancelButton.setEnabled(true);
-		}
-		else{
-			previousButton.setEnabled(true);
-			cancelButton.setEnabled(false);
-		}
+	private void toggleButtons(WizardPanelComposite panel) {
+		nextButton.setEnabled(panel.hasNextButton());
+		previousButton.setEnabled(panel.hasPreviousButton());
+		cancelButton.setEnabled(panel.hasCancelButton());
+		finishButton.setEnabled(panel.hasFinishButton());
 	}
 
 	private void buildPanels() {
-		panels.put(Panel.START, new StartPanel(stackComposite, SWT.NONE));
-		panels.put(Panel.CREATE_REPOSITORY, new RepositorySelectionPanel(stackComposite, SWT.NONE));
-		panels.put(Panel.CREATE_SUMMARY, new CreateRepositorySummaryPanel(stackComposite, SWT.NONE));
-		panels.put(Panel.CONNECT_REPOSITORY, new ConnectDialog(stackComposite, SWT.NONE));
-		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(stackComposite, SWT.NONE));
+		panels.put(Panel.START, new StartPanel(this, stackComposite, SWT.NONE));
+		panels.put(Panel.REPOSITORY_SELECTION, new RepositorySelectionPanel(this, stackComposite, SWT.NONE));
+		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(this, stackComposite, SWT.NONE));
+		panels.put(Panel.SUMMARY, new SummaryPanel(this, stackComposite, SWT.NONE));
 	}
 }

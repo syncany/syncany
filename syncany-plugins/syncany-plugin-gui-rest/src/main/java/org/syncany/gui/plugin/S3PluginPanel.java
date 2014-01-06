@@ -62,29 +62,35 @@ public class S3PluginPanel extends PluginPanel {
 		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
-		gl_composite.marginRight = 30;
-		gl_composite.verticalSpacing = 10;
 		setLayout(gl_composite);
 		
-		Label lblNewLabel = new Label(this, SWT.WRAP);
-		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		lblNewLabel.setText("New Label");
-		lblNewLabel.setFont(fontBold);
+		Label introductionTitleLabel = new Label(this, SWT.WRAP);
+		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		introductionTitleLabel.setText(I18n.getString("plugin.s3.introduction.title"));
+		introductionTitleLabel.setFont(fontBold);
+		
+		Label introductionLabel = new Label(this, SWT.WRAP);
+		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
+		introductionLabel.setText(I18n.getString("plugin.s3.introduction"));
+		introductionLabel.setFont(fontNormal);
 		
 		Label accessKeyLabel = new Label(this, SWT.NONE);
-		accessKeyLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		accessKeyLabel.setText(I18n.getString("plugin.amazon.accessKey", true));
+		GridData gd_accessKeyLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
+		gd_accessKeyLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		accessKeyLabel.setLayoutData(gd_accessKeyLabel);
+		accessKeyLabel.setText(I18n.getString("plugin.s3.accessKey", true));
 		accessKeyLabel.setFont(fontNormal);
 		
 		accessKey = new Text(this, SWT.BORDER);
 		accessKey.setFont(fontNormal);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
 		accessKey.setLayoutData(gd_hostText);
 		
 		Label secretKeyLabel = new Label(this, SWT.NONE);
 		secretKeyLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		secretKeyLabel.setText(I18n.getString("plugin.amazon.secretKey", true));
+		secretKeyLabel.setText(I18n.getString("plugin.s3.secretKey", true));
 		secretKeyLabel.setFont(fontNormal);
 		
 		secretKey = new Text(this, SWT.BORDER);
@@ -93,7 +99,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label bucketLabel = new Label(this, SWT.NONE);
 		bucketLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		bucketLabel.setText(I18n.getString("plugin.amazon.bucket", true));
+		bucketLabel.setText(I18n.getString("plugin.s3.bucket", true));
 		bucketLabel.setFont(fontNormal);
 		
 		bucket = new Text(this, SWT.BORDER);
@@ -102,7 +108,7 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label locationLabel = new Label(this, SWT.NONE);
 		locationLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		locationLabel.setText(I18n.getString("plugin.amazon.location", true));
+		locationLabel.setText(I18n.getString("plugin.s3.location", true));
 		locationLabel.setFont(fontNormal);
 		
 		location = new Text(this, SWT.BORDER);
@@ -116,7 +122,7 @@ public class S3PluginPanel extends PluginPanel {
 		gl_buttonComposite.marginWidth = 0;
 		gl_buttonComposite.marginHeight = 0;
 		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, true, 4, 1);
+		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false, 4, 1);
 		gd_buttonComposite.minimumHeight = 30;
 		buttonComposite.setLayoutData(gd_buttonComposite);
 		
@@ -131,7 +137,7 @@ public class S3PluginPanel extends PluginPanel {
 		gd_testButton.widthHint = 100;
 		testButton.setLayoutData(gd_testButton);
 		testButton.setFont(fontNormal);
-		testButton.setText(I18n.getString("plugin.amazon.testConnection"));
+		testButton.setText(I18n.getString("plugin.s3.testConnection"));
 	}
 
 	@Override

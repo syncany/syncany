@@ -29,11 +29,12 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -57,35 +58,37 @@ public class LocalPluginPanel extends PluginPanel {
 		GridLayout gl_composite = new GridLayout(3, false);
 		setLayout(gl_composite);
 		
-		Label lblNewLabel = new Label(this, SWT.WRAP);
-		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
-		lblNewLabel.setText(I18n.getString("plugin.local.introduction.title"));
-		lblNewLabel.setFont(fontBold);
+		Label introductionTitleLabel = new Label(this, SWT.WRAP);
+		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
+		introductionTitleLabel.setText(I18n.getString("plugin.local.introduction.title"));
+		introductionTitleLabel.setFont(fontBold);
 		
-		Label lblNewLabel_1 = new Label(this, SWT.WRAP);
-		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 3, 1));
-		lblNewLabel_1.setText(I18n.getString("plugin.local.introduction"));
+		Label introductionLabel = new Label(this, SWT.WRAP);
+		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 3, 1));
+		introductionLabel.setText(I18n.getString("plugin.local.introduction"));
+		introductionLabel.setFont(fontNormal);
 		
 		Label hostLabel = new Label(this, SWT.NONE);
-		hostLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
+		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.local.localFolder", true));
 		hostLabel.setFont(fontNormal);
 		
 		localDir = new Text(this, SWT.BORDER);
 		localDir.setFont(fontNormal);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
 		localDir.setLayoutData(gd_hostText);
 		
 		Button selectFolderButton = new Button(this, SWT.NONE);
-		selectFolderButton.setText("...");
-		GridData gd_testFtpButton1 = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
-		gd_testFtpButton1.heightHint = ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
-		selectFolderButton.setLayoutData(gd_testFtpButton1);
+		selectFolderButton.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, false, false, 1, 1));
+		selectFolderButton.setImage(SWTResourceManager.getResizedImage("/images/folder-icon.png", 16, 16));
 		selectFolderButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				FileDialog fd = new FileDialog(getShell());
+				DirectoryDialog fd = new DirectoryDialog(getShell());
 				String selectedFolder = fd.open();
 				
 				if (selectedFolder != null && selectedFolder.length() > 0)

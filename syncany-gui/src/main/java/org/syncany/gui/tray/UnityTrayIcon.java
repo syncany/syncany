@@ -119,7 +119,6 @@ public class UnityTrayIcon extends TrayIcon {
 	
 	private static void startUnityProcess() throws IOException{
 		String scriptUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/unitytray.py";
-		String[] command1 = new String[]{"python", "src/main/resources/scripts/unitytray.py", "/src/main/resources/images", "coucou"};
 		String[] command2 = new String[]{"python", "-c", "import urllib2;exec urllib2.urlopen('" + scriptUrl + "').read()"};
 		
 		ProcessBuilder processBuilder = new ProcessBuilder(command2);

@@ -21,11 +21,28 @@ import org.eclipse.swt.widgets.Composite;
 import org.syncany.gui.panel.UserParametersChecker;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public abstract class WizardPanelComposite extends Composite implements UserParametersChecker {
-	public WizardPanelComposite(Composite parent, int style) {
+	private WizardDialog parentWizardDialog;
+	
+	public WizardPanelComposite(WizardDialog parentWizardDialog, Composite parent, int style) {
 		super(parent, style);
+		this.parentWizardDialog = parentWizardDialog;
 	}
+	
+	public WizardDialog getParentWizardDialog() {
+		return parentWizardDialog;
+	}
+	
+	public boolean hasCancelButton(){
+		return true;
+	}
+
+	public abstract boolean hasNextButton();
+	public abstract boolean hasPreviousButton();
+	public abstract boolean hasFinishButton();
+	
+	public abstract void updateData();
 }

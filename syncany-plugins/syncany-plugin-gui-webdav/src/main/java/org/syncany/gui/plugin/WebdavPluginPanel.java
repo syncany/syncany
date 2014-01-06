@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTUtil;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -45,7 +46,6 @@ public class WebdavPluginPanel extends PluginPanel {
 		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
-		gl_composite.verticalSpacing = 10;
 		setLayout(gl_composite);
 		
 		Label webdavTextTitleLabel = new Label(this, SWT.WRAP);
@@ -59,13 +59,16 @@ public class WebdavPluginPanel extends PluginPanel {
 		webdavTextLabel.setFont(fontNormal);
 		
 		Label urlLabel = new Label(this, SWT.NONE);
-		urlLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		GridData gd_urlLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
+		gd_urlLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		urlLabel.setLayoutData(gd_urlLabel);
 		urlLabel.setText(I18n.getString("plugin.webdav.url", true));
 		urlLabel.setFont(fontNormal);
 		
 		url = new Text(this, SWT.BORDER);
 		url.setFont(fontNormal);
 		GridData gd_url = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_url.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_url.minimumWidth = 200;
 		url.setLayoutData(gd_url);
 		
@@ -94,7 +97,7 @@ public class WebdavPluginPanel extends PluginPanel {
 		gl_buttonComposite.marginWidth = 0;
 		gl_buttonComposite.marginHeight = 0;
 		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, true, 4, 1);
+		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false, 4, 1);
 		gd_buttonComposite.minimumHeight = 30;
 		buttonComposite.setLayoutData(gd_buttonComposite);
 		
@@ -109,7 +112,7 @@ public class WebdavPluginPanel extends PluginPanel {
 		gd_testButton.widthHint = 100;
 		testButton.setLayoutData(gd_testButton);
 		testButton.setFont(fontNormal);
-		testButton.setText(I18n.getString("plugin.amazon.testConnection"));
+		testButton.setText(I18n.getString("plugin.webdav.testConnection"));
 	}
 
 	@Override
@@ -123,6 +126,13 @@ public class WebdavPluginPanel extends PluginPanel {
 	
 	@Override
 	public boolean isValid() {
-		return true;
+		boolean valid = true;
+		
+		// && order matters cause java uses lazy evaluation
+		valid = SWTUtil.checkTextLength(url, 4) && valid;
+		valid = SWTUtil.checkTextLength(username, 0) && valid;
+		valid = SWTUtil.checkTextLength(password, 0) && valid;
+			
+		return valid;
 	}
 }
