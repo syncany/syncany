@@ -74,13 +74,11 @@ public class Indexer {
 	private Config config;
 	private Deduper deduper;
 	private IndexSqlDatabaseDAO localDatabase;
-	private MemoryDatabase dirtyDatabase;
 	
-	public Indexer(Config config, Deduper deduper, MemoryDatabase dirtyDatabase) {
+	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
 		this.deduper = deduper;
 		this.localDatabase = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
-		this.dirtyDatabase = dirtyDatabase;
 	}
 	
 	/**
@@ -96,14 +94,8 @@ public class Indexer {
 	 * @return New database version containing new/changed/deleted entities
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
-	// TODO [medium] Performance: To avoid having to parse the checksum twice (status and indexer), the status operation should pass over the FileProperties object in the ChangeSet
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
-		
-		// Add dirty database's chunks/multichunks/file contents
-		if (dirtyDatabase != null) {
-			addDirtyChunkData(newDatabaseVersion);
-		}
 		
 		// Find and index new files
 		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion));			
@@ -114,26 +106,6 @@ public class Indexer {
 		return newDatabaseVersion;
 	}
 	
-	private void addDirtyChunkData(DatabaseVersion newDatabaseVersion) {
-		logger.log(Level.INFO, "- Adding dirty chunks/multichunks/file contents (from dirty database) ...");
-		for (DatabaseVersion dirtyDatabaseVersion : dirtyDatabase.getDatabaseVersions()) {
-			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getChunks().size()+" chunks ...");
-			for (ChunkEntry dirtyChunk : dirtyDatabaseVersion.getChunks()) {
-				newDatabaseVersion.addChunk(dirtyChunk);
-			}
-			
-			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getMultiChunks().size()+" multichunks ...");
-			for (MultiChunkEntry dirtyMultiChunk : dirtyDatabaseVersion.getMultiChunks()) {
-				newDatabaseVersion.addMultiChunk(dirtyMultiChunk);
-			}
-			
-			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getFileContents().size()+" file contents ...");
-			for (FileContent dirtyFileContent : dirtyDatabaseVersion.getFileContents()) {
-				newDatabaseVersion.addFileContent(dirtyFileContent);
-			}
-		}
-	}
-
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
@@ -276,62 +248,16 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = guessLastFileHistory(fileProperties);						
 			FileVersion lastFileVersion = (lastFileHistory != null) ? lastFileHistory.getLastVersion() : null;
 			
-			// 2. Add new file version
-			PartialFileHistory fileHistory = null;
-			FileVersion fileVersion = null;			
+			// 2. Create new file history/version
+			PartialFileHistory fileHistory = createNewFileHistory(lastFileHistory);
+			FileVersion fileVersion = createNewFileVersion(lastFileVersion, fileProperties);	
 			
-			if (lastFileVersion == null) {				
-				// TODO [low] move this generation to a better place. Where?
-				FileHistoryId newFileHistoryId = generateNewFileHistoryId();
-				
-				fileHistory = new PartialFileHistory(newFileHistoryId);
-				
-				fileVersion = new FileVersion();
-				fileVersion.setVersion(1L);
-				fileVersion.setStatus(FileStatus.NEW);
-			} 
-			else {
-				fileHistory = new PartialFileHistory(lastFileHistory.getFileId());
-				
-				fileVersion = lastFileVersion.clone();
-				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
-			}			
-
-			fileVersion.setPath(fileProperties.getRelativePath());
-			fileVersion.setLinkTarget(fileProperties.getLinkTarget());
-			fileVersion.setType(fileProperties.getType());
-			fileVersion.setSize(fileProperties.getSize());
-			fileVersion.setChecksum(fileProperties.getChecksum());
-			fileVersion.setLastModified(new Date(fileProperties.getLastModified()));
-			fileVersion.setUpdated(new Date());
-			
-			if (FileUtil.isWindows()) {
-				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
-			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
-				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
-			}
-
-			// Determine status
-			if (lastFileVersion != null) {
-				if (fileVersion.getType() == FileType.FILE && FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
-					fileVersion.setStatus(FileStatus.CHANGED);
-				}
-				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
-					fileVersion.setStatus(FileStatus.RENAMED);
-				}
-				else {
-					fileVersion.setStatus(FileStatus.CHANGED); 
-				}						
-			}	
-			
-			// Compare new and last version 
+			// 3. Compare new and last version 
 			FileProperties lastFileVersionProperties = fileVersionComparator.captureFileProperties(lastFileVersion);
 			FileVersionComparison lastToNewFileVersionComparison = fileVersionComparator.compare(fileProperties, lastFileVersionProperties, true);
 			
 			boolean newVersionDiffersFromToLastVersion = !lastToNewFileVersionComparison.equals();
 			
-			// Only add new version if it differs!			
 			if (newVersionDiffersFromToLastVersion) {
 				fileHistory.addFileVersion(fileVersion);
 				newDatabaseVersion.addFileHistory(fileHistory);
@@ -344,7 +270,7 @@ public class Indexer {
 				logger.log(Level.INFO, "         b/c IDENTICAL prev.: "+lastFileVersion);
 			}
 			
-			// 3. Add file content (if not a directory)			
+			// 4. Add file content (if not a directory)			
 			if (fileProperties.getChecksum() != null && fileContent != null) {
 				fileContent.setSize(fileProperties.getSize());
 				fileContent.setChecksum(fileProperties.getChecksum());
@@ -357,6 +283,63 @@ public class Indexer {
 				}
 			}						
 		}	
+
+		private PartialFileHistory createNewFileHistory(PartialFileHistory lastFileHistory) {
+			if (lastFileHistory == null) {				
+				FileHistoryId newFileHistoryId = generateNewFileHistoryId();				
+				return new PartialFileHistory(newFileHistoryId);			
+			} 
+			else {
+				return new PartialFileHistory(lastFileHistory.getFileId());
+			}			
+		}
+		
+		private FileVersion createNewFileVersion(FileVersion lastFileVersion, FileProperties fileProperties) {
+			FileVersion fileVersion = null;
+			
+			// Version
+			if (lastFileVersion == null) {				
+				fileVersion = new FileVersion();
+				fileVersion.setVersion(1L);
+				fileVersion.setStatus(FileStatus.NEW);
+			} 
+			else {
+				fileVersion = lastFileVersion.clone();
+				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
+			}			
+
+			// Simple attributes
+			fileVersion.setPath(fileProperties.getRelativePath());
+			fileVersion.setLinkTarget(fileProperties.getLinkTarget());
+			fileVersion.setType(fileProperties.getType());
+			fileVersion.setSize(fileProperties.getSize());
+			fileVersion.setChecksum(fileProperties.getChecksum());
+			fileVersion.setLastModified(new Date(fileProperties.getLastModified()));
+			fileVersion.setUpdated(new Date());
+			
+			// Permissions
+			if (FileUtil.isWindows()) {
+				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
+			}
+			else if (FileUtil.isUnixLikeOperatingSystem()) {
+				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
+			}
+			
+			// Status
+			if (lastFileVersion != null) {
+				if (fileVersion.getType() == FileType.FILE && FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
+					fileVersion.setStatus(FileStatus.CHANGED);
+				}
+				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
+					fileVersion.setStatus(FileStatus.RENAMED);
+				}
+				else {
+					fileVersion.setStatus(FileStatus.CHANGED); 
+				}						
+			}	
+			
+			return fileVersion;
+		}
 
 		private FileHistoryId generateNewFileHistoryId() {
 			int newFileHistoryIdAttempts = 0;
@@ -526,8 +509,6 @@ public class Indexer {
 		/*
 		 * Checks if chunk already exists in all database versions (db)
 		 * Afterwards checks if chunk exists in new introduced databaseversion. 
-		 * (non-Javadoc)
-		 * @see org.syncany.chunk.DeduperListener#onChunk(org.syncany.chunk.Chunk)
 		 */
 		@Override
 		public boolean onChunk(Chunk chunk) {

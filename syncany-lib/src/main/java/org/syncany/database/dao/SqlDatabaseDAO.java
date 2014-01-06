@@ -29,7 +29,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
@@ -63,11 +64,7 @@ public class SqlDatabaseDAO {
 		Map<String, FileVersion> currentFileTree = new HashMap<String, FileVersion>();
 
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"select * from fileversion fv "
-					+ "where fv.status<>'DELETED' "
-					+ "  and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)");
-
+			PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.select.getCurrentFileTree.sql"));
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
@@ -76,6 +73,24 @@ public class SqlDatabaseDAO {
 			}
 
 			return currentFileTree;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Long getMaxDirtyVectorClock(String machineName) {
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.select.getMaxDirtyVectorClock.sql"));
+			preparedStatement.setString(1, machineName);
+			
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			if (resultSet.next()) {
+				return resultSet.getLong("logicaltime");
+			}
+
+			return null;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -252,6 +267,47 @@ public class SqlDatabaseDAO {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				  "select fv0.* " 
+				+ "from fileversion_master fv0 "
+				+ "where fv0.filehistory_id=( "
+				+ "  select fv1.filehistory_id " 
+				+ "  from fileversion fv1 "
+				+ "  where fv1.path=? "
+				+ "    and fv1.status<>? " 
+				+ "    and fv1.version=( "
+				+ "      select max(fv2.version) "
+				+ "      from fileversion fv2 "
+				+ "      where fv1.filehistory_id=fv2.filehistory_id "
+				+ "    ) "
+				+ ")");
+			
+			preparedStatement.setString(1, relativePath);
+			preparedStatement.setString(2, FileStatus.DELETED.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			PartialFileHistory fileHistory = null;				
+			
+			while (resultSet.next()) {
+				if (fileHistory == null) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					fileHistory = new PartialFileHistory(fileHistoryId);
+				}
+				
+				FileVersion fileVersion = createFileVersionFromRow(resultSet);				
+				fileHistory.addFileVersion(fileVersion);
+			}
+
+			return fileHistory;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}		
+	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
 		try {
@@ -294,6 +350,38 @@ public class SqlDatabaseDAO {
 				MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
 				MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
 				
+				return multiChunkEntry;
+			}
+
+			return null;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public MultiChunkEntry getMultiChunk(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(							
+				  "select distinct mc.id "
+				+ "from databaseversion dbv "
+				+ "join filehistory fh on dbv.id=fh.databaseversion_id "
+				+ "join fileversion fv on fh.id=fv.filehistory_id "
+				+ "join filecontent fc on fv.filecontent_checksum=fc.checksum "
+				+ "join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum "
+				+ "join chunk c on fcc.chunk_checksum=c.checksum "
+				+ "join multichunk_chunk mcc on c.checksum=mcc.chunk_checksum "
+				+ "join multichunk mc on mcc.multichunk_id=mc.id "
+				+ "where dbv.status=? and mc.id=? "
+			);
+			
+			preparedStatement.setString(1, status.toString());
+			preparedStatement.setString(2, multiChunkId.toString());
+					
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			if (resultSet.next()) {
+				MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);				
 				return multiChunkEntry;
 			}
 
@@ -352,15 +440,6 @@ public class SqlDatabaseDAO {
 		}
 	}	
 	
-
-	public DatabaseVersion getDatabaseVersion(VectorClock vectorClock) {
-		throw new RuntimeException("Not implemented");
-	}	
-
-	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {
-		throw new RuntimeException("Not implemented");
-	}
-
 	public List<String> getKnownDatabases() {
 		List<String> knownDatabases = new ArrayList<String>();
 		

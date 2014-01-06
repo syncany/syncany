@@ -37,51 +37,38 @@ import java.util.regex.Pattern;
 public class SqlRunner {
 	private static final Logger logger = Logger.getLogger(SqlRunner.class.getSimpleName());
 
-	public static final String DELIMITER_LINE_REGEX = "(?i)DELIMITER.+", DELIMITER_LINE_SPLIT_REGEX = "(?i)DELIMITER", DEFAULT_DELIMITER = ";";
-	private final boolean autoCommit;
+	public static final String DELIMITER_LINE_REGEX = "(?i)DELIMITER.+";
+	public static final String DELIMITER_LINE_SPLIT_REGEX = "(?i)DELIMITER";
+	public static final String DELIMITER = ";";
+	
 	private final Connection connection;
-	private String delimiter = SqlRunner.DEFAULT_DELIMITER;
+	private String delimiter = SqlRunner.DELIMITER;
 
-	public SqlRunner(final Connection connection, final boolean autoCommit) {
-		if (connection == null) {
-			throw new RuntimeException("SqlRunner requires an SQL Connection");
-		}
-
+	public SqlRunner(Connection connection) {
 		this.connection = connection;
-		this.autoCommit = autoCommit;
 	}
 
-	public void runScript(final Reader reader) throws SQLException {
-		final boolean originalAutoCommit = this.connection.getAutoCommit();
-		try {
-			if (originalAutoCommit != this.autoCommit) {
-				this.connection.setAutoCommit(this.autoCommit);
-			}
-			this.runScript(this.connection, reader);
-		}
-		finally {
-			this.connection.setAutoCommit(originalAutoCommit);
-		}
-	}
-
-	private void runScript(final Connection conn, final Reader reader) {
+	public void runScript(Reader reader) throws SQLException {
 		StringBuffer command = null;
+		
 		try {
-			final LineNumberReader lineReader = new LineNumberReader(reader);
+			LineNumberReader lineReader = new LineNumberReader(reader);
 			String line = null;
+			
 			while ((line = lineReader.readLine()) != null) {
 				if (command == null) {
 					command = new StringBuffer();
 				}
+				
 				String trimmedLine = line.trim();
 
+				// a) Comment line
 				if (trimmedLine.startsWith("--") || trimmedLine.startsWith("//") || trimmedLine.startsWith("#")) {
 					logger.log(Level.INFO, "SQL (comment): " + trimmedLine);
 				}
-				else if (trimmedLine.endsWith(this.delimiter)) {
-
-					// Line is end of statement
-
+				
+				// b) End of statement (ends with ";")
+				else if (trimmedLine.endsWith(DELIMITER)) {
 					// Support new delimiter
 					final Pattern pattern = Pattern.compile(SqlRunner.DELIMITER_LINE_REGEX);
 					final Matcher matcher = pattern.matcher(trimmedLine);
@@ -104,14 +91,11 @@ public class SqlRunner {
 					Statement stmt = null;
 					ResultSet rs = null;
 					try {
-						stmt = conn.createStatement();
+						stmt = connection.createStatement();
 						logger.log(Level.INFO, "SQL: " + command);
 
 						stmt.execute(command.toString());
-						
-						if (this.autoCommit && !conn.getAutoCommit()) {
-							conn.commit();
-						}
+
 						rs = stmt.getResultSet();
 
 						command = null;
@@ -133,11 +117,9 @@ public class SqlRunner {
 							}
 					}
 				}
+				
+				// c) Not the end of a statement
 				else {
-
-					// Line is middle of a statement
-
-					// Support new delimiter
 					final Pattern pattern = Pattern.compile(SqlRunner.DELIMITER_LINE_REGEX);
 					final Matcher matcher = pattern.matcher(trimmedLine);
 					if (matcher.matches()) {
@@ -152,12 +134,6 @@ public class SqlRunner {
 					command.append(" ");
 				}
 			}
-			if (!this.autoCommit) {
-				conn.commit();
-			}
-		}
-		catch (final SQLException e) {
-			logger.log(Level.SEVERE, "SQL ERROR: " + e.getMessage(), e);
 		}
 		catch (final IOException e) {
 			logger.log(Level.SEVERE, "SQL ERROR: " + e.getMessage(), e);

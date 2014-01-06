@@ -26,9 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -141,20 +139,8 @@ public class TestClient extends Client {
 	public File getLocalDatabaseFile() {
 		return config.getDatabaseFile();
 	}
-
-	public File getDirtyDatabaseFile() {
-		return config.getDirtyDatabaseFile();
-	}
 	
-	public MemoryDatabase loadLocalDatabase() throws IOException {
-		File localDatabaseFile = getLocalDatabaseFile();
-		MemoryDatabase db = new MemoryDatabase();
-		
-		if (localDatabaseFile.exists()) {			
-			XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
-			dao.load(db, getLocalDatabaseFile());		
-		}
-
-		return db;
+	public SqlDatabaseDAO loadLocalDatabase() throws IOException {
+		return new SqlDatabaseDAO(config.createDatabaseConnection());
 	}
 }

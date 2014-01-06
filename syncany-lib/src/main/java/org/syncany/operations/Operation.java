@@ -68,20 +68,5 @@ public abstract class Operation {
 		
 		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
 		dao.save(db, fromVersion, toVersion, localDatabaseFile);		
-	}		
-	
-	protected MemoryDatabase loadLocalDatabase(File localDatabaseFile) throws IOException {
-		MemoryDatabase db = new MemoryDatabase();
-		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
-		
-		if (localDatabaseFile.exists()) {
-			logger.log(Level.INFO, "- Loading database from "+localDatabaseFile+" ...");
-			dao.load(db, localDatabaseFile);
-		}
-		else {
-			logger.log(Level.INFO, "- NOT loading. File does not exist.");
-		}
-		
-		return db;
-	}
+	}			
 }

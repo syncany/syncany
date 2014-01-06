@@ -21,17 +21,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.PartialFileHistory;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -105,15 +103,15 @@ public class FileVanishedScenarioTest {
 		deleteFilesThread.join();
 		
 		// Test 1: There should be between 50 and 100 file histories in the database
-		MemoryDatabase databaseClientA = clientA.loadLocalDatabase();
+		SqlDatabaseDAO databaseClientA = clientA.loadLocalDatabase();
 		
-		assertTrue("There should be less file histories than originally added files.", databaseClientA.getFileHistories().size() < numFiles);
-		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistories().size() >= numFilesRemaining);
+		assertTrue("There should be less file histories than originally added files.", databaseClientA.getFileHistoriesWithFileVersions().size() < numFiles);
+		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistoriesWithFileVersions().size() >= numFilesRemaining);
 		
 		// Test 2: Now up the rest, there should be exactly 50 files in the database
 		clientA.up();		
 		databaseClientA = clientA.loadLocalDatabase();
-		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, getNumNotDeletedFileHistories(databaseClientA));
+		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, databaseClientA.getFileHistoriesWithFileVersions().size());
 		
 		// Test 3: After that, the sync between the clients should of course still work
 		clientB.down();
@@ -154,17 +152,5 @@ public class FileVanishedScenarioTest {
 		// Tear down
 		clientA.cleanup();
 		clientB.cleanup();
-	}
-	
-	private int getNumNotDeletedFileHistories(MemoryDatabase db) {
-		int numNotDeletedFileHistories = 0;
-		
-		for (PartialFileHistory fileHistory : db.getFileHistories()) {
-			if (fileHistory.getLastVersion().getStatus() != FileStatus.DELETED) {
-				numNotDeletedFileHistories++;
-			}
-		}
-		
-		return numNotDeletedFileHistories;
-	}
+	}	
 }

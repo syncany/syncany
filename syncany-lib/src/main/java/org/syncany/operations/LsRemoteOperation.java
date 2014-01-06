@@ -37,7 +37,7 @@ import org.syncany.database.dao.SqlDatabaseDAO;
  * 
  * <p>It first uses a {@link TransferManager} to list all remote databases and then
  * uses the local list of known databases to filter already processed files. The local
- * list of known databases is loaded from {@link Config#getKnownDatabaseListFile() getKnownDatabaseListFile()}.
+ * list of known databases is loaded.
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */

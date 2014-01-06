@@ -31,8 +31,7 @@ import java.nio.file.Paths;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.DatabaseVersion;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
@@ -65,11 +64,10 @@ public class SymlinkSyncScenarioTest {
 		assertTrue("File should be uploaded.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		MemoryDatabase database = clientA.loadLocalDatabase();
-		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
+		SqlDatabaseDAO database = clientA.loadLocalDatabase();
 
-		assertNotNull("File should be uploaded.", database.getFileHistory("symlink-name"));		
-		assertNotNull("There should be a new database version, because file should not have been added.", databaseVersion);
+		assertNotNull("File should be uploaded.", database.getFileVersionByPath("symlink-name"));		
+		assertNotNull("There should be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 		
 		// Test 3: Check file system for inconsistencies
 		File repoPath = new File(((LocalConnection) testConnection).getRepositoryPath()+"/databases");

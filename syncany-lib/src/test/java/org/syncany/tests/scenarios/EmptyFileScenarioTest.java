@@ -17,18 +17,19 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
+import static org.junit.Assert.assertEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
 import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 
 public class EmptyFileScenarioTest {
 	@Test
@@ -51,9 +52,13 @@ public class EmptyFileScenarioTest {
 		clientB.moveFile("A-file1.jpg", "B-file1-moved");
 		clientB.up();
 		
-		File beforeUpDatabaseFile = TestFileUtil.copyIntoDirectory(clientB.getLocalDatabaseFile(), clientB.getConfig().getCacheDir()); 
+		SqlDatabaseDAO database = clientB.loadLocalDatabase();
+		DatabaseVersionHeader lastDatabaseVersionHeaderBeforeUp = database.getLastDatabaseVersionHeader();
+		
 		clientB.up(); // double-up, has caused problems
-		assertFileEquals("Nothing changed. Local database file should not change.", beforeUpDatabaseFile, clientB.getLocalDatabaseFile());
+		DatabaseVersionHeader lastDatabaseVersionHeaderAfterUp = database.getLastDatabaseVersionHeader();
+
+		assertEquals("Nothing changed. Local database file should not change.", lastDatabaseVersionHeaderBeforeUp, lastDatabaseVersionHeaderAfterUp);
 		
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());

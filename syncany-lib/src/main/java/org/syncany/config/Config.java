@@ -314,15 +314,7 @@ public class Config {
 
 	public File getDatabaseFile() {
 		return new File(databaseDir+File.separator+"local.db");	
-	}
-	
-	public File getDirtyDatabaseFile() {
-		return new File(databaseDir+File.separator+"dirty.db");	
-	}
-	
-	public File getKnownDatabaseListFile() {
-		return new File(databaseDir+File.separator+"knowndbs.list");	
-	}
+	}	
 
 	public void setDatabaseDir(File databaseDir) {
 		this.databaseDir = databaseDir;

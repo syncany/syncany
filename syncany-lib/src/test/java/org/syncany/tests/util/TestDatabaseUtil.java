@@ -25,16 +25,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.chunk.Transformer;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
+import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.operations.DatabaseBranch;
 
 public class TestDatabaseUtil {

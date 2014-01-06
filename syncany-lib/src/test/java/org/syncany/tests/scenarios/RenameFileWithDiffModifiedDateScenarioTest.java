@@ -19,14 +19,14 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -56,10 +56,10 @@ public class RenameFileWithDiffModifiedDateScenarioTest {
 		clientB.moveFile("A-file1-with-different-modified-date.jpg", "A-file1-with-different-modified-date-moved.jpg");				
 		clientB.up();
 		
-		MemoryDatabase clientDatabaseB = clientB.loadLocalDatabase();
+		SqlDatabaseDAO clientDatabaseB = clientB.loadLocalDatabase();
 		
-		PartialFileHistory file1Orig = clientDatabaseB.getFileHistory("A-file1-moved.jpg");
-		PartialFileHistory file1WithDiffLastModDate = clientDatabaseB.getFileHistory("A-file1-with-different-modified-date-moved.jpg");
+		PartialFileHistory file1Orig = clientDatabaseB.getFileHistoryWithFileVersions("A-file1-moved.jpg");
+		PartialFileHistory file1WithDiffLastModDate = clientDatabaseB.getFileHistoryWithFileVersions("A-file1-with-different-modified-date-moved.jpg");
 		
 		assertNotNull(file1Orig);
 		assertNotNull(file1WithDiffLastModDate);

@@ -37,13 +37,15 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileVersion;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.database.dao.CleanupSqlDatabaseDAO;
 import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.dao.WriteSqlDatabaseDAO;
 import org.syncany.database.dao.XmlDatabaseDAO;
@@ -80,7 +82,6 @@ public class UpOperation extends Operation {
 	private UpOperationResult result;
 	private TransferManager transferManager;
 	private SqlDatabaseDAO localDatabase;
-	private MemoryDatabase dirtyDatabase;
 
 	public UpOperation(Config config) {
 		this(config, new UpOperationOptions());
@@ -100,11 +101,6 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		// Load dirty database (if existent)
-		if (config.getDirtyDatabaseFile().exists()) {
-			dirtyDatabase = loadLocalDatabase(config.getDirtyDatabaseFile());
-		}
 
 		// Find local changes
 		ChangeSet statusChangeSet = (new StatusOperation(config, options.getStatusOptions()).execute()).getChangeSet();
@@ -192,11 +188,7 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Sync up done.");
 		}
 
-		if (config.getDirtyDatabaseFile().exists()) {
-			logger.log(Level.INFO, "- Deleting dirty.db from: " + config.getDirtyDatabaseFile());
-			config.getDirtyDatabaseFile().delete();
-		}
-		
+		removeUnreferencedDirtyData();		
 		disconnectTransferManager();
 
 		// Result
@@ -204,6 +196,13 @@ public class UpOperation extends Operation {
 		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
 
 		return result;
+	}
+
+	private void removeUnreferencedDirtyData() {
+		logger.log(Level.INFO, "- Removing unreferenced dirty data from database ...");
+		
+		CleanupSqlDatabaseDAO cleanupSqlDao = new CleanupSqlDatabaseDAO(config.createDatabaseConnection());
+		cleanupSqlDao.removeDirtyDatabaseVersions();		
 	}
 
 	private List<File> determineLocallyUpdatedFiles(ChangeSet statusChangeSet) {
@@ -245,7 +244,9 @@ public class UpOperation extends Operation {
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			if (dirtyDatabase != null && dirtyDatabase.getMultiChunk(multiChunkEntry.getId()) != null) {
+			MultiChunkEntry dirtyMultiChunkEntry= localDatabase.getMultiChunk(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
+			
+			if (dirtyMultiChunkEntry != null) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
 			}
 			else {
@@ -276,14 +277,13 @@ public class UpOperation extends Operation {
 		VectorClock newVectorClock = lastVectorClock.clone();
 
 		Long lastLocalValue = lastVectorClock.getClock(config.getMachineName());
-		Long lastDirtyLocalValue = (dirtyDatabase != null) ? dirtyDatabase.getLastDatabaseVersion().getVectorClock()
-				.getClock(config.getMachineName()) : null;
+		Long lastDirtyLocalValue = localDatabase.getMaxDirtyVectorClock(config.getMachineName());
 
 		Long newLocalValue = null;
 
 		if (lastDirtyLocalValue != null) {
-			newLocalValue = lastDirtyLocalValue + 1; // TODO [medium] Does this lead to problems? C-1 does not exist! Possible problems with
-														// DatabaseReconciliator?
+			// TODO [medium] Does this lead to problems? C-1 does not exist! Possible problems with DatabaseReconciliator?
+			newLocalValue = lastDirtyLocalValue + 1; 
 		}
 		else {
 			if (lastLocalValue != null) {
@@ -298,7 +298,7 @@ public class UpOperation extends Operation {
 
 		// Index
 		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		Indexer indexer = new Indexer(config, deduper, dirtyDatabase);
+		Indexer indexer = new Indexer(config, deduper);
 
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
 
@@ -397,7 +397,7 @@ public class UpOperation extends Operation {
 			transferManager.delete(toDeleteRemoteFile);
 		}
 	}
-
+	
 	private void disconnectTransferManager() {
 		try {
 			transferManager.disconnect();

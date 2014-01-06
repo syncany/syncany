@@ -1,4 +1,4 @@
-// Tables
+-- Tables
 
 CREATE CACHED TABLE chunk (
   checksum varchar(40) NOT NULL,
@@ -8,8 +8,11 @@ CREATE CACHED TABLE chunk (
 
 CREATE CACHED TABLE databaseversion (
   id int NOT NULL IDENTITY,
+  status varchar(45) NOT NULL,
   localtime datetime NOT NULL,
-  client varchar(45) NOT NULL  
+  client varchar(45) NOT NULL,
+  vectorclock_serialized varchar(1024) NOT NULL,
+  UNIQUE (vectorclock_serialized)
 );
 
 CREATE CACHED TABLE databaseversion_vectorclock (
@@ -81,10 +84,20 @@ CREATE CACHED TABLE known_databases (
 );
 
 
-// Non-primary indices
+-- Non-primary indices
 
+CREATE INDEX idx_databaseversion_status ON databaseversion (status);
+CREATE INDEX idx_databaseversion_vectorclock_serialized ON databaseversion (vectorclock_serialized);
 CREATE INDEX idx_fileversion_path ON fileversion (path);
 CREATE INDEX idx_fileversion_status ON fileversion (status);
 CREATE INDEX idx_fileversion_filecontent_checksum ON fileversion (filecontent_checksum);
 
 
+-- Views
+
+CREATE VIEW fileversion_master AS
+  SELECT fv0.* 
+  FROM fileversion fv0
+  JOIN databaseversion dbv 
+    ON fv0.databaseversion_id=dbv.id 
+       AND dbv.status='MASTER';           

@@ -44,6 +44,7 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -217,17 +218,10 @@ public class DownOperation extends Operation {
 		else {
 			// Load dirty database (if existent)
 			logger.log(Level.INFO, "  + Pruning databases locally ...");
-			MemoryDatabase dirtyDatabase = new MemoryDatabase();
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
-				// Database version
-				DatabaseVersion databaseVersion = localDatabase.getDatabaseVersion(databaseVersionHeader.getVectorClock());
-				dirtyDatabase.addDatabaseVersion(databaseVersion);
-
-				// Remove database version locally
-				logger.log(Level.INFO, "    * Removing " + databaseVersionHeader + " ...");
-				localDatabase.removeDatabaseVersion(databaseVersion);
-
+				localDatabase.markDatabaseVersion(databaseVersionHeader, DatabaseVersionStatus.DIRTY);
+			
 				String remoteFileToPruneClientName = config.getMachineName();
 				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
 				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
@@ -235,9 +229,6 @@ public class DownOperation extends Operation {
 				logger.log(Level.INFO, "    * Deleting remote database file " + remoteFileToPrune + " ...");
 				transferManager.delete(remoteFileToPrune);
 			}
-
-			logger.log(Level.INFO, "    * Saving dirty database to " + config.getDirtyDatabaseFile() + " ...");
-			saveLocalDatabase(dirtyDatabase, config.getDirtyDatabaseFile());
 		}
 	}
 

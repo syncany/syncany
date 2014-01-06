@@ -22,8 +22,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -39,8 +39,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.DatabaseVersion;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.scenarios.framework.ClientActions;
@@ -126,10 +125,8 @@ public class FileLockedScenarioTest {
 		assertTrue("File should be uploaded while it is read-only.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		MemoryDatabase database = client.loadLocalDatabase();
-		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
-
-		assertNotNull("There should be a new database version, because file should have been added.", databaseVersion);
+		SqlDatabaseDAO database = client.loadLocalDatabase();
+		assertNotNull("There should be a new database version, because files should have been added.", database.getLastDatabaseVersionHeader());
 		
 		// Test 3: Check file system for inconsistencies
 		File repoPath = ((LocalConnection) connection).getRepositoryPath();		
@@ -145,11 +142,10 @@ public class FileLockedScenarioTest {
 		assertFalse("File should NOT be uploaded while it is locked.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		MemoryDatabase database = client.loadLocalDatabase();
-		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
+		SqlDatabaseDAO database = client.loadLocalDatabase();
 
-		assertNull("File should NOT be uploaded while it is locked.", database.getFileHistory("large-test-file"));		
-		assertNull("There should NOT be a new database version, because file should not have been added.", databaseVersion);
+		assertNull("File should NOT be uploaded while it is locked.", database.getFileVersionByPath("large-test-file"));		
+		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 		
 		// Test 3: Check file system for inconsistencies
 		File repoPath = ((LocalConnection) connection).getRepositoryPath();

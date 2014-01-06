@@ -30,7 +30,10 @@ import java.util.logging.Level;
 
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.ChunkEntry;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
@@ -61,8 +64,10 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 		connection.commit();
 	}
 	
-	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException, SQLException {
+	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException, SQLException {		
 		try {
+			logger.log(Level.INFO, "Persisting database version ... ");
+			
 			writeDatabaseVersion(connection, databaseVersion);			
 			connection.commit();
 		}
@@ -74,13 +79,27 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 			}
 		}		
 	}
+	
+	public void markDatabaseVersion(DatabaseVersionHeader databaseVersionHeader, DatabaseVersionStatus status) throws SQLException {
+		PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.update.markDatabaseVersion.sql"));
+
+		preparedStatement.setString(1, status.toString());
+		preparedStatement.setString(2, databaseVersionHeader.getVectorClock().toString());
+
+		preparedStatement.executeUpdate();		
+		connection.commit();
+	}
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {		
 		PreparedStatement preparedStatement = connection.prepareStatement(
-				"insert into databaseversion (localtime, client) values (?, ?)", Statement.RETURN_GENERATED_KEYS);
+				  "insert into databaseversion (status, localtime, client, vectorclock_serialized) "
+				+ "values (?, ?, ?, ?)", 
+				Statement.RETURN_GENERATED_KEYS);
 
-		preparedStatement.setDate(1, new java.sql.Date(databaseVersion.getHeader().getDate().getTime()));
-		preparedStatement.setString(2, databaseVersion.getHeader().getClient());
+		preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
+		preparedStatement.setDate(2, new java.sql.Date(databaseVersion.getHeader().getDate().getTime()));
+		preparedStatement.setString(3, databaseVersion.getHeader().getClient());
+		preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
 
 		preparedStatement.executeUpdate();
 		
@@ -197,7 +216,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 			preparedStatement.setLong(1, databaseVersionId);
 			preparedStatement.setString(2, vectorClockEntry.getKey());
 			preparedStatement.setLong(3, vectorClockEntry.getValue());
-			
+						
 			preparedStatement.executeUpdate();			
 		}
 	}

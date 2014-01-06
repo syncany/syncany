@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
@@ -50,12 +49,19 @@ public class DirtyDatabaseScenarioTest {
 		clientB.up(upOptionsForceEnabled);
 		
 		clientB.down(); // This creates a dirty database		
-		assertTrue("Dirty database should exist.", clientB.getDirtyDatabaseFile().exists());
+		
+		
+		
+		fail("IMPLEMENT THIS TEST");
+		
+		
+		
+		//assertTrue("Dirty database should exist.", clientB.getDirtyDatabaseFile().exists());
 		assertFileEquals("Files should be identical", clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
 		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		clientB.up(); // This deletes the dirty database file
-		assertFalse("Dirty database should NOT exist.", clientB.getDirtyDatabaseFile().exists());
+		//assertFalse("Dirty database should NOT exist.", clientB.getDirtyDatabaseFile().exists());
 		
 		clientA.down(); // This pulls down the conflicting file
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());

@@ -43,7 +43,12 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersion {
+	private DatabaseVersionStatus status;
     private DatabaseVersionHeader header; 
+    
+    public enum DatabaseVersionStatus {
+    	MASTER, DIRTY, PRUNED
+    }
     
     // Full DB in RAM
     private Map<ChunkChecksum, ChunkEntry> chunks;
@@ -94,10 +99,18 @@ public class DatabaseVersion {
 	public String getClient() {
 		return header.getClient();
 	}
+	
+	public DatabaseVersionStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(DatabaseVersionStatus status) {
+		this.status = status;
+	}	
 
     // Chunk
-    
-    public ChunkEntry getChunk(ChunkChecksum checksum) {
+	
+	public ChunkEntry getChunk(ChunkChecksum checksum) {
         return chunks.get(checksum);
     }    
     
