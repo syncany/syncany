@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.util.component.Container;
 import org.eclipse.jetty.util.resource.Resource;
 
 public class StaticResourcesWebServer {
@@ -42,8 +43,7 @@ public class StaticResourcesWebServer {
 			        context1.setHandler(rh1);
 			        
 			        ContextHandlerCollection contexts = new ContextHandlerCollection();
-			        contexts.setHandlers(new Handler[]
-			        { context0, context1 });
+			        contexts.setHandlers(new Handler[]{ context0, context1 });
 			        
 			        server.setHandler(contexts);
 			        

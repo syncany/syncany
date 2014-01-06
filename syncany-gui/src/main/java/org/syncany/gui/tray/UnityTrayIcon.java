@@ -43,6 +43,13 @@ public class UnityTrayIcon extends TrayIcon {
 	private WebSocketServer webSocketClient;
 
 	public UnityTrayIcon() {
+		new StaticResourcesWebServer().startService();
+		try {
+			Thread.sleep(1000);
+		}
+		catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
 		try {
 			Map<String, String> map = new HashMap<>();
 			map.put("client_id", MainGUI.getClientIdentification());
@@ -73,7 +80,7 @@ public class UnityTrayIcon extends TrayIcon {
 
 			webSocketClient.start();
 
-			new Thread(new Runnable() {
+			Thread unityPythonProcess = new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -83,8 +90,8 @@ public class UnityTrayIcon extends TrayIcon {
 						throw new RuntimeException("Unable to determine Linux desktop environment.", e);
 					}
 				}
-			}).start();
-
+			});
+			unityPythonProcess.start();
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
@@ -109,16 +116,14 @@ public class UnityTrayIcon extends TrayIcon {
 			}
 		}
 	}
-
+	
 	private static void startUnityProcess() throws IOException{
 		String scriptUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/unitytray.py";
-		ProcessBuilder processBuilder = new ProcessBuilder(new String[]{
-			"python", 
-			"-c", 
-			"import urllib2;" +
-			"exec urllib2.urlopen('" + scriptUrl + "').read()"
-		});
+		String[] command1 = new String[]{"python", "src/main/resources/scripts/unitytray.py", "/src/main/resources/images", "coucou"};
+		String[] command2 = new String[]{"python", "-c", "import urllib2;exec urllib2.urlopen('" + scriptUrl + "').read()"};
 		
+		ProcessBuilder processBuilder = new ProcessBuilder(command2);
+
 		Process process = processBuilder.start();
 		
 		BufferedReader is = new BufferedReader(new InputStreamReader(process.getInputStream()));
