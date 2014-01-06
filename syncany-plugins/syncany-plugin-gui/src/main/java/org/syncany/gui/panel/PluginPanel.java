@@ -17,8 +17,6 @@
  */
 package org.syncany.gui.panel;
 
-import java.util.Map;
-
 import org.eclipse.swt.widgets.Composite;
 
 
@@ -26,7 +24,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class PluginPanel extends Composite {
+public abstract class PluginPanel extends Composite implements UserParametersChecker {
 
 	/**
 	 * @param parent
@@ -35,8 +33,4 @@ public abstract class PluginPanel extends Composite {
 	public PluginPanel(Composite parent, int style) {
 		super(parent, style);
 	}
-
-	public abstract Map<String, String> getParameters();
-	
-	public abstract boolean isValid();
 }

@@ -135,7 +135,7 @@ public class S3PluginPanel extends PluginPanel {
 	}
 
 	@Override
-	public Map<String, String> getParameters() {
+	public Map<String, String> getUserSelection() {
 		Map<String, String> parameters = new HashMap<>();
 		parameters.put("plugin.s3.accessKey", accessKey.getText());
 		parameters.put("plugin.s3.secretKey", secretKey.getText());

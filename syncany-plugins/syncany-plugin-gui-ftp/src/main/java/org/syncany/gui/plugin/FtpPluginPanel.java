@@ -200,7 +200,7 @@ public class FtpPluginPanel extends PluginPanel {
 	}
 
 	@Override
-	public Map<String, String> getParameters() {
+	public Map<String, String> getUserSelection() {
 		Map<String, String> parameters = new HashMap<>();
 		parameters.put("plugin.ftp.host", hostText.getText());
 		parameters.put("plugin.ftp.username", usernameText.getText());

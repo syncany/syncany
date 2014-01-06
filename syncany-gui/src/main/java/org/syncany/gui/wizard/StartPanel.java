@@ -38,10 +38,6 @@ public class StartPanel extends WizardPanelComposite {
 	//Widgets
 	private Button createStorageRadio;
 	private Button connectStorageRadio;
-	private Label createText;
-	private Label connectText;
-	private Label introductionText;
-	private Label introductionTitleText;
 	
 	//Constructor
 	public StartPanel(Composite composite, int style) {
@@ -58,15 +54,15 @@ public class StartPanel extends WizardPanelComposite {
 		gl_composite.marginRight = 30;
 		setLayout(gl_composite);
 		
-		introductionTitleText = new Label(this, SWT.WRAP);
+		Label introductionTitleText = new Label(this, SWT.WRAP);
 		introductionTitleText.setFont(fontBold);
 		introductionTitleText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
-		introductionTitleText.setText(I18n.getString("StartDialog.dialog.introductionText.title"));
+		introductionTitleText.setText(I18n.getString("dialog.start.introductionText.title"));
 		
-		introductionText = new Label(this, SWT.WRAP);
+		Label introductionText = new Label(this, SWT.WRAP);
 		introductionText.setFont(fontNormal);
 		introductionText.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false, 1, 1));
-		introductionText.setText(I18n.getString("StartDialog.dialog.introductionText"));
+		introductionText.setText(I18n.getString("dialog.start.introductionText"));
 
 		createStorageRadio = new Button(this, SWT.RADIO);
 		createStorageRadio.setFont(fontNormal);
@@ -76,15 +72,15 @@ public class StartPanel extends WizardPanelComposite {
 		gd_createStorageRadio.heightHint = 30;
 		createStorageRadio.setLayoutData(gd_createStorageRadio);
 		createStorageRadio.setBounds(0, 0, 90, 16);
-		createStorageRadio.setText(I18n.getString("StartDialog.dialog.option.createOnlineStorage"));
+		createStorageRadio.setText(I18n.getString("dialog.start.option.createOnlineStorage"));
 		createStorageRadio.setSelection(true);
 		
-		createText = new Label(this, SWT.WRAP);
+		Label createText = new Label(this, SWT.WRAP);
 		GridData gd_createText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_createText.horizontalIndent = 30;
 		createText.setLayoutData(gd_createText);
 		createText.setFont(fontNormal);
-		createText.setText(I18n.getString("StartDialog.dialog.option.createOnlineStorage.helpText"));
+		createText.setText(I18n.getString("dialog.start.option.createOnlineStorage.helpText"));
 		
 		connectStorageRadio = new Button(this, SWT.RADIO);
 		GridData gd_connectStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
@@ -94,14 +90,14 @@ public class StartPanel extends WizardPanelComposite {
 		connectStorageRadio.setLayoutData(gd_connectStorageRadio);
 		connectStorageRadio.setBounds(0, 0, 90, 16);
 		connectStorageRadio.setFont(fontNormal);
-		connectStorageRadio.setText(I18n.getString("StartDialog.dialog.option.connectExisting"));
+		connectStorageRadio.setText(I18n.getString("dialog.start.option.connectExisting"));
 		
-		connectText = new Label(this, SWT.WRAP);
+		Label connectText = new Label(this, SWT.WRAP);
 		GridData gd_connectText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_connectText.horizontalIndent = 30;
 		connectText.setLayoutData(gd_connectText);
 		connectText.setFont(fontNormal);
-		connectText.setText(I18n.getString("StartDialog.dialog.option.connectExisting.helpText"));
+		connectText.setText(I18n.getString("dialog.start.option.connectExisting.helpText"));
 	}
 
 	@Override

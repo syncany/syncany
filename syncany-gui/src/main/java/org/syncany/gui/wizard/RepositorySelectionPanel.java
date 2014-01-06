@@ -44,13 +44,11 @@ import org.syncany.util.StringUtil;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class CreateRepositorySelectionPanel extends WizardPanelComposite {
-	private static final Logger log = Logger.getLogger(CreateRepositorySelectionPanel.class.getSimpleName());
+public class RepositorySelectionPanel extends WizardPanelComposite {
+	private static final Logger log = Logger.getLogger(RepositorySelectionPanel.class.getSimpleName());
 	
-	private Combo pluginSelectionCombo;
+	private Combo repositorySelectionCombo;
 	private List<Plugin> pluginList;
-	private Label lblNewLabel;
-	private Label lblNewLabel_1;
 	private Composite pluginStackComposite;
 	
 	/**
@@ -58,11 +56,9 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 	 * @param parent
 	 * @param style
 	 */
-	public CreateRepositorySelectionPanel(Composite parent, int style) {
+	public RepositorySelectionPanel(Composite parent, int style) {
 		super(parent, style);
-		
 		this.pluginList = Plugins.list();
-		
 		initComposite();
 	}
 	
@@ -74,39 +70,40 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 		GridLayout gl_composite = new GridLayout(2, false);
 		setLayout(gl_composite);
 		
-		lblNewLabel = new Label(this, SWT.NONE);
-		lblNewLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		lblNewLabel.setFont(fontBold);
-		lblNewLabel.setText("New Label");
+		Label introductionTitleLabel = new Label(this, SWT.NONE);
+		introductionTitleLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		introductionTitleLabel.setFont(fontBold);
+		introductionTitleLabel.setText(I18n.getString("dialog.chooseRepository.introduction.title"));
 		
-		lblNewLabel_1 = new Label(this, SWT.NONE);
-		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		lblNewLabel_1.setFont(fontNormal);
-		lblNewLabel_1.setText("New Label");
+		Label introductionLabel = new Label(this, SWT.WRAP);
+		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
+		introductionLabel.setFont(fontNormal);
+		introductionLabel.setText(I18n.getString("dialog.chooseRepository.introduction"));
 		
-		lblNewLabel_2 = new Label(this, SWT.NONE);
-		lblNewLabel_2.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		lblNewLabel_2.setFont(fontNormal);
-		lblNewLabel_2.setText(I18n.getString("NewDialog.dialog.option.otherPlugin"));
+		chooseRepositoryLabel = new Label(this, SWT.NONE);
+		GridData gd_chooseRepositoryLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
+		gd_chooseRepositoryLabel.verticalIndent = 20;
+		chooseRepositoryLabel.setLayoutData(gd_chooseRepositoryLabel);
+		chooseRepositoryLabel.setFont(fontNormal);
+		chooseRepositoryLabel.setText(I18n.getString("dialog.chooseRepository.choosePlugin"));
 		
-		
-		pluginSelectionCombo = new Combo(this, SWT.NONE);
-		pluginSelectionCombo.setFont(fontNormal);
-		pluginSelectionCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		
-		pluginSelectionCombo.select(0);
-		
-		pluginSelectionCombo.addSelectionListener(new SelectionAdapter() {
+		repositorySelectionCombo = new Combo(this, SWT.NONE);
+		repositorySelectionCombo.setFont(fontNormal);
+		GridData gd_repositorySelectionCombo = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		gd_repositorySelectionCombo.verticalIndent = 20;
+		repositorySelectionCombo.setLayoutData(gd_repositorySelectionCombo);
+		repositorySelectionCombo.select(0);
+		repositorySelectionCombo.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				String id = (String)pluginSelectionCombo.getData(pluginSelectionCombo.getItem(pluginSelectionCombo.getSelectionIndex()));
+				String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));
 				showPLuginPanel(id);;
 			}
 		});
 		
 		for (Plugin p : pluginList){
-			pluginSelectionCombo.add(p.getName());
-			pluginSelectionCombo.setData(p.getName(), p.getId());
+			repositorySelectionCombo.add(p.getName());
+			repositorySelectionCombo.setData(p.getName(), p.getId());
 		}
 		
 		pluginStackComposite = new Composite(this, SWT.NONE);
@@ -143,7 +140,7 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 
 	private Map<String, PluginPanel> panels = new HashMap<>();
 	private StackLayout stackLayout;
-	private Label lblNewLabel_2;
+	private Label chooseRepositoryLabel;
 	
 	@Override
 	public boolean isValid() {
@@ -152,9 +149,9 @@ public class CreateRepositorySelectionPanel extends WizardPanelComposite {
 
 	@Override
 	public Map<String, String> getUserSelection() {
-		String id = (String)pluginSelectionCombo.getData(pluginSelectionCombo.getItem(pluginSelectionCombo.getSelectionIndex()));Map<String, String> userInput = new HashMap<>();
+		String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));Map<String, String> userInput = new HashMap<>();
 		userInput.put("repositoryType", id);
-		Map<String, String> pluginParameters = panels.get(id).getParameters();
+		Map<String, String> pluginParameters = panels.get(id).getUserSelection();
 		userInput.putAll(pluginParameters);
 		return userInput;
 	}

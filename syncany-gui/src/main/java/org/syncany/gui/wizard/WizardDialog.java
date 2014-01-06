@@ -220,7 +220,10 @@ public class WizardDialog extends Dialog {
 			case REPOSITORY_ENCRYPTION:
 				showPanel(Panel.CREATE_REPOSITORY);
 				break;
-			}
+			case CREATE_SUMMARY:
+				showPanel(Panel.REPOSITORY_ENCRYPTION);
+				break;
+		}
 	}
 
 	private void handleCancel() {
@@ -247,7 +250,7 @@ public class WizardDialog extends Dialog {
 
 	private void buildPanels() {
 		panels.put(Panel.START, new StartPanel(stackComposite, SWT.NONE));
-		panels.put(Panel.CREATE_REPOSITORY, new CreateRepositorySelectionPanel(stackComposite, SWT.NONE));
+		panels.put(Panel.CREATE_REPOSITORY, new RepositorySelectionPanel(stackComposite, SWT.NONE));
 		panels.put(Panel.CREATE_SUMMARY, new CreateRepositorySummaryPanel(stackComposite, SWT.NONE));
 		panels.put(Panel.CONNECT_REPOSITORY, new ConnectDialog(stackComposite, SWT.NONE));
 		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(stackComposite, SWT.NONE));

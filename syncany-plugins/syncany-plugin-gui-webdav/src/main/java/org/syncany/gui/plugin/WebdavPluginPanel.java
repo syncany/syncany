@@ -113,7 +113,7 @@ public class WebdavPluginPanel extends PluginPanel {
 	}
 
 	@Override
-	public Map<String, String> getParameters() {
+	public Map<String, String> getUserSelection() {
 		Map<String, String> parameters = new HashMap<>();
 		parameters.put("plugin.webdav.url", url.getText());
 		parameters.put("plugin.webdav.username", username.getText());

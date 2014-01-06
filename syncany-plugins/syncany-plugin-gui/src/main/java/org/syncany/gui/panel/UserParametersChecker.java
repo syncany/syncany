@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.wizard;
+package org.syncany.gui.panel;
 
-import org.eclipse.swt.widgets.Composite;
-import org.syncany.gui.panel.UserParametersChecker;
+import java.util.Map;
 
 /**
  * @author vwiencek
  *
  */
-public abstract class WizardPanelComposite extends Composite implements UserParametersChecker {
-	public WizardPanelComposite(Composite parent, int style) {
-		super(parent, style);
-	}
+public interface UserParametersChecker {
+	public abstract Map<String, String> getUserSelection();
+	
+	public abstract boolean isValid();
 }
