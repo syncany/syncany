@@ -17,6 +17,7 @@
  */
 package org.syncany.gui.wizard;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -29,32 +30,64 @@ import org.eclipse.swt.widgets.Label;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class CreateRepositorySummaryPanel extends WizardPanelComposite {
-	private Label contentLabel;
+public class SummaryPanel extends WizardPanelComposite {
+	private Label repositoryType;
 	
-	public CreateRepositorySummaryPanel(Composite parent, int style) {
-		super(parent, style);
+	public SummaryPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
+		super(wizardParentDialog, parent, style);
 		initComposite();
 	}
 	
 	private void initComposite(){
-		setLayout(new GridLayout(1, false));
-		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
+		setLayout(new GridLayout(2, false));
 		
-		contentLabel = new Label(this, SWT.WRAP);
-		contentLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-		contentLabel.setText("New Label");
+		Label repositoryTypeLanbl = new Label(this, SWT.NONE);
+		repositoryTypeLanbl.setText("Repository Type");
+		
+		repositoryType = new Label(this, SWT.NONE);
+		repositoryType.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+		repositoryType.setText("New Label");
+		
+		Label lblNewLabel_2 = new Label(this, SWT.NONE);
+		lblNewLabel_2.setText("Local Folder");
+		
+		Label lblNewLabel_3 = new Label(this, SWT.NONE);
+		lblNewLabel_3.setText("New Label");
+		
+		Label lblNewLabel_4 = new Label(this, SWT.NONE);
+		lblNewLabel_4.setText("Encryption Settings");
+		
+		Label lblNewLabel_5 = new Label(this, SWT.NONE);
+		lblNewLabel_5.setText("New Label");
 	}
-
+	
+	public void updateData(){
+		Map<String, String> userInput = getParentWizardDialog().getUserInput();
+		repositoryType.setText(userInput.get("repositoryType"));
+	}
+	
 	@Override
 	public boolean isValid() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public Map<String, String> getUserSelection() {
-		// TODO Auto-generated method stub
-		return null;
+		return new HashMap<String, String>();
+	}
+
+	@Override
+	public boolean hasNextButton() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPreviousButton() {
+		return true;
+	}
+
+	@Override
+	public boolean hasFinishButton() {
+		return true;
 	}
 }
