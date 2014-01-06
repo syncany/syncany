@@ -17,7 +17,6 @@
  */
 package org.syncany.connection.plugins.s3;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +77,6 @@ public class S3Connection extends RestConnection {
 
 	@Override
 	public List<String> getSensitiveSettings() {
-		// TODO [medium] Which S3 settings should be hidden?
-		return new ArrayList<String>();
+		return super.getSensitiveSettings();
 	}
 }

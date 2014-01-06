@@ -65,7 +65,9 @@ public abstract class RestConnection implements Connection {
     }
     
     public List<String> getSensitiveSettings() {
-    	return new ArrayList<String>();
+    	List<String> sensitive = new ArrayList<String>();
+    	sensitive.add("secretKey");
+    	return sensitive;
     }
     
     public String getAccessKey() {
