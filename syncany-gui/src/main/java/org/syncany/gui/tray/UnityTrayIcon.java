@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.eclipse.swt.widgets.Shell;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -40,10 +41,16 @@ import org.syncany.util.JsonHelper;
  */
 public class UnityTrayIcon extends TrayIcon {
 	private static final Logger logger = Logger.getLogger(WSClient.class.getSimpleName());
+	
 	private WebSocketServer webSocketClient;
-
-	public UnityTrayIcon() {
-		new StaticResourcesWebServer().startService();
+	private StaticResourcesWebServer staticWebServer;
+	
+	public UnityTrayIcon(Shell shell) {
+		super(shell);
+		
+		staticWebServer = new StaticResourcesWebServer();
+		staticWebServer.startService();
+		
 		try {
 			Thread.sleep(1000);
 		}
@@ -98,12 +105,33 @@ public class UnityTrayIcon extends TrayIcon {
 		}
 	}
 
+	@Override
+	protected void quit() {
+		super.quit();
+		staticWebServer.stopService();
+		try {
+			webSocketClient.stop();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	protected void handleCommand(Map<String, Object> map) {
 		String command = (String)map.get("command");
 		
 		switch (command){
 			case "DONATE":
 				showDonate();
+				break;
+			case "WEBSITE":
+				showWebsite();
+				break;
+			case "QUIT":
+				quit();
 				break;
 		}
 	}
@@ -119,22 +147,18 @@ public class UnityTrayIcon extends TrayIcon {
 	
 	private static void startUnityProcess() throws IOException{
 		String scriptUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/unitytray.py";
-		String[] command2 = new String[]{"python", "-c", "import urllib2;exec urllib2.urlopen('" + scriptUrl + "').read()"};
+		String[] command = new String[]{"python", "-c", "import urllib2;exec urllib2.urlopen('" + scriptUrl + "').read()"};
 		
-		ProcessBuilder processBuilder = new ProcessBuilder(command2);
+		ProcessBuilder processBuilder = new ProcessBuilder(command);
 
 		Process process = processBuilder.start();
 		
 		BufferedReader is = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		BufferedReader es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		
-		String ligne;
+		String line;
 
-        while ((ligne = is.readLine()) != null) {
-            System.out.println(ligne);
-        }
-        while ((ligne = es.readLine()) != null) {
-            System.out.println(ligne);
+        while ((line = is.readLine()) != null) {
+        	logger.info(line);
         }
 	}
 	

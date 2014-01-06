@@ -22,26 +22,62 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Shell;
+import org.syncany.gui.Launcher;
+import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.settings.SettingsDialog;
 
 /**
  * @author pheckel
  *
  */
 public abstract class TrayIcon {
+	private static final Logger logger = Logger.getLogger(TrayIcon.class.getSimpleName());
+	
+	private Shell shell;
+
+	public TrayIcon(Shell shell) {
+		this.shell = shell;
+	}
+	
 	public abstract void updateFolders(Map<String, Map<String, String>> folders);
 	public abstract void updateStatusText(String statusText);
 	public abstract void makeSystemTrayStartSync();
 	public abstract void makeSystemTrayStopSync();
 	
+	private void showWebSite(String url){
+		if (Desktop.isDesktopSupported()){
+			try {
+				Desktop.getDesktop().browse(new URI(url));
+			}
+			catch (IOException e) {
+				logger.warning("IOException " + e);
+			}
+			catch (URISyntaxException e) {
+				logger.warning("URISyntaxException " + e);
+			}
+		}
+	}
+	
 	protected void showDonate(){
-		try {
-			Desktop.getDesktop().browse(new URI("http://google.com"));
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+		showWebSite("http://www.syncany.org/donate");
+	}
+	
+	protected void showWebsite(){
+		showWebSite("http://www.syncany.org");
+	}
+	
+	protected void quit(){
+		ClientCommandFactory.closeWebSocketClient();
+		Launcher.daemon.shutdown();
+		shell.dispose();
+	}
+	
+	protected void showSettings(){
+		SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
+		wd.open();
 	}
 }

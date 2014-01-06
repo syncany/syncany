@@ -29,15 +29,9 @@ import org.syncany.util.EnvironmentUtil;
  *
  */
 public class TrayIconFactory {
-	private Shell shell;
-
-	public TrayIconFactory(Shell shell) {
-		this.shell = shell;
-	}
-
-	public TrayIcon createTrayIcon() {
+	public TrayIcon createTrayIcon(Shell shell) {
 		if (EnvironmentUtil.isLinux() && isUnity()) {
-			return new UnityTrayIcon();
+			return new UnityTrayIcon(shell);
 		}
 		else {
 			return new DefaultTrayIcon(shell);

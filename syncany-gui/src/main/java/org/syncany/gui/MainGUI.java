@@ -25,7 +25,7 @@ public class MainGUI {
 	
 	public void open() {
 		shell = new Shell();	
-		tray = new TrayIconFactory(shell).createTrayIcon();
+		tray = new TrayIconFactory().createTrayIcon(shell);
 
 		// Temporary
 		final TrayIcon finalTray = tray;		

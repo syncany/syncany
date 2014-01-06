@@ -34,10 +34,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
-import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.EnvironmentUtil;
 
@@ -53,24 +50,21 @@ public class DefaultTrayIcon extends TrayIcon {
 	private List<MenuItem> items = new ArrayList<>();
 	private MenuItem statusTextItem;
 	
-	private Display display = Display.getDefault();
-	
-	private Shell shell;
-
 	private AtomicBoolean syncing = new AtomicBoolean(false);
 	private AtomicBoolean running = new AtomicBoolean(false);
 	
-	private String[] animation = new String[]{
-		"/images/tray/tray-syncing1.png",
-		"/images/tray/tray-syncing2.png",
-		"/images/tray/tray-syncing3.png",
-		"/images/tray/tray-syncing4.png",
-		"/images/tray/tray-syncing5.png",
-		"/images/tray/tray-syncing6.png",
+	private Image[] animation = new Image[]{
+		SWTResourceManager.getImage("/images/tray/tray-syncing1.png"),
+		SWTResourceManager.getImage("/images/tray/tray-syncing2.png"),
+		SWTResourceManager.getImage("/images/tray/tray-syncing3.png"),
+		SWTResourceManager.getImage("/images/tray/tray-syncing4.png"),
+		SWTResourceManager.getImage("/images/tray/tray-syncing5.png"),
+		SWTResourceManager.getImage("/images/tray/tray-syncing6.png")
 	};
 	
 	public DefaultTrayIcon(final Shell shell) {
-		this.shell = shell;
+		super(shell);
+		
 		Tray tray = Display.getDefault().getSystemTray();
 		
 		if (tray != null) {
@@ -102,8 +96,7 @@ public class DefaultTrayIcon extends TrayIcon {
 			settingsItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
-					wd.open();
+					showSettings();
 				}
 			});
 			
@@ -112,7 +105,7 @@ public class DefaultTrayIcon extends TrayIcon {
 			donateItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					System.out.println("donate");
+					showDonate();
 				}
 			});
 			
@@ -121,7 +114,7 @@ public class DefaultTrayIcon extends TrayIcon {
 			websiteItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					showDonate();
+					showWebsite();
 				}
 			});
 
@@ -130,11 +123,7 @@ public class DefaultTrayIcon extends TrayIcon {
 			quitMenu.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					shell.dispose();
-					display.dispose();
-					
-					ClientCommandFactory.closeWebSocketClient();
-					Launcher.daemon.shutdown();
+					quit();
 				}
 			});
 
@@ -168,12 +157,12 @@ public class DefaultTrayIcon extends TrayIcon {
 						final int idx = i;
 						Display.getDefault().asyncExec(new Runnable() {
 							public void run() {
-								item.setImage(SWTResourceManager.getImage(animation[idx]));
+								item.setImage(animation[idx]);
 							}
 						});
 						i++;
 						if (i == 6) i = 0;
-						Thread.sleep(500);
+						Thread.sleep(300);
 					}
 					catch (InterruptedException e) {
 						e.printStackTrace();
@@ -188,7 +177,12 @@ public class DefaultTrayIcon extends TrayIcon {
 				running.set(false);
 				
 				while (!running.get()){
-
+					try {
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
