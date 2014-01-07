@@ -21,6 +21,7 @@ import java.io.Console;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +107,7 @@ public abstract class AbstractInitCommand extends Command {
 		
 		// Check if all mandatory are set
 		for (PluginSetting setting : connection.getSettings()) {
-			if (setting.mandatory && !pluginSettings.containsKey(setting.name)) {
+			if (setting.isMandatory() && !pluginSettings.containsKey(setting.name)) {
 				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getSettings(), ", ")+"). Use -Psettingname=.. to set it.");
 			}
 		}	
@@ -141,20 +142,23 @@ public abstract class AbstractInitCommand extends Command {
 			while (true) {
 				out.print("- "+setting.name+": ");
 				String value = null;
-				if (setting.sensitive) {
+				if (setting.isSensitive()) {
 					value = String.copyValueOf(console.readPassword());
 				}
 				else {
 					value = console.readLine();
 				}
-				setting.setValue(value);
-				if (setting.mandatory) {
-					if ("".equals(setting.getString())) {
+				try {
+					setting.setValue(value);
+				}
+				catch (InvalidParameterException e) {
+					out.println(value + " is not valid input for the setting " + setting.name);
+					out.println();
+					continue;
+				}
+				if (setting.isMandatory()) {
+					if ("".equals(setting.getValue())) {
 						out.println("ERROR: This setting is mandatory.");
-						out.println();
-					}
-					else if (!setting.validate()) {
-						out.println(setting.getString() + " is not valid input for the setting " + setting.name);
 						out.println();
 					}
 					else {
@@ -166,7 +170,7 @@ public abstract class AbstractInitCommand extends Command {
 				}
 			}	
 			if (setting.validate()) {
-				pluginSettingsMap.put(setting.name, setting.getString());
+				pluginSettingsMap.put(setting.name, setting.getValue());
 			}
 		}
 

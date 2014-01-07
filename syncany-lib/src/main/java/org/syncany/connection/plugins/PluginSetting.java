@@ -17,16 +17,26 @@
  */
 package org.syncany.connection.plugins;
 
+import java.security.InvalidParameterException;
+
 
 public class PluginSetting {
 	   public enum ValueType { STRING, INT, BOOLEAN};
 
 	   public String name;
 	   public ValueType type;
-	   public boolean mandatory;
-	   public boolean sensitive;
+	   private boolean mandatory;
+	   private boolean sensitive;
 	   private String value;
+	   private String defaultValue;
 	   
+	   /**
+	    * Standard constructor 
+	    * @param name of the setting
+	    * @param type STRING/INT/BOOLEAN
+	    * @param mandatory boolean
+	    * @param sensitive boolean
+	    */
 	   public PluginSetting(String name, ValueType type, boolean mandatory, boolean sensitive) {
 		   this.name = name;
 		   this.type = type;
@@ -34,10 +44,24 @@ public class PluginSetting {
 		   this.sensitive = sensitive;
 	   }
 	   
+	   /**
+	    * Constructor for optional setting with a default value
+	    */
+	   public PluginSetting(String name, ValueType type, String defaultValue, boolean sensitive) {
+		   this.name = name;
+		   this.type = type;
+		   this.mandatory = false;
+		   this.sensitive = sensitive;
+		   this.defaultValue = defaultValue;
+	   }
+	   
 	   public boolean validate() { 
 		   return (value != null);
 	   }
 	   
+	   /**
+	    * Setter for the value. Throws InvalidParameterException on invalid values.
+	    */
 	   public void setValue(String str) {
 		   if (type == ValueType.STRING) {
 			   value = str;
@@ -47,16 +71,29 @@ public class PluginSetting {
 				   value = Integer.toString(Integer.parseInt(str));
 			   }
 			   catch (NumberFormatException e) {
-				   value = null;
+				   throw new InvalidParameterException(str + " is not a valid integer.");
 			   }
 		   }
 		   else if (type == ValueType.BOOLEAN) {
+			   //This is false if and only if value.equals("false"). 
 			   value = Boolean.toString(Boolean.parseBoolean(str));
 		   }
 	   }
 	   
-	   public String getString() {
+	   public String getValue() {
 		   return value;
+	   }
+	   
+	   public boolean isMandatory() {
+		   return mandatory;
+	   }
+	   
+	   public boolean isSensitive()	{
+		   return sensitive;
+	   }
+	   
+	   public String getDefaultValue() {
+		   return defaultValue;
 	   }
 	   
 	   @Override
