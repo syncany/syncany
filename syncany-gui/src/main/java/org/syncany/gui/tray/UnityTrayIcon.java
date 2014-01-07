@@ -32,6 +32,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.WSClient;
+import org.syncany.gui.util.Listener;
 import org.syncany.gui.util.StaticResourcesWebServer;
 import org.syncany.util.JsonHelper;
 
@@ -47,16 +48,20 @@ public class UnityTrayIcon extends TrayIcon {
 	
 	public UnityTrayIcon(Shell shell) {
 		super(shell);
+		startWebServer();
+	}
 		
+	private void startWebServer(){
 		staticWebServer = new StaticResourcesWebServer();
-		staticWebServer.startService();
-		
-		try {
-			Thread.sleep(1000);
-		}
-		catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
+		staticWebServer.startService(new Listener() {
+			@Override
+			public void update() {
+				startTray();
+			}
+		});
+	}
+	
+	private void startTray(){
 		try {
 			Map<String, String> map = new HashMap<>();
 			map.put("client_id", MainGUI.getClientIdentification());

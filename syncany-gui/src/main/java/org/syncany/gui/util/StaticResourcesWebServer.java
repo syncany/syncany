@@ -7,7 +7,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.util.component.Container;
+import org.eclipse.jetty.util.component.LifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.eclipse.jetty.util.resource.Resource;
 
 public class StaticResourcesWebServer {
@@ -19,16 +20,33 @@ public class StaticResourcesWebServer {
 	private Server server;
 
 	public static void main(String[] args) {
-		new StaticResourcesWebServer().startService();
+		new StaticResourcesWebServer().startService(null);
 	}
 	
-	public void startService() {
+	public void startService(final org.syncany.gui.util.Listener listener) {
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try{
 					server = new Server(port);
-				
+					server.addLifeCycleListener(new Listener() {
+						@Override
+						public void lifeCycleStarted(LifeCycle event) {
+							listener.update();
+						}
+						
+						@Override
+						public void lifeCycleStopping(LifeCycle event) { }
+						
+						@Override
+						public void lifeCycleStopped(LifeCycle event) { }
+
+						@Override
+						public void lifeCycleStarting(LifeCycle event) { }
+
+						@Override
+						public void lifeCycleFailure(LifeCycle event, Throwable cause) { }
+					});
 					ContextHandler context0 = new ContextHandler();
 			        context0.setContextPath("/");
 			        ResourceHandler rh0 = new ResourceHandler();
