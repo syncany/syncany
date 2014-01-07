@@ -138,6 +138,9 @@ public class UnityTrayIcon extends TrayIcon {
 			case "QUIT":
 				quit();
 				break;
+			case "PREFERENCES":
+				showSettings();
+				break;
 		}
 	}
 
