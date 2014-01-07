@@ -42,7 +42,7 @@ import org.syncany.connection.plugins.StorageException;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class RestConnection implements Connection {
+public abstract class RestConnection extends Connection {
     protected String accessKey;
     protected String secretKey; 
     protected String bucket;    

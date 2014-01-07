@@ -107,7 +107,7 @@ public abstract class AbstractInitCommand extends Command {
 		
 		// Check if all mandatory are set
 		for (PluginSetting setting : connection.getSettings()) {
-			if (setting.isMandatory() && !pluginSettings.containsKey(setting.name)) {
+			if (setting.isMandatory() && !pluginSettings.containsKey(setting.getName())) {
 				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getSettings(), ", ")+"). Use -Psettingname=.. to set it.");
 			}
 		}	
@@ -140,7 +140,7 @@ public abstract class AbstractInitCommand extends Command {
 		for (PluginSetting setting : pluginSettings) {
 			
 			while (true) {
-				out.print("- "+setting.name+": ");
+				out.print("- "+setting.getName()+": ");
 				String value = null;
 				if (setting.isSensitive()) {
 					value = String.copyValueOf(console.readPassword());
@@ -152,7 +152,7 @@ public abstract class AbstractInitCommand extends Command {
 					setting.setValue(value);
 				}
 				catch (InvalidParameterException e) {
-					out.println(value + " is not valid input for the setting " + setting.name);
+					out.println(value + " is not valid input for the setting " + setting.getName());
 					out.println();
 					continue;
 				}
@@ -170,7 +170,7 @@ public abstract class AbstractInitCommand extends Command {
 				}
 			}	
 			if (setting.validate()) {
-				pluginSettingsMap.put(setting.name, setting.getValue());
+				pluginSettingsMap.put(setting.getName(), setting.getValue());
 			}
 		}
 

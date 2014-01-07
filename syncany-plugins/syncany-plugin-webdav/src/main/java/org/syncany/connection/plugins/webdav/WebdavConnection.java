@@ -37,7 +37,7 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.PluginSetting.ValueType;
 
-public class WebdavConnection implements Connection {
+public class WebdavConnection extends Connection {
 	private String url;
 	private String username;
 	private String password;

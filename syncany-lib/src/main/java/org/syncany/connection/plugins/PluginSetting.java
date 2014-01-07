@@ -23,8 +23,8 @@ import java.security.InvalidParameterException;
 public class PluginSetting {
 	   public enum ValueType { STRING, INT, BOOLEAN};
 
-	   public String name;
-	   public ValueType type;
+	   private String name;
+	   private ValueType type;
 	   private boolean mandatory;
 	   private boolean sensitive;
 	   private String value;
@@ -94,6 +94,14 @@ public class PluginSetting {
 	   
 	   public String getDefaultValue() {
 		   return defaultValue;
+	   }
+	   
+	   public String getName() {
+		   return name;
+	   }
+	   
+	   public ValueType getType() {
+		   return type;
 	   }
 	   
 	   @Override

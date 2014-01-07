@@ -19,6 +19,7 @@ package org.syncany.connection.plugins;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -32,9 +33,23 @@ import java.util.Map;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public interface Connection {
-    public TransferManager createTransferManager();
-    public void init(Map<String, String> map) throws StorageException;
-    public List<PluginSetting> getSettings();
+public abstract class Connection {
+    public abstract TransferManager createTransferManager();
+    //public abstract void validateSettings(Map<String, String> map);
+    public abstract void init(Map<String, String> map) throws StorageException;
+    public abstract List<PluginSetting> getSettings();
+    
+    public Map<String, PluginSetting> getSettingsMap(Map<String, String> map) {
+    	Map<String, PluginSetting> pluginSettings = new TreeMap<String, PluginSetting>();
+    	for (PluginSetting setting : getSettings()) {
+    		pluginSettings.put(setting.getName(), setting);
+    		String value = map.get(setting.getName());
+    		if (value != null) {
+    			setting.setValue(value);
+    		}
+    	}
+    	
+    	return pluginSettings;
+    }
 }
 

@@ -34,7 +34,7 @@ import org.syncany.connection.plugins.TransferManager;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class FtpConnection implements Connection {
+public class FtpConnection extends Connection {
     private String hostname;
     private String username;
     private String password;

@@ -36,7 +36,7 @@ import org.syncany.connection.plugins.TransferManager;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection implements Connection {
+public class LocalConnection extends Connection {
 	private File repositoryPath;
 
 	@Override
@@ -49,6 +49,7 @@ public class LocalConnection implements Connection {
 		
 		setRepositoryPath(new File(path));
 	}
+	
 
     @Override
     public TransferManager createTransferManager() {
@@ -69,4 +70,13 @@ public class LocalConnection implements Connection {
 				new PluginSetting("path", ValueType.STRING, true, false)
 		});
 	}
+
+
+	@Override
+	public void validateSettings(Map<String, String> map) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }
