@@ -25,10 +25,12 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.settings.SettingsDialog;
+import org.syncany.gui.util.BrowserHelper;
 
 /**
  * @author pheckel
@@ -48,36 +50,26 @@ public abstract class TrayIcon {
 	public abstract void makeSystemTrayStartSync();
 	public abstract void makeSystemTrayStopSync();
 	
-	private void showWebSite(String url){
-		if (Desktop.isDesktopSupported()){
-			try {
-				Desktop.getDesktop().browse(new URI(url));
-			}
-			catch (IOException e) {
-				logger.warning("IOException " + e);
-			}
-			catch (URISyntaxException e) {
-				logger.warning("URISyntaxException " + e);
-			}
-		}
-	}
-	
 	protected void showDonate(){
-		showWebSite("http://www.syncany.org/donate");
+		BrowserHelper.browse("http://www.syncany.org/donate");
 	}
 	
 	protected void showWebsite(){
-		showWebSite("http://www.syncany.org");
+		BrowserHelper.browse("http://www.syncany.org");
 	}
 	
 	protected void quit(){
-		ClientCommandFactory.closeWebSocketClient();
-		Launcher.daemon.shutdown();
-		shell.dispose();
+		Launcher.stopApplication();
 	}
 	
 	protected void showSettings(){
-		SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
-		wd.open();
+		shell.getDisplay().asyncExec(new Runnable() {
+			
+			@Override
+			public void run() {
+				SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
+				wd.open();
+			}
+		});
 	}
 }

@@ -45,6 +45,7 @@ public class UnityTrayIcon extends TrayIcon {
 	
 	private WebSocketServer webSocketClient;
 	private StaticResourcesWebServer staticWebServer;
+	private static Process unityProcess;
 	
 	public UnityTrayIcon(Shell shell) {
 		super(shell);
@@ -91,19 +92,7 @@ public class UnityTrayIcon extends TrayIcon {
 			};
 
 			webSocketClient.start();
-
-			Thread unityPythonProcess = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						startUnityProcess();
-					}
-					catch (IOException e) {
-						throw new RuntimeException("Unable to determine Linux desktop environment.", e);
-					}
-				}
-			});
-			unityPythonProcess.start();
+			startUnityProcess();
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
@@ -113,7 +102,11 @@ public class UnityTrayIcon extends TrayIcon {
 	@Override
 	protected void quit() {
 		super.quit();
+		
+		makeUnityScriptGracefullyExit();
+		
 		staticWebServer.stopService();
+		
 		try {
 			webSocketClient.stop();
 		}
@@ -123,6 +116,7 @@ public class UnityTrayIcon extends TrayIcon {
 		catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		
 	}
 	
 	protected void handleCommand(Map<String, Object> map) {
@@ -153,25 +147,44 @@ public class UnityTrayIcon extends TrayIcon {
 		}
 	}
 	
+	private static void launchLoggerThread(final BufferedReader bf, final String prefix){
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				String line;
+				try{
+					while ((line = bf.readLine()) != null) {
+			        	logger.info(prefix + line);
+			        }
+				}
+				catch (Exception e){
+					logger.warning("Exception " + e);
+				}
+			}
+		});
+		t.start();
+	}
+	
 	private static void startUnityProcess() throws IOException{
-		String scriptUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/unitytray.py";
-		String[] command = new String[]{"python", "-c", "import urllib2;exec urllib2.urlopen('" + scriptUrl + "').read()"};
+		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/";
+		String scriptUrl =  baseUrl + "unitytray.py";
+		String[] command = new String[]{
+			"python", 
+			"-c", 
+			"import urllib2;"
+			+ "baseUrl = '" + baseUrl + "';"
+			+ "exec urllib2.urlopen('" + scriptUrl + "').read()" 
+		};
 		
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 
-		Process process = processBuilder.start();
-		
-		BufferedReader is = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		BufferedReader es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-		
-		String line;
+		unityProcess = processBuilder.start();
 
-        while ((line = is.readLine()) != null) {
-        	logger.info(line);
-        }
-        while ((line = es.readLine()) != null) {
-        	logger.info(line);
-        }
+		BufferedReader is = new BufferedReader(new InputStreamReader(unityProcess.getInputStream()));
+		BufferedReader es = new BufferedReader(new InputStreamReader(unityProcess.getErrorStream()));
+		
+		launchLoggerThread(is, "PYTHON INPUT STREAM : ");
+		launchLoggerThread(es, "PYTHON ERROR STREAM : ");
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -179,7 +192,12 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 	
 	public void sendTo(WebSocket ws, String text) {
-		ws.send(text);
+		try{
+			ws.send(text);
+		}
+		catch (Exception e){
+			logger.warning("Exception " + e);
+		}
 	}
 
 	@Override
@@ -208,6 +226,13 @@ public class UnityTrayIcon extends TrayIcon {
 	public void makeSystemTrayStopSync() {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("action", "stop_syncing");
+
+		sendToAll(JsonHelper.fromMapToString(parameters));
+	}
+	
+	private void makeUnityScriptGracefullyExit() {
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("action", "quit");
 
 		sendToAll(JsonHelper.fromMapToString(parameters));
 	}

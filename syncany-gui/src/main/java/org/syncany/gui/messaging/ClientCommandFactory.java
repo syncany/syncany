@@ -22,8 +22,10 @@ public class ClientCommandFactory {
 		}
 	}
 	
-	public static void closeWebSocketClient(){
+	public static void stopWebSocketClient(){
+		log.info("Stopping websocket server");
 		client.stop();
+		client = null;
 	}
 	
 	public static void watch(String folder) {

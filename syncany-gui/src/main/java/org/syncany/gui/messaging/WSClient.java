@@ -81,20 +81,13 @@ public class WSClient {
 		};
 	}
 
-	/**
-	 * @return the client
-	 */
-	private WebSocketClient getClient() {
-		return client;
-	}
-	
 	public void startWebSocketConnection() {
-		getClient().connect();
+		client.connect();
 	}
 	
 	public void stop(){
 		log.info("closing client");
-		getClient().close();
+		client.close();
 	}
 
 	@SuppressWarnings("unchecked")

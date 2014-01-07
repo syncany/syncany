@@ -79,45 +79,42 @@ public class Daemon {
 		daemonSocketLock.free();
 		instance = null;
 		
-		//[TODO high: daemon should exit gracefully by stoping watching threads
-
 		quittingInProgress = false;
-		System.exit(1);
 	}
 	
 	public void start(boolean startedWithGui) {
 		this.startedWithGui = startedWithGui;
 		
-		Thread t = new Thread(new Runnable() {
-			public void run() {
-				Map<String, Object> syncing = new HashMap<>();
-				syncing.put("action", "get_syncing_state");
-				syncing.put("syncing_state", "syncing");
-				
-				Map<String, Object> notSyncing = new HashMap<>();
-				notSyncing.put("action", "get_syncing_state");
-				notSyncing.put("syncing_state", "in-sync");
-				
-				while (true){
-					
-					DaemonCommandHandler.handle(syncing);
-					try {
-						Thread.sleep(5000);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					DaemonCommandHandler.handle(notSyncing);
-					try {
-						Thread.sleep(5000);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		t.start();
+//		Thread t = new Thread(new Runnable() {
+//			public void run() {
+//				Map<String, Object> syncing = new HashMap<>();
+//				syncing.put("action", "get_syncing_state");
+//				syncing.put("syncing_state", "syncing");
+//				
+//				Map<String, Object> notSyncing = new HashMap<>();
+//				notSyncing.put("action", "get_syncing_state");
+//				notSyncing.put("syncing_state", "in-sync");
+//				
+//				while (true){
+//					
+//					DaemonCommandHandler.handle(syncing);
+//					try {
+//						Thread.sleep(5000);
+//					}
+//					catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//					DaemonCommandHandler.handle(notSyncing);
+//					try {
+//						Thread.sleep(5000);
+//					}
+//					catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//		});
+//		t.start();
 		
 		//0- determine if gui is already launched
 		try{

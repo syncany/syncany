@@ -79,6 +79,7 @@ public class StaticResourcesWebServer {
 	public void stopService() {
 		try {
 			server.stop();
+			server.destroy();
 		} catch (Exception e) {
 			log.warning("Exception " + e.getMessage());
 		}

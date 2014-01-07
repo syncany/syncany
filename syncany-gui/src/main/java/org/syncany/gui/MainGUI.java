@@ -1,8 +1,5 @@
 package org.syncany.gui;
 
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -23,20 +20,19 @@ public class MainGUI {
 	
 	private TrayIcon tray;
 	
+	public void dispose(){
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				display.dispose();
+			}
+		});
+	}
+	
 	public void open() {
 		shell = new Shell();	
 		tray = new TrayIconFactory().createTrayIcon(shell);
 
-		// Temporary
-		final TrayIcon finalTray = tray;		
-		new Timer().scheduleAtFixedRate(new TimerTask() {
-			@Override
-			public void run() {
-				finalTray.updateStatusText(""+new Date());
-			}
-			
-		}, 1000, 5000);
-		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();

@@ -36,21 +36,19 @@ import appindicator
 import urllib
 import tempfile
 
-def fetch_image(url):
+def fetch_image(relativeUrl):
+	global baseUrl
 	tf = tempfile.NamedTemporaryFile(delete=True)
-	fname,x = urllib.urlretrieve(url, tf.name +".png")
+	fname,x = urllib.urlretrieve(baseUrl + relativeUrl, tf.name +".png")
 	return fname
 
 def do_notify(request):
-	global resdir
-	
 	do_print("Creating notification ...")
 
 	if request["image"] == "":
-		image = resdir + "/logo48.png"
+		image = fetch_image("/logo48.png")
 	else:
 		image = request["image"]
-
 	
 	# Alterantive using 'notify-send'
 	# os.system("notify-send -t 2000 -i '{0}' '{1}' '{2}'".format(image, request["summary"], request["body"]))
@@ -64,18 +62,16 @@ def do_notify(request):
 	return None		
 	
 def do_update_icon(request):
-	global indicator, updating_count, resdir
+	global indicator, updating_count
 	
-	do_print("Update icon: count= {0}, resdir={1} ".format(updating_count, resdir))		
+	do_print("Update icon: count= {0} ".format(updating_count))		
 	
 	if request["status"] == "DISCONNECTED":
 		do_print("Update icon to DISCONNECTED.")
 		
 		updating_count = 0
-		image = fetch_image("http://127.0.0.1:8081/tray/tray.png")									
-
+		image = fetch_image("tray/tray.png")									
 		indicator.set_icon(image)		
-			
 		return "OK"	
 	
 	elif request["status"] == "UPDATING":
@@ -83,8 +79,7 @@ def do_update_icon(request):
 		
 		if updating_count == 1:
 			do_print("Update icon to UPDATING.")
-			
-			image = fetch_image("http://127.0.0.1:8081/tray/tray-syncing1.png")									
+			image = fetch_image("tray/tray-syncing1.png")									
 			indicator.set_icon(image)		
 
 	elif request["status"] == "UPTODATE":
@@ -95,7 +90,7 @@ def do_update_icon(request):
 		
 		if updating_count == 0:
 			do_print("Update icon to UPTODATE.")		
-			image = resdir + "/tray/tray-uptodate.png"
+			image = fetch_image("tray/tray-uptodate.png")		
 			indicator.set_icon(image)		
 			
 	return "OK"	
@@ -214,10 +209,10 @@ def init_menu():
 	do_update_menu(None)
 
 def init_tray_icon():
-	global resdir, indicator
+	global indicator
 
 	# Default image
-	image = fetch_image("http://127.0.0.1:8081/tray/tray.png")									
+	image = fetch_image("tray/tray.png")									
 
 	# Go!
 	do_print("Initializing indicator ...")
@@ -229,6 +224,9 @@ def init_tray_icon():
 def menu_item_clicked(widget, cmd):
 	do_print("Menu item '" + cmd + "' clicked.")
 	ws.send("{'action': 'tray_menu_item_clicked', 'command': '" + cmd + "'}")
+	
+	if cmd == "QUIT":
+		sys.exit(0)
 
 def menu_item_folder_clicked(widget, folder):
 	do_print("Folder item '" + folder + "' clicked.")
@@ -240,7 +238,6 @@ def do_kill():
 	
 	pid = os.getpid()
 	os.system("kill -9 {0}".format(pid))
-		
 	
 def do_print(msg):
 	try:
@@ -271,7 +268,7 @@ def on_ws_message(ws, message):
 		
 		elif request["action"] == "update_tray_status_text":
 			response = do_update_text(request)			
-
+		
 	except:	
 		do_print("Unexpected error: {0}".format(sys.exc_info()[0]))
 
@@ -294,7 +291,7 @@ def on_ws_open(ws):
 def ws_start_client():
 	global ws
 
-	ws = websocket.WebSocketApp("ws://127.0.0.1:8887/",
+	ws = websocket.WebSocketApp("ws://127.0.0.1:8882/",
 		on_message = on_ws_message,
 		on_error = on_ws_error,
 		on_close = on_ws_close,
@@ -322,7 +319,6 @@ def main():
 
 if __name__ == "__main__":
 	# Global variables
-	resdir = "/home/vwiencek/dev/workspace/syncany/syncany-gui/src/main/resources/images"
 	status_text = "Synced"
 	
 	updating_count = 0

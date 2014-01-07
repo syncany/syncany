@@ -27,7 +27,6 @@ import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.ProxyController;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.WSClient;
 import org.syncany.util.I18n;
 
 import com.google.common.eventbus.EventBus;
@@ -38,10 +37,11 @@ import com.google.common.eventbus.EventBus;
  */
 public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
-	private static EventBus eventBus = new EventBus("syncany-gui");
+
 	public static ApplicationConfiguration applicationConfiguration;
 	
-	public static Daemon daemon;
+	private static EventBus eventBus = new EventBus("syncany-gui");
+	private static MainGUI window;
 	
 	static {
 		Logging.init();
@@ -52,23 +52,37 @@ public class Launcher {
 	}
 
 	public static void main(String[] args) {
+		startApplication();
+	}
+	
+	private static void startApplication(){
 		startDaemon();
 		startWebSocketClient();
 		startGUI();	
 	}
+	
+	public static void stopApplication(){
+		ClientCommandFactory.stopDaemon();
+		stopWebSocketClient();
+		stopGUI();
+		
+		System.exit(0);
+	}
 
 	private static void startDaemon(){
-		daemon = new Daemon();
-		daemon.start(true);
+		new Daemon().start(true);
+	}
+	
+	private static void stopWebSocketClient(){
+		ClientCommandFactory.stopWebSocketClient();
 	}
 	
 	private static void startWebSocketClient() {
-		try {
-			new WSClient().startWebSocketConnection();
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot start websocket client.", e);
-		}
+		ClientCommandFactory.startWebSocketClient();
+	}
+	
+	private static void stopGUI(){
+		window.dispose();
 	}
 	
 	private static void startGUI(){
@@ -102,10 +116,9 @@ public class Launcher {
 			}
 		});
 
-		ClientCommandFactory.startWebSocketClient();
 		log.info("Starting Graphical User Interface");
 
-		MainGUI window = new MainGUI();
+		window = new MainGUI();
 		Launcher.getEventBus().register(window);
 		window.open();
 	}
