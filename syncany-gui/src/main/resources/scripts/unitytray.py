@@ -37,10 +37,15 @@ import urllib
 import tempfile
 
 def fetch_image(relativeUrl):
-	global baseUrl
-	tf = tempfile.NamedTemporaryFile(delete=True)
-	fname,x = urllib.urlretrieve(baseUrl + relativeUrl, tf.name +".png")
-	return fname
+	global baseUrl, imagesMap
+	
+	#caching images in dictionary
+	if not relativeUrl in imagesMap:
+		tf = tempfile.NamedTemporaryFile(delete=True)
+		fname,x = urllib.urlretrieve(baseUrl + relativeUrl, tf.name +".png")
+		imagesMap[relativeUrl] = fname
+	
+	return imagesMap[relativeUrl]
 
 def do_notify(request):
 	do_print("Creating notification ...")
@@ -62,38 +67,9 @@ def do_notify(request):
 	return None		
 	
 def do_update_icon(request):
-	global indicator, updating_count
-	
-	do_print("Update icon: count= {0} ".format(updating_count))		
-	
-	if request["status"] == "DISCONNECTED":
-		do_print("Update icon to DISCONNECTED.")
-		
-		updating_count = 0
-		image = fetch_image("tray/tray.png")									
-		indicator.set_icon(image)		
-		return "OK"	
-	
-	elif request["status"] == "UPDATING":
-		updating_count += 1
-		
-		if updating_count == 1:
-			do_print("Update icon to UPDATING.")
-			image = fetch_image("tray/tray-syncing1.png")									
-			indicator.set_icon(image)		
-
-	elif request["status"] == "UPTODATE":
-		updating_count -= 1
-		
-		if updating_count < 0:
-			updating_count = 0
-		
-		if updating_count == 0:
-			do_print("Update icon to UPTODATE.")		
-			image = fetch_image("tray/tray-uptodate.png")		
-			indicator.set_icon(image)		
-			
-	return "OK"	
+	global indicator
+	indicator.set_icon(fetch_image(request["imageFileName"]))		
+	return "{'response':'OK'}"
 	
 def do_update_text(request):
 	global menu_item_status
@@ -203,7 +179,7 @@ def do_update_menu(request):
 	menu.show_all()
 	gtk.gdk.threads_leave()
 	
-	return "OK"
+	return "{'response':'OK'}"
 
 def init_menu():
 	do_update_menu(None)
@@ -212,7 +188,7 @@ def init_tray_icon():
 	global indicator
 
 	# Default image
-	image = fetch_image("tray/tray.png")									
+	image = fetch_image("images/tray/tray.png")									
 
 	# Go!
 	do_print("Initializing indicator ...")
@@ -272,9 +248,7 @@ def on_ws_message(ws, message):
 		do_print("Unexpected error: {0}".format(sys.exc_info()[0]))
 
 	if response is not None:
-		do_print("Sending response: "+response)
 		ws.send(response)
-
 
 def on_ws_error(ws, error):
 	print "WS error"
@@ -288,9 +262,9 @@ def on_ws_open(ws):
 	print "WS open"
 
 def ws_start_client():
-	global ws
+	global ws, wsUrl
 
-	ws = websocket.WebSocketApp("ws://127.0.0.1:8882/",
+	ws = websocket.WebSocketApp(wsUrl,
 		on_message = on_ws_message,
 		on_error = on_ws_error,
 		on_close = on_ws_close,
@@ -314,10 +288,10 @@ def main():
 	gtk.main()
 		
 	#gtk.gdk.threads_leave()
-			
 
 if __name__ == "__main__":
 	# Global variables
+	imagesMap = dict()
 	status_text = "Synced"
 	
 	updating_count = 0

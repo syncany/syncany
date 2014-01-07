@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.settings.SettingsDialog;
@@ -36,6 +35,7 @@ public abstract class TrayIcon {
 	public enum SyncanyTrayIcons{
 		TRAY_NO_OVERLAY("/images/tray/tray.png"),
 		TRAY_IN_SYNC("/images/tray/tray-in-sync.png"),
+		TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"),
 		TRAY_SYNCING1("/images/tray/tray-syncing1.png"),
 		TRAY_SYNCING2("/images/tray/tray-syncing2.png"),
 		TRAY_SYNCING3("/images/tray/tray-syncing3.png"),
@@ -75,7 +75,7 @@ public abstract class TrayIcon {
 	
 	private Shell shell;
 	private AtomicBoolean syncing = new AtomicBoolean(false);
-	private AtomicBoolean running = new AtomicBoolean(false);
+	private AtomicBoolean paused = new AtomicBoolean(false);
 	
 	public TrayIcon(Shell shell) {
 		this.shell = shell;
@@ -100,27 +100,38 @@ public abstract class TrayIcon {
 	
 	public void makeSystemTrayStartSync(){
 		syncing.set(true);
-		running.set(true);
+		paused.set(false);
 	}
 	
 	public void makeSystemTrayStopSync(){
 		syncing.set(false);
+		paused.set(false);
+		setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
+	}
+	
+	public void pauseSyncing(){
+		paused.set(true);
+		setTrayImage(SyncanyTrayIcons.TRAY_PAUSE_SYNC);
+	}
+	
+	public void resumeSyncing(){
+		paused.set(false);
 	}
 	
 	private Thread systemTrayAnimationThread = new Thread(new Runnable() {
 		@Override
 		public void run() {
 			while (true){
+				while (paused.get() || !syncing.get()){
+					try {Thread.sleep(500);}
+					catch (InterruptedException e) { }
+				}
+				
 				int i = 0;
 				
 				while (syncing.get()){
 					try {
-						final int idx = i;
-						Display.getDefault().asyncExec(new Runnable() {
-							public void run() {
-								setTrayImage(SyncanyTrayIcons.get(idx));
-							}
-						});
+						setTrayImage(SyncanyTrayIcons.get(i));
 						i++;
 						if (i == 6) i = 0;
 						Thread.sleep(300);
@@ -129,22 +140,7 @@ public abstract class TrayIcon {
 						e.printStackTrace();
 					}
 				}
-				Display.getDefault().asyncExec(new Runnable() {
-					public void run() {
-						setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
-					}
-				});
-				
-				running.set(false);
-				
-				while (!running.get()){
-					try {
-						Thread.sleep(500);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
+				setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
 			}
 		}
 	});

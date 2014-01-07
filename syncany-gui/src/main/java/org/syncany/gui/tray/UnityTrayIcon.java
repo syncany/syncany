@@ -43,6 +43,7 @@ import org.syncany.util.JsonHelper;
  */
 public class UnityTrayIcon extends TrayIcon {
 	private static final Logger logger = Logger.getLogger(WSClient.class.getSimpleName());
+	private static int PORT = 8882;
 	
 	private WebSocketServer webSocketClient;
 	private StaticResourcesWebServer staticWebServer;
@@ -68,7 +69,7 @@ public class UnityTrayIcon extends TrayIcon {
 			Map<String, String> map = new HashMap<>();
 			map.put("client_id", MainGUI.getClientIdentification());
 
-			this.webSocketClient = new WebSocketServer(new InetSocketAddress(8882)) {
+			this.webSocketClient = new WebSocketServer(new InetSocketAddress(PORT)) {
 				@Override
 				public void onOpen(WebSocket conn, ClientHandshake handshake) {
 					String id = handshake.getFieldValue("client_id");
@@ -98,6 +99,8 @@ public class UnityTrayIcon extends TrayIcon {
 		catch (Exception e) {
 			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
 		}
+		
+		makeSystemTrayStartSync();
 	}
 
 	@Override
@@ -128,6 +131,9 @@ public class UnityTrayIcon extends TrayIcon {
 				break;
 			case "PREFERENCES":
 				showSettings();
+				break;
+			case "NEW":
+				showWizard();
 				break;
 		}
 	}
@@ -161,12 +167,13 @@ public class UnityTrayIcon extends TrayIcon {
 	
 	private static void startUnityProcess() throws IOException{
 		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/";
-		String scriptUrl =  baseUrl + "unitytray.py";
+		String scriptUrl =  baseUrl + "scripts/unitytray.py";
 		String[] command = new String[]{
 			"python", 
 			"-c", 
 			"import urllib2;"
 			+ "baseUrl = '" + baseUrl + "';"
+			+ "wsUrl = 'ws://127.0.0.1:" + PORT + "';"
 			+ "exec urllib2.urlopen('" + scriptUrl + "').read()" 
 		};
 		
@@ -209,25 +216,10 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 
 	@Override
-	public void makeSystemTrayStartSync() {
-		Map<String, Object> parameters = new HashMap<>();
-		parameters.put("action", "start_syncing");
-
-		sendToAll(JsonHelper.fromMapToString(parameters));
-	}
-
-	@Override
-	public void makeSystemTrayStopSync() {
-		Map<String, Object> parameters = new HashMap<>();
-		parameters.put("action", "stop_syncing");
-
-		sendToAll(JsonHelper.fromMapToString(parameters));
-	}
-
-	@Override
 	protected void setTrayImage(SyncanyTrayIcons image) {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("action", "update_tray_icon");
+		parameters.put("imageFileName", image.getFileName());
 
 		sendToAll(JsonHelper.fromMapToString(parameters));
 	}

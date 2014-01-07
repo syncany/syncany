@@ -50,18 +50,11 @@ public class StaticResourcesWebServer {
 					ContextHandler context0 = new ContextHandler();
 			        context0.setContextPath("/");
 			        ResourceHandler rh0 = new ResourceHandler();
-			        rh0.setBaseResource( Resource.newResource(ClassLoader.getSystemResource("images")));
+			        rh0.setBaseResource( Resource.newResource(ClassLoader.getSystemResource(".")));
 			        context0.setHandler(rh0);
 			 
-			        // Rinse and repeat the previous item, only specifying a different resource base.
-			        ContextHandler context1 = new ContextHandler();
-			        context1.setContextPath("/");   
-			        ResourceHandler rh1 = new ResourceHandler();
-			        rh1.setBaseResource( Resource.newResource(ClassLoader.getSystemResource("scripts")));
-			        context1.setHandler(rh1);
-			        
 			        ContextHandlerCollection contexts = new ContextHandlerCollection();
-			        contexts.setHandlers(new Handler[]{ context0, context1 });
+			        contexts.setHandlers(new Handler[]{ context0 });
 			        
 			        server.setHandler(contexts);
 			        

@@ -163,7 +163,11 @@ public class DefaultTrayIcon extends TrayIcon {
 	}
 
 	@Override
-	protected void setTrayImage(SyncanyTrayIcons image) {
-		item.setImage(images.get(image));
+	protected void setTrayImage(final SyncanyTrayIcons image) {
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+				item.setImage(images.get(image));
+			}
+		});
 	}
 }
