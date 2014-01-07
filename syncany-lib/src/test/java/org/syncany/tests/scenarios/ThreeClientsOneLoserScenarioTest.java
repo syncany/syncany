@@ -32,7 +32,7 @@ import org.syncany.tests.util.TestConfigUtil;
 
 public class ThreeClientsOneLoserScenarioTest {
 	@Test
-	public void testKnownDatabaseList() throws Exception {		
+	public void testThreeClientsOneLoser() throws Exception {		
 		// Setup 
 		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);

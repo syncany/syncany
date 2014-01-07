@@ -83,6 +83,10 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		});
 		
 		Logging.setGlobalLogLevel(Level.SEVERE);
+				
+		// Before start: setup up databases (takes a while)
+		clientA.status();
+		clientB.status();
 		
 		// Run!
 		writeFileThread.start();

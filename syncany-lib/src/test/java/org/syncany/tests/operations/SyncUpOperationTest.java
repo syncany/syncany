@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,10 +33,12 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.CollectionUtil;
 
 public class SyncUpOperationTest {
 	private Config testConfig;	
@@ -64,30 +65,34 @@ public class SyncUpOperationTest {
 		UpOperation op = new UpOperation(testConfig);		
 		op.execute();
 
-		//Compare dbs
+		// Get databases (for comparison)
 		LocalConnection localConnection = (LocalConnection) testConfig.getConnection();
 		
-		File localDatabaseFile = new File(testConfig.getDatabaseDir() + "/local.db");
+		File localDatabaseDir = testConfig.getDatabaseDir();
 		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/databases/db-" + testConfig.getMachineName()+"-0000000001");
 		
-		assertTrue(localDatabaseFile.exists());
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
 		assertTrue(remoteDatabaseFile.exists());
 		
+		// - Memory database
 		XmlDatabaseDAO dDAO = new XmlDatabaseDAO(testConfig.getTransformer());
-		MemoryDatabase localDatabase = new MemoryDatabase();
-		MemoryDatabase remoteDatabase = new MemoryDatabase();
-		dDAO.load(localDatabase, localDatabaseFile);
+		
+		MemoryDatabase remoteDatabase = new MemoryDatabase();		
 		dDAO.load(remoteDatabase, remoteDatabaseFile);
 		
-		DatabaseVersion localDatabaseVersion = localDatabase.getLastDatabaseVersion();
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 		
-		assertEquals(localDatabaseVersion.getHeader(), remoteDatabaseVersion.getHeader());
-
-		assertEquals(localDatabaseVersion.getFileHistories().size(),fileAmount);
-		assertEquals(localDatabaseVersion.getFileHistories().size(),remoteDatabaseVersion.getFileHistories().size());
+		// - Sql Database
+		SqlDatabaseDAO localDatabase = new SqlDatabaseDAO(testConfig.createDatabaseConnection());
+		Collection<PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		
-		Collection<PartialFileHistory> localFileHistories = localDatabaseVersion.getFileHistories();
+		// Compare!
+		assertEquals(localDatabase.getLastDatabaseVersionHeader(), remoteDatabaseVersion.getHeader());
+
+		assertEquals(localFileHistories.size(), fileAmount);
+		assertEquals(localDatabase.getFileHistoriesWithFileVersions().size(), remoteDatabaseVersion.getFileHistories().size());
+		
 		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
 	
 		List<FileVersion> remoteFileVersions = new ArrayList<FileVersion>(); 
@@ -102,7 +107,7 @@ public class SyncUpOperationTest {
 			localFileVersions.add(partialFileHistory.getLastVersion());
 		}
 		
-		assertEquals(localFileVersions,remoteFileVersions);
+		assertTrue(CollectionUtil.containsExactly(localFileVersions, remoteFileVersions));
 		
 		compareFileVersionsAgainstOriginalFiles(originalFiles, localFileVersions);
 		compareFileVersionsAgainstOriginalFiles(originalFiles, remoteFileVersions);
@@ -123,5 +128,4 @@ public class SyncUpOperationTest {
 		}
 		assertEquals(0, toFind);
 	}
-
 }

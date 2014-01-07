@@ -72,11 +72,8 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 			connection.commit();
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "SQL Error: ", e);
-			
-			if (connection != null) {
-				connection.rollback();
-			}
+			logger.log(Level.SEVERE, "SQL Error: ", e);			
+			throw new RuntimeException("Cannot persist database.", e);
 		}		
 	}
 	
@@ -96,7 +93,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 				Statement.RETURN_GENERATED_KEYS);
 
 		preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
-		preparedStatement.setDate(2, new java.sql.Date(databaseVersion.getHeader().getDate().getTime()));
+		preparedStatement.setTimestamp(2, new Timestamp(databaseVersion.getHeader().getDate().getTime()));
 		preparedStatement.setString(3, databaseVersion.getHeader().getClient());
 		preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
 
@@ -132,14 +129,16 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 
 	private void writeMultiChunkRefs(Connection connection, MultiChunkEntry multiChunk) throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/insert.writeMultiChunkRefs.sql");
+		
 		for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
-			PreparedStatement preparedStatement = getStatement("/sql/insert.writeMultiChunkRefs.sql");
-
 			preparedStatement.setString(1, multiChunk.getId().toString());
 			preparedStatement.setString(2, chunkChecksum.toString());
 			
-			preparedStatement.executeUpdate();
+			preparedStatement.addBatch();			
 		}
+		
+		preparedStatement.executeBatch();
 	}
 
 	private void writeFileContents(Connection connection, Collection<FileContent> fileContents) throws SQLException {
@@ -156,19 +155,21 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 
 	private void writeFileContentChunkRefs(Connection connection, FileContent fileContent) throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileContentChunkRefs.sql");
 		int order = 0;
 		
 		for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
-			PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileContentChunkRefs.sql");
 			
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
 			preparedStatement.setString(2, chunkChecksum.toString());
 			preparedStatement.setInt(3, order);
-			
-			preparedStatement.executeUpdate();
+
+			preparedStatement.addBatch();
 			
 			order++;				
 		}
+		
+		preparedStatement.executeBatch();
 	}
 
 	private void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
@@ -185,10 +186,10 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 
 	private void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId, Collection<FileVersion> fileVersions) throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileVersions.sql");
+
 		for (FileVersion fileVersion : fileVersions) {
-			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  
-			
-			PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileVersions.sql");
+			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  		
 
 			preparedStatement.setString(1, fileHistoryId.toString());
 			preparedStatement.setInt(2, Integer.parseInt(""+fileVersion.getVersion()));
@@ -204,10 +205,12 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 			preparedStatement.setString(12, fileVersion.getPosixPermissions());
 			preparedStatement.setString(13, fileVersion.getDosAttributes());
 			
-			preparedStatement.executeUpdate();			
+			preparedStatement.addBatch();
 		}				
+		
+		preparedStatement.executeBatch();
 	}
-
+	
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {			
 		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
 			PreparedStatement preparedStatement = getStatement("/sql/insert.writeVectorClock.sql");
@@ -222,14 +225,16 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 
 	private void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
 		if (chunks.size() > 0) {
-			for (ChunkEntry chunk : chunks) {
-				PreparedStatement preparedStatement = getStatement("/sql/insert.writeChunks.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeChunks.sql");
 
+			for (ChunkEntry chunk : chunks) {
 				preparedStatement.setString(1, chunk.getChecksum().toString());
 				preparedStatement.setInt(2, chunk.getSize());
 
-				preparedStatement.executeUpdate();
+				preparedStatement.addBatch();
 			}
+			
+			preparedStatement.executeBatch();
 		}
 	}
 }

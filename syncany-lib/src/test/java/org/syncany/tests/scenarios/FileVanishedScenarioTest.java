@@ -74,7 +74,7 @@ public class FileVanishedScenarioTest {
 					catch (Exception e) { }
 				}
 			}			
-		});
+		}, "A-delete");
 		
 		Thread runUpThread = new Thread(new Runnable() {
 			@Override
@@ -87,7 +87,11 @@ public class FileVanishedScenarioTest {
 					fail(e.getMessage());
 				}				
 			}			
-		});
+		}, "A-up");
+		
+		// Before we start: init database (this takes a while)
+		clientA.status();
+		clientB.status();
 		
 		// Delete files and run up simultaneously
 		// --> This will hopefully lead to a couple of 'vanished' files

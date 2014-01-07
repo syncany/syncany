@@ -41,12 +41,13 @@ public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
 	
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";	
+	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";//;hsqldb.sqllog=3";	
 	public static final String DATABASE_SCRIPT_RESOURCE = "/sql/create.all.sql";	
 	public static final Map<String, String> DATABASE_STATEMENTS = new HashMap<String, String>(); 
 	
 	static {
 		try {
+			logger.log(Level.INFO, "Loading database driver "+DATABASE_DRIVER+" ...");
 			Class.forName(DATABASE_DRIVER);
 		}
 		catch (Exception e) {
@@ -93,6 +94,8 @@ public class DatabaseConnectionFactory {
 	}
 	
 	private static void createTables(Connection connection) throws SQLException {
+		logger.log(Level.INFO, "Database has no tables. Creating tables from "+DATABASE_SCRIPT_RESOURCE);
+		
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(DATABASE_SCRIPT_RESOURCE);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		
@@ -118,9 +121,9 @@ public class DatabaseConnectionFactory {
 			preparedStatement = readDatabaseStatement(statementInputStream);			
 			DATABASE_STATEMENTS.put(resourceIdentifier, preparedStatement);
 			
-			if (logger.isLoggable(Level.FINE)) {
+			/*if (logger.isLoggable(Level.FINE)) {
 				logger.log(Level.FINE, "Database query \"{0}\" loaded (first time): {1}", new String[] { resourceIdentifier, preparedStatement });
-			}
+			}*/
 			
 			return preparedStatement;
 		}		

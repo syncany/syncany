@@ -134,7 +134,9 @@ public class Indexer {
 				deletedVersion.setStatus(FileStatus.DELETED);
 				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion()+1);
 				
-				logger.log(Level.FINER, "  + Deleted: {0}, adding deleted version {1}", new Object[] { lastLocalVersion, deletedVersion });
+				logger.log(Level.FINER, "  + Deleted: Adding DELETED version: {0}", deletedVersion);
+				logger.log(Level.FINER, "                           based on: {0}", lastLocalVersion);
+				
 				deletedFileHistory.addFileVersion(deletedVersion);
 				newDatabaseVersion.addFileHistory(deletedFileHistory);			
 			}

@@ -114,7 +114,7 @@ public class AllFilePossibilitiesScenarioTest {
 				@Override
 				public void execute() throws Exception {
 					// Nothing.
-				}			
+			 	}			
 			},
 			new AbstractClientAction[] {
 				new CreateFileTree(),

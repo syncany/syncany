@@ -174,7 +174,7 @@ public class UpOperation extends Operation {
 			// Save local database
 			logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
 			
-			logger.log(Level.INFO, "Saving local database to file " + config.getDatabaseFile() + " ...");
+			logger.log(Level.INFO, "Saving local database ...");
 			WriteSqlDatabaseDAO writeSqlDao = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
 			writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
 
