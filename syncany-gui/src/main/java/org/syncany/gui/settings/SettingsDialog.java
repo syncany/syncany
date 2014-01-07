@@ -262,6 +262,4 @@ public class SettingsDialog extends Dialog {
 	private Label lblNewLabel_1;
 	private Label optionsMessageTitleLabel;
 	private Label optionsMessageLabel;
-	private Label lblNewLabel;
-	private Label lblNewLabel_2;
 }

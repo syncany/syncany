@@ -154,7 +154,7 @@ public class ProxySettingsPanel extends Composite {
 		proxyAuthTypeCombo.setFont(fontNormal);
 		proxyAuthTypeCombo.setItems(proxyAuthValues);
 		GridData gd_proxyAuthTypeCombo = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
-		gd_proxyAuthTypeCombo.heightHint = 49;
+		gd_proxyAuthTypeCombo.heightHint = 40;
 		proxyAuthTypeCombo.setLayoutData(gd_proxyAuthTypeCombo);
 		
 		proxyHostPortLabel = new Label(this, SWT.NONE);
@@ -222,7 +222,7 @@ public class ProxySettingsPanel extends Composite {
 		proxyPasswordText.setFont(fontNormal);
 		GridData gd_proxyPasswordText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_proxyPasswordText.heightHint = 15;
-		proxyPasswordText.setLayoutData(gd_proxyPasswordText);	
+		proxyPasswordText.setLayoutData(gd_proxyPasswordText);
 	}
 
 	/**

@@ -17,38 +17,74 @@
  */
 package org.syncany.gui.tray;
 
-import java.awt.Desktop;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
-import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
+import org.syncany.gui.wizard.WizardDialog;
 
 /**
  * @author pheckel
- *
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  */
 public abstract class TrayIcon {
-	private static final Logger logger = Logger.getLogger(TrayIcon.class.getSimpleName());
-	
-	private Shell shell;
+	public enum SyncanyTrayIcons{
+		TRAY_NO_OVERLAY("/images/tray/tray.png"),
+		TRAY_IN_SYNC("/images/tray/tray-in-sync.png"),
+		TRAY_SYNCING1("/images/tray/tray-syncing1.png"),
+		TRAY_SYNCING2("/images/tray/tray-syncing2.png"),
+		TRAY_SYNCING3("/images/tray/tray-syncing3.png"),
+		TRAY_SYNCING4("/images/tray/tray-syncing4.png"),
+		TRAY_SYNCING5("/images/tray/tray-syncing5.png"),
+		TRAY_SYNCING6("/images/tray/tray-syncing6.png"),
+		TRAY_UP_TO_DATE("/images/tray/tray-uptodate.png");
+			
+		private String fileName;
+		
+		SyncanyTrayIcons(String filenName){
+			this.fileName = filenName;
+		}
+		
+		public String getFileName() {
+			return fileName;
+		}
 
-	public TrayIcon(Shell shell) {
-		this.shell = shell;
+		public static SyncanyTrayIcons get(int idx) {
+			switch (idx+1){
+				default:
+				case 1:
+					return TRAY_SYNCING1;
+				case 2:
+					return TRAY_SYNCING2;
+				case 3:
+					return TRAY_SYNCING3;
+				case 4:
+					return TRAY_SYNCING4;
+				case 5:
+					return TRAY_SYNCING5;
+				case 6:
+					return TRAY_SYNCING6;
+			}
+		}
 	}
 	
-	public abstract void updateFolders(Map<String, Map<String, String>> folders);
-	public abstract void updateStatusText(String statusText);
-	public abstract void makeSystemTrayStartSync();
-	public abstract void makeSystemTrayStopSync();
+	private Shell shell;
+	private AtomicBoolean syncing = new AtomicBoolean(false);
+	private AtomicBoolean running = new AtomicBoolean(false);
+	
+	public TrayIcon(Shell shell) {
+		this.shell = shell;
+		systemTrayAnimationThread.start();
+	}
+	
+	public Shell getShell() {
+		return shell;
+	}
 	
 	protected void showDonate(){
 		BrowserHelper.browse("http://www.syncany.org/donate");
@@ -62,9 +98,59 @@ public abstract class TrayIcon {
 		Launcher.stopApplication();
 	}
 	
+	public void makeSystemTrayStartSync(){
+		syncing.set(true);
+		running.set(true);
+	}
+	
+	public void makeSystemTrayStopSync(){
+		syncing.set(false);
+	}
+	
+	private Thread systemTrayAnimationThread = new Thread(new Runnable() {
+		@Override
+		public void run() {
+			while (true){
+				int i = 0;
+				
+				while (syncing.get()){
+					try {
+						final int idx = i;
+						Display.getDefault().asyncExec(new Runnable() {
+							public void run() {
+								setTrayImage(SyncanyTrayIcons.get(idx));
+							}
+						});
+						i++;
+						if (i == 6) i = 0;
+						Thread.sleep(300);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
+					}
+				});
+				
+				running.set(false);
+				
+				while (!running.get()){
+					try {
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	});
+	
 	protected void showSettings(){
 		shell.getDisplay().asyncExec(new Runnable() {
-			
 			@Override
 			public void run() {
 				SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
@@ -72,4 +158,19 @@ public abstract class TrayIcon {
 			}
 		});
 	}
+	
+	protected void showWizard(){
+		shell.getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
+				wd.open();
+			}
+		});
+	}
+	
+	//Abstract methods
+	protected abstract void setTrayImage(SyncanyTrayIcons image);
+	public abstract void updateFolders(Map<String, Map<String, String>> folders);
+	public abstract void updateStatusText(String statusText);
 }

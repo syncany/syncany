@@ -252,7 +252,6 @@ def on_ws_message(ws, message):
 		do_print("Received request: " + message)				
 
 		request = json.loads(message)
-		do_print("Received request: " + message)				
 		response = None
 		
 		last_request = time.time()

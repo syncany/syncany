@@ -18,9 +18,9 @@
 package org.syncany.gui.tray;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -35,7 +35,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -43,37 +42,32 @@ import org.syncany.util.EnvironmentUtil;
  *
  */
 public class DefaultTrayIcon extends TrayIcon {
-	private static final String TRAY_ICON_IMAGE_RESOURCE = "/images/tray/tray.png";
 	private TrayItem item;
 	
 	private Menu menu;
 	private List<MenuItem> items = new ArrayList<>();
 	private MenuItem statusTextItem;
-	
-	private AtomicBoolean syncing = new AtomicBoolean(false);
-	private AtomicBoolean running = new AtomicBoolean(false);
-	
-	private Image[] animation = new Image[]{
-		SWTResourceManager.getImage("/images/tray/tray-syncing1.png"),
-		SWTResourceManager.getImage("/images/tray/tray-syncing2.png"),
-		SWTResourceManager.getImage("/images/tray/tray-syncing3.png"),
-		SWTResourceManager.getImage("/images/tray/tray-syncing4.png"),
-		SWTResourceManager.getImage("/images/tray/tray-syncing5.png"),
-		SWTResourceManager.getImage("/images/tray/tray-syncing6.png")
-	};
+
+	@SuppressWarnings("serial")
+	private Map<SyncanyTrayIcons, Image> images = new HashMap<SyncanyTrayIcons, Image>(){{
+		for (SyncanyTrayIcons ti : SyncanyTrayIcons.values()){
+			put(ti, SWTResourceManager.getImage(ti.getFileName(), false));
+		}
+	}};
 	
 	public DefaultTrayIcon(final Shell shell) {
 		super(shell);
-		
+		buildTray();
+	}
+	
+	private void buildTray(){
 		Tray tray = Display.getDefault().getSystemTray();
 		
 		if (tray != null) {
 			item = new TrayItem(tray, SWT.NONE);
-
-			Image image = (EnvironmentUtil.isUnixLikeOperatingSystem()) ? SWTResourceManager.getImage(TRAY_ICON_IMAGE_RESOURCE) : SWTResourceManager.getResizedImage(TRAY_ICON_IMAGE_RESOURCE, 16, 16);
-			item.setImage(image);
-
-			menu = new Menu(shell, SWT.POP_UP);
+			setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
+		
+			menu = new Menu(getShell(), SWT.POP_UP);
 						
 			statusTextItem = new MenuItem(menu, SWT.PUSH);
 			statusTextItem.setText("All folders in sync");
@@ -86,8 +80,7 @@ public class DefaultTrayIcon extends TrayIcon {
 			connectItem.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					WizardDialog wd = new WizardDialog(shell, SWT.APPLICATION_MODAL);
-					wd.open();
+					showWizard();
 				}
 			});
 			
@@ -141,64 +134,9 @@ public class DefaultTrayIcon extends TrayIcon {
 				
 				item.addListener(SWT.Selection, showMenuListener);
 			}
-			
-			start();
 		}
 	}
 	
-	private Thread systemTrayAnimationThread = new Thread(new Runnable() {
-		@Override
-		public void run() {
-			while (true){
-				int i = 0;
-				
-				while (syncing.get()){
-					try {
-						final int idx = i;
-						Display.getDefault().asyncExec(new Runnable() {
-							public void run() {
-								item.setImage(animation[idx]);
-							}
-						});
-						i++;
-						if (i == 6) i = 0;
-						Thread.sleep(300);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				Display.getDefault().asyncExec(new Runnable() {
-					public void run() {
-						item.setImage(SWTResourceManager.getImage("/images/tray/tray-in-sync.png"));
-					}
-				});
-				
-				running.set(false);
-				
-				while (!running.get()){
-					try {
-						Thread.sleep(500);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-	});
-	
-	@Override
-	public void makeSystemTrayStartSync(){
-		syncing.set(true);
-		running.set(true);
-	}
-	
-	@Override
-	public void makeSystemTrayStopSync(){
-		syncing.set(false);
-	}
-
 	@Override
 	public void updateFolders(Map<String, Map<String, String>> folders) {
 		for (MenuItem mi : items) {
@@ -223,8 +161,9 @@ public class DefaultTrayIcon extends TrayIcon {
 		});
 		
 	}
-	
-	private void start() {
-		systemTrayAnimationThread.start();
+
+	@Override
+	protected void setTrayImage(SyncanyTrayIcons image) {
+		item.setImage(images.get(image));
 	}
 }

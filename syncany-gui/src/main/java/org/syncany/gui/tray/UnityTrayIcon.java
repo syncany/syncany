@@ -38,6 +38,7 @@ import org.syncany.util.JsonHelper;
 
 /**
  * @author pheckel
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class UnityTrayIcon extends TrayIcon {
@@ -101,22 +102,15 @@ public class UnityTrayIcon extends TrayIcon {
 
 	@Override
 	protected void quit() {
-		super.quit();
-		
-		makeUnityScriptGracefullyExit();
-		
-		staticWebServer.stopService();
-		
 		try {
+			staticWebServer.stopService();
 			webSocketClient.stop();
 		}
-		catch (IOException e) {
-			e.printStackTrace();
+		catch (Exception e) {
+			logger.warning("Exception while quitting application " + e);
 		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
+
+		super.quit();
 	}
 	
 	protected void handleCommand(Map<String, Object> map) {
@@ -229,10 +223,11 @@ public class UnityTrayIcon extends TrayIcon {
 
 		sendToAll(JsonHelper.fromMapToString(parameters));
 	}
-	
-	private void makeUnityScriptGracefullyExit() {
+
+	@Override
+	protected void setTrayImage(SyncanyTrayIcons image) {
 		Map<String, Object> parameters = new HashMap<>();
-		parameters.put("action", "quit");
+		parameters.put("action", "update_tray_icon");
 
 		sendToAll(JsonHelper.fromMapToString(parameters));
 	}

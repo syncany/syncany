@@ -146,6 +146,15 @@ public class SWTResourceManager {
 		return image;
 	}
 	
+	public static Image getImage(String path, boolean resize) {
+		if (resize){
+			return getResizedImage(path, 16, 16);
+		}
+		else{
+			return getImage(path);
+		}
+	}
+	
 	public static Image getResizedImage(String path, int width, int height) {
 		Image scaled = m_imageMap.get(path+ "_" + width);
 		if (scaled == null){
