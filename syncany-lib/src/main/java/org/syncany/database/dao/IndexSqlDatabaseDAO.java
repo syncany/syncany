@@ -57,7 +57,7 @@ public class IndexSqlDatabaseDAO extends SqlDatabaseDAO {
 		chunkCache = new HashMap<ChunkChecksum, ChunkEntry>();
 		
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement("select * from chunk");
+			PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
@@ -87,12 +87,7 @@ public class IndexSqlDatabaseDAO extends SqlDatabaseDAO {
 	
 	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					  "select * from fileversion fv " 
-					+ "where fv.path=? "
-					+ "and fv.status<>'DELETED' "
-					+ "and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)");
-
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoryWithLastVersion.sql");
 			preparedStatement.setString(1, relativePath);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -118,11 +113,7 @@ public class IndexSqlDatabaseDAO extends SqlDatabaseDAO {
 		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
 
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					  "select * from fileversion fv "
-					+ "where fv.status<>'DELETED' "
-					+ "  and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)");
-
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithLastVersion.sql");					 
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
@@ -146,12 +137,7 @@ public class IndexSqlDatabaseDAO extends SqlDatabaseDAO {
 		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
 
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					  "select * from fileversion fv "
-					+ "where fv.status<>'DELETED' "
-					+ "  and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)"
-					+ "  and fv.filecontent_checksum=?");
-
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithLastVersionByChecksum.sql");
 			preparedStatement.setString(1, fileContentChecksum.toString());
 			
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -172,5 +158,4 @@ public class IndexSqlDatabaseDAO extends SqlDatabaseDAO {
 			throw new RuntimeException(e);
 		}		
 	}
-
 }

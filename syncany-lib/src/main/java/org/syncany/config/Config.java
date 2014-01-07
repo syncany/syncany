@@ -212,7 +212,7 @@ public class Config {
 	}
 	
 	public java.sql.Connection createDatabaseConnection() {
-		return DatabaseConnectionFactory.createFileConnection(getDatabaseFile());
+		return DatabaseConnectionFactory.createConnection(getDatabaseFile());
 	}
 	
 	public void setCacheDir(File file) {

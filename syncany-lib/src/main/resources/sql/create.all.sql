@@ -84,7 +84,7 @@ CREATE CACHED TABLE known_databases (
 );
 
 
--- Non-primary indices
+-- Non-primary indices                              
 
 CREATE INDEX idx_databaseversion_status ON databaseversion (status);
 CREATE INDEX idx_databaseversion_vectorclock_serialized ON databaseversion (vectorclock_serialized);
@@ -100,4 +100,17 @@ CREATE VIEW fileversion_master AS
   FROM fileversion fv0
   JOIN databaseversion dbv 
     ON fv0.databaseversion_id=dbv.id 
-       AND dbv.status='MASTER';           
+       AND dbv.status='MASTER';   
+       
+CREATE VIEW fileversion_master_maxversion AS
+  SELECT DISTINCT filehistory_id, MAX(version) version
+  FROM fileversion_master
+  GROUP BY filehistory_id;     
+  
+CREATE VIEW fileversion_master_last AS
+  SELECT fv.* 
+  FROM fileversion_master_maxversion fvmax
+  JOIN fileversion_master fv 
+    ON fvmax.filehistory_id=fv.filehistory_id 
+       AND fvmax.version=fv.version 
+  WHERE fv.status<>'DELETED';    

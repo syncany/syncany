@@ -64,7 +64,7 @@ public class SqlDatabaseDAO {
 		Map<String, FileVersion> currentFileTree = new HashMap<String, FileVersion>();
 
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.select.getCurrentFileTree.sql"));
+			PreparedStatement preparedStatement = getStatement("/sql/select.getCurrentFileTree.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
@@ -81,7 +81,7 @@ public class SqlDatabaseDAO {
 	
 	public Long getMaxDirtyVectorClock(String machineName) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.select.getMaxDirtyVectorClock.sql"));
+			PreparedStatement preparedStatement = getStatement("/sql/select.getMaxDirtyVectorClock.sql");
 			preparedStatement.setString(1, machineName);
 			
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -99,12 +99,7 @@ public class SqlDatabaseDAO {
 
 	public FileVersion getFileVersionByPath(String path) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"select * from fileversion fv " 
-					+ "where fv.path=? "
-					+ "and fv.status<>'DELETED' "
-					+ "and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)");
-
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileVersionByPath.sql");
 			preparedStatement.setString(1, path);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -122,12 +117,7 @@ public class SqlDatabaseDAO {
 	
 	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"select * from fileversion fv " 
-					+ "where fv.filehistory_id=? "
-					+ "and fv.status<>'DELETED' "
-					+ "and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)");
-
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileVersionByFileHistoryId.sql");
 			preparedStatement.setString(1, fileHistoryId.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -149,13 +139,7 @@ public class SqlDatabaseDAO {
 		}
 		else {
 			try {
-				PreparedStatement preparedStatement = connection.prepareStatement(
-					  "select distinct mcc.multichunk_id "
-					+ "from filecontent fc "
-					+ "join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum "
-					+ "join multichunk_chunk mcc on fcc.chunk_checksum=mcc.chunk_checksum "
-					+ "where fc.checksum=?");
-				
+				PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksForFileChecksum.sql");
 				preparedStatement.setString(1, fileChecksum.toString());
 	
 				ResultSet resultSet = preparedStatement.executeQuery();
@@ -181,59 +165,61 @@ public class SqlDatabaseDAO {
 			return null;
 		}
 		else if (includeChunkChecksums) {
-			try {
-				PreparedStatement preparedStatement = connection.prepareStatement(
-					  "select fc.checksum, fc.size, fcc.chunk_checksum, fcc.num "
-					+ "from filecontent fc "
-					+ "join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum "
-					+ "where fc.checksum=? "
-					+ "order by fcc.num asc");
-				
-				preparedStatement.setString(1, fileChecksum.toString());
-	
-				ResultSet resultSet = preparedStatement.executeQuery();
-				FileContent fileContent = null;
-				
-				while (resultSet.next()) {
-					if (fileContent == null) {
-						fileContent = new FileContent();
-						
-						fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
-						fileContent.setSize(resultSet.getLong("size"));
-					}
-					
-					// Add chunk references
-					ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum"));
-					fileContent.addChunk(chunkChecksum);
-				}
-	
-				return fileContent;
-			}
-			catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
+			return getFileContentByChecksumWithChunkChecksums(fileChecksum);			
 		}
 		else {
-			try {
-				PreparedStatement preparedStatement = connection.prepareStatement("select * from filecontent fc where fc.checksum=?");
-				preparedStatement.setString(1, fileChecksum.toString());
-	
-				ResultSet resultSet = preparedStatement.executeQuery();
-	
-				if (resultSet.next()) {
-					FileContent fileContent = new FileContent();
-	
+			return getFileContentByChecksumWithoutChunkChecksums(fileChecksum);			
+		}
+	}
+
+	private FileContent getFileContentByChecksumWithoutChunkChecksums(FileChecksum fileChecksum) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithoutChunkChecksums.sql");
+			preparedStatement.setString(1, fileChecksum.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			if (resultSet.next()) {
+				FileContent fileContent = new FileContent();
+
+				fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
+				fileContent.setSize(resultSet.getLong("size"));
+
+				return fileContent;
+			}
+
+			return null;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private FileContent getFileContentByChecksumWithChunkChecksums(FileChecksum fileChecksum) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithChunkChecksums.sql");				
+			preparedStatement.setString(1, fileChecksum.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			FileContent fileContent = null;
+			
+			while (resultSet.next()) {
+				if (fileContent == null) {
+					fileContent = new FileContent();
+					
 					fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
 					fileContent.setSize(resultSet.getLong("size"));
-	
-					return fileContent;
 				}
-	
-				return null;
+				
+				// Add chunk references
+				ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum"));
+				fileContent.addChunk(chunkChecksum);
 			}
-			catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
+
+			return fileContent;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -241,7 +227,7 @@ public class SqlDatabaseDAO {
 		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
 
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement("select * from fileversion order by filehistory_id, version");
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithFileVersions.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			PartialFileHistory fileHistory = null;
@@ -270,21 +256,8 @@ public class SqlDatabaseDAO {
 	
 	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-				  "select fv0.* " 
-				+ "from fileversion_master fv0 "
-				+ "where fv0.filehistory_id=( "
-				+ "  select fv1.filehistory_id " 
-				+ "  from fileversion fv1 "
-				+ "  where fv1.path=? "
-				+ "    and fv1.status<>? " 
-				+ "    and fv1.version=( "
-				+ "      select max(fv2.version) "
-				+ "      from fileversion fv2 "
-				+ "      where fv1.filehistory_id=fv2.filehistory_id "
-				+ "    ) "
-				+ ")");
-			
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoryWithFileVersions.sql");
+
 			preparedStatement.setString(1, relativePath);
 			preparedStatement.setString(2, FileStatus.DELETED.toString());
 
@@ -311,7 +284,7 @@ public class SqlDatabaseDAO {
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement("select * from databaseversion order by id desc");
+			PreparedStatement preparedStatement = getStatement("/sql/select.getLastDatabaseVersionHeader.sql");
 			preparedStatement.setMaxRows(1);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -335,13 +308,7 @@ public class SqlDatabaseDAO {
 
 	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunkChecksum) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-				  "select mcc.multichunk_id "
-				+ "from multichunk_chunk mcc "
-				+ "join multichunk mc on mc.id=mcc.multichunk_id "
-				+ "where mcc.chunk_checksum=?"
-			);
-			
+			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkForChunk.sql");
 			preparedStatement.setString(1, chunkChecksum.toString());
 					
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -360,20 +327,9 @@ public class SqlDatabaseDAO {
 		}
 	}
 	
-	public MultiChunkEntry getMultiChunk(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
+	public MultiChunkEntry getMultiChunkWithStatus(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(							
-				  "select distinct mc.id "
-				+ "from databaseversion dbv "
-				+ "join filehistory fh on dbv.id=fh.databaseversion_id "
-				+ "join fileversion fv on fh.id=fv.filehistory_id "
-				+ "join filecontent fc on fv.filecontent_checksum=fc.checksum "
-				+ "join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum "
-				+ "join chunk c on fcc.chunk_checksum=c.checksum "
-				+ "join multichunk_chunk mcc on c.checksum=mcc.chunk_checksum "
-				+ "join multichunk mc on mcc.multichunk_id=mc.id "
-				+ "where dbv.status=? and mc.id=? "
-			);
+			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkWithStatus.sql");
 			
 			preparedStatement.setString(1, status.toString());
 			preparedStatement.setString(2, multiChunkId.toString());
@@ -396,12 +352,7 @@ public class SqlDatabaseDAO {
 		DatabaseBranch databaseBranch = new DatabaseBranch();
 		
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-				  "select dbv.id, dbv.localtime, dbv.client, vc.client as vc_client, vc.logicaltime as vc_logicaltime "
-				+ "from databaseversion dbv "
-				+ "join databaseversion_vectorclock vc on vc.databaseversion_id=dbv.id "
-				+ "order by dbv.id asc, vc.client");
-					
+			PreparedStatement preparedStatement = getStatement("/sql/select.getLocalDatabaseBranch.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
 			DatabaseVersionHeader currentDatabaseVersionHeader = null;
@@ -444,9 +395,7 @@ public class SqlDatabaseDAO {
 		List<String> knownDatabases = new ArrayList<String>();
 		
 		try {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-				  "select database_name from known_databases");
-					
+			PreparedStatement preparedStatement = getStatement("/sql/select.getKnownDatabases.sql");					
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
@@ -478,7 +427,7 @@ public class SqlDatabaseDAO {
 	}
 	
 	protected VectorClock getVectorClockByDatabaseVersionId(int databaseVersionId) throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement("select * from databaseversion_vectorclock where databaseversion_id=?");
+		PreparedStatement preparedStatement = getStatement("/sql/select.getVectorClockByDatabaseVersionId.sql");
 		preparedStatement.setInt(1, databaseVersionId);
 
 		ResultSet resultSet = preparedStatement.executeQuery();
@@ -524,5 +473,9 @@ public class SqlDatabaseDAO {
 		}
 
 		return fileVersion;
+	}
+	
+	protected PreparedStatement getStatement(String resourceId) throws SQLException {
+		return connection.prepareStatement(DatabaseConnectionFactory.getStatement(resourceId));
 	}
 }

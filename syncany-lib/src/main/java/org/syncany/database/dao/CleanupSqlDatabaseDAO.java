@@ -48,7 +48,7 @@ public class CleanupSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 
 	private void removeDirtyFileHistories() throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.delete.removeDirtyFileHistories.sql"));
+		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyFileHistories.sql");
 		preparedStatement.executeUpdate();
 	}
 
@@ -63,7 +63,7 @@ public class CleanupSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 
 	private void removeDirtyChunks() throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.delete.removeDirtyChunks.sql"));
+		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyChunks.sql");
 		preparedStatement.executeUpdate();
 	}
 

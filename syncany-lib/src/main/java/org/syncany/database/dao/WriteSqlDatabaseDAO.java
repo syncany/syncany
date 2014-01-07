@@ -23,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +53,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 	
 	public void persistNewKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement(
-				"insert into known_databases (database_name) values (?)");
+		PreparedStatement preparedStatement = getStatement("/sql/insert.persistNewKnownRemoteDatabases.sql");
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
 			preparedStatement.setString(1, databaseRemoteFile.getName());
@@ -81,7 +81,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 	
 	public void markDatabaseVersion(DatabaseVersionHeader databaseVersionHeader, DatabaseVersionStatus status) throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement(DatabaseConnectionFactory.getStatement("/sql.update.markDatabaseVersion.sql"));
+		PreparedStatement preparedStatement = getStatement("/sql/update.markDatabaseVersion.sql");
 
 		preparedStatement.setString(1, status.toString());
 		preparedStatement.setString(2, databaseVersionHeader.getVectorClock().toString());
@@ -92,8 +92,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {		
 		PreparedStatement preparedStatement = connection.prepareStatement(
-				  "insert into databaseversion (status, localtime, client, vectorclock_serialized) "
-				+ "values (?, ?, ?, ?)", 
+				DatabaseConnectionFactory.getStatement("/sql/insert.writeDatabaseVersion.sql"),
 				Statement.RETURN_GENERATED_KEYS);
 
 		preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
@@ -123,55 +122,59 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 
 	private void writeMultiChunks(Connection connection, Collection<MultiChunkEntry> multiChunks) throws SQLException {
 		for (MultiChunkEntry multiChunk : multiChunks) {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into multichunk (id) values (?)");
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeMultiChunks.sql");
 
 			preparedStatement.setString(1, multiChunk.getId().toString());
 			preparedStatement.executeUpdate();
 						
-			for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
-				PreparedStatement preparedStatement1 = connection.prepareStatement(
-						"insert into multichunk_chunk (multichunk_id, chunk_checksum) values (?, ?)");
+			writeMultiChunkRefs(connection, multiChunk);			
+		}
+	}
 
-				preparedStatement1.setString(1, multiChunk.getId().toString());
-				preparedStatement1.setString(2, chunkChecksum.toString());
-				
-				preparedStatement1.executeUpdate();
-			}
+	private void writeMultiChunkRefs(Connection connection, MultiChunkEntry multiChunk) throws SQLException {
+		for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeMultiChunkRefs.sql");
+
+			preparedStatement.setString(1, multiChunk.getId().toString());
+			preparedStatement.setString(2, chunkChecksum.toString());
+			
+			preparedStatement.executeUpdate();
 		}
 	}
 
 	private void writeFileContents(Connection connection, Collection<FileContent> fileContents) throws SQLException {
 		for (FileContent fileContent : fileContents) {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into filecontent (checksum, size) values (?, ?)");
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileContents.sql");
 
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
 			preparedStatement.setLong(2, fileContent.getSize());
 			
 			preparedStatement.executeUpdate();
-						
-			int order = 0;
-			for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
-				PreparedStatement preparedStatement1 = connection.prepareStatement(
-						"insert into filecontent_chunk (filecontent_checksum, chunk_checksum, num) values (?, ?, ?)");
+					
+			writeFileContentChunkRefs(connection, fileContent);			
+		}
+	}
 
-				preparedStatement1.setString(1, fileContent.getChecksum().toString());
-				preparedStatement1.setString(2, chunkChecksum.toString());
-				preparedStatement1.setInt(3, order);
-				
-				preparedStatement1.executeUpdate();
-				
-				order++;				
-			}
+	private void writeFileContentChunkRefs(Connection connection, FileContent fileContent) throws SQLException {
+		int order = 0;
+		
+		for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileContentChunkRefs.sql");
+			
+			preparedStatement.setString(1, fileContent.getChecksum().toString());
+			preparedStatement.setString(2, chunkChecksum.toString());
+			preparedStatement.setInt(3, order);
+			
+			preparedStatement.executeUpdate();
+			
+			order++;				
 		}
 	}
 
 	private void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
 		for (PartialFileHistory fileHistory : fileHistories) {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into filehistory (id, databaseversion_id) values (?, ?)");
-
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileHistories.sql");
+			
 			preparedStatement.setString(1, fileHistory.getFileId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
 			
@@ -185,10 +188,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 		for (FileVersion fileVersion : fileVersions) {
 			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  
 			
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into fileversion "
-					+ "(filehistory_id, version, databaseversion_id, path, type, status, size, lastmodified, linktarget, filecontent_checksum, updated, posixperms, dosattrs) "
-					+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeFileVersions.sql");
 
 			preparedStatement.setString(1, fileHistoryId.toString());
 			preparedStatement.setInt(2, Integer.parseInt(""+fileVersion.getVersion()));
@@ -197,10 +197,10 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 			preparedStatement.setString(5, fileVersion.getType().toString());
 			preparedStatement.setString(6, fileVersion.getStatus().toString());
 			preparedStatement.setLong(7, fileVersion.getSize());
-			preparedStatement.setDate(8, new java.sql.Date(fileVersion.getLastModified().getTime()));
+			preparedStatement.setTimestamp(8, new Timestamp(fileVersion.getLastModified().getTime()));
 			preparedStatement.setString(9, fileVersion.getLinkTarget());
 			preparedStatement.setString(10, fileContentChecksumStr);
-			preparedStatement.setDate(11, new java.sql.Date(fileVersion.getUpdated().getTime()));
+			preparedStatement.setTimestamp(11, new Timestamp(fileVersion.getUpdated().getTime()));
 			preparedStatement.setString(12, fileVersion.getPosixPermissions());
 			preparedStatement.setString(13, fileVersion.getDosAttributes());
 			
@@ -210,8 +210,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {			
 		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
-			PreparedStatement preparedStatement = connection.prepareStatement(
-					"insert into databaseversion_vectorclock (databaseversion_id, client, logicaltime) values (?, ?, ?)");
+			PreparedStatement preparedStatement = getStatement("/sql/insert.writeVectorClock.sql");
 
 			preparedStatement.setLong(1, databaseVersionId);
 			preparedStatement.setString(2, vectorClockEntry.getKey());
@@ -224,7 +223,7 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	private void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
 		if (chunks.size() > 0) {
 			for (ChunkEntry chunk : chunks) {
-				PreparedStatement preparedStatement = connection.prepareStatement("insert into chunk (checksum, size) values (?, ?)");
+				PreparedStatement preparedStatement = getStatement("/sql/insert.writeChunks.sql");
 
 				preparedStatement.setString(1, chunk.getChecksum().toString());
 				preparedStatement.setInt(2, chunk.getSize());

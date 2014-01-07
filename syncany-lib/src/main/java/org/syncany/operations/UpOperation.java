@@ -194,7 +194,7 @@ public class UpOperation extends Operation {
 		// Result
 		updateResultChangeSet(newDatabaseVersion);
 		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
-
+		
 		return result;
 	}
 
@@ -244,7 +244,7 @@ public class UpOperation extends Operation {
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			MultiChunkEntry dirtyMultiChunkEntry= localDatabase.getMultiChunk(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
+			MultiChunkEntry dirtyMultiChunkEntry= localDatabase.getMultiChunkWithStatus(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
 			
 			if (dirtyMultiChunkEntry != null) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");

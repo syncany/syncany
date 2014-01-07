@@ -41,10 +41,8 @@ public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
 	
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
-	public static final String DATABASE_CONNECTION_MEM_STRING = "jdbc:hsqldb:mem:%DATABASENAME%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
-	
-	public static final String DATABASE_SCRIPT_RESOURCE = "/sql.create.alltables.sql";	
+	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";	
+	public static final String DATABASE_SCRIPT_RESOURCE = "/sql/create.all.sql";	
 	public static final Map<String, String> DATABASE_STATEMENTS = new HashMap<String, String>(); 
 	
 	static {
@@ -56,15 +54,10 @@ public class DatabaseConnectionFactory {
 		}
 	}
 
-	public static Connection createFileConnection(File databaseFile) {
+	public static Connection createConnection(File databaseFile) {
 		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFile.toString());			
 		return createConnection(connectionString);
 	}
-	
-	public static Connection createMemoryConnection(String databaseName) {
-		String connectionString = DATABASE_CONNECTION_MEM_STRING.replaceAll("%DATABASENAME%", databaseName);			
-		return createConnection(connectionString);
-	} 
 	
 	private static Connection createConnection(String connectionString) {
 		try {
@@ -99,14 +92,14 @@ public class DatabaseConnectionFactory {
 		}
 	}
 	
-	private static void createTables(Connection sqlConnection) throws SQLException {
+	private static void createTables(Connection connection) throws SQLException {
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(DATABASE_SCRIPT_RESOURCE);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		
-		sqlConnection.setAutoCommit(false);
-		new SqlRunner(sqlConnection).runScript(reader);
-		
-		sqlConnection.commit();
+		connection.setAutoCommit(true);
+		new SqlRunner(connection).runScript(reader);
+		 
+		connection.setAutoCommit(false);
 	}
 	
 	public synchronized static String getStatement(String resourceIdentifier) {
@@ -126,7 +119,7 @@ public class DatabaseConnectionFactory {
 			DATABASE_STATEMENTS.put(resourceIdentifier, preparedStatement);
 			
 			if (logger.isLoggable(Level.FINE)) {
-				logger.log(Level.FINE, "Database query '{0}' loaded (first time): {1}", new Object[] { resourceIdentifier, preparedStatement });
+				logger.log(Level.FINE, "Database query \"{0}\" loaded (first time): {1}", new String[] { resourceIdentifier, preparedStatement });
 			}
 			
 			return preparedStatement;

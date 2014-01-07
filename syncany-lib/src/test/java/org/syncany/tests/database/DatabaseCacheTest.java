@@ -23,17 +23,16 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
@@ -341,7 +340,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testRemoveDatabaseVersion() {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();

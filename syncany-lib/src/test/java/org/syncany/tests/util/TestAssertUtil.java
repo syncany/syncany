@@ -190,8 +190,8 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertSqlDatabaseTablesEqual(File expectedDatabaseFile, File actualDatabaseFile, String... compareTables) throws IOException, SQLException {
-		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createFileConnection(expectedDatabaseFile);
-		Connection actualDatabaseConnection = DatabaseConnectionFactory.createFileConnection(actualDatabaseFile);
+		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createConnection(expectedDatabaseFile);
+		Connection actualDatabaseConnection = DatabaseConnectionFactory.createConnection(actualDatabaseFile);
 				
 		for (String tableName : compareTables) {
 			// Get table's primary keys
