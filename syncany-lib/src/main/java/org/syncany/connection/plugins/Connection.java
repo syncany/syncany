@@ -35,20 +35,18 @@ import java.util.TreeMap;
  */
 public abstract class Connection {
     public abstract TransferManager createTransferManager();
-    //public abstract void validateSettings(Map<String, String> map);
+    public abstract void validateSettings(List<PluginSetting> settings) throws StorageException;
     public abstract void init(Map<String, String> map) throws StorageException;
     public abstract List<PluginSetting> getSettings();
     
-    public Map<String, PluginSetting> getSettingsMap(Map<String, String> map) {
-    	Map<String, PluginSetting> pluginSettings = new TreeMap<String, PluginSetting>();
-    	for (PluginSetting setting : getSettings()) {
-    		pluginSettings.put(setting.getName(), setting);
+    public List<PluginSetting> getFilledSettings(Map<String, String> map) {
+    	List<PluginSetting> pluginSettings = getSettings();
+    	for (PluginSetting setting : pluginSettings) {
     		String value = map.get(setting.getName());
     		if (value != null) {
     			setting.setValue(value);
     		}
     	}
-    	
     	return pluginSettings;
     }
 }

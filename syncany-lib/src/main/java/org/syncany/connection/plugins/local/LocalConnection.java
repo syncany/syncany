@@ -41,15 +41,26 @@ public class LocalConnection extends Connection {
 
 	@Override
 	public void init(Map<String, String> map) throws StorageException {
-		String path = map.get("path");
-		
-		if (path == null) {
-			throw new StorageException("Config does not contain 'path' setting.");
-		}
-		
-		setRepositoryPath(new File(path));
+		List<PluginSetting> settings = getFilledSettings(map);
+		validateSettings(settings);
+		for (PluginSetting setting : settings) {
+			if (setting.getName().equals("path")) {
+				setRepositoryPath(new File(setting.getValue()));
+			}
+		}		
 	}
 	
+	@Override
+	public void validateSettings(List<PluginSetting> settings) throws StorageException {
+		for (PluginSetting setting : settings) {
+			if (setting.getName().equals("path")) {
+				if (!setting.validate()) {
+					throw new StorageException("Config does not contain 'path' setting.");
+				}
+			}
+		}
+		
+	}
 
     @Override
     public TransferManager createTransferManager() {
@@ -72,11 +83,7 @@ public class LocalConnection extends Connection {
 	}
 
 
-	@Override
-	public void validateSettings(Map<String, String> map) {
-		// TODO Auto-generated method stub
-		
-	}
+
 
 	
 }
