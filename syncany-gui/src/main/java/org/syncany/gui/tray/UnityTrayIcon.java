@@ -37,7 +37,7 @@ import org.syncany.gui.util.StaticResourcesWebServer;
 import org.syncany.util.JsonHelper;
 
 /**
- * @author pheckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */

@@ -18,6 +18,7 @@
 package org.syncany.gui;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
 /**
@@ -39,4 +40,29 @@ public class SWTUtil {
 		return valid;
 	}
 
+	public static boolean checkNumberBetween(Spinner spinner, int min, int max) {
+		boolean valid = true;
+		String value = spinner.getText();
+		try{
+			int port = Integer.parseInt(value);
+			valid = port > min && port < max;
+		}
+		catch (Exception e){
+			valid = false;
+		}
+		
+		return valid;
+	}
+
+	public static boolean checkEquals(Text text, String match) {
+		boolean valid = text.getText().equals(match);
+		
+		if (!valid){
+			text.setBackground(ApplicationResourcesManager.INVALID_TEXT_COLOR);
+		}
+		else{
+			text.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		}
+		return valid;
+	}
 }

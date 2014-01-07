@@ -15,15 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
+package org.syncany.gui;
 
-import org.syncany.gui.UserInput;
+import java.util.HashMap;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public interface UserParametersChecker {
-	public abstract UserInput getUserSelection();
-	public abstract boolean isValid();
+public class UserInput extends HashMap<SyncanyParameters, String>{
+	private static final long serialVersionUID = 7692703262033066027L;
+
+	@Override
+	public String put(SyncanyParameters key, String value) {
+		if (key.containsValue(value))
+			return super.put(key, value);
+
+		throw new RuntimeException(String.format("Value [%s] not compatible with key [%s]", value, key.toString()));
+	}
+	
+	@Override
+	public String get(Object key) {
+		if (!(key instanceof SyncanyParameters))
+			throw new RuntimeException(String.format("Key should be of type SyncanyParameters"));
+		return super.get(key);
+	}
 }

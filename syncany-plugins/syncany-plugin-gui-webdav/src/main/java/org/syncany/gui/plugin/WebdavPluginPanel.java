@@ -1,9 +1,5 @@
 package org.syncany.gui.plugin;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
@@ -14,6 +10,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
+import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -23,8 +20,6 @@ import org.syncany.util.I18n;
  * 
  */
 public class WebdavPluginPanel extends PluginPanel {
-	private static final Logger log = Logger.getLogger(WebdavPluginPanel.class.getSimpleName());
-	
 	private Text url;
 	private Text username;
 	private Text password;
@@ -34,9 +29,8 @@ public class WebdavPluginPanel extends PluginPanel {
 	 * @param parent
 	 * @param style
 	 */
-	public WebdavPluginPanel(Composite parent, int style) {
+	public WebdavPluginPanel(Composite parent, int style){
 		super(parent, style);
-		
 		initComposite();
 	}
 	
@@ -116,11 +110,11 @@ public class WebdavPluginPanel extends PluginPanel {
 	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("plugin.webdav.url", url.getText());
-		parameters.put("plugin.webdav.username", username.getText());
-		parameters.put("plugin.webdav.password", password.getText());
+	public UserInput getUserSelection() {
+		UserInput parameters = new UserInput();
+		parameters.put(SyncanyWebDAVParameter.URL, url.getText());
+		parameters.put(SyncanyWebDAVParameter.USERNAME, username.getText());
+		parameters.put(SyncanyWebDAVParameter.PASSWORD, password.getText());
 		return parameters;
 	}
 	

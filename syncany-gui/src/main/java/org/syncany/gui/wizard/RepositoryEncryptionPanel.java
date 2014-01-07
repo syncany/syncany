@@ -17,9 +17,6 @@
  */
 package org.syncany.gui.wizard;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -35,6 +32,9 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.SWTUtil;
+import org.syncany.gui.SyncanyCommandParameters;
+import org.syncany.gui.UserInput;
 import org.syncany.util.I18n;
 
 /**
@@ -168,22 +168,32 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		lblNewLabel_6.setForeground(enableEncryption.getSelection() ? black : gray);
 	}
 
-	@Override
-	public boolean isValid() {
+	public boolean issValid() {
 		return 
 			password.getText().length() > 6 && 
 			password.getText().equals(passwordAgain.getText()); 
 	}
+	
+	@Override
+	public boolean isValid() {
+		boolean valid = true;
+		
+		// && order matters cause java uses lazy evaluation
+		valid = SWTUtil.checkTextLength(password, 6) && valid;
+		valid = SWTUtil.checkEquals(passwordAgain, password.getText()) && valid;
+			
+		return valid;
+	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		Map<String, String> userInput = new HashMap<>();
-		userInput.put("password", password.getText());
+	public UserInput getUserSelection() {
+		UserInput userInput = new UserInput();
+		userInput.put(SyncanyCommandParameters.ENCRYPTION_PASSWORD, password.getText());
 		
 		if (enableEncryption.getSelection()){
-			userInput.put("encryption", enableEncryption.getSelection() ? "yes" : "no");
-			userInput.put("algotirhm", cypherCombo.getItem(cypherCombo.getSelectionIndex()));
-			userInput.put("keylength", keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
+			userInput.put(SyncanyCommandParameters.ENCRYPTION_ENABLED, enableEncryption.getSelection() ? "yes" : "no");
+			userInput.put(SyncanyCommandParameters.ENCRYPTION_ALGORITHM, cypherCombo.getItem(cypherCombo.getSelectionIndex()));
+			userInput.put(SyncanyCommandParameters.ENCRYPTION_KEYLENGTH, keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
 		}
 		return userInput;
 	}
@@ -205,7 +215,6 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 
 	@Override
 	public void updateData() {
-		// TODO Auto-generated method stub
 		
 	}
 }

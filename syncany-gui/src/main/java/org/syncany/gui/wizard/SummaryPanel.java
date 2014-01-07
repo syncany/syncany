@@ -17,14 +17,15 @@
  */
 package org.syncany.gui.wizard;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SyncanyCommandParameters;
+import org.syncany.gui.UserInput;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -32,6 +33,9 @@ import org.eclipse.swt.widgets.Label;
  */
 public class SummaryPanel extends WizardPanelComposite {
 	private Label repositoryType;
+	private Label localFolder;
+	private Label encryptionType;
+	private Label lblNewLabel;
 	
 	public SummaryPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -39,31 +43,65 @@ public class SummaryPanel extends WizardPanelComposite {
 	}
 	
 	private void initComposite(){
-		setLayout(new GridLayout(2, false));
+		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
+		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
 		
-		Label repositoryTypeLanbl = new Label(this, SWT.NONE);
-		repositoryTypeLanbl.setText("Repository Type");
+		GridLayout gridLayout = new GridLayout(2, false);
+		gridLayout.horizontalSpacing = 8;
+		gridLayout.verticalSpacing = 8;
+		setLayout(gridLayout);
+		
+		lblNewLabel = new Label(this, SWT.NONE);
+		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		lblNewLabel.setText("New Label");
+		
+		Label repositoryTypeLabel = new Label(this, SWT.NONE);
+		GridData gd_repositoryTypeLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
+		gd_repositoryTypeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		repositoryTypeLabel.setLayoutData(gd_repositoryTypeLabel);
+		repositoryTypeLabel.setText("Repository Type :");
+		repositoryTypeLabel.setFont(fontBold);
 		
 		repositoryType = new Label(this, SWT.NONE);
-		repositoryType.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
-		repositoryType.setText("New Label");
+		GridData gd_repositoryType = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		gd_repositoryType.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		repositoryType.setLayoutData(gd_repositoryType);
+		repositoryType.setFont(fontNormal);
 		
-		Label lblNewLabel_2 = new Label(this, SWT.NONE);
-		lblNewLabel_2.setText("Local Folder");
+		Label localFolderLabel = new Label(this, SWT.NONE);
+		localFolderLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		localFolderLabel.setText("Local Folder :");
+		localFolderLabel.setFont(fontBold);
 		
-		Label lblNewLabel_3 = new Label(this, SWT.NONE);
-		lblNewLabel_3.setText("New Label");
+		localFolder = new Label(this, SWT.NONE);
+		localFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		localFolder.setFont(fontNormal);
 		
-		Label lblNewLabel_4 = new Label(this, SWT.NONE);
-		lblNewLabel_4.setText("Encryption Settings");
+		Label encryptionTypeLabel = new Label(this, SWT.NONE);
+		encryptionTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		encryptionTypeLabel.setText("Encryption Settings :");
+		encryptionTypeLabel.setFont(fontBold);
 		
-		Label lblNewLabel_5 = new Label(this, SWT.NONE);
-		lblNewLabel_5.setText("New Label");
+		encryptionType = new Label(this, SWT.NONE);
+		encryptionType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		encryptionType.setFont(fontNormal);
 	}
 	
 	public void updateData(){
-		Map<String, String> userInput = getParentWizardDialog().getUserInput();
-		repositoryType.setText(userInput.get("repositoryType"));
+		final UserInput userInput = getParentWizardDialog().getUserInput();
+		
+		getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				String type = String.format("%s", userInput.get(SyncanyCommandParameters.COMMAND_ACTION));
+				String encryption = String.format("[%s / %s]", userInput.get(SyncanyCommandParameters.ENCRYPTION_ALGORITHM), userInput.get(SyncanyCommandParameters.ENCRYPTION_KEYLENGTH));
+				String folder = String.format("%s", userInput.get(SyncanyCommandParameters.LOCAL_FOLDER));
+				repositoryType.setText(type);
+				localFolder.setText(folder);
+				encryptionType.setText(encryption);
+			}
+		});
+
 	}
 	
 	@Override
@@ -72,8 +110,8 @@ public class SummaryPanel extends WizardPanelComposite {
 	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		return new HashMap<String, String>();
+	public UserInput getUserSelection() {
+		return new UserInput();
 	}
 
 	@Override

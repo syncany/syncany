@@ -36,6 +36,8 @@ import org.eclipse.swt.widgets.Label;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SyncanyCommandParameters;
+import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 import org.syncany.util.StringUtil;
@@ -153,10 +155,12 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));Map<String, String> userInput = new HashMap<>();
-		userInput.put("repositoryType", id);
-		Map<String, String> pluginParameters = panels.get(id).getUserSelection();
+	public UserInput getUserSelection() {
+		UserInput userInput = new UserInput();
+		
+		String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));
+		userInput.put(SyncanyCommandParameters.PLUGIN_ID, id);
+		UserInput pluginParameters = panels.get(id).getUserSelection();
 		userInput.putAll(pluginParameters);
 		return userInput;
 	}

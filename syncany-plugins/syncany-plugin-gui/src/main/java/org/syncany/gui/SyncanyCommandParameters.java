@@ -15,15 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
-
-import org.syncany.gui.UserInput;
+package org.syncany.gui;
 
 /**
- * @author vwiencek
+ * @author vincent
  *
  */
-public interface UserParametersChecker {
-	public abstract UserInput getUserSelection();
-	public abstract boolean isValid();
+public enum SyncanyCommandParameters implements SyncanyParameters {
+	COMMAND_ACTION("create", "connect"), 
+	ENCRYPTION_ENABLED("yes", "no"), 
+	ENCRYPTION_ALGORITHM("AES", "TwoFish"), 
+	ENCRYPTION_KEYLENGTH("128", "256"), 
+	ENCRYPTION_PASSWORD, 
+	LOCAL_FOLDER,
+	PLUGIN_ID;
+	
+	private String[] values;
+	
+	SyncanyCommandParameters(String...values){
+		this.values = values;
+	}
+
+	public boolean containsValue(String value) {
+		if (values == null || values.length == 0) return true;
+		
+		for (String s : values){
+			if (value.toUpperCase().equals(s.toUpperCase()))
+				return true;
+		}
+		return false;
+	}
 }

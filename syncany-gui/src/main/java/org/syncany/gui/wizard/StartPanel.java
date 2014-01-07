@@ -17,9 +17,6 @@
  */
 package org.syncany.gui.wizard;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
@@ -28,6 +25,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SyncanyCommandParameters;
+import org.syncany.gui.UserInput;
 import org.syncany.util.I18n;
 
 /**
@@ -106,13 +105,13 @@ public class StartPanel extends WizardPanelComposite {
 	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		Map<String, String> userInput = new HashMap<>();
+	public UserInput getUserSelection() {
+		UserInput userInput = new UserInput();
 		if (createStorageRadio.getSelection()){
-			userInput.put("startAction", "create");
+			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "create");
 		}
 		else{
-			userInput.put("startAction", "connect");
+			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "connect");
 		}
 		return userInput;
 	}

@@ -19,8 +19,6 @@ package org.syncany.gui.plugin;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -37,6 +35,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTUtil;
+import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -61,7 +61,6 @@ public class FtpPluginPanel extends PluginPanel {
 	 */
 	public FtpPluginPanel(Composite parent, int style) {
 		super(parent, style);
-		
 		initComposite();
 	}
 	
@@ -129,7 +128,7 @@ public class FtpPluginPanel extends PluginPanel {
 		passwordLabel.setText(I18n.getString("plugin.ftp.password", true));
 		passwordLabel.setFont(fontNormal);
 		
-		usernameText = new Text(this, SWT.BORDER);
+		usernameText = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 		usernameText.setFont(fontNormal);
 		
@@ -210,18 +209,27 @@ public class FtpPluginPanel extends PluginPanel {
 	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("plugin.ftp.host", hostText.getText());
-		parameters.put("plugin.ftp.username", usernameText.getText());
-		parameters.put("plugin.ftp.password", passwordText.getText());
-		parameters.put("plugin.ftp.path", pathText.getText());
-		parameters.put("plugin.ftp.port", spinner.getText());
+	public UserInput getUserSelection() {
+		UserInput parameters = new UserInput();
+		parameters.put(SyncanyFTPParameters.HOST, hostText.getText());
+		parameters.put(SyncanyFTPParameters.USERNAME, usernameText.getText());
+		parameters.put(SyncanyFTPParameters.PASSWORD, passwordText.getText());
+		parameters.put(SyncanyFTPParameters.PATH, pathText.getText());
+		parameters.put(SyncanyFTPParameters.PORT, spinner.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
-		return true;
+		boolean valid = true;
+		
+		// && order matters cause java uses lazy evaluation
+		valid = SWTUtil.checkTextLength(hostText, 0) && valid;
+		valid = SWTUtil.checkTextLength(usernameText, 0) && valid;
+		valid = SWTUtil.checkTextLength(passwordText, 0) && valid;
+		valid = SWTUtil.checkTextLength(pathText, 0) && valid;
+		valid = SWTUtil.checkNumberBetween(spinner, 0, 65535+1) && valid;
+			
+		return valid;
 	}
 }

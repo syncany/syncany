@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Composite;
  *
  */
 public abstract class PluginPanel extends Composite implements UserParametersChecker {
-
+	
 	/**
 	 * @param parent
 	 * @param style

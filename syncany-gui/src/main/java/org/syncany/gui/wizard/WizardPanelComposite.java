@@ -43,6 +43,5 @@ public abstract class WizardPanelComposite extends Composite implements UserPara
 	public abstract boolean hasNextButton();
 	public abstract boolean hasPreviousButton();
 	public abstract boolean hasFinishButton();
-	
 	public abstract void updateData();
 }

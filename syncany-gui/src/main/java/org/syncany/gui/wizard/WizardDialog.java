@@ -41,6 +41,8 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.UserInput;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
 
@@ -70,7 +72,7 @@ public class WizardDialog extends Dialog {
 
 	private Panel selectedPanel = Panel.START;
 	private Map<Panel, WizardPanelComposite> panels = new HashMap<>();
-	private Map<String, String> userInput = new HashMap<>();
+	private UserInput userInput = new UserInput();
 	
 	/**
 	 * Create the dialog.
@@ -184,25 +186,7 @@ public class WizardDialog extends Dialog {
 	}
 	
 	private void handleFinish(){
-		Map<String, String> commonParameters = new HashMap<>();
-		Map<String, String> pluginParameters = new HashMap<>();
-		
-		for (String key : userInput.keySet()){
-			if (key.startsWith("plugin.")){
-				String[] tokens = key.split("\\."); // get username from plugin.webdav.username
-				if (tokens.length == 3){
-					String newKey = tokens[2];
-					pluginParameters.put(newKey, userInput.get(key));
-				}
-				else{
-					log.warning(String.format("Unknown user input key Value : [%s/%s]", key, userInput.get(key)));
-				}
-			}
-			else{
-				commonParameters.put(key, userInput.get(key));
-			}
-		}
-		
+		ClientCommandFactory.handleCommand(userInput);
 		shell.dispose();
 	}
 	
@@ -254,7 +238,7 @@ public class WizardDialog extends Dialog {
 		}
 	}
 
-	public Map<String, String> getUserInput() {
+	public UserInput getUserInput() {
 		return userInput;
 	}
 	

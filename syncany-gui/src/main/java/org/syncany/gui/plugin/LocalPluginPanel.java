@@ -18,8 +18,6 @@
 package org.syncany.gui.plugin;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -35,6 +33,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -45,7 +44,7 @@ import org.syncany.util.I18n;
 public class LocalPluginPanel extends PluginPanel {
 	private Text localDir;
 	
-	public LocalPluginPanel(Composite parent, int style) {
+	public LocalPluginPanel(Composite parent, int style){
 		super(parent, style);
 		initComposite();
 	}
@@ -142,9 +141,9 @@ public class LocalPluginPanel extends PluginPanel {
 	}	
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("plugin.local.path", localDir.getText());
+	public UserInput getUserSelection() {
+		UserInput parameters = new UserInput();
+		parameters.put(SyncanyLocalParameter.LOCAL_FOLDER, localDir.getText());
 		return parameters;
 	}
 	

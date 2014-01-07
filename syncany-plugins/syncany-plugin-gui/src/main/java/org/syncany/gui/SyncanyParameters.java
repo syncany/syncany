@@ -15,15 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.panel;
-
-import org.syncany.gui.UserInput;
+package org.syncany.gui;
 
 /**
- * @author vwiencek
+ * @author vincent
  *
  */
-public interface UserParametersChecker {
-	public abstract UserInput getUserSelection();
-	public abstract boolean isValid();
+public interface SyncanyParameters {
+
+	public boolean containsValue(String value);
+
 }

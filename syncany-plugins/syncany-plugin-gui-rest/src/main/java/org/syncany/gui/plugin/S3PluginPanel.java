@@ -17,10 +17,6 @@
  */
 package org.syncany.gui.plugin;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
@@ -30,6 +26,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTUtil;
+import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -38,8 +36,6 @@ import org.syncany.util.I18n;
  * 
  */
 public class S3PluginPanel extends PluginPanel {
-	private static final Logger log = Logger.getLogger(S3PluginPanel.class.getSimpleName());
-	
 	private Text accessKey;
 	private Text secretKey;
 	private Text bucket;
@@ -50,9 +46,8 @@ public class S3PluginPanel extends PluginPanel {
 	 * @param parent
 	 * @param style
 	 */
-	public S3PluginPanel(Composite parent, int style) {
+	public S3PluginPanel(Composite parent, int style){
 		super(parent, style);
-		
 		initComposite();
 	}
 	
@@ -141,17 +136,25 @@ public class S3PluginPanel extends PluginPanel {
 	}
 
 	@Override
-	public Map<String, String> getUserSelection() {
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("plugin.s3.accessKey", accessKey.getText());
-		parameters.put("plugin.s3.secretKey", secretKey.getText());
-		parameters.put("plugin.s3.bucket", bucket.getText());
-		parameters.put("plugin.s3.location", location.getText());
+	public UserInput getUserSelection() {
+		UserInput parameters = new UserInput();
+		parameters.put(SyncanyRestParameters.ACCESS_KEY, accessKey.getText());
+		parameters.put(SyncanyRestParameters.SECRET_KEY, secretKey.getText());
+		parameters.put(SyncanyRestParameters.BUCKET, bucket.getText());
+		parameters.put(SyncanyRestParameters.LOCATION, location.getText());
 		return parameters;
 	}
 
 	@Override
 	public boolean isValid() {
-		return true;
+		boolean valid = true;
+		
+		// && order matters cause java uses lazy evaluation
+		valid = SWTUtil.checkTextLength(accessKey, 0) && valid;
+		valid = SWTUtil.checkTextLength(secretKey, 0) && valid;
+		valid = SWTUtil.checkTextLength(bucket, 0) && valid;
+		valid = SWTUtil.checkTextLength(location, 0) && valid;
+			
+		return valid;
 	}
 }

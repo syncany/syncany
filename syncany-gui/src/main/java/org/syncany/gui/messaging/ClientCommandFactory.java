@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.gui.MainGUI;
+import org.syncany.gui.UserInput;
 
 public class ClientCommandFactory {
 	private static final Logger log = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
+	
 	private static WSClient client;
 	
 	public static void startWebSocketClient(){
@@ -28,33 +30,19 @@ public class ClientCommandFactory {
 		client = null;
 	}
 	
-	public static void watch(String folder) {
-		Map<String, Object> parameters = buildParameters();
-		parameters.put("action", "watch");
-		parameters.put("folder", folder);
-		client.handleCommand(parameters);
-	}
-	
-	public static void stopWatch(String clientId){
-		Map<String, Object> parameters = buildParameters();
-		parameters.put("action", "stop");
-		parameters.put("id", clientId);
-		client.handleCommand(parameters);
-	}
-	
 	public static void stopDaemon(){
 		Map<String, Object> parameters = buildParameters();
 		parameters.put("action", "quit");
 		client.handleCommand(parameters);
 	}
 	
-	public static void list() {
+	private static void list() {
 		Map<String, Object> parameters = buildParameters();
 		parameters.put("action", "get_watched");
 		client.handleCommand(parameters);
 	}
 
-	public static void connect(String url, String folder) {
+	private static void connect(String url, String folder) {
 		Map<String, Object> parameters = buildParameters();
 		parameters.put("action", "connect");
 		parameters.put("folder", folder);
@@ -62,10 +50,13 @@ public class ClientCommandFactory {
 		client.handleCommand(parameters);
 	}
 
-	public static void create(Map<String, Object> wizardParameters) {
+	private static void create(Map<String, Object> wizardParameters) {
 		Map<String, Object> parameters = buildParameters();
 		parameters.putAll(wizardParameters);
 		client.handleCommand(parameters);
+	}
+	
+	public static void handleCommand(UserInput userInput){
 	}
 	
 	/**

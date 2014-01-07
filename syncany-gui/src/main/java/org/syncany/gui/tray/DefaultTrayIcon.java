@@ -38,7 +38,8 @@ import org.syncany.gui.SWTResourceManager;
 import org.syncany.util.EnvironmentUtil;
 
 /**
- * @author pheckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class DefaultTrayIcon extends TrayIcon {
@@ -58,6 +59,7 @@ public class DefaultTrayIcon extends TrayIcon {
 	public DefaultTrayIcon(final Shell shell) {
 		super(shell);
 		buildTray();
+		makeSystemTrayStartSync();
 	}
 	
 	private void buildTray(){
