@@ -85,8 +85,7 @@ public class Launcher {
 		window.dispose();
 	}
 	
-	private static void startGUI(){
-		Display.setAppName("Syncany");
+	public static void loadConfiguration(){
 		applicationConfiguration = null;
 		try {
 			ApplicationConfigurationTO acto = loadApplicationConfiguration();
@@ -103,6 +102,14 @@ public class Launcher {
 		catch (Exception e){
 			log.severe("Unable to initiate proxy");
 		}
+	}
+	
+	private static void startGUI(){
+		Display.setAppName("Syncany");
+		
+		loadConfiguration();
+		
+		
 		
 		// Register messages bundles
 		I18n.registerBundleName("i18n/messages");
@@ -123,6 +130,18 @@ public class Launcher {
 		window.open();
 	}
 
+	public static void saveConfiguration(){
+		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File f = new File(saHome, "syncany-gui-config.xml");
+		
+		try {
+			ApplicationConfigurationTO.store(ApplicationConfiguration.toTO(applicationConfiguration), f);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
 		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
 		File f = new File(saHome, "syncany-gui-config.xml");

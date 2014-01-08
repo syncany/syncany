@@ -1,5 +1,6 @@
 package org.syncany.gui;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -59,7 +60,10 @@ public class MainGUI {
 	}
 	
 	private static void restoreWatchedFolders() {
-		for (String folder : Launcher.applicationConfiguration.getWatchedFolders()){
+		List<String> wf = Launcher.applicationConfiguration.getWatchedFolders();
+		if (wf == null) return;
+		
+		for (String folder : wf){
 			ClientCommandFactory.handleWatch(folder);
 		}
 	}

@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
@@ -191,7 +192,10 @@ public class WizardDialog extends Dialog {
 		switch (selectedPanel) {
 			case WATCH:
 				WatchPanel wp = (WatchPanel)panels.get(selectedPanel);
-				ClientCommandFactory.handleWatch(wp.getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER));
+				String f = wp.getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER);
+				Launcher.applicationConfiguration.addWatchedFolder(f);
+				Launcher.saveConfiguration();
+				ClientCommandFactory.handleWatch(f);
 				shell.dispose();
 				break;
 			case SUMMARY:

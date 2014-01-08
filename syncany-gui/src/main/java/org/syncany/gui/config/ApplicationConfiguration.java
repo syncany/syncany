@@ -17,6 +17,7 @@
  */
 package org.syncany.gui.config;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +36,11 @@ public class ApplicationConfiguration {
 
 	public List<String> getWatchedFolders() {
 		return watchedFolders;
+	}
+	
+	public void addWatchedFolder(String folder){
+		if (watchedFolders == null) watchedFolders = new ArrayList<>();
+		if (!watchedFolders.contains(folder)) watchedFolders.add(folder);
 	}
 
 	public void setWatchedFolders(List<String> watchedFolders) {
