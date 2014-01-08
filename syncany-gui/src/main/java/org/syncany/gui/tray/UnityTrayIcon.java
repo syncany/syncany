@@ -166,8 +166,8 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 	
 	private static void startUnityProcess() throws IOException{
-		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port + "/";
-		String scriptUrl =  baseUrl + "scripts/unitytray.py";
+		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port;
+		String scriptUrl =  baseUrl + "/scripts/unitytray.py";
 		String[] command = new String[]{
 			"python", 
 			"-c", 

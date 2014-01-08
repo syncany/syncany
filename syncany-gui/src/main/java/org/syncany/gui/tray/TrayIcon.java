@@ -32,6 +32,7 @@ import org.syncany.gui.wizard.WizardDialog;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
 public abstract class TrayIcon {
+	private static int REFRESH_TIME=1000;
 	public enum SyncanyTrayIcons{
 		TRAY_NO_OVERLAY("/images/tray/tray.png"),
 		TRAY_IN_SYNC("/images/tray/tray-in-sync.png"),
@@ -134,7 +135,7 @@ public abstract class TrayIcon {
 						setTrayImage(SyncanyTrayIcons.get(i));
 						i++;
 						if (i == 6) i = 0;
-						Thread.sleep(300);
+						Thread.sleep(REFRESH_TIME);
 					}
 					catch (InterruptedException e) {
 						e.printStackTrace();

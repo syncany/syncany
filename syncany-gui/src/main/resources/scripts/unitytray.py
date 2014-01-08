@@ -43,6 +43,7 @@ def fetch_image(relativeUrl):
 	if not relativeUrl in imagesMap:
 		tf = tempfile.NamedTemporaryFile(delete=True)
 		fname,x = urllib.urlretrieve(baseUrl + relativeUrl, tf.name +".png")
+		do_print("Caching image '" + relativeUrl + "' to '" + fname + "'")
 		imagesMap[relativeUrl] = fname
 	
 	return imagesMap[relativeUrl]
@@ -69,7 +70,7 @@ def do_notify(request):
 def do_update_icon(request):
 	global indicator
 	indicator.set_icon(fetch_image(request["imageFileName"]))		
-	return "{'response':'OK'}"
+	return "OK"
 	
 def do_update_text(request):
 	global menu_item_status
@@ -188,7 +189,7 @@ def init_tray_icon():
 	global indicator
 
 	# Default image
-	image = fetch_image("images/tray/tray.png")									
+	image = fetch_image("/images/tray/tray.png")									
 
 	# Go!
 	do_print("Initializing indicator ...")

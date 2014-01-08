@@ -47,14 +47,21 @@ public class StaticResourcesWebServer {
 						@Override
 						public void lifeCycleFailure(LifeCycle event, Throwable cause) { }
 					});
+					
 					ContextHandler context0 = new ContextHandler();
-			        context0.setContextPath("/");
+			        context0.setContextPath("/scripts/");
 			        ResourceHandler rh0 = new ResourceHandler();
-			        rh0.setBaseResource( Resource.newResource(ClassLoader.getSystemResource(".")));
+			        rh0.setBaseResource( Resource.newResource(ClassLoader.getSystemResource("scripts")));
 			        context0.setHandler(rh0);
+			        
+			        ContextHandler context1 = new ContextHandler();
+			        context1.setContextPath("/images/");
+			        ResourceHandler rh1 = new ResourceHandler();
+			        rh1.setBaseResource( Resource.newResource(ClassLoader.getSystemResource("images")));
+			        context1.setHandler(rh1);
 			 
 			        ContextHandlerCollection contexts = new ContextHandlerCollection();
-			        contexts.setHandlers(new Handler[]{ context0 });
+			        contexts.setHandlers(new Handler[]{ context0, context1 });
 			        
 			        server.setHandler(contexts);
 			        

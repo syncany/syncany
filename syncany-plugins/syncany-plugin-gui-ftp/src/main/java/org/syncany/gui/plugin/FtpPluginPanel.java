@@ -73,12 +73,12 @@ public class FtpPluginPanel extends PluginPanel {
 		setLayout(gl_composite);
 		
 		Label introductionTitleLabel = new Label(this, SWT.WRAP);
-		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
+		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("plugin.ftp.introduction.title"));
 		introductionTitleLabel.setFont(fontBold);
 		
 		Label introductionLabel = new Label(this, SWT.WRAP);
-		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 4, 1));
+		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, false, 4, 1));
 		introductionLabel.setText(I18n.getString("plugin.ftp.introduction"));
 		introductionLabel.setFont(fontNormal);
 		
@@ -93,7 +93,6 @@ public class FtpPluginPanel extends PluginPanel {
 		hostText.setFont(fontNormal);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		gd_hostText.minimumWidth = 200;
 		hostText.setLayoutData(gd_hostText);
 		
 		Label portLabel = new Label(this, SWT.NONE);

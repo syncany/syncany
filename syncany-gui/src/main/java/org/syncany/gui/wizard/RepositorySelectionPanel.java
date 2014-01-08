@@ -70,6 +70,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
+		gl_composite.marginRight = 30;
 		setLayout(gl_composite);
 		
 		Label introductionTitleLabel = new Label(this, SWT.NONE);
@@ -108,7 +109,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		}
 		
 		pluginStackComposite = new Composite(this, SWT.NONE);
-		GridData gd_pluginStackComposite = new GridData(SWT.LEFT, SWT.FILL, false, true, 2, 1);
+		GridData gd_pluginStackComposite = new GridData(SWT.FILL, SWT.FILL, false, true, 2, 1);
 		gd_pluginStackComposite.verticalIndent = 30;
 		gd_pluginStackComposite.horizontalIndent = 30;
 		pluginStackComposite.setLayoutData(gd_pluginStackComposite);

@@ -114,7 +114,7 @@ public class WizardDialog extends Dialog {
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
 		shell.setToolTipText("");
 		shell.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		shell.setSize(670, 500);
+		shell.setSize(700, 500);
 		shell.setText(getText());
 		GridLayout gl_shell = new GridLayout(2, false);
 		gl_shell.marginLeft = -2;
