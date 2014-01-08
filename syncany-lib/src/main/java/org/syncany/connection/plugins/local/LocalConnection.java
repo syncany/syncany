@@ -52,6 +52,13 @@ public class LocalConnection extends Connection {
     public void setRepositoryPath(File repositoryPath) {
         this.repositoryPath = repositoryPath;
     }
+    
+    @Override
+	public void init() {
+		repositoryPath = new File(getSettings().get("path").getValue());
+	}
+    
+    
 
 	@Override
 	public Map<String,PluginSetting> getSettings() {
@@ -62,6 +69,8 @@ public class LocalConnection extends Connection {
 		return settings;
 
 	}
+
+	
 
 
 

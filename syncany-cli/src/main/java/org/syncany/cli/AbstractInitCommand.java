@@ -165,6 +165,7 @@ public abstract class AbstractInitCommand extends Command {
 		}
 
 		connection.validate(); // To check for exceptions
+		connection.init();
 		
 		return connection.getSettingsStrings();
 	}
