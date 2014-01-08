@@ -96,6 +96,12 @@ public class WSClient {
 		String action = (String)parameters.get("action");
 		
 		switch (action){
+			case "update_watched_folders":
+				final Map<String, Map<String, String>> folders = (Map<String, Map<String, String>>)parameters.get("folders");
+			    InterfaceUpdate iu = new InterfaceUpdate(InterfaceUpdateAction.UPDATE_WATCHED_FOLDERS, folders);
+			    Launcher.getEventBus().post(iu);
+				break;
+		
 			case "update_syncing_state":
 				String syncingState = (String)parameters.get("syncing_state");
 				if (syncingState.equals("syncing")){
@@ -105,17 +111,15 @@ public class WSClient {
 					Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
 				}
 				break;
+				
 			case "start_syncing":
 			    Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
 				break;
+				
 			case "stop_syncing":
 			    Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
 				break;
-			case "update_watched_folders":
-				final Map<String, Map<String, String>> folders = (Map<String, Map<String, String>>)parameters.get("folders");
-			    InterfaceUpdate iu = new InterfaceUpdate(InterfaceUpdateAction.UPDATE_WATCHED_FOLDERS, folders);
-			    Launcher.getEventBus().post(iu);
-				break;
+			
 		}
 	}
 

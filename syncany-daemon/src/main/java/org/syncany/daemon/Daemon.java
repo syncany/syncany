@@ -32,7 +32,7 @@ public class Daemon {
 	private boolean startedWithGui = false;
 	private DeamonConfiguration daemonConfiguration;
 	
-	private Map<String, Command> commands = new HashMap<>(); 
+	private Map<String, Command> _commands = new HashMap<>(); 
 	
 	static{
 		Logging.init();
@@ -52,7 +52,7 @@ public class Daemon {
 	 * @return the commands
 	 */
 	public Map<String, Command> getCommands() {
-		return commands;
+		return _commands;
 	}
 	
 	private void killWatchingThreads(){

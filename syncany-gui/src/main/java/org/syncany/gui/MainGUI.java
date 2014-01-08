@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.InterfaceUpdate;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
@@ -28,15 +29,38 @@ public class MainGUI {
 			}
 		});
 	}
-	
-	public void open() {
+
+	public MainGUI() {
 		shell = new Shell();	
 		tray = new TrayIconFactory().createTrayIcon(shell);
-
+	}
+	
+	public void open() {
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(3000);
+				}
+				catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				restoreWatchedFolders();
+			}
+		}).start();
+		
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
+		}
+	}
+	
+	private static void restoreWatchedFolders() {
+		for (String folder : Launcher.applicationConfiguration.getWatchedFolders()){
+			ClientCommandFactory.handleWatch(folder);
 		}
 	}
 	

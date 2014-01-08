@@ -60,6 +60,7 @@ public class Launcher {
 		startWebSocketClient();
 		startGUI();	
 	}
+	
 	public static void stopApplication(){
 		ClientCommandFactory.stopDaemon();
 		stopWebSocketClient();

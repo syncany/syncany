@@ -19,6 +19,8 @@ package org.syncany.gui;
 
 import java.util.HashMap;
 
+import org.syncany.util.SyncanyParameters;
+
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *

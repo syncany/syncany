@@ -140,18 +140,22 @@ public class DefaultTrayIcon extends TrayIcon {
 	}
 	
 	@Override
-	public void updateFolders(Map<String, Map<String, String>> folders) {
-		for (MenuItem mi : items) {
-			mi.dispose();
-		}
+	public void updateFolders(final Map<String, Map<String, String>> folders) {
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+				for (MenuItem mi : items) {
+					mi.dispose();
+				}
 
-		items.clear();
+				items.clear();
 
-		for (String key : folders.keySet()) {
-			MenuItem mi = new MenuItem(menu, SWT.PUSH);
-			mi.setText(folders.get(key).get("folder") + " [" + folders.get(key).get("status") + "]");
-			items.add(mi);
-		}
+				for (String key : folders.keySet()) {
+					MenuItem mi = new MenuItem(menu, SWT.PUSH);
+					mi.setText(folders.get(key).get("folder") + " [" + folders.get(key).get("status") + "]");
+					items.add(mi);
+				}
+			}
+		});
 	}
 
 	@Override
@@ -161,7 +165,6 @@ public class DefaultTrayIcon extends TrayIcon {
 				statusTextItem.setText(statusText);
 			}
 		});
-		
 	}
 
 	@Override

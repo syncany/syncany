@@ -26,9 +26,13 @@ import org.syncany.gui.panel.UserParametersChecker;
  */
 public abstract class WizardPanelComposite extends Composite implements UserParametersChecker {
 	private WizardDialog parentWizardDialog;
+
+	protected WizardPanelComposite(Composite parent, int style) {
+		super(parent, style);
+	}
 	
 	public WizardPanelComposite(WizardDialog parentWizardDialog, Composite parent, int style) {
-		super(parent, style);
+		this(parent, style);
 		this.parentWizardDialog = parentWizardDialog;
 	}
 	

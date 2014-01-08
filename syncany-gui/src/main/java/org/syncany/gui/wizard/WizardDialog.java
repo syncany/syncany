@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.util.DialogUtil;
@@ -57,7 +58,8 @@ public class WizardDialog extends Dialog {
 		START, 
 		REPOSITORY_SELECTION, 
 		REPOSITORY_ENCRYPTION,
-		SUMMARY;
+		SUMMARY, 
+		WATCH;
 	};
 
 	//Widgets
@@ -186,8 +188,19 @@ public class WizardDialog extends Dialog {
 	}
 	
 	private void handleFinish(){
-		ClientCommandFactory.handleCommand(userInput);
-		shell.dispose();
+		switch (selectedPanel) {
+			case WATCH:
+				WatchPanel wp = (WatchPanel)panels.get(selectedPanel);
+				ClientCommandFactory.handleWatch(wp.getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER));
+				shell.dispose();
+				break;
+			case SUMMARY:
+				ClientCommandFactory.handleCommand(userInput);
+				shell.dispose();
+				break;
+			default:
+				throw new RuntimeException("Invalid user selection: " + selectedPanel);
+		}
 	}
 	
 	private void handleNext() {
@@ -198,7 +211,13 @@ public class WizardDialog extends Dialog {
 				panel = panels.get(Panel.START);
 				if (panel.isValid()) {
 					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.REPOSITORY_SELECTION);
+					
+					if (userInput.get(SyncanyCommandParameters.COMMAND_ACTION).equals("watch")){
+						showPanel(Panel.WATCH);
+					}
+					else{
+						showPanel(Panel.REPOSITORY_SELECTION);
+					}
 				}
 				break;
 			case REPOSITORY_SELECTION:
@@ -215,14 +234,15 @@ public class WizardDialog extends Dialog {
 					showPanel(Panel.SUMMARY);
 				}
 				break;
-		default:
-			throw new RuntimeException("Invalid user selection: "+selectedPanel);
+			default:
+				throw new RuntimeException("Invalid user selection: "+selectedPanel);
 		}
 	}
 
 	private void handlePrevious() {
 		switch (selectedPanel) {
 			case REPOSITORY_SELECTION:
+			case WATCH:
 				showPanel(Panel.START);
 				break;
 			case REPOSITORY_ENCRYPTION:
@@ -267,5 +287,6 @@ public class WizardDialog extends Dialog {
 		panels.put(Panel.REPOSITORY_SELECTION, new RepositorySelectionPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.SUMMARY, new SummaryPanel(this, stackComposite, SWT.NONE));
+		panels.put(Panel.WATCH, new WatchPanel(this, stackComposite, SWT.NONE));
 	}
 }

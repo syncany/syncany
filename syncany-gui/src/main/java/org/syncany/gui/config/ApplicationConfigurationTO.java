@@ -18,9 +18,12 @@
 package org.syncany.gui.config;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -52,6 +55,9 @@ public class ApplicationConfigurationTO {
 
 	@Element(name="proxyType", required=false)
 	private String proxyType;
+	
+	@ElementList(name="watchedFolders", required=false, type=String.class, entry="folder", inline=true)
+	private List<String> watchedFolders;
 
 	public static ApplicationConfigurationTO load(File file) throws Exception {
 		try {
@@ -124,9 +130,21 @@ public class ApplicationConfigurationTO {
 		this.proxyAuthType = proxyAuthType;
 	}
 
+	public List<String> getWatchedFolders() {
+		return watchedFolders;
+	}
+
+	public void setWatchedFolders(List<String> watchedFolders) {
+		this.watchedFolders = watchedFolders;
+	}
+	
+	@SuppressWarnings("serial")
 	public static ApplicationConfigurationTO getDefault() {
 		ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
 		acto.setProxyType(ProxyController.ProxyType.NONE.toString());
+		acto.setWatchedFolders(new ArrayList<String>(){{
+			add("C:\\Users\\vincent\\Syncany");
+		}});
 		return acto;
 	}
 }

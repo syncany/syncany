@@ -52,7 +52,6 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	private Label lblNewLabel_5;
 	private Label lblNewLabel_4;
 	
-	
 	public RepositoryEncryptionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
 		initComposite();

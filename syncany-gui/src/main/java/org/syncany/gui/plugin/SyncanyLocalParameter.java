@@ -17,16 +17,39 @@
  */
 package org.syncany.gui.plugin;
 
-import org.syncany.gui.SyncanyParameters;
+import org.syncany.util.SyncanyParameters;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public enum SyncanyLocalParameter implements SyncanyParameters {
-	LOCAL_FOLDER;
+	LOCAL_FOLDER("path", true);
+
+	private String value;
+	private boolean mandatory;
+	
+	private SyncanyLocalParameter(String value, boolean mandatory) {
+		this.value = value;
+		this.mandatory = mandatory;
+	}
 
 	public boolean containsValue(String value) {
 		return true;
+	}
+
+	@Override
+	public String value() {
+		return value;
+	}
+
+	@Override
+	public boolean isPluginParameter() {
+		return true;
+	}
+
+	@Override
+	public boolean isParameterMandatory() {
+		return mandatory;
 	}
 }

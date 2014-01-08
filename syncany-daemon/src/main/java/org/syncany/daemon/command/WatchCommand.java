@@ -118,6 +118,7 @@ public class WatchCommand extends Command {
 		
 		return 0;
 	}
+	
 	private Thread th;
 	
 	private Config initConfigOption(String localDir) throws ConfigException, Exception {

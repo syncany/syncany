@@ -17,23 +17,29 @@
  */
 package org.syncany.gui;
 
+import org.syncany.util.SyncanyParameters;
+
 /**
  * @author vincent
  *
  */
 public enum SyncanyCommandParameters implements SyncanyParameters {
-	COMMAND_ACTION("create", "connect"), 
-	ENCRYPTION_ENABLED("yes", "no"), 
-	ENCRYPTION_ALGORITHM("AES", "TwoFish"), 
-	ENCRYPTION_KEYLENGTH("128", "256"), 
-	ENCRYPTION_PASSWORD, 
-	LOCAL_FOLDER,
-	PLUGIN_ID;
+	COMMAND_ACTION("action", true, "create", "connect", "watch"), 
+	ENCRYPTION_ENABLED("encryption", true, "yes", "no"), 
+	ENCRYPTION_ALGORITHM("algorithm", false, "AES", "TwoFish"), 
+	ENCRYPTION_KEYLENGTH("keylength", false, "128", "256"), 
+	ENCRYPTION_PASSWORD("password", true), 
+	LOCAL_FOLDER("localFolder", true),
+	PLUGIN_ID("pluginId", true);
 	
 	private String[] values;
+	private String value;
+	private boolean mandatory;
 	
-	SyncanyCommandParameters(String...values){
-		this.values = values;
+	SyncanyCommandParameters(String value, boolean mandatory, String...possibleValues){
+		this.values = possibleValues;
+		this.value = value;
+		this.mandatory = mandatory;
 	}
 
 	public boolean containsValue(String value) {
@@ -44,5 +50,20 @@ public enum SyncanyCommandParameters implements SyncanyParameters {
 				return true;
 		}
 		return false;
+	}
+
+	@Override
+	public String value() {
+		return value;
+	}
+
+	@Override
+	public boolean isPluginParameter() {
+		return false;
+	}
+
+	@Override
+	public boolean isParameterMandatory() {
+		return mandatory;
 	}
 }

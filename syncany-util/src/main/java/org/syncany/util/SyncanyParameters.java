@@ -15,14 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui;
+package org.syncany.util;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public interface SyncanyParameters {
 
 	public boolean containsValue(String value);
 
+	public String value();
+	
+	public boolean isPluginParameter();
+	
+	public boolean isParameterMandatory();
 }

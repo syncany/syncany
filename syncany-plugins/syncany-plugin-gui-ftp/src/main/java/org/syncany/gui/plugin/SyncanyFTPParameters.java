@@ -17,20 +17,43 @@
  */
 package org.syncany.gui.plugin;
 
-import org.syncany.gui.SyncanyParameters;
+import org.syncany.util.SyncanyParameters;
 
 /**
  * @author vincent
  *
  */
 public enum SyncanyFTPParameters implements SyncanyParameters {
-	HOST, 
-	PORT,
-	PATH,
-	USERNAME,
-	PASSWORD;
+	HOST("hostname", true), 
+	PORT("port", false),
+	PATH("path", true),
+	USERNAME("username", true),
+	PASSWORD("password", true);
+	
+	private String value;
+	private boolean mandatory;
+	
+	private SyncanyFTPParameters(String value, boolean mandatory) {
+		this.value = value;
+		this.mandatory = mandatory;
+	}
 
 	public boolean containsValue(String value) {
 		return true;
+	}
+
+	@Override
+	public String value() {
+		return value;
+	}
+
+	@Override
+	public boolean isPluginParameter() {
+		return true;
+	}
+
+	@Override
+	public boolean isParameterMandatory() {
+		return mandatory;
 	}
 }

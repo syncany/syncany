@@ -17,6 +17,8 @@
  */
 package org.syncany.gui.config;
 
+import java.util.List;
+
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
@@ -29,6 +31,15 @@ public class ApplicationConfiguration {
 	private String proxyType;
 	private String proxyAuthType;
 	private boolean proxyAuth;
+	public List<String> watchedFolders;
+
+	public List<String> getWatchedFolders() {
+		return watchedFolders;
+	}
+
+	public void setWatchedFolders(List<String> watchedFolders) {
+		this.watchedFolders = watchedFolders;
+	}
 	
 	public String getProxyHost() {
 		return proxyHost;
@@ -95,6 +106,7 @@ public class ApplicationConfiguration {
 		to.setProxyType(from.getProxyType());
 		to.setProxyUsername(from.getProxyUsername());
 		to.setProxyAuthType(from.getProxyAuthType());
+		to.setWatchedFolders(from.getWatchedFolders());
 		return to;
 	}
 
@@ -106,6 +118,7 @@ public class ApplicationConfiguration {
 		from.setProxyPort(to.getProxyPort());
 		from.setProxyType(to.getProxyType());
 		from.setProxyAuthType(to.getProxyAuthType());
+		from.setWatchedFolders(to.getWatchedFolders());
 		return from;
 	}
 }

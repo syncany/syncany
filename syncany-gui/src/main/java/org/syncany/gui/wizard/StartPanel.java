@@ -37,10 +37,11 @@ public class StartPanel extends WizardPanelComposite {
 	//Widgets
 	private Button createStorageRadio;
 	private Button connectStorageRadio;
+	private Button watchStorageRadio;
 	
 	//Constructor
 	public StartPanel(WizardDialog wizardParentDialog, Composite composite, int style) {
-		super(wizardParentDialog, composite, SWT.NONE);
+		super(wizardParentDialog, composite, style);
 		initComposite();
 	}
 	
@@ -97,11 +98,28 @@ public class StartPanel extends WizardPanelComposite {
 		connectText.setLayoutData(gd_connectText);
 		connectText.setFont(fontNormal);
 		connectText.setText(I18n.getString("dialog.start.option.connectExisting.helpText"));
+		
+		watchStorageRadio = new Button(this, SWT.RADIO);
+		GridData gd_watchStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		gd_watchStorageRadio.verticalIndent = 20;
+		gd_watchStorageRadio.horizontalIndent = 30;
+		gd_watchStorageRadio.heightHint = 30;
+		watchStorageRadio.setLayoutData(gd_watchStorageRadio);
+		watchStorageRadio.setBounds(0, 0, 90, 16);
+		watchStorageRadio.setFont(fontNormal);
+		watchStorageRadio.setText(I18n.getString("dialog.start.option.connectExisting"));
+		
+		Label watchText = new Label(this, SWT.WRAP);
+		GridData gd_watchText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
+		gd_watchText.horizontalIndent = 30;
+		watchText.setLayoutData(gd_watchText);
+		watchText.setFont(fontNormal);
+		watchText.setText(I18n.getString("dialog.start.option.connectExisting.helpText"));
 	}
 
 	@Override
 	public boolean isValid() {
-		return createStorageRadio.getSelection() || connectStorageRadio.getSelection();
+		return createStorageRadio.getSelection() || connectStorageRadio.getSelection() || watchStorageRadio.getSelection();
 	}
 
 	@Override
@@ -110,8 +128,11 @@ public class StartPanel extends WizardPanelComposite {
 		if (createStorageRadio.getSelection()){
 			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "create");
 		}
-		else{
+		else if (connectStorageRadio.getSelection()){
 			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "connect");
+		}
+		else{
+			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "watch");
 		}
 		return userInput;
 	}
@@ -133,7 +154,6 @@ public class StartPanel extends WizardPanelComposite {
 
 	@Override
 	public void updateData() {
-		// TODO Auto-generated method stub
 		
 	}
 }

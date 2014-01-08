@@ -1,5 +1,6 @@
 package org.syncany.gui.messaging;
 
+import java.io.File;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.logging.Logger;
 
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.UserInput;
+import org.syncany.util.SyncanyParameters;
 
 public class ClientCommandFactory {
 	private static final Logger log = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
@@ -36,27 +38,29 @@ public class ClientCommandFactory {
 		client.handleCommand(parameters);
 	}
 	
-	private static void list() {
-		Map<String, Object> parameters = buildParameters();
-		parameters.put("action", "get_watched");
-		client.handleCommand(parameters);
-	}
-
-	private static void connect(String url, String folder) {
-		Map<String, Object> parameters = buildParameters();
-		parameters.put("action", "connect");
-		parameters.put("folder", folder);
-		parameters.put("url", url);
-		client.handleCommand(parameters);
-	}
-
-	private static void create(Map<String, Object> wizardParameters) {
-		Map<String, Object> parameters = buildParameters();
-		parameters.putAll(wizardParameters);
-		client.handleCommand(parameters);
+	//Command Methods
+	public static void handleCommand(UserInput userInput){
+		Map<String, Object> command = buildParameters();
+		Map<String, String> pluginArgs = new HashMap<>();
+		
+		for (SyncanyParameters key : userInput.keySet()){
+			if (key.isPluginParameter()){
+				pluginArgs.put(key.value(), userInput.get(key));
+			}
+			else{
+				command.put(key.value(), userInput.get(key));
+			}
+		}
+		command.put("pluginArgs", pluginArgs);
+		
+		client.handleCommand(command);
 	}
 	
-	public static void handleCommand(UserInput userInput){
+	public static void handleWatch(String folder) {
+		Map<String, Object> command = buildParameters();
+		command.put("action", "watch");
+		command.put("localfolder", folder);
+		client.handleCommand(command);
 	}
 	
 	/**
@@ -67,6 +71,7 @@ public class ClientCommandFactory {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("client_id", MainGUI.getClientIdentification());
 		parameters.put("client_type", "syncany-gui");
+		parameters.put("localDir", System.getProperty("user.home") + File.separator + "Syncany");
 		parameters.put("timestamp", ""+System.nanoTime());
 		return parameters;
 	}
