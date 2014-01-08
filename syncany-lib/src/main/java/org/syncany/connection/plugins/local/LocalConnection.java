@@ -18,9 +18,9 @@
 package org.syncany.connection.plugins.local;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginSetting;
@@ -38,29 +38,7 @@ import org.syncany.connection.plugins.TransferManager;
  */
 public class LocalConnection extends Connection {
 	private File repositoryPath;
-
-	@Override
-	public void init(Map<String, String> map) throws StorageException {
-		List<PluginSetting> settings = getFilledSettings(map);
-		validateSettings(settings);
-		for (PluginSetting setting : settings) {
-			if (setting.getName().equals("path")) {
-				setRepositoryPath(new File(setting.getValue()));
-			}
-		}		
-	}
-	
-	@Override
-	public void validateSettings(List<PluginSetting> settings) throws StorageException {
-		for (PluginSetting setting : settings) {
-			if (setting.getName().equals("path")) {
-				if (!setting.validate()) {
-					throw new StorageException("Config does not contain 'path' setting.");
-				}
-			}
-		}
-		
-	}
+	private Map<String, PluginSetting> settings = null;
 
     @Override
     public TransferManager createTransferManager() {
@@ -76,10 +54,13 @@ public class LocalConnection extends Connection {
     }
 
 	@Override
-	public List<PluginSetting> getSettings() {
-		return Arrays.asList(new PluginSetting[] {
-				new PluginSetting("path", ValueType.STRING, true, false)
-		});
+	public Map<String,PluginSetting> getSettings() {
+		if (settings == null) {
+			settings = new TreeMap<String, PluginSetting>();
+			settings.put("path", new PluginSetting(ValueType.STRING, true, false));
+		}
+		return settings;
+
 	}
 
 

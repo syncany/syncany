@@ -22,8 +22,6 @@ import java.security.InvalidParameterException;
 
 public class PluginSetting {
 	   public enum ValueType { STRING, INT, BOOLEAN};
-
-	   private String name;
 	   private ValueType type;
 	   private boolean mandatory;
 	   private boolean sensitive;
@@ -32,13 +30,11 @@ public class PluginSetting {
 	   
 	   /**
 	    * Standard constructor 
-	    * @param name of the setting
 	    * @param type STRING/INT/BOOLEAN
 	    * @param mandatory boolean
 	    * @param sensitive boolean
 	    */
-	   public PluginSetting(String name, ValueType type, boolean mandatory, boolean sensitive) {
-		   this.name = name;
+	   public PluginSetting(ValueType type, boolean mandatory, boolean sensitive) {
 		   this.type = type;
 		   this.mandatory = mandatory;
 		   this.sensitive = sensitive;
@@ -47,8 +43,7 @@ public class PluginSetting {
 	   /**
 	    * Constructor for optional setting with a default value
 	    */
-	   public PluginSetting(String name, ValueType type, String defaultValue, boolean sensitive) {
-		   this.name = name;
+	   public PluginSetting(ValueType type, String defaultValue, boolean sensitive) {
 		   this.type = type;
 		   this.mandatory = false;
 		   this.sensitive = sensitive;
@@ -56,7 +51,7 @@ public class PluginSetting {
 	   }
 	   
 	   public boolean validate() { 
-		   return (value != null);
+		   return (value != null && !value.equals(""));
 	   }
 	   
 	   /**
@@ -95,17 +90,9 @@ public class PluginSetting {
 	   public String getDefaultValue() {
 		   return defaultValue;
 	   }
-	   
-	   public String getName() {
-		   return name;
-	   }
+
 	   
 	   public ValueType getType() {
 		   return type;
-	   }
-	   
-	   @Override
-	   public String toString() {
-		   return name;
 	   }
 }

@@ -104,15 +104,9 @@ public abstract class AbstractInitCommand extends Command {
 		
 		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
 		Connection connection = plugin.createConnection();
-		
-		// Check if all mandatory are set
-		for (PluginSetting setting : connection.getSettings()) {
-			if (setting.isMandatory() && !pluginSettings.containsKey(setting.getName())) {
-				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getSettings(), ", ")+"). Use -Psettingname=.. to set it.");
-			}
-		}	
 				
-		connection.init(pluginSettings); // Only to test for exceptions!
+		connection.setSettings(pluginSettings);
+		connection.validate();
 		
 		return pluginSettings;
 	}
@@ -131,16 +125,15 @@ public abstract class AbstractInitCommand extends Command {
 		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
 		Connection connection = plugin.createConnection();
 		
-		List<PluginSetting> pluginSettings = connection.getSettings();
-		Map<String, String> pluginSettingsMap = new TreeMap<String, String>();
+		Map<String, PluginSetting> pluginSettings = connection.getSettings();
 		
 		out.println();
 		out.println("Connection details for "+plugin.getName()+" connection:");
 		
-		for (PluginSetting setting : pluginSettings) {
-			
+		for (String name : pluginSettings.keySet()) {
+			PluginSetting setting = pluginSettings.get(name);
 			while (true) {
-				out.print("- "+setting.getName()+": ");
+				out.print("- "+name+": ");
 				String value = null;
 				if (setting.isSensitive()) {
 					value = String.copyValueOf(console.readPassword());
@@ -152,12 +145,12 @@ public abstract class AbstractInitCommand extends Command {
 					setting.setValue(value);
 				}
 				catch (InvalidParameterException e) {
-					out.println(value + " is not valid input for the setting " + setting.getName());
+					out.println(value + " is not valid input for the setting " + name);
 					out.println();
 					continue;
 				}
 				if (setting.isMandatory()) {
-					if ("".equals(setting.getValue())) {
+					if (!setting.validate()) {
 						out.println("ERROR: This setting is mandatory.");
 						out.println();
 					}
@@ -169,14 +162,11 @@ public abstract class AbstractInitCommand extends Command {
 					break;
 				}
 			}	
-			if (setting.validate()) {
-				pluginSettingsMap.put(setting.getName(), setting.getValue());
-			}
 		}
 
-		connection.init(pluginSettingsMap); // To check for exceptions
+		connection.validate(); // To check for exceptions
 		
-		return pluginSettingsMap;
+		return connection.getSettingsStrings();
 	}
 
 	protected String askPlugin() {

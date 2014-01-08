@@ -17,7 +17,6 @@
  */
 package org.syncany.connection.plugins;
 
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -35,19 +34,46 @@ import java.util.TreeMap;
  */
 public abstract class Connection {
     public abstract TransferManager createTransferManager();
-    public abstract void validateSettings(List<PluginSetting> settings) throws StorageException;
-    public abstract void init(Map<String, String> map) throws StorageException;
-    public abstract List<PluginSetting> getSettings();
-    
-    public List<PluginSetting> getFilledSettings(Map<String, String> map) {
-    	List<PluginSetting> pluginSettings = getSettings();
-    	for (PluginSetting setting : pluginSettings) {
-    		String value = map.get(setting.getName());
-    		if (value != null) {
-    			setting.setValue(value);
+    public void validate() throws StorageException {
+    	for (String name : getSettings().keySet()) {
+    		PluginSetting setting = getSettings().get(name);
+    		if (setting.isMandatory()) {
+    			if (!setting.validate()) {
+    				throw new StorageException("Mandatory setting " + name + " is not set.");
+    			}
+    		}
+    		else {
+    			//Set default value if it exists and none is given
+    			if (!setting.validate()) {
+    				if (setting.getDefaultValue() != null) {
+    					setting.setValue(setting.getDefaultValue());
+    				}
+    			}
     		}
     	}
-    	return pluginSettings;
+    }
+    
+    public abstract Map<String,PluginSetting> getSettings();
+    public void setSettings(Map<String, String> map) throws StorageException {
+    	for (String name : map.keySet()) {
+    		if (getSettings().get(name) == null) {
+    			throw new StorageException("No such setting: " + name);
+    		}
+    		try {
+    			getSettings().get(name).setValue(map.get(name));
+    		}
+    		catch (Exception e) {
+    			throw new StorageException(e);
+    		}
+    	}
+    }
+    
+    public Map<String, String> getSettingsStrings() {
+    	Map<String, String> map = new TreeMap<String, String>();
+    	for (String name : getSettings().keySet()) {
+    		map.put(name, getSettings().get(name).getValue());
+    	}
+    	return map;
     }
 }
 
