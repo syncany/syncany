@@ -127,6 +127,7 @@ public class Launcher {
 
 		window = new MainGUI();
 		Launcher.getEventBus().register(window);
+		MainGUI.restoreWatchedFolders();
 		window.open();
 	}
 

@@ -14,21 +14,20 @@ import org.syncany.gui.tray.TrayIconFactory;
 import com.google.common.eventbus.Subscribe;
 
 public class MainGUI {
-	private static final Logger log = Logger.getLogger(MainGUI.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(MainGUI.class.getSimpleName());
+	
+	/**
+	 * Unique client identification
+	 * Used to allow identification in communications
+	 * between client and daemon server
+	 **/
 	private static String clientIdentification = UUID.randomUUID().toString();
 
-	private Display display = Display.getDefault();
 	private Shell shell;
-	
 	private TrayIcon tray;
 	
 	public void dispose(){
-		Display.getDefault().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				display.dispose();
-			}
-		});
+		shell.dispose();
 	}
 
 	public MainGUI() {
@@ -37,21 +36,7 @@ public class MainGUI {
 	}
 	
 	public void open() {
-		
-		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(3000);
-				}
-				catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				restoreWatchedFolders();
-			}
-		}).start();
-		
+		Display display = Display.getDefault();
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -59,7 +44,8 @@ public class MainGUI {
 		}
 	}
 	
-	private static void restoreWatchedFolders() {
+	public static void restoreWatchedFolders() {
+		logger.info("Restoring watched folders");
 		List<String> wf = Launcher.applicationConfiguration.getWatchedFolders();
 		if (wf == null) return;
 		
@@ -71,7 +57,7 @@ public class MainGUI {
 	@Subscribe
 	public void updateInterface(InterfaceUpdate update) {
 		if (tray != null){
-			log.info("Update Interface Event : " + update.getAction());
+			logger.info("Update Interface Event : " + update.getAction());
 			switch (update.getAction()){
 				case START_SYSTEM_TRAY_SYNC:
 					tray.makeSystemTrayStartSync();
