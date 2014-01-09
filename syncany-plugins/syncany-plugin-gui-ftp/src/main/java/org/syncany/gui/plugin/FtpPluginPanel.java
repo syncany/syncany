@@ -118,18 +118,18 @@ public class FtpPluginPanel extends PluginPanel {
 		usernameLabel.setText(I18n.getString("plugin.ftp.username", true));
 		usernameLabel.setFont(fontNormal);
 		
-		passwordText = new Text(this, SWT.BORDER);
-		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-		passwordText.setFont(fontNormal);
+		usernameText = new Text(this, SWT.BORDER);
+		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+		usernameText.setFont(fontNormal);
 		
 		Label passwordLabel = new Label(this, SWT.NONE);
 		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		passwordLabel.setText(I18n.getString("plugin.ftp.password", true));
 		passwordLabel.setFont(fontNormal);
 		
-		usernameText = new Text(this, SWT.BORDER | SWT.PASSWORD);
-		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-		usernameText.setFont(fontNormal);
+		passwordText = new Text(this, SWT.BORDER | SWT.PASSWORD);
+		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+		passwordText.setFont(fontNormal);
 		
 		Label pathLabel = new Label(this, SWT.NONE);
 		pathLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -210,11 +210,11 @@ public class FtpPluginPanel extends PluginPanel {
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.put(SyncanyFTPParameters.HOST, hostText.getText());
-		parameters.put(SyncanyFTPParameters.USERNAME, usernameText.getText());
-		parameters.put(SyncanyFTPParameters.PASSWORD, passwordText.getText());
-		parameters.put(SyncanyFTPParameters.PATH, pathText.getText());
-		parameters.put(SyncanyFTPParameters.PORT, spinner.getText());
+		parameters.put(SyncanyFTPParameters.FTP_HOST, hostText.getText());
+		parameters.put(SyncanyFTPParameters.FTP_USERNAME, usernameText.getText());
+		parameters.put(SyncanyFTPParameters.FTP_PASSWORD, passwordText.getText());
+		parameters.put(SyncanyFTPParameters.FTP_PATH, pathText.getText());
+		parameters.put(SyncanyFTPParameters.FTP_PORT, spinner.getText());
 		return parameters;
 	}
 	

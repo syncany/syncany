@@ -24,11 +24,11 @@ import org.syncany.util.SyncanyParameters;
  *
  */
 public enum SyncanyFTPParameters implements SyncanyParameters {
-	HOST("hostname", true), 
-	PORT("port", false),
-	PATH("path", true),
-	USERNAME("username", true),
-	PASSWORD("password", true);
+	FTP_HOST("hostname", true), 
+	FTP_PORT("port", false),
+	FTP_PATH("path", true),
+	FTP_USERNAME("username", true),
+	FTP_PASSWORD("password", true);
 	
 	private String value;
 	private boolean mandatory;
