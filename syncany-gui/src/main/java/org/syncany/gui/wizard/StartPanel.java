@@ -107,14 +107,14 @@ public class StartPanel extends WizardPanelComposite {
 		watchStorageRadio.setLayoutData(gd_watchStorageRadio);
 		watchStorageRadio.setBounds(0, 0, 90, 16);
 		watchStorageRadio.setFont(fontNormal);
-		watchStorageRadio.setText(I18n.getString("dialog.start.option.connectExisting"));
+		watchStorageRadio.setText(I18n.getString("dialog.start.option.watchExisting"));
 		
 		Label watchText = new Label(this, SWT.WRAP);
 		GridData gd_watchText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_watchText.horizontalIndent = 30;
 		watchText.setLayoutData(gd_watchText);
 		watchText.setFont(fontNormal);
-		watchText.setText(I18n.getString("dialog.start.option.connectExisting.helpText"));
+		watchText.setText(I18n.getString("dialog.start.option.watchExisting.helpText"));
 	}
 
 	@Override

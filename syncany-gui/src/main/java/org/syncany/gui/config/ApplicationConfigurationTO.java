@@ -142,9 +142,6 @@ public class ApplicationConfigurationTO {
 	public static ApplicationConfigurationTO getDefault() {
 		ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
 		acto.setProxyType(ProxyController.ProxyType.NONE.toString());
-		acto.setWatchedFolders(new ArrayList<String>(){{
-			add("C:\\Users\\vincent\\Syncany");
-		}});
 		return acto;
 	}
 }

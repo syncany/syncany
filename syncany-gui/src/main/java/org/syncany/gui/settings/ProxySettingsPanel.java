@@ -75,6 +75,181 @@ public class ProxySettingsPanel extends Composite {
 		initComposite();
 	}
 	
+	private void initComposite() {
+		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
+		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
+		
+		setLayout(new GridLayout(2, false));
+		
+		lblNewLabel_1 = new Label(this, SWT.NONE);
+		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		lblNewLabel_1.setText(I18n.getString("dialog.settings.proxy.title", true));
+		lblNewLabel_1.setFont(fontBold);
+		
+		lblNewLabel = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		lblNewLabel.setText("New Label");
+		
+		proxyTypeLabel = new Label(this, SWT.NONE);
+		proxyTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false, 1, 3));
+		proxyTypeLabel.setFont(fontNormal);
+		proxyTypeLabel.setText(I18n.getString("dialog.settings.proxy.type", true));
+		
+		radioNoProxy = new Button(this, SWT.RADIO);
+		radioNoProxy.setText(I18n.getString("dialog.settings.proxy.type.no"));
+		radioNoProxy.setFont(fontNormal);
+		radioNoProxy.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				proxyToggle();
+			}
+		});
+		
+		radioAutomaticProxy = new Button(this, SWT.RADIO);
+		radioAutomaticProxy.setText(I18n.getString("dialog.settings.proxy.type.default"));
+		radioAutomaticProxy.setFont(fontNormal);
+		radioAutomaticProxy.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				proxyToggle();
+			}
+		});
+		
+		radioManualProxy = new Button(this, SWT.RADIO);
+		radioManualProxy.setText(I18n.getString("dialog.settings.proxy.type.manual"));
+		radioManualProxy.setFont(fontNormal);
+		radioManualProxy.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				proxyToggle();
+			}
+		});
+		
+		proxyAuthTypeLabel = new Label(this, SWT.NONE);
+		proxyAuthTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		proxyAuthTypeLabel.setText(I18n.getString("dialog.settings.proxy.auth.type", true));
+		proxyAuthTypeLabel.setFont(fontNormal);
+		
+		proxyAuthTypeCombo = new Combo(this, SWT.NONE);
+		proxyAuthTypeCombo.setFont(fontNormal);
+		proxyAuthTypeCombo.setItems(proxyAuthValues);
+		proxyAuthTypeCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		
+		proxyHostPortLabel = new Label(this, SWT.NONE);
+		proxyHostPortLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		proxyHostPortLabel.setFont(fontNormal);
+		proxyHostPortLabel.setText(I18n.getString("dialog.settings.proxy.server", true));
+		
+		composite_2 = new Composite(this, SWT.NONE);
+		GridLayout gl_composite_2 = new GridLayout(3, false);
+		gl_composite_2.verticalSpacing = 0;
+		gl_composite_2.marginWidth = 0;
+		gl_composite_2.marginHeight = 0;
+		composite_2.setLayout(gl_composite_2);
+		composite_2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		
+		proxyHostText = new Text(composite_2, SWT.BORDER);
+		GridData gd_proxyHostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_proxyHostText.heightHint = 20;
+		proxyHostText.setLayoutData(gd_proxyHostText);
+		proxyHostText.setFont(fontNormal);
+
+		hostPortColonLabel = new Label(composite_2, SWT.NONE);
+		hostPortColonLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
+		hostPortColonLabel.setFont(fontNormal);
+		hostPortColonLabel.setText(":");
+		
+		proxyPortText = new Text(composite_2, SWT.BORDER);
+		GridData gd_proxyPortText = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		gd_proxyPortText.widthHint = 50;
+		gd_proxyPortText.heightHint = 20;
+		proxyPortText.setLayoutData(gd_proxyPortText);
+		proxyPortText.setFont(fontNormal);
+		new Label(this, SWT.NONE);
+		
+		proxyAuthRadio = new Button(this, SWT.CHECK);
+		proxyAuthRadio.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				authToggle();
+			}
+		});
+		GridData gd_proxyAuthRadio = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_proxyAuthRadio.verticalIndent = 20;
+		proxyAuthRadio.setLayoutData(gd_proxyAuthRadio);
+		proxyAuthRadio.setFont(fontNormal);
+		proxyAuthRadio.setText(I18n.getString("dialog.settings.proxy.auth"));
+		
+		proxyUsernameLabel = new Label(this, SWT.NONE);
+		proxyUsernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		proxyUsernameLabel.setFont(fontNormal);
+		proxyUsernameLabel.setText(I18n.getString("dialog.settings.proxy.username", true));
+		
+		proxyUsernameText = new Text(this, SWT.BORDER);
+		proxyUsernameText.setFont(fontNormal);
+		GridData gd_proxyUsernameText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_proxyUsernameText.heightHint = 20;
+		proxyUsernameText.setLayoutData(gd_proxyUsernameText);
+		
+		proxyPasswordLabel = new Label(this, SWT.NONE);
+		proxyPasswordLabel.setFont(fontNormal);
+		proxyPasswordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		proxyPasswordLabel.setText(I18n.getString("dialog.settings.proxy.password", true));
+		
+		proxyPasswordText = new Text(this, SWT.BORDER |SWT.PASSWORD);
+		proxyPasswordText.setFont(fontNormal);
+		GridData gd_proxyPasswordText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_proxyPasswordText.heightHint = 20;
+		proxyPasswordText.setLayoutData(gd_proxyPasswordText);
+	}
+
+	/**
+	 * enables / disables username/password fields
+	 * depending on proxyAuthRadio selection
+	 */
+	private void authToggle() {
+		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
+		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
+
+		proxyPasswordText.setEnabled(proxyAuthRadio.getSelection() && radioManualProxy.getSelection());
+		proxyUsernameText.setEnabled(proxyAuthRadio.getSelection() && radioManualProxy.getSelection());
+		
+		proxyUsernameLabel.setForeground(proxyAuthRadio.getSelection() && radioManualProxy.getSelection() ? black : gray);
+		proxyPasswordLabel.setForeground(proxyAuthRadio.getSelection() && radioManualProxy.getSelection() ? black : gray);
+	}
+	
+	private void proxyToggle(){
+		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
+		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
+		
+		proxyAuthTypeLabel.setForeground(radioManualProxy.getSelection() ? black : gray);
+		proxyHostPortLabel.setForeground(radioManualProxy.getSelection() ? black : gray);
+		hostPortColonLabel.setForeground(radioManualProxy.getSelection() ? black : gray);
+		
+		proxyPortText.setEnabled(radioManualProxy.getSelection());
+		proxyHostText.setEnabled(radioManualProxy.getSelection());
+		proxyAuthTypeCombo.setEnabled(radioManualProxy.getSelection());
+		proxyAuthRadio.setEnabled(radioManualProxy.getSelection());
+		
+		authToggle();
+	}
+
+	public Map<String, String> getInputParameters() {
+		Map<String, String> params = new HashMap<>();
+		params.put("proxy.auth", proxyAuthRadio.getSelection()+"");
+		params.put("proxy.host", proxyHostText.getText());
+		params.put("proxy.username", proxyUsernameText.getText());
+		params.put("proxy.password", proxyPasswordText.getText());
+		params.put("proxy.type", 
+			radioNoProxy.getSelection() ? ProxyController.ProxyType.NONE.toString() :
+			radioAutomaticProxy.getSelection() ? ProxyController.ProxyType.DEFAULT.toString() :
+			ProxyController.ProxyType.PROXY.toString()
+		);
+		params.put("proxy.authType", proxyAuthTypeCombo.getItem(proxyAuthTypeCombo.getSelectionIndex()).toString());
+		params.put("proxy.port", proxyPortText.getText());
+		return params;
+	}
+	
 	public void setApplicationParameters(ApplicationConfiguration configuration){
 		if (configuration.getProxyUsername() != null)
 			proxyUsernameText.setText(configuration.getProxyUsername());
@@ -110,149 +285,6 @@ public class ProxySettingsPanel extends Composite {
 		
 		proxyAuthRadio.setSelection(configuration.isProxyAuth());
 		
-		authToggle();
-	}
-
-	private void initComposite() {
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
-		setLayout(new GridLayout(2, false));
-		
-		lblNewLabel_1 = new Label(this, SWT.NONE);
-		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		lblNewLabel_1.setText(I18n.getString("dialog.settings.proxy.title", true));
-		lblNewLabel_1.setFont(fontBold);
-		
-		lblNewLabel = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
-		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
-		lblNewLabel.setText("New Label");
-		
-		proxyTypeLabel = new Label(this, SWT.NONE);
-		proxyTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false, 1, 3));
-		proxyTypeLabel.setFont(fontNormal);
-		proxyTypeLabel.setText(I18n.getString("dialog.settings.proxy.type", true));
-		
-		radioNoProxy = new Button(this, SWT.RADIO);
-		radioNoProxy.setText(I18n.getString("dialog.settings.proxy.type.no"));
-		radioNoProxy.setFont(fontNormal);
-		
-		radioAutomaticProxy = new Button(this, SWT.RADIO);
-		radioAutomaticProxy.setText(I18n.getString("dialog.settings.proxy.type.default"));
-		radioAutomaticProxy.setFont(fontNormal);
-		
-		radioManualProxy = new Button(this, SWT.RADIO);
-		radioManualProxy.setText(I18n.getString("dialog.settings.proxy.type.manual"));
-		radioManualProxy.setFont(fontNormal);
-		
-		proxyAuthTypeLabel = new Label(this, SWT.NONE);
-		proxyAuthTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyAuthTypeLabel.setText(I18n.getString("dialog.settings.proxy.auth.type", true));
-		proxyAuthTypeLabel.setFont(fontNormal);
-		
-		proxyAuthTypeCombo = new Combo(this, SWT.NONE);
-		proxyAuthTypeCombo.setFont(fontNormal);
-		proxyAuthTypeCombo.setItems(proxyAuthValues);
-		GridData gd_proxyAuthTypeCombo = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
-		gd_proxyAuthTypeCombo.heightHint = 40;
-		proxyAuthTypeCombo.setLayoutData(gd_proxyAuthTypeCombo);
-		
-		proxyHostPortLabel = new Label(this, SWT.NONE);
-		proxyHostPortLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyHostPortLabel.setFont(fontNormal);
-		proxyHostPortLabel.setText(I18n.getString("dialog.settings.proxy.server", true));
-		
-		composite_2 = new Composite(this, SWT.NONE);
-		GridLayout gl_composite_2 = new GridLayout(3, false);
-		gl_composite_2.verticalSpacing = 0;
-		gl_composite_2.marginWidth = 0;
-		gl_composite_2.marginHeight = 0;
-		composite_2.setLayout(gl_composite_2);
-		composite_2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		
-		proxyHostText = new Text(composite_2, SWT.BORDER);
-		GridData gd_proxyHostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
-		gd_proxyHostText.heightHint = 15;
-		proxyHostText.setLayoutData(gd_proxyHostText);
-		proxyHostText.setFont(fontNormal);
-
-		hostPortColonLabel = new Label(composite_2, SWT.NONE);
-		hostPortColonLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-		hostPortColonLabel.setFont(fontNormal);
-		hostPortColonLabel.setText(":");
-		
-		proxyPortText = new Text(composite_2, SWT.BORDER);
-		GridData gd_proxyPortText = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
-		gd_proxyPortText.widthHint = 50;
-		gd_proxyPortText.heightHint = 15;
-		proxyPortText.setLayoutData(gd_proxyPortText);
-		proxyPortText.setFont(fontNormal);
-		new Label(this, SWT.NONE);
-		
-		proxyAuthRadio = new Button(this, SWT.CHECK);
-		proxyAuthRadio.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				authToggle();
-			}
-		});
-		GridData gd_proxyAuthRadio = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_proxyAuthRadio.verticalIndent = 20;
-		proxyAuthRadio.setLayoutData(gd_proxyAuthRadio);
-		proxyAuthRadio.setFont(fontNormal);
-		proxyAuthRadio.setText("Check Button");
-		
-		proxyUsernameLabel = new Label(this, SWT.NONE);
-		proxyUsernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyUsernameLabel.setFont(fontNormal);
-		proxyUsernameLabel.setText(I18n.getString("dialog.settings.proxy.username", true));
-		
-		proxyUsernameText = new Text(this, SWT.BORDER);
-		proxyUsernameText.setFont(fontNormal);
-		GridData gd_proxyUsernameText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_proxyUsernameText.heightHint = 15;
-		proxyUsernameText.setLayoutData(gd_proxyUsernameText);
-		
-		proxyPasswordLabel = new Label(this, SWT.NONE);
-		proxyPasswordLabel.setFont(fontNormal);
-		proxyPasswordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		proxyPasswordLabel.setText(I18n.getString("dialog.settings.proxy.password", true));
-		
-		proxyPasswordText = new Text(this, SWT.BORDER |SWT.PASSWORD);
-		proxyPasswordText.setFont(fontNormal);
-		GridData gd_proxyPasswordText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_proxyPasswordText.heightHint = 15;
-		proxyPasswordText.setLayoutData(gd_proxyPasswordText);
-	}
-
-	/**
-	 * enables / disables username/password fields
-	 * depending on proxyAuthRadio selection
-	 */
-	private void authToggle() {
-		proxyPasswordText.setEnabled(proxyAuthRadio.getSelection());
-		proxyUsernameText.setEnabled(proxyAuthRadio.getSelection());
-		
-		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
-		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
-		
-		proxyUsernameLabel.setForeground(proxyAuthRadio.getSelection() ? black : gray);
-		proxyPasswordLabel.setForeground(proxyAuthRadio.getSelection() ? black : gray);
-	}
-
-	public Map<String, String> getInputParameters() {
-		Map<String, String> params = new HashMap<>();
-		params.put("proxy.auth", proxyAuthRadio.getSelection()+"");
-		params.put("proxy.host", proxyHostText.getText());
-		params.put("proxy.username", proxyUsernameText.getText());
-		params.put("proxy.password", proxyPasswordText.getText());
-		params.put("proxy.type", 
-			radioNoProxy.getSelection() ? ProxyController.ProxyType.NONE.toString() :
-			radioAutomaticProxy.getSelection() ? ProxyController.ProxyType.DEFAULT.toString() :
-			ProxyController.ProxyType.PROXY.toString()
-		);
-		params.put("proxy.authType", proxyAuthTypeCombo.getItem(proxyAuthTypeCombo.getSelectionIndex()).toString());
-		params.put("proxy.port", proxyPortText.getText());
-		return params;
+		proxyToggle();
 	}
 }
