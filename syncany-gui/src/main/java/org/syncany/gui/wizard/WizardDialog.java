@@ -22,11 +22,9 @@ import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -39,11 +37,12 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
+import org.syncany.gui.WidgetDecorator.FontDecorator;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
@@ -53,8 +52,6 @@ import org.syncany.util.I18n;
  *
  */
 public class WizardDialog extends Dialog {
-	private static final Logger log = Logger.getLogger(WizardDialog.class.getSimpleName());
-	
 	private enum Panel {
 		START, 
 		REPOSITORY_SELECTION, 
@@ -112,8 +109,6 @@ public class WizardDialog extends Dialog {
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
 		shell.setToolTipText("");
 		shell.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
@@ -145,7 +140,6 @@ public class WizardDialog extends Dialog {
 
 		cancelButton = new Button(buttonComposite, SWT.NONE);
 		cancelButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
-		cancelButton.setFont(fontNormal);
 		cancelButton.setText(I18n.getString("dialog.default.cancel"));
 		cancelButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -156,7 +150,6 @@ public class WizardDialog extends Dialog {
 
 		previousButton = new Button(buttonComposite, SWT.NONE);
 		previousButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
-		previousButton.setFont(fontNormal);
 		previousButton.setText(I18n.getString("dialog.default.previous"));
 		previousButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -167,7 +160,6 @@ public class WizardDialog extends Dialog {
 
 		nextButton = new Button(buttonComposite, SWT.NONE);
 		nextButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
-		nextButton.setFont(fontNormal);
 		nextButton.setText(I18n.getString("dialog.default.next"));
 		nextButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -178,7 +170,6 @@ public class WizardDialog extends Dialog {
 		
 		finishButton = new Button(buttonComposite, SWT.NONE);
 		finishButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
-		finishButton.setFont(fontNormal);
 		finishButton.setText(I18n.getString("dialog.default.finish"));
 		finishButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -186,6 +177,11 @@ public class WizardDialog extends Dialog {
 				handleFinish();
 			}
 		});
+		
+		WidgetDecorator.setFont(cancelButton, FontDecorator.NORMAL);
+		WidgetDecorator.setFont(previousButton, FontDecorator.NORMAL);
+		WidgetDecorator.setFont(nextButton, FontDecorator.NORMAL);
+		WidgetDecorator.setFont(finishButton, FontDecorator.NORMAL);
 	}
 	
 	private void handleFinish(){

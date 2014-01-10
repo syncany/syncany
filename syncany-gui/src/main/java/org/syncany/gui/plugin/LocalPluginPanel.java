@@ -88,6 +88,7 @@ public class LocalPluginPanel extends PluginPanel {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				DirectoryDialog fd = new DirectoryDialog(getShell());
+				
 				String selectedFolder = fd.open();
 				
 				if (selectedFolder != null && selectedFolder.length() > 0)

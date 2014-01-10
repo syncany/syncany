@@ -73,8 +73,12 @@ public class WatchPanel extends WizardPanelComposite {
 				DirectoryDialog fd = new DirectoryDialog(getShell());
 				String selectedFolder = fd.open();
 				
-				if (selectedFolder != null && selectedFolder.length() > 0)
-					localDir.setText(selectedFolder);
+				if (selectedFolder != null && selectedFolder.length() > 0){
+					File folder = new File(selectedFolder, ".syncany");
+					if (folder.exists()){
+						localDir.setText(selectedFolder);
+					}
+				}
 			}
 		});
 		
