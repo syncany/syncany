@@ -23,7 +23,6 @@ import org.jets3t.service.security.AWSCredentials;
 import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.PluginSetting;
 import org.syncany.connection.plugins.PluginSetting.ValueType;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.rest.RestConnection;
 

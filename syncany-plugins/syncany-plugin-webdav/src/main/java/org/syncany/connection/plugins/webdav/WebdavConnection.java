@@ -27,8 +27,6 @@ import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.net.ssl.SSLException;
-
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;

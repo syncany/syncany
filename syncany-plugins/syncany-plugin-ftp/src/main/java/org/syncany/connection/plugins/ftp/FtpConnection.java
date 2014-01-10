@@ -17,14 +17,12 @@
  */
 package org.syncany.connection.plugins.ftp;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginSetting;
 import org.syncany.connection.plugins.PluginSetting.ValueType;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
