@@ -76,6 +76,9 @@ public class PluginSetting {
 	   }
 	   
 	   public String getValue() {
+		   if (value == null && getDefaultValue() != null) {
+			   return getDefaultValue();
+		   }
 		   return value;
 	   }
 	   

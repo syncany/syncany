@@ -18,8 +18,8 @@
 package org.syncany.connection.plugins.ftp;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginSetting;
@@ -40,6 +40,7 @@ public class FtpConnection extends Connection {
     private String password;
     private String path;
     private int port;
+    private Map<String, PluginSetting> settings = null;
 
     @Override
     public TransferManager createTransferManager() {
@@ -87,47 +88,34 @@ public class FtpConnection extends Connection {
     }
 
 	@Override
-	public void init(Map<String, String> map) throws StorageException {
+	public void init() {
+		Map<String, PluginSetting> map = getSettings();
 		// Mandatory
-		String hostname = map.get("hostname");
-		String username = map.get("username");
-		String password = map.get("password");
-		String path = map.get("path");
+		String hostname = map.get("hostname").getValue();
+		String username = map.get("username").getValue();
+		String password = map.get("password").getValue();
+		String path = map.get("path").getValue();
 		
 		// Optional
-		String portStr = map.get("port");
-		
-		if (hostname == null || username == null || password == null || path == null) {
-			throw new StorageException("Mandatory fields missing for FTP configuration: hostname, username, password and path.");
-		}
+		String portStr = map.get("port").getValue();
 		
 		this.hostname = hostname;
 		this.username = username;
 		this.password = password;
 		this.path = path;
-		
-		if (portStr != null) {
-			try {
-				this.port = Integer.parseInt(portStr);
-			}
-			catch (NumberFormatException e) {
-				throw new StorageException("Invalid port number given: "+portStr, e);
-			}
-		}
-		else {
-			this.port = 21;
-		}
+		this.port = Integer.parseInt(portStr);
 	}
 
 	@Override 
-	public List<PluginSetting> getSettings() {
-		return Arrays.asList(new PluginSetting[]{
-				new PluginSetting("hostname", ValueType.STRING,  true, false),
-				new PluginSetting("username", ValueType.STRING,  true, false),
-				new PluginSetting("password", ValueType.STRING,  true, true),
-				new PluginSetting("path", ValueType.STRING,  true, false),
-				new PluginSetting("port", ValueType.STRING,  false, false),
-		});
+	public Map<String,PluginSetting> getSettings() {
+		if (settings == null) {
+			settings = new TreeMap<String, PluginSetting>();
+			settings.put("hostname", new PluginSetting(ValueType.STRING,  true, false));
+			settings.put("password", new PluginSetting(ValueType.STRING,  true, true));
+			settings.put("path", new PluginSetting(ValueType.STRING,  true, false));
+			settings.put("port", new PluginSetting(ValueType.INT,  "21", false));
+		}
+		return settings;
 	}
 	
     @Override
