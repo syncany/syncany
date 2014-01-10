@@ -40,11 +40,6 @@ public class UnreliableLocalConnection extends LocalConnection {
         this.typeOperationCounters = new HashMap<String, Integer>();
         this.failingOperationPatterns = new ArrayList<String>();
 	}
-	
-	@Override
-	public void init(Map<String, String> map) throws StorageException {
-		throw new StorageException("This plugin is for test purposes only.");
-	}
 
     @Override
     public TransferManager createTransferManager() {
