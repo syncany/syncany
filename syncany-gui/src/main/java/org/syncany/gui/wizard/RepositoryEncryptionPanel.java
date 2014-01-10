@@ -21,7 +21,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -35,6 +34,8 @@ import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
+import org.syncany.gui.WidgetDecorator.FontDecorator;
 import org.syncany.util.I18n;
 
 /**
@@ -60,41 +61,38 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	}
 	
 	public void initComposite(){
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
 		GridLayout gridLayout = new GridLayout(2, false);
 		setLayout(gridLayout);
 		
 		Label introductionTextTitle = new Label(this, SWT.WRAP);
 		introductionTextTitle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
 		introductionTextTitle.setText(I18n.getString("repository.encryption.introduction.title"));
-		introductionTextTitle.setFont(fontBold);
+		WidgetDecorator.decorateLabel(introductionTextTitle, FontDecorator.BOLD);
 		
 		Label introductionText = new Label(this, SWT.WRAP);
 		introductionText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
 		introductionText.setText(I18n.getString("repository.encryption.introduction"));
-		introductionText.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(introductionText, FontDecorator.NORMAL);
 		
 		Label passwordLabel = new Label(this, SWT.NONE);
 		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		passwordLabel.setText(I18n.getString("repository.encryption.password", true));
-		passwordLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(passwordLabel, FontDecorator.NORMAL);
 		
 		password = new Text(this, SWT.BORDER | SWT.PASSWORD);
-		password.setFont(fontNormal);
+		WidgetDecorator.decorateText(password, FontDecorator.NORMAL);
 		password.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		Label passwordLabelAgain = new Label(this, SWT.NONE);
 		passwordLabelAgain.setText(I18n.getString("repository.encryption.passwordAgain", true));
-		passwordLabelAgain.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(passwordLabelAgain, FontDecorator.NORMAL);
 		
 		passwordAgain = new Text(this, SWT.BORDER | SWT.PASSWORD);
-		passwordAgain.setFont(fontNormal);
+		WidgetDecorator.decorateText(passwordAgain, FontDecorator.NORMAL);
 		passwordAgain.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		enableEncryption = new Button(this, SWT.CHECK);
-		enableEncryption.setFont(fontNormal);
+		WidgetDecorator.setFont(enableEncryption, FontDecorator.NORMAL);
 		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
 		gd_enableEncryption.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		enableEncryption.setLayoutData(gd_enableEncryption);
@@ -117,11 +115,11 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		gd_lblNewLabel_4.horizontalIndent = 30;
 		lblNewLabel_4.setLayoutData(gd_lblNewLabel_4);
 		lblNewLabel_4.setText(I18n.getString("repository.encryption.algorithm", true));
-		lblNewLabel_4.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(lblNewLabel_4, FontDecorator.NORMAL);
 		
 		cypherCombo = new Combo(composite, SWT.NONE);
 		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		cypherCombo.setFont(fontNormal);
+		WidgetDecorator.setFont(cypherCombo, FontDecorator.NORMAL);
 		cypherCombo.setItems(new String[]{"AES", "TwoFish"});
 		cypherCombo.select(0);
 		
@@ -130,11 +128,11 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		gd_lblNewLabel_5.horizontalIndent = 30;
 		lblNewLabel_5.setLayoutData(gd_lblNewLabel_5);
 		lblNewLabel_5.setText(I18n.getString("repository.encryption.keylength", true));
-		lblNewLabel_5.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(lblNewLabel_5, FontDecorator.NORMAL);
 		
 		keylengthCombo = new Combo(composite, SWT.NONE);
 		keylengthCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		keylengthCombo.setFont(fontNormal);
+		WidgetDecorator.setFont(keylengthCombo, FontDecorator.NORMAL);
 		keylengthCombo.setItems(new String[]{"128", "256"});
 		keylengthCombo.select(0);
 		
@@ -143,7 +141,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		gd_lblNewLabel_6.horizontalIndent = 30;
 		lblNewLabel_6.setLayoutData(gd_lblNewLabel_6);
 		lblNewLabel_6.setText(I18n.getString("repository.encryption.chunckSize", true));
-		lblNewLabel_6.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(lblNewLabel_6, FontDecorator.NORMAL);
 		
 		chunckSize = new Spinner(composite, SWT.BORDER);
 		chunckSize.setMaximum(10000);
@@ -151,7 +149,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		GridData gd_chunckSize = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_chunckSize.heightHint = 15;
 		chunckSize.setLayoutData(gd_chunckSize);
-		chunckSize.setFont(fontNormal);
+		WidgetDecorator.setFont(keylengthCombo, FontDecorator.NORMAL);
 	}
 	
 	protected void toggleEncryptionSelection() {

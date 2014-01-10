@@ -25,7 +25,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -37,6 +36,8 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
+import org.syncany.gui.WidgetDecorator.FontDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -65,9 +66,6 @@ public class FtpPluginPanel extends PluginPanel {
 	}
 	
 	public void initComposite(){
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(4, false);
 		setLayout(gl_composite);
@@ -75,22 +73,23 @@ public class FtpPluginPanel extends PluginPanel {
 		Label introductionTitleLabel = new Label(this, SWT.WRAP);
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("plugin.ftp.introduction.title"));
-		introductionTitleLabel.setFont(fontBold);
+		WidgetDecorator.decorateLabel(introductionTitleLabel, FontDecorator.BOLD);
 		
 		Label introductionLabel = new Label(this, SWT.WRAP);
 		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, false, 4, 1));
 		introductionLabel.setText(I18n.getString("plugin.ftp.introduction"));
-		introductionLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(introductionLabel, FontDecorator.NORMAL);
 		
 		Label hostLabel = new Label(this, SWT.NONE);
 		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.ftp.host", true));
-		hostLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(hostLabel, FontDecorator.NORMAL);
 		
 		hostText = new Text(this, SWT.BORDER);
-		hostText.setFont(fontNormal);
+		WidgetDecorator.decorateText(hostText, FontDecorator.NORMAL);
+		
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		hostText.setLayoutData(gd_hostText);
@@ -100,12 +99,12 @@ public class FtpPluginPanel extends PluginPanel {
 		gd_portLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		portLabel.setLayoutData(gd_portLabel);
 		portLabel.setText(I18n.getString("plugin.ftp.port", true));
-		portLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(portLabel, FontDecorator.NORMAL);
 		
 		spinner = new Spinner(this, SWT.BORDER);
 		spinner.setPageIncrement(1);
 		spinner.setMaximum(100000);
-		spinner.setFont(fontNormal);
+		WidgetDecorator.setFont(spinner, FontDecorator.NORMAL);
 		spinner.setSelection(21);
 		GridData gd_spinner = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_spinner.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
@@ -116,30 +115,30 @@ public class FtpPluginPanel extends PluginPanel {
 		Label usernameLabel = new Label(this, SWT.NONE);
 		usernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		usernameLabel.setText(I18n.getString("plugin.ftp.username", true));
-		usernameLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(usernameLabel, FontDecorator.NORMAL);
 		
 		usernameText = new Text(this, SWT.BORDER);
 		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-		usernameText.setFont(fontNormal);
+		WidgetDecorator.decorateText(usernameText, FontDecorator.NORMAL);
 		
 		Label passwordLabel = new Label(this, SWT.NONE);
 		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		passwordLabel.setText(I18n.getString("plugin.ftp.password", true));
-		passwordLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(passwordLabel, FontDecorator.NORMAL);
 		
 		passwordText = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-		passwordText.setFont(fontNormal);
+		WidgetDecorator.decorateText(passwordText, FontDecorator.NORMAL);
 		
 		Label pathLabel = new Label(this, SWT.NONE);
 		pathLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		pathLabel.setText(I18n.getString("plugin.ftp.path", true));
-		pathLabel.setFont(fontNormal);
+		WidgetDecorator.decorateLabel(pathLabel, FontDecorator.NORMAL);
 		
 		pathText = new Text(this, SWT.BORDER);
 		pathText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-		pathText.setFont(fontNormal);
-		
+		WidgetDecorator.decorateText(pathText, FontDecorator.NORMAL);
+
 		Composite buttonComposite = new Composite(this, SWT.NONE);
 		GridLayout gl_buttonComposite = new GridLayout(2, false);
 		gl_buttonComposite.horizontalSpacing = 0;
@@ -147,7 +146,7 @@ public class FtpPluginPanel extends PluginPanel {
 		gl_buttonComposite.marginWidth = 0;
 		gl_buttonComposite.marginHeight = 0;
 		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false, 4, 1);
+		GridData gd_buttonComposite = new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1);
 		gd_buttonComposite.minimumHeight = 30;
 		buttonComposite.setLayoutData(gd_buttonComposite);
 		
@@ -157,11 +156,11 @@ public class FtpPluginPanel extends PluginPanel {
 		
 		final Button testFtpButton = new Button(buttonComposite, SWT.NONE);
 
-		GridData gd_testFtpButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
+		GridData gd_testFtpButton = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_testFtpButton.heightHint = 30;
 		gd_testFtpButton.widthHint = 100;
 		testFtpButton.setLayoutData(gd_testFtpButton);
-		testFtpButton.setFont(fontNormal);
+		WidgetDecorator.setFont(testFtpButton, FontDecorator.NORMAL);
 		testFtpButton.setText(I18n.getString("plugin.ftp.test"));
 		testFtpButton.addSelectionListener(new SelectionAdapter() {
 			@Override
