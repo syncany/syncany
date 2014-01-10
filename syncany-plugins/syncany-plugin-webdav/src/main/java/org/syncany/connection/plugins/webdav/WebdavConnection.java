@@ -27,11 +27,14 @@ import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.net.ssl.SSLException;
+
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginSetting;
 import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 public class WebdavConnection extends Connection {
@@ -49,7 +52,7 @@ public class WebdavConnection extends Connection {
 	}
 
 	@Override
-	public void init() {
+	public void init() throws StorageException {
 		Map<String, PluginSetting> map = getSettings();
 		// Mandatory
 		String url = map.get("url").getValue();
@@ -64,9 +67,8 @@ public class WebdavConnection extends Connection {
 			try {
 				initSsl();
 			}
-			catch (KeyManagementException | UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException
-					| IOException e) {
-				throw new IllegalArgumentException(e);
+			catch (Exception e) {
+				throw new StorageException(e);
 			}
 		}
 	}

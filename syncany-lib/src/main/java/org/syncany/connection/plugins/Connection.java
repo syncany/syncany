@@ -54,7 +54,7 @@ public abstract class Connection {
     }
     
     public abstract Map<String,PluginSetting> getSettings();
-    public abstract void init();
+    public abstract void init() throws StorageException;
     public void setSettings(Map<String, String> map) throws StorageException {
     	for (String name : map.keySet()) {
     		if (getSettings().get(name) == null) {
