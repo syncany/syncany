@@ -24,23 +24,21 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginSetting;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.TransferManager;
 
 public class WebdavConnection extends Connection {
 	private String url;
 	private String username;
 	private String password;
+	private Map<String, PluginSetting> settings = null;
 
 	private boolean secure;
 	private SSLSocketFactory sslSocketFactory;
@@ -51,27 +49,24 @@ public class WebdavConnection extends Connection {
 	}
 
 	@Override
-	public void init(Map<String, String> map) throws StorageException {
+	public void init() {
+		Map<String, PluginSetting> map = getSettings();
 		// Mandatory
-		String url = map.get("url");
-		String username = map.get("username");
-		String password = map.get("password");
-
-		if (url == null || username == null || password == null) {
-			throw new StorageException("Mandatory fields missing for Webdav configuration: url, username and password.");
-		}
+		String url = map.get("url").getValue();
+		String username = map.get("username").getValue();
+		String password = map.get("password").getValue();
 
 		this.url = url;
 		this.username = username;
 		this.password = password;
-
 		// SSL
 		if (url.toLowerCase().startsWith("https")) {
 			try {
 				initSsl();
 			}
-			catch (Exception e) {
-				throw new StorageException(e);
+			catch (KeyManagementException | UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException
+					| IOException e) {
+				throw new IllegalArgumentException(e);
 			}
 		}
 	}
@@ -100,13 +95,14 @@ public class WebdavConnection extends Connection {
 	}
 
 	@Override 
-	public List<PluginSetting> getSettings() {
-    	return Arrays.asList(new PluginSetting[]{
-    			new PluginSetting("url", ValueType.STRING, true, false),
-    			new PluginSetting("username", ValueType.STRING, true, false),
-    			new PluginSetting("password", ValueType.STRING, true, true),
-    			
-    	});
+	public Map<String, PluginSetting> getSettings() {
+		if (settings == null) {
+			settings = new TreeMap<String, PluginSetting>();
+			settings.put("url", new PluginSetting(ValueType.STRING, true, false));
+			settings.put("username", new PluginSetting(ValueType.STRING, true, false));
+			settings.put("password", new PluginSetting(ValueType.STRING, true, true));
+		}
+    	return settings;
 	}
 	
 
