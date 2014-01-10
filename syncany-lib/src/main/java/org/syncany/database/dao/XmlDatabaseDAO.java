@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,19 +40,19 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
-import org.syncany.database.MemoryDatabase;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
-import org.syncany.database.FileVersion;
-import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.VectorClock;
-import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MemoryDatabase;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -72,10 +73,10 @@ public class XmlDatabaseDAO {
 	}
 	
 	public void save(MemoryDatabase db, File destinationFile) throws IOException {
-		save(db, null, null, destinationFile);
+		save(db.getDatabaseVersions().iterator(), destinationFile);
 	}
 
-	public void save(MemoryDatabase db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {				 
+	public void save(Iterator<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {	
 		try {
 			PrintWriter out;
 			
@@ -98,13 +99,9 @@ public class XmlDatabaseDAO {
 			 
 			xmlOut.writeStartElement("databaseVersions");
 			 			
-			for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
-				boolean databaseVersionInSaveRange = databaseVersionInRange(databaseVersion, versionFrom, versionTo);
-
-				if (!databaseVersionInSaveRange) {				
-					continue;
-				}						
-
+			while (databaseVersions.hasNext()) {
+				DatabaseVersion databaseVersion = databaseVersions.next();
+				
 				// Database version
 				xmlOut.writeStartElement("databaseVersion");
 				
@@ -132,7 +129,7 @@ public class XmlDatabaseDAO {
 		catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
-	}			
+	}		
 
 	private void writeDatabaseVersionHeader(IndentXmlStreamWriter xmlOut, DatabaseVersion databaseVersion) throws IOException, XMLStreamException {
 		if (databaseVersion.getTimestamp() == null || databaseVersion.getClient() == null
@@ -313,14 +310,6 @@ public class XmlDatabaseDAO {
 		}
 
 		return greaterOrEqualToVersionFrom && lowerOrEqualToVersionTo;		
-	}
-	
-	private boolean databaseVersionInRange(DatabaseVersion databaseVersion, DatabaseVersion databaseVersionFrom, DatabaseVersion databaseVersionTo) {
-		VectorClock vectorClock = databaseVersion.getVectorClock();
-		VectorClock vectorClockRangeFrom = (databaseVersionFrom != null) ? databaseVersionFrom.getVectorClock() : null;
-		VectorClock vectorClockRangeTo = (databaseVersionTo != null) ? databaseVersionTo.getVectorClock() : null;
-		
-		return vectorClockInRange(vectorClock, vectorClockRangeFrom, vectorClockRangeTo);
 	}	
 
 	public void load(MemoryDatabase db, File databaseFile) throws IOException {

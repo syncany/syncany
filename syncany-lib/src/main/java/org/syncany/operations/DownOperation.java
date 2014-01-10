@@ -39,7 +39,6 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
@@ -479,7 +478,7 @@ public class DownOperation extends Operation {
 		logger.log(Level.INFO, "Downloading unknown databases.");
 		List<File> unknownRemoteDatabasesInCache = new ArrayList<File>();
 
-		for (RemoteFile remoteFile : unknownRemoteDatabases) {
+		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });

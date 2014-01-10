@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 
@@ -95,7 +95,7 @@ public class ManySyncUpsAndDatabaseFileCleanupTest {
 			
 			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
-		
+		 
 		for (int i=21; i<=25; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File expectedDatabaseFile = new File(testConnection.getRepositoryPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
@@ -104,6 +104,7 @@ public class ManySyncUpsAndDatabaseFileCleanupTest {
 		}	
 		
 		// Tear down
+		// TODO [medium] Test the content of these database files
 		clientA.cleanup();		
 	}
 }

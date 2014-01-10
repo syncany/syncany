@@ -42,7 +42,20 @@ public class Cache {
     	this.cacheDir = cacheDir;
     }
 
-    public File getEncryptedMultiChunkFile(byte[] multiChunkId) {
+    /* 
+    
+     TODO [medium] Implement methods like this:    
+
+    public File getEncryptedMultiChunkFile(MultiChunkId multiChunkId) {
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, multiChunkId.toString());
+    }
+    
+    public File getDecryptedMultiChunkFile(MultiChunkId multiChunkId) {
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_DECRYPTED, multiChunkId.toString());
+    }    
+    */
+    
+    public File getEncryptedMultiChunkFile(byte[] multiChunkId) {    	
     	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, StringUtil.toHex(multiChunkId));
     }
     

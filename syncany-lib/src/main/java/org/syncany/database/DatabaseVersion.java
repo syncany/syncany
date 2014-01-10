@@ -75,6 +75,10 @@ public class DatabaseVersion {
 	public DatabaseVersionHeader getHeader() {
 		return header;
 	}
+	
+	public void setHeader(DatabaseVersionHeader header) {
+		this.header = header;
+	}
 
 	public Date getTimestamp() {
 		return header.getDate();

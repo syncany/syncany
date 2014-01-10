@@ -392,7 +392,7 @@ public class XmlDatabaseDAOTest {
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		
 		XmlDatabaseDAO writeDAO = new XmlDatabaseDAO();
-		writeDAO.save(writtenDatabase, writtenDatabaseVersions.get(0), writtenDatabaseVersions.get(4), writtenDatabaseFile);
+		writeDAO.save(writtenDatabase, writtenDatabaseFile);
 		
 		// Read again
 		MemoryDatabase readDatabase = new MemoryDatabase();
@@ -400,7 +400,7 @@ public class XmlDatabaseDAOTest {
 		XmlDatabaseDAO readDAO = new XmlDatabaseDAO();
 		readDAO.load(readDatabase, writtenDatabaseFile);
 		
-		for (int i=0; i<=4; i++) {
+		for (int i=0; i<10; i++) {
 			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersions.get(i);
 			DatabaseVersion readDatabaseVersion = readDatabase.getDatabaseVersion(writtenDatabaseVersion.getVectorClock());
 			
@@ -408,7 +408,7 @@ public class XmlDatabaseDAOTest {
 			assertDatabaseVersionEquals(writtenDatabaseVersion, readDatabaseVersion);
 		}
 		
-		assertEquals(5, readDatabase.getDatabaseVersions().size());
+		assertEquals(10, readDatabase.getDatabaseVersions().size());
 	}	
 	
 	private MemoryDatabase writeReadAndCompareDatabase(MemoryDatabase writtenDatabase) throws IOException {

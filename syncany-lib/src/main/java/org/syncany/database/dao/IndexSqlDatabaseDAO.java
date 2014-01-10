@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,18 +53,11 @@ public class IndexSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 	
 	private void loadChunkCache() {
-		chunkCache = new HashMap<ChunkChecksum, ChunkEntry>();
-		
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 
-			while (resultSet.next()) {
-				ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("checksum"));
-				ChunkEntry chunkEntry = new ChunkEntry(chunkChecksum, resultSet.getInt("size"));
-				
-				chunkCache.put(chunkChecksum, chunkEntry);
-			}
+			chunkCache = createChunkEntries(resultSet);
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

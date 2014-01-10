@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.MemoryDatabase;
-import org.syncany.database.DatabaseVersion;
 import org.syncany.database.dao.XmlDatabaseDAO;
 
 /**
@@ -59,14 +58,10 @@ public abstract class Operation {
 	 */
 	public abstract OperationResult execute() throws Exception;
 
-	protected void saveLocalDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {
-		saveLocalDatabase(db, null, null, localDatabaseFile);
-	}	
-	
-	protected void saveLocalDatabase(MemoryDatabase db, DatabaseVersion fromVersion, DatabaseVersion toVersion, File localDatabaseFile) throws IOException {
+	protected void saveLocalDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {	
 		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
 		
 		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
-		dao.save(db, fromVersion, toVersion, localDatabaseFile);		
+		dao.save(db, localDatabaseFile);		
 	}			
 }

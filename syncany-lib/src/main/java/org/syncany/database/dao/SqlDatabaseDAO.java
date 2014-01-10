@@ -24,11 +24,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersionHeader;
@@ -160,6 +163,231 @@ public class SqlDatabaseDAO {
 		}
 	}
 	
+	public List<DatabaseVersion> getLastNDatabaseVersions(String machineName, int maxDatabaseVersions) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getLastNDatabaseVersions.sql");
+			
+			preparedStatement.setString(1, machineName);
+			preparedStatement.setMaxRows(maxDatabaseVersions);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			List<DatabaseVersion> databaseVersions = new ArrayList<DatabaseVersion>();
+			
+			while (resultSet.next()) {				
+				DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet);
+				databaseVersions.add(databaseVersion);
+			}
+
+			return databaseVersions;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsTo.sql");
+			
+			preparedStatement.setString(1, machineName);
+			preparedStatement.setLong(2, maxLocalClientVersion);
+
+			return new DatabaseVersionIteration(preparedStatement.executeQuery());			
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private class DatabaseVersionIteration implements Iterator<DatabaseVersion> {
+		private ResultSet resultSet;
+		private boolean hasNext;
+		
+		public DatabaseVersionIteration(ResultSet resultSet) throws SQLException {
+			this.resultSet = resultSet;
+			this.hasNext = resultSet.next();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return hasNext;
+		}
+
+		@Override
+		public DatabaseVersion next() {
+			if (hasNext) {
+				try {
+					DatabaseVersion databaseVersion =  createDatabaseVersionFromRow(resultSet);
+					hasNext = resultSet.next();
+					
+					return databaseVersion;
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Cannot load next SQL row.", e);
+				}
+			}
+			else { 
+				return null;
+			}			
+		}
+
+		@Override
+		public void remove() {
+			throw new RuntimeException("Not implemented.");
+		}
+		
+	}
+	
+	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet) throws SQLException {
+		DatabaseVersion databaseVersion = new DatabaseVersion();
+		
+		DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);		
+		databaseVersion.setHeader(databaseVersionHeader);
+		
+		Map<ChunkChecksum, ChunkEntry> chunks = getChunksForDatabaseVersion(databaseVersionHeader.getVectorClock());
+		Map<MultiChunkId, MultiChunkEntry> multiChunks = getMultiChunksForDatabaseVersion(databaseVersionHeader.getVectorClock());
+		Map<FileChecksum, FileContent>fileContents = getFileContentsForDatabaseVersion(databaseVersionHeader.getVectorClock());
+		List<PartialFileHistory> fileHistories = getFileHistoriesForDatabaseVersion(databaseVersionHeader.getVectorClock());
+		
+		for (ChunkEntry chunk: chunks.values()) {
+			databaseVersion.addChunk(chunk);
+		}
+		
+		for (MultiChunkEntry multiChunk: multiChunks.values()) {
+			databaseVersion.addMultiChunk(multiChunk);
+		}
+		
+		for (FileContent fileContent: fileContents.values()) {
+			databaseVersion.addFileContent(fileContent);
+		}
+		
+		for (PartialFileHistory fileHistory : fileHistories) {
+			databaseVersion.addFileHistory(fileHistory);
+		}
+		
+		return databaseVersion;
+	}
+	
+	private Map<FileChecksum, FileContent> getFileContentsForDatabaseVersion(VectorClock vectorClock) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByDatabaseVersionWithChunkChecksums.sql");			
+			preparedStatement.setString(1, vectorClock.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			return createFileContents(resultSet);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private Map<FileChecksum, FileContent> createFileContents(ResultSet resultSet) throws SQLException {
+		Map<FileChecksum, FileContent> fileContents = new HashMap<FileChecksum, FileContent>();		
+		FileChecksum currentFileChecksum = null;
+		
+		while (resultSet.next()) {			
+			FileChecksum fileChecksum = FileChecksum.parseFileChecksum(resultSet.getString("checksum"));
+			FileContent fileContent = null;
+			
+			if (currentFileChecksum != null && currentFileChecksum.equals(fileChecksum)) {
+				fileContent = fileContents.get(fileChecksum);	
+			}
+			else {
+				fileContent = new FileContent();
+				
+				fileContent.setChecksum(fileChecksum);
+				fileContent.setSize(resultSet.getLong("size"));
+			}
+			
+			ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum"));
+			fileContent.addChunk(chunkChecksum);
+
+			fileContents.put(fileChecksum, fileContent); 
+			currentFileChecksum = fileChecksum;
+		}
+		
+		return fileContents;
+	}
+
+	private Map<MultiChunkId, MultiChunkEntry> getMultiChunksForDatabaseVersion(VectorClock vectorClock) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksWithChunksForDatabaseVersion.sql");			
+			preparedStatement.setString(1, vectorClock.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			return createMultiChunkEntries(resultSet);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	protected Map<ChunkChecksum, ChunkEntry> getChunksForDatabaseVersion(VectorClock vectorClock) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql");			
+			preparedStatement.setString(1, vectorClock.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			return createChunkEntries(resultSet);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	protected Map<MultiChunkId, MultiChunkEntry> createMultiChunkEntries(ResultSet resultSet) throws SQLException {
+		Map<MultiChunkId, MultiChunkEntry> multiChunkEntries = new HashMap<MultiChunkId, MultiChunkEntry>();		
+		MultiChunkId currentMultiChunkId = null;
+		
+		while (resultSet.next()) {			
+			MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+			MultiChunkEntry multiChunkEntry = null;
+			
+			if (currentMultiChunkId != null && currentMultiChunkId.equals(multiChunkId)) {
+				multiChunkEntry = multiChunkEntries.get(multiChunkId);	
+			}
+			else {
+				multiChunkEntry = new MultiChunkEntry(multiChunkId);
+			}
+			
+			multiChunkEntry.addChunk(ChunkChecksum.parseChunkChecksum("chunk_checksum"));
+			multiChunkEntries.put(multiChunkId, multiChunkEntry); 
+			
+			currentMultiChunkId = multiChunkId;
+		}
+		
+		return multiChunkEntries;
+	}
+	
+	protected Map<ChunkChecksum, ChunkEntry> createChunkEntries(ResultSet resultSet) throws SQLException {
+		Map<ChunkChecksum, ChunkEntry> chunks = new HashMap<ChunkChecksum, ChunkEntry>();
+		
+		while (resultSet.next()) {
+			ChunkEntry chunkEntry = createChunkEntryFromRow(resultSet);				
+			chunks.put(chunkEntry.getChecksum(), chunkEntry);
+		}
+		
+		return chunks;
+	}
+
+	protected ChunkEntry createChunkEntryFromRow(ResultSet resultSet) throws SQLException {
+		ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("checksum"));
+		return new ChunkEntry(chunkChecksum, resultSet.getInt("size"));
+	}
+
+	public List<PartialFileHistory> getFileHistoriesForDatabaseVersion(VectorClock databaseVersionVectorClock) {
+		try {
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesForDatabaseVersion.sql");			
+			preparedStatement.setString(1, databaseVersionVectorClock.toString());
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			return createFileHistoriesFromResult(resultSet);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public FileContent getFileContentByChecksum(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		if (fileChecksum == null) {
 			return null;
@@ -172,7 +400,7 @@ public class SqlDatabaseDAO {
 		}
 	}
 
-	private FileContent getFileContentByChecksumWithoutChunkChecksums(FileChecksum fileChecksum) {
+	public FileContent getFileContentByChecksumWithoutChunkChecksums(FileChecksum fileChecksum) {
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithoutChunkChecksums.sql");
 			preparedStatement.setString(1, fileChecksum.toString());
@@ -195,7 +423,7 @@ public class SqlDatabaseDAO {
 		}
 	}
 
-	private FileContent getFileContentByChecksumWithChunkChecksums(FileChecksum fileChecksum) {
+	public FileContent getFileContentByChecksumWithChunkChecksums(FileChecksum fileChecksum) {
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithChunkChecksums.sql");				
 			preparedStatement.setString(1, fileChecksum.toString());
@@ -224,36 +452,39 @@ public class SqlDatabaseDAO {
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
-		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
-
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithFileVersions.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 
-			PartialFileHistory fileHistory = null;
-			
-			while (resultSet.next()) {
-				FileVersion lastFileVersion = createFileVersionFromRow(resultSet);
-				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-				
-				if (fileHistory != null && fileHistory.getFileId().equals(fileHistoryId)) { // Same history!
-						fileHistory.addFileVersion(lastFileVersion);
-				}
-				else { // New history!
-					fileHistory = new PartialFileHistory(fileHistoryId);
-					fileHistory.addFileVersion(lastFileVersion);
-				}				
-					
-				currentFileTree.add(fileHistory);
-			}
-
-			return currentFileTree;
+			return createFileHistoriesFromResult(resultSet);
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
+	protected List<PartialFileHistory> createFileHistoriesFromResult(ResultSet resultSet) throws SQLException {
+		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
+		PartialFileHistory fileHistory = null;
+		
+		while (resultSet.next()) {
+			FileVersion lastFileVersion = createFileVersionFromRow(resultSet);
+			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+			
+			if (fileHistory != null && fileHistory.getFileId().equals(fileHistoryId)) { // Same history!
+					fileHistory.addFileVersion(lastFileVersion);
+			}
+			else { // New history!
+				fileHistory = new PartialFileHistory(fileHistoryId);
+				fileHistory.addFileVersion(lastFileVersion);
+			}				
+				
+			fileHistories.add(fileHistory);
+		}
+
+		return fileHistories;
+	}
+
 	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoryWithFileVersions.sql");
@@ -290,12 +521,7 @@ public class SqlDatabaseDAO {
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			if (resultSet.next()) {
-				DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
-
-				databaseVersionHeader.setClient(resultSet.getString("client"));
-				databaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
-				databaseVersionHeader.setVectorClock(getVectorClockByDatabaseVersionId(resultSet.getInt("id")));
-
+				DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
 				return databaseVersionHeader;
 			}
 
@@ -304,6 +530,16 @@ public class SqlDatabaseDAO {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private DatabaseVersionHeader createDatabaseVersionHeaderFromRow(ResultSet resultSet) throws SQLException {
+		DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
+
+		databaseVersionHeader.setClient(resultSet.getString("client"));
+		databaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
+		databaseVersionHeader.setVectorClock(getVectorClockByDatabaseVersionId(resultSet.getInt("id")));
+		
+		return databaseVersionHeader;
 	}
 
 	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunkChecksum) {

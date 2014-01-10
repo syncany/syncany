@@ -95,6 +95,12 @@ CREATE INDEX idx_fileversion_filecontent_checksum ON fileversion (filecontent_ch
 
 -- Views
 
+CREATE VIEW databaseversion_master AS
+  SELECT dbv.*, vc.logicaltime as client_version
+  FROM databaseversion dbv
+  JOIN databaseversion_vectorclock vc on dbv.id=vc.databaseversion_id
+  WHERE dbv.status='MASTER';
+
 CREATE VIEW fileversion_master AS
   SELECT fv0.* 
   FROM fileversion fv0
@@ -114,3 +120,62 @@ CREATE VIEW fileversion_master_last AS
     ON fvmax.filehistory_id=fv.filehistory_id 
        AND fvmax.version=fv.version 
   WHERE fv.status<>'DELETED';    
+  
+  
+-- Full Views   
+
+create view filehistory_full as
+	select 
+		dbv.status as databaseversion_status, 
+		dbv.localtime as databaseversion_localtime, 
+		dbv.client as databaseversion_client, 	
+		dbv.vectorclock_serialized as databaseversion_vectorclock_serialized, 	
+		fh.*
+	from databaseversion dbv
+	join filehistory fh on dbv.id=fh.databaseversion_id;
+	
+create view fileversion_full as
+	select 		
+		fhf.databaseversion_status, 
+		fhf.databaseversion_localtime, 
+		fhf.databaseversion_client, 	
+		fhf.databaseversion_vectorclock_serialized, 	
+		fv.*
+	from filehistory_full fhf
+	join fileversion fv on fhf.id=fv.filehistory_id and fhf.databaseversion_id=fv.databaseversion_id;	
+	
+create view filecontent_full as
+	select 		
+		fvf.databaseversion_id,
+		fvf.databaseversion_status, 
+		fvf.databaseversion_localtime, 
+		fvf.databaseversion_client, 	
+		fvf.databaseversion_vectorclock_serialized, 	
+		fc.*,
+		fcc.chunk_checksum,
+		fcc.num		
+	from fileversion_full fvf
+	join filecontent fc on fc.checksum=fvf.filecontent_checksum
+	join filecontent_chunk fcc on fc.checksum=fcc.chunk_checksum;
+	
+create view multichunk_full as
+	select 		
+		fcf.databaseversion_id,
+		fcf.databaseversion_status, 
+		fcf.databaseversion_localtime, 
+		fcf.databaseversion_client, 	
+		fcf.databaseversion_vectorclock_serialized, 	
+		mcc.*
+	from filecontent_full fcf 
+	join multichunk_chunk mcc on fcf.chunk_checksum=mcc.chunk_checksum;		
+		
+create view chunk_full as				
+	select 		
+		fcf.databaseversion_id,
+		fcf.databaseversion_status, 
+		fcf.databaseversion_localtime, 
+		fcf.databaseversion_client, 	
+		fcf.databaseversion_vectorclock_serialized, 	
+		c.*
+	from filecontent_full fcf 
+	join chunk c on fcf.chunk_checksum=c.checksum;
