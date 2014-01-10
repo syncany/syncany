@@ -17,17 +17,14 @@
  */
 package org.syncany.connection.plugins.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.PluginSetting;
 import org.syncany.connection.plugins.PluginSetting.ValueType;
-import org.syncany.connection.plugins.StorageException;
 
 /**
  * The REST connection represents the settings required to create to a
@@ -47,26 +44,26 @@ public abstract class RestConnection extends Connection {
     protected String secretKey; 
     protected String bucket;    
     protected ProviderCredentials credentials;
+    protected Map<String, PluginSetting> settings = null;
     
     @Override
-	public void init(Map<String, String> map) throws StorageException {
-		accessKey = map.get("accessKey");
-		secretKey = map.get("secretKey");
-		bucket = map.get("bucket");
-		
-		if (accessKey == null || secretKey == null || bucket == null) {
-			throw new StorageException("Config does not contain 'accessKey', 'secretKey' or 'bucket' setting.");
-		}
+	public void init() {
+    	Map<String, PluginSetting> map = getSettings();
+		accessKey = map.get("accessKey").getValue();
+		secretKey = map.get("secretKey").getValue();
+		bucket = map.get("bucket").getValue();
 	}   
     
     
     @Override
-    public List<PluginSetting> getSettings() {
-    	return Arrays.asList(new PluginSetting[]{
-    			new PluginSetting("accessKey", ValueType.STRING, true, false),
-    			new PluginSetting("secretKey", ValueType.STRING, true, true),
-    			new PluginSetting("bucket", ValueType.STRING, true, false),
-    	});
+    public Map<String, PluginSetting> getSettings() {
+    	if (settings == null) {
+    		settings = new TreeMap<String, PluginSetting>();
+    		settings.put("accessKey", new PluginSetting(ValueType.STRING, true, false));
+    		settings.put("secretKey", new PluginSetting(ValueType.STRING, true, true));
+    		settings.put("bucket", new PluginSetting(ValueType.STRING, true, false));
+    	}
+    	return settings;
     }
     
     public String getAccessKey() {
