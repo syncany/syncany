@@ -42,14 +42,6 @@ public abstract class Connection {
     				throw new StorageException("Mandatory setting " + name + " is not set.");
     			}
     		}
-    		else {
-    			//Set default value if it exists and none is given
-    			if (!setting.validate()) {
-    				if (setting.getDefaultValue() != null) {
-    					setting.setValue(setting.getDefaultValue());
-    				}
-    			}
-    		}
     	}
     }
     
