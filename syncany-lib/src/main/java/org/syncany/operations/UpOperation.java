@@ -44,6 +44,7 @@ import org.syncany.database.VectorClock;
 import org.syncany.database.dao.CleanupSqlDatabaseDAO;
 import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.dao.WriteSqlDatabaseDAO;
+import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
@@ -112,8 +113,8 @@ public class UpOperation extends Operation {
 
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
-			List<DatabaseRemoteFile> unknownRemoteDatabases = (new LsRemoteOperation(config, transferManager).execute())
-					.getUnknownRemoteDatabases();
+			LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config, transferManager).execute();
+			List<DatabaseRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
 
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");
@@ -145,43 +146,47 @@ public class UpOperation extends Operation {
 
 			return result;
 		}
-		else {
-			// Upload multichunks
-			logger.log(Level.INFO, "Uploading new multichunks ...");
-			uploadMultiChunks(newDatabaseVersion.getMultiChunks());
 
-			long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().getClock(config.getMachineName());
+		// Upload multichunks
+		logger.log(Level.INFO, "Uploading new multichunks ...");
+		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
 
-			// Upload delta database
-			DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
-			File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
+		// Create delta database
+		MemoryDatabase newDeltaDatabase = new MemoryDatabase();
+		newDeltaDatabase.addDatabaseVersion(newDatabaseVersion);		
+		
+		// TODO [high] Must add dirty chunks/filecontents to newDatabaseVersion here
+		
+		
+		// Save delta database locally
+		long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().getClock(config.getMachineName());
+		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
+		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
-			MemoryDatabase newDeltaDatabase = new MemoryDatabase();
-			newDeltaDatabase.addDatabaseVersion(newDatabaseVersion);
+		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] {
+				newDatabaseVersion.getHeader(), localDeltaDatabaseFile });
+		
+		saveLocalDatabase(newDeltaDatabase, localDeltaDatabaseFile);				
 
-			logger.log(Level.INFO, "Saving local delta database, version " + newDatabaseVersion.getHeader() + " to file " + localDeltaDatabaseFile
-					+ " ...");
-			saveLocalDatabase(newDeltaDatabase, localDeltaDatabaseFile);
+		// Upload delta database
+		logger.log(Level.INFO, "- Uploading local delta database file ...");
+		uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
 
-			logger.log(Level.INFO, "- Uploading local delta database file ...");
-			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+		// Save local database
+		logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
+		
+		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
+		WriteSqlDatabaseDAO writeSqlDao = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
+		writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
 
-			// Save local database
-			logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
-			
-			logger.log(Level.INFO, "Saving local database ...");
-			WriteSqlDatabaseDAO writeSqlDao = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
-			writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
-
-			if (options.cleanupEnabled()) {
-				new CleanupOperation(config).execute(); 
-			}
-			
-			logger.log(Level.INFO, "Sync up done.");
+		if (options.cleanupEnabled()) {
+			new CleanupOperation(config).execute(); 
 		}
-
+		
 		removeUnreferencedDirtyData();		
 		disconnectTransferManager();
+
+		logger.log(Level.INFO, "Sync up done.");
 
 		// Result
 		updateResultChangeSet(newDatabaseVersion);
@@ -236,7 +241,7 @@ public class UpOperation extends Operation {
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			MultiChunkEntry dirtyMultiChunkEntry= localDatabase.getMultiChunkWithStatus(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
+			MultiChunkEntry dirtyMultiChunkEntry = localDatabase.getMultiChunkWithStatus(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
 			
 			if (dirtyMultiChunkEntry != null) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");

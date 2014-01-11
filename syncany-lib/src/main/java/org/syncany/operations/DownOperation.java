@@ -323,6 +323,11 @@ public class DownOperation extends Operation {
 						multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum);
 					}
 
+					// Check consistency!
+					if (multiChunkForChunk == null) {
+						throw new RuntimeException("Cannot find multichunk for chunk "+chunkChecksum);
+					}
+					
 					if (!multiChunksToDownload.contains(multiChunkForChunk)) {
 						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
 						multiChunksToDownload.add(multiChunkForChunk);

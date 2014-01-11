@@ -34,11 +34,11 @@ public class CleanupSqlDatabaseDAO extends SqlDatabaseDAO {
 
 	public void removeDirtyDatabaseVersions() {
 		try {
-			removeDirtyFileHistories();
-			removeDirtyFileVersions();
-			removeDirtyFileContents();
 			removeDirtyChunks();
 			removeDirtyMultiChunks();
+			removeDirtyFileVersions();
+			removeDirtyFileContents();
+			removeDirtyFileHistories();
 	
 			connection.commit();
 		}
@@ -52,9 +52,9 @@ public class CleanupSqlDatabaseDAO extends SqlDatabaseDAO {
 		preparedStatement.executeUpdate();
 	}
 
-	private void removeDirtyFileVersions() {
-		// TODO Auto-generated method stub
-
+	private void removeDirtyFileVersions() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyFileVersions.sql");
+		preparedStatement.executeUpdate();		
 	}
 
 	private void removeDirtyFileContents() {
@@ -63,13 +63,13 @@ public class CleanupSqlDatabaseDAO extends SqlDatabaseDAO {
 	}
 
 	private void removeDirtyChunks() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyChunks.sql");
+		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyUnreferencedChunks.sql");
 		preparedStatement.executeUpdate();
 	}
 
-	private void removeDirtyMultiChunks() {
-		// TODO Auto-generated method stub
-
+	private void removeDirtyMultiChunks() throws SQLException {
+		//PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyMultiChunks.sql");
+		//preparedStatement.executeUpdate();
 	}
 
 }

@@ -98,7 +98,7 @@ CREATE INDEX idx_fileversion_filecontent_checksum ON fileversion (filecontent_ch
 CREATE VIEW databaseversion_master AS
   SELECT dbv.*, vc.logicaltime as client_version
   FROM databaseversion dbv
-  JOIN databaseversion_vectorclock vc on dbv.id=vc.databaseversion_id
+  JOIN databaseversion_vectorclock vc on dbv.id=vc.databaseversion_id and dbv.client=vc.client
   WHERE dbv.status='MASTER';
 
 CREATE VIEW fileversion_master AS
