@@ -181,7 +181,31 @@ public class DatabaseVersion {
         
     public Collection<PartialFileHistory> getFileHistories() {
         return fileHistories.values();
-    }     
+    }    
+    
+    @Override
+    public DatabaseVersion clone() {
+    	DatabaseVersion clonedDatabaseVersion = new DatabaseVersion();
+    	clonedDatabaseVersion.setHeader(getHeader());
+		
+		for (ChunkEntry chunkEntry : getChunks()) {
+			clonedDatabaseVersion.addChunk(chunkEntry);
+		}
+		
+		for (MultiChunkEntry multiChunkEntry : getMultiChunks()) {
+			clonedDatabaseVersion.addMultiChunk(multiChunkEntry);
+		}
+		
+		for (FileContent fileContent : getFileContents()) {
+			clonedDatabaseVersion.addFileContent(fileContent);
+		}
+		
+		for (PartialFileHistory fileHistory : getFileHistories()) {
+			clonedDatabaseVersion.addFileHistory(fileHistory);
+		}		
+		
+		return clonedDatabaseVersion;
+    }
     
     @Override
   	public int hashCode() {

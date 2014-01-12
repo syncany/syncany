@@ -51,7 +51,7 @@ public class RenameNoDownloadMultiChunksScenarioTest {
 		assertEquals("No multichunks should have been downloaded.", 0, downOperationResult.getDownloadedMultiChunks().size());
 		assertTrue("Moved files should exist.", clientB.getLocalFile("A-file-moved1").exists());		
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// Tear down
 		clientA.cleanup();

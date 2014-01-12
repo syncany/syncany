@@ -52,8 +52,6 @@ public class StatusOperation extends Operation {
 	private SqlDatabaseDAO basicDatabaseDAO;
 	private StatusOperationOptions options;
 	
-	private Map<String, FileVersion> currentFileTree;
-	
 	public StatusOperation(Config config) {
 		this(config, new StatusOperationOptions());
 	}	
@@ -64,8 +62,6 @@ public class StatusOperation extends Operation {
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 		this.options = options;		
-		
-		this.currentFileTree = null;
 	}	
 	
 	@Override
@@ -81,13 +77,13 @@ public class StatusOperation extends Operation {
 		
 		// Get local databse
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
-		currentFileTree = basicDatabaseDAO.getCurrentFileTree();
+		Map<String, FileVersion> databaseFiles = basicDatabaseDAO.getCurrentFileTree();
 
 		// Find changed and deleted files
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");						
 		
 		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir());
-		changeSet = findDeletedFiles(changeSet);
+		changeSet = findDeletedFiles(changeSet, databaseFiles);
 		
 		if (!changeSet.hasChanges()) {
 			logger.log(Level.INFO, "- No changes to local database");
@@ -109,7 +105,7 @@ public class StatusOperation extends Operation {
 		return fileVisitor.getChangeSet();		
 	}
 	
-	private ChangeSet findDeletedFiles(ChangeSet changeSet) {
+	private ChangeSet findDeletedFiles(ChangeSet changeSet, Map<String, FileVersion> currentFileTree) {
 		for (FileVersion lastLocalVersion : currentFileTree.values()) {
 			// Check if file exists, remove if it doesn't
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());

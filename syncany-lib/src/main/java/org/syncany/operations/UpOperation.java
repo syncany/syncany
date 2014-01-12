@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,9 +34,11 @@ import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
@@ -44,6 +47,7 @@ import org.syncany.database.VectorClock;
 import org.syncany.database.dao.CleanupSqlDatabaseDAO;
 import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.dao.WriteSqlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDAO;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -145,32 +149,14 @@ public class UpOperation extends Operation {
 			disconnectTransferManager();
 
 			return result;
-		}
+		}		
 
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
 
 		// Create delta database
-		MemoryDatabase newDeltaDatabase = new MemoryDatabase();
-		newDeltaDatabase.addDatabaseVersion(newDatabaseVersion);		
-		
-		// TODO [high] Must add dirty chunks/filecontents to newDatabaseVersion here
-		
-		
-		// Save delta database locally
-		long newestLocalDatabaseVersion = newDatabaseVersion.getVectorClock().getClock(config.getMachineName());
-		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
-		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
-
-		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] {
-				newDatabaseVersion.getHeader(), localDeltaDatabaseFile });
-		
-		saveLocalDatabase(newDeltaDatabase, localDeltaDatabaseFile);				
-
-		// Upload delta database
-		logger.log(Level.INFO, "- Uploading local delta database file ...");
-		uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+		writeAndUploadDeltaDatabase(newDatabaseVersion);
 
 		// Save local database
 		logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
@@ -193,6 +179,68 @@ public class UpOperation extends Operation {
 		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
 		
 		return result;
+	}
+
+	private void writeAndUploadDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
+		// Clone database version (necessary, because the orginal must not be touched)
+		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();		
+		
+		// Add dirty data (if existent)
+		addDirtyData(deltaDatabaseVersion);		
+		
+		// New delta database
+		MemoryDatabase deltaDatabase = new MemoryDatabase();
+		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);		
+				
+		// Save delta database locally
+		long newestLocalDatabaseVersion = deltaDatabaseVersion.getVectorClock().getClock(config.getMachineName());
+		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
+		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
+
+		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] {
+				deltaDatabaseVersion.getHeader(), localDeltaDatabaseFile });
+		
+		saveDeltaDatabase(deltaDatabase, localDeltaDatabaseFile);				
+
+		// Upload delta database
+		logger.log(Level.INFO, "- Uploading local delta database file ...");
+		uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+	}
+
+	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {	
+		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
+		
+		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
+		dao.save(db, localDatabaseFile);		
+	}			
+	
+	private void addDirtyData(DatabaseVersion newDatabaseVersion) {
+		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDatabaseVersions(DatabaseVersionStatus.DIRTY);
+		
+		if (!dirtyDatabaseVersions.hasNext()) {
+			logger.log(Level.INFO, "No DIRTY data found in database (no dirty databases); Nothing to do here.");
+		}
+		else {
+			logger.log(Level.INFO, "Adding DIRTY data to new database version: ");
+		
+			while (dirtyDatabaseVersions.hasNext()) {
+				DatabaseVersion dirtyDatabaseVersion = dirtyDatabaseVersions.next();
+				
+				logger.log(Level.INFO, "- Adding chunks/multichunks/filecontents from database version "+dirtyDatabaseVersion.getHeader());
+				
+				for (ChunkEntry chunkEntry : dirtyDatabaseVersion.getChunks()) {
+					newDatabaseVersion.addChunk(chunkEntry);
+				}
+				
+				for (MultiChunkEntry multiChunkEntry : dirtyDatabaseVersion.getMultiChunks()) {
+					newDatabaseVersion.addMultiChunk(multiChunkEntry);
+				}
+				
+				for (FileContent fileContent : dirtyDatabaseVersion.getFileContents()) {
+					newDatabaseVersion.addFileContent(fileContent);
+				}			
+			}
+		}
 	}
 
 	private void removeUnreferencedDirtyData() {
@@ -271,6 +319,22 @@ public class UpOperation extends Operation {
 		VectorClock lastVectorClock = (lastDatabaseVersionHeader != null) ? lastDatabaseVersionHeader.getVectorClock() : new VectorClock();
 
 		// New vector clock
+		VectorClock newVectorClock = findNewVectorClock(lastVectorClock);
+
+		// Index
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
+		Indexer indexer = new Indexer(config, deduper);
+
+		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
+
+		newDatabaseVersion.setVectorClock(newVectorClock);
+		newDatabaseVersion.setTimestamp(new Date());
+		newDatabaseVersion.setClient(config.getMachineName());
+
+		return newDatabaseVersion;
+	}
+	
+	private VectorClock findNewVectorClock(VectorClock lastVectorClock) {
 		VectorClock newVectorClock = lastVectorClock.clone();
 
 		Long lastLocalValue = lastVectorClock.getClock(config.getMachineName());
@@ -293,19 +357,9 @@ public class UpOperation extends Operation {
 
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
-		// Index
-		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		Indexer indexer = new Indexer(config, deduper);
-
-		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
-
-		newDatabaseVersion.setVectorClock(newVectorClock);
-		newDatabaseVersion.setTimestamp(new Date());
-		newDatabaseVersion.setClient(config.getMachineName());
-
-		return newDatabaseVersion;
+		return newVectorClock;
 	}
-	
+
 	private void disconnectTransferManager() {
 		try {
 			transferManager.disconnect();

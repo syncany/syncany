@@ -49,7 +49,7 @@ public class ChangedTypeScenarioTest {
 					
 					clientB.down();
 					assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-					assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());					
+					assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());					
 				}			
 			}
 		);

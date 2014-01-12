@@ -172,6 +172,22 @@ public class TestAssertUtil {
 		}		
 	}
 	
+	public static void assertSqlResultEquals(File databaseFile, String sqlQuery, String expectedResultStr) throws SQLException {
+		Connection databaseConnection = DatabaseConnectionFactory.createConnection(databaseFile);		
+		ResultSet resultSet = databaseConnection.prepareStatement(sqlQuery).executeQuery();
+		
+		List<String> actualResultStrList = new ArrayList<String>();		
+		
+		while (resultSet.next()) {
+			for (int i=1; i<=resultSet.getMetaData().getColumnCount(); i++) {
+				actualResultStrList.add(resultSet.getString(i));
+			}
+		}
+		
+		String actualResultStr = StringUtil.join(actualResultStrList, ",");
+		assertEquals("SQL query result differs: "+sqlQuery, expectedResultStr, actualResultStr);
+	}
+	
 	public static void assertSqlDatabaseEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException, SQLException {
 		String[] compareTables = new String[] { 
 			"chunk",

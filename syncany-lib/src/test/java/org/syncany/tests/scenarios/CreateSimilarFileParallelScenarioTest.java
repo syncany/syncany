@@ -61,7 +61,7 @@ public class CreateSimilarFileParallelScenarioTest {
 		// A, should retrieve B's conflicting copy
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());				
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());				
 		
 		// Tear down
 		clientA.cleanup();

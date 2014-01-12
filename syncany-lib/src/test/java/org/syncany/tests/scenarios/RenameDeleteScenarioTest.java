@@ -44,7 +44,7 @@ public class RenameDeleteScenarioTest {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// A moves, and up
 		clientA.deleteFile("A-original");
@@ -61,7 +61,7 @@ public class RenameDeleteScenarioTest {
 		assertFalse("File A-orginal should not be recreated.", clientA.getLocalFile("A-original").exists());
 		assertFalse("File A-orginal should not be recreated.", clientB.getLocalFile("A-original").exists());
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());		
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
 		
 		// Tear down
 		clientA.cleanup();

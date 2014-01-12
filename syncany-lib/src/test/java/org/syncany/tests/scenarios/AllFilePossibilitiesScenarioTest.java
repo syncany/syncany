@@ -160,7 +160,7 @@ public class AllFilePossibilitiesScenarioTest {
 					
 					clientB.down();
 					assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-					assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());					
+					assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());					
 				}			
 			}
 		);
@@ -181,7 +181,7 @@ public class AllFilePossibilitiesScenarioTest {
 		clientA.upWithForceChecksum();		
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());					
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());					
 		
 		clientA.cleanup();
 		clientB.cleanup();

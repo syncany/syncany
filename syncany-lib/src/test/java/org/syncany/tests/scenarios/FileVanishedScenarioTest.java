@@ -120,7 +120,7 @@ public class FileVanishedScenarioTest {
 		// Test 3: After that, the sync between the clients should of course still work
 		clientB.down();
 		assertFileListEquals("Files of both clients should be identical.", clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());				
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());				
 		
 		// Tear down
 		clientA.cleanup();
