@@ -120,7 +120,7 @@ public class UpOperation extends Operation {
 			List<DatabaseRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
 
 			if (unknownRemoteDatabases.size() > 0) {
-				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force, Luke!.");
+				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
 				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
 
 				disconnectTransferManager();
@@ -135,7 +135,7 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
 		}
 
-		List<File> locallyUpdatedFiles = determineLocallyUpdatedFiles(localChanges);
+		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 		localChanges = null; // allow GC to clean up
 
 		// Index
@@ -205,14 +205,14 @@ public class UpOperation extends Operation {
 		cleanupSqlDao.removeDirtyDatabaseVersions();		
 	}
 
-	private List<File> determineLocallyUpdatedFiles(ChangeSet statusChangeSet) {
+	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {
 		List<File> locallyUpdatedFiles = new ArrayList<File>();
 
-		for (String relativeFilePath : statusChangeSet.getNewFiles()) {
+		for (String relativeFilePath : localChanges.getNewFiles()) {
 			locallyUpdatedFiles.add(new File(config.getLocalDir() + File.separator + relativeFilePath));
 		}
 
-		for (String relativeFilePath : statusChangeSet.getChangedFiles()) {
+		for (String relativeFilePath : localChanges.getChangedFiles()) {
 			locallyUpdatedFiles.add(new File(config.getLocalDir() + File.separator + relativeFilePath));
 		}
 

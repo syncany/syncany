@@ -44,7 +44,6 @@ import org.syncany.database.dao.SqlDatabaseDAO;
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
 	private TransferManager loadedTransferManager;
-	private List<String> alreadyDownloadedRemoteDatabases;
 	private SqlDatabaseDAO localDatabase;
 	
 	public LsRemoteOperation(Config config) {
@@ -55,7 +54,6 @@ public class LsRemoteOperation extends Operation {
 		super(config);		
 		
 		this.loadedTransferManager = transferManager;
-		this.alreadyDownloadedRemoteDatabases = new ArrayList<String>();
 		this.localDatabase = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}	
 	
@@ -69,30 +67,30 @@ public class LsRemoteOperation extends Operation {
 				? loadedTransferManager
 				: config.getConnection().createTransferManager();
 		
-		alreadyDownloadedRemoteDatabases = localDatabase.getKnownDatabases();
-		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, alreadyDownloadedRemoteDatabases);		
+		List<String> knownDatabases = localDatabase.getKnownDatabases();
+		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
 		
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<String> alreadyDownloadedRemoteDatabases) throws StorageException {
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<String> knownDatabases) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
-		List<DatabaseRemoteFile> unknownRemoteDatabasesList = new ArrayList<DatabaseRemoteFile>();
+		List<DatabaseRemoteFile> unknownRemoteDatabases = new ArrayList<DatabaseRemoteFile>();
 
 		// List all remote database files
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
 		
-		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
+		DatabaseVersionHeader lastLocalDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 		
 		// No local database yet
-		if (lastDatabaseVersionHeader == null) {
+		if (lastLocalDatabaseVersionHeader == null) {
 			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
 		}
 		
 		// At least one local database version exists
 		else {
-			VectorClock knownDatabaseVersions = lastDatabaseVersionHeader.getVectorClock();
+			VectorClock knownDatabaseVersions = lastLocalDatabaseVersionHeader.getVectorClock();
 			
 			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 				String clientName = remoteDatabaseFile.getClientName();
@@ -102,22 +100,21 @@ public class LsRemoteOperation extends Operation {
 					if (remoteDatabaseFile.getClientVersion() <= knownClientVersion) {
 						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteDatabaseFile.getName());
 					}
-					else if (alreadyDownloadedRemoteDatabases.contains(remoteDatabaseFile.getName())) {
+					else if (knownDatabases.contains(remoteDatabaseFile.getName())) {
 						logger.log(Level.INFO, "- Remote database {0} is already known (in knowndbs.list). Ignoring.", remoteDatabaseFile.getName());
 					}
 					else {
 						logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-						unknownRemoteDatabasesList.add(remoteDatabaseFile);
+						unknownRemoteDatabases.add(remoteDatabaseFile);
 					}
-				}
-				
+				} 
 				else {
 					logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-					unknownRemoteDatabasesList.add(remoteDatabaseFile);
+					unknownRemoteDatabases.add(remoteDatabaseFile);
 				}				
 			}
 			
-			return unknownRemoteDatabasesList;			
+			return unknownRemoteDatabases;			
 		}
 	}
 	
