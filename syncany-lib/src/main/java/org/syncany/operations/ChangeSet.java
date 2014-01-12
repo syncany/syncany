@@ -54,6 +54,7 @@ public class ChangeSet {
 			|| deletedFiles.size() > 0;
 	}
 	
+	// TODO [low] This is ugly. Use unmutable lists.
 	public List<String> getChangedFiles() {
 		return changedFiles;
 	}
@@ -68,5 +69,5 @@ public class ChangeSet {
 	
 	public List<String> getUnchangedFiles() {
 		return unchangedFiles;
-	}	
+	}
 }

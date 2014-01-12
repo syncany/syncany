@@ -63,7 +63,7 @@ public class SqlDatabaseDAO {
 		return connection;
 	}
 
-	public Map<String, FileVersion> getCurrentFileTree() {
+	public Map<String, FileVersion> getFilesInDatabase() {
 		Map<String, FileVersion> currentFileTree = new HashMap<String, FileVersion>();
 
 		try {

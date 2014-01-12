@@ -52,8 +52,6 @@ public class StatusOperation extends Operation {
 	private SqlDatabaseDAO basicDatabaseDAO;
 	private StatusOperationOptions options;
 	
-	private Map<String, FileVersion> currentFileTree;
-	
 	public StatusOperation(Config config) {
 		this(config, new StatusOperationOptions());
 	}	
@@ -64,8 +62,6 @@ public class StatusOperation extends Operation {
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
 		this.options = options;		
-		
-		this.currentFileTree = null;
 	}	
 	
 	@Override
@@ -79,28 +75,36 @@ public class StatusOperation extends Operation {
 		}
 
 		
-		// Get local databse
+		// Get local database
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
-		currentFileTree = basicDatabaseDAO.getCurrentFileTree();
+		
+		// Path to actual file version
+		final Map<String, FileVersion> filesInDatabase = basicDatabaseDAO.getFilesInDatabase();
 
-		// Find changed and deleted files
+		// Find local changes
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");						
 		
-		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir());
-		changeSet = findDeletedFiles(changeSet);
+		ChangeSet localChanges = findLocalChanges(filesInDatabase);
 		
-		if (!changeSet.hasChanges()) {
+		if (!localChanges.hasChanges()) {
 			logger.log(Level.INFO, "- No changes to local database");
 		}
 		
 		// Return result
 		StatusOperationResult statusResult = new StatusOperationResult();
-		statusResult.setChangeSet(changeSet);
+		statusResult.setChangeSet(localChanges);
 		
 		return statusResult;
-	}		
+	}
 
-	private ChangeSet findChangedAndNewFiles(final File root) throws FileNotFoundException, IOException {
+	private ChangeSet findLocalChanges(final Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
+		ChangeSet localChanges = findLocalChangedAndNewFiles(config.getLocalDir());
+		findAndAppendDeletedFiles(localChanges,filesInDatabase);
+		
+		return localChanges;
+	}		
+	
+	private ChangeSet findLocalChangedAndNewFiles(final File root) throws FileNotFoundException, IOException {
 		Path rootPath = Paths.get(root.getAbsolutePath());
 		
 		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath);		
@@ -109,8 +113,8 @@ public class StatusOperation extends Operation {
 		return fileVisitor.getChangeSet();		
 	}
 	
-	private ChangeSet findDeletedFiles(ChangeSet changeSet) {
-		for (FileVersion lastLocalVersion : currentFileTree.values()) {
+	private void findAndAppendDeletedFiles(ChangeSet localChanges, Map<String,FileVersion> filesInDatabase) {
+		for (FileVersion lastLocalVersion : filesInDatabase.values()) {
 			// Check if file exists, remove if it doesn't
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
@@ -121,11 +125,9 @@ public class StatusOperation extends Operation {
 			
 			// If file has VANISHED, mark as DELETED 
 			if (!FileUtil.exists(lastLocalVersionOnDisk)) {
-				changeSet.getDeletedFiles().add(lastLocalVersion.getPath());
+				localChanges.getDeletedFiles().add(lastLocalVersion.getPath());
 			}
 		}		
-		
-		return changeSet;
 	}
 	
 	private class StatusFileVisitor implements FileVisitor<Path> {

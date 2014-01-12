@@ -75,7 +75,6 @@ public class UpOperation extends Operation {
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 
 	private UpOperationOptions options;
-	private UpOperationResult result;
 	private TransferManager transferManager;
 	private SqlDatabaseDAO localDatabase;
 
@@ -87,7 +86,6 @@ public class UpOperation extends Operation {
 		super(config);
 
 		this.options = options;
-		this.result = new UpOperationResult();
 		this.transferManager = config.getConnection().createTransferManager();
 		this.localDatabase = new SqlDatabaseDAO(config.createDatabaseConnection());
 	}
@@ -98,11 +96,16 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		UpOperationResult result = new UpOperationResult();
+		
 		// Find local changes
-		ChangeSet statusChangeSet = (new StatusOperation(config, options.getStatusOptions()).execute()).getChangeSet();
-		result.getStatusResult().setChangeSet(statusChangeSet);
+		StatusOperation statusOperation = new StatusOperation(config, options.getStatusOptions());
+		StatusOperationResult statusOperationResult = statusOperation.execute();
+		ChangeSet localChanges = statusOperationResult.getChangeSet();
+		
+		result.getStatusResult().setChangeSet(localChanges);
 
-		if (!statusChangeSet.hasChanges()) {
+		if (!localChanges.hasChanges()) {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
 
@@ -132,8 +135,8 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
 		}
 
-		List<File> locallyUpdatedFiles = determineLocallyUpdatedFiles(statusChangeSet);
-		statusChangeSet = null; // allow GC to clean up
+		List<File> locallyUpdatedFiles = determineLocallyUpdatedFiles(localChanges);
+		localChanges = null; // allow GC to clean up
 
 		// Index
 		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles);
@@ -189,7 +192,7 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "Sync up done.");
 
 		// Result
-		updateResultChangeSet(newDatabaseVersion);
+		addNewDatabaseChangesToResultChanges(newDatabaseVersion,result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
 		
 		return result;
@@ -216,24 +219,22 @@ public class UpOperation extends Operation {
 		return locallyUpdatedFiles;
 	}
 
-	private void updateResultChangeSet(DatabaseVersion newDatabaseVersion) {
-		ChangeSet changeSet = result.getChangeSet();
-
+	private void addNewDatabaseChangesToResultChanges(DatabaseVersion newDatabaseVersion, ChangeSet resultChanges) {
 		for (PartialFileHistory partialFileHistory : newDatabaseVersion.getFileHistories()) {
 			FileVersion lastFileVersion = partialFileHistory.getLastVersion();
 
 			switch (lastFileVersion.getStatus()) {
 			case NEW:
-				changeSet.getNewFiles().add(lastFileVersion.getPath());
+				resultChanges.getNewFiles().add(lastFileVersion.getPath());
 				break;
 
 			case CHANGED:
 			case RENAMED:
-				changeSet.getChangedFiles().add(lastFileVersion.getPath());
+				resultChanges.getChangedFiles().add(lastFileVersion.getPath());
 				break;
 
 			case DELETED:
-				changeSet.getDeletedFiles().add(lastFileVersion.getPath());
+				resultChanges.getDeletedFiles().add(lastFileVersion.getPath());
 				break;
 			}
 		}
