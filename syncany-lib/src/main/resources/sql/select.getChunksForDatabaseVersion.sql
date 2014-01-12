@@ -3,10 +3,16 @@
 -- Takes into account that a chunk may appear in multiple database versions,
 -- but originally belongs to the database version where it appeared first
 
-select  
-	min(cf.databaseversion_id) as databaseversion_id, 
-	cf.checksum,
-	cf.size
-from chunk_full cf
-where cf.databaseversion_vectorclock_serialized=?
-group by cf.checksum, cf.size
+-- Example: If a chunk appears in database version (A1), it is not returned
+-- in this query if databaseversion_vectorclock_serialized='(A17)', even if
+-- the chunk is used by a file in this database version.
+
+select checksum, size
+from chunk_full
+where databaseversion_vectorclock_serialized=?
+
+minus 
+
+select checksum, size
+from chunk_full 
+where databaseversion_id<(select id from databaseversion where vectorclock_serialized=?)

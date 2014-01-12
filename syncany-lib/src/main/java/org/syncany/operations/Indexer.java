@@ -130,7 +130,7 @@ public class Indexer {
 			// If file has VANISHED, mark as DELETED			
 			if (!FileUtil.exists(lastLocalVersionOnDisk) || newFileWithSameName != null) {
 				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileId());
-				FileVersion deletedVersion = (FileVersion) lastLocalVersion.clone();
+				FileVersion deletedVersion = lastLocalVersion.clone();
 				deletedVersion.setStatus(FileStatus.DELETED);
 				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion()+1);
 				
@@ -282,6 +282,9 @@ public class Indexer {
 				
 				if (existingContent == null) { 
 					newDatabaseVersion.addFileContent(fileContent);
+				}
+				else {
+					// Uses existing content (already in database); ref. by checksum
 				}
 			}						
 		}	
@@ -508,15 +511,15 @@ public class Indexer {
 			fileContent.addChunk(new ChunkChecksum(chunk.getChecksum()));				
 		}		
 
-		/*
-		 * Checks if chunk already exists in all database versions (db)
-		 * Afterwards checks if chunk exists in new introduced databaseversion. 
+		/**
+		 * Checks if chunk already exists in all database versions
+		 * Afterwards checks if chunk exists in new introduced database version. 
 		 */
 		@Override
 		public boolean onChunk(Chunk chunk) {
 			ChunkChecksum chunkChecksum = new ChunkChecksum(chunk.getChecksum());
 			chunkEntry = localDatabase.getChunk(chunkChecksum);
-
+			
 			if (chunkEntry == null) {
 				chunkEntry = newDatabaseVersion.getChunk(chunkChecksum);
 				

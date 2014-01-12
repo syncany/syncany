@@ -43,9 +43,9 @@ import org.syncany.util.FileUtil;
  * @author Nikolai Hellwig, Andreas Fenske, Philipp Heckel
  *
  */
-public class TestFileUtil {
-	
-	private static Random rnd = new Random(); 
+public class TestFileUtil {	
+	private static Random randomGen = new Random();
+	private static Random nonRandomGen = new Random(123456789L); // fixed seed!
 	
 	private static File copyFileToDirectory(File from, File toDirectory) throws IOException {
 		File outFile = new File(toDirectory, from.getName());
@@ -167,7 +167,7 @@ public class TestFileUtil {
 	}	
 		
 	public static File getRandomFilenameInDirectory(File rootFolder) {
-		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(rnd.nextInt()) + ".dat";
+		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(randomGen.nextInt()) + ".dat";
 		File newRandomFile = new File(rootFolder, fileName);
 		
 		return newRandomFile;
@@ -245,8 +245,16 @@ public class TestFileUtil {
 		
 		return newRandomFile;
 	}
+
+	public static void createNonRandomFile(File fileToCreate, long sizeInBytes) throws IOException {
+		createFile(fileToCreate, sizeInBytes, nonRandomGen);
+	}
 	
-	public static void createRandomFile(File fileToCreate, long sizeInBytes) throws IOException{
+	public static void createRandomFile(File fileToCreate, long sizeInBytes) throws IOException {
+		createFile(fileToCreate, sizeInBytes, randomGen);
+	}
+	
+	private static void createFile(File fileToCreate, long sizeInBytes, Random randomGen) throws IOException {
 		if (fileToCreate != null && fileToCreate.exists()){
 			throw new IOException("File already exists");
 		}
@@ -256,17 +264,17 @@ public class TestFileUtil {
 		long cycles = sizeInBytes / (long) bufSize;
 		
 		for(int i = 0; i < cycles; i++){
-			byte[] randomByteArray = createRandomArray(bufSize);
+			byte[] randomByteArray = createArray(bufSize, randomGen);
 			fos.write(randomByteArray);
 		}
 		
 		// create last one
 		// modulo cannot exceed integer range, so cast should be ok
-		byte[] arr = createRandomArray((int)(sizeInBytes % bufSize));
+		byte[] arr = createArray((int)(sizeInBytes % bufSize), randomGen);
 		fos.write(arr);
 		
 		fos.close();
-	}
+	}	
 	
 	public static void writeByteArrayToFile(byte[] inputByteArray, File fileToCreate) throws IOException {
 		FileOutputStream fos = new FileOutputStream(fileToCreate);		
@@ -274,12 +282,15 @@ public class TestFileUtil {
 		fos.close();			
 	}	
 	
-	public static byte[] createRandomArray(int size){
+	public static byte[] createArray(int size, Random randomGen) {
 		byte[] ret = new byte[size];
-		rnd.nextBytes(ret);
+		randomGen.nextBytes(ret);
 		return ret;
 	}		
 	
+	public static byte[] createRandomArray(int size) {
+		return createArray(size, randomGen);
+	}	
 
 	public static byte[] createChecksum(File file) throws Exception {
 		return FileUtil.createChecksum(file, "SHA1");

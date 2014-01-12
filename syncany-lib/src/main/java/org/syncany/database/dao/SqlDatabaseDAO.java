@@ -260,8 +260,10 @@ public class SqlDatabaseDAO {
 	
 	private Map<FileChecksum, FileContent> getFileContentsForDatabaseVersion(VectorClock vectorClock) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByDatabaseVersionWithChunkChecksums.sql");			
+			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentsWithChunkChecksumsForDatabaseVersion.sql");			
+
 			preparedStatement.setString(1, vectorClock.toString());
+			preparedStatement.setString(2, vectorClock.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			return createFileContents(resultSet);
@@ -301,8 +303,10 @@ public class SqlDatabaseDAO {
 
 	private Map<MultiChunkId, MultiChunkEntry> getMultiChunksForDatabaseVersion(VectorClock vectorClock) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksWithChunksForDatabaseVersion.sql");			
+			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksWithChunksForDatabaseVersion.sql");
+			
 			preparedStatement.setString(1, vectorClock.toString());
+			preparedStatement.setString(2, vectorClock.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			return createMultiChunkEntries(resultSet);
@@ -315,7 +319,9 @@ public class SqlDatabaseDAO {
 	protected Map<ChunkChecksum, ChunkEntry> getChunksForDatabaseVersion(VectorClock vectorClock) {
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql");			
+			
 			preparedStatement.setString(1, vectorClock.toString());
+			preparedStatement.setString(2, vectorClock.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			return createChunkEntries(resultSet);

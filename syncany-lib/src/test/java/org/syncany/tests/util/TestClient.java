@@ -82,7 +82,7 @@ public class TestClient extends Client {
 	
 	public File createNewFile(String name, long size) throws IOException {
 		File localFile = getLocalFile(name);		
-		TestFileUtil.createRandomFile(localFile, size);
+		TestFileUtil.createNonRandomFile(localFile, size);
 		
 		return localFile;
 	}

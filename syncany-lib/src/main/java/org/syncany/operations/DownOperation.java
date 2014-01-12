@@ -188,6 +188,8 @@ public class DownOperation extends Operation {
 			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!
 			WriteSqlDatabaseDAO writeDatabaseDAO = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
 			
+			logger.log(Level.INFO, "   Adding database versions to SQL database ...");
+			
 			for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
 

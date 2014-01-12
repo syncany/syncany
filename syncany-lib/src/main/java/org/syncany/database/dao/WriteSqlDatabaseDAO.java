@@ -66,8 +66,6 @@ public class WriteSqlDatabaseDAO extends SqlDatabaseDAO {
 	
 	public void persistDatabaseVersion(DatabaseVersion databaseVersion) throws IOException, SQLException {		
 		try {
-			logger.log(Level.INFO, "Persisting database version ... ");
-			
 			writeDatabaseVersion(connection, databaseVersion);			
 			connection.commit();
 		}
