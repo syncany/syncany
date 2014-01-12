@@ -46,7 +46,7 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		clientB.down();
 		assertEquals("There should be three files.", 3, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());	
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());	
 		
 		// Tear down
 		clientA.cleanup();
@@ -70,7 +70,7 @@ public class FilenameCapitalizationWindowsScenarioTest {
 		clientB.down();
 		assertEquals("There should be three files.", 3, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());	
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());	
 		
 		// Tear down
 		clientA.cleanup();

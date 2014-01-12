@@ -73,17 +73,15 @@ public class StatusOperation extends Operation {
 		if (options != null && options.isForceChecksum()) {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
-
 		
 		// Get local database
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
-		
+
 		// Path to actual file version
 		final Map<String, FileVersion> filesInDatabase = basicDatabaseDAO.getFilesInDatabase();
 
 		// Find local changes
-		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");						
-		
+		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");								
 		ChangeSet localChanges = findLocalChanges(filesInDatabase);
 		
 		if (!localChanges.hasChanges()) {

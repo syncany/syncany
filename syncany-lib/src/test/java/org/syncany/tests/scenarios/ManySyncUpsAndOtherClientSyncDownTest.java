@@ -43,7 +43,7 @@ public class ManySyncUpsAndOtherClientSyncDownTest {
 		// ROUND 2: sync down by B
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());		
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
 		
 		// Tear down
 		clientA.cleanup();

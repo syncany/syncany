@@ -88,7 +88,7 @@ public class LongRunningLargeFileScenarioTest {
 		
 		try {
 			assertEquals("File checksum should be equal. ", checksumFileA, checksumFileB);
-			assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+			assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		}
 		finally {
 			// Tear down

@@ -136,7 +136,7 @@ public class TestClient extends Client {
 		return TestFileUtil.getLocalFilesExcludeLockedAndNoRead(config.getLocalDir());		
 	}
  
-	public File getLocalDatabaseFile() {
+	public File getDatabaseFile() {
 		return config.getDatabaseFile();
 	}
 	

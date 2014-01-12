@@ -46,7 +46,7 @@ public class EmptyFileScenarioTest {
 		
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientB.createNewFile("B-file2", 0);
 		clientB.moveFile("A-file1.jpg", "B-file1-moved");
@@ -62,7 +62,7 @@ public class EmptyFileScenarioTest {
 		
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());				
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());				
 		
 		Map<String, File> beforeSyncDownFileList = clientB.getLocalFilesExcludeLockedAndNoRead();
 		clientA.down(); // double-down, has caused problems		

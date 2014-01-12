@@ -161,24 +161,14 @@ public class SqlDatabaseDAO {
 				throw new RuntimeException(e);
 			}
 		}
-	}
+	}	
 	
-	public List<DatabaseVersion> getLastNDatabaseVersions(String machineName, int maxDatabaseVersions) {
+	public Iterator<DatabaseVersion> getDatabaseVersions(DatabaseVersionStatus status) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getLastNDatabaseVersions.sql");
-			
-			preparedStatement.setString(1, machineName);
-			preparedStatement.setMaxRows(maxDatabaseVersions);
+			PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsByStatus.sql");			
+			preparedStatement.setString(1, status.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-			List<DatabaseVersion> databaseVersions = new ArrayList<DatabaseVersion>();
-			
-			while (resultSet.next()) {				
-				DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet);
-				databaseVersions.add(databaseVersion);
-			}
-
-			return databaseVersions;
+			return new DatabaseVersionIteration(preparedStatement.executeQuery());			
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -217,7 +207,7 @@ public class SqlDatabaseDAO {
 		public DatabaseVersion next() {
 			if (hasNext) {
 				try {
-					DatabaseVersion databaseVersion =  createDatabaseVersionFromRow(resultSet);
+					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet);
 					hasNext = resultSet.next();
 					
 					return databaseVersion;
@@ -350,7 +340,7 @@ public class SqlDatabaseDAO {
 				multiChunkEntry = new MultiChunkEntry(multiChunkId);
 			}
 			
-			multiChunkEntry.addChunk(ChunkChecksum.parseChunkChecksum("chunk_checksum"));
+			multiChunkEntry.addChunk(ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum")));
 			multiChunkEntries.put(multiChunkId, multiChunkEntry); 
 			
 			currentMultiChunkId = multiChunkId;

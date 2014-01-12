@@ -21,8 +21,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.syncany.database.DatabaseConnectionFactory;
-
 /**
  * @author pheckel
  *
@@ -34,17 +32,31 @@ public class CleanupSqlDatabaseDAO extends SqlDatabaseDAO {
 
 	public void removeDirtyDatabaseVersions() {
 		try {
+			// The order is important, because of the database foreign key consistencies
+			
 			removeDirtyChunks();
 			removeDirtyMultiChunks();
 			removeDirtyFileVersions();
 			removeDirtyFileContents();
 			removeDirtyFileHistories();
+			removeDirtyVectorClocks();
+			removeDirtyDatabaseVersionsInt();
 	
 			connection.commit();
 		}
 		catch (SQLException e) {
 			throw new RuntimeException("Unable to remove dirty database versions.", e);
 		}
+	}
+
+	private void removeDirtyVectorClocks() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyVectorClocks.sql");
+		preparedStatement.executeUpdate();		
+	}
+	
+	private void removeDirtyDatabaseVersionsInt() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyDatabaseVersionsInt.sql");
+		preparedStatement.executeUpdate();		
 	}
 
 	private void removeDirtyFileHistories() throws SQLException {

@@ -17,8 +17,8 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.junit.Assert.*;
+import static org.syncany.tests.util.TestAssertUtil.*;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -57,10 +57,15 @@ public class ThreeClientsOneLoserScenarioTest {
 		clientA.createNewFile("file4.jpg");
 		UpOperationResult aUpResult = clientA.upWithForceChecksum(); // 
 		assertEquals("Expected to fail, because db-C-1 has not been looked at", UpResultCode.NOK_UNKNOWN_DATABASES, aUpResult.getResultCode());
+		assertFalse(clientA.getLocalFile("file2.jpg").exists());
+		assertFalse(clientA.getLocalFile("file3.jpg").exists());
 		
 		// A downloads C's changes, no file changes are expected
 		DownOperationResult aDownResult = clientA.down(); 
 		assertEquals("Expected to succeed with remote changes (a new database file, but no file changes!).", DownResultCode.OK_WITH_REMOTE_CHANGES, aDownResult.getResultCode());
+		assertTrue(clientA.getLocalFile("file2.jpg").exists());
+		assertFalse(clientA.getLocalFile("file3.jpg").exists());
+		
 		// TODO [low] Add assert: "no file changes are expected"
 		
 		// A uploads again, this time it should succeed, because C's file is in knowndbs.list
@@ -68,8 +73,11 @@ public class ThreeClientsOneLoserScenarioTest {
 		assertEquals("Expected to succeed, because db-C-1 has already been looked at", UpResultCode.OK_APPLIED_CHANGES, aUpResult.getResultCode());
 		
 		// C calls down and up, to sync its changes
-		clientC.down();
+		clientC.down(); // Adds dirty database
+		assertSqlResultEquals(clientC.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "1");
+		
 		clientC.upWithForceChecksum(); 
+		assertSqlResultEquals(clientC.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "0");
 		
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());		

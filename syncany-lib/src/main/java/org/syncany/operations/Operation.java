@@ -17,14 +17,9 @@
  */
 package org.syncany.operations;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.MemoryDatabase;
-import org.syncany.database.dao.XmlDatabaseDAO;
 
 /**
  * Operations represent and implement Syncany's business logic. They typically
@@ -57,11 +52,4 @@ public abstract class Operation {
 	 * @throws Exception If the operation fails
 	 */
 	public abstract OperationResult execute() throws Exception;
-
-	protected void saveLocalDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {	
-		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
-		
-		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
-		dao.save(db, localDatabaseFile);		
-	}			
 }

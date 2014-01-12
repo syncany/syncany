@@ -50,7 +50,7 @@ public class RenameFileWithDiffModifiedDateScenarioTest {
 		// B, down, then move BOTH files
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertSqlDatabaseEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientB.moveFile("A-file1.jpg", "A-file1-moved.jpg");
 		clientB.moveFile("A-file1-with-different-modified-date.jpg", "A-file1-with-different-modified-date-moved.jpg");				

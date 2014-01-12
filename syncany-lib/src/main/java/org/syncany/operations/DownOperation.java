@@ -216,9 +216,10 @@ public class DownOperation extends Operation {
 		}
 		else {
 			// Load dirty database (if existent)
-			logger.log(Level.INFO, "  + Pruning databases locally ...");
+			logger.log(Level.INFO, "  + Marking databases as DIRTY locally ...");
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
+				logger.log(Level.INFO, "    * MASTER->DIRTY: "+databaseVersionHeader);
 				localDatabase.markDatabaseVersion(databaseVersionHeader, DatabaseVersionStatus.DIRTY);
 			
 				String remoteFileToPruneClientName = config.getMachineName();
