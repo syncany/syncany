@@ -51,13 +51,19 @@ public class PluginSetting {
 	   }
 	   
 	   public boolean validate() { 
-		   return (value != null && !value.equals(""));
+		   return (value != null);
 	   }
 	   
 	   /**
 	    * Setter for the value. Throws InvalidParameterException on invalid values.
 	    */
 	   public void setValue(String str) {
+		   if ("".equals(str)) {
+			   //Setting null allows us to keep the internal representation consistent. 
+			   //Non-null values should be valid. 
+			   value = null;
+			   return;
+		   }
 		   if (type == ValueType.STRING) {
 			   value = str;
 		   }
@@ -76,8 +82,10 @@ public class PluginSetting {
 	   }
 	   
 	   public String getValue() {
-		   if (value == null && getDefaultValue() != null) {
-			   return getDefaultValue();
+		   if (value == null) {
+			   if (getDefaultValue() != null) {
+				   return getDefaultValue();
+			   }
 		   }
 		   return value;
 	   }
