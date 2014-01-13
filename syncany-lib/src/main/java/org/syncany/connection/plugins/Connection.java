@@ -18,7 +18,6 @@
 package org.syncany.connection.plugins;
 
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -32,43 +31,9 @@ import java.util.TreeMap;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class Connection {
-    public abstract TransferManager createTransferManager();
-    public void validate() throws StorageException {
-    	for (String name : getSettings().keySet()) {
-    		PluginSetting setting = getSettings().get(name);
-    		if (setting.isMandatory()) {
-    			if (!setting.validate()) {
-    				throw new StorageException("Mandatory setting " + name + " is not set.");
-    			}
-    		}
-    	}
-    }
-    
-    public abstract Map<String,PluginSetting> getSettings();
-    public abstract void init() throws StorageException;
-    public void setSettings(Map<String, String> map) throws StorageException {
-    	for (String name : map.keySet()) {
-    		if (getSettings().get(name) == null) {
-    			throw new StorageException("No such setting: " + name);
-    		}
-    		try {
-    			getSettings().get(name).setValue(map.get(name));
-    		}
-    		catch (Exception e) {
-    			throw new StorageException(e);
-    		}
-    	}
-    	validate();
-    	init();
-    }
-    
-    public Map<String, String> getSettingsStrings() {
-    	Map<String, String> map = new TreeMap<String, String>();
-    	for (String name : getSettings().keySet()) {
-    		map.put(name, getSettings().get(name).getValue());
-    	}
-    	return map;
-    }
+public interface Connection {
+    public TransferManager createTransferManager();
+    public PluginOptionSpecs getOptionSpecs();        
+    public void init(Map<String, String> optionValues) throws StorageException;    
 }
 

@@ -21,13 +21,11 @@ import java.io.Console;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.TreeMap;
 
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -36,35 +34,39 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginSetting;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 public abstract class AbstractInitCommand extends Command {
 	protected Console console;
-	
+
 	public AbstractInitCommand() {
 		console = System.console();
-	}	
-	
+	}
+
 	protected ConfigTO createConfigTO(File localDir, SaltedSecretKey masterKey, ConnectionTO connectionTO) throws Exception {
 		ConfigTO configTO = new ConfigTO();
-		
+
 		configTO.setDisplayName(getDefaultDisplayName());
 		configTO.setMachineName(getDefaultMachineName());
 		configTO.setMasterKey(masterKey); // can be null
 
 		configTO.setConnection(connectionTO);
-		
-		return configTO;
-	}		
 
-	protected ConnectionTO initPluginWithOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts) throws Exception {
+		return configTO;
+	}
+
+	protected ConnectionTO initPluginWithOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts)
+			throws Exception {
 		ConnectionTO connectionTO = new ConnectionTO();
-		
+
 		String pluginStr = null;
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 
@@ -74,144 +76,153 @@ public abstract class AbstractInitCommand extends Command {
 		else {
 			pluginStr = askPlugin();
 		}
-		
+
 		if (options.has(optionPluginOpts)) {
-			pluginSettings = initPluginSettings(pluginStr, options.valuesOf(optionPluginOpts));			
+			pluginSettings = initPluginSettings(pluginStr, options.valuesOf(optionPluginOpts));
 		}
 		else {
 			pluginSettings = askPluginSettings(pluginStr);
-		}		
-		
+		}
+
 		connectionTO.setType(pluginStr);
 		connectionTO.setSettings(pluginSettings);
-		
+
 		return connectionTO;
 	}
-	
-	protected Map<String, String> initPluginSettings(String pluginStr, List<String> pluginSettingsOptList) throws Exception {		
-		Map<String, String> pluginSettings = new HashMap<String, String>();
+
+	protected Map<String, String> initPluginSettings(String pluginStr, List<String> pluginSettingsOptList) throws Exception {
+		Map<String, String> pluginOptionValues = new HashMap<String, String>();		
+		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
+
+		Connection connection = plugin.createConnection();
+		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
 		// Fill settings map
 		for (String pluginSettingKeyValue : pluginSettingsOptList) {
 			String[] keyValue = pluginSettingKeyValue.split("=", 2);
-			
+
 			if (keyValue.length != 2) {
-				throw new Exception("Invalid setting: "+pluginSettingKeyValue);
+				throw new Exception("Invalid setting: " + pluginSettingKeyValue);
 			}
-			
-			pluginSettings.put(keyValue[0], keyValue[1]);
+
+			pluginOptionValues.put(keyValue[0], keyValue[1]);
 		}
 		
-		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
-		Connection connection = plugin.createConnection();
-				
-		connection.setSettings(pluginSettings);
-		connection.validate();
-		
-		return pluginSettings;
+		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
+		connection = null; // Connection only needed to to test for exceptions
+
+		return pluginOptionValues;
 	}
 
 	protected String initPlugin(String pluginStr) throws Exception {
 		Plugin plugin = Plugins.get(pluginStr);
-		
+
 		if (plugin == null) {
-			throw new Exception("ERROR: Plugin '"+pluginStr+"' does not exist.");
+			throw new Exception("ERROR: Plugin '" + pluginStr + "' does not exist.");
 		}
-		
+
 		return pluginStr;
 	}
 
 	protected Map<String, String> askPluginSettings(String pluginStr) throws StorageException {
 		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
+		
 		Connection connection = plugin.createConnection();
+		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
-		Map<String, PluginSetting> pluginSettings = connection.getSettings();
-		
+		Map<String, String> pluginOptionValues = new HashMap<String, String>();
+
 		out.println();
-		out.println("Connection details for "+plugin.getName()+" connection:");
-		
-		for (String name : pluginSettings.keySet()) {
-			PluginSetting setting = pluginSettings.get(name);
-			while (true) {
-				out.print("- "+name+": ");
-				String value = null;
-				if (setting.isSensitive()) {
-					value = String.copyValueOf(console.readPassword());
-				}
-				else {
-					value = console.readLine();
-				}
-				try {
-					setting.setValue(value);
-				}
-				catch (InvalidParameterException e) {
-					out.println(value + " is not valid input for the setting " + name);
-					out.println();
-					continue;
-				}
-				if (setting.isMandatory()) {
-					if (!setting.validate()) {
-						out.println("ERROR: This setting is mandatory.");
-						out.println();
-					}
-					else {
-						break;
-					}
-				}
-				else {
-					break;
-				}
-			}	
+		out.println("Connection details for " + plugin.getName() + " connection:");
+
+		for (PluginOptionSpec optionSpec : pluginOptionSpecs.values()) {
+			String optionValue = askPluginOption(optionSpec);
+			pluginOptionValues.put(optionSpec.getId(), optionValue);
 		}
 
-		connection.validate(); // To check for exceptions
-		connection.init();
+		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
+		connection = null; // Connection only needed to to test for exceptions
 		
-		return connection.getSettingsStrings();
+		return pluginOptionValues;
+	}
+
+	private String askPluginOption(PluginOptionSpec optionSpec) {
+		while (true) {
+			String value = null;
+
+			if (optionSpec.isSensitive()) {
+				out.printf("- %s (not displayed): ", optionSpec.getDescription());
+				value = String.copyValueOf(console.readPassword());
+			}
+			else if (!optionSpec.isMandatory()) {
+				out.printf("- %s (optional, default is %s): ", optionSpec.getDescription(), optionSpec.getDefaultValue());
+				value = console.readLine();
+			}
+			else {
+				out.printf("- %s: ", optionSpec.getDescription());
+				value = console.readLine();
+			}
+
+			OptionValidationResult validationResult = optionSpec.validateInput(value);
+
+			switch (validationResult) {
+			case INVALID_NOT_SET:
+				out.println("ERROR: This option is mandatory.");
+				out.println();
+				break;
+
+			case INVALID_TYPE:
+				out.println("ERROR: Not a valid input.");
+				out.println();
+				break;
+
+			case VALID:
+				return optionSpec.getValue(value);
+				
+			default:
+				throw new RuntimeException("Invalid return type: "+validationResult);
+			}
+		}
 	}
 
 	protected String askPlugin() {
 		String pluginStr = null;
-		
+
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsList = "";
-		
-		for (int i=0; i<plugins.size(); i++) {
-			pluginsList += plugins.get(i).getId();
-			if (i < plugins.size()-1) { pluginsList += ", "; }			
-		}
-		
+		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
+			@Override
+			public String getString(Plugin plugin) {
+				return plugin.getId();
+			}
+		});
+
 		while (pluginStr == null) {
-			out.println("Choose a storage plugin. Available plugins are: "+pluginsList);
-			out.print("Plugin: ");			
+			out.println("Choose a storage plugin. Available plugins are: " + pluginsList);
+			out.print("Plugin: ");
 			pluginStr = console.readLine();
-			
+
 			Plugin plugin = Plugins.get(pluginStr);
-			
+
 			if (plugin == null) {
-				out.println("ERROR: Plugin '"+pluginStr+"' does not exist.");
+				out.println("ERROR: Plugin does not exist.");
 				out.println();
-				
+
 				pluginStr = null;
 			}
 		}
-		
+
 		return pluginStr;
 	}
 
 	protected String getDefaultMachineName() throws UnknownHostException {
-		return new String(
-			  InetAddress.getLocalHost().getHostName() 
-			+ System.getProperty("user.name")
-			+ Math.abs(new Random().nextInt())
-		).replaceAll("[^a-zA-Z0-9]", "");		
+		return new String(InetAddress.getLocalHost().getHostName() + System.getProperty("user.name") + Math.abs(new Random().nextInt())).replaceAll(
+				"[^a-zA-Z0-9]", "");
 	}
-	
 
 	protected String getDefaultDisplayName() throws UnknownHostException {
-		return System.getProperty("user.name");		
+		return System.getProperty("user.name");
 	}
-	
+
 	protected void printLink(GenlinkOperationResult operationResult, boolean shortOutput) {
 		if (shortOutput) {
 			out.println(operationResult.getShareLink());
@@ -220,10 +231,10 @@ public abstract class AbstractInitCommand extends Command {
 			out.println();
 			out.println("Repository created, and local folder initialized. To share the same repository");
 			out.println("with others, you can share this link:");
-			out.println();		
-			out.println("   "+operationResult.getShareLink());
 			out.println();
-			
+			out.println("   " + operationResult.getShareLink());
+			out.println();
+
 			if (operationResult.isShareLinkEncrypted()) {
 				out.println("This link is encrypted with the given password, so you can safely share it.");
 				out.println("using unsecure communication (chat, e-mail, etc.)");
@@ -240,6 +251,6 @@ public abstract class AbstractInitCommand extends Command {
 			}
 
 			out.println();
-		}			
+		}
 	}
 }

@@ -18,11 +18,11 @@
 package org.syncany.connection.plugins.ftp;
 
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginSetting;
-import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
@@ -32,13 +32,12 @@ import org.syncany.connection.plugins.TransferManager;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class FtpConnection extends Connection {
+public class FtpConnection implements Connection {
     private String hostname;
     private String username;
     private String password;
     private String path;
     private int port;
-    private Map<String, PluginSetting> settings = null;
 
     @Override
     public TransferManager createTransferManager() {
@@ -86,34 +85,23 @@ public class FtpConnection extends Connection {
     }
 
 	@Override
-	public void init() {
-		Map<String, PluginSetting> map = getSettings();
-		// Mandatory
-		String hostname = map.get("hostname").getValue();
-		String username = map.get("username").getValue();
-		String password = map.get("password").getValue();
-		String path = map.get("path").getValue();
-		
-		// Optional
-		String portStr = map.get("port").getValue();
-		
-		this.hostname = hostname;
-		this.username = username;
-		this.password = password;
-		this.path = path;
-		this.port = Integer.parseInt(portStr);
+	public void init(Map<String, String> optionValues) {
+		this.hostname = optionValues.get("hostname");
+		this.username = optionValues.get("username");
+		this.password = optionValues.get("password");
+		this.path = optionValues.get("path");
+		this.port = Integer.parseInt(optionValues.get("port"));
 	}
 
 	@Override 
-	public Map<String,PluginSetting> getSettings() {
-		if (settings == null) {
-			settings = new TreeMap<String, PluginSetting>();
-			settings.put("hostname", new PluginSetting(ValueType.STRING,  true, false));
-			settings.put("password", new PluginSetting(ValueType.STRING,  true, true));
-			settings.put("path", new PluginSetting(ValueType.STRING,  true, false));
-			settings.put("port", new PluginSetting(ValueType.INT,  "21", false));
-		}
-		return settings;
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("hostname", "Hostname", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("username", "Username", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("password", "Password", ValueType.STRING, true, true, null),
+			new PluginOptionSpec("path", "Path", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("port", "Port", ValueType.INT, false, false, "21")
+		);
 	}
 	
     @Override

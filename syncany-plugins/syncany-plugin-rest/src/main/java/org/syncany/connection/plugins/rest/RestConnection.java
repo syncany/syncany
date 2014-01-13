@@ -18,13 +18,13 @@
 package org.syncany.connection.plugins.rest;
 
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginSetting;
-import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 
 /**
  * The REST connection represents the settings required to create to a
@@ -39,32 +39,28 @@ import org.syncany.connection.plugins.PluginSetting.ValueType;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class RestConnection extends Connection {
+public abstract class RestConnection implements Connection {
     protected String accessKey;
     protected String secretKey; 
     protected String bucket;    
     protected ProviderCredentials credentials;
-    protected Map<String, PluginSetting> settings = null;
+    protected Map<String, PluginOptionSpec> settings = null;
     
     @Override
-	public void init() {
-    	Map<String, PluginSetting> map = getSettings();
-		accessKey = map.get("accessKey").getValue();
-		secretKey = map.get("secretKey").getValue();
-		bucket = map.get("bucket").getValue();
+	public void init(Map<String, String> optionValues) {
+		accessKey = optionValues.get("accessKey");
+		secretKey = optionValues.get("secretKey");
+		bucket = optionValues.get("bucket");
 	}   
-    
-    
-    @Override
-    public Map<String, PluginSetting> getSettings() {
-    	if (settings == null) {
-    		settings = new TreeMap<String, PluginSetting>();
-    		settings.put("accessKey", new PluginSetting(ValueType.STRING, true, false));
-    		settings.put("secretKey", new PluginSetting(ValueType.STRING, true, true));
-    		settings.put("bucket", new PluginSetting(ValueType.STRING, true, false));
-    	}
-    	return settings;
-    }
+
+    @Override 
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("accessKey", "Access Key", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("secretKey", "Secret Key", ValueType.STRING, true, true, null),
+			new PluginOptionSpec("bucket", "Bucket Name", ValueType.STRING, true, false, null)
+		);
+	}
     
     public String getAccessKey() {
         return accessKey;

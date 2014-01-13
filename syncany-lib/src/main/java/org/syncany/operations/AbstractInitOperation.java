@@ -57,7 +57,7 @@ public abstract class AbstractInitOperation extends Operation {
 		Plugin plugin = Plugins.get(connectionTO.getType());
 		
 		Connection connection = plugin.createConnection();
-		connection.setSettings(connectionTO.getSettings());
+		connection.init(connectionTO.getSettings());
 		
 		return connection.createTransferManager();
 	}
