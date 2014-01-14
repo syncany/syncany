@@ -91,7 +91,7 @@ public class LocalConnectionPluginTest {
 		invalidPluginSettings.put("path", "/path/does/not/exist");
 		
 		Connection connection = pluginInfo.createConnection();
-		connection.setSettings(invalidPluginSettings);
+		connection.init(invalidPluginSettings);
 		
 		TransferManager transferManager = connection.createTransferManager();
 		
@@ -107,7 +107,7 @@ public class LocalConnectionPluginTest {
 		// do NOT add 'path'
 		
 		Connection connection = pluginInfo.createConnection();
-		connection.setSettings(invalidPluginSettings);
+		connection.init(invalidPluginSettings);
 		
 		TransferManager transferManager = connection.createTransferManager();
 		
@@ -240,7 +240,7 @@ public class LocalConnectionPluginTest {
 		Plugin pluginInfo = Plugins.get("local");	
 		
 		Connection connection = pluginInfo.createConnection();				
-		connection.setSettings(localPluginSettings);
+		connection.init(localPluginSettings);
 		
 		TransferManager transferManager = connection.createTransferManager();
 

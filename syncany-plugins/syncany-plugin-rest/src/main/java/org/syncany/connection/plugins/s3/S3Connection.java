@@ -21,22 +21,20 @@ import java.util.Map;
 
 import org.jets3t.service.security.AWSCredentials;
 import org.jets3t.service.security.ProviderCredentials;
-import org.syncany.connection.plugins.PluginSetting;
-import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.rest.RestConnection;
 
 public class S3Connection extends RestConnection {   
     // cp. http://jets3t.s3.amazonaws.com/api/constant-values.html#org.jets3t.service.model.S3Bucket.LOCATION_ASIA_PACIFIC
     private String location;
-    Map<String, PluginSetting> settings = null;
 
     @Override
-	public void init() {
-    	super.init();
-    	Map<String, PluginSetting> map = getSettings();
-    	// Additional S3 settings
-		location = map.get("location").getValue();
+	public void init(Map<String, String> optionValues) {
+    	super.init(optionValues);    	
+		location = optionValues.get("location");
 	}
 
     @Override
@@ -58,12 +56,10 @@ public class S3Connection extends RestConnection {
     }
     
     @Override
-    public Map<String, PluginSetting> getSettings() {
-    	if (settings == null) {
-    		settings = super.getSettings();
-    		settings.put("location", new PluginSetting(ValueType.STRING, true, false));
-    	}
-    	return settings;
-    }
-    
+    public PluginOptionSpecs getOptionSpecs() {
+    	PluginOptionSpecs optionSpecs = super.getOptionSpecs();    	
+    	optionSpecs.add(new PluginOptionSpec("location", "Location", ValueType.STRING, true, false, null));
+
+    	return optionSpecs;
+    }    
 }

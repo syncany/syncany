@@ -17,29 +17,23 @@
  */
 package org.syncany.connection.plugins.webdav;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginSetting;
-import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
-public class WebdavConnection extends Connection {
+public class WebdavConnection implements Connection {
 	private String url;
 	private String username;
 	private String password;
-	private Map<String, PluginSetting> settings = null;
 
 	private boolean secure;
 	private SSLSocketFactory sslSocketFactory;
@@ -50,16 +44,11 @@ public class WebdavConnection extends Connection {
 	}
 
 	@Override
-	public void init() throws StorageException {
-		Map<String, PluginSetting> map = getSettings();
-		// Mandatory
-		String url = map.get("url").getValue();
-		String username = map.get("username").getValue();
-		String password = map.get("password").getValue();
+	public void init(Map<String, String> optionValues) throws StorageException {
+		this.url = optionValues.get("url");
+		this.username = optionValues.get("username");
+		this.password = optionValues.get("password");
 
-		this.url = url;
-		this.username = username;
-		this.password = password;
 		// SSL
 		if (url.toLowerCase().startsWith("https")) {
 			try {
@@ -71,40 +60,40 @@ public class WebdavConnection extends Connection {
 		}
 	}
 
-	private void initSsl() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, UnrecoverableKeyException {
+	private void initSsl() throws Exception {
 		this.secure = true;
 
-		/*String keyStoreFilename = "/tmp/mystore";
-		File keystoreFile = new File(keyStoreFilename);
-		FileInputStream fis = new FileInputStream(keystoreFile);
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); // JKS
-		keyStore.load(fis, null);*/
+		/*
+		 * String keyStoreFilename = "/tmp/mystore"; 
+		 * File keystoreFile = new File(keyStoreFilename); 
+		 * FileInputStream fis = new
+		 * FileInputStream(keystoreFile); 
+		 * KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); // JKS keyStore.load(fis, null);
+		 */
 
-		TrustStrategy trustStrategy = new TrustStrategy() {			
+		TrustStrategy trustStrategy = new TrustStrategy() {
 			@Override
 			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 				for (X509Certificate cert : chain) {
 					System.out.println(cert);
 				}
-				 
-				return true; // TODO [high] WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible!
+
+				// TODO [high] WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
+				return true;							
 			}
 		};
-		
+
 		this.sslSocketFactory = new SSLSocketFactory(trustStrategy);
 	}
 
-	@Override 
-	public Map<String, PluginSetting> getSettings() {
-		if (settings == null) {
-			settings = new TreeMap<String, PluginSetting>();
-			settings.put("url", new PluginSetting(ValueType.STRING, true, false));
-			settings.put("username", new PluginSetting(ValueType.STRING, true, false));
-			settings.put("password", new PluginSetting(ValueType.STRING, true, true));
-		}
-    	return settings;
+	@Override
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("url", "URL (incl. path & port)", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("username", "Username", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("password", "Password", ValueType.STRING, true, true, null)
+		);				
 	}
-	
 
 	@Override
 	public String toString() {

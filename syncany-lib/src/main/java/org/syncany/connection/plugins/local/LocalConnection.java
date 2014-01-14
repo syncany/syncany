@@ -19,11 +19,11 @@ package org.syncany.connection.plugins.local;
 
 import java.io.File;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginSetting;
-import org.syncany.connection.plugins.PluginSetting.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
@@ -34,44 +34,31 @@ import org.syncany.connection.plugins.TransferManager;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection extends Connection {
+public class LocalConnection implements Connection {
 	private File repositoryPath;
-	private Map<String, PluginSetting> settings = null;
-
-    @Override
-    public TransferManager createTransferManager() {
-        return new LocalTransferManager(this);
-    }
-
-    public File getRepositoryPath() {
-        return repositoryPath;
-    }
-
-    public void setRepositoryPath(File repositoryPath) {
-        this.repositoryPath = repositoryPath;
-    }
-    
-    @Override
-	public void init() {
-		repositoryPath = new File(getSettings().get("path").getValue());
-	}
-    
-    
 
 	@Override
-	public Map<String,PluginSetting> getSettings() {
-		if (settings == null) {
-			settings = new TreeMap<String, PluginSetting>();
-			settings.put("path", new PluginSetting(ValueType.STRING, true, false));
-		}
-		return settings;
-
+	public TransferManager createTransferManager() {
+		return new LocalTransferManager(this);
 	}
 
-	
+	public File getRepositoryPath() {
+		return repositoryPath;
+	}
 
+	public void setRepositoryPath(File repositoryPath) {
+		this.repositoryPath = repositoryPath;
+	}
 
+	@Override
+	public void init(Map<String, String> optionValues) {
+		repositoryPath = new File(optionValues.get("path"));
+	}
 
-
-	
+	@Override
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null)
+		);
+	}
 }
