@@ -58,7 +58,7 @@ public class WatchCommand extends Command {
 		
 		// --interval
 		if (interval != null) {
-			operationOptions.setInterval(interval.intValue() * 1000);
+			operationOptions.setInterval(interval.intValue());
 		}
 		
 		// Conflicting options: --no-announcements and --announce=<..>
@@ -104,10 +104,11 @@ public class WatchCommand extends Command {
 		th = new Thread(new Runnable() {
 			public void run() {
 				try {
-					setStatus(CommandStatus.STARTED);
 					Config config = initConfigOption(localFolder);
 					WatchOperation wo = new WatchOperation(config, operationOptions);
+					setStatus(CommandStatus.STARTED);
 					wo.execute();
+					setStatus(CommandStatus.STOPPED);
 				}
 				catch (Exception e) {
 					setStatus(CommandStatus.STOPPED);

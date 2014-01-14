@@ -154,6 +154,14 @@ public class SelectLocalFolder extends WizardPanelComposite {
 
 	@Override
 	public void updateData() {
-		
+		String action = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION);
+		if (action.equals("watch")){
+			getParentWizardDialog().updateFinishButton(true);
+			getParentWizardDialog().updateNextButton(false);
+		}
+		else{
+			getParentWizardDialog().updateFinishButton(false);
+			getParentWizardDialog().updateNextButton(true);
+		}
 	}
 }

@@ -56,10 +56,11 @@ public class ClientCommandFactory {
 		client.handleCommand(command);
 	}
 	
-	public static void handleWatch(String folder) {
+	public static void handleWatch(String folder, int interval) {
 		Map<String, Object> command = buildParameters();
 		command.put("action", "watch");
 		command.put("localfolder", folder);
+		command.put("interval", ""+interval);
 		client.handleCommand(command);
 	}
 	

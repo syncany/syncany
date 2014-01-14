@@ -19,6 +19,9 @@ package org.syncany.daemon.command;
 
 import java.util.UUID;
 
+import org.syncany.daemon.Daemon;
+import org.syncany.daemon.DaemonEvent;
+
 /**
  * @author vincent
  *
@@ -51,6 +54,7 @@ public abstract class Command {
 	 */
 	public void setStatus(CommandStatus status) {
 		this.status = status;
+		Daemon.getEventBus().post(new DaemonEvent());
 	}
 	
 	public abstract void disposeCommand();

@@ -33,6 +33,8 @@ public class DaemonCommandHandler {
 	private static String handleWatch(Map<String, Object> parameters) {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		String localDir = (String)parameters.get("localfolder");
+		int interval = Integer.parseInt((String)parameters.get("interval"));
+		
 		logger.log(Level.INFO, "Watching folder {0}", localDir);
 		
 		for (String key : commands.keySet()){
@@ -43,10 +45,9 @@ public class DaemonCommandHandler {
 			}
 		}
 
-		WatchCommand wc = new WatchCommand(localDir, 3);
+		WatchCommand wc = new WatchCommand(localDir, interval);
 		commands.put(wc.getId(), wc);
 		wc.execute();
-		updateWatchedFolders();
 		return null;
 	}
 
@@ -97,12 +98,13 @@ public class DaemonCommandHandler {
 		ret.put("client_id", (String)parameters.get("client_id"));
 		ret.put("client_type", (String)parameters.get("client_type"));
 		ret.put("timestamp", ""+System.nanoTime());
+		ret.put("localFolder", (String)parameters.get("localFolder"));
 		ret.put("action", "daemon_update");
 		ret.put("client_action", (String)parameters.get("action"));
 		return ret;
 	}
 
-	private static void updateWatchedFolders() {
+	public static void updateWatchedFolders() {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		
 		Map<String, Map<String, String>> folders = new HashMap<>();

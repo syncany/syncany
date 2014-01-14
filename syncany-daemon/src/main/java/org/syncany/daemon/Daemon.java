@@ -38,6 +38,13 @@ public class Daemon {
 		Logging.init();
 	}
 
+	/**
+	 * @return the eventBus
+	 */
+	public static EventBus getEventBus() {
+		return eventBus;
+	}
+	
 	public Daemon(){
 		try {
 			DaemonConfigurationTO acto = loadApplicationConfiguration();
@@ -53,6 +60,11 @@ public class Daemon {
 	 */
 	public Map<String, Command> getCommands() {
 		return _commands;
+	}
+	
+	@Subscribe
+	public void update(DaemonEvent event){
+		DaemonCommandHandler.updateWatchedFolders();
 	}
 	
 	private void killWatchingThreads(){
@@ -106,7 +118,10 @@ public class Daemon {
 	}
 
 	public static Daemon getInstance() {
-		if (instance == null) instance = new Daemon();
+		if (instance == null) {
+			instance = new Daemon();
+			getEventBus().register(instance);
+		}
 		return instance;
 	}
 	

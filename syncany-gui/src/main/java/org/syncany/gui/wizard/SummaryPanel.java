@@ -164,16 +164,17 @@ public class SummaryPanel extends WizardPanelComposite {
 		
 		btnNewButton = new Button(composite, SWT.NONE);
 		btnNewButton.setText("Close this windows");
+		btnNewButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				getParentWizardDialog().safeDispose();
+			}
+		});
+		
 		openSyncanyFolder.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				try {
-					Desktop.getDesktop().open(new File(getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER)));
-				}
-				catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				getShell().dispose();
+				getParentWizardDialog().safeDispose();
 			}
 		});
 		

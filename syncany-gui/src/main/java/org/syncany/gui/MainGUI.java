@@ -51,7 +51,7 @@ public class MainGUI {
 		if (wf == null) return;
 		
 		for (String folder : wf){
-			ClientCommandFactory.handleWatch(folder);
+			ClientCommandFactory.handleWatch(folder, 3000);
 		}
 	}
 	

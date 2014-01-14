@@ -57,21 +57,25 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WizardDialog extends Dialog {
 	private enum Panel {
-		START(null), 
-		REPOSITORY_SELECTION(START), 
-		REPOSITORY_ENCRYPTION(REPOSITORY_SELECTION),
-		LOCAL_FOLDER_SELECTION(REPOSITORY_ENCRYPTION),
-		WATCH(START),
-		SUMMARY(LOCAL_FOLDER_SELECTION); 
+		START(null, "LOCAL_FOLDER_SELECTION"), 
+		REPOSITORY_SELECTION("START", "REPOSITORY_ENCRYPTION"), 
+		REPOSITORY_ENCRYPTION("REPOSITORY_SELECTION", "SUMMARY"),
+		LOCAL_FOLDER_SELECTION("START", "REPOSITORY_SELECTION"),
+		SUMMARY("LOCAL_FOLDER_SELECTION", null); 
 		
-		Panel(Panel previous){
+		Panel(String previous, String next){
 			this.previous = previous;
+			this.next = next;
 		}
 		
-		private Panel previous;
+		private String previous;
+		private String next;
 		
 		public Panel getPrevious() {
-			return previous;
+			return Panel.valueOf(previous);
+		}
+		public Panel getNext() {
+			return Panel.valueOf(next);
 		}
 	};
 
@@ -199,26 +203,6 @@ public class WizardDialog extends Dialog {
 		WidgetDecorator.setFont(finishButton, FontDecorator.NORMAL);
 	}
 	
-	private void handleFinish(){
-		switch (selectedPanel) {
-			case WATCH:
-				WatchPanel wp = (WatchPanel)panels.get(selectedPanel);
-				String f = wp.getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER);
-				Launcher.applicationConfiguration.addWatchedFolder(f);
-				Launcher.saveConfiguration();
-				ClientCommandFactory.handleWatch(f);
-				shell.dispose();
-				break;
-			case SUMMARY:
-				ClientCommandFactory.handleCommand(userInput);
-				SummaryPanel sp = (SummaryPanel)panels.get(selectedPanel);
-				sp.startIndeterminateProgressBar();
-				break;
-			default:	
-				throw new RuntimeException("Invalid user selection: " + selectedPanel);
-		}
-	}
-	
 	@Subscribe
 	public void update(InterfaceUpdate event){
 		if (event.getAction() == InterfaceUpdateAction.WIZARD_COMMAND_DONE){
@@ -227,6 +211,7 @@ public class WizardDialog extends Dialog {
 			
 			String reply = (String) event.getData().get("result");
 			final String shareLink = (String) event.getData().get("share_link");
+			final String folder = (String) event.getData().get("localFolder");
 			final boolean shareLinkEncrypted = Boolean.parseBoolean((String) event.getData().get("share_link_encrypted"));
 			
 			switch (reply){
@@ -246,6 +231,10 @@ public class WizardDialog extends Dialog {
 						public void run() {
 							toggleButtons(false);
 							summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
+							
+							Launcher.applicationConfiguration.addWatchedFolder(folder);
+							Launcher.saveConfiguration();
+							ClientCommandFactory.handleWatch(folder, 3000);
 						}
 					});
 					
@@ -254,56 +243,33 @@ public class WizardDialog extends Dialog {
 		}
 	}
 	
-	private void safeDispose() {
-		Display.getDefault().asyncExec(new Runnable() {
-			@Override
-			public void run() {
+	private void handleFinish(){
+		switch (selectedPanel) {
+			case LOCAL_FOLDER_SELECTION:
+				SelectLocalFolder wp = (SelectLocalFolder)panels.get(selectedPanel);
+				String f = wp.getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER);
+				Launcher.applicationConfiguration.addWatchedFolder(f);
+				Launcher.saveConfiguration();
+				ClientCommandFactory.handleWatch(f, 3000);
 				shell.dispose();
-			}
-		});
+				break;
+				
+			case SUMMARY:
+				ClientCommandFactory.handleCommand(userInput);
+				SummaryPanel sp = (SummaryPanel)panels.get(selectedPanel);
+				sp.startIndeterminateProgressBar();
+				break;
+				
+			default:	
+				throw new RuntimeException("Invalid user selection: " + selectedPanel);
+		}
 	}
 	
 	private void handleNext() {
-		WizardPanelComposite panel;
-		
-		switch (selectedPanel) {
-			case START:
-				panel = panels.get(Panel.START);
-				if (panel.isValid()) {
-					userInput.putAll(panel.getUserSelection());
-					
-					if (userInput.get(SyncanyCommandParameters.COMMAND_ACTION).equals("watch")){
-						showPanel(Panel.WATCH);
-					}
-					else{
-						showPanel(Panel.REPOSITORY_SELECTION);
-					}
-				}
-				break;
-		
-			case REPOSITORY_SELECTION:
-				panel = panels.get(Panel.REPOSITORY_SELECTION);
-				if (panel.isValid()) {
-					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.REPOSITORY_ENCRYPTION);
-				}
-				break;
-			case REPOSITORY_ENCRYPTION:
-				panel = panels.get(Panel.REPOSITORY_ENCRYPTION);
-				if (panel.isValid()){
-					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.LOCAL_FOLDER_SELECTION);
-				}
-				break;
-			case LOCAL_FOLDER_SELECTION:
-				panel = panels.get(Panel.LOCAL_FOLDER_SELECTION);
-				if (panel.isValid()){
-					userInput.putAll(panel.getUserSelection());
-					showPanel(Panel.SUMMARY);
-				}
-				break;
-			default:
-				throw new RuntimeException("Invalid user selection: "+selectedPanel);
+		WizardPanelComposite panel = panels.get(selectedPanel);
+		if (panel.isValid()) {
+			userInput.putAll(panel.getUserSelection());
+			showPanel(selectedPanel.getNext());
 		}
 	}
 
@@ -311,12 +277,12 @@ public class WizardDialog extends Dialog {
 		showPanel(selectedPanel.getPrevious());
 	}
 
-	public UserInput getUserInput() {
-		return userInput;
-	}
-	
 	private void handleCancel() {
 		safeDispose();
+	}
+
+	public UserInput getUserInput() {
+		return userInput;
 	}
 
 	private void showPanel(Panel panel) {
@@ -341,13 +307,38 @@ public class WizardDialog extends Dialog {
 		cancelButton.setEnabled(panel.hasCancelButton());
 		finishButton.setEnabled(panel.hasFinishButton());
 	}
-
+	
+	public void updateFinishButton(final boolean state){
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				finishButton.setEnabled(state);		
+			}
+		});
+	}
+	public void updateNextButton(final boolean state){
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				nextButton.setEnabled(state);
+			}
+		});
+	}
+	
+	public void safeDispose() {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				shell.dispose();
+			}
+		});
+	}
+	
 	private void buildPanels() {
 		panels.put(Panel.START, new StartPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.REPOSITORY_SELECTION, new RepositorySelectionPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.SUMMARY, new SummaryPanel(this, stackComposite, SWT.NONE));
-		panels.put(Panel.WATCH, new WatchPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.LOCAL_FOLDER_SELECTION, new SelectLocalFolder(this, stackComposite, SWT.NONE));
 	}
 }
