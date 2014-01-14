@@ -11,6 +11,7 @@ import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.InitCommand;
 import org.syncany.daemon.command.WatchCommand;
 import org.syncany.daemon.websocket.WSServer;
+import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.JsonHelper;
 
 
@@ -76,9 +77,11 @@ public class DaemonCommandHandler {
 		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, false, encrypted, false);
 		
 		try {
-			ic.execute();
+			GenlinkOperationResult result = ic.execute().getGenLinkResult();
 			ret = buildReturnObject(parameters);
 			ret.put("result", "succeed");
+			ret.put("share_link", result.getShareLink());
+			ret.put("share_link_encrypted", ""+result.isShareLinkEncrypted());
 		}
 		catch (Exception e) {
 			logger.warning("Exception " + e);

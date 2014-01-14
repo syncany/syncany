@@ -226,6 +226,9 @@ public class WizardDialog extends Dialog {
 			summaryPanel.stopIndeterminateProgressBar();
 			
 			String reply = (String) event.getData().get("result");
+			final String shareLink = (String) event.getData().get("share_link");
+			final boolean shareLinkEncrypted = Boolean.parseBoolean((String) event.getData().get("share_link_encrypted"));
+			
 			switch (reply){
 				case "failed":
 					Display.getDefault().asyncExec(new Runnable() {
@@ -242,7 +245,7 @@ public class WizardDialog extends Dialog {
 						@Override
 						public void run() {
 							toggleButtons(false);
-							summaryPanel.showSuccessMessage();
+							summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
 						}
 					});
 					

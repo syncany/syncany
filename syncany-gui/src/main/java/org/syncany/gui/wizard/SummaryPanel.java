@@ -18,6 +18,9 @@
 package org.syncany.gui.wizard;
 
 import java.awt.Desktop;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
@@ -62,6 +65,7 @@ public class SummaryPanel extends WizardPanelComposite {
 	private Composite composite;
 	private Button btnNewButton;
 	private Label summaryIntroductionLabel;
+	private Label urlLabel;
 	
 	public SummaryPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -129,12 +133,16 @@ public class SummaryPanel extends WizardPanelComposite {
 		successComposite.setLayout(new GridLayout(1, false));
 		
 		sucessInitLabel = new Label(successComposite, SWT.NONE);
-		sucessInitLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+		sucessInitLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 		sucessInitLabel.setText("Repository sucessfully created");
 		WidgetDecorator.decorateLabel(sucessInitLabel, FontDecorator.BOLD);
 		
+		urlLabel = new Label(successComposite, SWT.WRAP);
+		urlLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+		urlLabel.setText("syncany url has been copied to Clipboard");
+		
 		composite = new Composite(successComposite, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
+		composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 		composite.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
 		openSyncanyFolder = new Button(composite, SWT.NONE);
@@ -151,7 +159,7 @@ public class SummaryPanel extends WizardPanelComposite {
 				catch (IOException e1) {
 					e1.printStackTrace();
 				}
-				getParent().dispose();
+				getShell().dispose();
 			}
 		});
 		
@@ -242,7 +250,15 @@ public class SummaryPanel extends WizardPanelComposite {
 		stackComposite.layout();
 	}
 	
-	public void showSuccessMessage(){
+	public void showSuccessMessage(String link, boolean linkEncrypted){
+		try{
+			Toolkit toolkit = Toolkit.getDefaultToolkit();
+			Clipboard clipboard = toolkit.getSystemClipboard();
+			StringSelection strSel = new StringSelection(link);
+			clipboard.setContents(strSel, null);
+		}
+		catch (Exception e){ }
+		
 		stackLayout.topControl = successComposite;
 		stackComposite.layout();
 	}

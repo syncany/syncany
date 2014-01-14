@@ -39,6 +39,7 @@ import org.syncany.crypto.CipherSpecs;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationListener;
 import org.syncany.operations.InitOperation.InitOperationOptions;
+import org.syncany.operations.InitOperation.InitOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -66,11 +67,11 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		this.gzipEnabled = gzipEnabled;
 	}
 	
-	public int execute() throws Exception {
+	public InitOperationResult execute() throws Exception {
 		InitOperationOptions operationOptions = parseInitOptions();
 		InitOperation io = new InitOperation(operationOptions, this);
-		io.execute();
-		return 0;		
+		InitOperationResult result = io.execute();
+		return result;		
 	}
 
 	private InitOperationOptions parseInitOptions() throws Exception {
