@@ -161,7 +161,9 @@ public abstract class TrayIcon {
 			@Override
 			public void run() {
 				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
+				Launcher.getEventBus().register(wd);
 				wd.open();
+				Launcher.getEventBus().unregister(wd);
 			}
 		});
 	}

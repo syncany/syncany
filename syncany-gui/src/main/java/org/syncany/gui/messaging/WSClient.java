@@ -28,9 +28,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
-import org.syncany.gui.Launcher;
 import org.syncany.gui.MainGUI;
-import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
 import org.syncany.util.JsonHelper;
 
 /**
@@ -57,6 +55,8 @@ public class WSClient {
 		Map<String, String> map = new HashMap<>();
 		map.put("client_id", MainGUI.getClientIdentification());
 		
+		final DaemonMessagesHandler handler = new DaemonMessagesHandler();
+		
 		return new WebSocketClient(new URI(location), new Draft_17(), map, 3000) {
 			@Override
 			public void onOpen(ServerHandshake handshakedata) {
@@ -66,12 +66,12 @@ public class WSClient {
 			@Override
 			public void onMessage(String message) {
 				log.fine("Received: " + message);
-				handleReceivedMessage(message);
+				handler.handleReceivedMessage(message);
 			}
 
 			@Override
 			public void onClose(int code, String reason, boolean remote) {
-				log.fine(String.format("You have been disconnected from {0} for reaseon {1}", getURI(), reason));
+				log.fine(String.format("You have been disconnected from [%s] for reason [%s]", getURI(), reason));
 			}
 
 			@Override
@@ -88,39 +88,6 @@ public class WSClient {
 	public void stop(){
 		log.info("closing client");
 		client.close();
-	}
-
-	@SuppressWarnings("unchecked")
-	public void handleReceivedMessage(String message) {
-		Map<String, ?> parameters = JsonHelper.fromStringToMap(message);
-		String action = (String)parameters.get("action");
-		
-		switch (action){
-			case "update_watched_folders":
-				final Map<String, Map<String, String>> folders = (Map<String, Map<String, String>>)parameters.get("folders");
-			    InterfaceUpdate iu = new InterfaceUpdate(InterfaceUpdateAction.UPDATE_WATCHED_FOLDERS, folders);
-			    Launcher.getEventBus().post(iu);
-				break;
-		
-			case "update_syncing_state":
-				String syncingState = (String)parameters.get("syncing_state");
-				if (syncingState.equals("syncing")){
-					Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
-				}
-				else if (syncingState.equals("in-sync")){
-					Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
-				}
-				break;
-				
-			case "start_syncing":
-			    Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
-				break;
-				
-			case "stop_syncing":
-			    Launcher.getEventBus().post(new InterfaceUpdate(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
-				break;
-			
-		}
 	}
 
 	public void handleCommand(Map<String, ?> parameters) {

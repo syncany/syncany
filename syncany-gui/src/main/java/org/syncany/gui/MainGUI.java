@@ -1,6 +1,7 @@
 package org.syncany.gui;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -66,7 +67,9 @@ public class MainGUI {
 					tray.makeSystemTrayStopSync();
 					break;
 				case UPDATE_WATCHED_FOLDERS:
-					tray.updateFolders(update.getData());
+					Map<String, ?> data = update.getData();
+					Map<String, Map<String, String>> data2 = (Map<String, Map<String, String>>)data;
+					tray.updateFolders(data2);
 					break;
 			}
 		}

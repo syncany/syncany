@@ -1,6 +1,5 @@
 package org.syncany.gui.messaging;
 
-import java.io.File;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +50,7 @@ public class ClientCommandFactory {
 				command.put(key.value(), userInput.get(key));
 			}
 		}
+		
 		command.put("pluginArgs", pluginArgs);
 		
 		client.handleCommand(command);
@@ -71,7 +71,6 @@ public class ClientCommandFactory {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("client_id", MainGUI.getClientIdentification());
 		parameters.put("client_type", "syncany-gui");
-		parameters.put("localDir", System.getProperty("user.home") + File.separator + "Syncany");
 		parameters.put("timestamp", ""+System.nanoTime());
 		return parameters;
 	}

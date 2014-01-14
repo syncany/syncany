@@ -17,6 +17,9 @@
  */
 package org.syncany.gui.tray;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -149,9 +152,21 @@ public class DefaultTrayIcon extends TrayIcon {
 
 				items.clear();
 
-				for (String key : folders.keySet()) {
+				for (final String key : folders.keySet()) {
 					MenuItem mi = new MenuItem(menu, SWT.PUSH);
 					mi.setText(folders.get(key).get("folder") + " [" + folders.get(key).get("status") + "]");
+					mi.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							try {
+								Desktop.getDesktop().open(new File(folders.get(key).get("folder") ));
+							}
+							catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}
+					});
 					items.add(mi);
 				}
 			}

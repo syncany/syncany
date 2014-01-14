@@ -24,19 +24,19 @@ import java.util.Map;
  *
  */
 public abstract class ApplicationEvent {
-	private Map<String, Map<String, String>> data;
+	private Map<String, Object> data;
 	
 	/**
 	 * @param data2
 	 */
-	public ApplicationEvent(Map<String, Map<String, String>> data) {
+	public ApplicationEvent(Map<String, Object> data) {
 		this.data = data;
 	}
 	
 	/**
 	 * @return the data
 	 */
-	public Map<String, Map<String, String>> getData() {
+	public Map<String, Object> getData() {
 		return data;
 	}
 }

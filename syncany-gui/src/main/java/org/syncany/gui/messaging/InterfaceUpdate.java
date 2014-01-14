@@ -26,13 +26,14 @@ import java.util.Map;
 public class InterfaceUpdate extends ApplicationEvent {
 	public enum InterfaceUpdateAction {
 		UPDATE_WATCHED_FOLDERS,
+		WIZARD_COMMAND_DONE,
 		START_SYSTEM_TRAY_SYNC,
 		STOP_SYSTEM_TRAY_SYNC;
 	}
 	
 	private InterfaceUpdateAction action;
 	
-	public InterfaceUpdate(InterfaceUpdateAction action, Map<String, Map<String, String>> data){
+	public InterfaceUpdate(InterfaceUpdateAction action, Map<String, Object> data){
 		super(data);
 		this.action = action;
 	}

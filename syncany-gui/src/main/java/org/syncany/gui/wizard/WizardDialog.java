@@ -44,20 +44,35 @@ import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.WidgetDecorator.FontDecorator;
 import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.messaging.InterfaceUpdate;
+import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
 
+import com.google.common.eventbus.Subscribe;
+
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class WizardDialog extends Dialog {
 	private enum Panel {
-		START, 
-		REPOSITORY_SELECTION, 
-		REPOSITORY_ENCRYPTION,
-		SUMMARY, 
-		WATCH;
+		START(null), 
+		REPOSITORY_SELECTION(START), 
+		REPOSITORY_ENCRYPTION(REPOSITORY_SELECTION),
+		LOCAL_FOLDER_SELECTION(REPOSITORY_ENCRYPTION),
+		WATCH(START),
+		SUMMARY(LOCAL_FOLDER_SELECTION); 
+		
+		Panel(Panel previous){
+			this.previous = previous;
+		}
+		
+		private Panel previous;
+		
+		public Panel getPrevious() {
+			return previous;
+		}
 	};
 
 	//Widgets
@@ -196,11 +211,53 @@ public class WizardDialog extends Dialog {
 				break;
 			case SUMMARY:
 				ClientCommandFactory.handleCommand(userInput);
-				shell.dispose();
+				SummaryPanel sp = (SummaryPanel)panels.get(selectedPanel);
+				sp.startIndeterminateProgressBar();
 				break;
-			default:
+			default:	
 				throw new RuntimeException("Invalid user selection: " + selectedPanel);
 		}
+	}
+	
+	@Subscribe
+	public void update(InterfaceUpdate event){
+		if (event.getAction() == InterfaceUpdateAction.WIZARD_COMMAND_DONE){
+			final SummaryPanel summaryPanel = (SummaryPanel)panels.get(Panel.SUMMARY);
+			summaryPanel.stopIndeterminateProgressBar();
+			
+			String reply = (String) event.getData().get("result");
+			switch (reply){
+				case "failed":
+					Display.getDefault().asyncExec(new Runnable() {
+						@Override
+						public void run() {
+							finishButton.setText("Retry ...");
+							summaryPanel.showErrorMessage();
+						}
+					});
+					
+					break;
+				case "succeed":
+					Display.getDefault().asyncExec(new Runnable() {
+						@Override
+						public void run() {
+							toggleButtons(false);
+							summaryPanel.showSuccessMessage();
+						}
+					});
+					
+					break;
+			}
+		}
+	}
+	
+	private void safeDispose() {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				shell.dispose();
+			}
+		});
 	}
 	
 	private void handleNext() {
@@ -220,6 +277,7 @@ public class WizardDialog extends Dialog {
 					}
 				}
 				break;
+		
 			case REPOSITORY_SELECTION:
 				panel = panels.get(Panel.REPOSITORY_SELECTION);
 				if (panel.isValid()) {
@@ -231,6 +289,13 @@ public class WizardDialog extends Dialog {
 				panel = panels.get(Panel.REPOSITORY_ENCRYPTION);
 				if (panel.isValid()){
 					userInput.putAll(panel.getUserSelection());
+					showPanel(Panel.LOCAL_FOLDER_SELECTION);
+				}
+				break;
+			case LOCAL_FOLDER_SELECTION:
+				panel = panels.get(Panel.LOCAL_FOLDER_SELECTION);
+				if (panel.isValid()){
+					userInput.putAll(panel.getUserSelection());
 					showPanel(Panel.SUMMARY);
 				}
 				break;
@@ -240,22 +305,7 @@ public class WizardDialog extends Dialog {
 	}
 
 	private void handlePrevious() {
-		switch (selectedPanel) {
-			case REPOSITORY_SELECTION:
-			case WATCH:
-				showPanel(Panel.START);
-				break;
-			case REPOSITORY_ENCRYPTION:
-				showPanel(Panel.REPOSITORY_SELECTION);
-				break;
-			case SUMMARY:
-				showPanel(Panel.REPOSITORY_ENCRYPTION);
-				break;
-			case START:
-			default:
-				//No previous panel
-				break;
-		}
+		showPanel(selectedPanel.getPrevious());
 	}
 
 	public UserInput getUserInput() {
@@ -263,7 +313,7 @@ public class WizardDialog extends Dialog {
 	}
 	
 	private void handleCancel() {
-		shell.dispose();
+		safeDispose();
 	}
 
 	private void showPanel(Panel panel) {
@@ -275,6 +325,13 @@ public class WizardDialog extends Dialog {
 		stackComposite.layout();
 	}
 
+	private void toggleButtons(boolean state){
+		nextButton.setEnabled(state);
+		previousButton.setEnabled(state);
+		cancelButton.setEnabled(state);
+		finishButton.setEnabled(state);
+	}
+	
 	private void toggleButtons(WizardPanelComposite panel) {
 		nextButton.setEnabled(panel.hasNextButton());
 		previousButton.setEnabled(panel.hasPreviousButton());
@@ -288,5 +345,6 @@ public class WizardDialog extends Dialog {
 		panels.put(Panel.REPOSITORY_ENCRYPTION, new RepositoryEncryptionPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.SUMMARY, new SummaryPanel(this, stackComposite, SWT.NONE));
 		panels.put(Panel.WATCH, new WatchPanel(this, stackComposite, SWT.NONE));
+		panels.put(Panel.LOCAL_FOLDER_SELECTION, new SelectLocalFolder(this, stackComposite, SWT.NONE));
 	}
 }

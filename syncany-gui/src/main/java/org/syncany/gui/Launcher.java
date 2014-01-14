@@ -56,9 +56,14 @@ public class Launcher {
 	}
 	
 	private static void startApplication(){
-		startDaemon();
-		startWebSocketClient();
-		startGUI();	
+		try{
+			startDaemon();
+			startWebSocketClient();
+			startGUI();
+		}
+		catch (Exception e){
+			log.warning(String.format("Error [%s]", e.getMessage()));
+		}
 	}
 	
 	public static void stopApplication(){
@@ -69,7 +74,7 @@ public class Launcher {
 		System.exit(0);
 	}
 
-	private static void startDaemon(){
+	private static void startDaemon() throws Exception{
 		new Daemon().start(true);
 	}
 	

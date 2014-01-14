@@ -57,7 +57,9 @@ public class DaemonCommandHandler {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static String handleInit(Map<String, Object> parameters) {
+	private static Map<String, String> handleInit(Map<String, Object> parameters) {
+		Map<String, String> ret;
+		
 		List<String> pluginArgs= new ArrayList<>();
 		
 		Map<String, String> args = (Map<String, String>)parameters.get("pluginArgs");
@@ -67,7 +69,7 @@ public class DaemonCommandHandler {
 		}
 		
 		String pluginName = (String)parameters.get("pluginId");
-		String localDir = (String)parameters.get("localDir");
+		String localDir = (String)parameters.get("localFolder");
 		String passsword =(String) parameters.get("password");
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
 		
@@ -75,14 +77,28 @@ public class DaemonCommandHandler {
 		
 		try {
 			ic.execute();
+			ret = buildReturnObject(parameters);
+			ret.put("result", "succeed");
 		}
 		catch (Exception e) {
 			logger.warning("Exception " + e);
+			ret = buildReturnObject(parameters);
+			ret.put("result", "failed");
 		}
 		
-		return null;
+		return ret;
 	}
 	
+	private static Map<String, String> buildReturnObject(Map<String, Object> parameters) {
+		Map<String, String> ret = new HashMap<>();
+		ret.put("client_id", (String)parameters.get("client_id"));
+		ret.put("client_type", (String)parameters.get("client_type"));
+		ret.put("timestamp", ""+System.nanoTime());
+		ret.put("action", "daemon_update");
+		ret.put("client_action", (String)parameters.get("action"));
+		return ret;
+	}
+
 	private static void updateWatchedFolders() {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		
@@ -128,7 +144,8 @@ public class DaemonCommandHandler {
 				handleWatch(params);
 				break;
 			case "create":
-				handleInit(params);
+				Map<String, String> ret = handleInit(params);
+				WSServer.sendToAll(JsonHelper.fromMapToString(ret));
 				break;
 //			case "connect":
 //				handleConnect(params);
