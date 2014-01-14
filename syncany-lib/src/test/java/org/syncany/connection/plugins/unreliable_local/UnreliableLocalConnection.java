@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
 
@@ -39,11 +38,6 @@ public class UnreliableLocalConnection extends LocalConnection {
         this.totalOperationCounter = 0;
         this.typeOperationCounters = new HashMap<String, Integer>();
         this.failingOperationPatterns = new ArrayList<String>();
-	}
-	
-	@Override
-	public void init(Map<String, String> map) throws StorageException {
-		throw new StorageException("This plugin is for test purposes only.");
 	}
 
     @Override
