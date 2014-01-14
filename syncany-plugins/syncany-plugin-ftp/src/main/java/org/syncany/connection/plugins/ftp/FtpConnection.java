@@ -20,7 +20,10 @@ package org.syncany.connection.plugins.ftp;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
@@ -83,47 +86,24 @@ public class FtpConnection implements Connection {
     }
 
 	@Override
-	public void init(Map<String, String> map) throws StorageException {
-		// Mandatory
-		String hostname = map.get("hostname");
-		String username = map.get("username");
-		String password = map.get("password");
-		String path = map.get("path");
-		
-		// Optional
-		String portStr = map.get("port");
-		
-		if (hostname == null || username == null || password == null || path == null) {
-			throw new StorageException("Mandatory fields missing for FTP configuration: hostname, username, password and path.");
-		}
-		
-		this.hostname = hostname;
-		this.username = username;
-		this.password = password;
-		this.path = path;
-		
-		if (portStr != null) {
-			try {
-				this.port = Integer.parseInt(portStr);
-			}
-			catch (NumberFormatException e) {
-				throw new StorageException("Invalid port number given: "+portStr, e);
-			}
-		}
-		else {
-			this.port = 21;
-		}
+	public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
+		this.hostname = optionValues.get("hostname");
+		this.username = optionValues.get("username");
+		this.password = optionValues.get("password");
+		this.path = optionValues.get("path");
+		this.port = Integer.parseInt(optionValues.get("port"));
 	}
 
-
-	@Override
-	public String[] getMandatorySettings() {
-		return new String[] { "hostname", "username", "password", "path" };
-	}
-
-	@Override
-	public String[] getOptionalSettings() {
-		return new String[] { "port" };
+	@Override 
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("hostname", "Hostname", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("username", "Username", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("password", "Password", ValueType.STRING, true, true, null),
+			new PluginOptionSpec("path", "Path", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("port", "Port", ValueType.INT, false, false, "21")
+		);
 	}
 	
     @Override

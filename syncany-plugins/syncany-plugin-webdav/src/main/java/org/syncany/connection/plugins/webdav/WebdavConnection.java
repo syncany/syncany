@@ -17,11 +17,6 @@
  */
 package org.syncany.connection.plugins.webdav;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
@@ -29,6 +24,9 @@ import java.util.Map;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -46,19 +44,11 @@ public class WebdavConnection implements Connection {
 	}
 
 	@Override
-	public void init(Map<String, String> map) throws StorageException {
-		// Mandatory
-		String url = map.get("url");
-		String username = map.get("username");
-		String password = map.get("password");
-
-		if (url == null || username == null || password == null) {
-			throw new StorageException("Mandatory fields missing for Webdav configuration: url, username and password.");
-		}
-
-		this.url = url;
-		this.username = username;
-		this.password = password;
+	public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
+		this.url = optionValues.get("url");
+		this.username = optionValues.get("username");
+		this.password = optionValues.get("password");
 
 		// SSL
 		if (url.toLowerCase().startsWith("https")) {
@@ -71,37 +61,39 @@ public class WebdavConnection implements Connection {
 		}
 	}
 
-	private void initSsl() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, UnrecoverableKeyException {
+	private void initSsl() throws Exception {
 		this.secure = true;
 
-		/*String keyStoreFilename = "/tmp/mystore";
-		File keystoreFile = new File(keyStoreFilename);
-		FileInputStream fis = new FileInputStream(keystoreFile);
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); // JKS
-		keyStore.load(fis, null);*/
+		/*
+		 * String keyStoreFilename = "/tmp/mystore"; 
+		 * File keystoreFile = new File(keyStoreFilename); 
+		 * FileInputStream fis = new
+		 * FileInputStream(keystoreFile); 
+		 * KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); // JKS keyStore.load(fis, null);
+		 */
 
-		TrustStrategy trustStrategy = new TrustStrategy() {			
+		TrustStrategy trustStrategy = new TrustStrategy() {
 			@Override
 			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 				for (X509Certificate cert : chain) {
 					System.out.println(cert);
 				}
-				 
-				return true; // TODO [high] WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible!
+
+				// TODO [high] WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
+				return true;							
 			}
 		};
-		
+
 		this.sslSocketFactory = new SSLSocketFactory(trustStrategy);
 	}
 
 	@Override
-	public String[] getMandatorySettings() {
-		return new String[] { "url", "username", "password" };
-	}
-
-	@Override
-	public String[] getOptionalSettings() {
-		return new String[] {};
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("url", "URL (incl. path & port)", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("username", "Username", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("password", "Password", ValueType.STRING, true, true, null)
+		);				
 	}
 
 	@Override

@@ -21,6 +21,9 @@ import java.io.File;
 import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -36,36 +39,28 @@ public class LocalConnection implements Connection {
 	private File repositoryPath;
 
 	@Override
-	public void init(Map<String, String> map) throws StorageException {
-		String path = map.get("path");
-		
-		if (path == null) {
-			throw new StorageException("Config does not contain 'path' setting.");
-		}
-		
-		setRepositoryPath(new File(path));
+	public TransferManager createTransferManager() {
+		return new LocalTransferManager(this);
 	}
 
-    @Override
-    public TransferManager createTransferManager() {
-        return new LocalTransferManager(this);
-    }
+	public File getRepositoryPath() {
+		return repositoryPath;
+	}
 
-    public File getRepositoryPath() {
-        return repositoryPath;
-    }
-
-    public void setRepositoryPath(File repositoryPath) {
-        this.repositoryPath = repositoryPath;
-    }
-
-	@Override
-	public String[] getMandatorySettings() {
-		return new String[] { "path" };
+	public void setRepositoryPath(File repositoryPath) {
+		this.repositoryPath = repositoryPath;
 	}
 
 	@Override
-	public String[] getOptionalSettings() {
-		return new String[] { };
+	public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
+		repositoryPath = new File(optionValues.get("path"));
+	}
+
+	@Override
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null)
+		);
 	}
 }
