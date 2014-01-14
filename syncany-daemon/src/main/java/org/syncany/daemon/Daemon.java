@@ -82,7 +82,7 @@ public class Daemon {
 		quittingInProgress = false;
 	}
 	
-	public void start(boolean startedWithGui) {
+	public void start(boolean startedWithGui) throws Exception {
 		this.startedWithGui = startedWithGui;
 		
 		//0- determine if gui is already launched
@@ -91,7 +91,7 @@ public class Daemon {
 		}
 		catch (Exception e){
 			log.info("Daemon already launched");
-			return;
+			throw new Exception("Daemon Server socket lock failed");
 		}
 
 		//1- Restore last watched directories
