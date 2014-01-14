@@ -24,6 +24,7 @@ import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.rest.RestConnection;
 
@@ -32,7 +33,7 @@ public class S3Connection extends RestConnection {
     private String location;
 
     @Override
-	public void init(Map<String, String> optionValues) {
+	public void init(Map<String, String> optionValues) throws StorageException {
     	super.init(optionValues);    	
 		location = optionValues.get("location");
 	}

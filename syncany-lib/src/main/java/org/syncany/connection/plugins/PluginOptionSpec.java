@@ -17,6 +17,10 @@
  */
 package org.syncany.connection.plugins;
 
+/**
+ * Container class for metadata of a plugin option. Does not contain the actual value,
+ * but has the responsibility for all single-option validation. 
+ */
 public class PluginOptionSpec {
 	public enum ValueType {
 		STRING, INT, BOOLEAN

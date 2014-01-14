@@ -24,6 +24,7 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
@@ -51,7 +52,8 @@ public class LocalConnection implements Connection {
 	}
 
 	@Override
-	public void init(Map<String, String> optionValues) {
+	public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
 		repositoryPath = new File(optionValues.get("path"));
 	}
 

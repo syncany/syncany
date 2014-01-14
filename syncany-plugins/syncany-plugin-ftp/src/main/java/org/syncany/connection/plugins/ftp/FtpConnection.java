@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.TransferManager;
@@ -85,7 +86,8 @@ public class FtpConnection implements Connection {
     }
 
 	@Override
-	public void init(Map<String, String> optionValues) {
+	public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
 		this.hostname = optionValues.get("hostname");
 		this.username = optionValues.get("username");
 		this.password = optionValues.get("password");

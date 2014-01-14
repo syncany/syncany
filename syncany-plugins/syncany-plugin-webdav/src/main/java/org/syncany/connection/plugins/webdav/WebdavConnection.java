@@ -45,6 +45,7 @@ public class WebdavConnection implements Connection {
 
 	@Override
 	public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
 		this.url = optionValues.get("url");
 		this.username = optionValues.get("username");
 		this.password = optionValues.get("password");

@@ -23,6 +23,7 @@ import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 
@@ -47,7 +48,8 @@ public abstract class RestConnection implements Connection {
     protected Map<String, PluginOptionSpec> settings = null;
     
     @Override
-	public void init(Map<String, String> optionValues) {
+    public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
 		accessKey = optionValues.get("accessKey");
 		secretKey = optionValues.get("secretKey");
 		bucket = optionValues.get("bucket");
