@@ -18,7 +18,7 @@ public class SocketLock {
     private Socket socket;
 
     public SocketLock() {
-        this(49163); // create an interlock using a socket
+        this(35666); // create an interlock using a socket
     }
 
     public SocketLock(int port) {// use lowest private port
