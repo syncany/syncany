@@ -43,11 +43,9 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.CleanupSqlDatabaseDAO;
-import org.syncany.database.dao.SqlDatabaseDAO;
-import org.syncany.database.dao.WriteSqlDatabaseDAO;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDao;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -80,7 +78,7 @@ public class UpOperation extends Operation {
 
 	private UpOperationOptions options;
 	private TransferManager transferManager;
-	private SqlDatabaseDAO localDatabase;
+	private SqlDatabase localDatabase;
 
 	public UpOperation(Config config) {
 		this(config, new UpOperationOptions());
@@ -91,7 +89,7 @@ public class UpOperation extends Operation {
 
 		this.options = options;
 		this.transferManager = config.getConnection().createTransferManager();
-		this.localDatabase = new SqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 	}
 
 	@Override
@@ -165,8 +163,7 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
 		
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
-		WriteSqlDatabaseDAO writeSqlDao = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
-		writeSqlDao.persistDatabaseVersion(newDatabaseVersion);
+		localDatabase.persistDatabaseVersion(newDatabaseVersion);
 
 		if (options.cleanupEnabled()) {
 			new CleanupOperation(config).execute(); 
@@ -213,7 +210,7 @@ public class UpOperation extends Operation {
 	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {	
 		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
 		
-		XmlDatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDao dao = new XmlDatabaseDao(config.getTransformer());
 		dao.save(db, localDatabaseFile);		
 	}			
 	
@@ -247,10 +244,8 @@ public class UpOperation extends Operation {
 	}
 
 	private void removeUnreferencedDirtyData() {
-		logger.log(Level.INFO, "- Removing unreferenced dirty data from database ...");
-		
-		CleanupSqlDatabaseDAO cleanupSqlDao = new CleanupSqlDatabaseDAO(config.createDatabaseConnection());
-		cleanupSqlDao.removeDirtyDatabaseVersions();		
+		logger.log(Level.INFO, "- Removing unreferenced dirty data from database ...");	
+		localDatabase.removeDirtyDatabaseVersions();		
 	}
 
 	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {

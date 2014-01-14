@@ -30,11 +30,11 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.util.FileUtil;
 
@@ -86,12 +86,12 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	private File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
-		SqlDatabaseDAO basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
+		SqlDatabase localDatabase = new SqlDatabase(config);
 
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
 		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");
 
-		FileContent fileContent = basicDatabaseDAO.getFileContentByChecksum(reconstructedFileVersion.getChecksum(), true);
+		FileContent fileContent = localDatabase.getFileContentByChecksum(reconstructedFileVersion.getChecksum(), true);
 
 		if (fileContent == null) {
 			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
@@ -111,7 +111,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
-				MultiChunkEntry multiChunkForChunk = basicDatabaseDAO.getMultiChunkForChunk(chunkChecksum);
+				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
 
 				if (multiChunkForChunk == null) {
 					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);

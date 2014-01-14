@@ -27,7 +27,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -52,7 +52,7 @@ public class EmptyFileScenarioTest {
 		clientB.moveFile("A-file1.jpg", "B-file1-moved");
 		clientB.up();
 		
-		SqlDatabaseDAO database = clientB.loadLocalDatabase();
+		SqlDatabase database = clientB.loadLocalDatabase();
 		DatabaseVersionHeader lastDatabaseVersionHeaderBeforeUp = database.getLastDatabaseVersionHeader();
 		
 		clientB.up(); // double-up, has caused problems

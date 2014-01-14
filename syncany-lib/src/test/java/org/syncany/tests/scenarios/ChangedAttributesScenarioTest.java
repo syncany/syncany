@@ -34,7 +34,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -78,7 +78,7 @@ public class ChangedAttributesScenarioTest {
 		assertTrue("File should be uploaded.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		SqlDatabaseDAO database = clientB.loadLocalDatabase();
+		SqlDatabase database = clientB.loadLocalDatabase();
 
 		assertNotNull("File should be uploaded.", database.getFileVersionByPath("file1.jpg"));		
 		assertEquals("There should be a new database version, because file should not have been added.", 2, database.getLocalDatabaseBranch().size());

@@ -27,9 +27,9 @@ import org.syncany.config.Config;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
-import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.actions.ChangeFileSystemAction;
@@ -125,12 +125,12 @@ public class FileSystemActionReconciliator {
 
 	private Config config; 
 	private ChangeSet changeSet;
-	private SqlDatabaseDAO basicDatabaseDAO;
+	private SqlDatabase localDatabase;
 	
 	public FileSystemActionReconciliator(Config config, DownOperationResult result) {
 		this.config = config; 
 		this.changeSet = result.getChangeSet();
-		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 	}
 	
 	public List<FileSystemAction> determineFileSystemActions(MemoryDatabase winnersDatabase) throws Exception {
@@ -145,7 +145,7 @@ public class FileSystemActionReconciliator {
 			File winningLastFile = new File(config.getLocalDir()+File.separator+winningLastVersion.getPath());
 			
 			// Get local file version and content
-			FileVersion localLastVersion = basicDatabaseDAO.getFileVersionByFileHistoryId(winningFileHistory.getFileId());
+			FileVersion localLastVersion = localDatabase.getFileVersionByFileHistoryId(winningFileHistory.getFileId());
 			File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir()+File.separator+localLastVersion.getPath()) : null;
 			
 			logger.log(Level.INFO, "   + Comparing local version: "+localLastVersion);			

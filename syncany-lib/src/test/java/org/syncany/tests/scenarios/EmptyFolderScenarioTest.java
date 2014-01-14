@@ -27,7 +27,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -54,7 +54,7 @@ public class EmptyFolderScenarioTest {
 		clientB.createNewFolder("B-folder5");
 		clientB.up();
 		
-		SqlDatabaseDAO databaseB = clientB.loadLocalDatabase();
+		SqlDatabase databaseB = clientB.loadLocalDatabase();
 		DatabaseVersionHeader beforeDatabaseVersionHeader = databaseB.getLastDatabaseVersionHeader();
 		
 		clientB.up(); // double-up, has caused problems

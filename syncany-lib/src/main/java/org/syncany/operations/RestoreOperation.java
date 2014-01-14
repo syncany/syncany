@@ -40,7 +40,7 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.dao.RestoreSqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
@@ -53,7 +53,7 @@ public class RestoreOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
 	private RestoreOperationOptions options;
 	
-	private RestoreSqlDatabaseDAO restoreDatabaseDao;
+	private SqlDatabase localDatabase;
 
 	public RestoreOperation(Config config) {
 		this(config, new RestoreOperationOptions());
@@ -63,7 +63,7 @@ public class RestoreOperation extends Operation {
 		super(config);
 		
 		this.options = options;
-		this.restoreDatabaseDao = new RestoreSqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class RestoreOperation extends Operation {
 				FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
 				
 				if (restoreFileChecksum != null) {
-					multiChunksToDownload.addAll(restoreDatabaseDao.getMultiChunksForFileChecksum(restoreFileChecksum));
+					multiChunksToDownload.addAll(localDatabase.getMultiChunksForFileChecksum(restoreFileChecksum));
 				}
 			}
 		}
@@ -106,7 +106,7 @@ public class RestoreOperation extends Operation {
 	}
 
 	private List<FileVersion> getFileTreeAtDate(Date databaseBeforeDate, List<String> restoreFilePaths) {
-		Map<String, FileVersion> entireFileTreeAtDate = restoreDatabaseDao.getFileTreeAtDate(databaseBeforeDate);
+		Map<String, FileVersion> entireFileTreeAtDate = localDatabase.getFileTreeAtDate(databaseBeforeDate);
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
 		
 		for (FileVersion restoreFileVersion : entireFileTreeAtDate.values()) {			

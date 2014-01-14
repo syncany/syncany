@@ -24,18 +24,18 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.dao.IndexSqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
 	private LogOperationOptions options;
-	private IndexSqlDatabaseDAO databaseDAO;
+	private SqlDatabase localDatabase;
 		
 	public LogOperation(Config config, LogOperationOptions options) {
 		super(config);		
 		
 		this.options = options;
-		this.databaseDAO = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 	}	
 		
 	@Override
@@ -47,7 +47,7 @@ public class LogOperation extends Operation {
 		List<PartialFileHistory> fileHistories = null;
 		
 		if (options.getPaths().isEmpty()) {
-			fileHistories = new ArrayList<PartialFileHistory>(databaseDAO.getFileHistoriesWithFileVersions());			
+			fileHistories = new ArrayList<PartialFileHistory>(localDatabase.getFileHistoriesWithFileVersions());			
 		}
 		else {
 			throw new Exception("Not supported yet.");

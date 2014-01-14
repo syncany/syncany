@@ -33,8 +33,8 @@ import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.dao.SqlDatabaseDAO;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
+import org.syncany.database.dao.XmlDatabaseDao;
 
 public class CleanupOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
@@ -44,7 +44,7 @@ public class CleanupOperation extends Operation {
 
 	private CleanupOperationOptions options;
 	private TransferManager transferManager;
-	private SqlDatabaseDAO localDatabase;
+	private SqlDatabase localDatabase;
 
 	public CleanupOperation(Config config) {
 		this(config, new CleanupOperationOptions());
@@ -55,7 +55,7 @@ public class CleanupOperation extends Operation {
 		
 		this.options = options;
 		this.transferManager = config.getConnection().createTransferManager();
-		this.localDatabase = new SqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class CleanupOperation extends Operation {
 		long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
 		Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(config.getMachineName(), lastLocalClientVersion);
 		
-		XmlDatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDao databaseDAO = new XmlDatabaseDao(config.getTransformer());
 		databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
 		
 		// 3. Uploading merge file		

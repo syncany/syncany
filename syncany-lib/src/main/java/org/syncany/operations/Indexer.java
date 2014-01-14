@@ -33,9 +33,9 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -43,11 +43,11 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.database.dao.IndexSqlDatabaseDAO;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -73,12 +73,12 @@ public class Indexer {
 	
 	private Config config;
 	private Deduper deduper;
-	private IndexSqlDatabaseDAO localDatabase;
+	private SqlDatabase localDatabase;
 	
 	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
 		this.deduper = deduper;
-		this.localDatabase = new IndexSqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 	}
 	
 	/**

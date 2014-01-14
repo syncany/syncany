@@ -49,9 +49,9 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.WriteSqlDatabaseDAO;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDao;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
@@ -94,7 +94,7 @@ public class DownOperation extends Operation {
 	private DownOperationOptions options;
 	private DownOperationResult result;
 
-	private WriteSqlDatabaseDAO localDatabase;
+	private SqlDatabase localDatabase;
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
@@ -108,6 +108,10 @@ public class DownOperation extends Operation {
 
 		this.options = options;
 		this.result = new DownOperationResult();
+		this.localDatabase = new SqlDatabase(config);
+		this.transferManager = config.getConnection().createTransferManager();
+		this.databaseReconciliator = new DatabaseReconciliator();
+
 	}
 
 	@Override
@@ -125,7 +129,7 @@ public class DownOperation extends Operation {
 		}
 		
 		// 0. Load database and create TM
-		initOperationVariables();
+		localBranch = localDatabase.getLocalDatabaseBranch();
 
 		// 1. Check which remote databases to download based on the last local vector clock
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager);
@@ -185,28 +189,18 @@ public class DownOperation extends Operation {
 			applyFileSystemActions(actions);
 
 			// Add winners database to local database
-			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!
-			WriteSqlDatabaseDAO writeDatabaseDAO = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
-			
+			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
 			logger.log(Level.INFO, "   Adding database versions to SQL database ...");
 			
 			for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
 
 				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());				
-				writeDatabaseDAO.persistDatabaseVersion(applyDatabaseVersion);
+				localDatabase.persistDatabaseVersion(applyDatabaseVersion);
 			}
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
-	}
-
-	private void initOperationVariables() throws Exception {
-		localDatabase = new WriteSqlDatabaseDAO(config.createDatabaseConnection());
-		localBranch = localDatabase.getLocalDatabaseBranch();
-
-		transferManager = config.getConnection().createTransferManager();
-		databaseReconciliator = new DatabaseReconciliator();
 	}
 
 	private void pruneConflictingLocalBranch(DatabaseBranch winnersBranch) throws Exception {
@@ -410,7 +404,7 @@ public class DownOperation extends Operation {
 		}
 
 		// Load individual databases for branch ranges
-		XmlDatabaseDAO databaseDAO = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDao databaseDAO = new XmlDatabaseDao(config.getTransformer());
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 		String clientName = null;
@@ -456,7 +450,7 @@ public class DownOperation extends Operation {
 
 		// Read database files
 		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
-		XmlDatabaseDAO dbDAO = new XmlDatabaseDAO(config.getTransformer());
+		XmlDatabaseDao dbDAO = new XmlDatabaseDao(config.getTransformer());
 
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients

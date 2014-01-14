@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -107,7 +107,7 @@ public class FileVanishedScenarioTest {
 		deleteFilesThread.join();
 		
 		// Test 1: There should be between 50 and 100 file histories in the database
-		SqlDatabaseDAO databaseClientA = clientA.loadLocalDatabase();
+		SqlDatabase databaseClientA = clientA.loadLocalDatabase();
 		
 		assertTrue("There should be less file histories than originally added files.", databaseClientA.getFileHistoriesWithFileVersions().size() < numFiles);
 		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistoriesWithFileVersions().size() >= numFilesRemaining);

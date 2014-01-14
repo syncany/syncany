@@ -32,10 +32,10 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
-import org.syncany.database.dao.SqlDatabaseDAO;
 import org.syncany.util.FileUtil;
 
 /**
@@ -49,7 +49,7 @@ public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
 	private FileVersionComparator fileVersionComparator; 
-	private SqlDatabaseDAO basicDatabaseDAO;
+	private SqlDatabase localDatabase;
 	private StatusOperationOptions options;
 	
 	public StatusOperation(Config config) {
@@ -60,7 +60,7 @@ public class StatusOperation extends Operation {
 		super(config);		
 		
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
-		this.basicDatabaseDAO = new SqlDatabaseDAO(config.createDatabaseConnection());
+		this.localDatabase = new SqlDatabase(config);
 		this.options = options;		
 	}	
 	
@@ -78,7 +78,7 @@ public class StatusOperation extends Operation {
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
 
 		// Path to actual file version
-		final Map<String, FileVersion> filesInDatabase = basicDatabaseDAO.getFilesInDatabase();
+		final Map<String, FileVersion> filesInDatabase = localDatabase.getFilesInDatabase();
 
 		// Find local changes
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");								
@@ -171,7 +171,7 @@ public class StatusOperation extends Operation {
 			}				
 			
 			// Check database by file path
-			FileVersion expectedLastFileVersion = basicDatabaseDAO.getFileVersionByPath(relativeFilePath);
+			FileVersion expectedLastFileVersion = localDatabase.getFileVersionByPath(relativeFilePath);
 			
 			if (expectedLastFileVersion != null) {				
 				// Compare

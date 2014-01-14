@@ -46,7 +46,7 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseDao;
 import org.syncany.database.VectorClock;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
@@ -391,13 +391,13 @@ public class XmlDatabaseDAOTest {
 		// Write database to disk, read it again, and compare them
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		
-		XmlDatabaseDAO writeDAO = new XmlDatabaseDAO();
+		XmlDatabaseDao writeDAO = new XmlDatabaseDao();
 		writeDAO.save(writtenDatabase, writtenDatabaseFile);
 		
 		// Read again
 		MemoryDatabase readDatabase = new MemoryDatabase();
 		
-		XmlDatabaseDAO readDAO = new XmlDatabaseDAO();
+		XmlDatabaseDao readDAO = new XmlDatabaseDao();
 		readDAO.load(readDatabase, writtenDatabaseFile);
 		
 		for (int i=0; i<10; i++) {

@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.dao.SqlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
@@ -105,7 +105,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		assertFalse("File should NOT be uploaded while still writing (no half-file upload).", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		SqlDatabaseDAO database = clientA.loadLocalDatabase();
+		SqlDatabase database = clientA.loadLocalDatabase();
 
 		assertNull("File should NOT be uploaded while still writing (no half-file upload).", database.getFileVersionByPath("large-test-file"));		
 		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());

@@ -33,8 +33,8 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.dao.SqlDatabaseDAO;
-import org.syncany.database.dao.XmlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
+import org.syncany.database.dao.XmlDatabaseDao;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -76,7 +76,7 @@ public class SyncUpOperationTest {
 		assertTrue(remoteDatabaseFile.exists());
 		
 		// - Memory database
-		XmlDatabaseDAO dDAO = new XmlDatabaseDAO(testConfig.getTransformer());
+		XmlDatabaseDao dDAO = new XmlDatabaseDao(testConfig.getTransformer());
 		
 		MemoryDatabase remoteDatabase = new MemoryDatabase();		
 		dDAO.load(remoteDatabase, remoteDatabaseFile);
@@ -84,7 +84,7 @@ public class SyncUpOperationTest {
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 		
 		// - Sql Database
-		SqlDatabaseDAO localDatabase = new SqlDatabaseDAO(testConfig.createDatabaseConnection());
+		SqlDatabase localDatabase = new SqlDatabase(testConfig);
 		Collection<PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		
 		// Compare!
