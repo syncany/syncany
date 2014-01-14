@@ -28,6 +28,8 @@ import java.util.TimerTask;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -139,7 +141,19 @@ public class SummaryPanel extends WizardPanelComposite {
 		
 		urlLabel = new Label(successComposite, SWT.WRAP);
 		urlLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
-		urlLabel.setText("syncany url has been copied to Clipboard");
+		urlLabel.setText("Click here to copy syncany url into Clipboard");
+		urlLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				try{
+					Toolkit toolkit = Toolkit.getDefaultToolkit();
+					Clipboard clipboard = toolkit.getSystemClipboard();
+					StringSelection strSel = new StringSelection(link);
+					clipboard.setContents(strSel, null);
+				}
+				catch (Exception ex){ }
+			}
+		});
 		
 		composite = new Composite(successComposite, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
@@ -156,7 +170,7 @@ public class SummaryPanel extends WizardPanelComposite {
 				try {
 					Desktop.getDesktop().open(new File(getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER)));
 				}
-				catch (IOException e1) {
+				catch (Exception e1) {
 					e1.printStackTrace();
 				}
 				getShell().dispose();
@@ -250,15 +264,9 @@ public class SummaryPanel extends WizardPanelComposite {
 		stackComposite.layout();
 	}
 	
+	private String link;
 	public void showSuccessMessage(String link, boolean linkEncrypted){
-		try{
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			Clipboard clipboard = toolkit.getSystemClipboard();
-			StringSelection strSel = new StringSelection(link);
-			clipboard.setContents(strSel, null);
-		}
-		catch (Exception e){ }
-		
+		this.link = link;
 		stackLayout.topControl = successComposite;
 		stackComposite.layout();
 	}
