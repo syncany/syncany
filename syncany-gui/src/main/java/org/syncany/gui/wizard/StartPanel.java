@@ -18,16 +18,18 @@
 package org.syncany.gui.wizard;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.syncany.gui.ApplicationResourcesManager;
+import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.util.I18n;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -38,34 +40,32 @@ public class StartPanel extends WizardPanelComposite {
 	private Button createStorageRadio;
 	private Button connectStorageRadio;
 	private Button watchStorageRadio;
+	private Button existingUrl;
 	
 	//Constructor
 	public StartPanel(WizardDialog wizardParentDialog, Composite composite, int style) {
-		super(wizardParentDialog, composite, style);
+		//Trick for windowBuilder to work
+		super(wizardParentDialog, composite == null ? new Composite(new Shell(), SWT.NONE) : composite, style);
 		initComposite();
 	}
 	
 	private void initComposite(){
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(1, false);
 		gl_composite.marginRight = 30;
 		setLayout(gl_composite);
 		
 		Label introductionTitleText = new Label(this, SWT.WRAP);
-		introductionTitleText.setFont(fontBold);
+		introductionTitleText.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 		introductionTitleText.setText(I18n.getString("dialog.start.introductionText.title"));
 		
 		Label introductionText = new Label(this, SWT.WRAP);
-		introductionText.setFont(fontNormal);
 		introductionText.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false, 1, 1));
 		introductionText.setText(I18n.getString("dialog.start.introductionText"));
 
 		createStorageRadio = new Button(this, SWT.RADIO);
-		createStorageRadio.setFont(fontNormal);
+		createStorageRadio.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		GridData gd_createStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_createStorageRadio.verticalIndent = 20;
 		gd_createStorageRadio.horizontalIndent = 30;
@@ -74,47 +74,73 @@ public class StartPanel extends WizardPanelComposite {
 		createStorageRadio.setBounds(0, 0, 90, 16);
 		createStorageRadio.setText(I18n.getString("dialog.start.option.createOnlineStorage"));
 		createStorageRadio.setSelection(true);
+		createStorageRadio.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				toggleButtons();
+			}
+		});
 		
 		Label createText = new Label(this, SWT.WRAP);
 		GridData gd_createText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_createText.horizontalIndent = 30;
 		createText.setLayoutData(gd_createText);
-		createText.setFont(fontNormal);
 		createText.setText(I18n.getString("dialog.start.option.createOnlineStorage.helpText"));
 		
 		connectStorageRadio = new Button(this, SWT.RADIO);
+		connectStorageRadio.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		GridData gd_connectStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_connectStorageRadio.verticalIndent = 20;
 		gd_connectStorageRadio.horizontalIndent = 30;
 		gd_connectStorageRadio.heightHint = 30;
 		connectStorageRadio.setLayoutData(gd_connectStorageRadio);
 		connectStorageRadio.setBounds(0, 0, 90, 16);
-		connectStorageRadio.setFont(fontNormal);
 		connectStorageRadio.setText(I18n.getString("dialog.start.option.connectExisting"));
+		connectStorageRadio.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				toggleButtons();
+			}
+		});
 		
 		Label connectText = new Label(this, SWT.WRAP);
 		GridData gd_connectText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_connectText.horizontalIndent = 30;
 		connectText.setLayoutData(gd_connectText);
-		connectText.setFont(fontNormal);
 		connectText.setText(I18n.getString("dialog.start.option.connectExisting.helpText"));
 		
+		existingUrl = new Button(this, SWT.CHECK);
+		existingUrl.setEnabled(false);
+		GridData gd_existingUrl = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_existingUrl.horizontalIndent = 50;
+		existingUrl.setLayoutData(gd_existingUrl);
+		existingUrl.setText(I18n.getString("dialog.start.option.connectExisting.url"));
+		
 		watchStorageRadio = new Button(this, SWT.RADIO);
+		watchStorageRadio.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		GridData gd_watchStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_watchStorageRadio.verticalIndent = 20;
 		gd_watchStorageRadio.horizontalIndent = 30;
 		gd_watchStorageRadio.heightHint = 30;
 		watchStorageRadio.setLayoutData(gd_watchStorageRadio);
 		watchStorageRadio.setBounds(0, 0, 90, 16);
-		watchStorageRadio.setFont(fontNormal);
 		watchStorageRadio.setText(I18n.getString("dialog.start.option.watchExisting"));
+		watchStorageRadio.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				toggleButtons();
+			}
+		});
 		
 		Label watchText = new Label(this, SWT.WRAP);
 		GridData gd_watchText = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_watchText.horizontalIndent = 30;
 		watchText.setLayoutData(gd_watchText);
-		watchText.setFont(fontNormal);
 		watchText.setText(I18n.getString("dialog.start.option.watchExisting.helpText"));
+	}
+
+	protected void toggleButtons() {
+		existingUrl.setEnabled(connectStorageRadio.getSelection());
 	}
 
 	@Override
@@ -130,6 +156,7 @@ public class StartPanel extends WizardPanelComposite {
 		}
 		else if (connectStorageRadio.getSelection()){
 			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "connect");
+			userInput.put(SyncanyCommandParameters.AVAILABLE_URL, existingUrl.getSelection() ? "yes" : "no");
 		}
 		else{
 			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "watch");

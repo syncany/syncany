@@ -27,7 +27,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -40,7 +39,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
@@ -98,9 +96,6 @@ public class SettingsDialog extends Dialog {
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
 		shell.setSize(516, 360);
 		shell.setText(getText());
@@ -112,7 +107,7 @@ public class SettingsDialog extends Dialog {
 		shell.setLayout(gl_shell);
 		
 		tree = new Tree(shell, SWT.NONE);
-		tree.setFont(fontNormal);
+//		tree.setFont(fontNormal); TODO
 		tree.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -128,22 +123,22 @@ public class SettingsDialog extends Dialog {
 		
 		menuItemGeneral = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemGeneral.setText("General");
-		menuItemGeneral.setFont(fontNormal);
+//		menuItemGeneral.setFont(fontNormal);
 		
 		menuItemProxy = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemProxy.setText("Proxy");
 		menuItemProxy.setExpanded(true);
-		menuItemProxy.setFont(fontNormal);
+//		menuItemProxy.setFont(fontNormal);
 		
 		menuItemAccount = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemAccount.setText("Account");
-		menuItemAccount.setFont(fontNormal);
+//		menuItemAccount.setFont(fontNormal);
 		menuItemOptions.setExpanded(true);
 		
 		lblNewLabel_1 = new Label(shell, SWT.SEPARATOR);
 		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true, 1, 1));
 		lblNewLabel_1.setText("New Label");
-		lblNewLabel_1.setFont(fontNormal);
+//		lblNewLabel_1.setFont(fontNormal);
 		
 		composite = new Composite(shell, SWT.NONE);
 		stackLayout = new StackLayout();
@@ -156,12 +151,10 @@ public class SettingsDialog extends Dialog {
 		optionsMessageTitleLabel = new Label(defaultPanel, SWT.WRAP);
 		optionsMessageTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		optionsMessageTitleLabel.setText(I18n.getString("dialog.settings.default.message.title"));
-		optionsMessageTitleLabel.setFont(fontBold);
 		
-		optionsMessageLabel = new Label(defaultPanel, SWT.WRAP);
+		optionsMessageLabel =  new Label(defaultPanel, SWT.WRAP);
 		optionsMessageLabel.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, true, 1, 1));
 		optionsMessageLabel.setText(I18n.getString("dialog.settings.default.message.title"));
-		optionsMessageLabel.setFont(fontNormal);
 		
 		generalSettingsPanel = new GeneralSettingsPanel(composite, SWT.NONE);
 		proxySettingsPanel = new ProxySettingsPanel(composite, SWT.NONE);

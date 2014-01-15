@@ -26,6 +26,7 @@ import org.syncany.util.SyncanyParameters;
 public enum SyncanyCommandParameters implements SyncanyParameters {
 	COMMAND_ACTION("action", true, "create", "connect", "watch"), 
 	ENCRYPTION_ENABLED("encryption", true, "yes", "no"), 
+	AVAILABLE_URL("connect_url", false, "yes", "no"),
 	ENCRYPTION_ALGORITHM("algorithm", false, "AES", "TwoFish"), 
 	ENCRYPTION_KEYLENGTH("keylength", false, "128", "256"), 
 	ENCRYPTION_PASSWORD("password", true), 

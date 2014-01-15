@@ -41,8 +41,6 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
-import org.syncany.gui.WidgetDecorator;
-import org.syncany.gui.WidgetDecorator.FontDecorator;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.InterfaceUpdate;
 import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
@@ -196,11 +194,6 @@ public class WizardDialog extends Dialog {
 				handleFinish();
 			}
 		});
-		
-		WidgetDecorator.setFont(cancelButton, FontDecorator.NORMAL);
-		WidgetDecorator.setFont(previousButton, FontDecorator.NORMAL);
-		WidgetDecorator.setFont(nextButton, FontDecorator.NORMAL);
-		WidgetDecorator.setFont(finishButton, FontDecorator.NORMAL);
 	}
 	
 	@Subscribe

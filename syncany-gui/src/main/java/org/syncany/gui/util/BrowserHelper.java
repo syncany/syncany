@@ -17,17 +17,20 @@
  */
 package org.syncany.gui.util;
 
+import org.eclipse.swt.program.Program;
 import org.syncany.util.EnvironmentUtil;
 
 /**
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class BrowserHelper {
 
+	public static void openFile(String filePath){
+		Program.launch(filePath);
+	}
+	
 	public static void browse(String url) {
-		String os = System.getProperty("os.name").toLowerCase();
-
 		Runtime rt = Runtime.getRuntime();
 
 		try {
@@ -39,7 +42,6 @@ public class BrowserHelper {
 				rt.exec("open " + url);
 			}
 			else if (EnvironmentUtil.isLinux()) {
-
 				// Do a best guess on unix until we get a platform independent way
 				// Build a list of browsers to try, in this order.
 				String[] browsers = { "epiphany", "firefox", "mozilla", "konqueror", "netscape", "opera", "links", "lynx" };

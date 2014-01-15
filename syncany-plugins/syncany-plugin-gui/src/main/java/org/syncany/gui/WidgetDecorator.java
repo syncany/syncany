@@ -20,46 +20,21 @@ package org.syncany.gui;
 
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class WidgetDecorator {
-	private static Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-	private static Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-	
-	public static enum FontDecorator{
-		NORMAL, BOLD;
-	}
-	
-	public static void setFont(Control control, FontDecorator fontDecorator){
-		switch (fontDecorator){
-			case BOLD:
-				control.setFont(fontBold);
-				break;
-			case NORMAL:
-				control.setFont(fontNormal);
-				break;
-		}
-	}
-	
-	public static void decorateText(final Text text, FontDecorator fontDecorator){
-		setFont(text, fontDecorator);
+	public static void enhanceFocus(Text control) {
+		final Text text = (Text)control;
 		text.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
 				text.selectAll();
 			}			
 		});
-	}
-
-	public static void decorateLabel(Label label, FontDecorator fontDecorator) {
-		setFont(label, fontDecorator);
 	}
 }
 

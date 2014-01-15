@@ -17,10 +17,7 @@
  */
 package org.syncany.gui;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.syncany.util.EnvironmentUtil;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -31,13 +28,4 @@ public class ApplicationResourcesManager {
 	public static final Color INVALID_TEXT_COLOR = SWTResourceManager.getColor(255, 218, 185);
 	public static int DEFAULT_BUTTON_WIDTH = 90;
 	public static int DEFAULT_BUTTON_HEIGHT = 30;
-
-	/**
-	 * Segeo UI is the default font under windows
-	 */
-	public static String FONT_NAME = "Segoe UI";
-	public static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 12 : 10;
-	
-	public static Font FONT_NORMAL = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.NORMAL);
-	public static Font FONT_BOLD = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.BOLD);
 }

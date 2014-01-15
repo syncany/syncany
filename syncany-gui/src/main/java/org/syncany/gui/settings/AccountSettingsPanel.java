@@ -1,7 +1,6 @@
 package org.syncany.gui.settings;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -9,7 +8,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.util.I18n;
 
@@ -37,14 +35,10 @@ public class AccountSettingsPanel extends Composite {
 	}
 	
 	private void initComposite() {
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
 		setLayout(new GridLayout(1, false));
 		
 		lblNewLabel_1 = new Label(this, SWT.NONE);
 		lblNewLabel_1.setText(I18n.getString("dialog.settings.proxy.title", true));
-		lblNewLabel_1.setFont(fontBold);
 		
 		lblNewLabel = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
 		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));

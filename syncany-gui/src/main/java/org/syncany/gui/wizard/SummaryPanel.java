@@ -17,12 +17,9 @@
  */
 package org.syncany.gui.wizard;
 
-import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.File;
-import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -43,8 +40,8 @@ import org.eclipse.swt.widgets.ProgressBar;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
-import org.syncany.gui.WidgetDecorator;
-import org.syncany.gui.WidgetDecorator.FontDecorator;
+import org.syncany.gui.util.BrowserHelper;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -68,6 +65,8 @@ public class SummaryPanel extends WizardPanelComposite {
 	private Button btnNewButton;
 	private Label summaryIntroductionLabel;
 	private Label urlLabel;
+	private Label repositoryTypeLabel;
+	private Label encryptionTypeLabel;
 	
 	public SummaryPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -80,45 +79,38 @@ public class SummaryPanel extends WizardPanelComposite {
 		setLayout(gridLayout);
 		
 		summaryIntroductionTitleLabel = new Label(this, SWT.NONE);
+		summaryIntroductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		summaryIntroductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		summaryIntroductionTitleLabel.setText("New Label");
-		WidgetDecorator.decorateLabel(summaryIntroductionTitleLabel, FontDecorator.BOLD);
 		
 		summaryIntroductionLabel = new Label(this, SWT.NONE);
 		summaryIntroductionLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 		summaryIntroductionLabel.setText("New Label");
-		WidgetDecorator.decorateLabel(summaryIntroductionLabel, FontDecorator.NORMAL);
 		
-		Label repositoryTypeLabel = new Label(this, SWT.NONE);
+		repositoryTypeLabel = new Label(this, SWT.NONE);
 		GridData gd_repositoryTypeLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_repositoryTypeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		repositoryTypeLabel.setLayoutData(gd_repositoryTypeLabel);
 		repositoryTypeLabel.setText("Repository Type :");
-		WidgetDecorator.decorateLabel(repositoryTypeLabel, FontDecorator.BOLD);
 		
 		repositoryType = new Label(this, SWT.NONE);
 		GridData gd_repositoryType = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_repositoryType.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		repositoryType.setLayoutData(gd_repositoryType);
-		WidgetDecorator.decorateLabel(repositoryType, FontDecorator.NORMAL);
 		
 		Label localFolderLabel = new Label(this, SWT.NONE);
 		localFolderLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		localFolderLabel.setText("Local Folder :");
-		WidgetDecorator.decorateLabel(localFolderLabel, FontDecorator.BOLD);
 		
 		localFolder = new Label(this, SWT.NONE);
 		localFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		WidgetDecorator.decorateLabel(localFolder, FontDecorator.NORMAL);
 		
-		Label encryptionTypeLabel = new Label(this, SWT.NONE);
+		encryptionTypeLabel = new Label(this, SWT.NONE);
 		encryptionTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		encryptionTypeLabel.setText("Encryption Settings :");
-		WidgetDecorator.decorateLabel(encryptionTypeLabel, FontDecorator.BOLD);
 		
 		encryptionType = new Label(this, SWT.NONE);
 		encryptionType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		WidgetDecorator.decorateLabel(encryptionType, FontDecorator.NORMAL);
 		
 		progressBar = new ProgressBar(this, SWT.INDETERMINATE);
 		GridData gd_progressBar = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
@@ -135,9 +127,9 @@ public class SummaryPanel extends WizardPanelComposite {
 		successComposite.setLayout(new GridLayout(1, false));
 		
 		sucessInitLabel = new Label(successComposite, SWT.NONE);
+		sucessInitLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		sucessInitLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 		sucessInitLabel.setText("Repository sucessfully created");
-		WidgetDecorator.decorateLabel(sucessInitLabel, FontDecorator.BOLD);
 		
 		urlLabel = new Label(successComposite, SWT.WRAP);
 		urlLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
@@ -175,6 +167,8 @@ public class SummaryPanel extends WizardPanelComposite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				getParentWizardDialog().safeDispose();
+				String file = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.LOCAL_FOLDER);
+				BrowserHelper.openFile(file);
 			}
 		});
 		
@@ -182,7 +176,6 @@ public class SummaryPanel extends WizardPanelComposite {
 		failureComposite.setLayout(new GridLayout(1, false));
 		
 		Label errorInitLabel = new Label(failureComposite, SWT.NONE);
-		WidgetDecorator.decorateLabel(errorInitLabel, FontDecorator.BOLD);
 		errorInitLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
 		errorInitLabel.setText("An error occured during repository initialisation\r\nClick \"Retry\" to retry repository configuration");
 		

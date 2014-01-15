@@ -17,12 +17,9 @@
  */
 package org.syncany.gui.plugin;
 
-import java.io.File;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -35,6 +32,7 @@ import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
+import org.syncany.gui.util.FileUtil;
 import org.syncany.util.I18n;
 
 /**
@@ -50,32 +48,26 @@ public class LocalPluginPanel extends PluginPanel {
 	}
 	
 	public void initComposite(){
-		Font fontNormal = ApplicationResourcesManager.FONT_NORMAL;
-		Font fontBold = ApplicationResourcesManager.FONT_BOLD;
-		
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(3, false);
 		setLayout(gl_composite);
 		
 		Label introductionTitleLabel = new Label(this, SWT.WRAP);
+		introductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("plugin.local.introduction.title"));
-		introductionTitleLabel.setFont(fontBold);
 		
 		Label introductionLabel = new Label(this, SWT.WRAP);
 		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 3, 1));
 		introductionLabel.setText(I18n.getString("plugin.local.introduction"));
-		introductionLabel.setFont(fontNormal);
 		
 		Label hostLabel = new Label(this, SWT.NONE);
 		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.local.localFolder", true));
-		hostLabel.setFont(fontNormal);
 		
 		localDir = new Text(this, SWT.BORDER);
-		localDir.setFont(fontNormal);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
@@ -118,7 +110,6 @@ public class LocalPluginPanel extends PluginPanel {
 		gd_testFtpButton.widthHint = ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
 		testLocalRepositoryButton.setLayoutData(gd_testFtpButton);
 		
-		testLocalRepositoryButton.setFont(fontNormal);
 		testLocalRepositoryButton.setText("Test");
 		testLocalRepositoryButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -129,10 +120,10 @@ public class LocalPluginPanel extends PluginPanel {
 				    	if (folder == null || folder.length() == 0){
 				    		testResultLabel.setText(I18n.getString("plugin.local.emptyDirectory"));
 				    	}
-				    	else if (!testLocalDirectory(folder)){
+				    	else if (!FileUtil.isExistingAndEmptyFolder(getShell(), folder)) {;
 				    		testResultLabel.setText(I18n.getString("plugin.local.notValidDirectory"));
 				    	}
-				    	else{
+				    	else {
 				    		testResultLabel.setText(I18n.getString("plugin.local.validDirectory"));
 				    	}
 				    }
@@ -150,11 +141,6 @@ public class LocalPluginPanel extends PluginPanel {
 	
 	@Override
 	public boolean isValid() {
-		return testLocalDirectory(localDir.getText());
-	}
-	
-	private boolean testLocalDirectory(String folder){
-		File localDirFile = new File(folder);		
-		return localDirFile.exists() && localDirFile.isDirectory();
+		return FileUtil.isExistingAndEmptyFolder(getShell(), localDir.getText());
 	}
 }
