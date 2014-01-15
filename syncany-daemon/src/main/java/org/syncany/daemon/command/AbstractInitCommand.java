@@ -29,9 +29,9 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.util.StringUtil;
 
 public abstract class AbstractInitCommand extends Command {
 	
@@ -64,6 +64,10 @@ public abstract class AbstractInitCommand extends Command {
 	
 	protected Map<String, String> initPluginSettings(String pluginStr, List<String> pluginSettingsOptList) throws Exception {		
 		Map<String, String> pluginSettings = new HashMap<String, String>();
+		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
+		
+		Connection connection = plugin.createConnection();
+		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
 		// Fill settings map
 		for (String pluginSettingKeyValue : pluginSettingsOptList) {
@@ -76,19 +80,12 @@ public abstract class AbstractInitCommand extends Command {
 			pluginSettings.put(keyValue[0], keyValue[1]);
 		}
 		
-		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
-		Connection connection = plugin.createConnection();
-		
-		// Check if all mandatory are set
-		for (String mandatorySetting : connection.getMandatorySettings()) {
-			if (!pluginSettings.containsKey(mandatorySetting)) {
-				throw new Exception("Not all mandatory settings are set ("+StringUtil.join(connection.getMandatorySettings(), ", ")+"). Use -Psettingname=.. to set it.");
-			}
-		}	
-				
-		connection.init(pluginSettings); // Only to test for exceptions!
+		pluginOptionSpecs.validate(pluginSettings); // throws error if invalid
+		connection = null; // Connection only needed to to test for exceptions
 		
 		return pluginSettings;
+		
+		
 	}
 
 	protected String initPlugin(String pluginStr) throws Exception {
