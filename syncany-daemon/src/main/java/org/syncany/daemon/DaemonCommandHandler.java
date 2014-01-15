@@ -120,8 +120,9 @@ public class DaemonCommandHandler {
 		ret.put("client_type", (String)parameters.get("client_type"));
 		ret.put("timestamp", ""+System.nanoTime());
 		ret.put("localFolder", (String)parameters.get("localFolder"));
-		ret.put("action", "daemon_update");
+		ret.put("command_id", (String)parameters.get("command_id"));
 		ret.put("client_action", (String)parameters.get("action"));
+		ret.put("action", "daemon_command_result");
 		return ret;
 	}
 

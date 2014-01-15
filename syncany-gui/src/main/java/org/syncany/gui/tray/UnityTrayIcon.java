@@ -100,6 +100,7 @@ public class UnityTrayIcon extends TrayIcon {
 			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
 		}
 		
+		//TODO remove
 		makeSystemTrayStartSync();
 	}
 
@@ -184,12 +185,8 @@ public class UnityTrayIcon extends TrayIcon {
 		BufferedReader is = new BufferedReader(new InputStreamReader(unityProcess.getInputStream()));
 		BufferedReader es = new BufferedReader(new InputStreamReader(unityProcess.getErrorStream()));
 		
-		launchLoggerThread(is, "PYTHON INPUT STREAM : ");
-		launchLoggerThread(es, "PYTHON ERROR STREAM : ");
-	}
-	
-	public static void main(String[] args) throws IOException {
-		startUnityProcess();
+		launchLoggerThread(is, "Pyhton Input Stream : ");
+		launchLoggerThread(es, "Pyhton Error Stream : ");
 	}
 	
 	public void sendTo(WebSocket ws, String text) {

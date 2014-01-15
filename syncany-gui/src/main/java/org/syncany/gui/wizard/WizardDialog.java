@@ -22,6 +22,7 @@ import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -41,6 +42,7 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.InterfaceUpdate;
 import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
@@ -194,11 +196,16 @@ public class WizardDialog extends Dialog {
 				handleFinish();
 			}
 		});
+		
+		WidgetDecorator.normal(nextButton, previousButton, cancelButton, finishButton);
 	}
+	
+	private String commandId;
 	
 	@Subscribe
 	public void update(InterfaceUpdate event){
-		if (event.getAction() == InterfaceUpdateAction.WIZARD_COMMAND_DONE){
+		String id = (String)event.getData().get("command_id");
+		if (event.getAction() == InterfaceUpdateAction.WIZARD_COMMAND_DONE && commandId.equals(id)){
 			final SummaryPanel summaryPanel = (SummaryPanel)panels.get(Panel.SUMMARY);
 			summaryPanel.stopIndeterminateProgressBar();
 			
@@ -248,6 +255,8 @@ public class WizardDialog extends Dialog {
 				break;
 				
 			case SUMMARY:
+				this.commandId = UUID.randomUUID().toString();
+				userInput.put(SyncanyCommandParameters.COMMAND_ID, this.commandId);
 				ClientCommandFactory.handleCommand(userInput);
 				SummaryPanel sp = (SummaryPanel)panels.get(selectedPanel);
 				sp.startIndeterminateProgressBar();

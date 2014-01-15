@@ -26,9 +26,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.util.I18n;
 
 /**
@@ -56,7 +56,6 @@ public class StartPanel extends WizardPanelComposite {
 		setLayout(gl_composite);
 		
 		Label introductionTitleText = new Label(this, SWT.WRAP);
-		introductionTitleText.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
 		introductionTitleText.setText(I18n.getString("dialog.start.introductionText.title"));
 		
@@ -65,7 +64,6 @@ public class StartPanel extends WizardPanelComposite {
 		introductionText.setText(I18n.getString("dialog.start.introductionText"));
 
 		createStorageRadio = new Button(this, SWT.RADIO);
-		createStorageRadio.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		GridData gd_createStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_createStorageRadio.verticalIndent = 20;
 		gd_createStorageRadio.horizontalIndent = 30;
@@ -88,7 +86,6 @@ public class StartPanel extends WizardPanelComposite {
 		createText.setText(I18n.getString("dialog.start.option.createOnlineStorage.helpText"));
 		
 		connectStorageRadio = new Button(this, SWT.RADIO);
-		connectStorageRadio.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		GridData gd_connectStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_connectStorageRadio.verticalIndent = 20;
 		gd_connectStorageRadio.horizontalIndent = 30;
@@ -117,7 +114,6 @@ public class StartPanel extends WizardPanelComposite {
 		existingUrl.setText(I18n.getString("dialog.start.option.connectExisting.url"));
 		
 		watchStorageRadio = new Button(this, SWT.RADIO);
-		watchStorageRadio.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		GridData gd_watchStorageRadio = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_watchStorageRadio.verticalIndent = 20;
 		gd_watchStorageRadio.horizontalIndent = 30;
@@ -137,6 +133,17 @@ public class StartPanel extends WizardPanelComposite {
 		gd_watchText.horizontalIndent = 30;
 		watchText.setLayoutData(gd_watchText);
 		watchText.setText(I18n.getString("dialog.start.option.watchExisting.helpText"));
+		
+		WidgetDecorator.bold(introductionTitleText);
+		WidgetDecorator.bold(createStorageRadio);
+		WidgetDecorator.bold(connectStorageRadio);
+		WidgetDecorator.bold(watchStorageRadio);
+		
+		WidgetDecorator.normal(introductionText);
+		WidgetDecorator.normal(existingUrl);
+		WidgetDecorator.normal(createText);
+		WidgetDecorator.normal(connectText);
+		WidgetDecorator.normal(watchText);
 	}
 
 	protected void toggleButtons() {

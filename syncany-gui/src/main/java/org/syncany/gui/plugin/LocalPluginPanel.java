@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.gui.util.FileUtil;
 import org.syncany.util.I18n;
@@ -53,7 +54,6 @@ public class LocalPluginPanel extends PluginPanel {
 		setLayout(gl_composite);
 		
 		Label introductionTitleLabel = new Label(this, SWT.WRAP);
-		introductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("plugin.local.introduction.title"));
 		
@@ -73,7 +73,7 @@ public class LocalPluginPanel extends PluginPanel {
 		gd_hostText.minimumWidth = 200;
 		localDir.setLayoutData(gd_hostText);
 		
-		Button selectFolderButton = new Button(this, SWT.NONE);
+		Button selectFolderButton = new Button(this, SWT.FLAT);
 		selectFolderButton.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, false, false, 1, 1));
 		selectFolderButton.setImage(SWTResourceManager.getResizedImage("/images/folder-icon.png", 16, 16));
 		selectFolderButton.addSelectionListener(new SelectionAdapter() {
@@ -129,6 +129,15 @@ public class LocalPluginPanel extends PluginPanel {
 				});
 			}
 		});
+		
+		WidgetDecorator.bold(introductionTitleLabel);
+		
+		WidgetDecorator.normal(introductionLabel);
+		WidgetDecorator.normal(hostLabel);
+		WidgetDecorator.normal(localDir);
+		WidgetDecorator.normal(selectFolderButton);
+		WidgetDecorator.normal(testResultLabel);
+		WidgetDecorator.normal(testLocalRepositoryButton);
 	}	
 
 	@Override

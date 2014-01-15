@@ -20,6 +20,7 @@ package org.syncany.gui.messaging;
 import java.util.Map;
 
 import org.syncany.gui.Launcher;
+import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
 import org.syncany.util.JsonHelper;
 
@@ -32,14 +33,18 @@ public class DaemonMessagesHandler {
 	public void handleReceivedMessage(String message) {
 		Map<String, Object> parameters = JsonHelper.fromStringToMap(message);
 		String action = (String)parameters.get("action");
+		String clientId = (String)parameters.get("client_id");
+		String clientType = (String)parameters.get("client_type"); // syncany-gui
+		
 		InterfaceUpdate iu;
 		
-		
 		switch (action){
-			case "daemon_update":
-				//TEST SI C BON TOUT CA
-				iu = new InterfaceUpdate(InterfaceUpdateAction.WIZARD_COMMAND_DONE, parameters);
-			    Launcher.getEventBus().post(iu);
+			case "daemon_command_result":
+				//test if daemon update
+				if (MainGUI.getClientIdentification().equals(clientId) && clientType.equals("syncany-gui")){
+					iu = new InterfaceUpdate(InterfaceUpdateAction.WIZARD_COMMAND_DONE, parameters);
+					Launcher.getEventBus().post(iu);
+				}
 				break;
 			
 			case "update_watched_folders":

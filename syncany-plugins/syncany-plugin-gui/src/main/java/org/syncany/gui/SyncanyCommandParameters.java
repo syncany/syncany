@@ -31,7 +31,8 @@ public enum SyncanyCommandParameters implements SyncanyParameters {
 	ENCRYPTION_KEYLENGTH("keylength", false, "128", "256"), 
 	ENCRYPTION_PASSWORD("password", true), 
 	LOCAL_FOLDER("localFolder", true),
-	PLUGIN_ID("pluginId", true);
+	PLUGIN_ID("pluginId", true), 
+	COMMAND_ID("command_id", false);
 	
 	private String[] values;
 	private String value;

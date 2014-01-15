@@ -18,16 +18,44 @@
 package org.syncany.gui;
 
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.util.EnvironmentUtil;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class WidgetDecorator {
-	public static void enhanceFocus(Text control) {
+	private static String FONT_NAME = "Segoe UI";
+	private static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 12 : 10;
+	
+	private static Font FONT_NORMAL = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.NORMAL);
+	private static Font FONT_BOLD = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.BOLD);
+	
+	public static void bold(Control...controls){
+		for (Control control : controls){
+			font(control, FONT_BOLD);
+			if (control instanceof Text) enhanceFocus((Text)control);
+		}
+	}
+	
+	public static void normal(Control...controls){
+		for (Control control : controls){
+			font(control, FONT_NORMAL);
+			if (control instanceof Text) enhanceFocus((Text)control);
+		}
+	}
+	
+	private static void font(Control control, Font font){
+		control.setFont(font);
+	}
+	
+	private static void enhanceFocus(Text control) {
 		final Text text = (Text)control;
 		text.addFocusListener(new FocusAdapter() {
 			@Override

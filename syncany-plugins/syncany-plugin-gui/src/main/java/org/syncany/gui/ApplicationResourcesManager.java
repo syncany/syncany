@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Color;
 public class ApplicationResourcesManager {
 	public static final int VERTICAL_INDENT = 20;
 	public static final Color INVALID_TEXT_COLOR = SWTResourceManager.getColor(255, 218, 185);
+	
 	public static int DEFAULT_BUTTON_WIDTH = 90;
 	public static int DEFAULT_BUTTON_HEIGHT = 30;
 }

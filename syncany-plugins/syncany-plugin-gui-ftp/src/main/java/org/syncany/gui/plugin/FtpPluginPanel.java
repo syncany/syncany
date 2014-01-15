@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -167,6 +168,12 @@ public class FtpPluginPanel extends PluginPanel {
 				});
 			}
 		});
+		
+		WidgetDecorator.bold(introductionTitleLabel);
+		WidgetDecorator.normal(
+			introductionLabel,hostText,hostLabel,portLabel,usernameLabel,
+			usernameText,passwordLabel,passwordText,pathLabel,pathText,spinner
+		);
 	}
 
 	protected boolean testFtpConnection() {
