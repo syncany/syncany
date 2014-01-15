@@ -39,7 +39,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.tests.util.TestDatabaseUtil;
 
-public class DatabaseCacheTest {
+public class MemoryDatabaseCacheTest {
 	static {
 		Logging.init();
 	}

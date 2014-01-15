@@ -46,7 +46,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId, Collection<FileVersion> fileVersions) throws SQLException {
-		PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeFileVersions.sql");
+		PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.insert.writeFileVersions.sql");
 
 		for (FileVersion fileVersion : fileVersions) {
 			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  		
@@ -73,7 +73,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	public Map<String, FileVersion> getCurrentFileTree() {		
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getCurrentFileTree.sql");		
+			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.getCurrentFileTree.sql");		
 			return getFileTree(preparedStatement);				
 		}
 		catch (SQLException e) {
@@ -83,8 +83,10 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	public Map<String, FileVersion> getFileTreeAtDate(Date date) {		
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileTreeAtDate.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.getFileTreeAtDate.sql");
+			
 			preparedStatement.setTimestamp(1, new Timestamp(date.getTime()));
+			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
 			
 			return getFileTree(preparedStatement);					
 		}
@@ -113,7 +115,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	public FileVersion getFileVersionByPath(String path) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileVersionByPath.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.getFileVersionByPath.sql");
 			preparedStatement.setString(1, path);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -131,7 +133,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileVersionByFileHistoryId.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.getFileVersionByFileHistoryId.sql");
 			preparedStatement.setString(1, fileHistoryId.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();

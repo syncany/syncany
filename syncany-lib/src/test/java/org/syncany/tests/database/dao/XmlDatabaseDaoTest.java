@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.database;
+package org.syncany.tests.database.dao;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -52,7 +52,7 @@ import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class XmlDatabaseDAOTest {
+public class XmlDatabaseDaoTest {
 	private File tempDir;
 	
 	static {
