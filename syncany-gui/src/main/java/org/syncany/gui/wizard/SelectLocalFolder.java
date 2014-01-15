@@ -36,7 +36,7 @@ public class SelectLocalFolder extends WizardPanelComposite {
 		setLayout(gl_composite);
 		
 		Label introductionTitleLabel = new Label(this, SWT.WRAP);
-		introductionTitleLabel.setFont(org.eclipse.wb.swt.SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		introductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("dialog.selectLocalFolder.introduction.title"));
 		

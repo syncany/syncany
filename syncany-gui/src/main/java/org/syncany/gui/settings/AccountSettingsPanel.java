@@ -17,8 +17,6 @@ import org.syncany.util.I18n;
  *
  */
 public class AccountSettingsPanel extends Composite {
-	
-	private String[] proxyAuthValues = new String[] {"HTTP", "Socket 4", "Socket 5"};
 	private Label lblNewLabel;
 	private Label lblNewLabel_1;
 	private Table table;

@@ -18,7 +18,7 @@
 package org.syncany.daemon.command;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public enum CommandStatus {

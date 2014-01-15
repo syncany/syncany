@@ -17,7 +17,6 @@
  */
 package org.syncany.daemon.command;
 
-import java.io.Console;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -35,11 +34,6 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 
 public abstract class AbstractInitCommand extends Command {
-	protected Console console;
-	
-	public AbstractInitCommand() {
-		console = System.console();
-	}	
 	
 	protected ConfigTO createConfigTO(File localDir, SaltedSecretKey masterKey, ConnectionTO connectionTO) throws Exception {
 		ConfigTO configTO = new ConfigTO();

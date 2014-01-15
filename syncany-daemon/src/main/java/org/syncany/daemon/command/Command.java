@@ -23,11 +23,10 @@ import org.syncany.daemon.Daemon;
 import org.syncany.daemon.DaemonEvent;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public abstract class Command {
-
 	private CommandStatus status;
 	private String id;
 	

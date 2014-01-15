@@ -36,12 +36,12 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 import org.syncany.util.StringUtil;
-import org.eclipse.wb.swt.SWTResourceManager;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>

@@ -64,7 +64,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		setLayout(gridLayout);
 		
 		Label introductionTextTitle = new Label(this, SWT.WRAP);
-		introductionTextTitle.setFont(org.eclipse.wb.swt.SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		introductionTextTitle.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTextTitle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
 		introductionTextTitle.setText(I18n.getString("repository.encryption.introduction.title"));
 		

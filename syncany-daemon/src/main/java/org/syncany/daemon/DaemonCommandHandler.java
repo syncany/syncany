@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.daemon.command.Command;
+import org.syncany.daemon.command.ConnectCommand;
 import org.syncany.daemon.command.InitCommand;
 import org.syncany.daemon.command.WatchCommand;
 import org.syncany.daemon.websocket.WSServer;
@@ -18,18 +19,6 @@ import org.syncany.util.JsonHelper;
 public class DaemonCommandHandler {
 	private static Logger logger = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
 		
-//	private static String handleStopWatch(Map<String, Object> parameters) {
-//		Map<String, Command> commands = Daemon.getInstance().getCommands();
-//		String id = (String)parameters.get("id");
-//		logger.log(Level.INFO, "Stop watching folder with id {1}", new Object[]{id});
-//		Command cl = commands.get(id);
-//		if (cl instanceof WatchCommand){
-//			WatchCommand wc = (WatchCommand)cl;
-//			wc.pause();
-//		}
-//		return null;
-//	}
-
 	private static String handleWatch(Map<String, Object> parameters) {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		String localDir = (String)parameters.get("localfolder");
@@ -83,6 +72,38 @@ public class DaemonCommandHandler {
 			ret.put("result", "succeed");
 			ret.put("share_link", result.getShareLink());
 			ret.put("share_link_encrypted", ""+result.isShareLinkEncrypted());
+		}
+		catch (Exception e) {
+			logger.warning("Exception " + e);
+			ret = buildReturnObject(parameters);
+			ret.put("result", "failed");
+		}
+		
+		return ret;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static Map<String, String> handleConnect(Map<String, Object> parameters) {
+		Map<String, String> ret;
+		
+		List<String> pluginArgs= new ArrayList<>();
+		
+		Map<String, String> args = (Map<String, String>)parameters.get("pluginArgs");
+		
+		for (String key : args.keySet()){
+			pluginArgs.add(key + "=" + args.get(key));
+		}
+		
+		String pluginName = (String)parameters.get("pluginId");
+		String localDir = (String)parameters.get("localFolder");
+		String passsword =(String) parameters.get("password");
+		
+		ConnectCommand ic = new ConnectCommand(pluginName, pluginArgs, localDir, passsword);
+		
+		try {
+			ic.execute();
+			ret = buildReturnObject(parameters);
+			ret.put("result", "succeed");
 		}
 		catch (Exception e) {
 			logger.warning("Exception " + e);
@@ -149,12 +170,13 @@ public class DaemonCommandHandler {
 				handleWatch(params);
 				break;
 			case "create":
-				Map<String, String> ret = handleInit(params);
-				WSServer.sendToAll(JsonHelper.fromMapToString(ret));
+				Map<String, String> retInit = handleInit(params);
+				WSServer.sendToAll(JsonHelper.fromMapToString(retInit));
 				break;
-//			case "connect":
-//				handleConnect(params);
-//				break;
+			case "connect":
+				Map<String, String> retConn = handleConnect(params);
+				WSServer.sendToAll(JsonHelper.fromMapToString(retConn));
+				break;
 //			case "pause":
 //				handleStopWatch(params);
 //				break;

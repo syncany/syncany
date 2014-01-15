@@ -46,7 +46,7 @@ public class ClientCommandFactory {
 			if (key.isPluginParameter()){
 				pluginArgs.put(key.value(), userInput.get(key));
 			}
-			else{
+			else {
 				command.put(key.value(), userInput.get(key));
 			}
 		}

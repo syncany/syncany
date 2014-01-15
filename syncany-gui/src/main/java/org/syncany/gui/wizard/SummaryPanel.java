@@ -38,10 +38,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.util.BrowserHelper;
-import org.eclipse.wb.swt.SWTResourceManager;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
