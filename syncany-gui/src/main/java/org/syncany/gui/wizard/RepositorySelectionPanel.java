@@ -163,7 +163,8 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 				Class<?>[] type = { Composite.class, int.class };
 				Class<?> classDefinition = Class.forName(pluginPanelClassName);
 				Constructor<?> cons = classDefinition.getConstructor(type);
-				Object[] obj = { pluginStackComposite, SWT.NONE };
+				String action = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION);
+				Object[] obj = { pluginStackComposite, SWT.NONE};
 				
 				PluginPanel pluginPanel = (PluginPanel) cons.newInstance(obj);
 				panels.put(p.getId(), pluginPanel);
@@ -183,6 +184,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		PluginPanel ppanel = panels.get(id);
 		stackLayout.topControl = ppanel;
 		pluginStackComposite.layout();
+		ppanel.setAction(getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION));
 	}
 
 	@Override

@@ -114,19 +114,18 @@ public class LocalPluginPanel extends PluginPanel {
 		testLocalRepositoryButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				final String folder = localDir.getText();
+				
 				Display.getCurrent().syncExec(new Runnable() {
 				    public void run() {
-				    	if (folder == null || folder.length() == 0){
-				    		testResultLabel.setText(I18n.getString("plugin.local.emptyDirectory"));
-				    	}
-				    	else if (!FileUtil.isExistingAndEmptyFolder(getShell(), folder)) {;
-				    		testResultLabel.setText(I18n.getString("plugin.local.notValidDirectory"));
-				    	}
-				    	else {
+				    	boolean isValid = isValid();
+				    	
+				    	if (isValid){
 				    		testResultLabel.setText(I18n.getString("plugin.local.validDirectory"));
 				    	}
-				    }
+				    	else{
+				    		testResultLabel.setText(I18n.getString("plugin.local.notValidDirectory"));
+				    	}
+					}
 				});
 			}
 		});
@@ -141,6 +140,29 @@ public class LocalPluginPanel extends PluginPanel {
 	
 	@Override
 	public boolean isValid() {
-		return FileUtil.isExistingAndEmptyFolder(getShell(), localDir.getText());
+		String folder = localDir.getText();
+		String action = getAction();
+    	
+    	if (folder == null || folder.length() == 0){
+    		return false;
+    	}
+    	
+    	if (action.equals("connect")){
+    		if (!FileUtil.isExistingFolder(getShell(), folder)){
+    			return false;
+    		}
+    		else {
+    			return true;
+    		}
+    	}
+    	else if (action.equals("create")){
+    		if (!FileUtil.isExistingAndEmptyFolder(getShell(), folder)){
+    			return false;
+    		}
+    		else {
+    			return true;
+    		}
+    	}
+    	return false;
 	}
 }

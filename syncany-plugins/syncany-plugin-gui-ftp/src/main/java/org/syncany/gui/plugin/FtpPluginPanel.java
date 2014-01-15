@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
-import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -69,27 +68,27 @@ public class FtpPluginPanel extends PluginPanel {
 		GridLayout gl_composite = new GridLayout(4, false);
 		setLayout(gl_composite);
 		
-		Label introductionTitleLabel = WidgetDecorator.label(this, SWT.WRAP).bold();
+		Label introductionTitleLabel = new Label(this, SWT.WRAP);
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("plugin.ftp.introduction.title"));
 		
-		Label introductionLabel = WidgetDecorator.label(this, SWT.WRAP).normal();
+		Label introductionLabel = new Label(this, SWT.WRAP);
 		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, false, 4, 1));
 		introductionLabel.setText(I18n.getString("plugin.ftp.introduction"));
 		
-		Label hostLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label hostLabel = new Label(this, SWT.NONE);
 		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.ftp.host", true));
 		
-		hostText = WidgetDecorator.text(this, SWT.BORDER).normal();
+		hostText = new Text(this, SWT.BORDER);
 		
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		hostText.setLayoutData(gd_hostText);
 		
-		Label portLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label portLabel = new Label(this, SWT.NONE);
 		GridData gd_portLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_portLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		portLabel.setLayoutData(gd_portLabel);
@@ -106,25 +105,25 @@ public class FtpPluginPanel extends PluginPanel {
 		gd_spinner.heightHint = 15;
 		spinner.setLayoutData(gd_spinner);
 		
-		Label usernameLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label usernameLabel = new Label(this, SWT.NONE);
 		usernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		usernameLabel.setText(I18n.getString("plugin.ftp.username", true));
 		
-		usernameText = WidgetDecorator.text(this, SWT.BORDER).normal();
+		usernameText = new Text(this, SWT.BORDER);
 		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 		
-		Label passwordLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label passwordLabel = new Label(this, SWT.NONE);
 		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		passwordLabel.setText(I18n.getString("plugin.ftp.password", true));
 		
-		passwordText = WidgetDecorator.text(this, SWT.BORDER | SWT.PASSWORD).normal();
+		passwordText = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 		
-		Label pathLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label pathLabel = new Label(this, SWT.NONE);
 		pathLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		pathLabel.setText(I18n.getString("plugin.ftp.path", true));
 		
-		pathText = WidgetDecorator.text(this, SWT.BORDER).normal();
+		pathText = new Text(this, SWT.BORDER);
 		pathText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 
 		Composite buttonComposite = new Composite(this, SWT.NONE);
@@ -142,7 +141,7 @@ public class FtpPluginPanel extends PluginPanel {
 		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
 		testResultLabel.setAlignment(SWT.CENTER);
 		
-		final Button testFtpButton = WidgetDecorator.button(buttonComposite, SWT.NONE).normal();
+		final Button testFtpButton = new Button(buttonComposite, SWT.NONE);
 
 		GridData gd_testFtpButton = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_testFtpButton.heightHint = 30;

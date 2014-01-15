@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
-import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -55,46 +54,46 @@ public class S3PluginPanel extends PluginPanel {
 		setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		GridLayout gl_composite = new GridLayout(2, false);
 		setLayout(gl_composite);
-		
-		Label introductionTitleLabel = WidgetDecorator.label(this, SWT.WRAP).bold();
+
+		Label introductionTitleLabel = new Label(this, SWT.WRAP);
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		introductionTitleLabel.setText(I18n.getString("plugin.s3.introduction.title"));
 		
-		Label introductionLabel =  WidgetDecorator.label(this, SWT.WRAP).normal();
+		Label introductionLabel =  new Label(this, SWT.WRAP);
 		introductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
 		introductionLabel.setText(I18n.getString("plugin.s3.introduction"));
 		
-		Label accessKeyLabel =  WidgetDecorator.label(this, SWT.NONE).normal();
+		Label accessKeyLabel =  new Label(this, SWT.NONE);
 		GridData gd_accessKeyLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_accessKeyLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		accessKeyLabel.setLayoutData(gd_accessKeyLabel);
 		accessKeyLabel.setText(I18n.getString("plugin.s3.accessKey", true));
 		
-		accessKey = WidgetDecorator.text(this, SWT.BORDER).normal();
+		accessKey = new Text(this, SWT.BORDER);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
 		accessKey.setLayoutData(gd_hostText);
 		
-		Label secretKeyLabel =  WidgetDecorator.label(this, SWT.NONE).normal();
+		Label secretKeyLabel =  new Label(this, SWT.NONE);
 		secretKeyLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		secretKeyLabel.setText(I18n.getString("plugin.s3.secretKey", true));
 		
-		secretKey =  WidgetDecorator.text(this, SWT.BORDER).normal();
+		secretKey =  new Text(this, SWT.BORDER);
 		secretKey.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
-		Label bucketLabel =  WidgetDecorator.label(this, SWT.NONE).normal();
+		Label bucketLabel =  new Label(this, SWT.NONE);
 		bucketLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		bucketLabel.setText(I18n.getString("plugin.s3.bucket", true));
 		
-		bucket = WidgetDecorator.text(this, SWT.BORDER).normal();
+		bucket = new Text(this, SWT.BORDER);
 		bucket.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
-		Label locationLabel =  WidgetDecorator.label(this, SWT.NONE).normal();
+		Label locationLabel =  new Label(this, SWT.NONE);
 		locationLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		locationLabel.setText(I18n.getString("plugin.s3.location", true));
 		
-		location = WidgetDecorator.text(this, SWT.BORDER).normal();
+		location = new Text(this, SWT.BORDER);
 		location.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
 		Composite buttonComposite = new Composite(this, SWT.NONE);
@@ -112,7 +111,7 @@ public class S3PluginPanel extends PluginPanel {
 		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
 		testResultLabel.setAlignment(SWT.CENTER);
 		
-		final Button testButton = WidgetDecorator.button(buttonComposite, SWT.NONE).normal();
+		final Button testButton = new Button(buttonComposite, SWT.NONE);
 
 		GridData gd_testButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
 		gd_testButton.heightHint = 30;

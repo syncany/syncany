@@ -10,7 +10,6 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
-import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -39,38 +38,38 @@ public class WebdavPluginPanel extends PluginPanel {
 		GridLayout gl_composite = new GridLayout(2, false);
 		setLayout(gl_composite);
 		
-		Label webdavTextTitleLabel = WidgetDecorator.label(this, SWT.WRAP).bold();
+		Label webdavTextTitleLabel = new Label(this, SWT.WRAP);
 		webdavTextTitleLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
 		webdavTextTitleLabel.setText(I18n.getString("plugin.webdav.introduction.title"));
 		
-		Label webdavTextLabel = WidgetDecorator.label(this, SWT.WRAP).normal();
+		Label webdavTextLabel = new Label(this, SWT.WRAP);
 		webdavTextLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		webdavTextLabel.setText(I18n.getString("plugin.webdav.introduction"));
 		
-		Label urlLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label urlLabel = new Label(this, SWT.NONE);
 		GridData gd_urlLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_urlLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		urlLabel.setLayoutData(gd_urlLabel);
 		urlLabel.setText(I18n.getString("plugin.webdav.url", true));
 		
-		url = WidgetDecorator.text(this, SWT.BORDER).normal();
+		url = new Text(this, SWT.BORDER);
 		GridData gd_url = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_url.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_url.minimumWidth = 200;
 		url.setLayoutData(gd_url);
 		
-		Label usernameLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label usernameLabel = new Label(this, SWT.NONE);
 		usernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		usernameLabel.setText(I18n.getString("plugin.webdav.username", true));
 		
-		username = WidgetDecorator.text(this, SWT.BORDER).normal();
+		username = new Text(this, SWT.BORDER);
 		username.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
-		Label passwordLabel = WidgetDecorator.label(this, SWT.NONE).normal();
+		Label passwordLabel = new Label(this, SWT.NONE);
 		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		passwordLabel.setText(I18n.getString("plugin.webdav.password", true));
 		
-		password = WidgetDecorator.text(this, SWT.BORDER | SWT.PASSWORD).normal();
+		password = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		password.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
 		Composite buttonComposite = new Composite(this, SWT.NONE);
@@ -88,7 +87,7 @@ public class WebdavPluginPanel extends PluginPanel {
 		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
 		testResultLabel.setAlignment(SWT.CENTER);
 		
-		final Button testButton = WidgetDecorator.button(buttonComposite, SWT.NONE).normal();
+		final Button testButton = new Button(buttonComposite, SWT.NONE);
 
 		GridData gd_testButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
 		gd_testButton.heightHint = 30;

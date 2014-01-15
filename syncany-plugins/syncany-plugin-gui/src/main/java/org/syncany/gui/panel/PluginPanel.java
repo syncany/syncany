@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
  *
  */
 public abstract class PluginPanel extends Composite implements UserParametersChecker {
+	protected String action;
 	
 	/**
 	 * @param parent
@@ -32,5 +33,19 @@ public abstract class PluginPanel extends Composite implements UserParametersChe
 	 */
 	public PluginPanel(Composite parent, int style) {
 		super(parent, style);
+	}
+	
+	/**
+	 * @return the action
+	 */
+	public String getAction() {
+		return action;
+	}
+	
+	/**
+	 * @param action the action to set
+	 */
+	public void setAction(String action) {
+		this.action = action;
 	}
 }
