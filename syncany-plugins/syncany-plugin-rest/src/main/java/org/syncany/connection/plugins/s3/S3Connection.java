@@ -21,6 +21,9 @@ import java.util.Map;
 
 import org.jets3t.service.security.AWSCredentials;
 import org.jets3t.service.security.ProviderCredentials;
+import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.rest.RestConnection;
@@ -30,15 +33,9 @@ public class S3Connection extends RestConnection {
     private String location;
 
     @Override
-	public void init(Map<String, String> map) throws StorageException {
-    	super.init(map);
-    	
-    	// Additional S3 settings
-		location = map.get("location");
-		
-		if (location == null) {
-			throw new StorageException("Config does not contain 'location' setting.");
-		}
+	public void init(Map<String, String> optionValues) throws StorageException {
+    	super.init(optionValues);    	
+		location = optionValues.get("location");
 	}
 
     @Override
@@ -59,18 +56,11 @@ public class S3Connection extends RestConnection {
         this.location = location;
     }
     
-    public String[] getMandatorySettings() {
-    	String[] superOptions = super.getMandatorySettings();
-    	String[] allOptions = new String[superOptions.length+1];
-    	
-    	System.arraycopy(superOptions, 0, allOptions, 0, superOptions.length);
-    	allOptions[allOptions.length-1] = "location";
-    	
-    	return allOptions;
-    }
+    @Override
+    public PluginOptionSpecs getOptionSpecs() {
+    	PluginOptionSpecs optionSpecs = super.getOptionSpecs();    	
+    	optionSpecs.add(new PluginOptionSpec("location", "Location", ValueType.STRING, true, false, null));
 
-	@Override
-	public String[] getOptionalSettings() {
-		return super.getOptionalSettings();
-	}
+    	return optionSpecs;
+    }    
 }

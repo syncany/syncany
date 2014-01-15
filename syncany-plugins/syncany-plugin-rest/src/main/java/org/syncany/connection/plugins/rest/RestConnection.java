@@ -22,7 +22,10 @@ import java.util.Map;
 import org.jets3t.service.security.ProviderCredentials;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.connection.plugins.PluginOptionSpecs;
 
 /**
  * The REST connection represents the settings required to create to a
@@ -42,25 +45,24 @@ public abstract class RestConnection implements Connection {
     protected String secretKey; 
     protected String bucket;    
     protected ProviderCredentials credentials;
+    protected Map<String, PluginOptionSpec> settings = null;
     
     @Override
-	public void init(Map<String, String> map) throws StorageException {
-		accessKey = map.get("accessKey");
-		secretKey = map.get("secretKey");
-		bucket = map.get("bucket");
-		
-		if (accessKey == null || secretKey == null || bucket == null) {
-			throw new StorageException("Config does not contain 'accessKey', 'secretKey' or 'bucket' setting.");
-		}
+    public void init(Map<String, String> optionValues) throws StorageException {
+		getOptionSpecs().validate(optionValues);
+		accessKey = optionValues.get("accessKey");
+		secretKey = optionValues.get("secretKey");
+		bucket = optionValues.get("bucket");
 	}   
-    
-    public String[] getMandatorySettings() {    	
-    	return new String[] { "accessKey", "secretKey", "bucket" };
-    }
-    
-    public String[] getOptionalSettings() {    	
-    	return new String[] { };
-    }
+
+    @Override 
+	public PluginOptionSpecs getOptionSpecs() {
+		return new PluginOptionSpecs(
+			new PluginOptionSpec("accessKey", "Access Key", ValueType.STRING, true, false, null),
+			new PluginOptionSpec("secretKey", "Secret Key", ValueType.STRING, true, true, null),
+			new PluginOptionSpec("bucket", "Bucket Name", ValueType.STRING, true, false, null)
+		);
+	}
     
     public String getAccessKey() {
         return accessKey;
