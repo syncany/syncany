@@ -104,10 +104,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		}
 
 		while (!stopRequired.get()) {
-			if (pauseRequired.get()){
-				synchronized (this) {
-					wait();
-					pauseRequired.set(false);
+			while (pauseRequired.get()){
+				try {
+					Thread.sleep(1000);
+				}
+				catch (Exception e) { 
+					
 				}
 			}
 			
@@ -206,7 +208,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 	
 	public void resume(){
-		notify();
+		pauseRequired.set(false);
 	}
 
 	public void stop(){
