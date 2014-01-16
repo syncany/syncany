@@ -65,6 +65,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private Database database;
 	private AtomicBoolean syncRunning;
+	private AtomicBoolean stopRequired;
+	private AtomicBoolean pauseRequired;
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
@@ -79,7 +81,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 		this.database = null;
 		this.syncRunning = new AtomicBoolean(false);
-		
+		this.stopRequired = new AtomicBoolean(false);
+		this.pauseRequired = new AtomicBoolean(false);
+
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
 		
@@ -99,7 +103,14 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			startRecursiveWatcher();
 		}
 
-		while (true) {
+		while (!stopRequired.get()) {
+			if (pauseRequired.get()){
+				synchronized (this) {
+					wait();
+					pauseRequired.set(false);
+				}
+			}
+			
 			try {
 				runSync();
 
@@ -111,6 +122,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				Thread.sleep(options.getInterval());
 			}
 		}
+		WatchOperationResult result = new WatchOperationResult();
+		return result;
 	}
 
 	private void startRecursiveWatcher() {
@@ -187,7 +200,19 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			notificationListener.announce(notificationChannel, notificationInstanceId);
 		}
 	}
+	
+	public void pause(){
+		pauseRequired.set(true);
+	}
+	
+	public void resume(){
+		notify();
+	}
 
+	public void stop(){
+		stopRequired.set(true);
+	}
+	
 	public static class WatchOperationOptions implements OperationOptions {
 		private int interval = 120000;
 		private boolean announcements = true;
