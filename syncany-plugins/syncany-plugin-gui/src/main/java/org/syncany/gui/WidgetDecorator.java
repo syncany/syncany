@@ -40,14 +40,18 @@ public class WidgetDecorator {
 	public static void bold(Control...controls){
 		for (Control control : controls){
 			font(control, FONT_BOLD);
-			if (control instanceof Text) enhanceFocus((Text)control);
+			if (control instanceof Text){
+				enhanceFocus((Text)control);
+			}
 		}
 	}
 	
 	public static void normal(Control...controls){
 		for (Control control : controls){
 			font(control, FONT_NORMAL);
-			if (control instanceof Text) enhanceFocus((Text)control);
+			if (control instanceof Text){
+				enhanceFocus((Text)control);
+			}
 		}
 	}
 	

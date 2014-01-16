@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.wizard.WizardDialog;
@@ -37,6 +38,10 @@ import org.syncany.gui.wizard.WizardDialog;
 public abstract class TrayIcon {
 	private static int REFRESH_TIME = 1000;
 
+	private Shell shell;
+	private AtomicBoolean syncing = new AtomicBoolean(false);
+	private AtomicBoolean paused = new AtomicBoolean(false);
+	
 	public enum TrayIcons {
 		TRAY_NO_OVERLAY("/images/tray/tray.png"), TRAY_IN_SYNC("/images/tray/tray-in-sync.png"), TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"), TRAY_SYNCING1(
 				"/images/tray/tray-syncing1.png"), TRAY_SYNCING2("/images/tray/tray-syncing2.png"), TRAY_SYNCING3("/images/tray/tray-syncing3.png"), TRAY_SYNCING4(
@@ -72,10 +77,6 @@ public abstract class TrayIcon {
 		}
 	}
 
-	private Shell shell;
-	private AtomicBoolean syncing = new AtomicBoolean(false);
-	private AtomicBoolean paused = new AtomicBoolean(false);
-
 	public TrayIcon(Shell shell) {
 		this.shell = shell;
 		systemTrayAnimationThread.start();
@@ -85,6 +86,10 @@ public abstract class TrayIcon {
 		return shell;
 	}
 
+	protected void pause(File folder) {
+		ClientCommandFactory.handlePauseWatch(folder.getAbsolutePath());
+	}
+	
 	protected void showFolder(File folder) {
 		try {
 			if (folder.exists() && folder.isDirectory()) {

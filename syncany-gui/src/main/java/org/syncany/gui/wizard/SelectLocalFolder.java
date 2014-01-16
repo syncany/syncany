@@ -14,6 +14,7 @@ import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.util.FileUtil;
 import org.syncany.util.I18n;
 
@@ -36,7 +37,6 @@ public class SelectLocalFolder extends WizardPanelComposite {
 		setLayout(gl_composite);
 		
 		Label introductionTitleLabel = new Label(this, SWT.WRAP);
-		introductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
 		introductionTitleLabel.setText(I18n.getString("dialog.selectLocalFolder.introduction.title"));
 		
@@ -70,6 +70,8 @@ public class SelectLocalFolder extends WizardPanelComposite {
 				}
 			}
 		});
+		WidgetDecorator.bold(introductionTitleLabel);
+		WidgetDecorator.normal(introductionLabel, localDir, hostLabel);
 	}	
 
 	@Override

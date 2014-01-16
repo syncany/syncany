@@ -130,10 +130,24 @@ public class DefaultTrayIcon extends TrayIcon {
 				if (folder.exists()) {
 					String status = folders.get(key).get("status");
 
-					MenuItem folderMenuItem = new MenuItem(menu, SWT.PUSH);
+					MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
 					folderMenuItem.setText(folder.getName() + " [" + status + "]");
-
-					folderMenuItem.addSelectionListener(new SelectionAdapter() {
+					
+					Menu subMenu = new Menu(folderMenuItem);
+					folderMenuItem.setMenu(subMenu);
+					
+					MenuItem startMI = new MenuItem(subMenu, SWT.PUSH);
+					startMI.setText("pause");
+					startMI.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							pause(folder);
+						}
+					});
+					
+					MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
+					openMI.setText("open");
+					openMI.addSelectionListener(new SelectionAdapter() {
 						@Override
 						public void widgetSelected(SelectionEvent e) {
 							showFolder(folder);

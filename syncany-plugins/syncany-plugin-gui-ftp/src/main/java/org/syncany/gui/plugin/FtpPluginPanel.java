@@ -57,7 +57,7 @@ public class FtpPluginPanel extends PluginPanel {
 	private Text usernameText;
 	private Text passwordText;
 	private Text pathText;
-	private Spinner spinner;
+	private Spinner portSpinner;
 
 	/**
 	 * Create the composite.
@@ -100,16 +100,16 @@ public class FtpPluginPanel extends PluginPanel {
 		portLabel.setLayoutData(gd_portLabel);
 		portLabel.setText(I18n.getString("plugin.ftp.port", true));
 		
-		spinner = new Spinner(this, SWT.BORDER);
-		spinner.setPageIncrement(1);
-		spinner.setMaximum(100000);
+		portSpinner = new Spinner(this, SWT.BORDER);
+		portSpinner.setPageIncrement(1);
+		portSpinner.setMaximum(100000);
 //		WidgetDecorator.decorateControl(spinner, FontDecorator.NORMAL);
-		spinner.setSelection(21);
+		portSpinner.setSelection(21);
 		GridData gd_spinner = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_spinner.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_spinner.widthHint = 50;
 		gd_spinner.heightHint = 15;
-		spinner.setLayoutData(gd_spinner);
+		portSpinner.setLayoutData(gd_spinner);
 		
 		Label usernameLabel = new Label(this, SWT.NONE);
 		usernameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -176,8 +176,13 @@ public class FtpPluginPanel extends PluginPanel {
 		
 		WidgetDecorator.bold(introductionTitleLabel);
 		WidgetDecorator.normal(
-			introductionLabel,hostText,hostLabel,portLabel,usernameLabel,
-			usernameText,passwordLabel,passwordText,pathLabel,pathText,spinner
+			introductionLabel,
+			hostText,hostLabel,
+			portLabel,portSpinner, 
+			usernameLabel, usernameText,
+			passwordLabel,passwordText,
+			pathLabel,pathText,
+			testFtpButton
 		);
 	}
 
@@ -187,7 +192,7 @@ public class FtpPluginPanel extends PluginPanel {
 		ftp.setConnectTimeout(TIMEOUT_CONNECT);
 
 		try{
-			ftp.connect(hostText.getText(), Integer.parseInt(spinner.getText()));
+			ftp.connect(hostText.getText(), Integer.parseInt(portSpinner.getText()));
 			boolean success = ftp.login(usernameText.getText(), passwordText.getText());
 			ftp.disconnect();
 			return success;
@@ -211,7 +216,7 @@ public class FtpPluginPanel extends PluginPanel {
 		parameters.putPluginParameter("username", usernameText.getText());
 		parameters.putPluginParameter("password", passwordText.getText());
 		parameters.putPluginParameter("path", pathText.getText());
-		parameters.putPluginParameter("port", spinner.getText());
+		parameters.putPluginParameter("port", portSpinner.getText());
 		return parameters;
 	}
 	
@@ -250,8 +255,8 @@ public class FtpPluginPanel extends PluginPanel {
 			valid = false;
 		}
 		
-		res = poc.get("port").validateInput(spinner.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), spinner);
+		res = poc.get("port").validateInput(portSpinner.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), portSpinner);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}

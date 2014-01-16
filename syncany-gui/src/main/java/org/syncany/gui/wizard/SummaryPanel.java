@@ -39,9 +39,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
-import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.util.BrowserHelper;
+import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -56,13 +57,13 @@ public class SummaryPanel extends WizardPanelComposite {
 	
 	private StackLayout stackLayout;
 	private Composite stackComposite;
-	private Composite successComposite;
+	private Composite successInitComposite;
 	private Composite failureComposite;
 	private Composite emptyComposite;
 	private Label sucessInitLabel;
-	private Button openSyncanyFolder; 
+	private Button initOpenSyncanyFolderButton; 
 	private Composite composite;
-	private Button btnNewButton;
+	private Button initCloseWizardButton;
 	private Label summaryIntroductionLabel;
 	private Label urlLabel;
 	private Label repositoryTypeLabel;
@@ -79,19 +80,18 @@ public class SummaryPanel extends WizardPanelComposite {
 		setLayout(gridLayout);
 		
 		summaryIntroductionTitleLabel = new Label(this, SWT.NONE);
-		summaryIntroductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		summaryIntroductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		summaryIntroductionTitleLabel.setText("New Label");
+		summaryIntroductionTitleLabel.setText(I18n.getString("dialog.summary.introduction.title"));
 		
 		summaryIntroductionLabel = new Label(this, SWT.NONE);
 		summaryIntroductionLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
-		summaryIntroductionLabel.setText("New Label");
+		summaryIntroductionLabel.setText(I18n.getString("dialog.summary.introduction"));
 		
 		repositoryTypeLabel = new Label(this, SWT.NONE);
 		GridData gd_repositoryTypeLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_repositoryTypeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		repositoryTypeLabel.setLayoutData(gd_repositoryTypeLabel);
-		repositoryTypeLabel.setText("Repository Type :");
+		repositoryTypeLabel.setText(I18n.getString("dialog.summary.repositoryType", true));
 		
 		repositoryType = new Label(this, SWT.NONE);
 		GridData gd_repositoryType = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
@@ -100,14 +100,14 @@ public class SummaryPanel extends WizardPanelComposite {
 		
 		Label localFolderLabel = new Label(this, SWT.NONE);
 		localFolderLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		localFolderLabel.setText("Local Folder :");
+		localFolderLabel.setText(I18n.getString("dialog.summary.localFolder", true));
 		
 		localFolder = new Label(this, SWT.NONE);
 		localFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		
 		encryptionTypeLabel = new Label(this, SWT.NONE);
 		encryptionTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		encryptionTypeLabel.setText("Encryption Settings :");
+		encryptionTypeLabel.setText(I18n.getString("dialog.summary.encryptionSettings", true));
 		
 		encryptionType = new Label(this, SWT.NONE);
 		encryptionType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
@@ -123,15 +123,14 @@ public class SummaryPanel extends WizardPanelComposite {
 		stackComposite.setLayout(stackLayout);
 		stackComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		
-		successComposite = new Composite(stackComposite, SWT.NONE);
-		successComposite.setLayout(new GridLayout(1, false));
+		successInitComposite = new Composite(stackComposite, SWT.NONE);
+		successInitComposite.setLayout(new GridLayout(1, false));
 		
-		sucessInitLabel = new Label(successComposite, SWT.NONE);
-		sucessInitLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		sucessInitLabel = new Label(successInitComposite, SWT.NONE);
 		sucessInitLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 		sucessInitLabel.setText("Repository sucessfully created");
 		
-		urlLabel = new Label(successComposite, SWT.WRAP);
+		urlLabel = new Label(successInitComposite, SWT.WRAP);
 		urlLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
 		urlLabel.setText("Click here to copy syncany url into Clipboard");
 		urlLabel.addMouseListener(new MouseAdapter() {
@@ -147,23 +146,23 @@ public class SummaryPanel extends WizardPanelComposite {
 			}
 		});
 		
-		composite = new Composite(successComposite, SWT.NONE);
+		composite = new Composite(successInitComposite, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 		composite.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
-		openSyncanyFolder = new Button(composite, SWT.NONE);
-		openSyncanyFolder.setText("Open Syncany Folder");
+		initOpenSyncanyFolderButton = new Button(composite, SWT.NONE);
+		initOpenSyncanyFolderButton.setText("Open Syncany Folder");
 		
-		btnNewButton = new Button(composite, SWT.NONE);
-		btnNewButton.setText("Close this windows");
-		btnNewButton.addSelectionListener(new SelectionAdapter() {
+		initCloseWizardButton = new Button(composite, SWT.NONE);
+		initCloseWizardButton.setText("Close this windows");
+		initCloseWizardButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				getParentWizardDialog().safeDispose();
 			}
 		});
 		
-		openSyncanyFolder.addSelectionListener(new SelectionAdapter() {
+		initOpenSyncanyFolderButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				getParentWizardDialog().safeDispose();
@@ -171,6 +170,27 @@ public class SummaryPanel extends WizardPanelComposite {
 				BrowserHelper.openFile(file);
 			}
 		});
+		
+		successConnectComposite = new Composite(stackComposite, SWT.NONE);
+		successConnectComposite.setLayout(new GridLayout(1, false));
+		
+		successConnectLabel = new Label(successConnectComposite, SWT.NONE);
+		successConnectLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+		successConnectLabel.setText("Repository sucessfully created");
+		
+		label_1 = new Label(successConnectComposite, SWT.WRAP);
+		label_1.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+		label_1.setText("Click here to copy syncany url into Clipboard");
+		
+		composite_2 = new Composite(successConnectComposite, SWT.NONE);
+		composite_2.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+		composite_2.setLayout(new RowLayout(SWT.HORIZONTAL));
+		
+		connectOpenSyncanyFolderButton = new Button(composite_2, SWT.NONE);
+		connectOpenSyncanyFolderButton.setText("Open Syncany Folder");
+		
+		connectCloseWizardButton = new Button(composite_2, SWT.NONE);
+		connectCloseWizardButton.setText("Close this windows");
 		
 		failureComposite = new Composite(stackComposite, SWT.NONE);
 		failureComposite.setLayout(new GridLayout(1, false));
@@ -183,6 +203,17 @@ public class SummaryPanel extends WizardPanelComposite {
 		
 		stackLayout.topControl = emptyComposite;
 		failureComposite.layout();
+		
+		WidgetDecorator.normal(
+			repositoryType, localFolder, encryptionType, urlLabel, 
+			initOpenSyncanyFolderButton, initCloseWizardButton,
+			connectOpenSyncanyFolderButton, connectCloseWizardButton
+		);
+		WidgetDecorator.bold(
+			successConnectLabel, errorInitLabel, successConnectLabel,
+			summaryIntroductionTitleLabel, 
+			encryptionTypeLabel, repositoryTypeLabel, localFolderLabel
+		);
 	}
 	
 	public void updateData(){
@@ -259,9 +290,15 @@ public class SummaryPanel extends WizardPanelComposite {
 	}
 	
 	private String link;
+	private Composite successConnectComposite;
+	private Label successConnectLabel;
+	private Label label_1;
+	private Composite composite_2;
+	private Button connectOpenSyncanyFolderButton;
+	private Button connectCloseWizardButton;
 	public void showSuccessMessage(String link, boolean linkEncrypted){
 		this.link = link;
-		stackLayout.topControl = successComposite;
+		stackLayout.topControl = successInitComposite;
 		stackComposite.layout();
 	}
 }

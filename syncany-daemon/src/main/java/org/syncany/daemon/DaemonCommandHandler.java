@@ -40,6 +40,25 @@ public class DaemonCommandHandler {
 		wc.execute();
 		return null;
 	}
+	
+	private static String handlePauseWatch(Map<String, Object> parameters) {
+		Map<String, Command> commands = Daemon.getInstance().getCommands();
+		String localDir = (String)parameters.get("localfolder");
+		
+		logger.log(Level.INFO, String.format("Pause watching folder %s", localDir));
+		
+		for (String key : commands.keySet()){
+			Command c = commands.get(key);
+			if (c instanceof WatchCommand){
+				WatchCommand _wc = (WatchCommand)c;
+				if (_wc.getLocalFolder().equals(localDir)){
+					_wc.pause();
+				}
+			}
+		}
+		updateWatchedFolders();
+		return null;
+	}
 
 	private static String handleQuit(Map<String, Object> parameters) {
 		if (Daemon.getInstance() != null) {
@@ -183,6 +202,9 @@ public class DaemonCommandHandler {
 		switch (action){
 			case "watch":
 				handleWatch(params);
+				break;
+			case "pause_watch":
+				handlePauseWatch(params);
 				break;
 			case "create":
 				Map<String, String> retInit = handleInit(params);

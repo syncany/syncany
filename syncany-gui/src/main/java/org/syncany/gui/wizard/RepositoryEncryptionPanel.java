@@ -34,6 +34,7 @@ import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.util.I18n;
 
 /**
@@ -47,9 +48,9 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	private Combo keylengthCombo;
 	private Spinner chunckSize;
 	private Button enableEncryption;
-	private Label lblNewLabel_6; 
-	private Label lblNewLabel_5;
-	private Label lblNewLabel_4;
+	private Label chunckSizeLabel; 
+	private Label keyLengthLabel;
+	private Label algorithmLabel;
 	
 	public RepositoryEncryptionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -64,7 +65,6 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		setLayout(gridLayout);
 		
 		Label introductionTextTitle = new Label(this, SWT.WRAP);
-		introductionTextTitle.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTextTitle.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 2, 1));
 		introductionTextTitle.setText(I18n.getString("repository.encryption.introduction.title"));
 		
@@ -103,33 +103,33 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		gd_composite.widthHint = 411;
 		composite.setLayoutData(gd_composite);
 		
-		lblNewLabel_4 = new Label(composite, SWT.NONE);
+		algorithmLabel = new Label(composite, SWT.NONE);
 		GridData gd_lblNewLabel_4 = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_lblNewLabel_4.horizontalIndent = 30;
-		lblNewLabel_4.setLayoutData(gd_lblNewLabel_4);
-		lblNewLabel_4.setText(I18n.getString("repository.encryption.algorithm", true));
+		algorithmLabel.setLayoutData(gd_lblNewLabel_4);
+		algorithmLabel.setText(I18n.getString("repository.encryption.algorithm", true));
 		
 		cypherCombo = new Combo(composite, SWT.NONE);
 		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		cypherCombo.setItems(new String[]{"AES", "TwoFish"});
 		cypherCombo.select(0);
 		
-		lblNewLabel_5 = new Label(composite, SWT.NONE);
+		keyLengthLabel = new Label(composite, SWT.NONE);
 		GridData gd_lblNewLabel_5 = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_lblNewLabel_5.horizontalIndent = 30;
-		lblNewLabel_5.setLayoutData(gd_lblNewLabel_5);
-		lblNewLabel_5.setText(I18n.getString("repository.encryption.keylength", true));
+		keyLengthLabel.setLayoutData(gd_lblNewLabel_5);
+		keyLengthLabel.setText(I18n.getString("repository.encryption.keylength", true));
 		
 		keylengthCombo = new Combo(composite, SWT.NONE);
 		keylengthCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		keylengthCombo.setItems(new String[]{"128", "256"});
 		keylengthCombo.select(0);
 		
-		lblNewLabel_6 = new Label(composite, SWT.NONE);
+		chunckSizeLabel = new Label(composite, SWT.NONE);
 		GridData gd_lblNewLabel_6 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_lblNewLabel_6.horizontalIndent = 30;
-		lblNewLabel_6.setLayoutData(gd_lblNewLabel_6);
-		lblNewLabel_6.setText(I18n.getString("repository.encryption.chunckSize", true));
+		chunckSizeLabel.setLayoutData(gd_lblNewLabel_6);
+		chunckSizeLabel.setText(I18n.getString("repository.encryption.chunckSize", true));
 		
 		chunckSize = new Spinner(composite, SWT.BORDER);
 		chunckSize.setMaximum(10000);
@@ -138,6 +138,12 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		GridData gd_chunckSize = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_chunckSize.heightHint = 15;
 		chunckSize.setLayoutData(gd_chunckSize);
+		
+		WidgetDecorator.bold(introductionTextTitle);
+		WidgetDecorator.normal(
+			passwordAgainText, passwordAgainText, introductionText, passwordLabel, passwordLabelAgain, enableEncryption, chunckSize,
+			chunckSizeLabel, keyLengthLabel, algorithmLabel
+		);
 	}
 	
 	protected void toggleEncryptionSelection() {
@@ -148,9 +154,9 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
 		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
 		
-		lblNewLabel_4.setForeground(enableEncryption.getSelection() ? black : gray);
-		lblNewLabel_5.setForeground(enableEncryption.getSelection() ? black : gray);
-		lblNewLabel_6.setForeground(enableEncryption.getSelection() ? black : gray);
+		chunckSizeLabel.setForeground(enableEncryption.getSelection() ? black : gray);
+		keyLengthLabel.setForeground(enableEncryption.getSelection() ? black : gray);
+		algorithmLabel.setForeground(enableEncryption.getSelection() ? black : gray);
 	}
 
 	public boolean issValid() {

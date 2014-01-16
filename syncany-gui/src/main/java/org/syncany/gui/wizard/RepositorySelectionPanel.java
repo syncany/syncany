@@ -37,8 +37,8 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
-import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 import org.syncany.util.StringUtil;
@@ -93,7 +93,6 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		urlComposite.setLayout(new GridLayout(2, false));
 		
 		urlIntroductionTitleLabel =new Label(urlComposite, SWT.WRAP);
-		urlIntroductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		urlIntroductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 		urlIntroductionTitleLabel.setText(I18n.getString("dialog.chooseRepository.url.introduction.title"));
 		
@@ -117,7 +116,6 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		createComposite.setLayout(new GridLayout(1, false));
 		
 		Label introductionTitleLabel =new Label(createComposite, SWT.NONE);
-		introductionTitleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		introductionTitleLabel.setSize(262, 17);
 		introductionTitleLabel.setText(I18n.getString("dialog.chooseRepository.introduction.title"));
@@ -176,6 +174,9 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		repositorySelectionCombo.select(idxSelectedPlugin);
 
 		showPLuginPanel(pluginList.get(idxSelectedPlugin).getId());
+		
+		WidgetDecorator.bold(urlIntroductionTitleLabel, introductionTitleLabel);
+		WidgetDecorator.normal(urlIntroductionLabel, introductionLabel, chooseRepositoryLabel, urlText);
 	}
 	
 	private void showPLuginPanel(String id){

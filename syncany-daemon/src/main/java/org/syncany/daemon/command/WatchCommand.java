@@ -105,9 +105,9 @@ public class WatchCommand extends Command {
 			public void run() {
 				try {
 					Config config = initConfigOption(localFolder);
-					WatchOperation wo = new WatchOperation(config, operationOptions);
+					watchOperation = new WatchOperation(config, operationOptions);
 					setStatus(CommandStatus.STARTED);
-					wo.execute();
+					watchOperation.execute();
 					setStatus(CommandStatus.STOPPED);
 				}
 				catch (Exception e) {
@@ -120,6 +120,7 @@ public class WatchCommand extends Command {
 		return 0;
 	}
 	
+	private WatchOperation watchOperation;
 	private Thread th;
 	
 	private Config initConfigOption(String localDir) throws ConfigException, Exception {
@@ -171,7 +172,7 @@ public class WatchCommand extends Command {
 	}
 
 	public void pause() {
-		
+		stop();
 	}
 	
 	public void stop() {

@@ -21,7 +21,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
 
 public class SWTUtil {
-	
 	private static void markAsInvalid(Control c){
 		c.setBackground(ApplicationResourcesManager.INVALID_TEXT_COLOR);
 	}
