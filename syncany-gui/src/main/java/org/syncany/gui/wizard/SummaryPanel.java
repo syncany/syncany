@@ -38,8 +38,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.util.BrowserHelper;
 
@@ -167,7 +167,7 @@ public class SummaryPanel extends WizardPanelComposite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				getParentWizardDialog().safeDispose();
-				String file = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.LOCAL_FOLDER);
+				String file = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.LOCAL_FOLDER);
 				BrowserHelper.openFile(file);
 			}
 		});
@@ -191,9 +191,9 @@ public class SummaryPanel extends WizardPanelComposite {
 		getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				String type = String.format("%s", userInput.get(SyncanyCommandParameters.COMMAND_ACTION));
-				String encryption = String.format("[%s / %s]", userInput.get(SyncanyCommandParameters.ENCRYPTION_ALGORITHM), userInput.get(SyncanyCommandParameters.ENCRYPTION_KEYLENGTH));
-				String folder = String.format("%s", userInput.get(SyncanyCommandParameters.LOCAL_FOLDER));
+				String type = String.format("%s", userInput.getCommonParameter(CommonParameters.COMMAND_ACTION));
+				String encryption = String.format("[%s / %s]", userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM), userInput.getCommonParameter(CommonParameters.ENCRYPTION_KEYLENGTH));
+				String folder = String.format("%s", userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 				repositoryType.setText(type);
 				localFolder.setText(folder);
 				encryptionType.setText(encryption);

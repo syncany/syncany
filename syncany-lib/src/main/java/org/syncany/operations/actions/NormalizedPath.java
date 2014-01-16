@@ -30,9 +30,9 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.EnvironmentUtil.OperatingSystem;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
+import org.syncany.util.EnvironmentUtil.OperatingSystem;
 
 public class NormalizedPath {
 	protected static final Logger logger = Logger.getLogger(NormalizedPath.class.getSimpleName());	

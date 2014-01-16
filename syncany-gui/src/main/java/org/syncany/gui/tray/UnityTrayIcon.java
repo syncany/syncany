@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.syncany.gui.messaging.WSClient;
+import org.syncany.gui.messaging.WebsocketClient;
 import org.syncany.gui.util.StaticResourcesWebServer;
 import org.syncany.gui.util.StaticResourcesWebServer.ServerStartedListener;
 import org.syncany.util.JsonHelper;
@@ -42,7 +42,7 @@ import org.syncany.util.JsonHelper;
  *
  */
 public class UnityTrayIcon extends TrayIcon {
-	private static final Logger logger = Logger.getLogger(WSClient.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(WebsocketClient.class.getSimpleName());
 	private static int WEBSOCKET_SERVER_PORT = 8882;
 
 	private WebSocketServer webSocketClient;
@@ -106,9 +106,6 @@ public class UnityTrayIcon extends TrayIcon {
 		catch (IOException e) {
 			throw new RuntimeException("Cannot start Python process for Unity Tray Icon.", e);
 		}
-		
-		// TODO [medium] remove
-		makeSystemTrayStartSync();
 	}
 
 	@Override

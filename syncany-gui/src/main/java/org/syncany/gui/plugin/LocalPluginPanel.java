@@ -28,8 +28,14 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
@@ -41,7 +47,7 @@ import org.syncany.util.I18n;
  *
  */
 public class LocalPluginPanel extends PluginPanel {
-	private Text localDir;
+	private Text pathText;
 	
 	public LocalPluginPanel(Composite parent, int style){
 		super(parent, style);
@@ -67,11 +73,11 @@ public class LocalPluginPanel extends PluginPanel {
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.local.localFolder", true));
 		
-		localDir = new Text(this, SWT.BORDER);
+		pathText = new Text(this, SWT.BORDER);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
-		localDir.setLayoutData(gd_hostText);
+		pathText.setLayoutData(gd_hostText);
 		
 		Button selectFolderButton = new Button(this, SWT.FLAT);
 		selectFolderButton.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, false, false, 1, 1));
@@ -84,7 +90,7 @@ public class LocalPluginPanel extends PluginPanel {
 				String selectedFolder = fd.open();
 				
 				if (selectedFolder != null && selectedFolder.length() > 0)
-					localDir.setText(selectedFolder);
+					pathText.setText(selectedFolder);
 			}
 		});
 		
@@ -134,7 +140,7 @@ public class LocalPluginPanel extends PluginPanel {
 		
 		WidgetDecorator.normal(introductionLabel);
 		WidgetDecorator.normal(hostLabel);
-		WidgetDecorator.normal(localDir);
+		WidgetDecorator.normal(pathText);
 		WidgetDecorator.normal(selectFolderButton);
 		WidgetDecorator.normal(testResultLabel);
 		WidgetDecorator.normal(testLocalRepositoryButton);
@@ -143,35 +149,44 @@ public class LocalPluginPanel extends PluginPanel {
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.put(SyncanyLocalParameter.LOCAL_FOLDER, localDir.getText());
+		parameters.putPluginParameter("path", pathText.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
-		String folder = localDir.getText();
+		boolean valid = true;
+
+		Plugin plugin = Plugins.get("local");
+		Connection c = plugin.createConnection();
+
+		PluginOptionSpecs poc = c.getOptionSpecs();
+		
+		OptionValidationResult res;
+		
+		res = poc.get("path").validateInput(pathText.getText());
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		String folder = pathText.getText();
 		String action = getAction();
     	
     	if (folder == null || folder.length() == 0){
-    		return false;
+    		valid = false;
     	}
     	
     	if (action.equals("connect")){
     		if (!FileUtil.isExistingFolder(getShell(), folder)){
-    			return false;
-    		}
-    		else {
-    			return true;
+    			valid = false;
     		}
     	}
     	else if (action.equals("create")){
     		if (!FileUtil.isExistingAndEmptyFolder(getShell(), folder)){
-    			return false;
-    		}
-    		else {
-    			return true;
+    			valid = false;
     		}
     	}
-    	return false;
+    	SWTUtil.markAs(valid, pathText);
+    	return valid;
 	}
 }

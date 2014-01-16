@@ -36,8 +36,8 @@ import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
@@ -163,7 +163,6 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 				Class<?>[] type = { Composite.class, int.class };
 				Class<?> classDefinition = Class.forName(pluginPanelClassName);
 				Constructor<?> cons = classDefinition.getConstructor(type);
-				String action = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION);
 				Object[] obj = { pluginStackComposite, SWT.NONE};
 				
 				PluginPanel pluginPanel = (PluginPanel) cons.newInstance(obj);
@@ -184,7 +183,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		PluginPanel ppanel = panels.get(id);
 		stackLayout.topControl = ppanel;
 		pluginStackComposite.layout();
-		ppanel.setAction(getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION));
+		ppanel.setAction(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION));
 	}
 
 	@Override
@@ -195,12 +194,12 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 
 	@Override
 	public UserInput getUserSelection() {
-		UserInput userInput = new UserInput();
-		
 		String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));
-		userInput.put(SyncanyCommandParameters.PLUGIN_ID, id);
+
+		UserInput userInput = new UserInput();
+		userInput.putCommonParameter(CommonParameters.PLUGIN_ID, id);
 		UserInput pluginParameters = panels.get(id).getUserSelection();
-		userInput.putAll(pluginParameters);
+		userInput.merge(pluginParameters);
 		return userInput;
 	}
 
@@ -221,8 +220,8 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 
 	@Override
 	public void updateData() {
-		String action = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION);
-		boolean url = "yes".equals(getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.AVAILABLE_URL)) ? true : false;
+		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
+		boolean url = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL)) ? true : false;
 		
 		if (action.equals("create")  || (action.equals("connect") && !url)){
 			rootStackLayout.topControl = createComposite;

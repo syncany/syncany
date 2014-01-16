@@ -15,43 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.plugin;
+package org.syncany.gui.messaging.event;
 
-import org.syncany.util.SyncanyParameters;
+import java.util.Map;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public enum SyncanyWebDAVParameter implements SyncanyParameters {
-	URL("url", true), 
-	PASSWORD("username", true),
-	USERNAME("password", true);
+public class WatchUpdateEvent extends ApplicationEvent {
+	private Map<String, Map<String, String>> watchUpdate;
 
-	private String value;
-	private boolean mandatory;
-	
-	private SyncanyWebDAVParameter(String value, boolean mandatory) {
-		this.value = value;
-		this.mandatory = mandatory;
+	public WatchUpdateEvent(Map<String, Map<String, String>> watchUpdate) {
+		this.watchUpdate = watchUpdate;
 	}
 
-	public boolean containsValue(String value) {
-		return true;
+	public void setWatchUpdate(Map<String, Map<String, String>> watchUpdate) {
+		this.watchUpdate = watchUpdate;
 	}
 
-	@Override
-	public String value() {
-		return value;
-	}
-
-	@Override
-	public boolean isPluginParameter() {
-		return true;
-	}
-
-	@Override
-	public boolean isParameterMandatory() {
-		return mandatory;
+	public Map<String, Map<String, String>> getWatchUpdate() {
+		return watchUpdate;
 	}
 }

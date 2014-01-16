@@ -30,9 +30,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.SWTUtil;
-import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.util.I18n;
 
@@ -41,8 +41,8 @@ import org.syncany.util.I18n;
  *
  */
 public class RepositoryEncryptionPanel extends WizardPanelComposite {
-	private Text password;
-	private Text passwordAgain;
+	private Text passwordText;
+	private Text passwordAgainText;
 	private Combo cypherCombo;
 	private Combo keylengthCombo;
 	private Spinner chunckSize;
@@ -76,14 +76,14 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		passwordLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		passwordLabel.setText(I18n.getString("repository.encryption.password", true));
 		
-		password = new Text(this, SWT.BORDER | SWT.PASSWORD);
-		password.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		passwordText = new Text(this, SWT.BORDER | SWT.PASSWORD);
+		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		Label passwordLabelAgain = new Label(this, SWT.NONE);
 		passwordLabelAgain.setText(I18n.getString("repository.encryption.passwordAgain", true));
 		
-		passwordAgain = new Text(this, SWT.BORDER | SWT.PASSWORD);
-		passwordAgain.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		passwordAgainText = new Text(this, SWT.BORDER | SWT.PASSWORD);
+		passwordAgainText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		enableEncryption = new Button(this, SWT.CHECK);
 		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
@@ -155,30 +155,30 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 
 	public boolean issValid() {
 		return 
-			password.getText().length() > 6 && 
-			password.getText().equals(passwordAgain.getText()); 
+			passwordText.getText().length() > 6 && 
+			passwordText.getText().equals(passwordAgainText.getText()); 
 	}
 	
 	@Override
 	public boolean isValid() {
-		boolean valid = true;
+		String password = passwordText.getText();
+		String passwordAgain = passwordAgainText.getText();
 		
-		// && order matters cause java uses lazy evaluation
-		valid = SWTUtil.checkTextLength(password, 6) && valid;
-		valid = SWTUtil.checkEquals(passwordAgain, password.getText()) && valid;
-			
-		return valid;
+		SWTUtil.markAs(password != null && password.length() > 6, passwordText);
+		SWTUtil.markAs(password != null && password.length() > 6 && password.equals(passwordAgain), passwordAgainText);
+		
+		return password != null && password.length() > 6 && password.equals(passwordAgain);
 	}
 
 	@Override
 	public UserInput getUserSelection() {
 		UserInput userInput = new UserInput();
-		userInput.put(SyncanyCommandParameters.ENCRYPTION_PASSWORD, password.getText());
+		userInput.putCommonParameter(CommonParameters.ENCRYPTION_PASSWORD, passwordText.getText());
 		
 		if (enableEncryption.getSelection()){
-			userInput.put(SyncanyCommandParameters.ENCRYPTION_ENABLED, enableEncryption.getSelection() ? "yes" : "no");
-			userInput.put(SyncanyCommandParameters.ENCRYPTION_ALGORITHM, cypherCombo.getItem(cypherCombo.getSelectionIndex()));
-			userInput.put(SyncanyCommandParameters.ENCRYPTION_KEYLENGTH, keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
+			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ENABLED, enableEncryption.getSelection() ? "yes" : "no");
+			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM, cypherCombo.getItem(cypherCombo.getSelectionIndex()));
+			userInput.putCommonParameter(CommonParameters.ENCRYPTION_KEYLENGTH, keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
 		}
 		return userInput;
 	}

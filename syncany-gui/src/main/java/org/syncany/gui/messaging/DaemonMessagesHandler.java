@@ -21,15 +21,18 @@ import java.util.Map;
 
 import org.syncany.gui.Launcher;
 import org.syncany.gui.MainGUI;
-import org.syncany.gui.messaging.InterfaceUpdateEvent.InterfaceUpdateAction;
+import org.syncany.gui.messaging.event.InitCommandEvent;
+import org.syncany.gui.messaging.event.SyncyngEvent;
+import org.syncany.gui.messaging.event.SyncyngEvent.SyncyngState;
+import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.util.JsonHelper;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class DaemonMessagesHandler {
-	@SuppressWarnings("unchecked")
+	
 	public void handleReceivedMessage(String message) {
 		Map<String, Object> parameters = JsonHelper.fromStringToMap(message);
 		String action = (String) parameters.get("action");
@@ -40,32 +43,29 @@ public class DaemonMessagesHandler {
 		case "daemon_command_result":
 			// test if daemon update
 			if (MainGUI.getClientIdentification().equals(clientId) && clientType.equals("syncany-gui")) {
-				InterfaceUpdateEvent interfaceUpdateEvent = new InterfaceUpdateEvent(InterfaceUpdateAction.WIZARD_COMMAND_DONE, parameters);
-				Launcher.getEventBus().post(interfaceUpdateEvent);
+				InitCommandEvent ce = new InitCommandEvent((String) parameters.get("command_id"), (String) parameters.get("result"),
+						(String) parameters.get("share_link"), (String) parameters.get("localFolder"), "yes".equals((String) parameters
+								.get("share_link_encrypted")));
+				Launcher.getEventBus().post(ce);
 			}
 			break;
 
 		case "update_watched_folders":
-			InterfaceUpdateEvent interfaceUpdateEvent = new InterfaceUpdateEvent(InterfaceUpdateAction.UPDATE_WATCHED_FOLDERS, (Map<String, Object>) parameters.get("folders"));
-			Launcher.getEventBus().post(interfaceUpdateEvent);
+			// TODO[medium]: try not to use unsafe casting .....
+			WatchUpdateEvent wue = new WatchUpdateEvent((Map<String, Map<String, String>>) parameters.get("folders"));
+			Launcher.getEventBus().post(wue);
 			break;
 
 		case "update_syncing_state":
 			String syncingState = (String) parameters.get("syncing_state");
+			SyncyngEvent se = new SyncyngEvent();
 			if (syncingState.equals("syncing")) {
-				Launcher.getEventBus().post(new InterfaceUpdateEvent(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
+				se.setState(SyncyngState.SYNCING);
 			}
 			else if (syncingState.equals("in-sync")) {
-				Launcher.getEventBus().post(new InterfaceUpdateEvent(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
+				se.setState(SyncyngState.SYNCED);
 			}
-			break;
-
-		case "start_syncing":
-			Launcher.getEventBus().post(new InterfaceUpdateEvent(InterfaceUpdateAction.START_SYSTEM_TRAY_SYNC, null));
-			break;
-
-		case "stop_syncing":
-			Launcher.getEventBus().post(new InterfaceUpdateEvent(InterfaceUpdateAction.STOP_SYSTEM_TRAY_SYNC, null));
+			Launcher.getEventBus().post(se);
 			break;
 		}
 	}

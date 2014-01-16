@@ -38,14 +38,13 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.InterfaceUpdateEvent;
-import org.syncany.gui.messaging.InterfaceUpdateEvent.InterfaceUpdateAction;
+import org.syncany.gui.messaging.event.InitCommandEvent;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
 
@@ -203,18 +202,18 @@ public class WizardDialog extends Dialog {
 	private String commandId;
 	
 	@Subscribe
-	public void update(InterfaceUpdateEvent event){
-		String id = (String)event.getData().get("command_id");
-		if (event.getAction() == InterfaceUpdateAction.WIZARD_COMMAND_DONE && commandId.equals(id)){
+	public void update(InitCommandEvent event){
+		String id = event.getCommandId();
+		if (commandId.equals(id)){
 			final SummaryPanel summaryPanel = (SummaryPanel)panels.get(Panel.SUMMARY);
 			summaryPanel.stopIndeterminateProgressBar();
 			
-			String reply = (String) event.getData().get("result");
-			final String shareLink = (String) event.getData().get("share_link");
-			final String folder = (String) event.getData().get("localFolder");
-			final boolean shareLinkEncrypted = Boolean.parseBoolean((String) event.getData().get("share_link_encrypted"));
+			String result = event.getResult();
+			final String shareLink = event.getShareLink();
+			final String folder = event.getLocalFolder();
+			final boolean shareLinkEncrypted = event.isShareLinkEncrypted();
 			
-			switch (reply){
+			switch (result){
 				case "failed":
 					Display.getDefault().asyncExec(new Runnable() {
 						@Override
@@ -247,7 +246,7 @@ public class WizardDialog extends Dialog {
 		switch (selectedPanel) {
 			case LOCAL_FOLDER_SELECTION:
 				SelectLocalFolder wp = (SelectLocalFolder)panels.get(selectedPanel);
-				String f = wp.getUserSelection().get(SyncanyCommandParameters.LOCAL_FOLDER);
+				String f = wp.getUserSelection().getCommonParameter(CommonParameters.LOCAL_FOLDER);
 				Launcher.applicationConfiguration.addWatchedFolder(f);
 				Launcher.saveConfiguration();
 				ClientCommandFactory.handleWatch(f, 3000);
@@ -256,7 +255,7 @@ public class WizardDialog extends Dialog {
 				
 			case SUMMARY:
 				this.commandId = UUID.randomUUID().toString();
-				userInput.put(SyncanyCommandParameters.COMMAND_ID, this.commandId);
+				userInput.putCommonParameter(CommonParameters.COMMAND_ID, this.commandId);
 				ClientCommandFactory.handleCommand(userInput);
 				SummaryPanel sp = (SummaryPanel)panels.get(selectedPanel);
 				sp.startIndeterminateProgressBar();
@@ -270,7 +269,7 @@ public class WizardDialog extends Dialog {
 	private void handleNext() {
 		WizardPanelComposite panel = panels.get(selectedPanel);
 		if (panel.isValid()) {
-			userInput.putAll(panel.getUserSelection());
+			userInput.merge(panel.getUserSelection());
 			showPanel(selectedPanel.getNext());
 		}
 	}

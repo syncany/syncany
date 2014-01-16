@@ -35,61 +35,56 @@ import org.syncany.gui.wizard.WizardDialog;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
 public abstract class TrayIcon {
-	private static int REFRESH_TIME=1000;
-	public enum TrayIcons{
-		TRAY_NO_OVERLAY("/images/tray/tray.png"),
-		TRAY_IN_SYNC("/images/tray/tray-in-sync.png"),
-		TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"),
-		TRAY_SYNCING1("/images/tray/tray-syncing1.png"),
-		TRAY_SYNCING2("/images/tray/tray-syncing2.png"),
-		TRAY_SYNCING3("/images/tray/tray-syncing3.png"),
-		TRAY_SYNCING4("/images/tray/tray-syncing4.png"),
-		TRAY_SYNCING5("/images/tray/tray-syncing5.png"),
-		TRAY_SYNCING6("/images/tray/tray-syncing6.png"),
-		TRAY_UP_TO_DATE("/images/tray/tray-uptodate.png");
-			
+	private static int REFRESH_TIME = 1000;
+
+	public enum TrayIcons {
+		TRAY_NO_OVERLAY("/images/tray/tray.png"), TRAY_IN_SYNC("/images/tray/tray-in-sync.png"), TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"), TRAY_SYNCING1(
+				"/images/tray/tray-syncing1.png"), TRAY_SYNCING2("/images/tray/tray-syncing2.png"), TRAY_SYNCING3("/images/tray/tray-syncing3.png"), TRAY_SYNCING4(
+				"/images/tray/tray-syncing4.png"), TRAY_SYNCING5("/images/tray/tray-syncing5.png"), TRAY_SYNCING6("/images/tray/tray-syncing6.png"), TRAY_UP_TO_DATE(
+				"/images/tray/tray-uptodate.png");
+
 		private String fileName;
-		
-		TrayIcons(String filenName){
+
+		TrayIcons(String filenName) {
 			this.fileName = filenName;
 		}
-		
+
 		public String getFileName() {
 			return fileName;
 		}
 
 		public static TrayIcons get(int idx) {
-			switch (idx+1){
-				default:
-				case 1:
-					return TRAY_SYNCING1;
-				case 2:
-					return TRAY_SYNCING2;
-				case 3:
-					return TRAY_SYNCING3;
-				case 4:
-					return TRAY_SYNCING4;
-				case 5:
-					return TRAY_SYNCING5;
-				case 6:
-					return TRAY_SYNCING6;
+			switch (idx + 1) {
+			default:
+			case 1:
+				return TRAY_SYNCING1;
+			case 2:
+				return TRAY_SYNCING2;
+			case 3:
+				return TRAY_SYNCING3;
+			case 4:
+				return TRAY_SYNCING4;
+			case 5:
+				return TRAY_SYNCING5;
+			case 6:
+				return TRAY_SYNCING6;
 			}
 		}
 	}
-	
+
 	private Shell shell;
 	private AtomicBoolean syncing = new AtomicBoolean(false);
 	private AtomicBoolean paused = new AtomicBoolean(false);
-	
+
 	public TrayIcon(Shell shell) {
 		this.shell = shell;
 		systemTrayAnimationThread.start();
 	}
-	
+
 	public Shell getShell() {
 		return shell;
 	}
-	
+
 	protected void showFolder(File folder) {
 		try {
 			if (folder.exists() && folder.isDirectory()) {
@@ -100,55 +95,59 @@ public abstract class TrayIcon {
 			e1.printStackTrace();
 		}
 	}
-	
-	protected void showDonate(){
+
+	protected void showDonate() {
 		BrowserHelper.browse("http://www.syncany.org/donate");
 	}
-	
-	protected void showWebsite(){
+
+	protected void showWebsite() {
 		BrowserHelper.browse("http://www.syncany.org");
 	}
-	
-	protected void quit(){
+
+	protected void quit() {
 		Launcher.stopApplication();
 	}
-	
-	public void makeSystemTrayStartSync(){
+
+	public void makeSystemTrayStartSync() {
 		syncing.set(true);
 		paused.set(false);
 	}
-	
-	public void makeSystemTrayStopSync(){
+
+	public void makeSystemTrayStopSync() {
 		syncing.set(false);
 		paused.set(false);
 		setTrayImage(TrayIcons.TRAY_IN_SYNC);
 	}
-	
-	public void pauseSyncing(){
+
+	public void pauseSyncing() {
 		paused.set(true);
 		setTrayImage(TrayIcons.TRAY_PAUSE_SYNC);
 	}
-	
-	public void resumeSyncing(){
+
+	public void resumeSyncing() {
 		paused.set(false);
 	}
-	
+
 	private Thread systemTrayAnimationThread = new Thread(new Runnable() {
 		@Override
 		public void run() {
-			while (true){
-				while (paused.get() || !syncing.get()){
-					try {Thread.sleep(500);}
-					catch (InterruptedException e) { }
+			while (true) {
+				while (paused.get() || !syncing.get()) {
+					try {
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e) {
+					}
 				}
-				
+
 				int i = 0;
-				
-				while (syncing.get()){
+
+				while (syncing.get()) {
 					try {
 						setTrayImage(TrayIcons.get(i));
 						i++;
-						if (i == 6) i = 0;
+						if (i == 6)
+							i = 0;
 						Thread.sleep(REFRESH_TIME);
 					}
 					catch (InterruptedException e) {
@@ -159,8 +158,8 @@ public abstract class TrayIcon {
 			}
 		}
 	});
-	
-	protected void showSettings(){
+
+	protected void showSettings() {
 		shell.getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
@@ -169,8 +168,8 @@ public abstract class TrayIcon {
 			}
 		});
 	}
-	
-	protected void showWizard(){
+
+	protected void showWizard() {
 		shell.getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
@@ -181,9 +180,11 @@ public abstract class TrayIcon {
 			}
 		});
 	}
-	
-	//Abstract methods
+
+	// Abstract methods
 	protected abstract void setTrayImage(TrayIcons image);
+
 	public abstract void updateFolders(Map<String, Map<String, String>> folders);
+
 	public abstract void updateStatusText(String statusText);
 }

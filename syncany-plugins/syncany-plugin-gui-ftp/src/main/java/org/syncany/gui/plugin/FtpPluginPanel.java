@@ -33,6 +33,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
@@ -202,25 +207,55 @@ public class FtpPluginPanel extends PluginPanel {
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.put(SyncanyFTPParameters.FTP_HOST, hostText.getText());
-		parameters.put(SyncanyFTPParameters.FTP_USERNAME, usernameText.getText());
-		parameters.put(SyncanyFTPParameters.FTP_PASSWORD, passwordText.getText());
-		parameters.put(SyncanyFTPParameters.FTP_PATH, pathText.getText());
-		parameters.put(SyncanyFTPParameters.FTP_PORT, spinner.getText());
+		parameters.putPluginParameter("hostname", hostText.getText());
+		parameters.putPluginParameter("username", usernameText.getText());
+		parameters.putPluginParameter("password", passwordText.getText());
+		parameters.putPluginParameter("path", pathText.getText());
+		parameters.putPluginParameter("port", spinner.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
 		boolean valid = true;
+
+		Plugin plugin = Plugins.get("ftp");
+		Connection c = plugin.createConnection();
+
+		PluginOptionSpecs poc = c.getOptionSpecs();
 		
-		// && order matters cause java uses lazy evaluation
-		valid = SWTUtil.checkTextLength(hostText, 0) && valid;
-		valid = SWTUtil.checkTextLength(usernameText, 0) && valid;
-		valid = SWTUtil.checkTextLength(passwordText, 0) && valid;
-		valid = SWTUtil.checkTextLength(pathText, 0) && valid;
-		valid = SWTUtil.checkNumberBetween(spinner, 0, 65535+1) && valid;
-			
+		OptionValidationResult res;
+		
+		res = poc.get("hostname").validateInput(hostText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), hostText);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("username").validateInput(usernameText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), usernameText);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("password").validateInput(passwordText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), passwordText);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("path").validateInput(pathText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), pathText);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("port").validateInput(spinner.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), spinner);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
 		return valid;
 	}
 }

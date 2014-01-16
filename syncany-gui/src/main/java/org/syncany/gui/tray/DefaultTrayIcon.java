@@ -42,49 +42,50 @@ import org.syncany.util.EnvironmentUtil;
  *
  */
 public class DefaultTrayIcon extends TrayIcon {
-	private TrayItem trayItem;	
+	private TrayItem trayItem;
 	private Menu menu;
 	private MenuItem statusTextItem;
 
 	@SuppressWarnings("serial")
-	private Map<TrayIcons, Image> images = new HashMap<TrayIcons, Image>(){{
-		for (TrayIcons ti : TrayIcons.values()){
-			put(ti, SWTResourceManager.getImage(ti.getFileName(), false));
+	private Map<TrayIcons, Image> images = new HashMap<TrayIcons, Image>() {
+		{
+			for (TrayIcons ti : TrayIcons.values()) {
+				put(ti, SWTResourceManager.getImage(ti.getFileName(), false));
+			}
 		}
-	}};
-	
+	};
+
 	public DefaultTrayIcon(final Shell shell) {
 		super(shell);
-		
+
 		buildTray();
-		makeSystemTrayStartSync();
 	}
-	
-	private void buildTray(){
+
+	private void buildTray() {
 		Tray tray = Display.getDefault().getSystemTray();
-		
+
 		if (tray != null) {
 			trayItem = new TrayItem(tray, SWT.NONE);
 			setTrayImage(TrayIcons.TRAY_IN_SYNC);
-		
-			buildMenuItems(null);			
+
+			buildMenuItems(null);
 			addMenuListeners();
 		}
 	}
-	
+
 	private void addMenuListeners() {
 		Listener showMenuListener = new Listener() {
 			public void handleEvent(Event event) {
 				menu.setVisible(true);
 			}
 		};
-		
+
 		trayItem.addListener(SWT.MenuDetect, showMenuListener);
-		
+
 		if (!EnvironmentUtil.isLinux()) {
 			// Tray icon popup menu positioning in Linux is off,
 			// Disable it for now.
-			
+
 			trayItem.addListener(SWT.Selection, showMenuListener);
 		}
 	}
@@ -93,15 +94,15 @@ public class DefaultTrayIcon extends TrayIcon {
 		if (menu != null) {
 			clearMenuItems();
 		}
-		
+
 		menu = new Menu(getShell(), SWT.POP_UP);
-		
+
 		statusTextItem = new MenuItem(menu, SWT.PUSH);
 		statusTextItem.setText("All folders in sync");
 		statusTextItem.setEnabled(false);
-						
+
 		new MenuItem(menu, SWT.SEPARATOR);
-		
+
 		MenuItem connectItem = new MenuItem(menu, SWT.PUSH);
 		connectItem.setText("New sync folder");
 		connectItem.addSelectionListener(new SelectionAdapter() {
@@ -110,7 +111,7 @@ public class DefaultTrayIcon extends TrayIcon {
 				showWizard();
 			}
 		});
-		
+
 		MenuItem settingsItem = new MenuItem(menu, SWT.PUSH);
 		settingsItem.setText("Preferences");
 		settingsItem.addSelectionListener(new SelectionAdapter() {
@@ -119,31 +120,31 @@ public class DefaultTrayIcon extends TrayIcon {
 				showSettings();
 			}
 		});
-		
+
 		if (folders != null && folders.size() > 0) {
 			new MenuItem(menu, SWT.SEPARATOR);
-			
+
 			for (final String key : folders.keySet()) {
 				final File folder = new File(folders.get(key).get("folder"));
-				
-				if (folder.exists()){
+
+				if (folder.exists()) {
 					String status = folders.get(key).get("status");
-					
+
 					MenuItem folderMenuItem = new MenuItem(menu, SWT.PUSH);
 					folderMenuItem.setText(folder.getName() + " [" + status + "]");
-					
+
 					folderMenuItem.addSelectionListener(new SelectionAdapter() {
 						@Override
 						public void widgetSelected(SelectionEvent e) {
-							showFolder(folder);						
+							showFolder(folder);
 						}
 					});
 				}
-			}			
+			}
 		}
-		
+
 		new MenuItem(menu, SWT.SEPARATOR);
-		
+
 		MenuItem donateItem = new MenuItem(menu, SWT.PUSH);
 		donateItem.setText("Donate");
 		donateItem.addSelectionListener(new SelectionAdapter() {
@@ -152,7 +153,7 @@ public class DefaultTrayIcon extends TrayIcon {
 				showDonate();
 			}
 		});
-		
+
 		MenuItem websiteItem = new MenuItem(menu, SWT.PUSH);
 		websiteItem.setText("Website");
 		websiteItem.addSelectionListener(new SelectionAdapter() {
@@ -161,7 +162,7 @@ public class DefaultTrayIcon extends TrayIcon {
 				showWebsite();
 			}
 		});
-		
+
 		new MenuItem(menu, SWT.SEPARATOR);
 
 		MenuItem quitMenu = new MenuItem(menu, SWT.PUSH);
@@ -171,7 +172,7 @@ public class DefaultTrayIcon extends TrayIcon {
 			public void widgetSelected(SelectionEvent e) {
 				quit();
 			}
-		});		
+		});
 	}
 
 	private void clearMenuItems() {

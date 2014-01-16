@@ -20,12 +20,14 @@ package org.syncany.daemon.websocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.syncany.daemon.DaemonCommandHandler;
+import org.syncany.util.JsonHelper;
 
 public class WSServer {
 	private static final Logger log = Logger.getLogger(WSServer.class.getSimpleName());
@@ -78,7 +80,12 @@ public class WSServer {
 		}
 	}
 	
-	public static void sendTo(WebSocket ws, String text) {
+	public static void sendToAll(Map<String, Object> res) {
+		String text = JsonHelper.fromMapToString(res);
+		sendToAll(text);
+	}
+	
+	private static void sendTo(WebSocket ws, String text) {
 		ws.send(text);
 	}
 

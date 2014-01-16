@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.syncany.gui.SyncanyCommandParameters;
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.util.I18n;
@@ -159,14 +159,14 @@ public class StartPanel extends WizardPanelComposite {
 	public UserInput getUserSelection() {
 		UserInput userInput = new UserInput();
 		if (createStorageRadio.getSelection()){
-			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "create");
+			userInput.putCommonParameter(CommonParameters.COMMAND_ACTION, "create");
 		}
 		else if (connectStorageRadio.getSelection()){
-			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "connect");
-			userInput.put(SyncanyCommandParameters.AVAILABLE_URL, existingUrl.getSelection() ? "yes" : "no");
+			userInput.putCommonParameter(CommonParameters.COMMAND_ACTION, "connect");
+			userInput.putCommonParameter(CommonParameters.AVAILABLE_URL, existingUrl.getSelection() ? "yes" : "no");
 		}
 		else{
-			userInput.put(SyncanyCommandParameters.COMMAND_ACTION, "watch");
+			userInput.putCommonParameter(CommonParameters.COMMAND_ACTION, "watch");
 		}
 		return userInput;
 	}

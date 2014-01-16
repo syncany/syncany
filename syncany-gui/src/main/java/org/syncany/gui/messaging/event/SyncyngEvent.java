@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,33 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging;
+package org.syncany.gui.messaging.event;
 
-import java.util.Map;
 
 /**
- * @author vwiencek
+ * @author vincent
  *
  */
-public class InterfaceUpdateEvent extends ApplicationEvent {
-	public enum InterfaceUpdateAction {
-		UPDATE_WATCHED_FOLDERS,
-		WIZARD_COMMAND_DONE,
-		START_SYSTEM_TRAY_SYNC,
-		STOP_SYSTEM_TRAY_SYNC;
+public class SyncyngEvent extends ApplicationEvent {
+	private SyncyngState state;
+	public enum SyncyngState{
+		SYNCING, SYNCED;
 	}
-	
-	private InterfaceUpdateAction action;
-	
-	public InterfaceUpdateEvent(InterfaceUpdateAction action, Map<String, Object> data){
-		super(data);
-		this.action = action;
+
+	public void setState(SyncyngState state) {
+		this.state = state;
 	}
-	
-	/**
-	 * @return the action
-	 */
-	public InterfaceUpdateAction getAction() {
-		return action;
+	public SyncyngState getState() {
+		return state;
 	}
 }

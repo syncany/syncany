@@ -3,21 +3,17 @@ package org.syncany.gui.messaging;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.UserInput;
-import org.syncany.util.SyncanyParameters;
 
 public class ClientCommandFactory {
-	private static final Logger log = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
-	
-	private static WSClient client;
+	private static WebsocketClient client;
 	
 	public static void startWebSocketClient(){
 		try {
-			log.info("Starting websocket server");
-			client = new WSClient();
+			client = new WebsocketClient();
 			client.startWebSocketConnection();
 		}
 		catch (URISyntaxException e) {
@@ -26,7 +22,6 @@ public class ClientCommandFactory {
 	}
 	
 	public static void stopWebSocketClient(){
-		log.info("Stopping websocket server");
 		client.stop();
 		client = null;
 	}
@@ -39,21 +34,18 @@ public class ClientCommandFactory {
 	
 	//Command Methods
 	public static void handleCommand(UserInput userInput){
-		Map<String, Object> command = buildParameters();
-		Map<String, String> pluginArgs = new HashMap<>();
+		Map<String, Object> commonParameters = buildParameters();
+		Map<String, String> pluginParameters = new HashMap<>();
 		
-		for (SyncanyParameters key : userInput.keySet()){
-			if (key.isPluginParameter()){
-				pluginArgs.put(key.value(), userInput.get(key));
-			}
-			else {
-				command.put(key.value(), userInput.get(key));
-			}
+		for (CommonParameters key : userInput.getCommonParameters().keySet()) {
+			commonParameters.put(key.value(), userInput.getCommonParameters().get(key));
 		}
+
+		pluginParameters.putAll(userInput.getPluginParameters());
+
+		commonParameters.put("pluginArgs", pluginParameters);
 		
-		command.put("pluginArgs", pluginArgs);
-		
-		client.handleCommand(command);
+		client.handleCommand(commonParameters);
 	}
 	
 	public static void handleWatch(String folder, int interval) {

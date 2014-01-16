@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util;
+package org.syncany.gui.messaging.event;
+
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public interface SyncanyParameters {
+public abstract class ApplicationEvent {
 
-	public boolean containsValue(String value);
-
-	public String value();
-	
-	public boolean isPluginParameter();
-	
-	public boolean isParameterMandatory();
 }

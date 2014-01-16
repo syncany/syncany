@@ -7,6 +7,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
@@ -99,21 +104,41 @@ public class WebdavPluginPanel extends PluginPanel {
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.put(SyncanyWebDAVParameter.URL, url.getText());
-		parameters.put(SyncanyWebDAVParameter.USERNAME, username.getText());
-		parameters.put(SyncanyWebDAVParameter.PASSWORD, password.getText());
+		parameters.putPluginParameter("url", url.getText());
+		parameters.putPluginParameter("password", password.getText());
+		parameters.putPluginParameter("username", username.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
 		boolean valid = true;
+
+		Plugin plugin = Plugins.get("webdav");
+		Connection c = plugin.createConnection();
+
+		PluginOptionSpecs poc = c.getOptionSpecs();
 		
-		// && order matters cause java uses lazy evaluation
-		valid = SWTUtil.checkTextLength(url, 4) && valid;
-		valid = SWTUtil.checkTextLength(username, 0) && valid;
-		valid = SWTUtil.checkTextLength(password, 0) && valid;
-			
+		OptionValidationResult res;
+		
+		res = poc.get("url").validateInput(url.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), url);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("username").validateInput(username.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), username);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("password").validateInput(password.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), password);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
 		return valid;
 	}
 }

@@ -11,8 +11,8 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.util.FileUtil;
 import org.syncany.util.I18n;
@@ -75,13 +75,13 @@ public class SelectLocalFolder extends WizardPanelComposite {
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.put(SyncanyCommandParameters.LOCAL_FOLDER, localDir.getText());
+		parameters.putCommonParameter(CommonParameters.LOCAL_FOLDER, localDir.getText());
 		return parameters;
 	}
 	
 	@Override
 	public boolean isValid() {
-		String action = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION);
+		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
 		
 		switch (action){
 			case "watch":
@@ -114,7 +114,7 @@ public class SelectLocalFolder extends WizardPanelComposite {
 
 	@Override
 	public void updateData() {
-		String action = getParentWizardDialog().getUserInput().get(SyncanyCommandParameters.COMMAND_ACTION);
+		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
 		if (action.equals("watch")){
 			getParentWizardDialog().updateFinishButton(true);
 			getParentWizardDialog().updateNextButton(false);

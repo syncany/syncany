@@ -34,8 +34,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.operations.actions.NormalizedPath;
 import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.EnvironmentUtil.OperatingSystem;
 import org.syncany.util.FileUtil;
+import org.syncany.util.EnvironmentUtil.OperatingSystem;
 
 public class FileUtilTests {
 	private OperatingSystem originalOperatingSystem;

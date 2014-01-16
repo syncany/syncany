@@ -3,13 +3,13 @@ package org.syncany.gui;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.InterfaceUpdateEvent;
+import org.syncany.gui.messaging.event.SyncyngEvent;
+import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
 
@@ -60,28 +60,23 @@ public class MainGUI {
 	}
 
 	@Subscribe
-	public void updateInterface(InterfaceUpdateEvent update) {
+	public void updateInterface(WatchUpdateEvent event) {
+		Map<String, Map<String, String>> folders = event.getWatchUpdate();
+		tray.updateFolders(folders);
+	}
+
+	@Subscribe
+	public void updateInterface(SyncyngEvent event) {
 		if (tray != null) {
-			logger.info("Update Interface Event : " + update.getAction());
-			
-			switch (update.getAction()) {
-			case START_SYSTEM_TRAY_SYNC:
+
+			switch (event.getState()) {
+			case SYNCING:
 				tray.makeSystemTrayStartSync();
 				break;
-				
-			case STOP_SYSTEM_TRAY_SYNC:
+
+			case SYNCED:
 				tray.makeSystemTrayStopSync();
-				
 				break;
-			case UPDATE_WATCHED_FOLDERS:
-				Map<String, ?> data = update.getData();
-				Map<String, Map<String, String>> folders = (Map<String, Map<String, String>>) data; // TODO [low] Can this be done differently?
-				
-				tray.updateFolders(folders);
-				break;
-				
-			default:
-				logger.log(Level.WARNING, "Action NOT supported: " + update.getAction());
 			}
 		}
 	}

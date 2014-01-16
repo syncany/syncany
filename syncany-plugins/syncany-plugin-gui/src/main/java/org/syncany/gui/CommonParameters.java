@@ -15,43 +15,49 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.plugin;
+package org.syncany.gui;
 
-import org.syncany.util.SyncanyParameters;
+
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public enum SyncanyRestParameters implements SyncanyParameters {
-	ACCESS_KEY("accessKey", true), 
-	SECRET_KEY("secretKey", true),
-	BUCKET("bucket", true),
-	LOCATION("location", true);
+public enum CommonParameters {
+	COMMAND_ACTION("action", true, "create", "connect", "watch"), 
+	ENCRYPTION_ENABLED("encryption", true, "yes", "no"), 
+	AVAILABLE_URL("connect_url", false, "yes", "no"),
+	ENCRYPTION_ALGORITHM("algorithm", false, "AES", "TwoFish"), 
+	ENCRYPTION_KEYLENGTH("keylength", false, "128", "256"), 
+	ENCRYPTION_PASSWORD("password", true), 
+	LOCAL_FOLDER("localFolder", true),
+	PLUGIN_ID("pluginId", true), 
+	COMMAND_ID("command_id", false);
 	
+	private String[] values;
 	private String value;
 	private boolean mandatory;
 	
-	private SyncanyRestParameters(String value, boolean mandatory) {
+	CommonParameters(String value, boolean mandatory, String...possibleValues){
+		this.values = possibleValues;
 		this.value = value;
 		this.mandatory = mandatory;
 	}
 
 	public boolean containsValue(String value) {
-		return true;
+		if (values == null || values.length == 0) return true;
+		
+		for (String s : values){
+			if (value.toUpperCase().equals(s.toUpperCase()))
+				return true;
+		}
+		return false;
 	}
 
-	@Override
 	public String value() {
 		return value;
 	}
 
-	@Override
-	public boolean isPluginParameter() {
-		return true;
-	}
-
-	@Override
 	public boolean isParameterMandatory() {
 		return mandatory;
 	}

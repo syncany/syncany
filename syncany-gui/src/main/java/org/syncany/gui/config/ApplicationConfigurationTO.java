@@ -137,7 +137,6 @@ public class ApplicationConfigurationTO {
 		this.watchedFolders = watchedFolders;
 	}
 	
-	@SuppressWarnings("serial")
 	public static ApplicationConfigurationTO getDefault() {
 		ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
 		acto.setProxyType(ProxyController.ProxyType.NONE.toString());

@@ -18,51 +18,23 @@
 package org.syncany.gui;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Control;
 
-/**
- * @author vincent
- *
- */
 public class SWTUtil {
-
-	public static boolean checkTextLength(Text text, int i) {
-		String value = text.getText();
-		boolean valid = true;
-		if (value == null || !(value.length() > i)){
-			text.setBackground(ApplicationResourcesManager.INVALID_TEXT_COLOR);
-			valid = false;
-		}
-		else{
-			text.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
-		}
-		return valid;
+	
+	private static void markAsInvalid(Control c){
+		c.setBackground(ApplicationResourcesManager.INVALID_TEXT_COLOR);
 	}
-
-	public static boolean checkNumberBetween(Spinner spinner, int min, int max) {
-		boolean valid = true;
-		String value = spinner.getText();
-		try{
-			int port = Integer.parseInt(value);
-			valid = port > min && port < max;
-		}
-		catch (Exception e){
-			valid = false;
-		}
-		
-		return valid;
+	private static void markAsValid(Control c){
+		c.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 	}
-
-	public static boolean checkEquals(Text text, String match) {
-		boolean valid = text.getText().equals(match);
-		
-		if (!valid){
-			text.setBackground(ApplicationResourcesManager.INVALID_TEXT_COLOR);
+	
+	public static void markAs(boolean valid, Control c){
+		if (valid) {
+			markAsValid(c);
 		}
-		else{
-			text.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		else {
+			 markAsInvalid(c);
 		}
-		return valid;
 	}
 }

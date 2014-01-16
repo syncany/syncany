@@ -24,6 +24,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
@@ -123,23 +128,48 @@ public class S3PluginPanel extends PluginPanel {
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.put(SyncanyRestParameters.ACCESS_KEY, accessKey.getText());
-		parameters.put(SyncanyRestParameters.SECRET_KEY, secretKey.getText());
-		parameters.put(SyncanyRestParameters.BUCKET, bucket.getText());
-		parameters.put(SyncanyRestParameters.LOCATION, location.getText());
+		parameters.putPluginParameter("accessKey", accessKey.getText());
+		parameters.putPluginParameter("secretKey", secretKey.getText());
+		parameters.putPluginParameter("bucket", bucket.getText());
+		parameters.putPluginParameter("location", location.getText());
 		return parameters;
 	}
 
 	@Override
 	public boolean isValid() {
 		boolean valid = true;
+
+		Plugin plugin = Plugins.get("ftp");
+		Connection c = plugin.createConnection();
+
+		PluginOptionSpecs poc = c.getOptionSpecs();
 		
-		// && order matters cause java uses lazy evaluation
-		valid = SWTUtil.checkTextLength(accessKey, 0) && valid;
-		valid = SWTUtil.checkTextLength(secretKey, 0) && valid;
-		valid = SWTUtil.checkTextLength(bucket, 0) && valid;
-		valid = SWTUtil.checkTextLength(location, 0) && valid;
-			
+		OptionValidationResult res;
+		
+		res = poc.get("accessKey").validateInput(accessKey.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), accessKey);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("secretKey").validateInput(secretKey.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), secretKey);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("bucket").validateInput(bucket.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), bucket);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
+		res = poc.get("location").validateInput(location.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), location);
+		if (!res.equals(OptionValidationResult.VALID)){
+			valid = false;
+		}
+		
 		return valid;
 	}
 }

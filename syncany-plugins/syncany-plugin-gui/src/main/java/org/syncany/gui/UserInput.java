@@ -18,28 +18,51 @@
 package org.syncany.gui;
 
 import java.util.HashMap;
+import java.util.Map;
 
-import org.syncany.util.SyncanyParameters;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class UserInput extends HashMap<SyncanyParameters, String>{
-	private static final long serialVersionUID = 7692703262033066027L;
-
-	@Override
-	public String put(SyncanyParameters key, String value) {
-		if (key.containsValue(value))
-			return super.put(key, value);
-
-		throw new RuntimeException(String.format("Value [%s] not compatible with key [%s]", value, key.toString()));
+public class UserInput {
+	private Map<CommonParameters, String> commonParameters = new HashMap<>();
+	private Map<String, String> pluginParameters = new HashMap<>();
+	
+	public Map<CommonParameters, String> getCommonParameters() {
+		return commonParameters;
 	}
 	
-	@Override
-	public String get(Object key) {
-		if (!(key instanceof SyncanyParameters))
+	public Map<String, String> getPluginParameters() {
+		return pluginParameters;
+	}
+	
+	public void putCommonParameter(CommonParameters key, String value) {
+		if (!key.containsValue(value)) {
+			throw new RuntimeException(String.format("Value [%s] not compatible with key [%s]", value, key.toString()));
+		}
+
+		commonParameters.put(key, value);
+	}
+	
+	public String getCommonParameter(CommonParameters key) {
+		if (!(key instanceof CommonParameters)) {
 			throw new RuntimeException(String.format("Key should be of type SyncanyParameters"));
-		return super.get(key);
+		}
+		
+		return commonParameters.get(key);
+	}
+	
+	public void putPluginParameter(String key, String value){
+		pluginParameters.put(key, value);
+	}
+	
+//	public String getPluginParameter(String key){
+//		return pluginParameters.get(key);
+//	}
+
+	public void merge(UserInput userSelection) {
+		getCommonParameters().putAll(userSelection.getCommonParameters());
+		getPluginParameters().putAll(userSelection.getPluginParameters());
 	}
 }

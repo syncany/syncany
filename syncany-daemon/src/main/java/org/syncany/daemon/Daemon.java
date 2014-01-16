@@ -39,9 +39,15 @@ public class Daemon {
 		Logging.init();
 	}
 
-	/**
-	 * @return the eventBus
-	 */
+	public static void main(String[] args) {
+		try {
+			Daemon.getInstance().start(false);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot launch daemon.", e);
+		}
+	}
+	
 	public static EventBus getEventBus() {
 		return eventBus;
 	}
@@ -150,15 +156,6 @@ public class Daemon {
 		WSServer.sendToAll("update");
 	}
 
-	public static void main(String[] args) {
-		try {
-			Daemon.getInstance().start(false);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot launch daemon.", e);
-		}
-	}
-
 	private static DaemonConfigurationTO loadDaemonConfiguration() throws Exception {
 		File appConfigDir = new File(System.getProperty("user.home") + File.separator + ".syncany");
 		File daemonConfigFile = new File(appConfigDir, "syncany-daemon-config.xml");
@@ -173,5 +170,9 @@ public class Daemon {
 		}
 
 		return DaemonConfigurationTO.load(daemonConfigFile);
+	}
+	
+	public DeamonConfiguration getDaemonConfiguration() {
+		return daemonConfiguration;
 	}
 }

@@ -15,45 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.plugin;
-
-import org.syncany.util.SyncanyParameters;
+package org.syncany.gui.messaging.event;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public enum SyncanyFTPParameters implements SyncanyParameters {
-	FTP_HOST("hostname", true), 
-	FTP_PORT("port", false),
-	FTP_PATH("path", true),
-	FTP_USERNAME("username", true),
-	FTP_PASSWORD("password", true);
-	
-	private String value;
-	private boolean mandatory;
-	
-	private SyncanyFTPParameters(String value, boolean mandatory) {
-		this.value = value;
-		this.mandatory = mandatory;
+public class InitCommandEvent extends CommandEvent {
+	private String result;
+	private String shareLink;
+	private String localFolder;
+	private boolean shareLinkEncrypted;
+
+	public InitCommandEvent(String commandId, String result, String shareLink, String localFolder, boolean shareLinkEncrypted) {
+		super(commandId);
+		this.result = result;
+		this.shareLink = shareLink;
+		this.localFolder = localFolder;
+		this.shareLinkEncrypted = shareLinkEncrypted;
 	}
 
-	public boolean containsValue(String value) {
-		return true;
+	public String getResult() {
+		return result;
 	}
 
-	@Override
-	public String value() {
-		return value;
+	public String getShareLink() {
+		return shareLink;
 	}
 
-	@Override
-	public boolean isPluginParameter() {
-		return true;
+	public String getLocalFolder() {
+		return localFolder;
 	}
 
-	@Override
-	public boolean isParameterMandatory() {
-		return mandatory;
+	public boolean isShareLinkEncrypted() {
+		return shareLinkEncrypted;
 	}
 }

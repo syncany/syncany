@@ -32,22 +32,24 @@ import org.syncany.gui.MainGUI;
 import org.syncany.util.JsonHelper;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class WSClient {
-	private static final Logger log = Logger.getLogger(WSClient.class.getSimpleName());
-	public static final String DEFAULT_WS_SERVER = "ws://localhost:8887";
+public class WebsocketClient {
+	// Static fields
+	private static final Logger log = Logger.getLogger(WebsocketClient.class.getSimpleName());
+	private static final String DEFAULT_WS_SERVER = "ws://localhost:8887";
 
-	private String location;
+	// Instance fields
+	private String uri;
 	private WebSocketClient client;
 
-	public WSClient() throws URISyntaxException {
+	public WebsocketClient() throws URISyntaxException {
 		this(DEFAULT_WS_SERVER);
 	}
 	
-	public WSClient(String location) throws URISyntaxException {
-		this.location = location;
+	public WebsocketClient(String uri) throws URISyntaxException {
+		this.uri = uri;
 		this.client = createClient();
 	}
 	
@@ -57,7 +59,7 @@ public class WSClient {
 		
 		final DaemonMessagesHandler handler = new DaemonMessagesHandler();
 		
-		return new WebSocketClient(new URI(location), new Draft_17(), map, 3000) {
+		return new WebSocketClient(new URI(uri), new Draft_17(), map, 3000) {
 			@Override
 			public void onOpen(ServerHandshake handshakedata) {
 				log.fine("Connection to syncany daemon server: " + getURI());
@@ -82,11 +84,12 @@ public class WSClient {
 	}
 
 	public void startWebSocketConnection() {
+		log.info("Starting Websocket connection");
 		client.connect();
 	}
 	
 	public void stop(){
-		log.info("closing client");
+		log.info("Closing Websocket connection");
 		client.close();
 	}
 

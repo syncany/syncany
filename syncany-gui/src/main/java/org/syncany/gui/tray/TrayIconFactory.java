@@ -25,7 +25,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.syncany.util.EnvironmentUtil;
 
 /**
- * @author pheckel
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class TrayIconFactory {

@@ -1,5 +1,6 @@
 package org.syncany.daemon;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,7 @@ public class DaemonCommandHandler {
 		String localDir = (String)parameters.get("localfolder");
 		int interval = Integer.parseInt((String)parameters.get("interval"));
 		
-		logger.log(Level.INFO, "Watching folder {0}", localDir);
+		logger.log(Level.INFO, String.format("Watching folder %s", localDir));
 		
 		for (String key : commands.keySet()){
 			Command c = commands.get(key);
@@ -65,6 +66,20 @@ public class DaemonCommandHandler {
 		String passsword =(String) parameters.get("password");
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
 		
+		// Creation of local Syncany folder
+		File localDirFile = new File(localDir);
+		if (!localDirFile.exists()){
+			localDirFile.mkdir();
+		}
+
+		// Creation of local repo ==> TODO[medium]: should'n be handled by plugin directly ?
+		if (pluginName.equals("local")){
+			File repoPath = new File(args.get("path"));
+			
+			if (!repoPath.exists()){
+				repoPath.mkdir();
+			}
+		}
 		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, false, encrypted, false);
 		
 		try {
@@ -98,6 +113,11 @@ public class DaemonCommandHandler {
 		String pluginName = (String)parameters.get("pluginId");
 		String localDir = (String)parameters.get("localFolder");
 		String passsword =(String) parameters.get("password");
+		
+		File localDirFile = new File(localDir);
+		if (!localDirFile.exists()){
+			localDirFile.mkdir();
+		}
 		
 		ConnectCommand ic = new ConnectCommand(pluginName, pluginArgs, localDir, passsword);
 		
@@ -149,8 +169,7 @@ public class DaemonCommandHandler {
 		
 		res.put("folders", folders);
 		res.put("action", "update_watched_folders");
-		String a = JsonHelper.fromMapToString(res);
-		WSServer.sendToAll(a);
+		WSServer.sendToAll(res);
 	}
 
 	public static void handle(String message) {
@@ -162,15 +181,6 @@ public class DaemonCommandHandler {
 		String action = ((String) params.get("action")).toLowerCase();
 		
 		switch (action){
-//			case "get_syncing_state":
-//				notifySyncingState(params);
-//				break;
-//			case "get_watched":
-//				handleGetWatchedFolders();
-//				break;
-			case "ping":
-				WSServer.sendToAll("{\"action\":\"pong\"}");
-				break;
 			case "watch":
 				handleWatch(params);
 				break;
@@ -182,9 +192,6 @@ public class DaemonCommandHandler {
 				Map<String, String> retConn = handleConnect(params);
 				WSServer.sendToAll(JsonHelper.fromMapToString(retConn));
 				break;
-//			case "pause":
-//				handleStopWatch(params);
-//				break;
 			case "quit":
 				handleQuit(params);
 				break;

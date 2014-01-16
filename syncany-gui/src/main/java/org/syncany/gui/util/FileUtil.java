@@ -62,6 +62,11 @@ public class FileUtil {
 
 	public static boolean isEmptyFolder(Shell shell, String folder) {
 		File f = new File(folder);
+		
+		if (!f.exists()){
+			return true;
+		}
+		
 		boolean ret = f.list().length == 0;
 
 		if (!ret) {
@@ -87,12 +92,7 @@ public class FileUtil {
 		int ret = dialog.open();
 
 		if (ret == SWT.OK) {
-			boolean mkdirSuccess = localDirFile.mkdir();
-
-			if (mkdirSuccess) {
-				return true;
-			}
-			return false;
+			return true;
 		}
 		return false;
 	}

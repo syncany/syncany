@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging;
-
-import java.util.Map;
+package org.syncany.gui.messaging.event;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class ApplicationEvent {
-	private Map<String, Object> data;
+public class CommandEvent extends ApplicationEvent {
+	private String commandId;
 	
-	/**
-	 * @param data2
-	 */
-	public ApplicationEvent(Map<String, Object> data) {
-		this.data = data;
+	public CommandEvent(String commandId) {
+		this.commandId = commandId;
 	}
-	
-	/**
-	 * @return the data
-	 */
-	public Map<String, Object> getData() {
-		return data;
+
+	public String getCommandId() {
+		return commandId;
 	}
 }
