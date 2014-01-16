@@ -43,10 +43,16 @@ public abstract class TrayIcon {
 	private AtomicBoolean paused = new AtomicBoolean(false);
 	
 	public enum TrayIcons {
-		TRAY_NO_OVERLAY("/images/tray/tray.png"), TRAY_IN_SYNC("/images/tray/tray-in-sync.png"), TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"), TRAY_SYNCING1(
-				"/images/tray/tray-syncing1.png"), TRAY_SYNCING2("/images/tray/tray-syncing2.png"), TRAY_SYNCING3("/images/tray/tray-syncing3.png"), TRAY_SYNCING4(
-				"/images/tray/tray-syncing4.png"), TRAY_SYNCING5("/images/tray/tray-syncing5.png"), TRAY_SYNCING6("/images/tray/tray-syncing6.png"), TRAY_UP_TO_DATE(
-				"/images/tray/tray-uptodate.png");
+		TRAY_NO_OVERLAY("/images/tray/tray.png"), 
+		TRAY_IN_SYNC("/images/tray/tray-in-sync.png"), 
+		TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"), 
+		TRAY_SYNCING1("/images/tray/tray-syncing1.png"), 
+		TRAY_SYNCING2("/images/tray/tray-syncing2.png"), 
+		TRAY_SYNCING3("/images/tray/tray-syncing3.png"), 
+		TRAY_SYNCING4("/images/tray/tray-syncing4.png"), 
+		TRAY_SYNCING5("/images/tray/tray-syncing5.png"), 
+		TRAY_SYNCING6("/images/tray/tray-syncing6.png"), 
+		TRAY_UP_TO_DATE("/images/tray/tray-uptodate.png");
 
 		private String fileName;
 
@@ -88,6 +94,10 @@ public abstract class TrayIcon {
 
 	protected void pause(File folder) {
 		ClientCommandFactory.handlePauseWatch(folder.getAbsolutePath());
+	}
+	
+	protected void resume(File folder) {
+		ClientCommandFactory.handleResumeWatch(folder.getAbsolutePath());
 	}
 	
 	protected void showFolder(File folder) {

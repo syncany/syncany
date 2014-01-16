@@ -145,6 +145,15 @@ public class DefaultTrayIcon extends TrayIcon {
 						}
 					});
 					
+					MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
+					resumetMI.setText("resume");
+					resumetMI.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							resume(folder);
+						}
+					});
+					
 					MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
 					openMI.setText("open");
 					openMI.addSelectionListener(new SelectionAdapter() {

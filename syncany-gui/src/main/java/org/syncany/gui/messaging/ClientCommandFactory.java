@@ -63,6 +63,13 @@ public class ClientCommandFactory {
 		client.handleCommand(command);
 	}
 	
+	public static void handleResumeWatch(String folder) {
+		Map<String, Object> command = buildParameters();
+		command.put("action", "resume_watch");
+		command.put("localfolder", folder);
+		client.handleCommand(command);
+	}
+	
 	/**
 	 * Created default Map<String, String> parameters
 	 * with client_id, client_type and timestamp

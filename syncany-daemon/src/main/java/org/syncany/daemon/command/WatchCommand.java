@@ -19,6 +19,7 @@ package org.syncany.daemon.command;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.simpleframework.xml.Serializer;
@@ -39,6 +40,8 @@ public class WatchCommand extends Command {
 	
 	private String localFolder;
 	private Integer interval;
+	
+	private AtomicBoolean started = new AtomicBoolean(false);
 	
 	public WatchCommand(String localFolder, Integer interval){
 		this.localFolder = localFolder;
@@ -101,12 +104,13 @@ public class WatchCommand extends Command {
 		
 		// Run!
 		
-		th = new Thread(new Runnable() {
+		new Thread(new Runnable() {
 			public void run() {
 				try {
 					Config config = initConfigOption(localFolder);
 					watchOperation = new WatchOperation(config, operationOptions);
 					setStatus(CommandStatus.STARTED);
+					started.set(true);
 					watchOperation.execute();
 					setStatus(CommandStatus.STOPPED);
 				}
@@ -114,14 +118,12 @@ public class WatchCommand extends Command {
 					setStatus(CommandStatus.STOPPED);
 				}
 			}
-		}, "watching "+ localFolder);
-		th.start();
+		}, "watching "+ localFolder).start();;
 		
 		return 0;
 	}
 	
 	private WatchOperation watchOperation;
-	private Thread th;
 	
 	private Config initConfigOption(String localDir) throws ConfigException, Exception {
 		// Load config
@@ -172,11 +174,18 @@ public class WatchCommand extends Command {
 	}
 
 	public void pause() {
-		stop();
+		watchOperation.pause();
+		setStatus(CommandStatus.PAUSED);
+	}
+	
+	public void resume() {
+		watchOperation.resume();
+		setStatus(CommandStatus.STARTED);
 	}
 	
 	public void stop() {
-		th.stop();
+		watchOperation.stop();
+		setStatus(CommandStatus.STOPPING);
 	}
 
 	@Override
