@@ -47,7 +47,7 @@ public abstract class ObjectId {
 		return StringUtil.toHex(array);
 	}
 
-	public static byte[] parseBytes(String s) {
+	public static byte[] parseObjectId(String s) {
 		return StringUtil.fromHex(s);
 	}
 

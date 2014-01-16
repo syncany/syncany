@@ -34,6 +34,7 @@ import org.syncany.tests.database.MemoryDatabaseCacheTest;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
 import org.syncany.tests.database.FileVersionComparatorTest;
 import org.syncany.tests.database.VectorClockTest;
+import org.syncany.tests.database.dao.FileHistoryDaoTest;
 import org.syncany.tests.database.dao.FileVersionDaoTest;
 import org.syncany.tests.database.dao.XmlDatabaseDaoTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
@@ -43,13 +44,15 @@ import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.util.CollectionUtilTest;
-import org.syncany.tests.util.FileUtilTests;
+import org.syncany.tests.util.FileUtilTest;
+import org.syncany.tests.util.StringUtilTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
 	CollectionUtilTest.class,
-	FileUtilTests.class,
+	FileUtilTest.class,
+	StringUtilTest.class,
 	
 	// Crypto	
 	CipherSpecsTest.class,
@@ -74,6 +77,7 @@ import org.syncany.tests.util.FileUtilTests;
 	XmlDatabaseDaoTest.class,
 	VectorClockTest.class,
 	FileVersionDaoTest.class,
+	FileHistoryDaoTest.class,
 	
 	// Operations
 	FileSystemActionComparatorTest.class,

@@ -37,7 +37,7 @@ import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.EnvironmentUtil.OperatingSystem;
 import org.syncany.util.FileUtil;
 
-public class FileUtilTests {
+public class FileUtilTest {
 	private OperatingSystem originalOperatingSystem;
 	
 	@Before

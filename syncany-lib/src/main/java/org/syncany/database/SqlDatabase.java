@@ -42,19 +42,23 @@ import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.DatabaseBranch;
 
 /**
- * @author pheckel
- *
+ * Represents the single entry point for all SQL database queries.
+ * 
+ * <p>This class combines all specific SQL database data access objects (DAOs) into
+ * a single class, and forwards all method calls to the responsible DAO.  
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SqlDatabase {
 	protected static final Logger logger = Logger.getLogger(SqlDatabase.class.getSimpleName());
 
-	private ApplicationSqlDao applicationDao;
-	private ChunkSqlDao chunkDao;
-	private FileContentSqlDao fileContentDao;
-	private FileVersionSqlDao fileVersionDao;
-	private FileHistorySqlDao fileHistoryDao;
-	private MultiChunkSqlDao multiChunkDao;
-	private DatabaseVersionSqlDao databaseVersionDao;
+	protected ApplicationSqlDao applicationDao;
+	protected ChunkSqlDao chunkDao;
+	protected FileContentSqlDao fileContentDao;
+	protected FileVersionSqlDao fileVersionDao;
+	protected FileHistorySqlDao fileHistoryDao;
+	protected MultiChunkSqlDao multiChunkDao;
+	protected DatabaseVersionSqlDao databaseVersionDao;
 
 	public SqlDatabase(Config config) {
 		Connection connection = config.createDatabaseConnection();
@@ -119,15 +123,13 @@ public class SqlDatabase {
 	// File History
 
 	public List<PartialFileHistory> getFileHistoriesForDatabaseVersion(VectorClock databaseVersionVectorClock) {
-		return fileHistoryDao.getFileHistoriesForDatabaseVersion(databaseVersionVectorClock);
+		return fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionVectorClock);
 	}
 
+	@Deprecated	
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
+		// TODO [medium] Note: This returns the full database. Don't use this!
 		return fileHistoryDao.getFileHistoriesWithFileVersions();
-	}
-
-	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
-		return fileHistoryDao.getFileHistoryWithFileVersions(relativePath);
 	}
 
 	public PartialFileHistory getFileHistoryWithLastVersion(FileHistoryId fileHistoryId) {
@@ -201,5 +203,4 @@ public class SqlDatabase {
 	public FileContent getFileContentByChecksumWithChunkChecksums(FileChecksum fileChecksum) {
 		return fileContentDao.getFileContentByChecksumWithChunkChecksums(fileChecksum);
 	}
-
 }

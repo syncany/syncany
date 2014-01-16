@@ -26,9 +26,9 @@ import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.SqlDatabase;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestSqlDatabase;
 
 public class RenameFileWithDiffModifiedDateScenarioTest {
 	@Test
@@ -56,7 +56,7 @@ public class RenameFileWithDiffModifiedDateScenarioTest {
 		clientB.moveFile("A-file1-with-different-modified-date.jpg", "A-file1-with-different-modified-date-moved.jpg");				
 		clientB.up();
 		
-		SqlDatabase clientDatabaseB = clientB.loadLocalDatabase();
+		TestSqlDatabase clientDatabaseB = clientB.loadLocalDatabase();
 		
 		PartialFileHistory file1Orig = clientDatabaseB.getFileHistoryWithFileVersions("A-file1-moved.jpg");
 		PartialFileHistory file1WithDiffLastModDate = clientDatabaseB.getFileHistoryWithFileVersions("A-file1-with-different-modified-date-moved.jpg");

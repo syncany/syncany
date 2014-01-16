@@ -31,11 +31,18 @@ import java.util.Map;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestSqlDatabaseUtil;
 
-public class FileVersionDaoTest {
+/**
+ * Tests the {@link FileVersionSqlDao}
+ * <p>
+ * Note: {@link FileVersionSqlDao#writeFileVersions(Connection, FileHistoryId, long, java.util.Collection) is
+ * tested in combination with the rest of the database write functioins. 
+ */
+public class FileVersionDaoTest {	
 	@Test
 	public void testFileVersionGetCurrentFileTree() throws Exception {
 		// Setup
@@ -144,42 +151,87 @@ public class FileVersionDaoTest {
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
-		FileVersion file1 = fileVersionDao.getFileVersionByPath("file1");
-		FileVersion file2 = fileVersionDao.getFileVersionByPath("file2");
-		FileVersion file3 = fileVersionDao.getFileVersionByPath("file3");
-		FileVersion file4 = fileVersionDao.getFileVersionByPath("file4");
+		FileVersion file1ByPath = fileVersionDao.getFileVersionByPath("file1");
+		FileVersion file2ByPath = fileVersionDao.getFileVersionByPath("file2");
+		FileVersion file3ByPath = fileVersionDao.getFileVersionByPath("file3");
+		FileVersion file4ByPath = fileVersionDao.getFileVersionByPath("file4");
 		
 		// Test
 		
-		// - File 1
-		assertNotNull(file1);
-		assertEquals(1, file1.getVersion());
-		assertFalse("rwxrw-r--".equals(file1.getPosixPermissions()));
-		assertNotNull(file1.getChecksum());
-		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1.getChecksum().toString());
+		// - By Path: File 1
+		assertNotNull(file1ByPath);
+		assertEquals(1, file1ByPath.getVersion());
+		assertFalse("rwxrw-r--".equals(file1ByPath.getPosixPermissions()));
+		assertNotNull(file1ByPath.getChecksum());
+		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1ByPath.getChecksum().toString());
 		
-		// - File 2
-		assertNotNull(file2);
-		assertEquals(1, file2.getVersion());
-		assertNotNull(file2.getChecksum());
-		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2.getChecksum().toString());		
-		assertEquals(toDate("2014-01-02 16:26:09.123"), file2.getLastModified());
-		assertEquals(toDate("2014-01-02 16:26:09.201"), file2.getUpdated());
-		assertEquals("rw-r--r--", file2.getPosixPermissions());
-		assertNull(file2.getDosAttributes());
+		// - By Path: File 2
+		assertNotNull(file2ByPath);
+		assertEquals(1, file2ByPath.getVersion());
+		assertNotNull(file2ByPath.getChecksum());
+		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2ByPath.getChecksum().toString());		
+		assertEquals(toDate("2014-01-02 16:26:09.123"), file2ByPath.getLastModified());
+		assertEquals(toDate("2014-01-02 16:26:09.201"), file2ByPath.getUpdated());
+		assertEquals("rw-r--r--", file2ByPath.getPosixPermissions());
+		assertNull(file2ByPath.getDosAttributes());
 		
-		// - File 3
-		assertNotNull(file3);
-		assertEquals(1, file3.getVersion());
-		assertNotNull(file3.getChecksum());
-		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3.getChecksum().toString());
-		assertEquals(toDate("2014-01-03 16:26:09.666"), file3.getLastModified());
-		assertEquals(toDate("2014-01-03 16:26:09.341"), file3.getUpdated());
-		assertEquals("rw-r--r--", file3.getPosixPermissions());
-		assertNull(file3.getDosAttributes());		
+		// - By Path: File 3
+		assertNotNull(file3ByPath);
+		assertEquals(1, file3ByPath.getVersion());
+		assertNotNull(file3ByPath.getChecksum());
+		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3ByPath.getChecksum().toString());
+		assertEquals(toDate("2014-01-03 16:26:09.666"), file3ByPath.getLastModified());
+		assertEquals(toDate("2014-01-03 16:26:09.341"), file3ByPath.getUpdated());
+		assertEquals("rw-r--r--", file3ByPath.getPosixPermissions());
+		assertNull(file3ByPath.getDosAttributes());		
 		
-		// - File 4
-		assertNull(file4);
+		// - By Path: File 4
+		assertNull(file4ByPath);
+		
+		// Tear down
+		databaseConnection.close();
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
+	
+	@Test
+	public void testFileVersionGetByFileHistoryId() throws Exception {
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		Connection databaseConnection = testConfig.createDatabaseConnection();
+				
+		// Run
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getFileTreeAtDate.sql");
+
+		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
+		
+		FileVersion file1ByDeletedId = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("851c441915478a539a5bab2b263ffa4cc48e282f"));
+		FileVersion file1ById = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+		FileVersion file2ById = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("c021aecb2ae36f2a8430eb10309923454b93b61e"));
+		FileVersion file3ById = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("4fef2d605640813464792b18b16e1a5e07aa4e53"));
+		FileVersion file4ByNonExistingId = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("0000000000000000000000000000000000000000"));
+		
+		// Test		
+		
+		// - By FileHistoryId: File 1 (DELETED Id)
+		assertNull(file1ByDeletedId);
+		
+		// - By FileHistoryId: File 1 (New! Not version 2!)
+		assertNotNull(file1ById);
+		assertEquals(1, file1ById.getVersion());
+		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1ById.getChecksum().toString());
+		
+		// - By FileHistoryId: File 2
+		assertNotNull(file2ById);
+		assertEquals(1, file2ById.getVersion());
+		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2ById.getChecksum().toString());
+		
+		// - By FileHistoryId: File 3
+		assertNotNull(file3ById);				
+		assertEquals(1, file3ById.getVersion());
+		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3ById.getChecksum().toString());
+		
+		// - By FileHistoryId: File 4 (does not exist)		
+		assertNull(file4ByNonExistingId);	
 		
 		// Tear down
 		databaseConnection.close();

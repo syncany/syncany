@@ -119,7 +119,7 @@ public class FileContent {
 		}
 
 		public static FileChecksum parseFileChecksum(String s) {
-			return new FileChecksum(ObjectId.parseBytes(s));
+			return new FileChecksum(ObjectId.parseObjectId(s));
 		}
 		
 		public static boolean fileChecksumEquals(FileChecksum checksum1, FileChecksum checksum2) {

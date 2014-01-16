@@ -35,8 +35,10 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
- * @author pheckel
- *
+ * The file version DAO queries and modifies the <i>fileversion</i> in
+ * the SQL database. This table corresponds to the Java object {@link FileVersion}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersionSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());
@@ -45,6 +47,11 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		super(connection);
 	}
 	
+	/**
+	 * Write a list of {@link FileVersion} to the database. 
+	 * 
+	 * <p>Please note:
+	 */
 	public void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId, Collection<FileVersion> fileVersions) throws SQLException {
 		PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.insert.writeFileVersions.sql");
 
@@ -149,7 +156,8 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	protected FileVersion createFileVersionFromRow(ResultSet resultSet) throws SQLException {
+	// TODO [low] This should be private; but it has to be public for a test
+	public FileVersion createFileVersionFromRow(ResultSet resultSet) throws SQLException {
 		FileVersion fileVersion = new FileVersion();
 
 		fileVersion.setVersion(resultSet.getLong("version"));

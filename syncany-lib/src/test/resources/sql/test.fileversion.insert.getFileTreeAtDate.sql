@@ -51,8 +51,8 @@ INSERT INTO DATABASEVERSION VALUES(5,'MASTER','2014-01-05 16:28:09.349000','A','
 INSERT INTO DATABASEVERSION_VECTORCLOCK VALUES(5,'A',5);
 INSERT INTO FILECONTENT VALUES('ffffffffffffffffffffffffffffffffffffffff',1);
 INSERT INTO FILECONTENT_CHUNK VALUES('ffffffffffffffffffffffffffffffffffffffff','ffffffffffffffffffffffffffffffffffffffff',0);
-INSERT INTO FILEHISTORY VALUES('abcdefgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',5);
-INSERT INTO FILEVERSION VALUES('abcdefgaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1,5,'file1','FILE','NEW',1,'2014-01-05 16:28:07.000000',NULL,'ffffffffffffffffffffffffffffffffffffffff','2014-01-05 16:26:08.995000','rw-r--r--',NULL);
+INSERT INTO FILEHISTORY VALUES('abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',5);
+INSERT INTO FILEVERSION VALUES('abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1,5,'file1','FILE','NEW',1,'2014-01-05 16:28:07.000000',NULL,'ffffffffffffffffffffffffffffffffffffffff','2014-01-05 16:26:08.995000','rw-r--r--',NULL);
 INSERT INTO MULTICHUNK VALUES('dddddddddddddddddddddddddddddddddddddddd');
 INSERT INTO MULTICHUNK_CHUNK VALUES('dddddddddddddddddddddddddddddddddddddddd','ffffffffffffffffffffffffffffffffffffffff');
 

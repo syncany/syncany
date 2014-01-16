@@ -26,7 +26,6 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.SqlDatabase;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -140,7 +139,7 @@ public class TestClient extends Client {
 		return config.getDatabaseFile();
 	}
 	
-	public SqlDatabase loadLocalDatabase() throws IOException {
-		return new SqlDatabase(config);
+	public TestSqlDatabase loadLocalDatabase() throws IOException {
+		return new TestSqlDatabase(config);
 	}
 }

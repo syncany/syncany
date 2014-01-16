@@ -226,7 +226,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunksForDatabaseVersion(databaseVersionHeader.getVectorClock());
 		Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunksForDatabaseVersion(databaseVersionHeader.getVectorClock());
 		Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContentsForDatabaseVersion(databaseVersionHeader.getVectorClock());
-		List<PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesForDatabaseVersion(databaseVersionHeader.getVectorClock());
+		List<PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
 
 		for (ChunkEntry chunk : chunks.values()) {
 			databaseVersion.addChunk(chunk);

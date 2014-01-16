@@ -36,6 +36,7 @@ import java.util.TreeMap;
  * 
  * @see FileVersion
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Fabrice Rossi
  */
 public class PartialFileHistory {
     private static final byte FILE_HISTORY_ID_LENGTH = 20;
@@ -125,9 +126,6 @@ public class PartialFileHistory {
 		return true;
 	}
 	
-	/**
-	 * @author Fabrice Rossi
-	 */
 	public static class FileHistoryId extends ObjectId {
 		private FileHistoryId(byte[] array) {
 			super(array);
@@ -138,7 +136,7 @@ public class PartialFileHistory {
 		}
 		
 		public static FileHistoryId parseFileId(String s) {
-			return new FileHistoryId(ObjectId.parseBytes(s));
+			return new FileHistoryId(ObjectId.parseObjectId(s));
 		}
 	}
 }

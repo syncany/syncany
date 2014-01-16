@@ -107,7 +107,7 @@ public class MultiChunkEntry  {
 		}
 		
 		public static MultiChunkId parseMultiChunkId(String s) {
-			return new MultiChunkId(ObjectId.parseBytes(s));
+			return new MultiChunkId(ObjectId.parseObjectId(s));
 		}
 	}
 

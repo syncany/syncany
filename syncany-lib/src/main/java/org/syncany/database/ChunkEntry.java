@@ -93,7 +93,7 @@ public class ChunkEntry {
 		}
 
 		public static ChunkChecksum parseChunkChecksum(String s) {
-			return new ChunkChecksum(ObjectId.parseBytes(s));
+			return new ChunkChecksum(ObjectId.parseObjectId(s));
 		}		
 	}
 }

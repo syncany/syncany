@@ -27,9 +27,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseConnectionFactory;
-import org.syncany.database.FileVersion;
 import org.syncany.database.FileContent.FileChecksum;
-import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
@@ -61,9 +60,9 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public List<PartialFileHistory> getFileHistoriesForDatabaseVersion(VectorClock databaseVersionVectorClock) {
+	public List<PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesForDatabaseVersion.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithFileVersionsByVectorClock.sql");
 			preparedStatement.setString(1, databaseVersionVectorClock.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -108,34 +107,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		return fileHistories;
 	}
 
-	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoryWithFileVersions.sql");
-
-			preparedStatement.setString(1, relativePath);
-			preparedStatement.setString(2, FileStatus.DELETED.toString());
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			PartialFileHistory fileHistory = null;
-
-			while (resultSet.next()) {
-				if (fileHistory == null) {
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-					fileHistory = new PartialFileHistory(fileHistoryId);
-				}
-
-				FileVersion fileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-				fileHistory.addFileVersion(fileVersion);
-			}
-
-			return fileHistory;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public PartialFileHistory getFileHistoryWithLastVersion(FileHistoryId fileHistoryId) {
 		FileVersion lastFileVersion = fileVersionDao.getFileVersionByFileHistoryId(fileHistoryId);
 
@@ -174,10 +145,10 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
-		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
+		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
 
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithLastVersion.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithLastVersion.sql");
 			ResultSet resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
@@ -187,10 +158,10 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 				PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
 				fileHistory.addFileVersion(lastFileVersion);
 
-				currentFileTree.add(fileHistory);
+				fileHistories.add(fileHistory);
 			}
 
-			return currentFileTree;
+			return fileHistories;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
