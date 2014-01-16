@@ -59,7 +59,7 @@ CREATE CACHED TABLE fileversion (
   updated datetime NOT NULL,
   posixperms varchar(45) DEFAULT NULL,
   dosattrs varchar(45) DEFAULT NULL,
-  PRIMARY KEY (filehistory_id, version),
+  PRIMARY KEY (filehistory_id, version, databaseversion_id),
   FOREIGN KEY (filehistory_id, databaseversion_id) REFERENCES filehistory (id, databaseversion_id) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (filecontent_checksum) REFERENCES filecontent (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );

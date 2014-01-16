@@ -18,6 +18,7 @@
 package org.syncany.tests.database.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -25,7 +26,6 @@ import java.sql.Connection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Test;
@@ -132,8 +132,61 @@ public class FileVersionDaoTest {
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}
+	
+	@Test
+	public void testFileVersionGetByPath() throws Exception {
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		Connection databaseConnection = testConfig.createDatabaseConnection();
+				
+		// Run
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getFileTreeAtDate.sql");
+
+		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
+		
+		FileVersion file1 = fileVersionDao.getFileVersionByPath("file1");
+		FileVersion file2 = fileVersionDao.getFileVersionByPath("file2");
+		FileVersion file3 = fileVersionDao.getFileVersionByPath("file3");
+		FileVersion file4 = fileVersionDao.getFileVersionByPath("file4");
+		
+		// Test
+		
+		// - File 1
+		assertNotNull(file1);
+		assertEquals(1, file1.getVersion());
+		assertFalse("rwxrw-r--".equals(file1.getPosixPermissions()));
+		assertNotNull(file1.getChecksum());
+		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1.getChecksum().toString());
+		
+		// - File 2
+		assertNotNull(file2);
+		assertEquals(1, file2.getVersion());
+		assertNotNull(file2.getChecksum());
+		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2.getChecksum().toString());		
+		assertEquals(toDate("2014-01-02 16:26:09.123"), file2.getLastModified());
+		assertEquals(toDate("2014-01-02 16:26:09.201"), file2.getUpdated());
+		assertEquals("rw-r--r--", file2.getPosixPermissions());
+		assertNull(file2.getDosAttributes());
+		
+		// - File 3
+		assertNotNull(file3);
+		assertEquals(1, file3.getVersion());
+		assertNotNull(file3.getChecksum());
+		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3.getChecksum().toString());
+		assertEquals(toDate("2014-01-03 16:26:09.666"), file3.getLastModified());
+		assertEquals(toDate("2014-01-03 16:26:09.341"), file3.getUpdated());
+		assertEquals("rw-r--r--", file3.getPosixPermissions());
+		assertNull(file3.getDosAttributes());		
+		
+		// - File 4
+		assertNull(file4);
+		
+		// Tear down
+		databaseConnection.close();
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
 
 	private Date toDate(String dateString) throws ParseException {
-		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS", Locale.ENGLISH).parse(dateString);
+		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(dateString);
 	}
 }
