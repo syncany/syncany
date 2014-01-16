@@ -70,7 +70,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
-	
+
 	private String notificationChannel;
 	private String notificationInstanceId;
 
@@ -86,9 +86,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
-		
+
 		this.notificationChannel = StringUtil.toHex(config.getRepoId());
-		this.notificationInstanceId = ""+Math.abs(new Random().nextLong());
+		this.notificationInstanceId = "" + Math.abs(new Random().nextLong());
 	}
 
 	@Override
@@ -98,21 +98,21 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		if (options.announcementsEnabled()) {
 			startNotificationListener();
 		}
-		
+
 		if (options.watcherEnabled()) {
 			startRecursiveWatcher();
 		}
 
 		while (!stopRequired.get()) {
-			while (pauseRequired.get()){
+			while (pauseRequired.get()) {
 				try {
 					Thread.sleep(1000);
 				}
-				catch (Exception e) { 
-					
+				catch (Exception e) {
+					// Don't care
 				}
 			}
-			
+
 			try {
 				runSync();
 
@@ -124,21 +124,21 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				Thread.sleep(options.getInterval());
 			}
 		}
-		WatchOperationResult result = new WatchOperationResult();
-		return result;
+
+		return new WatchOperationResult();
 	}
 
 	private void startRecursiveWatcher() {
 		Path localDir = Paths.get(config.getLocalDir().getAbsolutePath());
 		List<Path> ignorePaths = new ArrayList<Path>();
-		
+
 		ignorePaths.add(Paths.get(config.getAppDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getCacheDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getDatabaseDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getLogDir().getAbsolutePath()));
-		
+
 		recursiveWatcher = new RecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
-		
+
 		try {
 			recursiveWatcher.start();
 		}
@@ -150,7 +150,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private void startNotificationListener() {
 		notificationListener = new NotificationListener(options.getAnnouncementsHost(), options.getAnnouncementsPort(), this);
 		notificationListener.start();
-		
+
 		notificationListener.subscribe(notificationChannel);
 	}
 
@@ -185,7 +185,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				logger.log(Level.INFO, "Sync FAILED (event-triggered).");
 			}
 		}
-	}	
+	}
 
 	@Override
 	public void watchEventsOccurred() {
@@ -202,19 +202,19 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			notificationListener.announce(notificationChannel, notificationInstanceId);
 		}
 	}
-	
-	public void pause(){
+
+	public void pause() {
 		pauseRequired.set(true);
 	}
-	
-	public void resume(){
+
+	public void resume() {
 		pauseRequired.set(false);
 	}
 
-	public void stop(){
+	public void stop() {
 		stopRequired.set(true);
 	}
-	
+
 	public static class WatchOperationOptions implements OperationOptions {
 		private int interval = 120000;
 		private boolean announcements = true;
