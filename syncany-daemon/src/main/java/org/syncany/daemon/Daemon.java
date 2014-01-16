@@ -12,6 +12,7 @@ import org.syncany.daemon.command.CommandStatus;
 import org.syncany.daemon.command.WatchCommand;
 import org.syncany.daemon.config.DaemonConfigurationTO;
 import org.syncany.daemon.config.DeamonConfiguration;
+import org.syncany.daemon.exception.DaemonAlreadyStartedException;
 import org.syncany.daemon.util.SocketLock;
 import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
@@ -96,7 +97,7 @@ public class Daemon {
 		quittingInProgress = false;
 	}
 
-	public void start(boolean startedWithGui) throws Exception {
+	public void start(boolean startedWithGui) throws DaemonAlreadyStartedException {
 		this.startedWithGui = startedWithGui;
 
 		// 0- determine if gui is already launched
@@ -105,7 +106,7 @@ public class Daemon {
 		}
 		catch (Exception e) {
 			log.info("Daemon already launched");
-			throw new Exception("Daemon Server socket lock failed");
+			throw new DaemonAlreadyStartedException("Daemon Server socket lock failed");
 		}
 
 		// 1- Restore last watched directories

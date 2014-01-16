@@ -168,6 +168,9 @@ public class DaemonCommandHandler {
 //			case "get_watched":
 //				handleGetWatchedFolders();
 //				break;
+			case "ping":
+				WSServer.sendToAll("{\"action\":\"pong\"}");
+				break;
 			case "watch":
 				handleWatch(params);
 				break;
