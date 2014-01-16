@@ -39,84 +39,83 @@ public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
 
 	public static ApplicationConfiguration applicationConfiguration;
-	
+
 	private static EventBus eventBus = new EventBus("syncany-gui");
 	private static MainGUI window;
-	
+
 	static {
 		Logging.init();
 	}
-	
+
 	public static EventBus getEventBus() {
 		return eventBus;
 	}
 
 	public static void main(String[] args) {
-		System.setProperty("apple.awt.UIElement","true");
+		System.setProperty("apple.awt.UIElement", "true"); // TODO [low] Explain this: What is this for?
 		startApplication();
 	}
-	
-	private static void startApplication(){
-		try{
+
+	private static void startApplication() {
+		try {
 			startDaemon();
 			startWebSocketClient();
 			startGUI();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			log.warning(String.format("Error [%s]", e.getMessage()));
 		}
 	}
-	
-	public static void stopApplication(){
+
+	public static void stopApplication() {
 		ClientCommandFactory.stopDaemon();
 		stopWebSocketClient();
 		stopGUI();
-		
+
 		System.exit(0);
 	}
 
-	private static void startDaemon() throws Exception{
+	private static void startDaemon() throws Exception {
 		new Daemon().start(true);
 	}
-	
-	private static void stopWebSocketClient(){
+
+	private static void stopWebSocketClient() {
 		ClientCommandFactory.stopWebSocketClient();
 	}
-	
+
 	private static void startWebSocketClient() {
 		ClientCommandFactory.startWebSocketClient();
 	}
-	
-	private static void stopGUI(){
+
+	private static void stopGUI() {
 		window.dispose();
 	}
-	
-	public static void loadConfiguration(){
+
+	public static void loadConfiguration() {
 		applicationConfiguration = null;
+		
 		try {
 			ApplicationConfigurationTO acto = loadApplicationConfiguration();
 			applicationConfiguration = ApplicationConfiguration.from(acto);
 		}
 		catch (Exception e) {
-			log.severe("Unable to load application configuration File : "+e);
+			log.severe("Unable to load application configuration File : " + e);
 			return;
 		}
-		
-		try{
+
+		try {
 			ProxyController.instance().initProxy(applicationConfiguration);
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			log.severe("Unable to initiate proxy");
 		}
 	}
-	
-	private static void startGUI(){
+
+	private static void startGUI() {
 		Display.setAppName("Syncany");
-		
+
 		loadConfiguration();
-		
-		
-		
+
 		// Register messages bundles
 		I18n.registerBundleName("i18n/messages");
 		I18n.registerBundleFilter("plugin_messages*");
@@ -137,10 +136,10 @@ public class Launcher {
 		window.open();
 	}
 
-	public static void saveConfiguration(){
+	public static void saveConfiguration() {
 		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
 		File f = new File(saHome, "syncany-gui-config.xml");
-		
+
 		try {
 			ApplicationConfigurationTO.store(ApplicationConfiguration.toTO(applicationConfiguration), f);
 		}
@@ -148,19 +147,20 @@ public class Launcher {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
 		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
 		File f = new File(saHome, "syncany-gui-config.xml");
-		
-		if (!f.exists()){ /** creates an empty ApplicationConfigurationTO file **/
-			if (!saHome.exists()){
+
+		if (!f.exists()) {
+			/** creates an empty ApplicationConfigurationTO file **/
+			if (!saHome.exists()) {
 				saHome.mkdir();
 			}
 			ApplicationConfigurationTO.store(ApplicationConfigurationTO.getDefault(), f);
 			log.info("Syncany gui configuration file created");
 		}
-		
+
 		ApplicationConfigurationTO acto = ApplicationConfigurationTO.load(f);
 		return acto;
 	}

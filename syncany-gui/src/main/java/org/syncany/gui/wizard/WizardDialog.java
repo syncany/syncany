@@ -44,8 +44,8 @@ import org.syncany.gui.SyncanyCommandParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.InterfaceUpdate;
-import org.syncany.gui.messaging.InterfaceUpdate.InterfaceUpdateAction;
+import org.syncany.gui.messaging.InterfaceUpdateEvent;
+import org.syncany.gui.messaging.InterfaceUpdateEvent.InterfaceUpdateAction;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
 
@@ -203,7 +203,7 @@ public class WizardDialog extends Dialog {
 	private String commandId;
 	
 	@Subscribe
-	public void update(InterfaceUpdate event){
+	public void update(InterfaceUpdateEvent event){
 		String id = (String)event.getData().get("command_id");
 		if (event.getAction() == InterfaceUpdateAction.WIZARD_COMMAND_DONE && commandId.equals(id)){
 			final SummaryPanel summaryPanel = (SummaryPanel)panels.get(Panel.SUMMARY);

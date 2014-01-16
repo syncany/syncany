@@ -31,10 +31,10 @@ public class Daemon {
 	private static Daemon instance = null;
 	private boolean startedWithGui = false;
 	private DeamonConfiguration daemonConfiguration;
-	
-	private Map<String, Command> _commands = new HashMap<>(); 
-	
-	static{
+
+	private Map<String, Command> commands = new HashMap<>();
+
+	static {
 		Logging.init();
 	}
 
@@ -44,75 +44,77 @@ public class Daemon {
 	public static EventBus getEventBus() {
 		return eventBus;
 	}
-	
-	public Daemon(){
+
+	public Daemon() {
 		try {
-			DaemonConfigurationTO acto = loadApplicationConfiguration();
+			DaemonConfigurationTO acto = loadDaemonConfiguration();
 			daemonConfiguration = DeamonConfiguration.from(acto);
 		}
 		catch (Exception e) {
-			log.severe("Unable to load application configuration File : "+e);
+			log.severe("Unable to load application configuration File : " + e);
 			return;
 		}
 	}
+
 	/**
 	 * @return the commands
 	 */
 	public Map<String, Command> getCommands() {
-		return _commands;
+		return commands;
 	}
-	
+
 	@Subscribe
-	public void update(DaemonEvent event){
+	public void update(DaemonEvent event) {
 		DaemonCommandHandler.updateWatchedFolders();
 	}
-	
-	private void killWatchingThreads(){
+
+	private void killWatchingThreads() {
 		log.fine("Killing all watching threads ...");
-		for (String key : getCommands().keySet()){
+		for (String key : getCommands().keySet()) {
 			Command t = getCommands().get(key);
 			t.disposeCommand();
 		}
 	}
-	
-	public void shutdown(){
-		if (quittingInProgress || !startedWithGui) 
+
+	public void shutdown() {
+		if (quittingInProgress || !startedWithGui) {
 			return;
-		
+		}
+
 		log.fine("Shutdown DaemonServer");
-		
+
 		quittingInProgress = true;
 		quit.set(true);
-		
+
 		killWatchingThreads();
 
 		WSServer.stop();
-		
+
 		daemonSocketLock.free();
 		instance = null;
-		
+
 		quittingInProgress = false;
 	}
-	
+
 	public void start(boolean startedWithGui) throws Exception {
 		this.startedWithGui = startedWithGui;
-		
-		//0- determine if gui is already launched
-		try{
+
+		// 0- determine if gui is already launched
+		try {
 			daemonSocketLock.lock();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			log.info("Daemon already launched");
 			throw new Exception("Daemon Server socket lock failed");
 		}
 
-		//1- Restore last watched directories
+		// 1- Restore last watched directories
 		restoreLastState();
 
-		//2- Starting websocket server
+		// 2- Starting websocket server
 		WSServer.start();
 	}
-	
+
 	private void restoreLastState() {
 		log.fine("Restoring last state of DaemonServer");
 	}
@@ -124,51 +126,51 @@ public class Daemon {
 		}
 		return instance;
 	}
-	
-	@Subscribe 
-	public void update(WatchEvent event){
+
+	@Subscribe
+	public void update(WatchEvent event) {
 		Map<String, Command> map = getCommands();
-		
+
 		String id = event.getId();
 		Command cl = map.get(id);
-		
-		if (cl instanceof WatchCommand){
-			if (event.getAction().equals(WatchEventAction.START_WATCH)){
+
+		if (cl instanceof WatchCommand) {
+			if (event.getAction().equals(WatchEventAction.START_WATCH)) {
 				cl.setStatus(CommandStatus.STARTED);
 			}
-			
-			if (event.getAction().equals(WatchEventAction.STOP_WATCH)){
+
+			if (event.getAction().equals(WatchEventAction.STOP_WATCH)) {
 				cl.setStatus(CommandStatus.STOPPED);
 			}
 		}
-		
+
 		log.fine("Pushing update to client");
-		
+
 		WSServer.sendToAll("update");
 	}
-	
+
 	public static void main(String[] args) {
 		try {
 			Daemon.getInstance().start(false);
 		}
 		catch (Exception e) {
-			log.warning("Cannot launch daemon " + e);
+			throw new RuntimeException("Cannot launch daemon.", e);
 		}
 	}
-	
-	private static DaemonConfigurationTO loadApplicationConfiguration() throws Exception {
-		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
-		File f = new File(saHome, "syncany-daemon-config.xml");
 
-		if (!f.exists()){ /** creates an empty ApplicationConfigurationTO file **/
-			if (!saHome.exists()){
-				saHome.mkdir();
+	private static DaemonConfigurationTO loadDaemonConfiguration() throws Exception {
+		File appConfigDir = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File daemonConfigFile = new File(appConfigDir, "syncany-daemon-config.xml");
+
+		if (!daemonConfigFile.exists()) {
+			if (!appConfigDir.exists()) {
+				appConfigDir.mkdir();
 			}
-			DaemonConfigurationTO.store(DaemonConfigurationTO.getDefault(), f);
+			
+			DaemonConfigurationTO.store(DaemonConfigurationTO.getDefault(), daemonConfigFile);
 			log.info("Syncany daemon configuration file created");
 		}
-		
-		DaemonConfigurationTO acto = DaemonConfigurationTO.load(f);
-		return acto;
+
+		return DaemonConfigurationTO.load(daemonConfigFile);
 	}
 }

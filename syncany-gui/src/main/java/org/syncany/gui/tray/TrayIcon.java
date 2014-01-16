@@ -17,6 +17,9 @@
  */
 package org.syncany.gui.tray;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,7 +36,7 @@ import org.syncany.gui.wizard.WizardDialog;
  */
 public abstract class TrayIcon {
 	private static int REFRESH_TIME=1000;
-	public enum SyncanyTrayIcons{
+	public enum TrayIcons{
 		TRAY_NO_OVERLAY("/images/tray/tray.png"),
 		TRAY_IN_SYNC("/images/tray/tray-in-sync.png"),
 		TRAY_PAUSE_SYNC("/images/tray/tray-sync-pause.png"),
@@ -47,7 +50,7 @@ public abstract class TrayIcon {
 			
 		private String fileName;
 		
-		SyncanyTrayIcons(String filenName){
+		TrayIcons(String filenName){
 			this.fileName = filenName;
 		}
 		
@@ -55,7 +58,7 @@ public abstract class TrayIcon {
 			return fileName;
 		}
 
-		public static SyncanyTrayIcons get(int idx) {
+		public static TrayIcons get(int idx) {
 			switch (idx+1){
 				default:
 				case 1:
@@ -87,6 +90,17 @@ public abstract class TrayIcon {
 		return shell;
 	}
 	
+	protected void showFolder(File folder) {
+		try {
+			if (folder.exists() && folder.isDirectory()) {
+				Desktop.getDesktop().open(folder);
+			}
+		}
+		catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
 	protected void showDonate(){
 		BrowserHelper.browse("http://www.syncany.org/donate");
 	}
@@ -107,12 +121,12 @@ public abstract class TrayIcon {
 	public void makeSystemTrayStopSync(){
 		syncing.set(false);
 		paused.set(false);
-		setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
+		setTrayImage(TrayIcons.TRAY_IN_SYNC);
 	}
 	
 	public void pauseSyncing(){
 		paused.set(true);
-		setTrayImage(SyncanyTrayIcons.TRAY_PAUSE_SYNC);
+		setTrayImage(TrayIcons.TRAY_PAUSE_SYNC);
 	}
 	
 	public void resumeSyncing(){
@@ -132,7 +146,7 @@ public abstract class TrayIcon {
 				
 				while (syncing.get()){
 					try {
-						setTrayImage(SyncanyTrayIcons.get(i));
+						setTrayImage(TrayIcons.get(i));
 						i++;
 						if (i == 6) i = 0;
 						Thread.sleep(REFRESH_TIME);
@@ -141,7 +155,7 @@ public abstract class TrayIcon {
 						e.printStackTrace();
 					}
 				}
-				setTrayImage(SyncanyTrayIcons.TRAY_IN_SYNC);
+				setTrayImage(TrayIcons.TRAY_IN_SYNC);
 			}
 		}
 	});
@@ -169,7 +183,7 @@ public abstract class TrayIcon {
 	}
 	
 	//Abstract methods
-	protected abstract void setTrayImage(SyncanyTrayIcons image);
+	protected abstract void setTrayImage(TrayIcons image);
 	public abstract void updateFolders(Map<String, Map<String, String>> folders);
 	public abstract void updateStatusText(String statusText);
 }

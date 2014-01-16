@@ -13,63 +13,67 @@ import org.eclipse.jetty.util.resource.Resource;
 
 public class StaticResourcesWebServer {
 	private static final Logger log = Logger.getLogger(StaticResourcesWebServer.class.getSimpleName());
-	
+
 	private static StaticResourcesWebServer instance;
-	public static int port = 8081;
-	
+	public static int PORT = 8081; // TODO [medium] Use less popular port
+
 	private Server server;
 
-	public static void main(String[] args) {
-		new StaticResourcesWebServer().startService(null);
+	public interface ServerStartedListener {
+		public void serverStarted();
 	}
 	
-	public void startService(final org.syncany.gui.util.Listener listener) {
+	public void startService(final ServerStartedListener listener) {
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try{
-					server = new Server(port);
+				try {
+					server = new Server(PORT);
 					server.addLifeCycleListener(new Listener() {
 						@Override
 						public void lifeCycleStarted(LifeCycle event) {
-							listener.update();
+							listener.serverStarted();
 						}
-						
-						@Override
-						public void lifeCycleStopping(LifeCycle event) { }
-						
-						@Override
-						public void lifeCycleStopped(LifeCycle event) { }
 
 						@Override
-						public void lifeCycleStarting(LifeCycle event) { }
+						public void lifeCycleStopping(LifeCycle event) {
+						}
 
 						@Override
-						public void lifeCycleFailure(LifeCycle event, Throwable cause) { }
+						public void lifeCycleStopped(LifeCycle event) {
+						}
+
+						@Override
+						public void lifeCycleStarting(LifeCycle event) {
+						}
+
+						@Override
+						public void lifeCycleFailure(LifeCycle event, Throwable cause) {
+						}
 					});
-					
+
 					ContextHandler context0 = new ContextHandler();
-			        context0.setContextPath("/scripts/");
-			        ResourceHandler rh0 = new ResourceHandler();
-			        rh0.setBaseResource( Resource.newResource(ClassLoader.getSystemResource("scripts")));
-			        context0.setHandler(rh0);
-			        
-			        ContextHandler context1 = new ContextHandler();
-			        context1.setContextPath("/images/");
-			        ResourceHandler rh1 = new ResourceHandler();
-			        rh1.setBaseResource( Resource.newResource(ClassLoader.getSystemResource("images")));
-			        context1.setHandler(rh1);
-			 
-			        ContextHandlerCollection contexts = new ContextHandlerCollection();
-			        contexts.setHandlers(new Handler[]{ context0, context1 });
-			        
-			        server.setHandler(contexts);
-			        
+					context0.setContextPath("/scripts/");
+					ResourceHandler rh0 = new ResourceHandler();
+					rh0.setBaseResource(Resource.newResource(ClassLoader.getSystemResource("scripts")));
+					context0.setHandler(rh0);
+
+					ContextHandler context1 = new ContextHandler();
+					context1.setContextPath("/images/");
+					ResourceHandler rh1 = new ResourceHandler();
+					rh1.setBaseResource(Resource.newResource(ClassLoader.getSystemResource("images")));
+					context1.setHandler(rh1);
+
+					ContextHandlerCollection contexts = new ContextHandlerCollection();
+					contexts.setHandlers(new Handler[] { context0, context1 });
+
+					server.setHandler(contexts);
+
 					server.start();
 					server.join();
 				}
-				catch (Exception e){
-					log.warning("Exception "+ e.getMessage());
+				catch (Exception e) {
+					log.warning("Exception " + e.getMessage());
 				}
 			}
 		}, "staticWebServer");
@@ -80,13 +84,17 @@ public class StaticResourcesWebServer {
 		try {
 			server.stop();
 			server.destroy();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			log.warning("Exception " + e.getMessage());
 		}
 	}
 
 	public boolean isServiceStarted() {
-		if (server == null) return false;
+		if (server == null) {
+			return false;
+		}
+
 		return server.isStarted();
 	}
 
@@ -95,7 +103,10 @@ public class StaticResourcesWebServer {
 	}
 
 	public static StaticResourcesWebServer getInstance() {
-		if (instance == null) instance = new StaticResourcesWebServer();
+		if (instance == null) {
+			instance = new StaticResourcesWebServer();
+		}
+		
 		return instance;
 	}
 }

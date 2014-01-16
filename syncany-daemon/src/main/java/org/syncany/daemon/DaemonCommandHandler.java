@@ -41,8 +41,9 @@ public class DaemonCommandHandler {
 	}
 
 	private static String handleQuit(Map<String, Object> parameters) {
-		if (Daemon.getInstance() != null)
+		if (Daemon.getInstance() != null) {
 			Daemon.getInstance().shutdown();
+		}
 		
 		return null;
 	}

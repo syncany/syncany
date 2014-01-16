@@ -18,6 +18,7 @@
 package org.syncany.gui.tray;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
@@ -30,10 +31,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.WSClient;
-import org.syncany.gui.util.Listener;
 import org.syncany.gui.util.StaticResourcesWebServer;
+import org.syncany.gui.util.StaticResourcesWebServer.ServerStartedListener;
 import org.syncany.util.JsonHelper;
 
 /**
@@ -43,33 +43,22 @@ import org.syncany.util.JsonHelper;
  */
 public class UnityTrayIcon extends TrayIcon {
 	private static final Logger logger = Logger.getLogger(WSClient.class.getSimpleName());
-	private static int PORT = 8882;
-	
+	private static int WEBSOCKET_SERVER_PORT = 8882;
+
 	private WebSocketServer webSocketClient;
 	private StaticResourcesWebServer staticWebServer;
 	private static Process unityProcess;
-	
+
 	public UnityTrayIcon(Shell shell) {
 		super(shell);
+		
+		startWebSocketServer();
 		startWebServer();
 	}
-		
-	private void startWebServer(){
-		staticWebServer = new StaticResourcesWebServer();
-		staticWebServer.startService(new Listener() {
-			@Override
-			public void update() {
-				startTray();
-			}
-		});
-	}
-	
-	private void startTray(){
-		try {
-			Map<String, String> map = new HashMap<>();
-			map.put("client_id", MainGUI.getClientIdentification());
 
-			this.webSocketClient = new WebSocketServer(new InetSocketAddress(PORT)) {
+	private void startWebSocketServer() {
+		try {
+			this.webSocketClient = new WebSocketServer(new InetSocketAddress(WEBSOCKET_SERVER_PORT)) {
 				@Override
 				public void onOpen(WebSocket conn, ClientHandshake handshake) {
 					String id = handshake.getFieldValue("client_id");
@@ -94,13 +83,31 @@ public class UnityTrayIcon extends TrayIcon {
 			};
 
 			webSocketClient.start();
-			startUnityProcess();
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
 		}
+	}
+
+	private void startWebServer() {
+		staticWebServer = new StaticResourcesWebServer();
+		staticWebServer.startService(new ServerStartedListener() {
+			@Override
+			public void serverStarted() {
+				startTray();
+			}
+		});
+	}
+
+	private void startTray() {
+		try {
+			startUnityProcess();
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Cannot start Python process for Unity Tray Icon.", e);
+		}
 		
-		//TODO remove
+		// TODO [medium] remove
 		makeSystemTrayStartSync();
 	}
 
@@ -116,96 +123,102 @@ public class UnityTrayIcon extends TrayIcon {
 
 		super.quit();
 	}
-	
+
 	protected void handleCommand(Map<String, Object> map) {
-		String command = (String)map.get("command");
-		
-		switch (command){
-			case "DONATE":
-				showDonate();
-				break;
-			case "WEBSITE":
-				showWebsite();
-				break;
-			case "QUIT":
-				quit();
-				break;
-			case "PREFERENCES":
-				showSettings();
-				break;
-			case "NEW":
-				showWizard();
-				break;
+		String command = (String) map.get("action");
+
+		switch (command) {
+		case "tray_menu_clicked_new":
+			showWizard();
+			break;
+		case "tray_menu_clicked_preferences":
+			showSettings();
+			break;
+		case "tray_menu_clicked_folder":
+			showFolder(new File((String) map.get("folder")));
+			break;
+		case "tray_menu_clicked_donate":
+			showDonate();
+			break;
+		case "tray_menu_clicked_website":
+			showWebsite();
+			break;
+		case "tray_menu_clicked_quit":
+			quit();
+			break;
 		}
 	}
 
-	public void sendToAll(String text) {
-		Collection<WebSocket> con = webSocketClient.connections();
-		synchronized (con) {
-			for (WebSocket c : con) {
-				sendTo(c, text);
+	public void sendToAll(String message) {		
+		Collection<WebSocket> webSocketConnections = webSocketClient.connections();
+		
+		synchronized (webSocketConnections) {
+			for (WebSocket webSocket : webSocketConnections) {
+				sendTo(webSocket, message);
 			}
 		}
 	}
-	
-	private static void launchLoggerThread(final BufferedReader bf, final String prefix){
+
+	public void sendTo(WebSocket webSocket, String message) {
+		try {
+			webSocket.send(message);
+		}
+		catch (Exception e) {
+			logger.warning("Exception " + e);
+		}
+	}
+
+	private static void launchLoggerThread(final BufferedReader stdinReader, final String prefix) {
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				String line;
-				try{
-					while ((line = bf.readLine()) != null) {
-			        	logger.info(prefix + line);
-			        }
+				try {
+					String line;
+
+					while ((line = stdinReader.readLine()) != null) {
+						logger.info(prefix + line);
+					}
 				}
-				catch (Exception e){
+				catch (Exception e) {
 					logger.warning("Exception " + e);
 				}
 			}
 		});
 		t.start();
 	}
-	
-	private static void startUnityProcess() throws IOException{
-		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.port;
-		String scriptUrl =  baseUrl + "/scripts/unitytray.py";
-		String[] command = new String[]{
-			"python", 
-			"-c", 
-			"import urllib2;"
-			+ "baseUrl = '" + baseUrl + "';"
-			+ "wsUrl = 'ws://127.0.0.1:" + PORT + "';"
-			+ "exec urllib2.urlopen('" + scriptUrl + "').read()" 
-		};
-		
+
+	private static void startUnityProcess() throws IOException {
+		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.PORT;
+		String scriptUrl = baseUrl + "/scripts/unitytray.py";
+		String webSocketUri = "ws://127.0.0.1:" + WEBSOCKET_SERVER_PORT;
+
+		String startScript = String.format("import urllib2; baseUrl = '%s'; wsUrl = '%s'; exec urllib2.urlopen('%s').read()", new Object[] { baseUrl,
+				webSocketUri, scriptUrl });
+
+		String[] command = new String[] { "/usr/bin/python", "-c", startScript };
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 
 		unityProcess = processBuilder.start();
 
 		BufferedReader is = new BufferedReader(new InputStreamReader(unityProcess.getInputStream()));
 		BufferedReader es = new BufferedReader(new InputStreamReader(unityProcess.getErrorStream()));
-		
-		launchLoggerThread(is, "Pyhton Input Stream : ");
-		launchLoggerThread(es, "Pyhton Error Stream : ");
-	}
-	
-	public void sendTo(WebSocket ws, String text) {
-		try{
-			ws.send(text);
-		}
-		catch (Exception e){
-			logger.warning("Exception " + e);
-		}
+
+		launchLoggerThread(is, "Python Input Stream : ");
+		launchLoggerThread(es, "Python Error Stream : ");
 	}
 
 	@Override
 	public void updateFolders(Map<String, Map<String, String>> folders) {
-		sendToAll(JsonHelper.fromMapToString(folders));
+		Map<String, Object> parameters = new HashMap<String, Object>();
+		parameters.put("action", "update_tray_menu");
+		parameters.put("folders", folders);
+		
+		sendToAll(JsonHelper.fromMapToString(parameters));
 	}
 
 	@Override
 	public void updateStatusText(String statusText) {
-		Map<String, Object> parameters = new HashMap<>();
+		Map<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("action", "update_tray_status_text");
 		parameters.put("text", statusText);
 
@@ -213,7 +226,7 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 
 	@Override
-	protected void setTrayImage(SyncanyTrayIcons image) {
+	protected void setTrayImage(TrayIcons image) {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("action", "update_tray_icon");
 		parameters.put("imageFileName", image.getFileName());

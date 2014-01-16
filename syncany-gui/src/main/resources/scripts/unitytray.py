@@ -70,7 +70,7 @@ def do_notify(request):
 def do_update_icon(request):
 	global indicator
 	indicator.set_icon(fetch_image(request["imageFileName"]))		
-	return "OK"
+	return None
 	
 def do_update_text(request):
 	global menu_item_status
@@ -108,59 +108,42 @@ def do_update_menu(request):
 
 	'''New connection'''
 	menu_item_new = gtk.MenuItem("New sync folder")	
-	menu_item_new.connect("activate", menu_item_clicked, "NEW")
+	menu_item_new.connect("activate", menu_item_clicked, "tray_menu_clicked_new")
 
 	menu.append(menu_item_new)
-
-	'''Profiles'''
-	if request is not None:
-		profiles = request["profiles"]
-		
-		'''Only one profile: just list the folders'''
-		if len(profiles) == 1:
-			for folder in profiles[0]["folders"]:				
-				menu_item_folder = gtk.MenuItem(os.path.basename(folder["folder"]))
-				menu_item_folder.connect("activate", menu_item_folder_clicked, folder["folder"])
-	
-				menu.append(menu_item_folder)					
-		
-		elif len(profiles) > 1:
-			for profile in profiles:
-				submenu_folders = gtk.Menu()
-
-				menu_item_profile = gtk.MenuItem(os.path.basename(profile["name"]))
-				menu_item_profile.set_submenu(submenu_folders)			
-				
-				for folder in profile["folders"]:				
-					menu_item_folder = gtk.MenuItem(os.path.basename(folder["folder"]))
-					menu_item_folder.connect("activate", menu_item_folder_clicked, folder["folder"])
-	
-					submenu_folders.append(menu_item_folder)
-				
-				menu.append(menu_item_profile)				
-		
-		if len(profiles) > 0:
-			'''---'''
-			menu.append(gtk.SeparatorMenuItem())	
 	
 	'''Preferences'''
 	menu_item_prefs = gtk.MenuItem("Preferences")
-	menu_item_prefs.connect("activate", menu_item_clicked, "PREFERENCES")
+	menu_item_prefs.connect("activate", menu_item_clicked, "tray_menu_clicked_preferences")
 	
 	menu.append(menu_item_prefs)
 	
 	'''---'''
 	menu.append(gtk.SeparatorMenuItem())	
+
+	'''Folders'''
+	if request is not None:
+		folders = request["folders"]
+		
+		for folder in folders.itervalues():
+			menu_item_folder = gtk.MenuItem(os.path.basename(folder["folder"]) + "(" + folder["status"] + ")")
+			menu_item_folder.connect("activate", menu_item_folder_clicked, folder["folder"])
+		
+			menu.append(menu_item_folder)
+		
+		if len(folders) > 0:
+			'''---'''
+			menu.append(gtk.SeparatorMenuItem())	
 	
 	'''Donate ...'''
 	menu_item_donate = gtk.MenuItem("Donate")
-	menu_item_donate.connect("activate", menu_item_clicked, "DONATE")
+	menu_item_donate.connect("activate", menu_item_clicked, "tray_menu_clicked_donate")
 	
 	menu.append(menu_item_donate)	
 	
 	'''Website'''
 	menu_item_website = gtk.MenuItem("Website")
-	menu_item_website.connect("activate", menu_item_clicked, "WEBSITE")
+	menu_item_website.connect("activate", menu_item_clicked, "tray_menu_clicked_website")
 	
 	menu.append(menu_item_website)	
 	
@@ -169,8 +152,8 @@ def do_update_menu(request):
 
 	'''Quit'''
 	menu_item_quit = gtk.MenuItem("Exit")
-	menu_item_quit.connect("activate", menu_item_clicked, "QUIT")
-	
+	menu_item_quit.connect("activate", menu_item_clicked, "tray_menu_clicked_quit")
+		
 	menu.append(menu_item_quit)	
 	
 	'''Set as menu for indicator'''
@@ -180,7 +163,7 @@ def do_update_menu(request):
 	menu.show_all()
 	gtk.gdk.threads_leave()
 	
-	return "{'response':'OK'}"
+	return None
 
 def init_menu():
 	do_update_menu(None)
@@ -198,16 +181,17 @@ def init_tray_icon():
 	indicator.set_status(appindicator.STATUS_ACTIVE)
 	indicator.set_attention_icon("indicator-messages-new")	
 	
-def menu_item_clicked(widget, cmd):
-	do_print("Menu item '" + cmd + "' clicked.")
-	ws.send("{'action': 'tray_menu_item_clicked', 'command': '" + cmd + "'}")
+def menu_item_clicked(widget, action):
+	do_print("Menu item '" + action + "' clicked.")
+	ws.send("{'action': '" + action + "'}")
 	
-	if cmd == "QUIT":
+	if action == "tray_menu_clicked_quit":
+		time.sleep(2)
 		sys.exit(0)
 
 def menu_item_folder_clicked(widget, folder):
 	do_print("Folder item '" + folder + "' clicked.")
-	ws.send("{'action': 'tray_menu_folder_clicked', 'folder': '" + folder + "'}")
+	ws.send("{'action': 'tray_menu_clicked_folder', 'folder': '" + folder + "'}")
 
 def do_kill():
 	# Note: this method cannot contain any do_print() calls since it is called

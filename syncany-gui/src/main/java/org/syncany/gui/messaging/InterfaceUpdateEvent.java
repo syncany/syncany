@@ -15,37 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.util;
+package org.syncany.gui.messaging;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author vwiencek
  *
  */
-public class EmailValidator {
-	private Pattern pattern;
-	private Matcher matcher;
- 
-	private static final String EMAIL_PATTERN = 
-		  "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*" 
-		+ "@"
-		+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
- 
-	public EmailValidator() {
-		pattern = Pattern.compile(EMAIL_PATTERN);
+public class InterfaceUpdateEvent extends ApplicationEvent {
+	public enum InterfaceUpdateAction {
+		UPDATE_WATCHED_FOLDERS,
+		WIZARD_COMMAND_DONE,
+		START_SYSTEM_TRAY_SYNC,
+		STOP_SYSTEM_TRAY_SYNC;
 	}
- 
+	
+	private InterfaceUpdateAction action;
+	
+	public InterfaceUpdateEvent(InterfaceUpdateAction action, Map<String, Object> data){
+		super(data);
+		this.action = action;
+	}
+	
 	/**
-	 * Validate hex with regular expression
-	 * 
-	 * @param email
-	 *            email to be validated
-	 * @return true valid email, false invalid email
+	 * @return the action
 	 */
-	public boolean validate(final String email) {
-		matcher = pattern.matcher(email);
-		return matcher.matches();
+	public InterfaceUpdateAction getAction() {
+		return action;
 	}
 }
