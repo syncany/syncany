@@ -115,15 +115,8 @@ public class Daemon {
 			throw new DaemonAlreadyStartedException("Daemon Server socket lock failed");
 		}
 
-		// 1- Restore last watched directories
-		restoreLastState();
-
 		// 2- Starting websocket server
 		WSServer.start();
-	}
-
-	private void restoreLastState() {
-		log.fine("Restoring last state of DaemonServer");
 	}
 
 	public static Daemon getInstance() {
