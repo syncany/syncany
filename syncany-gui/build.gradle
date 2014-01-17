@@ -3,7 +3,6 @@ apply plugin: 'application'
 mainClassName = "org.syncany.gui.Launcher"
 
 dependencies {
-	compile 		files('lib/opal-0.9.5.2.jar')
 	compile			project(':syncany-util')
 	compile			project(':syncany-daemon')
 	compile			project(':syncany-plugins:syncany-plugin-gui')
