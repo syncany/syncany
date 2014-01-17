@@ -20,6 +20,12 @@ package org.syncany.gui.settings;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.syncany.gui.config.ApplicationConfiguration;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 
 /**
  * @author vincent
@@ -34,11 +40,35 @@ public class GeneralSettingsPanel extends Composite {
 	 */
 	public GeneralSettingsPanel(Composite parent, int style) {
 		super(parent, style);
+		setLayout(new GridLayout(1, false));
+		
+		Group grpSystem = new Group(this, SWT.NONE);
+		grpSystem.setText("System");
+		grpSystem.setLayout(new GridLayout(1, false));
+		grpSystem.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		
+		Button btnCheckButton = new Button(grpSystem, SWT.CHECK);
+		btnCheckButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		btnCheckButton.setBounds(0, 0, 93, 16);
+		btnCheckButton.setText("Launch Syncany at startup");
+		
+		Button btnCheckButton_1 = new Button(grpSystem, SWT.CHECK);
+		btnCheckButton_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		btnCheckButton_1.setBounds(0, 0, 93, 16);
+		btnCheckButton_1.setText("Display Toaster-like notifications");
+		
+		Group grpLanguage = new Group(this, SWT.NONE);
+		grpLanguage.setText("Language");
+		grpLanguage.setLayout(new GridLayout(1, false));
+		grpLanguage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		
+		Combo combo = new Combo(grpLanguage, SWT.NONE);
+		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		combo.setBounds(0, 0, 91, 23);
 		initComposite();
 	}
 
 	private void initComposite() {
-		setLayout(new GridLayout(2, false));
 		
 	}
 
