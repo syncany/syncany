@@ -12,6 +12,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -19,6 +20,7 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.Profile;
+import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.I18n;
 
 
@@ -35,6 +37,7 @@ public class AccountSettingsPanel extends Composite {
 	private Composite composite;
 	private Button deleteProfileButton;
 	private Label separatorLabel;
+	private Button addProfileButton;
 	
 	/**
 	 * @param parent
@@ -69,6 +72,15 @@ public class AccountSettingsPanel extends Composite {
 		composite.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false, 1, 1));
 		composite.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
+		addProfileButton = new Button(composite, SWT.NONE);
+		addProfileButton.setText("Add Profile");
+		addProfileButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		addProfileButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
+				handleAddProfile();
+			}
+		});
+		
 		deleteProfileButton = new Button(composite, SWT.NONE);
 		deleteProfileButton.setText("Delete Profile");
 		deleteProfileButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
@@ -83,14 +95,33 @@ public class AccountSettingsPanel extends Composite {
 	}
 
 	
+	protected void handleAddProfile() {
+		getShell().getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
+				Launcher.getEventBus().register(wd);
+				wd.open();
+				Launcher.getEventBus().unregister(wd);
+				updateTable();
+			}
+		});
+	}
+	
 	protected void handleDeleteProfile() {
 		int idx = table.getSelectionIndex();
 		
 		if (idx != -1){
-			configuration.getProfiles().remove(idx);
-			Launcher.saveConfiguration();
-			
-			updateTable();
+			MessageBox dialog = new MessageBox(getShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+			dialog.setText("Delete profile ?");
+			dialog.setMessage(String.format("Would you like to delete selected profile ?"));
+
+			int ret = dialog.open();
+			if (ret == SWT.YES) {
+				configuration.getProfiles().remove(idx);
+				Launcher.saveConfiguration();
+				updateTable();
+			}
 		}
 	}
 

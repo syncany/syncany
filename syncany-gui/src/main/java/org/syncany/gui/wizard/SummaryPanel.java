@@ -178,9 +178,9 @@ public class SummaryPanel extends WizardPanelComposite {
 		successConnectLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
 		successConnectLabel.setText("Repository sucessfully created");
 		
-		label_1 = new Label(successConnectComposite, SWT.WRAP);
-		label_1.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
-		label_1.setText("Click here to copy syncany url into Clipboard");
+		successUrlLabel = new Label(successConnectComposite, SWT.WRAP);
+		successUrlLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+		successUrlLabel.setText("Click here to copy syncany url into Clipboard");
 		
 		composite_2 = new Composite(successConnectComposite, SWT.NONE);
 		composite_2.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
@@ -292,7 +292,7 @@ public class SummaryPanel extends WizardPanelComposite {
 	private String link;
 	private Composite successConnectComposite;
 	private Label successConnectLabel;
-	private Label label_1;
+	private Label successUrlLabel;
 	private Composite composite_2;
 	private Button connectOpenSyncanyFolderButton;
 	private Button connectCloseWizardButton;

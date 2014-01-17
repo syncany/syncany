@@ -91,27 +91,21 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		rootComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		
 		urlComposite = new Composite(rootComposite, SWT.NONE);
-		urlComposite.setLayout(new GridLayout(2, false));
+		urlComposite.setLayout(new GridLayout(1, false));
 		
 		urlIntroductionTitleLabel =new Label(urlComposite, SWT.WRAP);
-		urlIntroductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		urlIntroductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		urlIntroductionTitleLabel.setText(I18n.getString("dialog.chooseRepository.url.introduction.title"));
 		
 		urlIntroductionLabel =new Label(urlComposite, SWT.WRAP);
-		urlIntroductionLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+		urlIntroductionLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		urlIntroductionLabel.setText(I18n.getString("dialog.chooseRepository.url.introduction"));
 		
 		urlLabel = new Label(urlComposite, SWT.NONE);
-		GridData gd_urlLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
+		GridData gd_urlLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_urlLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		urlLabel.setLayoutData(gd_urlLabel);
 		urlLabel.setText(I18n.getString("dialog.chooseRepository.url", true));
-		
-		urlText = new Text(urlComposite, SWT.BORDER | SWT.WRAP | SWT.MULTI);
-		GridData gd_urlText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_urlText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		gd_urlText.heightHint = 95;
-		urlText.setLayoutData(gd_urlText);
 		
 		createComposite = new Composite(rootComposite, SWT.NONE);
 		createComposite.setLayout(new GridLayout(1, false));
@@ -177,6 +171,11 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		showPLuginPanel(pluginList.get(idxSelectedPlugin).getId());
 		
 		WidgetDecorator.bold(urlIntroductionTitleLabel, introductionTitleLabel);
+		
+		urlText = new Text(urlComposite, SWT.BORDER | SWT.WRAP | SWT.MULTI);
+		GridData gd_urlText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		gd_urlText.heightHint = 95;
+		urlText.setLayoutData(gd_urlText);
 		WidgetDecorator.normal(
 			urlIntroductionLabel, introductionLabel, 
 			chooseRepositoryLabel, 
