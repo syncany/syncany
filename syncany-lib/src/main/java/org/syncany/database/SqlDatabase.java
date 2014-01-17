@@ -122,7 +122,9 @@ public class SqlDatabase {
 
 	// File History
 
+	@Deprecated
 	public List<PartialFileHistory> getFileHistoriesForDatabaseVersion(VectorClock databaseVersionVectorClock) {
+		// TODO [medium] This is not used anywhere, remove it!
 		return fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionVectorClock);
 	}
 

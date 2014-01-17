@@ -37,11 +37,11 @@ import org.syncany.config.Config;
 import org.syncany.util.FileUtil;
 
 /**
+ * This class provides file I/O helper methods for writing tests
  * 
- * This Class provides file I/O helper methods for writing tests
- * 
- * @author Nikolai Hellwig, Andreas Fenske, Philipp Heckel
- *
+ * @author Philipp Heckel <philipp.heckel@gmail.com>
+ * @author Nikolai Hellwig
+ * @author Andreas Fenske
  */
 public class TestFileUtil {	
 	private static Random randomGen = new Random();

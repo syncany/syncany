@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseConnectionFactory;
+import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
@@ -60,9 +61,12 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
+	/**
+	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
+	 */
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithFileVersionsByVectorClock.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql");
 			preparedStatement.setString(1, databaseVersionVectorClock.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
@@ -86,7 +90,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	protected List<PartialFileHistory> createFileHistoriesFromResult(ResultSet resultSet) throws SQLException {
-		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
+		List<PartialFileHistory> fileHistories = null;
 		PartialFileHistory fileHistory = null;
 
 		while (resultSet.next()) {
@@ -101,6 +105,11 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 				fileHistory.addFileVersion(lastFileVersion);
 			}
 
+			// Add to list
+			if (fileHistories == null) {
+				fileHistories = new ArrayList<PartialFileHistory>();
+			}
+			
 			fileHistories.add(fileHistory);
 		}
 
@@ -122,7 +131,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoryWithLastVersion.sql");
+			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithLastVersion.sql");
 			preparedStatement.setString(1, relativePath);
 
 			ResultSet resultSet = preparedStatement.executeQuery();

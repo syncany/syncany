@@ -51,6 +51,18 @@ public class TestDatabaseUtil {
 		String vectorClockString = databaseVersionHeaderMatcher.group(2);
 		long databaseVersionHeaderTime = Long.parseLong(databaseVersionHeaderMatcher.group(3));
 		
+		VectorClock vectorClock = createVectorClock(vectorClockString);		
+		
+		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
+		
+		newDatabaseVersionHeader.setDate(new Date(databaseVersionHeaderTime));
+		newDatabaseVersionHeader.setVectorClock(vectorClock);
+		newDatabaseVersionHeader.setClient(client);	
+		
+		return newDatabaseVersionHeader;
+	}
+	
+	public static VectorClock createVectorClock(String vectorClockString) throws Exception {
 		String[] vectorClockElements = vectorClockString.split(",");		
 		VectorClock vectorClock = new VectorClock();
 		
@@ -71,15 +83,9 @@ public class TestDatabaseUtil {
 			vectorClock.setClock(vectorClockMachineName, vectorClockTime);
 		}
 		
-		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
-		
-		newDatabaseVersionHeader.setDate(new Date(databaseVersionHeaderTime));
-		newDatabaseVersionHeader.setVectorClock(vectorClock);
-		newDatabaseVersionHeader.setClient(client);	
-		
-		return newDatabaseVersionHeader;
+		return vectorClock;
 	}
-	
+
 	public static TreeMap<String, DatabaseVersionHeader> createMapWithMachineKey(String[] keysAndDatabaseVersionHeaderStrings) throws Exception {
 		TreeMap<String, DatabaseVersionHeader> databaseVersionHeaderMap = new TreeMap<String, DatabaseVersionHeader>();
 		
