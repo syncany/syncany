@@ -56,6 +56,9 @@ public class TestClient extends Client {
 			public void run() {
 				try {
 					WatchOperationOptions watchOperationOptions = new WatchOperationOptions();
+					
+					watchOperationOptions.setAnnouncements(false);
+					watchOperationOptions.setWatcher(false);
 					watchOperationOptions.setInterval(interval);
 					
 					watch(watchOperationOptions);

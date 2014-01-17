@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.connection.plugins.unreliable_local;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.Arrays;
@@ -42,14 +42,14 @@ public class UploadInterruptedTest {
 		));
 		
 		TestClient clientA = new TestClient("A", testConnection);
-		Thread clientThreadA = clientA.watchAsThread(500);
+		Thread clientThreadA = clientA.watchAsThread(200);
 		
 		clientThreadA.start();
 		
 		int i = 0;
 		while (i++ < 5) {
 			clientA.createNewFile("A-original-"+i, 50*1024);
-			Thread.sleep(500);
+			Thread.sleep(700);
 		}
 		
 		clientThreadA.interrupt();
@@ -57,6 +57,8 @@ public class UploadInterruptedTest {
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000001").exists());
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000002").exists());
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000003").exists());
+		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000004").exists());
+		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
 		
 		// Tear down
 		clientA.cleanup();

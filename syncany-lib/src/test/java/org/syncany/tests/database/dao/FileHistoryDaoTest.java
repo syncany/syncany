@@ -17,17 +17,15 @@
  */
 package org.syncany.tests.database.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.sql.Connection;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
@@ -42,39 +40,53 @@ public class FileHistoryDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getCurrentFileTree.sql");
+		// TODO [low] This set is identical to test.fileversion.insert.getFileTreeAtDate.sql -- make new set!
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.filehistory.insert.set1.sql"); 
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		
-		fail("Implement this");
-		//fileHistoryDao.getFileHistoriesForDatabaseVersion(databaseVersionVectorClock);
-	
-		
-		Map<String, FileVersion> currentFileTree = fileVersionDao.getCurrentFileTree();
-		
+		PartialFileHistory fileHistory1Deleted = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("851c441915478a539a5bab2b263ffa4cc48e282f"));
+		PartialFileHistory fileHistory1New = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+		PartialFileHistory fileHistory2 = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("c021aecb2ae36f2a8430eb10309923454b93b61e"));
+		PartialFileHistory fileHistory3 = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("4fef2d605640813464792b18b16e1a5e07aa4e53"));
+				
 		// Test
-		assertEquals(50, currentFileTree.size());
 		
-		assertNotNull(currentFileTree.get("file1"));
-		assertNotNull(currentFileTree.get("file1").getChecksum());
-		assertEquals("fe83f217d464f6fdfa5b2b1f87fe3a1a47371196", currentFileTree.get("file1").getChecksum().toString());
+		// - File 1 (deleted)
+		assertNull(fileHistory1Deleted);
+		
+		// - File 1 (new)
+		assertNotNull(fileHistory1New);
+		assertEquals(1, fileHistory1New.getFileVersions().size());		
+		assertNotNull(fileHistory1New.getLastVersion().getChecksum());
+		assertEquals("ffffffffffffffffffffffffffffffffffffffff", fileHistory1New.getLastVersion().getChecksum().toString());		
+		assertEquals("rw-r--r--", fileHistory1New.getLastVersion().getPosixPermissions());
+		assertNull(fileHistory1New.getLastVersion().getDosAttributes());		
+
+		// - File 2 
+		assertNotNull(fileHistory2);
+		assertEquals(1, fileHistory2.getFileVersions().size());		
+		assertNotNull(fileHistory2.getLastVersion().getChecksum());
+		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", fileHistory2.getLastVersion().getChecksum().toString());		
+
+		// - File 3 )
+		assertNotNull(fileHistory3);
+		assertEquals(1, fileHistory3.getFileVersions().size());		
+		assertNotNull(fileHistory3.getLastVersion().getChecksum());
+		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", fileHistory3.getLastVersion().getChecksum().toString());		
 		
 		// Tear down
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}	
 	
-	// TODO [medium] Implement others
 	/*
+	    // TODO [medium] Implement tests for other PartialFileHistory methods
+	 
 	  	fileHistoryDao.getFileHistoriesWithFileVersions()
 		fileHistoryDao.getFileHistoriesWithLastVersion()
-		fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum)
-		fileHistoryDao.getFileHistoryWithLastVersion(fileHistoryId)
+		fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum)		
 		fileHistoryDao.getFileHistoryWithLastVersion(relativePath)
 	 */
-
-	private Date toDate(String dateString) throws ParseException {
-		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(dateString);
-	}
 }

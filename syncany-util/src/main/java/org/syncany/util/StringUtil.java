@@ -26,10 +26,20 @@ import java.util.List;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StringUtil {    
+	/**
+	 * Transforms a string to a camel case representation, including the
+	 * first character.
+	 * 
+	 * <p>Examples:
+	 * <ul>
+	 *  <li><tt>toCamelCase("hello world") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("hello_world") -&gt; "HelloWorld"</tt></li>
+	 * </ul>
+	 */
     public static String toCamelCase(String str) {
         StringBuilder sb = new StringBuilder();
 
-        for (String s : str.split("[_-]")) {
+        for (String s : str.split("[-_ ]")) {
         	if (s.length() > 0) {
 	            sb.append(Character.toUpperCase(s.charAt(0)));
 	
