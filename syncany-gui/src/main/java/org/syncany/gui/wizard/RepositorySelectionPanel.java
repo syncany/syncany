@@ -50,22 +50,23 @@ import org.syncany.util.StringUtil;
 public class RepositorySelectionPanel extends WizardPanelComposite {
 	private static final Logger log = Logger.getLogger(RepositorySelectionPanel.class.getSimpleName());
 	
-	private Combo repositorySelectionCombo;
-	private List<Plugin> pluginList;
 	private Composite pluginStackComposite;
-	private StackLayout rootStackLayout;
-	private String selectedPluginId;
-	private Map<String, PluginPanel> panels = new HashMap<>();
-	private StackLayout stackLayout;
-	private Label chooseRepositoryLabel;
 	private Composite rootComposite;
 	private Composite createComposite;
 	private Composite urlComposite;
-	private Label urlLabel;
+
 	private Text urlText;
+	private Combo repositorySelectionCombo;
+	private List<Plugin> pluginList;
+	private StackLayout rootStackLayout;
+	private StackLayout stackLayout;
+	private String selectedPluginId;
+	private Label chooseRepositoryLabel;
+	private Label urlLabel;
 	private Label urlIntroductionLabel;
 	private Label urlIntroductionTitleLabel;
 	
+	private Map<String, PluginPanel> panels = new HashMap<>();
 	/**
 	 * Create the dialog.
 	 * @param parent
@@ -176,7 +177,11 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		showPLuginPanel(pluginList.get(idxSelectedPlugin).getId());
 		
 		WidgetDecorator.bold(urlIntroductionTitleLabel, introductionTitleLabel);
-		WidgetDecorator.normal(urlIntroductionLabel, introductionLabel, chooseRepositoryLabel, urlText);
+		WidgetDecorator.normal(
+			urlIntroductionLabel, introductionLabel, 
+			chooseRepositoryLabel, 
+			urlText, urlLabel
+		);
 	}
 	
 	private void showPLuginPanel(String id){
@@ -189,18 +194,31 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 
 	@Override
 	public boolean isValid() {
-		PluginPanel ppanel = panels.get(selectedPluginId);
-		return ppanel.isValid(); 
+		boolean urlAvailable = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL));
+		
+		if (urlAvailable){
+			return urlText.getText() != null && urlText.getText().length() > 0;
+		}
+		else{
+			PluginPanel ppanel = panels.get(selectedPluginId);
+			return ppanel.isValid();
+		}
 	}
 
 	@Override
 	public UserInput getUserSelection() {
-		String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));
-
 		UserInput userInput = new UserInput();
-		userInput.putCommonParameter(CommonParameters.PLUGIN_ID, id);
-		UserInput pluginParameters = panels.get(id).getUserSelection();
-		userInput.merge(pluginParameters);
+		boolean urlAvailable = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL));
+		
+		if (urlAvailable){
+			userInput.putCommonParameter(CommonParameters.URL, urlText.getText());
+		}
+		else{
+			String id = (String)repositorySelectionCombo.getData(repositorySelectionCombo.getItem(repositorySelectionCombo.getSelectionIndex()));
+			userInput.putCommonParameter(CommonParameters.PLUGIN_ID, id);
+			UserInput pluginParameters = panels.get(id).getUserSelection();
+			userInput.merge(pluginParameters);
+		}
 		return userInput;
 	}
 
