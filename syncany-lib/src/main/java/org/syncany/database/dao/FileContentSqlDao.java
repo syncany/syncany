@@ -73,14 +73,15 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		preparedStatement.executeBatch();
 	}
 
-	public Map<FileChecksum, FileContent> getFileContentsForDatabaseVersion(VectorClock vectorClock) {
+	public Map<FileChecksum, FileContent> getFileContents(VectorClock vectorClock) {
 		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentsWithChunkChecksumsForDatabaseVersion.sql");			
+			PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql");			
 
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
 			ResultSet resultSet = preparedStatement.executeQuery();
+
 			return createFileContents(resultSet);
 		}
 		catch (SQLException e) {
@@ -89,10 +90,10 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private Map<FileChecksum, FileContent> createFileContents(ResultSet resultSet) throws SQLException {
-		Map<FileChecksum, FileContent> fileContents = new HashMap<FileChecksum, FileContent>();		
+		Map<FileChecksum, FileContent> fileContents = new HashMap<FileChecksum, FileContent>();;		
 		FileChecksum currentFileChecksum = null;
 		
-		while (resultSet.next()) {			
+		while (resultSet.next()) {		
 			FileChecksum fileChecksum = FileChecksum.parseFileChecksum(resultSet.getString("checksum"));
 			FileContent fileContent = null;
 			
@@ -116,19 +117,19 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		return fileContents;
 	}
 
-	public FileContent getFileContentByChecksum(FileChecksum fileChecksum, boolean includeChunkChecksums) {
+	public FileContent getFileContent(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		if (fileChecksum == null) {
 			return null;
 		}
 		else if (includeChunkChecksums) {
-			return getFileContentByChecksumWithChunkChecksums(fileChecksum);			
+			return getFileContentWithChunkChecksums(fileChecksum);			
 		}
 		else {
-			return getFileContentByChecksumWithoutChunkChecksums(fileChecksum);			
+			return getFileContentWithoutChunkChecksums(fileChecksum);			
 		}
 	}
 
-	public FileContent getFileContentByChecksumWithoutChunkChecksums(FileChecksum fileChecksum) {
+	private FileContent getFileContentWithoutChunkChecksums(FileChecksum fileChecksum) {
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithoutChunkChecksums.sql");
 			preparedStatement.setString(1, fileChecksum.toString());
@@ -151,7 +152,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public FileContent getFileContentByChecksumWithChunkChecksums(FileChecksum fileChecksum) {
+	private FileContent getFileContentWithChunkChecksums(FileChecksum fileChecksum) {
 		try {
 			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithChunkChecksums.sql");				
 			preparedStatement.setString(1, fileChecksum.toString());

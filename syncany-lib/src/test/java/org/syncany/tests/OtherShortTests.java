@@ -34,6 +34,7 @@ import org.syncany.tests.database.MemoryDatabaseCacheTest;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
 import org.syncany.tests.database.FileVersionComparatorTest;
 import org.syncany.tests.database.VectorClockTest;
+import org.syncany.tests.database.dao.FileContentDaoTest;
 import org.syncany.tests.database.dao.FileHistoryDaoTest;
 import org.syncany.tests.database.dao.FileVersionDaoTest;
 import org.syncany.tests.database.dao.XmlDatabaseDaoTest;
@@ -78,6 +79,7 @@ import org.syncany.tests.util.StringUtilTest;
 	VectorClockTest.class,
 	FileVersionDaoTest.class,
 	FileHistoryDaoTest.class,
+	FileContentDaoTest.class,
 	
 	// Operations
 	FileSystemActionComparatorTest.class,

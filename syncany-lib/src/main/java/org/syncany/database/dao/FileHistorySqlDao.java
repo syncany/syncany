@@ -90,7 +90,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	protected List<PartialFileHistory> createFileHistoriesFromResult(ResultSet resultSet) throws SQLException {
-		List<PartialFileHistory> fileHistories = null;
+		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();;
 		PartialFileHistory fileHistory = null;
 
 		while (resultSet.next()) {
@@ -103,11 +103,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			else { // New history!
 				fileHistory = new PartialFileHistory(fileHistoryId);
 				fileHistory.addFileVersion(lastFileVersion);
-			}
-
-			// Add to list
-			if (fileHistories == null) {
-				fileHistories = new ArrayList<PartialFileHistory>();
 			}
 			
 			fileHistories.add(fileHistory);

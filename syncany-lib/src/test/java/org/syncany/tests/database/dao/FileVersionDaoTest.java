@@ -50,7 +50,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getCurrentFileTree.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set2.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		Map<String, FileVersion> currentFileTree = fileVersionDao.getCurrentFileTree();
@@ -74,7 +74,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getFileTreeAtDate.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
@@ -147,7 +147,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getFileTreeAtDate.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
@@ -200,7 +200,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.fileversion.insert.getFileTreeAtDate.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		

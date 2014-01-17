@@ -195,14 +195,6 @@ public class SqlDatabase {
 	// File Content
 
 	public FileContent getFileContentByChecksum(FileChecksum fileChecksum, boolean includeChunkChecksums) {
-		return fileContentDao.getFileContentByChecksum(fileChecksum, includeChunkChecksums);
-	}
-
-	public FileContent getFileContentByChecksumWithoutChunkChecksums(FileChecksum fileChecksum) {
-		return fileContentDao.getFileContentByChecksumWithChunkChecksums(fileChecksum);
-	}
-
-	public FileContent getFileContentByChecksumWithChunkChecksums(FileChecksum fileChecksum) {
-		return fileContentDao.getFileContentByChecksumWithChunkChecksums(fileChecksum);
+		return fileContentDao.getFileContent(fileChecksum, includeChunkChecksums);
 	}
 }

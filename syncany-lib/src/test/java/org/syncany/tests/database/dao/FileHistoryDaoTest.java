@@ -40,8 +40,7 @@ public class FileHistoryDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		// TODO [low] This set is identical to test.fileversion.insert.getFileTreeAtDate.sql -- make new set!
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.filehistory.insert.set1.sql"); 
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql"); 
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
@@ -98,8 +97,7 @@ public class FileHistoryDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		// TODO [low] This set is identical to test.fileversion.insert.getFileTreeAtDate.sql -- make new set!
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.filehistory.insert.set1.sql"); 
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql"); 
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
@@ -146,7 +144,8 @@ public class FileHistoryDaoTest {
 		assertEquals("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", historiesFromA5.get(0).getFileId().toString());
 		assertEquals("ffffffffffffffffffffffffffffffffffffffff", historiesFromA5.get(0).getLastVersion().getChecksum().toString());
 				
-		assertNull(historiesFromDoesNotExist);
+		assertNotNull(historiesFromDoesNotExist);
+		assertEquals(0, historiesFromDoesNotExist.size());
 		
 		// Tear down
 		databaseConnection.close();
