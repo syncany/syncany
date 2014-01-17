@@ -1,5 +1,6 @@
 package org.syncany.gui;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -7,6 +8,7 @@ import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.SyncyngEvent;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
@@ -49,13 +51,17 @@ public class MainGUI {
 
 	public static void restoreWatchedFolders() {
 		logger.info("Restoring watched folders");
-		List<String> wf = Launcher.applicationConfiguration.getWatchedFolders();
-		if (wf == null) {
+		List<Profile> profiles = Launcher.applicationConfiguration.getProfiles();
+		if (profiles == null) {
 			return;
 		}
 
-		for (String folder : wf) {
-			ClientCommandFactory.handleWatch(folder, 3000);
+		for (Profile profil : profiles) {
+			File folderFile = new File(profil.getFolder());
+			
+			if (folderFile.exists()) {
+				ClientCommandFactory.handleWatch(profil.getFolder(), 3000);
+			}
 		}
 	}
 

@@ -141,8 +141,12 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		
 		WidgetDecorator.bold(introductionTextTitle);
 		WidgetDecorator.normal(
-			passwordAgainText, passwordAgainText, introductionText, passwordLabel, passwordLabelAgain, enableEncryption, chunckSize,
-			chunckSizeLabel, keyLengthLabel, algorithmLabel
+			introductionText, 
+			passwordAgainText, passwordLabel, passwordLabelAgain, passwordText, 
+			enableEncryption, 
+			algorithmLabel, cypherCombo, 
+			chunckSizeLabel, chunckSize, 
+			keylengthCombo, keyLengthLabel
 		);
 	}
 	

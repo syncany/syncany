@@ -87,12 +87,12 @@ public class DaemonCommandHandler {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	private static Map<String, String> handleInit(Map<String, Object> parameters) {
 		Map<String, String> ret;
 		
 		List<String> pluginArgs= new ArrayList<>();
 		
+		@SuppressWarnings("unchecked")
 		Map<String, String> args = (Map<String, String>)parameters.get("pluginArgs");
 		
 		for (String key : args.keySet()){
@@ -118,6 +118,7 @@ public class DaemonCommandHandler {
 				repoPath.mkdir();
 			}
 		}
+		
 		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, false, encrypted, false);
 		
 		try {
@@ -151,13 +152,14 @@ public class DaemonCommandHandler {
 		String pluginName = (String)parameters.get("pluginId");
 		String localDir = (String)parameters.get("localFolder");
 		String passsword =(String) parameters.get("password");
+		String url = (String) parameters.get("url");
 		
 		File localDirFile = new File(localDir);
 		if (!localDirFile.exists()){
 			localDirFile.mkdir();
 		}
 		
-		ConnectCommand ic = new ConnectCommand(pluginName, pluginArgs, localDir, passsword);
+		ConnectCommand ic = new ConnectCommand(url, pluginName, pluginArgs, localDir, passsword);
 		
 		try {
 			ic.execute();

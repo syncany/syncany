@@ -18,6 +18,7 @@
 package org.syncany.gui.config;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -55,8 +56,8 @@ public class ApplicationConfigurationTO {
 	@Element(name="proxyType", required=false)
 	private String proxyType;
 	
-	@ElementList(name="watchedFolders", required=false, type=String.class, entry="folder", inline=true)
-	private List<String> watchedFolders;
+	@ElementList(name="profiles", required=false, type=ProfileTO.class, entry="profile", inline=false)
+	private List<ProfileTO> profilesTO;
 
 	public static ApplicationConfigurationTO load(File file) throws Exception {
 		try {
@@ -129,17 +130,30 @@ public class ApplicationConfigurationTO {
 		this.proxyAuthType = proxyAuthType;
 	}
 
-	public List<String> getWatchedFolders() {
-		return watchedFolders;
+	public List<ProfileTO> getProfilesTO() {
+		return profilesTO;
 	}
-
-	public void setWatchedFolders(List<String> watchedFolders) {
-		this.watchedFolders = watchedFolders;
+	public void setProfilesTO(List<ProfileTO> profilesTO) {
+		this.profilesTO = profilesTO;
 	}
 	
 	public static ApplicationConfigurationTO getDefault() {
 		ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
 		acto.setProxyType(ProxyController.ProxyType.NONE.toString());
 		return acto;
+	}
+
+	public List<Profile> getProfiles() {
+		List<Profile> ret = new ArrayList<>();
+		if (profilesTO != null){
+			for (ProfileTO pto : profilesTO){
+				Profile p = new Profile();
+				p.setAutomaticSync(pto.isAutomaticSync());
+				p.setFolder(pto.getFolder());
+				p.setWatchInterval(pto.getWatchInterval());
+				ret.add(p);
+			}
+		}
+		return ret;
 	}
 }

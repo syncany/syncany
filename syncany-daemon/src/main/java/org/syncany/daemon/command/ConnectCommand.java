@@ -51,7 +51,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	private String pluginName;
 	private List<String> pluginArgs;
 	
-	public ConnectCommand(String pluginName, List<String> pluginArgs, String localDir, String password){
+	public ConnectCommand(String url, String pluginName, List<String> pluginArgs, String localDir, String password){
+		this.url = url;
 		this.localDir = localDir;
 		this.pluginArgs = pluginArgs;
 		this.password = password;

@@ -43,9 +43,13 @@ public class DaemonMessagesHandler {
 		case "daemon_command_result":
 			// test if daemon update
 			if (MainGUI.getClientIdentification().equals(clientId) && clientType.equals("syncany-gui")) {
-				InitCommandEvent ce = new InitCommandEvent((String) parameters.get("command_id"), (String) parameters.get("result"),
-						(String) parameters.get("share_link"), (String) parameters.get("localFolder"), "yes".equals((String) parameters
-								.get("share_link_encrypted")));
+				InitCommandEvent ce = new InitCommandEvent(
+					(String) parameters.get("command_id"), 
+					(String) parameters.get("result"),
+					(String) parameters.get("share_link"), 
+					(String) parameters.get("localFolder"), 
+					"yes".equals((String) parameters.get("share_link_encrypted"))
+				);
 				Launcher.getEventBus().post(ce);
 			}
 			break;

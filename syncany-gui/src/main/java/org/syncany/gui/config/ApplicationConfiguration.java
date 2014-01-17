@@ -32,19 +32,18 @@ public class ApplicationConfiguration {
 	private String proxyType;
 	private String proxyAuthType;
 	private boolean proxyAuth;
-	public List<String> watchedFolders;
+	public List<Profile> profiles;
 
-	public List<String> getWatchedFolders() {
-		return watchedFolders;
-	}
-	
-	public void addWatchedFolder(String folder){
-		if (watchedFolders == null) watchedFolders = new ArrayList<>();
-		if (!watchedFolders.contains(folder)) watchedFolders.add(folder);
+	public void addProfile(Profile profil){
+		if (profiles == null) profiles = new ArrayList<>();
+		if (!profiles.contains(profil)) profiles.add(profil);
 	}
 
-	public void setWatchedFolders(List<String> watchedFolders) {
-		this.watchedFolders = watchedFolders;
+	public void setProfiles(List<Profile> profiles) {
+		this.profiles = profiles;
+	}
+	public List<Profile> getProfiles() {
+		return profiles;
 	}
 	
 	public String getProxyHost() {
@@ -112,7 +111,7 @@ public class ApplicationConfiguration {
 		to.setProxyType(from.getProxyType());
 		to.setProxyUsername(from.getProxyUsername());
 		to.setProxyAuthType(from.getProxyAuthType());
-		to.setWatchedFolders(from.getWatchedFolders());
+		to.setProfiles(from.getProfiles());
 		return to;
 	}
 
@@ -124,7 +123,19 @@ public class ApplicationConfiguration {
 		from.setProxyPort(to.getProxyPort());
 		from.setProxyType(to.getProxyType());
 		from.setProxyAuthType(to.getProxyAuthType());
-		from.setWatchedFolders(to.getWatchedFolders());
+		from.setProfilesTO(to.getProfilesTO());
 		return from;
+	}
+
+	private List<ProfileTO> getProfilesTO() {
+		List<ProfileTO> ret = new ArrayList<>();
+		for (Profile p : profiles){
+			ProfileTO pto = new ProfileTO();
+			pto.setAutomaticSync(p.isAutomaticSync());
+			pto.setFolder(p.getFolder());
+			pto.setWatchInterval(pto.getWatchInterval());
+			ret.add(pto);
+		}
+		return ret;
 	}
 }

@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# author : Philipp C. Heckel <philipp.heckel@gmail.com> 
+# author : Vincent Wiencek <vwiencek@gmail.com>
 
 # Dependencies:
 # - python-appindicator

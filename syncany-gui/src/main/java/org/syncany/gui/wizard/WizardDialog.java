@@ -43,6 +43,7 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
+import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.InitCommandEvent;
 import org.syncany.gui.util.DialogUtil;
@@ -230,8 +231,13 @@ public class WizardDialog extends Dialog {
 						public void run() {
 							toggleButtons(false);
 							summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
+
+							Profile p = new Profile();
+							p.setFolder(folder);
+							p.setAutomaticSync(true);
+							p.setWatchInterval(3000);
 							
-							Launcher.applicationConfiguration.addWatchedFolder(folder);
+							Launcher.applicationConfiguration.addProfile(p);
 							Launcher.saveConfiguration();
 							ClientCommandFactory.handleWatch(folder, 3000);
 						}
@@ -247,7 +253,13 @@ public class WizardDialog extends Dialog {
 			case LOCAL_FOLDER_SELECTION:
 				SelectLocalFolder wp = (SelectLocalFolder)panels.get(selectedPanel);
 				String f = wp.getUserSelection().getCommonParameter(CommonParameters.LOCAL_FOLDER);
-				Launcher.applicationConfiguration.addWatchedFolder(f);
+				
+				Profile p = new Profile();
+				p.setFolder(f);
+				p.setAutomaticSync(true);
+				p.setWatchInterval(3000);
+				
+				Launcher.applicationConfiguration.addProfile(p);
 				Launcher.saveConfiguration();
 				ClientCommandFactory.handleWatch(f, 3000);
 				shell.dispose();

@@ -32,6 +32,7 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.util.I18n;
 
@@ -40,10 +41,10 @@ import org.syncany.util.I18n;
  * 
  */
 public class S3PluginPanel extends PluginPanel {
-	private Text accessKey;
-	private Text secretKey;
-	private Text bucket;
-	private Text location;
+	private Text accessKeyText;
+	private Text secretKeyText;
+	private Text bucketText;
+	private Text locationText;
 
 	/**
 	 * Create the composite.
@@ -74,32 +75,32 @@ public class S3PluginPanel extends PluginPanel {
 		accessKeyLabel.setLayoutData(gd_accessKeyLabel);
 		accessKeyLabel.setText(I18n.getString("plugin.s3.accessKey", true));
 		
-		accessKey = new Text(this, SWT.BORDER);
+		accessKeyText = new Text(this, SWT.BORDER);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
-		accessKey.setLayoutData(gd_hostText);
+		accessKeyText.setLayoutData(gd_hostText);
 		
 		Label secretKeyLabel =  new Label(this, SWT.NONE);
 		secretKeyLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		secretKeyLabel.setText(I18n.getString("plugin.s3.secretKey", true));
 		
-		secretKey =  new Text(this, SWT.BORDER);
-		secretKey.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		secretKeyText =  new Text(this, SWT.BORDER);
+		secretKeyText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
 		Label bucketLabel =  new Label(this, SWT.NONE);
 		bucketLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		bucketLabel.setText(I18n.getString("plugin.s3.bucket", true));
 		
-		bucket = new Text(this, SWT.BORDER);
-		bucket.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		bucketText = new Text(this, SWT.BORDER);
+		bucketText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
 		Label locationLabel =  new Label(this, SWT.NONE);
 		locationLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		locationLabel.setText(I18n.getString("plugin.s3.location", true));
 		
-		location = new Text(this, SWT.BORDER);
-		location.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		locationText = new Text(this, SWT.BORDER);
+		locationText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		
 		Composite buttonComposite = new Composite(this, SWT.NONE);
 		GridLayout gl_buttonComposite = new GridLayout(2, false);
@@ -123,15 +124,24 @@ public class S3PluginPanel extends PluginPanel {
 		gd_testButton.widthHint = 100;
 		testButton.setLayoutData(gd_testButton);
 		testButton.setText(I18n.getString("plugin.s3.testConnection"));
+		
+		WidgetDecorator.bold(introductionTitleLabel);
+		WidgetDecorator.normal(
+			introductionLabel, 
+			accessKeyLabel, accessKeyText, 
+			secretKeyLabel, secretKeyText, 
+			bucketLabel, bucketText, 
+			locationLabel, locationText
+		);
 	}
 
 	@Override
 	public UserInput getUserSelection() {
 		UserInput parameters = new UserInput();
-		parameters.putPluginParameter("accessKey", accessKey.getText());
-		parameters.putPluginParameter("secretKey", secretKey.getText());
-		parameters.putPluginParameter("bucket", bucket.getText());
-		parameters.putPluginParameter("location", location.getText());
+		parameters.putPluginParameter("accessKey", accessKeyText.getText());
+		parameters.putPluginParameter("secretKey", secretKeyText.getText());
+		parameters.putPluginParameter("bucket", bucketText.getText());
+		parameters.putPluginParameter("location", locationText.getText());
 		return parameters;
 	}
 
@@ -146,26 +156,26 @@ public class S3PluginPanel extends PluginPanel {
 		
 		OptionValidationResult res;
 		
-		res = poc.get("accessKey").validateInput(accessKey.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), accessKey);
+		res = poc.get("accessKey").validateInput(accessKeyText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), accessKeyText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
-		res = poc.get("secretKey").validateInput(secretKey.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), secretKey);
+		res = poc.get("secretKey").validateInput(secretKeyText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), secretKeyText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
-		res = poc.get("bucket").validateInput(bucket.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), bucket);
+		res = poc.get("bucket").validateInput(bucketText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), bucketText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
-		res = poc.get("location").validateInput(location.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), location);
+		res = poc.get("location").validateInput(locationText.getText());
+		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), locationText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}

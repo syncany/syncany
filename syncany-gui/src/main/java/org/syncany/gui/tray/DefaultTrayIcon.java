@@ -57,7 +57,6 @@ public class DefaultTrayIcon extends TrayIcon {
 
 	public DefaultTrayIcon(final Shell shell) {
 		super(shell);
-
 		buildTray();
 	}
 
@@ -136,9 +135,10 @@ public class DefaultTrayIcon extends TrayIcon {
 					Menu subMenu = new Menu(folderMenuItem);
 					folderMenuItem.setMenu(subMenu);
 					
-					MenuItem startMI = new MenuItem(subMenu, SWT.PUSH);
-					startMI.setText("pause");
-					startMI.addSelectionListener(new SelectionAdapter() {
+					final MenuItem pauseMI = new MenuItem(subMenu, SWT.PUSH);
+					pauseMI.setText("Pause");
+					pauseMI.setImage(SWTResourceManager.getImage("/images/tray/pause.png"));
+					pauseMI.addSelectionListener(new SelectionAdapter() {
 						@Override
 						public void widgetSelected(SelectionEvent e) {
 							pause(folder);
@@ -146,13 +146,16 @@ public class DefaultTrayIcon extends TrayIcon {
 					});
 					
 					MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
-					resumetMI.setText("resume");
+					resumetMI.setText("Resume");
+					resumetMI.setImage(SWTResourceManager.getImage("/images/tray/resume.png"));
 					resumetMI.addSelectionListener(new SelectionAdapter() {
 						@Override
 						public void widgetSelected(SelectionEvent e) {
 							resume(folder);
 						}
 					});
+					
+					new MenuItem(subMenu, SWT.SEPARATOR);
 					
 					MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
 					openMI.setText("open");
