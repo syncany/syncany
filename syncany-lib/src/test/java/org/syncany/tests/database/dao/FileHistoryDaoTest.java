@@ -34,7 +34,7 @@ import org.syncany.tests.util.TestSqlDatabaseUtil;
 
 public class FileHistoryDaoTest {	
 	@Test
-	public void testFileHistoriesForDatabase() throws Exception {
+	public void testGetFileHistoryWithLastVersionByIdAndPath() throws Exception {
 		// Setup
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
 		Connection databaseConnection = testConfig.createDatabaseConnection();
@@ -47,9 +47,13 @@ public class FileHistoryDaoTest {
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		
 		PartialFileHistory fileHistory1Deleted = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("851c441915478a539a5bab2b263ffa4cc48e282f"));
-		PartialFileHistory fileHistory1New = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
-		PartialFileHistory fileHistory2 = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("c021aecb2ae36f2a8430eb10309923454b93b61e"));
-		PartialFileHistory fileHistory3 = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("4fef2d605640813464792b18b16e1a5e07aa4e53"));
+		PartialFileHistory fileHistory1ByIdNew = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+		PartialFileHistory fileHistory2ById = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("c021aecb2ae36f2a8430eb10309923454b93b61e"));
+		PartialFileHistory fileHistory3ById = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("4fef2d605640813464792b18b16e1a5e07aa4e53"));
+		
+		PartialFileHistory fileHistory1ByPathNew = fileHistoryDao.getFileHistoryWithLastVersion("file1");
+		PartialFileHistory fileHistory2ByPath = fileHistoryDao.getFileHistoryWithLastVersion("file2");
+		PartialFileHistory fileHistory3ByPath = fileHistoryDao.getFileHistoryWithLastVersion("file3");
 				
 		// Test
 		
@@ -57,24 +61,30 @@ public class FileHistoryDaoTest {
 		assertNull(fileHistory1Deleted);
 		
 		// - File 1 (new)
-		assertNotNull(fileHistory1New);
-		assertEquals(1, fileHistory1New.getFileVersions().size());		
-		assertNotNull(fileHistory1New.getLastVersion().getChecksum());
-		assertEquals("ffffffffffffffffffffffffffffffffffffffff", fileHistory1New.getLastVersion().getChecksum().toString());		
-		assertEquals("rw-r--r--", fileHistory1New.getLastVersion().getPosixPermissions());
-		assertNull(fileHistory1New.getLastVersion().getDosAttributes());		
+		assertNotNull(fileHistory1ByPathNew);
+		assertEquals(1, fileHistory1ByPathNew.getFileVersions().size());		
+		assertNotNull(fileHistory1ByPathNew.getLastVersion().getChecksum());
+		assertEquals("ffffffffffffffffffffffffffffffffffffffff", fileHistory1ByPathNew.getLastVersion().getChecksum().toString());		
+		assertEquals("rw-r--r--", fileHistory1ByPathNew.getLastVersion().getPosixPermissions());
+		assertNull(fileHistory1ByPathNew.getLastVersion().getDosAttributes());		
 
+		assertEquals(fileHistory1ByIdNew, fileHistory1ByPathNew);
+		
 		// - File 2 
-		assertNotNull(fileHistory2);
-		assertEquals(1, fileHistory2.getFileVersions().size());		
-		assertNotNull(fileHistory2.getLastVersion().getChecksum());
-		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", fileHistory2.getLastVersion().getChecksum().toString());		
+		assertNotNull(fileHistory2ByPath);
+		assertEquals(1, fileHistory2ByPath.getFileVersions().size());		
+		assertNotNull(fileHistory2ByPath.getLastVersion().getChecksum());
+		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", fileHistory2ByPath.getLastVersion().getChecksum().toString());
+		
+		assertEquals(fileHistory2ById, fileHistory2ByPath);
 
-		// - File 3 )
-		assertNotNull(fileHistory3);
-		assertEquals(1, fileHistory3.getFileVersions().size());		
-		assertNotNull(fileHistory3.getLastVersion().getChecksum());
-		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", fileHistory3.getLastVersion().getChecksum().toString());		
+		// - File 3 
+		assertNotNull(fileHistory3ByPath);
+		assertEquals(1, fileHistory3ByPath.getFileVersions().size());		
+		assertNotNull(fileHistory3ByPath.getLastVersion().getChecksum());
+		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", fileHistory3ByPath.getLastVersion().getChecksum().toString());
+		
+		assertEquals(fileHistory3ById, fileHistory3ByPath);
 		
 		// Tear down
 		databaseConnection.close();
@@ -86,7 +96,6 @@ public class FileHistoryDaoTest {
 	 
 	  	fileHistoryDao.getFileHistoriesWithFileVersions()
 		fileHistoryDao.getFileHistoriesWithLastVersion()
-		fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum)		
-		fileHistoryDao.getFileHistoryWithLastVersion(relativePath)
+		fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum)				
 	 */
 }
