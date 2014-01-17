@@ -19,12 +19,15 @@ package org.syncany.gui.settings;
 
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.syncany.gui.config.ApplicationConfiguration;
 
 /**
  * @author vincent
  *
  */
 public class GeneralSettingsPanel extends Composite {
+	private ApplicationConfiguration configuration;
+	
 	/**
 	 * @param parent
 	 * @param style
@@ -39,4 +42,7 @@ public class GeneralSettingsPanel extends Composite {
 		
 	}
 
+	public void setApplicationParameters(ApplicationConfiguration configuration){
+		this.configuration = configuration;
+	}
 }

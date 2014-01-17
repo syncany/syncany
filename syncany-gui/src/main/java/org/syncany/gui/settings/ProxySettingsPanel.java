@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.SWTResourceManager;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ProxyController;
 import org.syncany.util.CollectionUtil;
@@ -62,7 +63,8 @@ public class ProxySettingsPanel extends Composite {
 	
 	private String[] proxyAuthValues = new String[] {"HTTP", "Socket 4", "Socket 5"};
 	private Label lblNewLabel;
-	private Label lblNewLabel_1;
+	private Label proxyIntroductionTitleLabel;
+	private Label proxyIntroductionLabel;
 	
 	/**
 	 * @param parent
@@ -76,13 +78,16 @@ public class ProxySettingsPanel extends Composite {
 	private void initComposite() {
 		setLayout(new GridLayout(2, false));
 		
-		lblNewLabel_1 = new Label(this, SWT.NONE);
-		lblNewLabel_1.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		lblNewLabel_1.setText(I18n.getString("dialog.settings.proxy.title", true));
+		proxyIntroductionTitleLabel = new Label(this, SWT.NONE);
+		proxyIntroductionTitleLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		proxyIntroductionTitleLabel.setText(I18n.getString("dialog.settings.proxy.introduction.title"));
+		
+		proxyIntroductionLabel = new Label(this, SWT.NONE);
+		proxyIntroductionLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		proxyIntroductionLabel.setText(I18n.getString("dialog.settings.proxy.introduction"));
 		
 		lblNewLabel = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
 		lblNewLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
-		lblNewLabel.setText("New Label");
 		
 		proxyTypeLabel = new Label(this, SWT.NONE);
 		proxyTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false, 1, 3));
@@ -180,8 +185,20 @@ public class ProxySettingsPanel extends Composite {
 		GridData gd_proxyPasswordText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_proxyPasswordText.heightHint = 20;
 		proxyPasswordText.setLayoutData(gd_proxyPasswordText);
+		
+		WidgetDecorator.bold(proxyIntroductionTitleLabel);
+		WidgetDecorator.normal(
+			proxyIntroductionLabel, 
+			proxyTypeLabel,
+			radioNoProxy, radioAutomaticProxy, radioManualProxy, 
+			proxyAuthTypeLabel, proxyAuthTypeCombo, proxyHostPortLabel,
+			proxyHostText, hostPortColonLabel,
+			proxyPortText, proxyAuthRadio,
+			proxyUsernameLabel, proxyPasswordLabel,
+			proxyUsernameText, proxyPasswordText
+		);
 	}
-
+	
 	/**
 	 * enables / disables username/password fields
 	 * depending on proxyAuthRadio selection
@@ -224,7 +241,13 @@ public class ProxySettingsPanel extends Composite {
 			radioAutomaticProxy.getSelection() ? ProxyController.ProxyType.DEFAULT.toString() :
 			ProxyController.ProxyType.PROXY.toString()
 		);
-		params.put("proxy.authType", proxyAuthTypeCombo.getItem(proxyAuthTypeCombo.getSelectionIndex()).toString());
+		
+		int idx = proxyAuthTypeCombo.getSelectionIndex();
+		
+		if (idx != -1){
+			params.put("proxy.authType", proxyAuthTypeCombo.getItem(idx).toString());
+		}
+		
 		params.put("proxy.port", proxyPortText.getText());
 		return params;
 	}

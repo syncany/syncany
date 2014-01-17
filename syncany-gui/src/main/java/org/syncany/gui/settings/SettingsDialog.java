@@ -50,8 +50,29 @@ import org.syncany.util.I18n;
  *
  */
 public class SettingsDialog extends Dialog {
+	private ApplicationConfiguration applicationConfiguration;
+	
 	protected Object result;
 	protected Shell shell;
+
+	private Composite composite;
+	private StackLayout stackLayout;
+	private Tree tree;
+	private TreeItem menuItemGeneral;
+	private TreeItem menuItemProxy;
+	private TreeItem menuItemAccount;
+	private TreeItem menuItemOptions;
+	
+	private Composite defaultPanel;
+	
+	private GeneralSettingsPanel generalSettingsPanel;
+	private ProxySettingsPanel proxySettingsPanel;
+	private AccountSettingsPanel accountSettingsPanel;
+	
+	private Label horizontalSeparatorLabel;
+	private Label lblNewLabel_1;
+	private Label optionsMessageTitleLabel;
+	private Label optionsMessageLabel;
 
 	/**
 	 * Create the dialog.
@@ -84,12 +105,14 @@ public class SettingsDialog extends Dialog {
 		return result;
 	}
 	
-	private void updateContent() {
-		proxySettingsPanel.setApplicationParameters(Launcher.applicationConfiguration);
+	public void setApplicationConfiguration(ApplicationConfiguration applicationConfiguration) {
+		this.applicationConfiguration = applicationConfiguration;
 	}
-
-	public static void main(String[] args) {
-		new SettingsDialog(new Shell(), SWT.APPLICATION_MODAL).open();
+	
+	private void updateContent() {
+		proxySettingsPanel.setApplicationParameters(applicationConfiguration);
+		generalSettingsPanel.setApplicationParameters(applicationConfiguration);
+		accountSettingsPanel.setApplicationParameters(applicationConfiguration);
 	}
 
 	/**
@@ -237,22 +260,4 @@ public class SettingsDialog extends Dialog {
 			}
 		}
 	}
-
-	private Composite composite;
-	private StackLayout stackLayout;
-	private Tree tree;
-	private TreeItem menuItemGeneral;
-	private TreeItem menuItemProxy;
-	private TreeItem menuItemAccount;
-	private TreeItem menuItemOptions;
-	
-	private Composite defaultPanel;
-	private Composite generalSettingsPanel;
-	private ProxySettingsPanel proxySettingsPanel;
-	private Composite accountSettingsPanel;
-	
-	private Label horizontalSeparatorLabel;
-	private Label lblNewLabel_1;
-	private Label optionsMessageTitleLabel;
-	private Label optionsMessageLabel;
 }
