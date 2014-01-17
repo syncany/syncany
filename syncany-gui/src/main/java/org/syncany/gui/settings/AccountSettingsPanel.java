@@ -4,6 +4,12 @@ import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
 import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.FileTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -20,6 +26,7 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.Profile;
+import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.I18n;
 
@@ -87,6 +94,25 @@ public class AccountSettingsPanel extends Composite {
 		deleteProfileButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
 				handleDeleteProfile();
+			}
+		});
+		
+		DropTarget dt = new DropTarget(table, DND.DROP_DEFAULT | DND.DROP_MOVE );
+		dt.setTransfer(new Transfer[] { FileTransfer.getInstance() });
+		dt.addDropListener(new DropTargetAdapter() {
+			public void drop(DropTargetEvent event) {
+				String fileList[] = null;
+				FileTransfer ft = FileTransfer.getInstance();
+				if (ft.isSupportedType(event.currentDataType)) {
+					fileList = (String[])event.data;
+					
+					for (String s : fileList){
+						ClientCommandFactory.handleWatch(s, 3000);
+						
+					}
+				}
+				
+				updateTable();
 			}
 		});
 		
