@@ -56,6 +56,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			preparedStatement.setLong(2, databaseVersionId);
 
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 
 			fileVersionDao.writeFileVersions(connection, fileHistory.getFileId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
@@ -65,12 +66,12 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
 	 */
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql")) {
 			preparedStatement.setString(1, databaseVersionVectorClock.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-			return createFileHistoriesFromResult(resultSet);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createFileHistoriesFromResult(resultSet);
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -78,11 +79,10 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithFileVersions.sql");
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			return createFileHistoriesFromResult(resultSet);
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithFileVersions.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createFileHistoriesFromResult(resultSet);
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -125,20 +125,19 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithLastVersion.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
 			preparedStatement.setString(1, relativePath);
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-				FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-
-				PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-				fileHistory.addFileVersion(lastFileVersion);
-
-				return fileHistory;
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
+	
+					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
+					fileHistory.addFileVersion(lastFileVersion);
+	
+					return fileHistory;
+				}
 			}
 
 			return null;
@@ -151,18 +150,17 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
 
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithLastVersion.sql");
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			while (resultSet.next()) {
-				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-				FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-
-				PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-				fileHistory.addFileVersion(lastFileVersion);
-
-				fileHistories.add(fileHistory);
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithLastVersion.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
+	
+					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
+					fileHistory.addFileVersion(lastFileVersion);
+	
+					fileHistories.add(fileHistory);
+				}
 			}
 
 			return fileHistories;
@@ -175,20 +173,19 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
 		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
 
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithLastVersionByChecksum.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithLastVersionByChecksum.sql")) {
 			preparedStatement.setString(1, fileContentChecksum.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			while (resultSet.next()) {
-				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-				FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-
-				PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-				fileHistory.addFileVersion(lastFileVersion);
-
-				currentFileTree.add(fileHistory);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
+	
+					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
+					fileHistory.addFileVersion(lastFileVersion);
+	
+					currentFileTree.add(fileHistory);
+				}
 			}
 
 			return currentFileTree;

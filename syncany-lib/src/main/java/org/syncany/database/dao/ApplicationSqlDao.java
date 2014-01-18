@@ -48,20 +48,20 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		
 		preparedStatement.executeBatch();
 		connection.commit();
+		preparedStatement.close();
 	}
 	
 	public List<String> getKnownDatabases() {
 		List<String> knownDatabases = new ArrayList<String>();
 		
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getKnownDatabases.sql");					
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			while (resultSet.next()) {
-				knownDatabases.add(resultSet.getString("database_name"));
+		
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getKnownDatabases.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {		
+				while (resultSet.next()) {
+					knownDatabases.add(resultSet.getString("database_name"));
+				}
+				return knownDatabases;
 			}
-
-			return knownDatabases;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
