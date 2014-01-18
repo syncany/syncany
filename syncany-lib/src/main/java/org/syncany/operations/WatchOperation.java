@@ -115,7 +115,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				Thread.sleep(options.getInterval());
 			}
 			catch (Exception e) {
-				logger.log(Level.INFO, "Sync FAILED, waiting {0} seconds ...", options.getInterval() / 1000);
+				logger.log(Level.INFO, String.format("Sync FAILED, waiting %d seconds ...", options.getInterval() / 1000), e);
 				Thread.sleep(options.getInterval());
 			}
 		}

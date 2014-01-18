@@ -138,7 +138,7 @@ public class Config {
 	private void initChunker(RepoTO repoTO) throws Exception {
 		// TODO [feature request] make chunking options configurable
 		chunker = new MimeTypeChunker(
-			new FixedChunker(16*1024, "SHA1"),
+			new FixedChunker(64*1024, "SHA1"),
 			new FixedChunker(2*1024*1024, "SHA1"),
 			Arrays.asList(new String[] {
 				"application/x-gzip",
@@ -148,6 +148,7 @@ public class Config {
 				"application/octet-stream",
 				"application/x-sharedlib",
 				"application/x-executable",
+				"application/x-iso9660-image",
 				"image/.+",
 				"audio/.+",
 				"video/.+",				
