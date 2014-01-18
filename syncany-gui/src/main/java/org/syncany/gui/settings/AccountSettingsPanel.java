@@ -29,6 +29,7 @@ import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.messaging.EventManager;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.I18n;
@@ -140,9 +141,9 @@ public class AccountSettingsPanel extends Composite {
 			@Override
 			public void run() {
 				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
-				Launcher.getEventBus().register(wd);
+				EventManager.register(wd);
 				wd.open();
-				Launcher.getEventBus().unregister(wd);
+				EventManager.unregister(wd);
 				updateTable();
 			}
 		});

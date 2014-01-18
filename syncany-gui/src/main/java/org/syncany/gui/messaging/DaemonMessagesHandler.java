@@ -19,7 +19,6 @@ package org.syncany.gui.messaging;
 
 import java.util.Map;
 
-import org.syncany.gui.Launcher;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.event.InitCommandEvent;
 import org.syncany.gui.messaging.event.SyncyngEvent;
@@ -50,14 +49,14 @@ public class DaemonMessagesHandler {
 					(String) parameters.get("localFolder"), 
 					"yes".equals((String) parameters.get("share_link_encrypted"))
 				);
-				Launcher.getEventBus().post(ce);
+				EventManager.post(ce);
 			}
 			break;
 
 		case "update_watched_folders":
 			// TODO[medium]: try not to use unsafe casting .....
 			WatchUpdateEvent wue = new WatchUpdateEvent((Map<String, Map<String, String>>) parameters.get("folders"));
-			Launcher.getEventBus().post(wue);
+			EventManager.post(wue);
 			break;
 
 		case "update_syncing_state":
@@ -69,7 +68,7 @@ public class DaemonMessagesHandler {
 			else if (syncingState.equals("in-sync")) {
 				se.setState(SyncyngState.SYNCED);
 			}
-			Launcher.getEventBus().post(se);
+			EventManager.post(se);
 			break;
 		}
 	}

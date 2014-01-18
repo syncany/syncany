@@ -28,9 +28,8 @@ import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.ProxyController;
 import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.messaging.EventManager;
 import org.syncany.util.I18n;
-
-import com.google.common.eventbus.EventBus;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -41,15 +40,10 @@ public class Launcher {
 
 	public static ApplicationConfiguration applicationConfiguration;
 
-	private static EventBus eventBus = new EventBus("syncany-gui");
 	private static MainGUI window;
 
 	static {
 		Logging.init();
-	}
-
-	public static EventBus getEventBus() {
-		return eventBus;
 	}
 
 	public static void main(String[] args) {
@@ -137,7 +131,7 @@ public class Launcher {
 		log.info("Starting Graphical User Interface");
 
 		window = new MainGUI();
-		Launcher.getEventBus().register(window);
+		EventManager.register(window);
 		MainGUI.restoreWatchedFolders();
 		window.open();
 	}
