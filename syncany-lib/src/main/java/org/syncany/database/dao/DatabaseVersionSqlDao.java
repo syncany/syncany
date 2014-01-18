@@ -68,9 +68,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public void markDatabaseVersion(DatabaseVersionHeader databaseVersionHeader, DatabaseVersionStatus status) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/update.markDatabaseVersion.sql");
-
+		try (PreparedStatement preparedStatement = getStatement("/sql/update.markDatabaseVersion.sql")){
 			preparedStatement.setString(1, status.toString());
 			preparedStatement.setString(2, databaseVersionHeader.getVectorClock().toString());
 
@@ -94,24 +92,27 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
-		PreparedStatement preparedStatement = connection.prepareStatement(
-				DatabaseConnectionFactory.getStatement("/sql/insert.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS);
-
-		preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
-		preparedStatement.setTimestamp(2, new Timestamp(databaseVersion.getHeader().getDate().getTime()));
-		preparedStatement.setString(3, databaseVersion.getHeader().getClient());
-		preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
-
-		preparedStatement.executeUpdate();
-
 		long databaseVersionId = -1;
-		ResultSet resultSet = preparedStatement.getGeneratedKeys();
-
-		if (resultSet.next()) {
-			databaseVersionId = resultSet.getLong(1);
-		}
-		else {
-			throw new SQLException("Cannot get new database version ID");
+		try(PreparedStatement preparedStatement = connection.prepareStatement(
+				DatabaseConnectionFactory.getStatement("/sql/insert.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
+	
+			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
+			preparedStatement.setTimestamp(2, new Timestamp(databaseVersion.getHeader().getDate().getTime()));
+			preparedStatement.setString(3, databaseVersion.getHeader().getClient());
+			preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
+	
+			preparedStatement.executeUpdate();
+	
+			
+			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
+				
+				if (resultSet.next()) {
+					databaseVersionId = resultSet.getLong(1);
+				}
+				else {
+					throw new SQLException("Cannot get new database version ID");
+				}
+			}
 		}
 
 		writeVectorClock(connection, databaseVersionId, databaseVersion.getVectorClock());
@@ -131,18 +132,18 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setLong(3, vectorClockEntry.getValue());
 
 			preparedStatement.executeUpdate();
+			preparedStatement.close();
 		}
 	}
 
 	public Long getMaxDirtyVectorClock(String machineName) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getMaxDirtyVectorClock.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMaxDirtyVectorClock.sql")) {
 			preparedStatement.setString(1, machineName);
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				return resultSet.getLong("logicaltime");
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getLong("logicaltime");
+				}
 			}
 
 			return null;
@@ -153,8 +154,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Iterator<DatabaseVersion> getDatabaseVersions(DatabaseVersionStatus status) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsByStatus.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsByStatus.sql")) {
 			preparedStatement.setString(1, status.toString());
 
 			return new DatabaseVersionIteration(preparedStatement.executeQuery());
@@ -165,9 +165,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsTo.sql");
-
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsTo.sql")) {
 			preparedStatement.setString(1, machineName);
 			preparedStatement.setLong(2, maxLocalClientVersion);
 
@@ -248,15 +246,14 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getLastDatabaseVersionHeader.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getLastDatabaseVersionHeader.sql")) {
 			preparedStatement.setMaxRows(1);
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
-				return databaseVersionHeader;
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
+					return databaseVersionHeader;
+				}
 			}
 
 			return null;
@@ -279,40 +276,39 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public DatabaseBranch getLocalDatabaseBranch() {
 		DatabaseBranch databaseBranch = new DatabaseBranch();
 
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getLocalDatabaseBranch.sql");
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			DatabaseVersionHeader currentDatabaseVersionHeader = null;
-			int currentDatabaseVersionHeaderId = -1;
-
-			while (resultSet.next()) {
-				int databaseVersionHeaderId = resultSet.getInt("id");
-
-				// Row does NOT belong to the current database version
-				if (currentDatabaseVersionHeader == null || currentDatabaseVersionHeaderId != databaseVersionHeaderId) {
-					// Add to database branch
-					if (currentDatabaseVersionHeader != null) {
-						databaseBranch.add(currentDatabaseVersionHeader);
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getLocalDatabaseBranch.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				DatabaseVersionHeader currentDatabaseVersionHeader = null;
+				int currentDatabaseVersionHeaderId = -1;
+	
+				while (resultSet.next()) {
+					int databaseVersionHeaderId = resultSet.getInt("id");
+	
+					// Row does NOT belong to the current database version
+					if (currentDatabaseVersionHeader == null || currentDatabaseVersionHeaderId != databaseVersionHeaderId) {
+						// Add to database branch
+						if (currentDatabaseVersionHeader != null) {
+							databaseBranch.add(currentDatabaseVersionHeader);
+						}
+	
+						// Make a new database version header
+						currentDatabaseVersionHeader = new DatabaseVersionHeader();
+						currentDatabaseVersionHeader.setClient(resultSet.getString("client"));
+						currentDatabaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
+	
+						currentDatabaseVersionHeaderId = databaseVersionHeaderId;
 					}
-
-					// Make a new database version header
-					currentDatabaseVersionHeader = new DatabaseVersionHeader();
-					currentDatabaseVersionHeader.setClient(resultSet.getString("client"));
-					currentDatabaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
-
-					currentDatabaseVersionHeaderId = databaseVersionHeaderId;
+	
+					currentDatabaseVersionHeader.getVectorClock().setClock(resultSet.getString("vc_client"), resultSet.getLong("vc_logicaltime"));
 				}
-
-				currentDatabaseVersionHeader.getVectorClock().setClock(resultSet.getString("vc_client"), resultSet.getLong("vc_logicaltime"));
+	
+				// Add to database branch
+				if (currentDatabaseVersionHeader != null) {
+					databaseBranch.add(currentDatabaseVersionHeader);
+				}
+	
+				return databaseBranch;
 			}
-
-			// Add to database branch
-			if (currentDatabaseVersionHeader != null) {
-				databaseBranch.add(currentDatabaseVersionHeader);
-			}
-
-			return databaseBranch;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -330,7 +326,8 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		while (resultSet.next()) {
 			vectorClock.setClock(resultSet.getString("client"), resultSet.getLong("logicaltime"));
 		}
-
+		resultSet.close();
+		preparedStatement.close();
 		return vectorClock;
 	}
 
@@ -356,22 +353,26 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	private void removeDirtyVectorClocks() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyVectorClocks.sql");
-		preparedStatement.executeUpdate();		
+		preparedStatement.executeUpdate();
+		preparedStatement.close();
 	}
 	
 	private void removeDirtyDatabaseVersionsInt() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyDatabaseVersionsInt.sql");
 		preparedStatement.executeUpdate();		
+		preparedStatement.close();
 	}
 
 	private void removeDirtyFileHistories() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyFileHistories.sql");
 		preparedStatement.executeUpdate();
+		preparedStatement.close();
 	}
 
 	private void removeDirtyFileVersions() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyFileVersions.sql");
-		preparedStatement.executeUpdate();		
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
 	}
 
 	private void removeDirtyFileContents() {
@@ -382,6 +383,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	private void removeDirtyChunks() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyUnreferencedChunks.sql");
 		preparedStatement.executeUpdate();
+		preparedStatement.close();
 	}
 
 	private void removeDirtyMultiChunks() throws SQLException {

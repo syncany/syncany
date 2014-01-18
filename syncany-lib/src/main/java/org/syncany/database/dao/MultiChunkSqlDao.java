@@ -52,7 +52,7 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 
 			preparedStatement.setString(1, multiChunk.getId().toString());
 			preparedStatement.executeUpdate();
-						
+			preparedStatement.close();
 			writeMultiChunkRefs(connection, multiChunk);			
 		}
 	}
@@ -68,6 +68,7 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 		
 		preparedStatement.executeBatch();
+		preparedStatement.close();
 	}
 	
 	public List<MultiChunkEntry> getMultiChunksForFileChecksum(FileChecksum fileChecksum) {
@@ -75,21 +76,21 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 			return new ArrayList<MultiChunkEntry>();			
 		}
 		else {
-			try {
-				PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksForFileChecksum.sql");
+			try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksForFileChecksum.sql")) {
 				preparedStatement.setString(1, fileChecksum.toString());
 	
-				ResultSet resultSet = preparedStatement.executeQuery();
-				List<MultiChunkEntry> multiChunkEntries = new ArrayList<MultiChunkEntry>();
-				
-				while (resultSet.next()) {
-					MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
-					MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					List<MultiChunkEntry> multiChunkEntries = new ArrayList<MultiChunkEntry>();
 					
-					multiChunkEntries.add(multiChunkEntry);
+					while (resultSet.next()) {
+						MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+						MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
+						
+						multiChunkEntries.add(multiChunkEntry);
+					}
+		
+					return multiChunkEntries;
 				}
-	
-				return multiChunkEntries;
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(e);
@@ -98,14 +99,13 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	}	
 	
 	public Map<MultiChunkId, MultiChunkEntry> getMultiChunksForDatabaseVersion(VectorClock vectorClock) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksWithChunksForDatabaseVersion.sql");
-			
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksWithChunksForDatabaseVersion.sql")) {
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-			return createMultiChunkEntries(resultSet);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createMultiChunkEntries(resultSet);
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -137,17 +137,16 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	}
 	
 	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunkChecksum) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkForChunk.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkForChunk.sql")) {
 			preparedStatement.setString(1, chunkChecksum.toString());
 					
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
-				MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
-				
-				return multiChunkEntry;
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+					MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);
+					
+					return multiChunkEntry;
+				}
 			}
 
 			return null;
@@ -158,17 +157,15 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	}
 	
 	public MultiChunkEntry getMultiChunkWithStatus(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkWithStatus.sql");
-			
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkWithStatus.sql")) {
 			preparedStatement.setString(1, status.toString());
 			preparedStatement.setString(2, multiChunkId.toString());
 					
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);				
-				return multiChunkEntry;
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);				
+					return multiChunkEntry;
+				}
 			}
 
 			return null;

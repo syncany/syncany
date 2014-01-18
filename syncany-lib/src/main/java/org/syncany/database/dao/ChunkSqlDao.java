@@ -56,6 +56,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 			}
 			
 			preparedStatement.executeBatch();
+			preparedStatement.close();
 		}
 	}
 	
@@ -68,11 +69,10 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 	
 	private void loadChunkCache() {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql");
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			chunkCache = createChunkEntries(resultSet);
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql")){
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				chunkCache = createChunkEntries(resultSet);
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -80,19 +80,19 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 	
 	public Map<ChunkChecksum, ChunkEntry> getChunksForDatabaseVersion(VectorClock vectorClock) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql");			
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql")){
 			
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-			return createChunkEntries(resultSet);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createChunkEntries(resultSet);
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}	
+	}
 	
 	protected Map<ChunkChecksum, ChunkEntry> createChunkEntries(ResultSet resultSet) throws SQLException {
 		Map<ChunkChecksum, ChunkEntry> chunks = new HashMap<ChunkChecksum, ChunkEntry>();
