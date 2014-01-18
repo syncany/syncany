@@ -50,7 +50,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 			preparedStatement.setLong(2, fileContent.getSize());
 			
 			preparedStatement.executeUpdate();
-					
+			preparedStatement.close();		
 			writeFileContentChunkRefs(connection, fileContent);			
 		}
 	}
@@ -71,18 +71,18 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		}
 		
 		preparedStatement.executeBatch();
+		preparedStatement.close();
 	}
 
 	public Map<FileChecksum, FileContent> getFileContents(VectorClock vectorClock) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql");			
-
+		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql")) {
+			
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			return createFileContents(resultSet);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createFileContents(resultSet);
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -130,19 +130,18 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private FileContent getFileContentWithoutChunkChecksums(FileChecksum fileChecksum) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithoutChunkChecksums.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithoutChunkChecksums.sql")) {
 			preparedStatement.setString(1, fileChecksum.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				FileContent fileContent = new FileContent();
-
-				fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
-				fileContent.setSize(resultSet.getLong("size"));
-
-				return fileContent;
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					FileContent fileContent = new FileContent();
+	
+					fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
+					fileContent.setSize(resultSet.getLong("size"));
+	
+					return fileContent;
+				}
 			}
 
 			return null;
@@ -153,27 +152,27 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private FileContent getFileContentWithChunkChecksums(FileChecksum fileChecksum) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithChunkChecksums.sql");				
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithChunkChecksums.sql")) {
 			preparedStatement.setString(1, fileChecksum.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-			FileContent fileContent = null;
-			
-			while (resultSet.next()) {
-				if (fileContent == null) {
-					fileContent = new FileContent();
-					
-					fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
-					fileContent.setSize(resultSet.getLong("size"));
-				}
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				FileContent fileContent = null;
 				
-				// Add chunk references
-				ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum"));
-				fileContent.addChunk(chunkChecksum);
+				while (resultSet.next()) {
+					if (fileContent == null) {
+						fileContent = new FileContent();
+						
+						fileContent.setChecksum(FileChecksum.parseFileChecksum(resultSet.getString("checksum")));
+						fileContent.setSize(resultSet.getLong("size"));
+					}
+					
+					// Add chunk references
+					ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum"));
+					fileContent.addChunk(chunkChecksum);
+				}
+	
+				return fileContent;
 			}
-
-			return fileContent;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

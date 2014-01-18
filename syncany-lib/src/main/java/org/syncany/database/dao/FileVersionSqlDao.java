@@ -76,11 +76,11 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}				
 		
 		preparedStatement.executeBatch();
+		preparedStatement.close();
 	}
 	
 	public Map<String, FileVersion> getCurrentFileTree() {		
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getCurrentFileTree.sql");		
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getCurrentFileTree.sql")) {
 			return getFileTree(preparedStatement);				
 		}
 		catch (SQLException e) {
@@ -89,9 +89,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public Map<String, FileVersion> getFileTreeAtDate(Date date) {		
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileTreeAtDate.sql");
-			
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileTreeAtDate.sql")) {
 			preparedStatement.setTimestamp(1, new Timestamp(date.getTime()));
 			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
 			
@@ -105,9 +103,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	private Map<String, FileVersion> getFileTree(PreparedStatement preparedStatement) {
 		Map<String, FileVersion> fileTree = new HashMap<String, FileVersion>();
 
-		try {
-			ResultSet resultSet = preparedStatement.executeQuery();
-
+		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) {
 				FileVersion fileVersion = createFileVersionFromRow(resultSet);
 				fileTree.put(fileVersion.getPath(), fileVersion);
@@ -121,14 +117,12 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public FileVersion getFileVersionByPath(String path) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByPath.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByPath.sql")) {
 			preparedStatement.setString(1, path);
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				return createFileVersionFromRow(resultSet);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return createFileVersionFromRow(resultSet);
+				}
 			}
 
 			return null;
@@ -139,14 +133,13 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
-		try {
-			PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByFileHistoryId.sql");
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByFileHistoryId.sql")) {
 			preparedStatement.setString(1, fileHistoryId.toString());
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {
-				return createFileVersionFromRow(resultSet);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return createFileVersionFromRow(resultSet);
+				}
 			}
 
 			return null;
