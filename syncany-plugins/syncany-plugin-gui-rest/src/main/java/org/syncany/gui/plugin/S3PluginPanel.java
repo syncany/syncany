@@ -182,4 +182,9 @@ public class S3PluginPanel extends PluginPanel {
 		
 		return valid;
 	}
+
+	@Override
+	public String getPluginId() {
+		return "s3";
+	}
 }

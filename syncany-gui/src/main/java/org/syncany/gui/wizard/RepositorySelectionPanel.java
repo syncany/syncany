@@ -40,6 +40,7 @@ import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
+import org.syncany.gui.panel.PluginPanel.PluginPanelPurpose;
 import org.syncany.util.I18n;
 import org.syncany.util.StringUtil;
 
@@ -157,7 +158,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 				Class<?> classDefinition = Class.forName(pluginPanelClassName);
 				Constructor<?> cons = classDefinition.getConstructor(type);
 				Object[] obj = { pluginStackComposite, SWT.NONE};
-				
+
 				PluginPanel pluginPanel = (PluginPanel) cons.newInstance(obj);
 				panels.put(p.getId(), pluginPanel);
 			}
@@ -188,7 +189,12 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		PluginPanel ppanel = panels.get(id);
 		stackLayout.topControl = ppanel;
 		pluginStackComposite.layout();
-		ppanel.setAction(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION));
+		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
+		
+		if (action != null){
+			PluginPanelPurpose purpose = PluginPanelPurpose.valueOf(action.toUpperCase());
+			ppanel.setPurpose(purpose);
+		}
 	}
 
 	@Override
@@ -239,6 +245,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	@Override
 	public void updateData() {
 		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
+		
 		boolean url = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL)) ? true : false;
 		
 		if (action.equals("create")  || (action.equals("connect") && !url)){

@@ -141,4 +141,9 @@ public class WebdavPluginPanel extends PluginPanel {
 		
 		return valid;
 	}
+
+	@Override
+	public String getPluginId() {
+		return "webdav";
+	}
 }

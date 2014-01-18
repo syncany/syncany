@@ -17,7 +17,12 @@
  */
 package org.syncany.gui.panel;
 
+import java.util.Map;
+
 import org.eclipse.swt.widgets.Composite;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.StorageException;
 
 
 /**
@@ -25,7 +30,12 @@ import org.eclipse.swt.widgets.Composite;
  *
  */
 public abstract class PluginPanel extends Composite implements UserParametersChecker {
-	protected String action;
+	public enum PluginPanelPurpose {
+		CREATE,
+		CONNECT;
+	}
+	
+	protected PluginPanelPurpose purpose;
 	
 	/**
 	 * @param parent
@@ -35,17 +45,30 @@ public abstract class PluginPanel extends Composite implements UserParametersChe
 		super(parent, style);
 	}
 	
-	/**
-	 * @return the action
-	 */
-	public String getAction() {
-		return action;
+	public PluginPanelPurpose getPurpose() {
+		return purpose;
+	}
+	public void setPurpose(PluginPanelPurpose purpose) {
+		this.purpose = purpose;
 	}
 	
-	/**
-	 * @param action the action to set
-	 */
-	public void setAction(String action) {
-		this.action = action;
+	public boolean testPluginConnection(){
+		try {
+			Map<String, String> params = getUserSelection().getPluginParameters();
+			Connection connection = Plugins.get(getPluginId()).createConnection();
+			connection.init(params);
+			connection.createTransferManager().connect();
+			return true;
+		}
+		catch (StorageException se){
+			return false;
+		}
 	}
+	
+	// Anstract Methods
+	
+	/**
+	 * Returns <code>Plugin</code> id
+	 */
+	public abstract String getPluginId();
 }

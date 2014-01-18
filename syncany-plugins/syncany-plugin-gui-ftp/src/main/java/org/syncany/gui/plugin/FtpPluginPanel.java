@@ -17,11 +17,6 @@
  */
 package org.syncany.gui.plugin;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.util.logging.Logger;
-
-import org.apache.commons.net.ftp.FTPClient;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -50,9 +45,6 @@ import org.syncany.util.I18n;
  *
  */
 public class FtpPluginPanel extends PluginPanel {
-	private static final Logger log = Logger.getLogger(FtpPluginPanel.class.getSimpleName());
-	private static final int TIMEOUT_CONNECT = 5000;
-	
 	private Text hostText;
 	private Text usernameText;
 	private Text passwordText;
@@ -158,12 +150,12 @@ public class FtpPluginPanel extends PluginPanel {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				testFtpButton.setEnabled(false);
-				final boolean test = testFtpConnection();
+				final boolean isValid = isValid() && testPluginConnection();
 				testFtpButton.setEnabled(true);
 				
 				Display.getCurrent().syncExec(new Runnable() {
 				    public void run() {
-				    	if (test){
+				    	if (isValid){
 				    		testResultLabel.setText(I18n.getString("plugin.ftp.testSucceed"));
 				    	}
 				    	else{
@@ -184,29 +176,6 @@ public class FtpPluginPanel extends PluginPanel {
 			pathLabel,pathText,
 			testFtpButton
 		);
-	}
-
-	protected boolean testFtpConnection() {
-		FTPClient ftp = new FTPClient();
-
-		ftp.setConnectTimeout(TIMEOUT_CONNECT);
-
-		try{
-			ftp.connect(hostText.getText(), Integer.parseInt(portSpinner.getText()));
-			boolean success = ftp.login(usernameText.getText(), passwordText.getText());
-			ftp.disconnect();
-			return success;
-		}
-		catch (NumberFormatException e){
-			log.warning("NumberFormatException "+e.toString());
-		}
-		catch (SocketException e) {
-			log.warning("SocketException "+e.toString());
-		}
-		catch (IOException e) {
-			log.warning("IOException "+e.toString());
-		}
-		return false;
 	}
 
 	@Override
@@ -262,5 +231,10 @@ public class FtpPluginPanel extends PluginPanel {
 		}
 		
 		return valid;
+	}
+
+	@Override
+	public String getPluginId() {
+		return "ftp";
 	}
 }

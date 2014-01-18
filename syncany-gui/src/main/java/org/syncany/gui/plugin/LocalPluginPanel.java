@@ -120,10 +120,9 @@ public class LocalPluginPanel extends PluginPanel {
 		testLocalRepositoryButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				
 				Display.getCurrent().syncExec(new Runnable() {
 				    public void run() {
-				    	boolean isValid = isValid();
+				    	boolean isValid = isValid() && testPluginConnection();
 				    	
 				    	if (isValid){
 				    		testResultLabel.setText(I18n.getString("plugin.local.validDirectory"));
@@ -170,23 +169,27 @@ public class LocalPluginPanel extends PluginPanel {
 		}
 		
 		String folder = pathText.getText();
-		String action = getAction();
     	
     	if (folder == null || folder.length() == 0){
     		valid = false;
     	}
     	
-    	if (action.equals("connect")){
+    	if (getPurpose().equals(PluginPanelPurpose.CONNECT)){
     		if (!FileUtil.isExistingFolder(getShell(), folder)){
     			valid = false;
     		}
     	}
-    	else if (action.equals("create")){
+    	else if (getPurpose().equals(PluginPanelPurpose.CREATE)){
     		if (!FileUtil.isExistingAndEmptyFolder(getShell(), folder)){
     			valid = false;
     		}
     	}
     	SWTUtil.markAs(valid, pathText);
     	return valid;
+	}
+
+	@Override
+	public String getPluginId() {
+		return "local";
 	}
 }
