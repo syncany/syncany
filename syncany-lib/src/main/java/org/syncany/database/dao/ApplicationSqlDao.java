@@ -60,8 +60,9 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 				while (resultSet.next()) {
 					knownDatabases.add(resultSet.getString("database_name"));
 				}
+				
 				return knownDatabases;
-			}
+			}  
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

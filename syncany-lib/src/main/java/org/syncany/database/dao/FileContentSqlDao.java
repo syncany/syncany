@@ -90,7 +90,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private Map<FileChecksum, FileContent> createFileContents(ResultSet resultSet) throws SQLException {
-		Map<FileChecksum, FileContent> fileContents = new HashMap<FileChecksum, FileContent>();;		
+		Map<FileChecksum, FileContent> fileContents = new HashMap<FileChecksum, FileContent>();	
 		FileChecksum currentFileChecksum = null;
 		
 		while (resultSet.next()) {		

@@ -185,7 +185,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 					fileHistory.addFileVersion(lastFileVersion);
 	
 					currentFileTree.add(fileHistory);
-				}
+				}	
 			}
 
 			return currentFileTree;

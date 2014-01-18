@@ -35,13 +35,13 @@ import org.syncany.database.VectorClock;
  *
  */
 public class ChunkSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(ChunkSqlDao.class.getSimpleName());	
-	private Map<ChunkChecksum, ChunkEntry> chunkCache; 
+	protected static final Logger logger = Logger.getLogger(ChunkSqlDao.class.getSimpleName());
+	private Map<ChunkChecksum, ChunkEntry> chunkCache;
 
 	public ChunkSqlDao(Connection connection) {
 		super(connection);
 		this.chunkCache = null;
-	}		
+	}
 
 	// TODO [low] Mark "no commit"
 	public void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
@@ -54,34 +54,34 @@ public class ChunkSqlDao extends AbstractSqlDao {
 
 				preparedStatement.addBatch();
 			}
-			
+
 			preparedStatement.executeBatch();
 			preparedStatement.close();
 		}
 	}
-	
+
 	public ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		if (chunkCache == null) {
 			loadChunkCache();
 		}
-		
+
 		return chunkCache.get(chunkChecksum);
 	}
-	
+
 	private void loadChunkCache() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql")){
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				chunkCache = createChunkEntries(resultSet);
 			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
-		}		
+		}
 	}
-	
+
 	public Map<ChunkChecksum, ChunkEntry> getChunksForDatabaseVersion(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql")){
-			
+		try (PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql")) {
+
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
@@ -93,15 +93,15 @@ public class ChunkSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	protected Map<ChunkChecksum, ChunkEntry> createChunkEntries(ResultSet resultSet) throws SQLException {
 		Map<ChunkChecksum, ChunkEntry> chunks = new HashMap<ChunkChecksum, ChunkEntry>();
-		
+
 		while (resultSet.next()) {
-			ChunkEntry chunkEntry = createChunkEntryFromRow(resultSet);				
+			ChunkEntry chunkEntry = createChunkEntryFromRow(resultSet);
 			chunks.put(chunkEntry.getChecksum(), chunkEntry);
 		}
-		
+
 		return chunks;
 	}
 

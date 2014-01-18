@@ -93,6 +93,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
 		long databaseVersionId = -1;
+		
 		try(PreparedStatement preparedStatement = connection.prepareStatement(
 				DatabaseConnectionFactory.getStatement("/sql/insert.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 	
@@ -101,11 +102,9 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setString(3, databaseVersion.getHeader().getClient());
 			preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
 	
-			preparedStatement.executeUpdate();
-	
+			preparedStatement.executeUpdate();	
 			
-			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
-				
+			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {				
 				if (resultSet.next()) {
 					databaseVersionId = resultSet.getLong(1);
 				}
@@ -326,8 +325,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		while (resultSet.next()) {
 			vectorClock.setClock(resultSet.getString("client"), resultSet.getLong("logicaltime"));
 		}
+		
 		resultSet.close();
 		preparedStatement.close();
+		
 		return vectorClock;
 	}
 
@@ -390,5 +391,4 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		//PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyMultiChunks.sql");
 		//preparedStatement.executeUpdate();
 	}
-
 }
