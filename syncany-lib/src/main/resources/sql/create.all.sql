@@ -26,7 +26,7 @@ CREATE CACHED TABLE databaseversion_vectorclock (
 CREATE CACHED TABLE filecontent (
   checksum varchar(40) NOT NULL,
   size bigint NOT NULL,
-  CONSTRAINT pk_checksum PRIMARY KEY (checksum)
+  PRIMARY KEY (checksum)
 );
 
 CREATE CACHED TABLE filecontent_chunk (
