@@ -3,6 +3,8 @@ package org.syncany.gui.settings;
 import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
 import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
 
+import java.io.File;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
@@ -27,8 +29,11 @@ import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.I18n;
+
+import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -106,9 +111,13 @@ public class AccountSettingsPanel extends Composite {
 				if (ft.isSupportedType(event.currentDataType)) {
 					fileList = (String[])event.data;
 					
-					for (String s : fileList){
-						ClientCommandFactory.handleWatch(s, 3000);
-						
+					for (String fileName : fileList){
+						File folder = new File(fileName);
+						File configFolder = new File(folder, ".syncany");
+						if (folder.exists() && configFolder.exists()){
+							ClientCommandFactory.handleWatch(folder.getAbsolutePath(), 3000);
+							ClientCommandFactory.updateProfiles(folder.getAbsolutePath(), 3000);
+						}
 					}
 				}
 				
@@ -120,6 +129,11 @@ public class AccountSettingsPanel extends Composite {
 		WidgetDecorator.normal(introductionLabel, table, deleteProfileButton);
 	}
 
+	@Subscribe
+	public void updateInterface(WatchUpdateEvent event) {
+		Launcher.saveConfiguration();
+		updateTable();
+	}
 	
 	protected void handleAddProfile() {
 		getShell().getDisplay().asyncExec(new Runnable() {

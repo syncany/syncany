@@ -179,8 +179,10 @@ public abstract class TrayIcon {
 			@Override
 			public void run() {
 				SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
+				Launcher.getEventBus().register(wd);
 				wd.setApplicationConfiguration(Launcher.applicationConfiguration);
 				wd.open();
+				Launcher.getEventBus().unregister(wd);
 			}
 		});
 	}

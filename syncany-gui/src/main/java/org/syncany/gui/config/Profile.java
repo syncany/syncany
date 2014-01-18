@@ -46,4 +46,11 @@ public class Profile {
 	public void setWatchInterval(int watchInterval) {
 		this.watchInterval = watchInterval;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return obj != null 
+			&& (obj instanceof Profile) 
+			&& ((Profile)obj).getFolder().equals(this.getFolder());
+	}
 }

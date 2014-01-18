@@ -35,8 +35,12 @@ public class ApplicationConfiguration {
 	public List<Profile> profiles;
 
 	public void addProfile(Profile profil){
-		if (profiles == null) profiles = new ArrayList<>();
-		if (!profiles.contains(profil)) profiles.add(profil);
+		if (profiles == null) {
+			profiles = new ArrayList<>();
+		}
+		if (!profiles.contains(profil)) {
+			profiles.add(profil);
+		}
 	}
 
 	public void setProfiles(List<Profile> profiles) {

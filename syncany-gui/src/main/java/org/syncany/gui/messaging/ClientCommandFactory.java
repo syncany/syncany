@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.syncany.gui.CommonParameters;
+import org.syncany.gui.Launcher;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.config.Profile;
 
 public class ClientCommandFactory {
 	private static WebsocketClient client;
@@ -54,6 +56,16 @@ public class ClientCommandFactory {
 		command.put("localfolder", folder);
 		command.put("interval", ""+interval);
 		client.handleCommand(command);
+	}
+	
+	public static void updateProfiles(String folder, int watchInterval){
+		Profile p = new Profile();
+		p.setFolder(folder);
+		p.setAutomaticSync(true);
+		p.setWatchInterval(watchInterval);
+		
+		Launcher.applicationConfiguration.addProfile(p);
+		Launcher.saveConfiguration();
 	}
 	
 	public static void handlePauseWatch(String folder) {
