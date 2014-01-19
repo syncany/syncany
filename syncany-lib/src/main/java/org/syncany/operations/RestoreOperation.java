@@ -83,7 +83,7 @@ public class RestoreOperation extends Operation {
 				FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
 				
 				if (restoreFileChecksum != null) {
-					multiChunksToDownload.addAll(localDatabase.getMultiChunksForFileChecksum(restoreFileChecksum));
+					multiChunksToDownload.addAll(localDatabase.getMultiChunksWithoutChunkChecksums(restoreFileChecksum));
 				}
 			}
 		}

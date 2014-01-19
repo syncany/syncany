@@ -296,7 +296,7 @@ public class DownOperation extends Operation {
 		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
 
 		// First: Check if we know this file locally!
-		List<MultiChunkEntry> multiChunkEntries = localDatabase.getMultiChunksForFileChecksum(fileVersion.getChecksum());
+		List<MultiChunkEntry> multiChunkEntries = localDatabase.getMultiChunksWithoutChunkChecksums(fileVersion.getChecksum());
 		
 		if (multiChunkEntries.size() > 0) {
 			multiChunksToDownload.addAll(multiChunkEntries);
@@ -313,7 +313,7 @@ public class DownOperation extends Operation {
 				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
 
 				for (ChunkChecksum chunkChecksum : fileChunks) {
-					MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
+					MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkWithoutChunkChecksums(chunkChecksum);
 					// TODO [high] Performance: This queries the database for every chunk, SLOWWW!
 					
 					if (multiChunkForChunk == null) {

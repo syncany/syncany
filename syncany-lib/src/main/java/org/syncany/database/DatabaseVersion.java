@@ -47,7 +47,7 @@ public class DatabaseVersion {
     private DatabaseVersionHeader header; 
     
     public enum DatabaseVersionStatus {
-    	MASTER, DIRTY, PRUNED
+    	MASTER, DIRTY
     }
     
     // Full DB in RAM

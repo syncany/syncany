@@ -170,16 +170,16 @@ public class SqlDatabase {
 
 	// Multi Chunk
 
-	public List<MultiChunkEntry> getMultiChunksForFileChecksum(FileChecksum fileChecksum) {
-		return multiChunkDao.getMultiChunksForFileChecksum(fileChecksum);
+	public List<MultiChunkEntry> getMultiChunksWithoutChunkChecksums(FileChecksum fileChecksum) {
+		return multiChunkDao.getMultiChunksWithoutChunkChecksums(fileChecksum);
 	}
 
-	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunkChecksum) {
-		return multiChunkDao.getMultiChunkForChunk(chunkChecksum);
+	public MultiChunkEntry getMultiChunkWithoutChunkChecksums(ChunkChecksum chunkChecksum) {
+		return multiChunkDao.getMultiChunkWithoutChunkChecksums(chunkChecksum);
 	}
 
-	public MultiChunkEntry getMultiChunkWithStatus(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
-		return multiChunkDao.getMultiChunkWithStatus(multiChunkId, status);
+	public MultiChunkEntry getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
+		return multiChunkDao.getMultiChunkByStatusWithoutChunkChecksums(multiChunkId, status);
 	}
 
 	// Chunk

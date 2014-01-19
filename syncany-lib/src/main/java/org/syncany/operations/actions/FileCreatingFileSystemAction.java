@@ -111,7 +111,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
-				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
+				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkWithoutChunkChecksums(chunkChecksum);
 
 				if (multiChunkForChunk == null) {
 					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);

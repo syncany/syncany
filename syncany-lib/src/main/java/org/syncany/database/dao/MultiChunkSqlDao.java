@@ -71,12 +71,15 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}
 	
-	public List<MultiChunkEntry> getMultiChunksForFileChecksum(FileChecksum fileChecksum) {
+	/**
+	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
+	 */
+	public List<MultiChunkEntry> getMultiChunksWithoutChunkChecksums(FileChecksum fileChecksum) {
 		if (fileChecksum == null) {
 			return new ArrayList<MultiChunkEntry>();			
 		}
 		else {
-			try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksForFileChecksum.sql")) {
+			try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunksForFileChecksum.sql")) {
 				preparedStatement.setString(1, fileChecksum.toString());
 	
 				try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -98,8 +101,11 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}	
 	
-	public Map<MultiChunkId, MultiChunkEntry> getMultiChunksForDatabaseVersion(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunksWithChunksForDatabaseVersion.sql")) {
+	/**
+	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
+	 */
+	public Map<MultiChunkId, MultiChunkEntry> getMultiChunksWithChunkChecksums(VectorClock vectorClock) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunksWithChunksForDatabaseVersion.sql")) {
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
@@ -136,8 +142,11 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		return multiChunkEntries;
 	}
 	
-	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunkChecksum) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkForChunk.sql")) {
+	/**
+	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
+	 */
+	public MultiChunkEntry getMultiChunkWithoutChunkChecksums(ChunkChecksum chunkChecksum) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkForChunk.sql")) {
 			preparedStatement.setString(1, chunkChecksum.toString());
 					
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -156,8 +165,8 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public MultiChunkEntry getMultiChunkWithStatus(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMultiChunkWithStatus.sql")) {
+	public MultiChunkEntry getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkByStatusWithoutChunkChecksums.sql")) {
 			preparedStatement.setString(1, status.toString());
 			preparedStatement.setString(2, multiChunkId.toString());
 					

@@ -285,7 +285,7 @@ public class UpOperation extends Operation {
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			MultiChunkEntry dirtyMultiChunkEntry = localDatabase.getMultiChunkWithStatus(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
+			MultiChunkEntry dirtyMultiChunkEntry = localDatabase.getMultiChunkByStatusWithoutChunkChecksums(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
 			
 			if (dirtyMultiChunkEntry != null) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
