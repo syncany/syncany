@@ -30,7 +30,8 @@ public enum CommonParameters {
 	URL("url", false),
 	ENCRYPTION_ALGORITHM("algorithm", false, "AES", "TwoFish"), 
 	ENCRYPTION_KEYLENGTH("keylength", false, "128", "256"), 
-	ENCRYPTION_PASSWORD("password", true), 
+	ENCRYPTION_PASSWORD("password", true),
+	CHUNCK_SIZE("chunck_size", false),
 	LOCAL_FOLDER("localFolder", true),
 	PLUGIN_ID("pluginId", true), 
 	COMMAND_ID("command_id", false);

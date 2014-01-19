@@ -43,6 +43,16 @@ import org.syncany.operations.InitOperation.InitOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
+/**
+
+ [1] AES/GCM/NoPadding, 128 bit
+ [2] Twofish/GCM/NoPadding, 128 bit
+ [3] AES/GCM/NoPadding, 256 bit
+ [4] Twofish/GCM/NoPadding, 256 bit
+ 
+ * @author vwiencek
+ *
+ */
 public class InitCommand extends AbstractInitCommand implements InitOperationListener {
 	public static final int REPO_ID_LENGTH = 32;
 	public static final int[] DEFAULT_CIPHER_SUITE_IDS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
@@ -50,19 +60,19 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
 	private String password;
-	private boolean advancedModeEnabled;
 	private boolean encryptionEnabled;
 	private boolean gzipEnabled;
 	private String localDir;
+	private int chunckSize;
 	private List<String> pluginArgs;
 	private String pluginName;
 	
-	public InitCommand(String pluginName, List<String> pluginArgs, String localDir, String password, boolean advancedModeEnabled, boolean encryptionEnabled, boolean gzipEnabled){
+	public InitCommand(String pluginName, List<String> pluginArgs, String localDir, String password, boolean encryptionEnabled, boolean gzipEnabled, int chunckSize){
 		this.password = password;
+		this.chunckSize = chunckSize;
 		this.pluginName = pluginName;
 		this.pluginArgs = pluginArgs;
 		this.localDir = localDir;
-		this.advancedModeEnabled = advancedModeEnabled;
 		this.encryptionEnabled = encryptionEnabled;
 		this.gzipEnabled = gzipEnabled;
 	}
@@ -79,14 +89,14 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 		ConnectionTO connectionTO = initPluginWithOptions(pluginName, pluginArgs);
 		
-		List<CipherSpec> cipherSpecs = new ArrayList<>();
+		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
 		List<TransformerTO> transformersTO = getTransformersTO(gzipEnabled, cipherSpecs);
-				
-			
+		
 		ConfigTO configTO = createConfigTO(new File(localDir), null, connectionTO);		
+		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
 		operationOptions.setLocalDir(new File(localDir));
@@ -99,6 +109,16 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		return operationOptions;
 	}		
+	
+	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled) throws Exception {
+		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
+		
+		if (encryptionEnabled) {
+			cipherSpecs = CipherSpecs.getDefaultCipherSpecs();					
+		}
+		
+		return cipherSpecs;
+	}
 
 	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
 		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
@@ -148,7 +168,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		multichunkerTO.setType(ZipMultiChunker.TYPE); 
 		multichunkerTO.setSettings(new HashMap<String, String>());
-		multichunkerTO.getSettings().put(ZipMultiChunker.PROPERTY_SIZE, "512");
+		multichunkerTO.getSettings().put(ZipMultiChunker.PROPERTY_SIZE, this.chunckSize+"");
 		
 		return multichunkerTO;		
 	}
@@ -170,7 +190,6 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
 		cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, cipherSuitesIdStr);
-		// Note: Property 'password' is added dynamically by CommandLineClient
 
 		TransformerTO cipherTransformerTO = new TransformerTO();
 		cipherTransformerTO.setType(CipherTransformer.TYPE);

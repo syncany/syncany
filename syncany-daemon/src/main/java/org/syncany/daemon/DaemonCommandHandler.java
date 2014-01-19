@@ -102,6 +102,9 @@ public class DaemonCommandHandler {
 		String pluginName = (String)parameters.get("pluginId");
 		String localDir = (String)parameters.get("localFolder");
 		String passsword =(String) parameters.get("password");
+		int chunkSize = Integer.parseInt((String)parameters.get("chunck_size"));
+		
+		boolean gzip = "yes".equals((String)parameters.get("gzip"));
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
 		
 		// Creation of local Syncany folder
@@ -119,7 +122,7 @@ public class DaemonCommandHandler {
 			}
 		}
 		
-		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, false, encrypted, false);
+		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize);
 		
 		try {
 			GenlinkOperationResult result = ic.execute().getGenLinkResult();

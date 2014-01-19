@@ -25,10 +25,9 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.syncany.gui.config.ApplicationConfiguration;
-import org.eclipse.swt.widgets.Label;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class GeneralSettingsPanel extends Composite {
