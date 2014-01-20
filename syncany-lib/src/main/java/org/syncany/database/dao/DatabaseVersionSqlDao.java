@@ -82,8 +82,12 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
 		try {
+			// Insert & commit database version
 			writeDatabaseVersion(connection, databaseVersion);
 			connection.commit();
+			
+			// Clear local caches
+			chunkDao.clearCache();
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "SQL Error: ", e);
@@ -164,9 +168,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsTo.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.master.getDatabaseVersionsTo.sql")) {
 			preparedStatement.setString(1, machineName);
-			preparedStatement.setLong(2, maxLocalClientVersion);
+			preparedStatement.setString(2, machineName);
+			preparedStatement.setLong(3, maxLocalClientVersion);
 
 			return new DatabaseVersionIteration(preparedStatement.executeQuery());
 		}

@@ -178,8 +178,8 @@ public class SqlDatabase {
 		return multiChunkDao.getMultiChunkWithoutChunkChecksums(chunkChecksum);
 	}
 
-	public MultiChunkEntry getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
-		return multiChunkDao.getMultiChunkByStatusWithoutChunkChecksums(multiChunkId, status);
+	public List<MultiChunkId> getDirtyMultiChunkIds() {
+		return multiChunkDao.getDirtyMultiChunkIds();
 	}
 
 	// Chunk

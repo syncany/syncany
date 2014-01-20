@@ -69,8 +69,10 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 	
 	public synchronized void clearCache() {
-		chunkCache.clear();
-		chunkCache = null;
+		if (chunkCache != null) {
+			chunkCache.clear();
+			chunkCache = null;
+		}
 	}
 
 	private void loadChunkCache() {

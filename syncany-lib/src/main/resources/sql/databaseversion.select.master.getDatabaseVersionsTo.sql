@@ -4,6 +4,6 @@ where
 	dbvm.client=?
 	and dbvm.id <= (
 		select id from databaseversion_master
-		where client_version=?
+		where client=? and client_version=?
 	)
 order by dbvm.id	 

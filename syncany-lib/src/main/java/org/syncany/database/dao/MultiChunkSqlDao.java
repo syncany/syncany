@@ -48,7 +48,7 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 
 	public void writeMultiChunks(Connection connection, Collection<MultiChunkEntry> multiChunks) throws SQLException {
 		for (MultiChunkEntry multiChunk : multiChunks) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeMultiChunks.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "/sql/multichunk.insert.all.writeMultiChunks.sql");
 
 			preparedStatement.setString(1, multiChunk.getId().toString());
 			preparedStatement.executeUpdate();
@@ -58,7 +58,7 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	}
 
 	private void writeMultiChunkRefs(Connection connection, MultiChunkEntry multiChunk) throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/insert.writeMultiChunkRefs.sql");
+		PreparedStatement preparedStatement = getStatement("/sql/multichunk.insert.all.writeMultiChunkRefs.sql");
 		
 		for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
 			preparedStatement.setString(1, multiChunk.getId().toString());
@@ -165,19 +165,17 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public MultiChunkEntry getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId multiChunkId, DatabaseVersionStatus status) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkByStatusWithoutChunkChecksums.sql")) {
-			preparedStatement.setString(1, status.toString());
-			preparedStatement.setString(2, multiChunkId.toString());
-					
+	public List<MultiChunkId> getDirtyMultiChunkIds() {
+		List<MultiChunkId> dirtyMultiChunkIds = new ArrayList<MultiChunkId>();		
+		
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.dirty.getDirtyMultiChunkIds.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				if (resultSet.next()) {
-					MultiChunkEntry multiChunkEntry = new MultiChunkEntry(multiChunkId);				
-					return multiChunkEntry;
+				while (resultSet.next()) {
+					dirtyMultiChunkIds.add(MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id")));
 				}
+				
+				return dirtyMultiChunkIds;
 			}
-
-			return null;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

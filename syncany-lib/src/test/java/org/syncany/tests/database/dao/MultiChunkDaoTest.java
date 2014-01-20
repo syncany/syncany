@@ -29,7 +29,6 @@ import java.util.Map;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
@@ -86,7 +85,7 @@ public class MultiChunkDaoTest {
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		
 		Map<MultiChunkId, MultiChunkEntry> multiChunksA6 = multiChunkDao.getMultiChunksWithChunkChecksums(TestDatabaseUtil.createVectorClock("A6"));
-		Map<MultiChunkId, MultiChunkEntry> multiChunksA8B3 = multiChunkDao.getMultiChunksWithChunkChecksums(TestDatabaseUtil.createVectorClock("A8,B3"));		
+		Map<MultiChunkId, MultiChunkEntry> multiChunksA7B2 = multiChunkDao.getMultiChunksWithChunkChecksums(TestDatabaseUtil.createVectorClock("A7,B2"));		
 
 		// Test
 		
@@ -103,13 +102,13 @@ public class MultiChunkDaoTest {
 		));
 				
 		// - Database version "A8,B3"		
-		assertNotNull(multiChunksA8B3);
-		assertEquals(1, multiChunksA8B3.size());
+		assertNotNull(multiChunksA7B2);
+		assertEquals(1, multiChunksA7B2.size());
 		
-		MultiChunkEntry multiChunkInA8B3 = multiChunksA8B3.get(MultiChunkId.parseMultiChunkId("51aaca5c1280b1cf95cff8a3266a6bb44b482ad4"));
+		MultiChunkEntry multiChunkInA7B2 = multiChunksA7B2.get(MultiChunkId.parseMultiChunkId("51aaca5c1280b1cf95cff8a3266a6bb44b482ad4"));
 		
-		assertEquals("51aaca5c1280b1cf95cff8a3266a6bb44b482ad4", multiChunkInA8B3.getId().toString());
-		assertTrue(CollectionUtil.containsExactly(multiChunkInA8B3.getChunks(), 
+		assertEquals("51aaca5c1280b1cf95cff8a3266a6bb44b482ad4", multiChunkInA7B2.getId().toString());
+		assertTrue(CollectionUtil.containsExactly(multiChunkInA7B2.getChunks(), 
 			ChunkChecksum.parseChunkChecksum("0fecbac8ac8a5f8b7aa12b2741a4ef5db88c5dea"),
 			ChunkChecksum.parseChunkChecksum("38a18897e94a901b833e750e8604d9616a02ca84"),
 			ChunkChecksum.parseChunkChecksum("47dded182d31799267f12eb9864cdc11127b3352"),
@@ -176,7 +175,7 @@ public class MultiChunkDaoTest {
 	}
 	
 	@Test
-	public void testGetMultiChunkWithStatus() throws Exception {
+	public void testGetDirtyMultiChunks() throws Exception {
 		// Setup
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
 		Connection databaseConnection = testConfig.createDatabaseConnection();
@@ -185,20 +184,13 @@ public class MultiChunkDaoTest {
 		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
-
-		MultiChunkEntry multiChunk1Dirty = multiChunkDao.getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId.parseMultiChunkId("1234567890987654321123456789098765433222"), DatabaseVersionStatus.DIRTY);
-		MultiChunkEntry multiChunk1MasterNonExistent = multiChunkDao.getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId.parseMultiChunkId("1234567890987654321123456789098765433222"), DatabaseVersionStatus.MASTER);
-		
-		MultiChunkEntry multiChunk2Master = multiChunkDao.getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId.parseMultiChunkId("e2a3f6bea38fcc90a35654f3500333115cf67943"), DatabaseVersionStatus.MASTER);
-		MultiChunkEntry multiChunk2DirtyNonExistent = multiChunkDao.getMultiChunkByStatusWithoutChunkChecksums(MultiChunkId.parseMultiChunkId("e2a3f6bea38fcc90a35654f3500333115cf67943"), DatabaseVersionStatus.DIRTY);
-		
+		List<MultiChunkId> dirtyMultiChunkIds = multiChunkDao.getDirtyMultiChunkIds();
+				
 		// Test
-		assertNotNull(multiChunk1Dirty);
-		assertNull(multiChunk1MasterNonExistent);
+		assertNotNull(dirtyMultiChunkIds);
+		assertEquals(1, dirtyMultiChunkIds.size());
+		assertEquals(MultiChunkId.parseMultiChunkId("1234567890987654321123456789098765433222"), dirtyMultiChunkIds.get(0));
 		
-		assertNotNull(multiChunk2Master);
-		assertNull(multiChunk2DirtyNonExistent);
-
 		// Tear down
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);

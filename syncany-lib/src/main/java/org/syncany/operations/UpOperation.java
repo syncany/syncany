@@ -42,6 +42,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
@@ -284,10 +285,10 @@ public class UpOperation extends Operation {
 	}
 
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
+		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
+		
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			MultiChunkEntry dirtyMultiChunkEntry = localDatabase.getMultiChunkByStatusWithoutChunkChecksums(multiChunkEntry.getId(), DatabaseVersionStatus.DIRTY);
-			
-			if (dirtyMultiChunkEntry != null) {
+			if (dirtyMultiChunkIds.contains(multiChunkEntry.getId())) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
 			}
 			else {

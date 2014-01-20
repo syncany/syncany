@@ -75,20 +75,6 @@ import org.syncany.tests.util.StringUtilTest;
 	LocalConnectionPluginTest.class,
 	UploadInterruptedTest.class,
 	
-	// Database
-	MemoryDatabaseCacheTest.class,
-	DatabaseReconciliatorTest.class,
-	FileVersionComparatorTest.class,
-	XmlDatabaseDaoTest.class,
-	VectorClockTest.class,
-	FileVersionDaoTest.class,
-	FileHistoryDaoTest.class,
-	FileContentDaoTest.class,
-	MultiChunkDaoTest.class,
-	ApplicationDaoTest.class,
-	ChunkDaoTest.class,
-	DatabaseVersionDaoTest.class,
-	
 	// Operations
 	FileSystemActionComparatorTest.class,
 	IndexerTest.class,
