@@ -95,12 +95,12 @@ public class LsRemoteOperation extends Operation {
 			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 				String clientName = remoteDatabaseFile.getClientName();
 				Long knownClientVersion = knownDatabaseVersions.getClock(clientName);
-						
+                
 				if (knownClientVersion != null) {
 					if (remoteDatabaseFile.getClientVersion() <= knownClientVersion) {
 						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteDatabaseFile.getName());
 					}
-					else if (knownDatabases.contains(remoteDatabaseFile.getName())) {
+					else if (knownDatabases.contains(remoteDatabaseFile)) {
 						logger.log(Level.INFO, "- Remote database {0} is already known (in knowndbs.list). Ignoring.", remoteDatabaseFile.getName());
 					}
 					else {
