@@ -18,10 +18,12 @@
 package org.syncany.gui.config;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -33,7 +35,7 @@ import org.simpleframework.xml.core.Persister;
  */
 @Root(name="syncany-gui-config")
 public class ApplicationConfigurationTO {
-	private static final Logger log = Logger.getLogger(ApplicationConfigurationTO.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(ApplicationConfigurationTO.class.getSimpleName());
 	
 	@Element(name="proxyHost", required=false)
 	private String proxyHost;
@@ -64,7 +66,7 @@ public class ApplicationConfigurationTO {
 			return new Persister().read(ApplicationConfigurationTO.class, file);
 		}
 		catch (Exception ex) {
-			log.warning("Application configuration file does not exist or is invalid: " + file);
+			logger.warning("Application configuration file does not exist or is invalid: " + file);
 			throw ex;
 		}
 	}
@@ -148,10 +150,13 @@ public class ApplicationConfigurationTO {
 		if (profilesTO != null){
 			for (ProfileTO pto : profilesTO){
 				Profile p = new Profile();
-				p.setAutomaticSync(pto.isAutomaticSync());
-				p.setFolder(pto.getFolder());
-				p.setWatchInterval(pto.getWatchInterval());
-				ret.add(p);
+				try {
+					BeanUtils.copyProperties(p, pto);
+					ret.add(p);
+				}
+				catch (IllegalAccessException | InvocationTargetException e) {
+					logger.warning("IllegalAccessException " + e);
+				}
 			}
 		}
 		return ret;

@@ -17,14 +17,20 @@
  */
 package org.syncany.gui.config;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
+
+import org.apache.commons.beanutils.BeanUtils;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class ApplicationConfiguration {
+	private static final Logger logger = Logger.getLogger(ApplicationConfiguration.class.getName());
+	
 	private String proxyHost;
 	private String proxyPort;
 	private String proxyUsername;
@@ -108,36 +114,44 @@ public class ApplicationConfiguration {
 	
 	public static ApplicationConfiguration from(ApplicationConfigurationTO from) {
 		ApplicationConfiguration to = new ApplicationConfiguration();
-		to.setProxyAuth(from.isProxyAuth());
-		to.setProxyHost(from.getProxyHost());
-		to.setProxyPassword(from.getProxyPassword());
-		to.setProxyPort(from.getProxyPort());
-		to.setProxyType(from.getProxyType());
-		to.setProxyUsername(from.getProxyUsername());
-		to.setProxyAuthType(from.getProxyAuthType());
-		to.setProfiles(from.getProfiles());
+		try {
+			BeanUtils.copyProperties(to, from);
+			to.setProfiles(from.getProfiles());
+		}
+		catch (IllegalAccessException e) {
+			logger.warning("IllegalAccessException " + e);
+		}
+		catch (InvocationTargetException e) {
+			logger.warning("InvocationTargetException " + e);
+		}
 		return to;
 	}
 
 	public static ApplicationConfigurationTO toTO(ApplicationConfiguration to) {
 		ApplicationConfigurationTO from = new ApplicationConfigurationTO();
-		from.setProxyAuth(to.isProxyAuth());
-		from.setProxyHost(to.getProxyHost());
-		from.setProxyPassword(to.getProxyPassword());
-		from.setProxyPort(to.getProxyPort());
-		from.setProxyType(to.getProxyType());
-		from.setProxyAuthType(to.getProxyAuthType());
-		from.setProfilesTO(to.getProfilesTO());
+		try {
+			BeanUtils.copyProperties(from, to);
+			from.setProfilesTO(to.getProfilesTO());
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			logger.warning("IllegalAccessException " + e);
+		}
+		
 		return from;
 	}
 
 	private List<ProfileTO> getProfilesTO() {
 		List<ProfileTO> ret = new ArrayList<>();
+		
 		for (Profile p : profiles){
 			ProfileTO pto = new ProfileTO();
-			pto.setAutomaticSync(p.isAutomaticSync());
-			pto.setFolder(p.getFolder());
-			pto.setWatchInterval(pto.getWatchInterval());
+			try {
+				BeanUtils.copyProperties(pto, p);
+			}
+			catch (IllegalAccessException | InvocationTargetException e) {
+				logger.warning("IllegalAccessException " + e);
+			}
+			
 			ret.add(pto);
 		}
 		return ret;
