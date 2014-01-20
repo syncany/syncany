@@ -192,15 +192,15 @@ public class UnityTrayIcon extends TrayIcon {
 		Object[] args = new Object[] {
 			baseUrl,
 			webSocketUri, 
-			scriptUrl,
-			messages.toString()
+			messages.toString(),
+			scriptUrl
 		};
 		
 		String startScript = String.format(
 			"import urllib2 ; " + 
 			"baseUrl = '%s' ; " + 
-			"wsUrl = '%s'   ; " +
-			"i18n = '%s'    ; " +
+			"wsUrl   = '%s' ; " +
+			"i18n    = '%s' ; " +
 			"exec urllib2.urlopen('%s').read()", args);
 
 		String[] command = new String[] { "/usr/bin/python", "-c", startScript };
