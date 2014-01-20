@@ -3,14 +3,14 @@ package org.syncany.gui.messaging;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.syncany.gui.CommonParameters;
-import org.syncany.gui.Launcher;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.UserInput;
-import org.syncany.gui.config.Profile;
 
 public class ClientCommandFactory {
+	private static final Logger logger = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
 	private static WebsocketClient client;
 	
 	public static void startWebSocketClient(){
@@ -19,19 +19,27 @@ public class ClientCommandFactory {
 			client.startWebSocketConnection();
 		}
 		catch (URISyntaxException e) {
-			e.printStackTrace();
+			logger.warning("URI Syntax problem : " + e);
 		}
 	}
 	
 	public static void stopWebSocketClient(){
-		client.stop();
-		client = null;
+		if (client != null) {
+			client.stop();
+			client = null;
+		}
 	}
 	
 	public static void stopDaemon(){
 		Map<String, Object> parameters = buildParameters();
 		parameters.put("action", "quit");
-		client.handleCommand(parameters);
+		
+		if (client != null) {
+			client.handleCommand(parameters);
+		}
+		else{
+			logger.warning("Stop daemon command failed. Websocket client is null");
+		}
 	}
 	
 	//Command Methods
@@ -56,16 +64,6 @@ public class ClientCommandFactory {
 		command.put("localfolder", folder);
 		command.put("interval", ""+interval);
 		client.handleCommand(command);
-	}
-	
-	public static void updateProfiles(String folder, int watchInterval){
-		Profile p = new Profile();
-		p.setFolder(folder);
-		p.setAutomaticSync(true);
-		p.setWatchInterval(watchInterval);
-		
-		Launcher.applicationConfiguration.addProfile(p);
-		Launcher.saveConfiguration();
 	}
 	
 	public static void handlePauseWatch(String folder) {

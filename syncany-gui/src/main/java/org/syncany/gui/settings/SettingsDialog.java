@@ -43,8 +43,11 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
+import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -230,7 +233,8 @@ public class SettingsDialog extends Dialog {
 		Launcher.applicationConfiguration.setProxyPort(proxyParams.get("proxy.port"));
 		Launcher.applicationConfiguration.setProxyType(proxyParams.get("proxy.type"));
 		Launcher.applicationConfiguration.setProxyUsername(proxyParams.get("proxy.username"));
-
+		Launcher.applicationConfiguration.setProxyAuthType(proxyParams.get("proxy.authType"));
+		
 		String userHome = System.getProperty("user.home");
 		File f = new File(userHome + File.separator + ".syncany" + File.separator + "syncany-gui-config.xml");
 		
@@ -264,5 +268,10 @@ public class SettingsDialog extends Dialog {
 				composite.layout();
 			}
 		}
+	}
+	
+	@Subscribe
+	public void updateInterface(WatchUpdateEvent event) {
+		accountSettingsPanel.watchUpdateEvent(event);
 	}
 }

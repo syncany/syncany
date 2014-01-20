@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.CommonParameters;
+import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
@@ -231,7 +232,7 @@ public class WizardDialog extends Dialog {
 							summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
 
 							ClientCommandFactory.handleWatch(folder, 3000);
-							ClientCommandFactory.updateProfiles(folder, 3000);
+							Launcher.updateProfiles(folder, 3000);
 						}
 					});
 					
@@ -247,7 +248,7 @@ public class WizardDialog extends Dialog {
 				String f = wp.getUserSelection().getCommonParameter(CommonParameters.LOCAL_FOLDER);
 				
 				ClientCommandFactory.handleWatch(f, 3000);
-				ClientCommandFactory.updateProfiles(f, 3000);
+				Launcher.updateProfiles(f, 3000);
 				shell.dispose();
 				break;
 				

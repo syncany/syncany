@@ -26,6 +26,7 @@ import org.syncany.daemon.Daemon;
 import org.syncany.daemon.exception.DaemonAlreadyStartedException;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
+import org.syncany.gui.config.Profile;
 import org.syncany.gui.config.ProxyController;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.EventManager;
@@ -51,7 +52,6 @@ public class Launcher {
 	}
 
 	private static void startApplication() {
-		// TODO [medium] in case startDaemon failed because a daemon is already
 		try {
 			startDaemon();
 		}
@@ -69,7 +69,8 @@ public class Launcher {
 
 	public static void stopApplication() {
 		ClientCommandFactory.stopDaemon();
-		stopWebSocketClient();
+		ClientCommandFactory.stopWebSocketClient();
+		
 		stopGUI();
 
 		System.exit(0);
@@ -77,10 +78,6 @@ public class Launcher {
 
 	private static void startDaemon() throws DaemonAlreadyStartedException {
 		new Daemon().start(true);
-	}
-
-	private static void stopWebSocketClient() {
-		ClientCommandFactory.stopWebSocketClient();
 	}
 
 	private static void startWebSocketClient() {
@@ -163,5 +160,15 @@ public class Launcher {
 
 		ApplicationConfigurationTO acto = ApplicationConfigurationTO.load(f);
 		return acto;
+	}
+	
+	public static void updateProfiles(String folder, int watchInterval){
+		Profile p = new Profile();
+		p.setFolder(folder);
+		p.setAutomaticSync(true);
+		p.setWatchInterval(watchInterval);
+		
+		Launcher.applicationConfiguration.addProfile(p);
+		Launcher.saveConfiguration();
 	}
 }

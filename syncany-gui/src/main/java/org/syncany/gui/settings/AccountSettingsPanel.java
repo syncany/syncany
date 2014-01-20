@@ -19,6 +19,7 @@ import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
@@ -33,8 +34,6 @@ import org.syncany.gui.messaging.EventManager;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.I18n;
-
-import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -86,7 +85,7 @@ public class AccountSettingsPanel extends Composite {
 		composite.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
 		addProfileButton = new Button(composite, SWT.NONE);
-		addProfileButton.setText("Add Profile");
+		addProfileButton.setText(I18n.getString("dialog.settings.account.addProfile"));
 		addProfileButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		addProfileButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
@@ -95,7 +94,7 @@ public class AccountSettingsPanel extends Composite {
 		});
 		
 		deleteProfileButton = new Button(composite, SWT.NONE);
-		deleteProfileButton.setText("Delete Profile");
+		deleteProfileButton.setText(I18n.getString("dialog.settings.account.deleteProfile"));
 		deleteProfileButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
 		deleteProfileButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
@@ -117,12 +116,10 @@ public class AccountSettingsPanel extends Composite {
 						File configFolder = new File(folder, ".syncany");
 						if (folder.exists() && configFolder.exists()){
 							ClientCommandFactory.handleWatch(folder.getAbsolutePath(), 3000);
-							ClientCommandFactory.updateProfiles(folder.getAbsolutePath(), 3000);
+							Launcher.updateProfiles(folder.getAbsolutePath(), 3000);
 						}
 					}
 				}
-				
-				updateTable();
 			}
 		});
 		
@@ -130,10 +127,13 @@ public class AccountSettingsPanel extends Composite {
 		WidgetDecorator.normal(introductionLabel, table, deleteProfileButton);
 	}
 
-	@Subscribe
-	public void updateInterface(WatchUpdateEvent event) {
-		Launcher.saveConfiguration();
-		updateTable();
+	public void watchUpdateEvent(WatchUpdateEvent event){
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				updateTable();
+			}
+		});
 	}
 	
 	protected void handleAddProfile() {
@@ -144,7 +144,6 @@ public class AccountSettingsPanel extends Composite {
 				EventManager.register(wd);
 				wd.open();
 				EventManager.unregister(wd);
-				updateTable();
 			}
 		});
 	}
@@ -154,14 +153,15 @@ public class AccountSettingsPanel extends Composite {
 		
 		if (idx != -1){
 			MessageBox dialog = new MessageBox(getShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO);
-			dialog.setText("Delete profile ?");
+			dialog.setText(I18n.getString("dialog.settings.account.deleteProfile.confirm"));
 			dialog.setMessage(String.format("Would you like to delete selected profile ?"));
 
 			int ret = dialog.open();
 			if (ret == SWT.YES) {
+				Profile p = configuration.getProfiles().get(idx);
+				ClientCommandFactory.handleStopWatch(p.getFolder());
 				configuration.getProfiles().remove(idx);
 				Launcher.saveConfiguration();
-				updateTable();
 			}
 		}
 	}
@@ -192,7 +192,11 @@ public class AccountSettingsPanel extends Composite {
 		
 		for (Profile p : configuration.getProfiles()){
 			TableItem item = new TableItem(table,SWT.NONE);
-			item.setText(new String[] {p.getFolder(),p.getWatchInterval()+"", p.isAutomaticSync()+""});
+			item.setText(new String[] {
+				p.getFolder(),
+				p.getWatchInterval()+"", 
+				p.isAutomaticSync()+"" 
+			});
 		}
 	}
 }
