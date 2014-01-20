@@ -67,9 +67,9 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		this.multiChunkDao = multiChunkDao;
 	}
 
-	public void markDatabaseVersion(DatabaseVersionHeader databaseVersionHeader, DatabaseVersionStatus status) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/update.markDatabaseVersion.sql")){
-			preparedStatement.setString(1, status.toString());
+	public void markDatabaseVersionDirty(DatabaseVersionHeader databaseVersionHeader) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.update.master.markDatabaseVersionDirty.sql")){
+			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 			preparedStatement.setString(2, databaseVersionHeader.getVectorClock().toString());
 
 			preparedStatement.executeUpdate();
@@ -95,7 +95,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		long databaseVersionId = -1;
 		
 		try(PreparedStatement preparedStatement = connection.prepareStatement(
-				DatabaseConnectionFactory.getStatement("/sql/insert.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
+				DatabaseConnectionFactory.getStatement("/sql/databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 	
 			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
 			preparedStatement.setTimestamp(2, new Timestamp(databaseVersion.getHeader().getDate().getTime()));
@@ -124,7 +124,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {
 		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeVectorClock.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "/sql/databaseversion.insert.all.writeVectorClock.sql");
 
 			preparedStatement.setLong(1, databaseVersionId);
 			preparedStatement.setString(2, vectorClockEntry.getKey());
@@ -136,7 +136,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Long getMaxDirtyVectorClock(String machineName) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getMaxDirtyVectorClock.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getMaxDirtyVectorClock.sql")) {
 			preparedStatement.setString(1, machineName);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {

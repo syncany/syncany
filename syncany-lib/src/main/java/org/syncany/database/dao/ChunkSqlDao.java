@@ -74,7 +74,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 
 	private void loadChunkCache() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.loadChunkCache.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.loadChunkCache.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				chunkCache = createChunkEntries(resultSet);
 			}
@@ -85,7 +85,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 
 	public Map<ChunkChecksum, ChunkEntry> getChunksForDatabaseVersion(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getChunksForDatabaseVersion.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.getChunksForDatabaseVersion.sql")) {
 
 			preparedStatement.setString(1, vectorClock.toString());
 			preparedStatement.setString(2, vectorClock.toString());

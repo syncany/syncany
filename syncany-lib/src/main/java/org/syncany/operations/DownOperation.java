@@ -43,7 +43,6 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -216,7 +215,7 @@ public class DownOperation extends Operation {
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 				logger.log(Level.INFO, "    * MASTER->DIRTY: "+databaseVersionHeader);
-				localDatabase.markDatabaseVersion(databaseVersionHeader, DatabaseVersionStatus.DIRTY);
+				localDatabase.markDatabaseVersionDirty(databaseVersionHeader);
 			
 				String remoteFileToPruneClientName = config.getMachineName();
 				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
