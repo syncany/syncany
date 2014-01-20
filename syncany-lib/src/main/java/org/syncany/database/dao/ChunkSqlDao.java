@@ -60,12 +60,17 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
+	public synchronized ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		if (chunkCache == null) {
 			loadChunkCache();
 		}
 
 		return chunkCache.get(chunkChecksum);
+	}
+	
+	public synchronized void clearCache() {
+		chunkCache.clear();
+		chunkCache = null;
 	}
 
 	private void loadChunkCache() {

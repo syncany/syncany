@@ -30,7 +30,7 @@ INSERT INTO MULTICHUNK_CHUNK VALUES('ac1d89b3f57349edc6fe29f9bef1b0aeadf499a8','
 INSERT INTO MULTICHUNK_CHUNK VALUES('e2a3f6bea38fcc90a35654f3500333115cf67943','8ce24fc0ea8e685eb23bf6346713ad9fef920425');
 INSERT INTO MULTICHUNK_CHUNK VALUES('e5c62378c7c4d99a84a186a41034c3dbf9a3ad7b','bf8b4530d8d246dd74ac53a13471bba17941dff7');
 
--- 2a. Add changed "file1" (changed posix permission; DIRTY -- not relevant!)
+-- 2a. Add changed "file1" (changed posix permission) and new file "beef" (new content!) -- DIRTY
 
 INSERT INTO CHUNK VALUES('beefbeefbeefbeefbeefbeefbeefbeefbeefbeef',1);
 INSERT INTO DATABASEVERSION VALUES(3,'DIRTY','2014-01-04 16:28:09.349000','B','(B1)');
