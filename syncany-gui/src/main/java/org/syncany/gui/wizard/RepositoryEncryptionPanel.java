@@ -85,6 +85,20 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		passwordAgainText = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		passwordAgainText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
+		chunckSizeLabel = new Label(this, SWT.NONE);
+		GridData gd_chunckSizeLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_chunckSizeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		chunckSizeLabel.setLayoutData(gd_chunckSizeLabel);
+		chunckSizeLabel.setText(I18n.getString("repository.encryption.chunckSize", true));
+		
+		
+		chunckSize = new Spinner(this, SWT.BORDER);
+		GridData gd_chunckSize = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
+		gd_chunckSize.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		chunckSize.setLayoutData(gd_chunckSize);
+		chunckSize.setMaximum(10000);
+		chunckSize.setSelection(512);
+		
 		enableEncryption = new Button(this, SWT.CHECK);
 		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
 		gd_enableEncryption.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
@@ -125,20 +139,6 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		keylengthCombo.setItems(new String[]{"128", "256"});
 		keylengthCombo.select(0);
 		
-		chunckSizeLabel = new Label(composite, SWT.NONE);
-		GridData gd_lblNewLabel_6 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_lblNewLabel_6.horizontalIndent = 30;
-		chunckSizeLabel.setLayoutData(gd_lblNewLabel_6);
-		chunckSizeLabel.setText(I18n.getString("repository.encryption.chunckSize", true));
-		
-		chunckSize = new Spinner(composite, SWT.BORDER);
-		chunckSize.setMaximum(10000);
-		chunckSize.setSelection(512);
-		
-		GridData gd_chunckSize = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
-		gd_chunckSize.heightHint = 15;
-		chunckSize.setLayoutData(gd_chunckSize);
-		
 		WidgetDecorator.bold(introductionTextTitle);
 		WidgetDecorator.normal(
 			introductionText, 
@@ -151,14 +151,12 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	}
 	
 	protected void toggleEncryptionSelection() {
-		chunckSize.setEnabled(enableEncryption.getSelection());
 		keylengthCombo.setEnabled(enableEncryption.getSelection());
 		cypherCombo.setEnabled(enableEncryption.getSelection());
 		
 		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
 		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
 		
-		chunckSizeLabel.setForeground(enableEncryption.getSelection() ? black : gray);
 		keyLengthLabel.setForeground(enableEncryption.getSelection() ? black : gray);
 		algorithmLabel.setForeground(enableEncryption.getSelection() ? black : gray);
 	}
@@ -184,6 +182,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	public UserInput getUserSelection() {
 		UserInput userInput = new UserInput();
 		userInput.putCommonParameter(CommonParameters.ENCRYPTION_PASSWORD, passwordText.getText());
+		userInput.putCommonParameter(CommonParameters.CHUNCK_SIZE, chunckSize.getText());
 		
 		if (enableEncryption.getSelection()){
 			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ENABLED, enableEncryption.getSelection() ? "yes" : "no");

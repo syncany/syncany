@@ -121,7 +121,14 @@ public class DaemonCommandHandler {
 		String pluginName = (String)parameters.get("pluginId");
 		String localDir = (String)parameters.get("localFolder");
 		String passsword =(String) parameters.get("password");
-		int chunkSize = Integer.parseInt((String)parameters.get("chunck_size"));
+		int chunkSize = 512;
+		
+		try{
+			chunkSize = Integer.parseInt((String)parameters.get("chunck_size"));
+		}
+		catch (Exception e){
+			
+		}
 		
 		boolean gzip = "yes".equals((String)parameters.get("gzip"));
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
