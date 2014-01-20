@@ -86,7 +86,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Map<ChunkChecksum, ChunkEntry> getChunksForDatabaseVersion(VectorClock vectorClock) {
+	public Map<ChunkChecksum, ChunkEntry> getChunks(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.getChunksForDatabaseVersion.sql")) {
 
 			preparedStatement.setString(1, vectorClock.toString());

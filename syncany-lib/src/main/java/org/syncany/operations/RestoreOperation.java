@@ -39,7 +39,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
-import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
@@ -74,7 +74,7 @@ public class RestoreOperation extends Operation {
 
 		List<String> restoreFilePaths = options.getRestoreFilePaths();
 		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
+		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
 
 		if (options.getStrategy() == RestoreOperationStrategy.DATABASE_DATE) {
 			restoreFileVersions = getFileTreeAtDate(options.getDatabaseBeforeDate(), restoreFilePaths);
@@ -83,7 +83,7 @@ public class RestoreOperation extends Operation {
 				FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
 				
 				if (restoreFileChecksum != null) {
-					multiChunksToDownload.addAll(localDatabase.getMultiChunksWithoutChunkChecksums(restoreFileChecksum));
+					multiChunksToDownload.addAll(localDatabase.getMultiChunkIds(restoreFileChecksum));
 				}
 			}
 		}
@@ -123,21 +123,21 @@ public class RestoreOperation extends Operation {
 		return restoreFileVersions;
 	}
 
-	private void downloadAndDecryptMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
+	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
 		// TODO [medium] Duplicate code in DownOperation
 
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
 		TransferManager transferManager = config.getConnection().createTransferManager();
 
-		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId().getRaw());
+		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId.getRaw());
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId.getRaw());
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId.getRaw());
 
-			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkEntry.getId() + " ...");
+			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
 
-			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkEntry.getId() + " ...");
+			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
 
@@ -147,7 +147,7 @@ public class RestoreOperation extends Operation {
 			decryptedMultiChunkOutputStream.close();
 			multiChunkInputStream.close();
 
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkEntry.getId() + " ...");
+			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
 			localEncryptedMultiChunkFile.delete();
 		}
 

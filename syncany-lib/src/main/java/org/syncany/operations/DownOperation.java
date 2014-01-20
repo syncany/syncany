@@ -47,7 +47,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
-import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.XmlDatabaseDao;
@@ -182,7 +182,7 @@ public class DownOperation extends Operation {
 			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
 			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
 
-			Set<MultiChunkEntry> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
+			Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
 			downloadAndDecryptMultiChunks(unknownMultiChunks);
 
 			applyFileSystemActions(actions);
@@ -279,8 +279,8 @@ public class DownOperation extends Operation {
 		return winnersBranch;
 	}
 
-	private Set<MultiChunkEntry> determineRequiredMultiChunks(List<FileSystemAction> actions, MemoryDatabase winnersDatabase) {
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
+	private Set<MultiChunkId> determineRequiredMultiChunks(List<FileSystemAction> actions, MemoryDatabase winnersDatabase) {
+		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
 
 		for (FileSystemAction action : actions) {
 			if (action instanceof FileCreatingFileSystemAction) { // TODO [low] This adds ALL multichunks even though some might be available locally
@@ -291,14 +291,14 @@ public class DownOperation extends Operation {
 		return multiChunksToDownload;
 	}
 
-	private Collection<MultiChunkEntry> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase winnersDatabase) {
-		Set<MultiChunkEntry> multiChunksToDownload = new HashSet<MultiChunkEntry>();
+	private Collection<MultiChunkId> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase winnersDatabase) {
+		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
 
 		// First: Check if we know this file locally!
-		List<MultiChunkEntry> multiChunkEntries = localDatabase.getMultiChunksWithoutChunkChecksums(fileVersion.getChecksum());
+		List<MultiChunkId> multiChunkIds = localDatabase.getMultiChunkIds(fileVersion.getChecksum());
 		
-		if (multiChunkEntries.size() > 0) {
-			multiChunksToDownload.addAll(multiChunkEntries);
+		if (multiChunkIds.size() > 0) {
+			multiChunksToDownload.addAll(multiChunkIds);
 		}
 		else {
 			// Second: We don't know it locally; must be from the winners database
@@ -312,21 +312,20 @@ public class DownOperation extends Operation {
 				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
 
 				for (ChunkChecksum chunkChecksum : fileChunks) {
-					MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkWithoutChunkChecksums(chunkChecksum);
+					MultiChunkId multiChunkIdForChunk = localDatabase.getMultiChunkId(chunkChecksum);
 					// TODO [high] Performance: This queries the database for every chunk, SLOWWW!
 					
-					if (multiChunkForChunk == null) {
-						multiChunkForChunk = winnersDatabase.getMultiChunkForChunk(chunkChecksum);
-					}
-
-					// Check consistency!
-					if (multiChunkForChunk == null) {
-						throw new RuntimeException("Cannot find multichunk for chunk "+chunkChecksum);
+					if (multiChunkIdForChunk == null) {
+						multiChunkIdForChunk = winnersDatabase.getMultiChunkIdForChunk(chunkChecksum);
+						
+						if (multiChunkIdForChunk == null) {
+							throw new RuntimeException("Cannot find multichunk for chunk "+chunkChecksum);	
+						}
 					}
 					
-					if (!multiChunksToDownload.contains(multiChunkForChunk)) {
-						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkForChunk.getId() + " to download list ...");
-						multiChunksToDownload.add(multiChunkForChunk);
+					if (!multiChunksToDownload.contains(multiChunkIdForChunk)) {
+						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkIdForChunk + " to download list ...");
+						multiChunksToDownload.add(multiChunkIdForChunk);
 					}
 				}
 			}
@@ -363,21 +362,21 @@ public class DownOperation extends Operation {
 		}
 	}
 
-	private void downloadAndDecryptMultiChunks(Set<MultiChunkEntry> unknownMultiChunks) throws StorageException, IOException {
+	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
 
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
 
-		for (MultiChunkEntry multiChunkEntry : unknownMultiChunks) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId().getRaw());
+		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId.getRaw());
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId.getRaw());
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId.getRaw());
 
-			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkEntry.getId() + " ...");
+			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-			result.downloadedMultiChunks.add(multiChunkEntry);
+			result.downloadedMultiChunks.add(multiChunkId);
 
-			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkEntry.getId() + " ...");
+			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
 
@@ -387,7 +386,7 @@ public class DownOperation extends Operation {
 			decryptedMultiChunkOutputStream.close();
 			multiChunkInputStream.close();
 
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkEntry.getId() + " ...");
+			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
 			localEncryptedMultiChunkFile.delete();
 		}
 
@@ -525,7 +524,7 @@ public class DownOperation extends Operation {
 		private DownResultCode resultCode;
 		private ChangeSet changeSet = new ChangeSet();
 		private Set<String> downloadedUnknownDatabases = new HashSet<String>();
-		private Set<MultiChunkEntry> downloadedMultiChunks = new HashSet<MultiChunkEntry>();
+		private Set<MultiChunkId> downloadedMultiChunks = new HashSet<MultiChunkId>();
 
 		public DownResultCode getResultCode() {
 			return resultCode;
@@ -551,11 +550,11 @@ public class DownOperation extends Operation {
 			this.downloadedUnknownDatabases = downloadedUnknownDatabases;
 		}
 
-		public Set<MultiChunkEntry> getDownloadedMultiChunks() {
+		public Set<MultiChunkId> getDownloadedMultiChunks() {
 			return downloadedMultiChunks;
 		}
 
-		public void setDownloadedMultiChunks(Set<MultiChunkEntry> downloadedMultiChunks) {
+		public void setDownloadedMultiChunks(Set<MultiChunkId> downloadedMultiChunks) {
 			this.downloadedMultiChunks = downloadedMultiChunks;
 		}
 	}

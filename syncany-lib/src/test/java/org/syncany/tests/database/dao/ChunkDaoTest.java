@@ -76,11 +76,11 @@ public class ChunkDaoTest {
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		
-		Map<ChunkChecksum, ChunkEntry> chunksForA1 = chunkDao.getChunksForDatabaseVersion(TestDatabaseUtil.createVectorClock("A1"));
-		Map<ChunkChecksum, ChunkEntry> chunksForA2 = chunkDao.getChunksForDatabaseVersion(TestDatabaseUtil.createVectorClock("A2"));
-		Map<ChunkChecksum, ChunkEntry> chunksForA4 = chunkDao.getChunksForDatabaseVersion(TestDatabaseUtil.createVectorClock("A4"));
-		Map<ChunkChecksum, ChunkEntry> chunksForB1 = chunkDao.getChunksForDatabaseVersion(TestDatabaseUtil.createVectorClock("B1"));
-		Map<ChunkChecksum, ChunkEntry> chunksForNonExistent = chunkDao.getChunksForDatabaseVersion(TestDatabaseUtil.createVectorClock("NonExistent1"));
+		Map<ChunkChecksum, ChunkEntry> chunksForA1 = chunkDao.getChunks(TestDatabaseUtil.createVectorClock("A1"));
+		Map<ChunkChecksum, ChunkEntry> chunksForA2 = chunkDao.getChunks(TestDatabaseUtil.createVectorClock("A2"));
+		Map<ChunkChecksum, ChunkEntry> chunksForA4 = chunkDao.getChunks(TestDatabaseUtil.createVectorClock("A4"));
+		Map<ChunkChecksum, ChunkEntry> chunksForB1 = chunkDao.getChunks(TestDatabaseUtil.createVectorClock("B1"));
+		Map<ChunkChecksum, ChunkEntry> chunksForNonExistent = chunkDao.getChunks(TestDatabaseUtil.createVectorClock("NonExistent1"));
 
 		// Test
 		assertNotNull(chunksForA1);

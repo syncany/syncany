@@ -98,8 +98,8 @@ public class MemoryDatabase {
 	/**
      * Get a multichunk that this chunk is contained in.
      */
-	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunk) {
-		return fullDatabaseVersionCache.getMultiChunk(chunk);
+	public MultiChunkId getMultiChunkIdForChunk(ChunkChecksum chunk) {
+		return fullDatabaseVersionCache.getMultiChunkId(chunk);
 	}	
 	
 	public PartialFileHistory getFileHistory(String relativeFilePath) {

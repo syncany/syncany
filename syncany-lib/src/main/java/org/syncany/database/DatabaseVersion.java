@@ -57,7 +57,7 @@ public class DatabaseVersion {
     private Map<FileHistoryId, PartialFileHistory> fileHistories;
 
     // Quick access cache
-    private Map<ChunkChecksum, MultiChunkEntry> chunkMultiChunkCache;    
+    private Map<ChunkChecksum, MultiChunkId> chunkMultiChunkCache;    
 
     public DatabaseVersion() {
     	header = new DatabaseVersionHeader();
@@ -69,7 +69,7 @@ public class DatabaseVersion {
         fileHistories = new HashMap<FileHistoryId, PartialFileHistory>();          
 
         // Quick access cache
-        chunkMultiChunkCache = new HashMap<ChunkChecksum, MultiChunkEntry>();
+        chunkMultiChunkCache = new HashMap<ChunkChecksum, MultiChunkId>();
     }
     
 	public DatabaseVersionHeader getHeader() {
@@ -133,7 +133,7 @@ public class DatabaseVersion {
         
         // Populate cache
         for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
-        	chunkMultiChunkCache.put(chunkChecksum, multiChunk);
+        	chunkMultiChunkCache.put(chunkChecksum, multiChunk.getId());
         }
     }
     
@@ -144,7 +144,7 @@ public class DatabaseVersion {
     /**
      * Get a multichunk that this chunk is contained in.
      */
-    public MultiChunkEntry getMultiChunk(ChunkChecksum chunk) {
+    public MultiChunkId getMultiChunkId(ChunkChecksum chunk) {
     	return chunkMultiChunkCache.get(chunk);
     }
     

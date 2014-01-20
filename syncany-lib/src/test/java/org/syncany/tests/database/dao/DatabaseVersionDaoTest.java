@@ -243,7 +243,7 @@ public class DatabaseVersionDaoTest {
 		
 		newFileVersion.setVersion(1L);
 		newFileVersion.setPath("newfile");
-		newFileVersion.setChecksum(null);
+		newFileVersion.setChecksum(FileChecksum.parseFileChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f"));
 		newFileVersion.setLinkTarget(null);
 		newFileVersion.setPosixPermissions("rwxrwxrwx");
 		newFileVersion.setDosAttributes(null);
@@ -281,15 +281,16 @@ public class DatabaseVersionDaoTest {
 		
 		assertNotNull(lastDatabaseVersionHeaderAfter);
 		assertEquals("C/(A5,C1)/T=1489977288627", lastDatabaseVersionHeaderAfter.toString());
+		assertEquals(newDatabaseVersionHeader.getVectorClock(), lastDatabaseVersionHeaderAfter.getVectorClock());
 		
 		assertEquals(newChunkEntry, chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f")));
 		assertEquals(newFileContent, fileContentDao.getFileContent(FileChecksum.parseFileChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f"), true));
 		
-		Map<MultiChunkId, MultiChunkEntry> multiChunksWithChunkChecksums = multiChunkDao.getMultiChunksWithChunkChecksums(newDatabaseVersionHeader.getVectorClock());
-		assertNotNull(multiChunksWithChunkChecksums);
-		assertEquals(1, multiChunksWithChunkChecksums.size());
+		Map<MultiChunkId, MultiChunkEntry> multiChunkIds = multiChunkDao.getMultiChunks(newDatabaseVersionHeader.getVectorClock());
+		assertNotNull(multiChunkIds);
+		assertEquals(1, multiChunkIds.size());
 		
-		MultiChunkEntry actualNewMultiChunkEntry = multiChunksWithChunkChecksums.get(MultiChunkId.parseMultiChunkId("1234567890987654321234567876543456555555"));
+		MultiChunkEntry actualNewMultiChunkEntry = multiChunkIds.get(MultiChunkId.parseMultiChunkId("1234567890987654321234567876543456555555"));
 		assertNotNull(actualNewMultiChunkEntry);
 		assertEquals(newMultiChunkEntry.getId(), actualNewMultiChunkEntry.getId());
 		
