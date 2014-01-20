@@ -20,6 +20,7 @@ package org.syncany.gui.tray;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,6 +32,7 @@ import org.syncany.gui.messaging.EventManager;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.wizard.WizardDialog;
+import org.syncany.util.I18n;
 
 /**
  * @author pheckel
@@ -42,6 +44,16 @@ public abstract class TrayIcon {
 	private Shell shell;
 	private AtomicBoolean syncing = new AtomicBoolean(false);
 	private AtomicBoolean paused = new AtomicBoolean(false);
+	
+	@SuppressWarnings("serial")
+	protected Map<String, String> messages = new HashMap<String, String>(){{
+		put("tray.menuitem.open", I18n.getString("tray.menuitem.open"));
+		put("tray.menuitem.donate", I18n.getString("tray.menuitem.donate"));
+		put("tray.menuitem.pause", I18n.getString("tray.menuitem.pause"));
+		put("tray.menuitem.resume", I18n.getString("tray.menuitem.resume"));
+		put("tray.menuitem.exit", I18n.getString("tray.menuitem.exit"));
+		put("tray.menuitem.website", I18n.getString("tray.menuitem.website"));
+	}};
 	
 	public enum TrayIcons {
 		TRAY_NO_OVERLAY("/images/tray/tray.png"), 

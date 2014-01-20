@@ -128,43 +128,45 @@ public class DefaultTrayIcon extends TrayIcon {
 
 				if (folder.exists()) {
 					String status = folders.get(key).get("status");
-
-					MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
-					folderMenuItem.setText(folder.getName() + " [" + status + "]");
 					
-					Menu subMenu = new Menu(folderMenuItem);
-					folderMenuItem.setMenu(subMenu);
-					
-					final MenuItem pauseMI = new MenuItem(subMenu, SWT.PUSH);
-					pauseMI.setText("Pause");
-					pauseMI.setImage(SWTResourceManager.getImage("/images/tray/pause.png"));
-					pauseMI.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							pause(folder);
-						}
-					});
-					
-					MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
-					resumetMI.setText("Resume");
-					resumetMI.setImage(SWTResourceManager.getImage("/images/tray/resume.png"));
-					resumetMI.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							resume(folder);
-						}
-					});
-					
-					new MenuItem(subMenu, SWT.SEPARATOR);
-					
-					MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
-					openMI.setText("open");
-					openMI.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							showFolder(folder);
-						}
-					});
+					if (!status.equals("STOPPED")){
+						MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
+						folderMenuItem.setText(folder.getName() + " [" + status + "]");
+						
+						Menu subMenu = new Menu(folderMenuItem);
+						folderMenuItem.setMenu(subMenu);
+						
+						final MenuItem pauseMI = new MenuItem(subMenu, SWT.PUSH);
+						pauseMI.setText(messages.get("tray.menuitem.pause"));
+						pauseMI.setImage(SWTResourceManager.getImage("/images/tray/pause.png"));
+						pauseMI.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								pause(folder);
+							}
+						});
+						
+						MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
+						resumetMI.setText(messages.get("tray.menuitem.resume"));
+						resumetMI.setImage(SWTResourceManager.getImage("/images/tray/resume.png"));
+						resumetMI.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								resume(folder);
+							}
+						});
+						
+						new MenuItem(subMenu, SWT.SEPARATOR);
+						
+						MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
+						openMI.setText(messages.get("tray.menuitem.open"));
+						openMI.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								showFolder(folder);
+							}
+						});
+					}
 				}
 			}
 		}
@@ -172,7 +174,7 @@ public class DefaultTrayIcon extends TrayIcon {
 		new MenuItem(menu, SWT.SEPARATOR);
 
 		MenuItem donateItem = new MenuItem(menu, SWT.PUSH);
-		donateItem.setText("Donate");
+		donateItem.setText(messages.get("tray.menuitem.donate"));
 		donateItem.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -181,7 +183,7 @@ public class DefaultTrayIcon extends TrayIcon {
 		});
 
 		MenuItem websiteItem = new MenuItem(menu, SWT.PUSH);
-		websiteItem.setText("Website");
+		websiteItem.setText(messages.get("tray.menuitem.website"));
 		websiteItem.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -192,7 +194,7 @@ public class DefaultTrayIcon extends TrayIcon {
 		new MenuItem(menu, SWT.SEPARATOR);
 
 		MenuItem quitMenu = new MenuItem(menu, SWT.PUSH);
-		quitMenu.setText("Exit");
+		quitMenu.setText(messages.get("tray.menuitem.exit"));
 		quitMenu.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

@@ -165,7 +165,7 @@ public class UnityTrayIcon extends TrayIcon {
 		}
 	}
 
-	private static void launchLoggerThread(final BufferedReader stdinReader, final String prefix) {
+	private void launchLoggerThread(final BufferedReader stdinReader, final String prefix) {
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -184,13 +184,24 @@ public class UnityTrayIcon extends TrayIcon {
 		t.start();
 	}
 
-	private static void startUnityProcess() throws IOException {
+	private void startUnityProcess() throws IOException {
 		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.PORT;
 		String scriptUrl = baseUrl + "/scripts/unitytray.py";
 		String webSocketUri = "ws://127.0.0.1:" + WEBSOCKET_SERVER_PORT;
 
-		String startScript = String.format("import urllib2; baseUrl = '%s'; wsUrl = '%s'; exec urllib2.urlopen('%s').read()", new Object[] { baseUrl,
-				webSocketUri, scriptUrl });
+		Object[] args = new Object[] {
+			baseUrl,
+			webSocketUri, 
+			scriptUrl,
+			messages.toString()
+		};
+		
+		String startScript = String.format(
+			"import urllib2 ; " + 
+			"baseUrl = '%s' ; " + 
+			"wsUrl = '%s'   ; " +
+			"i18n = '%s'    ; " +
+			"exec urllib2.urlopen('%s').read()", args);
 
 		String[] command = new String[] { "/usr/bin/python", "-c", startScript };
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
