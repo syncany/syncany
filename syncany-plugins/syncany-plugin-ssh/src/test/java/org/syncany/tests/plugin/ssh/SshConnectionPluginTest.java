@@ -46,7 +46,7 @@ import org.syncany.tests.util.TestFileUtil;
 
 public class SshConnectionPluginTest {
 	private File tempLocalSourceDir;
-	private Map<String, String> localPluginSettings;
+	private Map<String, String> sshPluginSettings;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -55,12 +55,12 @@ public class SshConnectionPluginTest {
 		tempLocalSourceDir = new File(rootDir+"/local");
 		tempLocalSourceDir.mkdir();
 		
-		localPluginSettings = new HashMap<String, String>();
-		localPluginSettings.put("hostname", "88.191.152.91");
-		localPluginSettings.put("username", "vwiencek");
-		localPluginSettings.put("password", "(r/VLN379s5}Z=jk");
-		localPluginSettings.put("port", "22");
-		localPluginSettings.put("path", "/home/vwiencek/sa");
+		sshPluginSettings = new HashMap<String, String>();
+		sshPluginSettings.put("hostname", "localhost");
+		sshPluginSettings.put("username", "vwiencek");
+		sshPluginSettings.put("password", "ulysse");
+		sshPluginSettings.put("port", "22");
+		sshPluginSettings.put("path", "/Users/vwiencek/dev/sandbox/");
 	}
 	
 	@After
@@ -88,9 +88,9 @@ public class SshConnectionPluginTest {
 		Plugin pluginInfo = Plugins.get("local");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
-		invalidPluginSettings.put("hostname", "jrisk.fr");
+		invalidPluginSettings.put("hostname", "localhost");
 		invalidPluginSettings.put("username", "vwiencek");
-		invalidPluginSettings.put("password", "(r/VLN379s5}Z=jk");
+		invalidPluginSettings.put("password", "ulysse");
 		invalidPluginSettings.put("port", "22");
 		invalidPluginSettings.put("path", "/path/does/not/exist");
 		
@@ -164,13 +164,11 @@ public class SshConnectionPluginTest {
 		}
 	}	
 	
-	@Test
+	@Test(expected=StorageException.class)
 	public void testDeleteNonExistantFile() throws StorageException {
 		TransferManager transferManager = loadPluginAndCreateTransferManager();		
 		transferManager.connect();	
-		
-		boolean fileDeletedSuccessfully = transferManager.delete(new RemoteFile("non-existant-file"));
-		assertFalse("File deletion expected to fail.", fileDeletedSuccessfully);
+		transferManager.delete(new RemoteFile("non-existant-file"));
 	}
 	
 	private Map<String, File> generateTestInputFile() throws IOException {
@@ -218,7 +216,7 @@ public class SshConnectionPluginTest {
 		Plugin pluginInfo = Plugins.get("ssh");	
 		
 		Connection connection = pluginInfo.createConnection();				
-		connection.init(localPluginSettings);
+		connection.init(sshPluginSettings);
 		
 		TransferManager transferManager = connection.createTransferManager();
 

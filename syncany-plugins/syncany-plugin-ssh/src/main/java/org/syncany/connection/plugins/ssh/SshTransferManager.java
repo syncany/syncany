@@ -162,32 +162,34 @@ public class SshTransferManager extends AbstractTransferManager {
 
 		String remotePath = getRemoteFile(remoteFile);
 
-		try {
-			// Download file
-			File tempFile = createTempFile(localFile.getName());
-			OutputStream tempFOS = new FileOutputStream(tempFile);
-
-			if (logger.isLoggable(Level.INFO)) {
-				logger.log(Level.INFO, "SSH: Downloading {0} to temp file {1}", new Object[] { remotePath, tempFile });
+		if (!remoteFile.getName().equals(".") && !remoteFile.getName().equals("..")){
+			try {
+				// Download file
+				File tempFile = createTempFile(localFile.getName());
+				OutputStream tempFOS = new FileOutputStream(tempFile);
+	
+				if (logger.isLoggable(Level.INFO)) {
+					logger.log(Level.INFO, "SSH: Downloading {0} to temp file {1}", new Object[] { remotePath, tempFile });
+				}
+	
+				channel.get(remotePath, tempFOS);
+	
+				tempFOS.close();
+	
+				// Move file
+				if (logger.isLoggable(Level.INFO)) {
+					logger.log(Level.INFO, "SSH: Renaming temp file {0} to file {1}", new Object[] { tempFile, localFile });
+				}
+	
+				localFile.delete();
+				FileUtils.moveFile(tempFile, localFile);
+				tempFile.delete();
 			}
-
-			channel.get(remotePath, tempFOS);
-
-			tempFOS.close();
-
-			// Move file
-			if (logger.isLoggable(Level.INFO)) {
-				logger.log(Level.INFO, "SSH: Renaming temp file {0} to file {1}", new Object[] { tempFile, localFile });
+			catch (SftpException | IOException ex) {
+				disconnect();
+				logger.log(Level.SEVERE, "Error while downloading file " + remoteFile.getName(), ex);
+				throw new StorageException(ex);
 			}
-
-			localFile.delete();
-			FileUtils.moveFile(tempFile, localFile);
-			tempFile.delete();
-		}
-		catch (SftpException | IOException ex) {
-			disconnect();
-			logger.log(Level.SEVERE, "Error while downloading file " + remoteFile.getName(), ex);
-			throw new StorageException(ex);
 		}
 	}
 
@@ -256,12 +258,14 @@ public class SshTransferManager extends AbstractTransferManager {
 			Map<String, T> remoteFiles = new HashMap<String, T>();
 
 			for (LsEntry entry : entries) {
-				try {
-					T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
-					remoteFiles.put(entry.getFilename(), remoteFile);
-				}
-				catch (Exception e) {
-					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
+				if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
+					try {
+						T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
+						remoteFiles.put(entry.getFilename(), remoteFile);
+					}
+					catch (Exception e) {
+						logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
+					}
 				}
 			}
 
