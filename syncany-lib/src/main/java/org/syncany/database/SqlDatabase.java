@@ -78,7 +78,7 @@ public class SqlDatabase {
 		applicationDao.persistNewKnownRemoteDatabases(remoteDatabases);
 	}
 
-	public List<String> getKnownDatabases() {
+	public List<DatabaseRemoteFile> getKnownDatabases() {
 		return applicationDao.getKnownDatabases();
 	}
 

@@ -67,13 +67,13 @@ public class LsRemoteOperation extends Operation {
 				? loadedTransferManager
 				: config.getConnection().createTransferManager();
 		
-		List<String> knownDatabases = localDatabase.getKnownDatabases();
+		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
 		
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<String> knownDatabases) throws StorageException {
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
 		List<DatabaseRemoteFile> unknownRemoteDatabases = new ArrayList<DatabaseRemoteFile>();
