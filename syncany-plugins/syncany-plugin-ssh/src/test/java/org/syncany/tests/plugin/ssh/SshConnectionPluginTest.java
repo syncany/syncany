@@ -173,31 +173,6 @@ public class SshConnectionPluginTest {
 		assertFalse("File deletion expected to fail.", fileDeletedSuccessfully);
 	}
 	
-	/*@Test
-	public void testListWithPrefix() throws StorageException, IOException {
-		// Create remote files directly in the 'remote' directory
-		String correctPrefix = "prefix-";
-		String incorrectPrefix = "otherprefix-";
-		
-		Collection<File> remoteFiles = Arrays.asList(new File[] {
-			new File(tempLocalRepoDir+"/"+correctPrefix+"1"),
-			new File(tempLocalRepoDir+"/"+correctPrefix+"2"),
-			new File(tempLocalRepoDir+"/"+correctPrefix+"3"),
-			new File(tempLocalRepoDir+"/"+incorrectPrefix+"1")	
-		});
-		
-		for (File remoteFileToCreate : remoteFiles) {
-			TestFileUtil.createRandomFile(remoteFileToCreate, 10*1024);
-		}
-		
-		// Connect and list
-		TransferManager transferManager = loadPluginAndCreateTransferManager();		
-		transferManager.connect();	
-		
-		Map<String, RemoteFile> listedRemoteFiles = transferManager.list(correctPrefix);
-		assertEquals("Expected 3 files with prefix "+correctPrefix, 3, listedRemoteFiles.size());
-	}*/
-
 	private Map<String, File> generateTestInputFile() throws IOException {
 		Map<String, File> inputFilesMap = new HashMap<String, File>();
 		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempLocalSourceDir, 50*1024, 10);

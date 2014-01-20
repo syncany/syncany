@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -101,7 +102,10 @@ public class SshTransferManager extends AbstractTransferManager {
 					logger.log(Level.INFO, "SSH client connecting to {0}:{1} ...", new Object[] { getConnection().getHostname(), getConnection().getPort() });
 				}
 				
+				Properties properties = new Properties();
+				properties.put("StrictHostKeyChecking", "no");
 				session = jsch.getSession(getConnection().getUsername(), getConnection().getHostname(), getConnection().getPort());
+				session.setConfig(properties);
 				session.setPassword(getConnection().getPassword());
 				session.connect();
 				if (!session.isConnected()){
