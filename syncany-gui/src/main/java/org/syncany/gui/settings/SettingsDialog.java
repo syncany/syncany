@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.syncany.gui.Launcher;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.util.DialogUtil;
@@ -120,7 +121,7 @@ public class SettingsDialog extends Dialog {
 	 */
 	private void createContents() {
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
-		shell.setSize(516, 360);
+		shell.setSize(600, 500);
 		shell.setText(getText());
 		GridLayout gl_shell = new GridLayout(3, false);
 		gl_shell.marginHeight = 0;
@@ -130,7 +131,6 @@ public class SettingsDialog extends Dialog {
 		shell.setLayout(gl_shell);
 		
 		tree = new Tree(shell, SWT.NONE);
-//		tree.setFont(fontNormal); TODO
 		tree.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -146,16 +146,13 @@ public class SettingsDialog extends Dialog {
 		
 		menuItemGeneral = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemGeneral.setText("General");
-//		menuItemGeneral.setFont(fontNormal);
 		
 		menuItemProxy = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemProxy.setText("Proxy");
 		menuItemProxy.setExpanded(true);
-//		menuItemProxy.setFont(fontNormal);
 		
 		menuItemAccount = new TreeItem(menuItemOptions, SWT.NONE);
 		menuItemAccount.setText("Account");
-//		menuItemAccount.setFont(fontNormal);
 		menuItemOptions.setExpanded(true);
 		
 		lblNewLabel_1 = new Label(shell, SWT.SEPARATOR);
@@ -209,6 +206,14 @@ public class SettingsDialog extends Dialog {
 				handleOk();
 			}
 		});
+		
+		WidgetDecorator.bold(optionsMessageTitleLabel);
+		WidgetDecorator.normal(
+			okButton, cancelButton, optionsMessageLabel, tree
+		);
+		WidgetDecorator.normal(
+			menuItemGeneral, menuItemOptions, menuItemAccount, menuItemProxy
+		);
 	}
 	
 	private void handleCancel(){

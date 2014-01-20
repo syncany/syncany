@@ -24,7 +24,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
+import org.syncany.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -39,7 +42,23 @@ public class GeneralSettingsPanel extends Composite {
 	 */
 	public GeneralSettingsPanel(Composite parent, int style) {
 		super(parent, style);
+		
+		initComposite();
+	}
+	
+	private void initComposite(){
 		setLayout(new GridLayout(1, false));
+		
+		Label introductionTitleLabel = new Label(this, SWT.WRAP);
+		introductionTitleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		introductionTitleLabel.setText(I18n.getString("dialog.settings.general.introduction.title"));
+		
+		Label introductionLabel = new Label(this, SWT.WRAP);
+		introductionLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		introductionLabel.setText(I18n.getString("dialog.settings.general.introduction"));
+		
+		Label separatorLabel = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+		separatorLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		Group grpSystem = new Group(this, SWT.NONE);
 		grpSystem.setText("System");
@@ -64,11 +83,9 @@ public class GeneralSettingsPanel extends Composite {
 		Combo combo = new Combo(grpLanguage, SWT.NONE);
 		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		combo.setBounds(0, 0, 91, 23);
-		initComposite();
-	}
-
-	private void initComposite() {
 		
+		WidgetDecorator.bold(introductionTitleLabel);
+		WidgetDecorator.normal(introductionLabel);
 	}
 
 	public void setApplicationParameters(ApplicationConfiguration configuration){

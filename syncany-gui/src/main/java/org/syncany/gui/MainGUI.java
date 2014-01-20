@@ -31,7 +31,9 @@ public class MainGUI {
 	private TrayIcon tray;
 
 	public void dispose() {
-		shell.dispose();
+		if (shell != null && !shell.isDisposed()) {
+			shell.dispose();
+		}
 	}
 
 	public MainGUI() {

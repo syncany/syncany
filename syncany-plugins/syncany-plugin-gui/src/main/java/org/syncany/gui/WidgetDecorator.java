@@ -24,6 +24,7 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.TreeItem;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -43,6 +44,12 @@ public class WidgetDecorator {
 			if (control instanceof Text){
 				enhanceFocus((Text)control);
 			}
+		}
+	}
+	
+	public static void normal(TreeItem...controls){
+		for (TreeItem control : controls){
+			control.setFont(FONT_NORMAL);
 		}
 	}
 	
