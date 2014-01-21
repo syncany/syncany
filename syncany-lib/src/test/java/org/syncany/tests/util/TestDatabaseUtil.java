@@ -148,8 +148,7 @@ public class TestDatabaseUtil {
 		return fileVersion;
 	}
 
-	// TODO [medium] Add functionality tests for the rest of the cache
-	// TODO [high] Add performance tests for the cache and optimize Database.addDatabaseVersion()-cache handling
+	// TODO [medium] Add performance tests for the cache and optimize Database.addDatabaseVersion()-cache handling
 	
 	public static DatabaseVersion createDatabaseVersion() {
 		return createDatabaseVersion(null, new Date());
@@ -175,6 +174,4 @@ public class TestDatabaseUtil {
 		
 		return databaseVersion;
 	}
-
-	
 }

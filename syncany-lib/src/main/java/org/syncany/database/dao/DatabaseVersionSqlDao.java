@@ -250,7 +250,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getLastDatabaseVersionHeader.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.master.getLastDatabaseVersionHeader.sql")) {
 			preparedStatement.setMaxRows(1);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -280,7 +280,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public DatabaseBranch getLocalDatabaseBranch() {
 		DatabaseBranch databaseBranch = new DatabaseBranch();
 
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getLocalDatabaseBranch.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.master.getLocalDatabaseBranch.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				DatabaseVersionHeader currentDatabaseVersionHeader = null;
 				int currentDatabaseVersionHeaderId = -1;

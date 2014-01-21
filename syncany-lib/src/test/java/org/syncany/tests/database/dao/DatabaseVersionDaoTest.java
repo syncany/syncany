@@ -17,11 +17,10 @@
  */
 package org.syncany.tests.database.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +48,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
+import org.syncany.operations.DatabaseBranch;
 import org.syncany.tests.util.TestCollectionUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
@@ -300,7 +300,7 @@ public class DatabaseVersionDaoTest {
 	}
 	
 	@Test
-	public void testGetLocalDatabaseBranch() throws Exception {
+	public void testGetLocalDatabaseBranch1() throws Exception {
 		// Setup
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
 		Connection databaseConnection = testConfig.createDatabaseConnection();
@@ -315,8 +315,66 @@ public class DatabaseVersionDaoTest {
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
 		
-		databaseVersionDao.getLocalDatabaseBranch();
-		fail("implement this");
+		DatabaseBranch localDatabaseBranch = databaseVersionDao.getLocalDatabaseBranch();
+		
+		// Test
+		assertNotNull(localDatabaseBranch);
+		assertEquals(11, localDatabaseBranch.size());
+		assertEquals(11, localDatabaseBranch.getAll().size());
+		 
+		assertEquals(TestDatabaseUtil.createBranch(
+			new String[] {
+				"A/(A1)/T=1389977166221",
+				"A/(A2)/T=1389977199506",
+				"A/(A3)/T=1389977203721",
+				"A/(A4)/T=1389977207863",
+				"A/(A5)/T=1389977214059",
+				"A/(A6)/T=1389977222341",
+				"B/(A6,B1)/T=1389977233549",
+				"A/(A7,B1)/T=1389977234818",
+				"B/(A7,B2)/T=1389977258145",
+				"B/(A7,B3)/T=1389977264593",
+				"A/(A8,B3)/T=1389977288627",
+			}
+		), localDatabaseBranch);		
+				
+		// Tear down
+		databaseConnection.close();
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
+	
+	@Test
+	public void testGetLocalDatabaseBranch2() throws Exception {
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		Connection databaseConnection = testConfig.createDatabaseConnection();
+
+		// Run
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		
+		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
+		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
+		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
+		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
+		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		
+		DatabaseBranch localDatabaseBranch = databaseVersionDao.getLocalDatabaseBranch();
+		
+		// Test
+		assertNotNull(localDatabaseBranch);
+		assertEquals(5, localDatabaseBranch.size());
+		assertEquals(5, localDatabaseBranch.getAll().size());
+		 
+		assertEquals(TestDatabaseUtil.createBranch(
+			new String[] {
+				"A/(A1)/T=1388589969004",
+				"A/(A2)/T=1388676369208",
+				"A/(A3)/T=1388762769349", // Note: Does NOT contain B1 (because: DIRTY!)
+				"A/(A4)/T=1388849289349",
+				"A/(A5)/T=1388935689349"
+			}
+		), localDatabaseBranch);		
 				
 		// Tear down
 		databaseConnection.close();
@@ -330,7 +388,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -339,8 +397,13 @@ public class DatabaseVersionDaoTest {
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
 		
-		//databaseVersionDao.getMaxDirtyVectorClock(machineName);
-		fail("implement this");
+		Long maxDirtyVectorClockA = databaseVersionDao.getMaxDirtyVectorClock("A");
+		Long maxDirtyVectorClockB = databaseVersionDao.getMaxDirtyVectorClock("B");
+		
+		// Test
+		assertNull(maxDirtyVectorClockA);
+		assertNotNull(maxDirtyVectorClockB);
+		assertEquals(1, maxDirtyVectorClockB);
 				
 		// Tear down
 		databaseConnection.close();

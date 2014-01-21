@@ -115,30 +115,6 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}	
 	
-	protected Map<MultiChunkId, MultiChunkEntry> createMultiChunkEntries(ResultSet resultSet) throws SQLException {
-		Map<MultiChunkId, MultiChunkEntry> multiChunkEntries = new HashMap<MultiChunkId, MultiChunkEntry>();		
-		MultiChunkId currentMultiChunkId = null;
-		
-		while (resultSet.next()) {			
-			MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
-			MultiChunkEntry multiChunkEntry = null;
-			
-			if (currentMultiChunkId != null && currentMultiChunkId.equals(multiChunkId)) {
-				multiChunkEntry = multiChunkEntries.get(multiChunkId);	
-			}
-			else {
-				multiChunkEntry = new MultiChunkEntry(multiChunkId);
-			}
-			
-			multiChunkEntry.addChunk(ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum")));
-			multiChunkEntries.put(multiChunkId, multiChunkEntry); 
-			
-			currentMultiChunkId = multiChunkId;
-		}
-		
-		return multiChunkEntries;
-	}
-	
 	/**
 	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
 	 */
@@ -174,5 +150,30 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+
+	protected Map<MultiChunkId, MultiChunkEntry> createMultiChunkEntries(ResultSet resultSet) throws SQLException {
+		Map<MultiChunkId, MultiChunkEntry> multiChunkEntries = new HashMap<MultiChunkId, MultiChunkEntry>();		
+		MultiChunkId currentMultiChunkId = null;
+		
+		while (resultSet.next()) {			
+			MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+			MultiChunkEntry multiChunkEntry = null;
+			
+			if (currentMultiChunkId != null && currentMultiChunkId.equals(multiChunkId)) {
+				multiChunkEntry = multiChunkEntries.get(multiChunkId);	
+			}
+			else {
+				multiChunkEntry = new MultiChunkEntry(multiChunkId);
+			}
+			
+			multiChunkEntry.addChunk(ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum")));
+			multiChunkEntries.put(multiChunkId, multiChunkEntry); 
+			
+			currentMultiChunkId = multiChunkId;
+		}
+		
+		return multiChunkEntries;
 	}
 }

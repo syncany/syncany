@@ -39,7 +39,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	}	
 	
 	public void persistNewKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/insert.persistNewKnownRemoteDatabases.sql");
+		PreparedStatement preparedStatement = getStatement("/sql/application.insert.all.persistNewKnownRemoteDatabases.sql");
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
 			preparedStatement.setString(1, databaseRemoteFile.getName());

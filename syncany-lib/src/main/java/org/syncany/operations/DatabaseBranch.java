@@ -105,6 +105,32 @@ public class DatabaseBranch {
 		return branch.toString();
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((branch == null) ? 0 : branch.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DatabaseBranch other = (DatabaseBranch) obj;
+		if (branch == null) {
+			if (other.branch != null)
+				return false;
+		}
+		else if (!branch.equals(other.branch))
+			return false;
+		return true;
+	}
+
 	public class BranchIterator implements Iterator<DatabaseVersionHeader> {		
         private int current;
         
