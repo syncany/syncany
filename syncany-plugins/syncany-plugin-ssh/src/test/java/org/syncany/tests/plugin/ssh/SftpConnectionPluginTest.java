@@ -25,13 +25,23 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
+import org.apache.sshd.SshServer;
+import org.apache.sshd.common.NamedFactory;
+import org.apache.sshd.server.Command;
+import org.apache.sshd.server.UserAuth;
+import org.apache.sshd.server.auth.UserAuthNone;
+import org.apache.sshd.server.command.ScpCommandFactory;
+import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.apache.sshd.server.sftp.SftpSubsystem;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
@@ -39,33 +49,64 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.ssh.SshConnection;
-import org.syncany.connection.plugins.ssh.SshPlugin;
-import org.syncany.connection.plugins.ssh.SshTransferManager;
+import org.syncany.connection.plugins.sftp.SftpConnection;
+import org.syncany.connection.plugins.sftp.SftpPlugin;
+import org.syncany.connection.plugins.sftp.SftpTransferManager;
 import org.syncany.tests.util.TestFileUtil;
 
-public class SshConnectionPluginTest {
-	private File tempLocalSourceDir;
-	private Map<String, String> sshPluginSettings;
+public class SftpConnectionPluginTest {
+	private static File tempLocalSourceDir;
+	private static File tempRepoSourceDir;
 	
+	private Map<String, String> sshPluginSettings;
+	private String HOST = "127.0.0.1";
+	private static int PORT = 2338;
+	
+	@BeforeClass
+	public static void beforeTestSetup() {
+		SshServer sshd = SshServer.setUpDefaultServer();
+		sshd.setPort(PORT);
+		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("hostkey.ser"));
+
+		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
+		userAuthFactories.add(new UserAuthNone.Factory());
+		sshd.setUserAuthFactories(userAuthFactories);
+		//sshd.setPublickeyAuthenticator(new PublickeyAuthenticator());
+
+		sshd.setCommandFactory(new ScpCommandFactory());
+
+		List<NamedFactory<Command>> namedFactoryList = new ArrayList<NamedFactory<Command>>();
+		namedFactoryList.add(new SftpSubsystem.Factory());
+		sshd.setSubsystemFactories(namedFactoryList);
+
+		try {
+			sshd.start();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	@Before
 	public void setUp() throws Exception {
 		File rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		
+
 		tempLocalSourceDir = new File(rootDir+"/local");
+		tempRepoSourceDir = new File(rootDir+"/repo");
 		tempLocalSourceDir.mkdir();
+		tempRepoSourceDir.mkdir();
 		
 		sshPluginSettings = new HashMap<String, String>();
-		sshPluginSettings.put("hostname", "localhost");
-		sshPluginSettings.put("username", "vwiencek");
-		sshPluginSettings.put("password", "ulysse");
-		sshPluginSettings.put("port", "22");
-		sshPluginSettings.put("path", "/Users/vwiencek/dev/sandbox/");
+		sshPluginSettings.put("hostname", HOST);
+		sshPluginSettings.put("username", "user");
+		sshPluginSettings.put("password", "pass");
+		sshPluginSettings.put("port", "" + PORT);
+		sshPluginSettings.put("path", tempRepoSourceDir.getAbsolutePath());
 	}
 	
-	@After
-	public void tearDown() {
+	@AfterClass
+	public static void tearDown() {
 		TestFileUtil.deleteDirectory(tempLocalSourceDir);
+		TestFileUtil.deleteDirectory(tempRepoSourceDir);
 	}
 	
 	@Test
@@ -75,23 +116,23 @@ public class SshConnectionPluginTest {
 	
 	@Test
 	public void testLocalPluginInfo() {
-		Plugin pluginInfo = Plugins.get("ssh");
+		Plugin pluginInfo = Plugins.get("sftp");
 		
 		assertNotNull("PluginInfo should not be null.", pluginInfo);
-		assertEquals("Plugin ID should be 'ssh'.", "ssh", pluginInfo.getId());
+		assertEquals("Plugin ID should be 'ssh'.", "sftp", pluginInfo.getId());
 		assertNotNull("Plugin version should not be null.", pluginInfo.getVersion());
 		assertNotNull("Plugin name should not be null.", pluginInfo.getName());
 	}
 	
 	@Test(expected=StorageException.class)
 	public void testConnectToNonExistantFolder() throws StorageException {
-		Plugin pluginInfo = Plugins.get("local");
+		Plugin pluginInfo = Plugins.get("sftp");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
-		invalidPluginSettings.put("hostname", "localhost");
-		invalidPluginSettings.put("username", "vwiencek");
-		invalidPluginSettings.put("password", "ulysse");
-		invalidPluginSettings.put("port", "22");
+		invalidPluginSettings.put("hostname", HOST);
+		invalidPluginSettings.put("username", "user");
+		invalidPluginSettings.put("password", "pass");
+		invalidPluginSettings.put("port", "" + PORT);
 		invalidPluginSettings.put("path", "/path/does/not/exist");
 		
 		Connection connection = pluginInfo.createConnection();
@@ -100,15 +141,15 @@ public class SshConnectionPluginTest {
 		TransferManager transferManager = connection.createTransferManager();
 		
 		// This should cause a Storage exception, because the path does not exist
-		transferManager.connect();		
+		transferManager.connect();	
+		transferManager.init();
 	}
 	
 	@Test(expected=StorageException.class)
 	public void testConnectWithInvalidSettings() throws StorageException {
-		Plugin pluginInfo = Plugins.get("ssh");
+		Plugin pluginInfo = Plugins.get("sftp");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
-		// do NOT add anything
 		
 		Connection connection = pluginInfo.createConnection();
 		connection.init(invalidPluginSettings);
@@ -120,7 +161,7 @@ public class SshConnectionPluginTest {
 	}
 
 	@Test
-	public void testLocalUploadListDownloadAndDelete() throws Exception {				
+	public void testSftpUploadListDownloadAndDelete() throws Exception {				
 		// Generate test files
 		Map<String, File> inputFiles = generateTestInputFile();
 
@@ -190,8 +231,6 @@ public class SshConnectionPluginTest {
 			transferManager.upload(inputFile, remoteOutputFile);
 			
 			inputFileOutputFile.put(inputFile, remoteOutputFile);			
-			
-//			assertTrue("Uploaded file does not exist.", new File(tempLocalRepoDir+"/"+remoteOutputFile.getName()).exists());			
 		}
 		
 		return inputFileOutputFile;
@@ -213,18 +252,17 @@ public class SshConnectionPluginTest {
 	}	
 	
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
-		Plugin pluginInfo = Plugins.get("ssh");	
+		Plugin pluginInfo = Plugins.get("sftp");	
 		
 		Connection connection = pluginInfo.createConnection();				
 		connection.init(sshPluginSettings);
 		
 		TransferManager transferManager = connection.createTransferManager();
 
-		assertEquals("LocalPluginInfo expected.", SshPlugin.class, pluginInfo.getClass());
-		assertEquals("LocalConnection expected.", SshConnection.class, connection.getClass());
-		assertEquals("LocalTransferManager expected.", SshTransferManager.class, transferManager.getClass());
+		assertEquals("LocalPluginInfo expected.", SftpPlugin.class, pluginInfo.getClass());
+		assertEquals("LocalConnection expected.", SftpConnection.class, connection.getClass());
+		assertEquals("LocalTransferManager expected.", SftpTransferManager.class, transferManager.getClass());
 		
 		return transferManager;
 	}
-				
 }

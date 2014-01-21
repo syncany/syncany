@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.ssh;
+package org.syncany.connection.plugins.sftp;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,11 +45,11 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
 /**
- * Implements a {@link TransferManager} based on an SSH storage backend for the
- * {@link SshPlugin}. 
+ * Implements a {@link TransferManager} based on an SFTP storage backend for the
+ * {@link SftpPlugin}. 
  * 
- * <p>Using an {@link SshConnection}, the transfer manager is configured and uses 
- * a well defined SSH folder to store the Syncany repository data. While repo and
+ * <p>Using an {@link SftpConnection}, the transfer manager is configured and uses 
+ * a well defined SFTP folder to store the Syncany repository data. While repo and
  * master file are stored in the given folder, databases and multichunks are stored
  * in special sub-folders:
  * 
@@ -63,8 +63,8 @@ import com.jcraft.jsch.SftpException;
  * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class SshTransferManager extends AbstractTransferManager {
-	private static final Logger logger = Logger.getLogger(SshTransferManager.class.getSimpleName());
+public class SftpTransferManager extends AbstractTransferManager {
+	private static final Logger logger = Logger.getLogger(SftpTransferManager.class.getSimpleName());
 
 	private static final int CONNECT_RETRY_COUNT = 3;
 
@@ -76,7 +76,7 @@ public class SshTransferManager extends AbstractTransferManager {
 	private String multichunkPath;
 	private String databasePath;
 
-	public SshTransferManager(SshConnection connection) {
+	public SftpTransferManager(SftpConnection connection) {
 		super(connection);
 
 		this.jsch = new JSch();
@@ -86,8 +86,8 @@ public class SshTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public SshConnection getConnection() {
-		return (SshConnection) super.getConnection();
+	public SftpConnection getConnection() {
+		return (SftpConnection) super.getConnection();
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class SshTransferManager extends AbstractTransferManager {
 				}
 
 				if (logger.isLoggable(Level.INFO)) {
-					logger.log(Level.INFO, "SSH client connecting to {0}:{1} ...", new Object[] { getConnection().getHostname(), getConnection().getPort() });
+					logger.log(Level.INFO, "SFTP client connecting to {0}:{1} ...", new Object[] { getConnection().getHostname(), getConnection().getPort() });
 				}
 				
 				Properties properties = new Properties();
@@ -109,23 +109,23 @@ public class SshTransferManager extends AbstractTransferManager {
 				session.setPassword(getConnection().getPassword());
 				session.connect();
 				if (!session.isConnected()){
-					logger.warning("SSH: unable to connect to ssh host " + getConnection().getHostname() + ":" + getConnection().getPort());
+					logger.warning("SFTP: unable to connect to sftp host " + getConnection().getHostname() + ":" + getConnection().getPort());
 				}
 
 				channel = (ChannelSftp)session.openChannel("sftp");
 				channel.connect();
 				if (!channel.isConnected()){
-					logger.warning("SSH: unable to connect to sftp channel " + getConnection().getHostname() + ":" + getConnection().getPort());
+					logger.warning("SFTP: unable to connect to sftp channel " + getConnection().getHostname() + ":" + getConnection().getPort());
 				}
 				return;
 			}
 			catch (Exception ex) {
 				if (i == CONNECT_RETRY_COUNT - 1) {
-					logger.log(Level.WARNING, "SSH client connection failed. Retrying failed.", ex);
+					logger.log(Level.WARNING, "SFTP client connection failed. Retrying failed.", ex);
 					throw new StorageException(ex);
 				}
 				else {
-					logger.log(Level.WARNING, "SSH client connection failed. Retrying " + (i + 1) + "/" + CONNECT_RETRY_COUNT + " ...", ex);
+					logger.log(Level.WARNING, "SFTP client connection failed. Retrying " + (i + 1) + "/" + CONNECT_RETRY_COUNT + " ...", ex);
 				}
 			}
 		}
@@ -169,7 +169,7 @@ public class SshTransferManager extends AbstractTransferManager {
 				OutputStream tempFOS = new FileOutputStream(tempFile);
 	
 				if (logger.isLoggable(Level.INFO)) {
-					logger.log(Level.INFO, "SSH: Downloading {0} to temp file {1}", new Object[] { remotePath, tempFile });
+					logger.log(Level.INFO, "SFTP: Downloading {0} to temp file {1}", new Object[] { remotePath, tempFile });
 				}
 	
 				channel.get(remotePath, tempFOS);
@@ -178,7 +178,7 @@ public class SshTransferManager extends AbstractTransferManager {
 	
 				// Move file
 				if (logger.isLoggable(Level.INFO)) {
-					logger.log(Level.INFO, "SSH: Renaming temp file {0} to file {1}", new Object[] { tempFile, localFile });
+					logger.log(Level.INFO, "SFTP: Renaming temp file {0} to file {1}", new Object[] { tempFile, localFile });
 				}
 	
 				localFile.delete();
@@ -205,7 +205,7 @@ public class SshTransferManager extends AbstractTransferManager {
 			InputStream fileFIS = new FileInputStream(localFile);
 
 			if (logger.isLoggable(Level.INFO)) {
-				logger.log(Level.INFO, "SSH: Uploading {0} to temp file {1}", new Object[] { localFile, tempRemotePath });
+				logger.log(Level.INFO, "SFTP: Uploading {0} to temp file {1}", new Object[] { localFile, tempRemotePath });
 			}
 
 			channel.put(fileFIS, tempRemotePath);
@@ -214,7 +214,7 @@ public class SshTransferManager extends AbstractTransferManager {
 
 			// Move
 			if (logger.isLoggable(Level.INFO)) {
-				logger.log(Level.INFO, "SSH: Renaming temp file {0} to file {1}", new Object[] { tempRemotePath, remotePath });
+				logger.log(Level.INFO, "SFTP: Renaming temp file {0} to file {1}", new Object[] { tempRemotePath, remotePath });
 			}
 
 			channel.rename(tempRemotePath, remotePath);

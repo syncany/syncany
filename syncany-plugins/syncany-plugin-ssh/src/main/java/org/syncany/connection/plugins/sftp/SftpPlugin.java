@@ -15,40 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.ssh;
+package org.syncany.connection.plugins.sftp;
 
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 
 /**
- * Identifies the SSH-based storage {@link Plugin} for Syncany. 
+ * Identifies the SFTP-based storage {@link Plugin} for Syncany. 
  * 
  * <p>This class defines the identifier, name and 
  * version of the plugin. It furthermore allows the instantiation 
- * of a plugin-specific {@link SshConnection}. 
+ * of a plugin-specific {@link SftpConnection}. 
  * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class SshPlugin extends Plugin {
-    public static final String ID = "ssh";
-    
-    @Override
-    public String getId() {
-        return ID;
-    }    
-    
+public class SftpPlugin extends Plugin {
+	public static final String ID = "sftp";
+
 	@Override
-	public String getName() {
-		return "SSH";
+	public String getId() {
+		return ID;
 	}
 
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
-    }
+	@Override
+	public String getName() {
+		return "SFTP";
+	}
 
-    @Override
-    public Connection createConnection() {
-        return new SshConnection();
-    }
+	@Override
+	public Integer[] getVersion() {
+		return new Integer[] { 0, 1 };
+	}
+
+	@Override
+	public Connection createConnection() {
+		return new SftpConnection();
+	}
 }

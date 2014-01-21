@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.ssh;
+package org.syncany.connection.plugins.sftp;
 
 import java.util.Map;
 
@@ -27,13 +27,13 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
- * The SSH connection represents the settings required to connect to an
- * SSH-based storage backend. It can be used to initialize/create an 
- * {@link SshTransferManager} and is part of the {@link SshPlugin}.  
+ * The SFTP connection represents the settings required to connect to an
+ * SFTP-based storage backend. It can be used to initialize/create an 
+ * {@link SftpTransferManager} and is part of the {@link SftpPlugin}.  
  *
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class SshConnection implements Connection {
+public class SftpConnection implements Connection {
     private String hostname;
     private String username;
     private String password;
@@ -42,7 +42,7 @@ public class SshConnection implements Connection {
 
     @Override
     public TransferManager createTransferManager() {
-        return new SshTransferManager(this);
+        return new SftpTransferManager(this);
     }
   
     public String getHostname() {
@@ -108,7 +108,7 @@ public class SshConnection implements Connection {
 	
     @Override
     public String toString() {
-        return SshConnection.class.getSimpleName()
+        return SftpConnection.class.getSimpleName()
         + "[hostname=" + hostname + ":" + port + ", username=" + username + ", path=" + path + "]";
     }
 }
