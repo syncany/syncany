@@ -22,6 +22,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -49,25 +50,39 @@ import org.syncany.util.I18n;
  *
  */
 public class SummaryPanel extends WizardPanelComposite {
+	private static Logger logger = Logger.getLogger(SummaryPanel.class.getSimpleName());
+	
 	private Label repositoryType;
 	private Label localFolder;
 	private Label encryptionType;
 	private Label summaryIntroductionTitleLabel;
-	private ProgressBar progressBar;
-	
-	private StackLayout stackLayout;
-	private Composite stackComposite;
-	private Composite successInitComposite;
-	private Composite failureComposite;
-	private Composite emptyComposite;
-	private Label sucessInitLabel;
-	private Button initOpenSyncanyFolderButton; 
-	private Composite composite;
-	private Button initCloseWizardButton;
 	private Label summaryIntroductionLabel;
 	private Label urlLabel;
 	private Label repositoryTypeLabel;
 	private Label encryptionTypeLabel;
+	private Label successConnectLabel;
+	private Label successUrlLabel;
+	private Label sucessInitLabel;
+
+	private ProgressBar progressBar;
+	
+	private StackLayout stackLayout;
+	
+	private Composite stackComposite;
+	private Composite successInitComposite;
+	private Composite failureComposite;
+	private Composite emptyComposite;
+	private Composite composite;
+	private Composite successConnectComposite;
+	private Composite composite_2;
+	
+	private Button initOpenSyncanyFolderButton; 
+	private Button initCloseWizardButton;
+	
+	private String link;
+
+	private Button connectOpenSyncanyFolderButton;
+	private Button connectCloseWizardButton;
 	
 	public SummaryPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -136,13 +151,7 @@ public class SummaryPanel extends WizardPanelComposite {
 		urlLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
-				try{
-					Toolkit toolkit = Toolkit.getDefaultToolkit();
-					Clipboard clipboard = toolkit.getSystemClipboard();
-					StringSelection strSel = new StringSelection(link);
-					clipboard.setContents(strSel, null);
-				}
-				catch (Exception ex){ }
+				copyUrlInClipboard();
 			}
 		});
 		
@@ -216,18 +225,30 @@ public class SummaryPanel extends WizardPanelComposite {
 		);
 	}
 	
+	protected void copyUrlInClipboard() {
+		try{
+			Toolkit toolkit = Toolkit.getDefaultToolkit();
+			Clipboard clipboard = toolkit.getSystemClipboard();
+			StringSelection strSel = new StringSelection(link);
+			clipboard.setContents(strSel, null);
+		}
+		catch (Exception ex){ 
+			logger.warning("Error in copyUrlInClipboard " + ex);
+		}
+	}
+
 	public void updateData(){
-		final UserInput userInput = getParentWizardDialog().getUserInput();
+		UserInput userInput = getParentWizardDialog().getUserInput();
+		final String type = String.format("%s", userInput.getCommonParameter(CommonParameters.COMMAND_ACTION));
+		final String encryption = String.format("[%s / %s]", userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM), userInput.getCommonParameter(CommonParameters.ENCRYPTION_KEYLENGTH));
+		final String folder = String.format("%s", userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 		
 		getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				String type = String.format("%s", userInput.getCommonParameter(CommonParameters.COMMAND_ACTION));
-				String encryption = String.format("[%s / %s]", userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM), userInput.getCommonParameter(CommonParameters.ENCRYPTION_KEYLENGTH));
-				String folder = String.format("%s", userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 				repositoryType.setText(type);
-				localFolder.setText(folder);
 				encryptionType.setText(encryption);
+				localFolder.setText(folder);
 			}
 		});
 	}	
@@ -289,13 +310,6 @@ public class SummaryPanel extends WizardPanelComposite {
 		stackComposite.layout();
 	}
 	
-	private String link;
-	private Composite successConnectComposite;
-	private Label successConnectLabel;
-	private Label successUrlLabel;
-	private Composite composite_2;
-	private Button connectOpenSyncanyFolderButton;
-	private Button connectCloseWizardButton;
 	public void showSuccessMessage(String link, boolean linkEncrypted){
 		this.link = link;
 		stackLayout.topControl = successInitComposite;

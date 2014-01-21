@@ -30,9 +30,9 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
@@ -95,7 +95,6 @@ public class SftpPluginPanel extends PluginPanel {
 		portSpinner = new Spinner(this, SWT.BORDER);
 		portSpinner.setPageIncrement(1);
 		portSpinner.setMaximum(100000);
-//		WidgetDecorator.decorateControl(spinner, FontDecorator.NORMAL);
 		portSpinner.setSelection(22);
 		GridData gd_spinner = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_spinner.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
