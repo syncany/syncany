@@ -33,6 +33,7 @@ import java.util.Map;
 
 import org.apache.sshd.SshServer;
 import org.apache.sshd.common.NamedFactory;
+import org.apache.sshd.common.file.nativefs.NativeFileSystemFactory;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.UserAuth;
 import org.apache.sshd.server.auth.UserAuthNone;
@@ -61,13 +62,15 @@ public class SftpConnectionPluginTest {
 	private Map<String, String> sshPluginSettings;
 	private String HOST = "127.0.0.1";
 	private static int PORT = 2338;
+	private static SshServer sshd;
 	
 	@BeforeClass
 	public static void beforeTestSetup() {
-		SshServer sshd = SshServer.setUpDefaultServer();
+		sshd = SshServer.setUpDefaultServer();
 		sshd.setPort(PORT);
 		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("hostkey.ser"));
-
+		sshd.setFileSystemFactory(new NativeFileSystemFactory());
+		
 		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
 		userAuthFactories.add(new UserAuthNone.Factory());
 		sshd.setUserAuthFactories(userAuthFactories);
@@ -107,6 +110,12 @@ public class SftpConnectionPluginTest {
 	public static void tearDown() {
 		TestFileUtil.deleteDirectory(tempLocalSourceDir);
 		TestFileUtil.deleteDirectory(tempRepoSourceDir);
+		try {
+			sshd.stop(true);
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Test
