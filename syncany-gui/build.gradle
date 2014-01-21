@@ -100,8 +100,8 @@ task exe(dependsOn: ["installApp", "launch4j"]) << {
 	}
 	
 	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
-		rename("setup.iss.skel", "setup.iss")
+		from("${rootProject.projectDir}/gradle/innosetup/setup.gui.iss.skel")
+		rename("setup.gui.iss.skel", "setup.iss")
 		expand([
 			applicationVersion: "${applicationVersion}",
 			applicationVersionFull: "${applicationVersionFull}",			
