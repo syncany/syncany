@@ -47,10 +47,23 @@ In case innoextract is not available, use the author's repo:
 	sudo apt-get update
 	sudo apt-get install innoextract
 
+#### 2. Download and install Launch4j (http://launch4j.sourceforge.net/)
 
-#### 2. Create exe-installer with the Gradle "exe" task
+##### 2.1. On Windows
 
-The Gradle task "exe" first copies the skeleton input script [setup.iss.skel](setup.iss.skel)
+1. [Download](http://sourceforge.net/projects/launch4j/files/launch4j-3/3.1.0-beta2) and install Launch4j
+2. Add Launch4j path to global PATH and make sure "launch4j" command workd
+
+##### 2.2. On Linux
+
+1. [Download](http://sourceforge.net/projects/launch4j/files/launch4j-3/3.1.0-beta2) and install Launch4j
+2. Add Launch4j path to global PATH and make sure "launch4j" command workd
+
+#### 3. Create Windows Command Line Client and Gui installers
+
+##### 3.1 Create Syncany Command Line Client exe-installer with the Gradle ":syncany-cli:exe" task
+
+The Gradle task ":syncany-cli:exe" first copies the skeleton input script [setup.iss.skel](setup.iss.skel)
 and replaces some variables (application version). It then calls the Inno Setup
 compiler (ISCC) with this script and generates an exe-file to 
 `syncany-cli/build/innosetup`.
@@ -58,5 +71,18 @@ compiler (ISCC) with this script and generates an exe-file to
 After all that you should be able to run `iscc` from the command line; and hence
 Gradle should also be able to use the iscc compiler. You can run it like this:
 
-	gradle exe
+	gradle :syncany-cli:exe
 
+##### 3.2 Create Syncany Command Line Client exe-installer with the Gradle ":syncany-cli:exe" task
+
+First of all, gradle create a ".exe" file for windows execution with Launch4j.
+
+Then the Gradle task ":syncany-cli:exe" copies the skeleton input script [setup.iss.skel](setup.iss.skel)
+and replaces some variables (application version). It then calls the Inno Setup
+compiler (ISCC) with this script and generates an exe-file to 
+`syncany-gui/build/innosetup`.
+
+After all that you should be able to run `iscc` from the command line; and hence
+Gradle should also be able to use the iscc compiler. You can run it like this:
+
+	gradle :syncany-gui:exe

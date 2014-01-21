@@ -46,9 +46,40 @@ distZip {
 	version = "$applicationVersionFull"
 }
 
+// Windows EXE File ////////////////////////////////////////////////////////////
+apply plugin: 'launch4j'
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "edu.sc.seis.gradle:launch4j:1.0.6"
+    }
+}
+
+launch4j {
+    mainClassName   = "org.syncany.gui.Launcher"
+    icon            = "${rootProject.projectDir}/gradle/innosetup/setup-icon.ico"
+    launch4jCmd     = "launch4j"
+    outputDir       = "launch4j"
+    dontWrapJar     = false
+    headerType      = "gui"
+    outfile         = "syncany-client.exe"
+    
+    jreMinVersion   = '1.7.0_10'
+    
+    copyright       = "Syncany"
+    
+    initialHeapSize = 512
+    maxHeapSize     = 1024
+    mutexName       = "syncany-gui"
+    windowTitle     = "Syncany Client"
+}
+
 // Windows Installer ///////////////////////////////////////////////////////////
 
-task exe(dependsOn: ["installApp"]) << {
+task exe(dependsOn: ["installApp", "launch4j"]) << {
 	def innoSetupDir = new File("${buildDir}/innosetup")
 
 	delete innoSetupDir	
@@ -63,6 +94,11 @@ task exe(dependsOn: ["installApp"]) << {
 		into(innoSetupDir)
 	}
 
+	copy {
+		from("${rootProject.projectDir}/syncany-gui/build/launch4j/syncany-client.exe")
+		into("${rootProject.projectDir}/syncany-gui/build/install/syncany")
+	}
+	
 	copy {
 		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
 		rename("setup.iss.skel", "setup.iss")
