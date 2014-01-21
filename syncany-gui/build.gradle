@@ -1,7 +1,4 @@
-apply plugin: 'application'
-
-applicationName = "syncany"
-mainClassName = "org.syncany.gui.Launcher"
+// Project dependencies
 
 dependencies {
 	compile			project(':syncany-util')
@@ -22,13 +19,12 @@ dependencies {
 	compile			"org.eclipse.jetty:jetty-server:9.1.0.RC2"
 }
 
-task(runGui, dependsOn: 'classes', type: JavaExec) {
-	main = "${mainClassName}"
-	//SWT need -XStartOnFirstThread to run on OSX
-	jvmArgs = getOsName().startsWith("mac") ? ['-XstartOnFirstThread'] : []	
-	classpath = sourceSets.main.runtimeClasspath
-}
+// Application Plugin ////////////////////////////////////////////////////////////
+apply plugin: 'application'
 
+// Application plugin specific parameter
+mainClassName     = "org.syncany.gui.Launcher"
+applicationName   = "syncany"
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
@@ -58,6 +54,10 @@ buildscript {
     }
 }
 
+project.ext {
+	clientExeFileName = "syncany.exe"
+}
+
 launch4j {
     mainClassName   = "org.syncany.gui.Launcher"
     icon            = "${rootProject.projectDir}/gradle/innosetup/setup-icon.ico"
@@ -65,7 +65,7 @@ launch4j {
     outputDir       = "launch4j"
     dontWrapJar     = false
     headerType      = "gui"
-    outfile         = "syncany-client.exe"
+    outfile         = "${project.clientExeFileName}"
     
     jreMinVersion   = '1.7.0_10'
     
@@ -95,7 +95,7 @@ task exe(dependsOn: ["installApp", "launch4j"]) << {
 	}
 
 	copy {
-		from("${rootProject.projectDir}/syncany-gui/build/launch4j/syncany-client.exe")
+		from("${rootProject.projectDir}/syncany-gui/build/launch4j/${project.clientExeFileName}")
 		into("${rootProject.projectDir}/syncany-gui/build/install/syncany")
 	}
 	
@@ -113,4 +113,12 @@ task exe(dependsOn: ["installApp", "launch4j"]) << {
 		workingDir rootProject.projectDir
 		commandLine "iscc ${innoSetupDir}/setup.iss".split()
 	}
+}
+
+// syncany-gui tasks
+task(runGui, dependsOn: 'classes', type: JavaExec) {
+	main = "${mainClassName}"
+	//SWT need -XStartOnFirstThread to run on OSX
+	jvmArgs = getOsName().startsWith("mac") ? ['-XstartOnFirstThread'] : []	
+	classpath = sourceSets.main.runtimeClasspath
 }
