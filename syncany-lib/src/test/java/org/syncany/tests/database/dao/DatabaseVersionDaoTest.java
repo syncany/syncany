@@ -17,10 +17,12 @@
  */
 package org.syncany.tests.database.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -417,7 +419,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set2.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -426,8 +428,18 @@ public class DatabaseVersionDaoTest {
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
 				
-		//databaseVersionDao.markDatabaseVersionDirty(databaseVersionHeader, status);
-		fail("implement this");
+		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A48"));
+		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A49"));
+		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A50"));
+		
+		List<DatabaseVersion> dirtyDatabaseVersions = TestCollectionUtil.toList(databaseVersionDao.getDatabaseVersions(DatabaseVersionStatus.DIRTY));
+		
+		// Test
+		assertNotNull(dirtyDatabaseVersions);
+		assertEquals(3, dirtyDatabaseVersions.size());
+		assertEquals("(A48)", dirtyDatabaseVersions.get(0).getVectorClock().toString());
+		assertEquals("(A49)", dirtyDatabaseVersions.get(1).getVectorClock().toString());
+		assertEquals("(A50)", dirtyDatabaseVersions.get(2).getVectorClock().toString());		
 				
 		// Tear down
 		databaseConnection.close();

@@ -67,10 +67,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		this.multiChunkDao = multiChunkDao;
 	}
 
-	public void markDatabaseVersionDirty(DatabaseVersionHeader databaseVersionHeader) {
+	public void markDatabaseVersionDirty(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.update.master.markDatabaseVersionDirty.sql")){
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
-			preparedStatement.setString(2, databaseVersionHeader.getVectorClock().toString());
+			preparedStatement.setString(2, vectorClock.toString());
 
 			preparedStatement.executeUpdate();
 			connection.commit();

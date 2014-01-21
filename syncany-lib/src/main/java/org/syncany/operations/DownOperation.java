@@ -215,7 +215,7 @@ public class DownOperation extends Operation {
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
 				logger.log(Level.INFO, "    * MASTER->DIRTY: "+databaseVersionHeader);
-				localDatabase.markDatabaseVersionDirty(databaseVersionHeader);
+				localDatabase.markDatabaseVersionDirty(databaseVersionHeader.getVectorClock());
 			
 				String remoteFileToPruneClientName = config.getMachineName();
 				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());

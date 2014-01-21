@@ -108,8 +108,8 @@ public class SqlDatabase {
 		databaseVersionDao.persistDatabaseVersion(databaseVersion);
 	}
 
-	public void markDatabaseVersionDirty(DatabaseVersionHeader databaseVersionHeader) {
-		databaseVersionDao.markDatabaseVersionDirty(databaseVersionHeader);
+	public void markDatabaseVersionDirty(VectorClock vectorClock) {
+		databaseVersionDao.markDatabaseVersionDirty(vectorClock);
 	}
 
 	public void removeDirtyDatabaseVersions() {
