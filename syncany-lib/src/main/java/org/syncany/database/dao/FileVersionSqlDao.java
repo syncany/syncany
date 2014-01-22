@@ -78,6 +78,12 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		preparedStatement.executeBatch();
 		preparedStatement.close();
 	}
+
+	public void removeDirtyFileVersions() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql");
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
+	}
 	
 	public Map<String, FileVersion> getCurrentFileTree() {		
 		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getCurrentFileTree.sql")) {
@@ -182,5 +188,5 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 
 		return fileVersion;
-	}	
+	}
 }

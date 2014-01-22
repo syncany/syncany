@@ -20,7 +20,6 @@ package org.syncany.tests.database.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.util.Date;
@@ -33,7 +32,6 @@ import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
@@ -71,55 +69,11 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
-		Iterator<DatabaseVersion> databaseVersionsMaster = databaseVersionDao.getDatabaseVersions(DatabaseVersionStatus.MASTER);
-		Iterator<DatabaseVersion> databaseVersionsDirty = databaseVersionDao.getDatabaseVersions(DatabaseVersionStatus.DIRTY);
+		Iterator<DatabaseVersion> databaseVersionsDirty = databaseVersionDao.getDirtyDatabaseVersions();
 		
-		// Test
-		
-		// - MASTER
-		assertNotNull(databaseVersionsMaster);
-		
-		List<DatabaseVersion> databaseVersionsMasterList = TestCollectionUtil.toList(databaseVersionsMaster);
-		assertEquals(5, databaseVersionsMasterList.size());
-		
-		DatabaseVersion databaseVersionA1 = databaseVersionsMasterList.get(0);
-		assertEquals("(A1)", databaseVersionA1.getVectorClock().toString());
-		assertEquals(1, databaseVersionA1.getChunks().size());
-		assertEquals(1, databaseVersionA1.getMultiChunks().size());
-		assertEquals(1, databaseVersionA1.getFileContents().size());
-		assertEquals(1, databaseVersionA1.getFileHistories().size());
-		
-		DatabaseVersion databaseVersionA2 = databaseVersionsMasterList.get(1);
-		assertEquals("(A2)", databaseVersionA2.getVectorClock().toString());
-		assertEquals(1, databaseVersionA2.getChunks().size());
-		assertEquals(1, databaseVersionA2.getMultiChunks().size());
-		assertEquals(1, databaseVersionA2.getFileContents().size());
-		assertEquals(1, databaseVersionA2.getFileHistories().size());
-		
-		DatabaseVersion databaseVersionA3 = databaseVersionsMasterList.get(2);
-		assertEquals("(A3)", databaseVersionA3.getVectorClock().toString());
-		assertEquals(1, databaseVersionA3.getChunks().size());
-		assertEquals(1, databaseVersionA3.getMultiChunks().size());
-		assertEquals(1, databaseVersionA3.getFileContents().size());
-		assertEquals(1, databaseVersionA3.getFileHistories().size());
-		
-		DatabaseVersion databaseVersionA4 = databaseVersionsMasterList.get(3);
-		assertEquals("(A4)", databaseVersionA4.getVectorClock().toString());
-		assertEquals(0, databaseVersionA4.getChunks().size());
-		assertEquals(0, databaseVersionA4.getMultiChunks().size());
-		assertEquals(0, databaseVersionA4.getFileContents().size());
-		assertEquals(1, databaseVersionA4.getFileHistories().size());
-		
-		DatabaseVersion databaseVersionA5 = databaseVersionsMasterList.get(4);
-		assertEquals("(A5)", databaseVersionA5.getVectorClock().toString());
-		assertEquals(1, databaseVersionA5.getChunks().size());
-		assertEquals(1, databaseVersionA5.getMultiChunks().size());
-		assertEquals(1, databaseVersionA5.getFileContents().size());
-		assertEquals(1, databaseVersionA5.getFileHistories().size());
-		
-		// - DIRTY
+		// Test				
 		assertNotNull(databaseVersionsDirty);
 		
 		List<DatabaseVersion> databaseVersionsDirtyList = TestCollectionUtil.toList(databaseVersionsDirty);
@@ -151,7 +105,7 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
 		Iterator<DatabaseVersion> databaseVersionsToA2 = databaseVersionDao.getDatabaseVersionsTo("A", 2);
 		Iterator<DatabaseVersion> databaseVersionsToA5 = databaseVersionDao.getDatabaseVersionsTo("A", 5);
@@ -197,7 +151,7 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
 		DatabaseVersionHeader lastDatabaseVersionHeader = databaseVersionDao.getLastDatabaseVersionHeader();
 		
@@ -225,7 +179,7 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
 		// a. Capture database version header (now)
 		DatabaseVersionHeader lastDatabaseVersionHeaderBefore = databaseVersionDao.getLastDatabaseVersionHeader();
@@ -315,7 +269,7 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
 		DatabaseBranch localDatabaseBranch = databaseVersionDao.getLocalDatabaseBranch();
 		
@@ -359,7 +313,7 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
 		DatabaseBranch localDatabaseBranch = databaseVersionDao.getLocalDatabaseBranch();
 		
@@ -397,7 +351,7 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
 		Long maxDirtyVectorClockA = databaseVersionDao.getMaxDirtyVectorClock("A");
 		Long maxDirtyVectorClockB = databaseVersionDao.getMaxDirtyVectorClock("B");
@@ -426,13 +380,13 @@ public class DatabaseVersionDaoTest {
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 				
 		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A48"));
 		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A49"));
 		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A50"));
 		
-		List<DatabaseVersion> dirtyDatabaseVersions = TestCollectionUtil.toList(databaseVersionDao.getDatabaseVersions(DatabaseVersionStatus.DIRTY));
+		List<DatabaseVersion> dirtyDatabaseVersions = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());
 		
 		// Test
 		assertNotNull(dirtyDatabaseVersions);
@@ -453,17 +407,47 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
-		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
+
+		// a. Test before
+		List<DatabaseVersion> dirtyDatabaseVersionsBefore = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());		
+		assertNotNull(dirtyDatabaseVersionsBefore);
+		assertNotNull(chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef")));
+		assertNotNull(multiChunkDao.getDirtyMultiChunkIds());
+		assertEquals(1, multiChunkDao.getDirtyMultiChunkIds().size());
+
+		// TODO [high] Test file version and history
 		
+		// b. Remove
 		databaseVersionDao.removeDirtyDatabaseVersions();
-		fail("implement this");
+		
+		// c. Test after		
+		
+		// Database version
+		List<DatabaseVersion> dirtyDatabaseVersionsAfter = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());		
+		assertNotNull(dirtyDatabaseVersionsAfter);
+		assertEquals(0, dirtyDatabaseVersionsAfter.size());
+		
+		// File version/history/content ARE removed
+		assertNull(fileContentDao.getFileContent(FileChecksum.parseFileChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), true));
+		
+		// TODO [low] Test file version and file history removal		
+		
+		// Chunks and multichunks are NOT removed!
+		assertNotNull(chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef")));
+		
+		assertNotNull(multiChunkDao.getMultiChunks(TestDatabaseUtil.createVectorClock("B1")));
+		assertEquals(0, multiChunkDao.getMultiChunks(TestDatabaseUtil.createVectorClock("B1")).size());
+		
+		assertNotNull(multiChunkDao.getDirtyMultiChunkIds());
+		assertEquals(0, multiChunkDao.getDirtyMultiChunkIds().size());		
 				
 		// Tear down
 		databaseConnection.close();

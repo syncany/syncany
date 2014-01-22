@@ -36,7 +36,6 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -170,7 +169,7 @@ public class UpOperation extends Operation {
 			new CleanupOperation(config).execute(); 
 		}
 		
-		removeUnreferencedDirtyData();		
+		removeUnreferencedData();		
 		disconnectTransferManager();
 
 		logger.log(Level.INFO, "Sync up done.");
@@ -183,7 +182,7 @@ public class UpOperation extends Operation {
 	}
 
 	private void writeAndUploadDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
-		// Clone database version (necessary, because the orginal must not be touched)
+		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();		
 		
 		// Add dirty data (if existent)
@@ -216,7 +215,7 @@ public class UpOperation extends Operation {
 	}			
 	
 	private void addDirtyData(DatabaseVersion newDatabaseVersion) {
-		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDatabaseVersions(DatabaseVersionStatus.DIRTY);
+		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDirtyDatabaseVersions();
 		
 		if (!dirtyDatabaseVersions.hasNext()) {
 			logger.log(Level.INFO, "No DIRTY data found in database (no dirty databases); Nothing to do here.");
@@ -244,7 +243,7 @@ public class UpOperation extends Operation {
 		}
 	}
 
-	private void removeUnreferencedDirtyData() {
+	private void removeUnreferencedData() {
 		logger.log(Level.INFO, "- Removing unreferenced dirty data from database ...");	
 		localDatabase.removeDirtyDatabaseVersions();		
 	}

@@ -44,7 +44,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 
 	public void writeFileContents(Connection connection, Collection<FileContent> fileContents) throws SQLException {
 		for (FileContent fileContent : fileContents) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeFileContents.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContents.sql");
 
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
 			preparedStatement.setLong(2, fileContent.getSize());
@@ -56,7 +56,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private void writeFileContentChunkRefs(Connection connection, FileContent fileContent) throws SQLException {
-		PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeFileContentChunkRefs.sql");
+		PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContentChunkRefs.sql");
 		int order = 0;
 		
 		for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
@@ -74,6 +74,18 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}
 
+	public void removeUnreferencedFileContents() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/filecontent.delete.all.removeUnreferencedFileContents.sql");
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
+	}
+	
+	public void removeUnreferencedFileContentChunkRefs() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/filecontent.delete.all.removeUnreferencedFileContentRefs.sql");
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
+	}
+	
 	public FileContent getFileContent(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		if (fileChecksum == null) {
 			return null;
@@ -102,7 +114,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private FileContent getFileContentWithoutChunkChecksums(FileChecksum fileChecksum) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithoutChunkChecksums.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.all.getFileContentByChecksumWithoutChunkChecksums.sql")) {
 			preparedStatement.setString(1, fileChecksum.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -124,7 +136,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private FileContent getFileContentWithChunkChecksums(FileChecksum fileChecksum) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileContentByChecksumWithChunkChecksums.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.all.getFileContentByChecksumWithChunkChecksums.sql")) {
 			preparedStatement.setString(1, fileChecksum.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {

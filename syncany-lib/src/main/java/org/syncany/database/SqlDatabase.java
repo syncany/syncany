@@ -28,7 +28,6 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
@@ -69,7 +68,7 @@ public class SqlDatabase {
 		this.fileVersionDao = new FileVersionSqlDao(connection);
 		this.fileHistoryDao = new FileHistorySqlDao(connection, fileVersionDao);
 		this.multiChunkDao = new MultiChunkSqlDao(connection);
-		this.databaseVersionDao = new DatabaseVersionSqlDao(connection, chunkDao, fileContentDao, fileHistoryDao, multiChunkDao);
+		this.databaseVersionDao = new DatabaseVersionSqlDao(connection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 	}
 
 	// Application
@@ -88,8 +87,8 @@ public class SqlDatabase {
 
 	// Database version
 
-	public Iterator<DatabaseVersion> getDatabaseVersions(DatabaseVersionStatus status) {
-		return databaseVersionDao.getDatabaseVersions(status);
+	public Iterator<DatabaseVersion> getDirtyDatabaseVersions() {
+		return databaseVersionDao.getDirtyDatabaseVersions();
 	}
 
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {

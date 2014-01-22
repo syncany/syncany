@@ -34,6 +34,7 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileVersion;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
@@ -53,16 +54,18 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	private ChunkSqlDao chunkDao;
 	private FileContentSqlDao fileContentDao;
+	private FileVersionSqlDao fileVersionDao;
 	private FileHistorySqlDao fileHistoryDao;
 	private MultiChunkSqlDao multiChunkDao;
 
-	public DatabaseVersionSqlDao(Connection connection, ChunkSqlDao chunkDao, FileContentSqlDao fileContentDao, FileHistorySqlDao fileHistoryDao,
+	public DatabaseVersionSqlDao(Connection connection, ChunkSqlDao chunkDao, FileContentSqlDao fileContentDao, FileVersionSqlDao fileVersionDao, FileHistorySqlDao fileHistoryDao,
 			MultiChunkSqlDao multiChunkDao) {
 		
 		super(connection);
 
 		this.chunkDao = chunkDao;
 		this.fileContentDao = fileContentDao;
+		this.fileVersionDao = fileVersionDao;
 		this.fileHistoryDao = fileHistoryDao;
 		this.multiChunkDao = multiChunkDao;
 	}
@@ -84,10 +87,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		try {
 			// Insert & commit database version
 			writeDatabaseVersion(connection, databaseVersion);
-			connection.commit();
 			
-			// Clear local caches
-			chunkDao.clearCache();
+			// Commit & clear local caches
+			connection.commit();			
+			clearCaches();	
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "SQL Error: ", e);
@@ -139,6 +142,40 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
+	/**
+	 * Removes dirty {@link DatabaseVersion}s, {@link FileVersion}s, {@link PartialFileHistory}s and {@link FileContent}s
+	 * from the database, but leaves stale/unreferenced chunks/multichunks untouched (must be cleaned up at a later stage).
+	 */
+	public void removeDirtyDatabaseVersions() {
+		try {
+			// IMPORTANT: The order is important, because of 
+			//            the database foreign key consistencies!
+			
+			// First, remove dirty file histories, then file versions
+			fileVersionDao.removeDirtyFileVersions();
+			fileHistoryDao.removeDirtyFileHistories();
+
+			// Now, remove all unreferenced file contents
+			fileContentDao.removeUnreferencedFileContentChunkRefs(); 
+			fileContentDao.removeUnreferencedFileContents();
+						
+			// And the database versions
+			removeDirtyVectorClocks();
+			removeDirtyDatabaseVersionsInt(); 
+	
+			// Commit & clear local caches
+			connection.commit();			
+			clearCaches();			
+		}
+		catch (SQLException e) {
+			throw new RuntimeException("Unable to remove dirty database versions.", e);
+		}
+	}
+
+	public void clearCaches() {
+		chunkDao.clearCache();
+	}
+	
 	public Long getMaxDirtyVectorClock(String machineName) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getMaxDirtyVectorClock.sql")) {
 			preparedStatement.setString(1, machineName);
@@ -156,9 +193,9 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Iterator<DatabaseVersion> getDatabaseVersions(DatabaseVersionStatus status) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getDatabaseVersionsByStatus.sql")) {
-			preparedStatement.setString(1, status.toString());
+	public Iterator<DatabaseVersion> getDirtyDatabaseVersions() {
+		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getDirtyDatabaseVersions.sql")) {
+			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 
 			return new DatabaseVersionIteration(preparedStatement.executeQuery());
 		}
@@ -320,7 +357,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	protected VectorClock getVectorClockByDatabaseVersionId(int databaseVersionId) throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/select.getVectorClockByDatabaseVersionId.sql");
+		PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.all.getVectorClockByDatabaseVersionId.sql");
 		preparedStatement.setInt(1, databaseVersionId);
 
 		ResultSet resultSet = preparedStatement.executeQuery();
@@ -337,63 +374,15 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		return vectorClock;
 	}
 
-
-	public void removeDirtyDatabaseVersions() {
-		try {
-			// The order is important, because of the database foreign key consistencies
-			
-			removeDirtyChunks();
-			removeDirtyMultiChunks();
-			removeDirtyFileVersions();
-			removeDirtyFileContents();
-			removeDirtyFileHistories();
-			removeDirtyVectorClocks();
-			removeDirtyDatabaseVersionsInt();
-	
-			connection.commit();
-		}
-		catch (SQLException e) {
-			throw new RuntimeException("Unable to remove dirty database versions.", e);
-		}
-	}
-
 	private void removeDirtyVectorClocks() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyVectorClocks.sql");
+		PreparedStatement preparedStatement = getStatement("/sql/databaseversion.delete.dirty.removeDirtyVectorClocks.sql");
 		preparedStatement.executeUpdate();
 		preparedStatement.close();
 	}
 	
 	private void removeDirtyDatabaseVersionsInt() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyDatabaseVersionsInt.sql");
+		PreparedStatement preparedStatement = getStatement("/sql/databaseversion.delete.dirty.removeDirtyDatabaseVersionsInt.sql");
 		preparedStatement.executeUpdate();		
 		preparedStatement.close();
-	}
-
-	private void removeDirtyFileHistories() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyFileHistories.sql");
-		preparedStatement.executeUpdate();
-		preparedStatement.close();
-	}
-
-	private void removeDirtyFileVersions() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyFileVersions.sql");
-		preparedStatement.executeUpdate();	
-		preparedStatement.close();
-	}
-
-	private void removeDirtyFileContents() {
-		// TODO Auto-generated method stub
-
-	}
-
-	private void removeDirtyChunks() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyUnreferencedChunks.sql");
-		preparedStatement.executeUpdate();
-		preparedStatement.close();
-	}
-
-	private void removeDirtyMultiChunks() throws SQLException {
-		//PreparedStatement preparedStatement = getStatement("/sql/delete.removeDirtyMultiChunks.sql");
-		//preparedStatement.executeUpdate();
 	}
 }

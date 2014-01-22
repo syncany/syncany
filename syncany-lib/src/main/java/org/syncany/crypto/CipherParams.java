@@ -55,7 +55,7 @@ public abstract class CipherParams {
 	 * Password-based key derivation function used to generate the master key
 	 * from the user's password. 
 	 * 
-	 * <p><b>Warning:</b> Changing this constant may lean to unrecoverable ciphertext data
+	 * <p><b>Warning:</b> Changing this constant may lead to unrecoverable ciphertext data
 	 * Do not change this constant unless you know what you are doing! 
 	 * 
 	 * @see #MASTER_KEY_DERIVATION_ROUNDS
@@ -68,7 +68,7 @@ public abstract class CipherParams {
      * Number of rounds the password-based key derivation function is applied during the
      * master key generation process.
      * 
-	 * <p><b>Warning:</b> Changing this constant may lean to unrecoverable ciphertext data
+	 * <p><b>Warning:</b> Changing this constant may lead to unrecoverable ciphertext data
 	 * Do not change this constant unless you know what you are doing! 
 	 * 
 	 * @see #MASTER_KEY_DERIVATION_FUNCTION
@@ -81,7 +81,7 @@ public abstract class CipherParams {
      * Size of a generated master key (in bits). This value is used during the key
      * generation by the password-based key derivation function.
      * 
-	 * <p><b>Warning:</b> Changing this constant may lean to unrecoverable ciphertext data
+	 * <p><b>Warning:</b> Changing this constant may lead to unrecoverable ciphertext data
 	 * Do not change this constant unless you know what you are doing! 
 	 * 
 	 * @see #MASTER_KEY_DERIVATION_FUNCTION
@@ -94,7 +94,7 @@ public abstract class CipherParams {
      * Size of the salt used to generate the master key. This value is used during
      * the key generation by the password-based key derivation function.
      * 
-	 * <p><b>Warning:</b> Changing this constant may lean to unrecoverable ciphertext data
+	 * <p><b>Warning:</b> Changing this constant may lead to unrecoverable ciphertext data
 	 * Do not change this constant unless you know what you are doing! 
 	 * 
 	 * @see #MASTER_KEY_DERIVATION_FUNCTION
@@ -107,7 +107,7 @@ public abstract class CipherParams {
      * Hash function used in the HKDF key derivation algorithm for deriving
      * keys from a master key.
      * 
-	 * <p><b>Warning:</b> Changing this constant may lean to unrecoverable ciphertext data
+	 * <p><b>Warning:</b> Changing this constant may lead to unrecoverable ciphertext data
 	 * Do not change this constant unless you know what you are doing! 
 	 * 
      * @see #KEY_DERIVATION_INFO
@@ -117,7 +117,7 @@ public abstract class CipherParams {
     /**
      * Additional info used in the HKDF key derivation algorithm.
      *  
-	 * <p><b>Warning:</b> Changing this constant may lean to unrecoverable ciphertext data
+	 * <p><b>Warning:</b> Changing this constant may lead to unrecoverable ciphertext data
 	 * Do not change this constant unless you know what you are doing! 
 	 * 
 	 * @see #KEY_DERIVATION_DIGEST

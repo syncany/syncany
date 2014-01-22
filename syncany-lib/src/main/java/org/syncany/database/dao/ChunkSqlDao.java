@@ -46,7 +46,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	// TODO [low] Mark "no commit"
 	public void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
 		if (chunks.size() > 0) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeChunks.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "/sql/chunk.insert.all.writeChunks.sql");
 
 			for (ChunkEntry chunk : chunks) {
 				preparedStatement.setString(1, chunk.getChecksum().toString());
@@ -59,7 +59,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 			preparedStatement.close();
 		}
 	}
-
+	
 	public synchronized ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		if (chunkCache == null) {
 			loadChunkCache();

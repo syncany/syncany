@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
@@ -50,7 +49,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 	public void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
 		for (PartialFileHistory fileHistory : fileHistories) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/insert.writeFileHistories.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "/sql/filehistory.insert.all.writeFileHistories.sql");
 
 			preparedStatement.setString(1, fileHistory.getFileId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
@@ -60,6 +59,12 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 			fileVersionDao.writeFileVersions(connection, fileHistory.getFileId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
+	}
+
+	public void removeDirtyFileHistories() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql");
+		preparedStatement.executeUpdate();
+		preparedStatement.close();		
 	}
 
 	/**
@@ -79,7 +84,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithFileVersions.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithFileVersions.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileHistoriesFromResult(resultSet);
 			}
@@ -173,7 +178,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
 		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
 
-		try (PreparedStatement preparedStatement = getStatement("/sql/select.getFileHistoriesWithLastVersionByChecksum.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
 			preparedStatement.setString(1, fileContentChecksum.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -193,9 +198,5 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	protected PreparedStatement getStatement(String resourceId) throws SQLException {
-		return connection.prepareStatement(DatabaseConnectionFactory.getStatement(resourceId));
 	}
 }
