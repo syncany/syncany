@@ -133,14 +133,11 @@ public class DaemonCommandHandler {
 		boolean gzip = "yes".equals((String)parameters.get("gzip"));
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
 		
-		String algorithm = (String)parameters.get("algorithm");
-		int keylength = 256;
+		String[] cipherSuitString = ((String)parameters.get("cipherSuit")).split(",");
+		int[] cipherSuit = new int[cipherSuitString.length];
 		
-		try{
-			keylength = Integer.parseInt((String)parameters.get("keylength"));
-		}
-		catch (Exception e){
-			logger.warning("Unable to parse 'keylength' " + (String)parameters.get("keylength"));
+		for (int i = 0 ; i < cipherSuitString.length ; i ++){
+			cipherSuit[i] = Integer.parseInt(cipherSuitString[i]);
 		}
 		
 		// Creation of local Syncany folder
@@ -158,7 +155,7 @@ public class DaemonCommandHandler {
 			}
 		}
 		
-		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize, algorithm, keylength);
+		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize, cipherSuit);
 		
 		try {
 			GenlinkOperationResult result = ic.execute().getGenLinkResult();

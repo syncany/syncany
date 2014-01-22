@@ -44,12 +44,6 @@ import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 /**
-
- [1] AES/GCM/NoPadding, 128 bit
- [2] Twofish/GCM/NoPadding, 128 bit
- [3] AES/GCM/NoPadding, 256 bit
- [4] Twofish/GCM/NoPadding, 256 bit
- 
  * @author vwiencek
  *
  */
@@ -66,15 +60,11 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	private int chunckSize;
 	private List<String> pluginArgs;
 	private String pluginName;
-	private String algorithm;
-	private int keylength;
+	private int[] cipherSuit;
 	
 	public InitCommand(String pluginName, List<String> pluginArgs, String localDir, String password, 
-			boolean encryptionEnabled, boolean gzipEnabled, int chunckSize,
-			String algorithm, int keylength){
-		
-		this.algorithm = algorithm;
-		this.keylength = keylength;
+			boolean encryptionEnabled, boolean gzipEnabled, int chunckSize, int[] cipherSuit){
+		this.cipherSuit = cipherSuit;
 		this.password = password;
 		this.chunckSize = chunckSize;
 		this.pluginName = pluginName;
@@ -96,7 +86,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 		ConnectionTO connectionTO = initPluginWithOptions(pluginName, pluginArgs);
 		
-		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, keylength, algorithm);
+		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, cipherSuit);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
@@ -117,29 +107,15 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return operationOptions;
 	}		
 	
-	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, int keylength, String algorithm) throws Exception {
+	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, int[] cipherSuite) throws Exception {
 		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
-			if (keylength == 256){
-				if (algorithm.equals("AES")){
-					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM));
-				}
-				else if (algorithm.equals("TwoFish")){
-					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM));
-				}
+			for (int i : cipherSuite) {
+				cipherSpecs.add(CipherSpecs.getCipherSpec(i));
 			}
-			else if (keylength == 128){
-				if (algorithm.equals("AES")){
-					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM));
-				}
-				else if (algorithm.equals("TwoFish")){
-					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM));
-				}
-			}
-			cipherSpecs = CipherSpecs.getDefaultCipherSpecs();					
 		}
-		
+
 		return cipherSpecs;
 	}
 

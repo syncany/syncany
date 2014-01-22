@@ -29,6 +29,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
@@ -45,17 +47,24 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	private Text passwordText;
 	private Text passwordAgainText;
 	private Combo cypherCombo;
-	private Combo keylengthCombo;
 	private Spinner chunckSize;
 	private Button enableEncryption;
 	private Label chunckSizeLabel; 
-	private Label keyLengthLabel;
 	private Label algorithmLabel;
+	
+	private CipherSpec[][] cipherOptions = new CipherSpec[][]{
+		{CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)},
+		{CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM)},
+		{CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)},
+		{CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)},
+		{CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM), CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)},
+		{CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM), CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)},
+	};
 	
 	public RepositoryEncryptionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
 		initComposite();
-		enableEncryption.setSelection(false);
+		enableEncryption.setSelection(true);
 		toggleEncryptionSelection();
 	}
 	
@@ -111,53 +120,44 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 			}
 		});
 		
-		Composite composite = new Composite(this, SWT.NONE);
-		composite.setLayout(new GridLayout(2, false));
-		GridData gd_composite = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
-		gd_composite.widthHint = 411;
-		composite.setLayoutData(gd_composite);
-		
-		algorithmLabel = new Label(composite, SWT.NONE);
-		GridData gd_lblNewLabel_4 = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_lblNewLabel_4.horizontalIndent = 30;
-		algorithmLabel.setLayoutData(gd_lblNewLabel_4);
+		algorithmLabel = new Label(this, SWT.NONE);
 		algorithmLabel.setText(I18n.getString("repository.encryption.algorithm", true));
 		
-		cypherCombo = new Combo(composite, SWT.NONE | SWT.READ_ONLY);
-		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		cypherCombo.setItems(new String[]{"AES", "TwoFish"});
-		cypherCombo.select(0);
-		
-		keyLengthLabel = new Label(composite, SWT.NONE);
-		GridData gd_lblNewLabel_5 = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_lblNewLabel_5.horizontalIndent = 30;
-		keyLengthLabel.setLayoutData(gd_lblNewLabel_5);
-		keyLengthLabel.setText(I18n.getString("repository.encryption.keylength", true));
-		
-		keylengthCombo = new Combo(composite, SWT.NONE | SWT.READ_ONLY);
-		keylengthCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		keylengthCombo.setItems(new String[]{"128", "256"});
-		keylengthCombo.select(0);
+		cypherCombo = new Combo(this, SWT.NONE | SWT.READ_ONLY);
+		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		for (CipherSpec[] specs : cipherOptions){
+			StringBuilder sb = new StringBuilder();
+			StringBuilder id = new StringBuilder();
+			
+			for (int i = 0 ; i < specs.length ; i++){
+				CipherSpec cs = specs[i];
+				sb.append(cs.getAlgorithm());
+				sb.append("/");
+				sb.append(cs.getKeySize());
+
+				id.append(cs.getId());
+				
+				if (i+1 < specs.length) {
+					sb.append(" + ");
+					id.append(",");
+				}
+				
+			}
+			cypherCombo.add(sb.toString());
+			cypherCombo.setData(sb.toString(), id.toString());
+		}
+
+		cypherCombo.select(4);
 		
 		WidgetDecorator.bold(introductionTextTitle);
-		WidgetDecorator.normal(
-			introductionText, 
-			passwordAgainText, passwordLabel, passwordLabelAgain, passwordText, 
-			enableEncryption, 
-			algorithmLabel, cypherCombo, 
-			chunckSizeLabel, chunckSize, 
-			keylengthCombo, keyLengthLabel
-		);
+		
 	}
 	
 	protected void toggleEncryptionSelection() {
-		keylengthCombo.setEnabled(enableEncryption.getSelection());
 		cypherCombo.setEnabled(enableEncryption.getSelection());
 		
 		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
 		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
-		
-		keyLengthLabel.setForeground(enableEncryption.getSelection() ? black : gray);
 		algorithmLabel.setForeground(enableEncryption.getSelection() ? black : gray);
 	}
 
@@ -186,8 +186,10 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		
 		if (enableEncryption.getSelection()){
 			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ENABLED, enableEncryption.getSelection() ? "yes" : "no");
-			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM, cypherCombo.getItem(cypherCombo.getSelectionIndex()));
-			userInput.putCommonParameter(CommonParameters.ENCRYPTION_KEYLENGTH, keylengthCombo.getItem(keylengthCombo.getSelectionIndex()));
+			
+			String cipherSuit = cypherCombo.getItem(cypherCombo.getSelectionIndex());
+			String ids = (String)cypherCombo.getData(cipherSuit);
+			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM, ids);
 		}
 		return userInput;
 	}

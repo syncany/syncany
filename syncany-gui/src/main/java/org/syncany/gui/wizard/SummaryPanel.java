@@ -240,7 +240,7 @@ public class SummaryPanel extends WizardPanelComposite {
 	public void updateData(){
 		UserInput userInput = getParentWizardDialog().getUserInput();
 		final String type = String.format("%s", userInput.getCommonParameter(CommonParameters.COMMAND_ACTION));
-		final String encryption = String.format("[%s / %s]", userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM), userInput.getCommonParameter(CommonParameters.ENCRYPTION_KEYLENGTH));
+		final String encryption = String.format("[%s / %s]", userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM), "fifi");
 		final String folder = String.format("%s", userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 		
 		getDisplay().asyncExec(new Runnable() {
