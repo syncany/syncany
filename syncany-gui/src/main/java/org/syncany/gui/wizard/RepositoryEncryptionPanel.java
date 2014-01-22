@@ -123,7 +123,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		algorithmLabel.setLayoutData(gd_lblNewLabel_4);
 		algorithmLabel.setText(I18n.getString("repository.encryption.algorithm", true));
 		
-		cypherCombo = new Combo(composite, SWT.NONE);
+		cypherCombo = new Combo(composite, SWT.NONE | SWT.READ_ONLY);
 		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		cypherCombo.setItems(new String[]{"AES", "TwoFish"});
 		cypherCombo.select(0);
@@ -134,7 +134,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		keyLengthLabel.setLayoutData(gd_lblNewLabel_5);
 		keyLengthLabel.setText(I18n.getString("repository.encryption.keylength", true));
 		
-		keylengthCombo = new Combo(composite, SWT.NONE);
+		keylengthCombo = new Combo(composite, SWT.NONE | SWT.READ_ONLY);
 		keylengthCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		keylengthCombo.setItems(new String[]{"128", "256"});
 		keylengthCombo.select(0);

@@ -138,7 +138,7 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 
 	@Override
 	public String getPasswordCallback() {
-		return null;
+		return password;
 	}
 
 	@Override

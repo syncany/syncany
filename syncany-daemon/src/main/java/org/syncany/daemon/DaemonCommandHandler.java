@@ -127,11 +127,21 @@ public class DaemonCommandHandler {
 			chunkSize = Integer.parseInt((String)parameters.get("chunck_size"));
 		}
 		catch (Exception e){
-			
+			logger.warning("Unable to parse 'chunck_size' " + (String)parameters.get("chunck_size"));
 		}
 		
 		boolean gzip = "yes".equals((String)parameters.get("gzip"));
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
+		
+		String algorithm = (String)parameters.get("algorithm");
+		int keylength = 256;
+		
+		try{
+			keylength = Integer.parseInt((String)parameters.get("keylength"));
+		}
+		catch (Exception e){
+			logger.warning("Unable to parse 'keylength' " + (String)parameters.get("keylength"));
+		}
 		
 		// Creation of local Syncany folder
 		File localDirFile = new File(localDir);
@@ -148,7 +158,7 @@ public class DaemonCommandHandler {
 			}
 		}
 		
-		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize);
+		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize, algorithm, keylength);
 		
 		try {
 			GenlinkOperationResult result = ic.execute().getGenLinkResult();
@@ -253,26 +263,33 @@ public class DaemonCommandHandler {
 			case "watch":
 				handleWatch(params);
 				break;
+				
 			case "pause_watch":
 				handlePauseWatch(params);
 				break;
+				
 			case "stop_watch":
 				handleStopWatch(params);
 				break;	
+				
 			case "resume_watch":
 				handleResumeWatch(params);
 				break;
+				
 			case "create":
 				Map<String, String> retInit = handleInit(params);
 				WSServer.sendToAll(JsonHelper.fromMapToString(retInit));
 				break;
+				
 			case "connect":
 				Map<String, String> retConn = handleConnect(params);
 				WSServer.sendToAll(JsonHelper.fromMapToString(retConn));
 				break;
+				
 			case "quit":
 				handleQuit(params);
 				break;
+				
 			default:
 				logger.log(Level.WARNING, "Unknown action received; returning message: "+action);
 				WSServer.sendToAll(JsonHelper.fromMapToString(params));

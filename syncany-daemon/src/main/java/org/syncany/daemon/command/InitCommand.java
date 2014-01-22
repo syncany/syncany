@@ -66,8 +66,15 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	private int chunckSize;
 	private List<String> pluginArgs;
 	private String pluginName;
+	private String algorithm;
+	private int keylength;
 	
-	public InitCommand(String pluginName, List<String> pluginArgs, String localDir, String password, boolean encryptionEnabled, boolean gzipEnabled, int chunckSize){
+	public InitCommand(String pluginName, List<String> pluginArgs, String localDir, String password, 
+			boolean encryptionEnabled, boolean gzipEnabled, int chunckSize,
+			String algorithm, int keylength){
+		
+		this.algorithm = algorithm;
+		this.keylength = keylength;
 		this.password = password;
 		this.chunckSize = chunckSize;
 		this.pluginName = pluginName;
@@ -89,7 +96,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 		ConnectionTO connectionTO = initPluginWithOptions(pluginName, pluginArgs);
 		
-		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled);
+		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, keylength, algorithm);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
@@ -110,10 +117,26 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return operationOptions;
 	}		
 	
-	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled) throws Exception {
+	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, int keylength, String algorithm) throws Exception {
 		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
+			if (keylength == 256){
+				if (algorithm.equals("AES")){
+					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM));
+				}
+				else if (algorithm.equals("TwoFish")){
+					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM));
+				}
+			}
+			else if (keylength == 128){
+				if (algorithm.equals("AES")){
+					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM));
+				}
+				else if (algorithm.equals("TwoFish")){
+					cipherSpecs.add(CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM));
+				}
+			}
 			cipherSpecs = CipherSpecs.getDefaultCipherSpecs();					
 		}
 		
