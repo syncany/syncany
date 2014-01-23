@@ -22,7 +22,7 @@ package org.syncany.gui.messaging.event;
  * @author vincent
  *
  */
-public class SyncyngEvent extends ApplicationEvent {
+public class SyncingEvent extends ApplicationEvent {
 	private SyncyngState state;
 	public enum SyncyngState{
 		SYNCING, SYNCED;

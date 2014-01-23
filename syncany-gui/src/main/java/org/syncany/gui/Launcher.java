@@ -29,7 +29,7 @@ import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.config.ProxyController;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.EventManager;
+import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.util.I18n;
 
 /**

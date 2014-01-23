@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.event.SyncyngEvent;
+import org.syncany.gui.messaging.event.SyncingEvent;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
@@ -84,7 +84,7 @@ public class MainGUI {
 	}
 
 	@Subscribe
-	public void updateInterface(SyncyngEvent event) {
+	public void updateInterface(SyncingEvent event) {
 		if (tray != null) {
 
 			switch (event.getState()) {

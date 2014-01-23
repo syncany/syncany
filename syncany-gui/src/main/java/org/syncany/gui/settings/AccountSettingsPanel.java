@@ -30,7 +30,7 @@ import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.EventManager;
+import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.wizard.WizardDialog;
 import org.syncany.util.I18n;

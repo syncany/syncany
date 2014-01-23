@@ -20,9 +20,10 @@ package org.syncany.gui.messaging;
 import java.util.Map;
 
 import org.syncany.gui.MainGUI;
+import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.messaging.event.InitCommandEvent;
-import org.syncany.gui.messaging.event.SyncyngEvent;
-import org.syncany.gui.messaging.event.SyncyngEvent.SyncyngState;
+import org.syncany.gui.messaging.event.SyncingEvent;
+import org.syncany.gui.messaging.event.SyncingEvent.SyncyngState;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.util.JsonHelper;
 
@@ -61,7 +62,7 @@ public class DaemonMessagesHandler {
 
 		case "update_syncing_state":
 			String syncingState = (String) parameters.get("syncing_state");
-			SyncyngEvent se = new SyncyngEvent();
+			SyncingEvent se = new SyncingEvent();
 			if (syncingState.equals("syncing")) {
 				se.setState(SyncyngState.SYNCING);
 			}

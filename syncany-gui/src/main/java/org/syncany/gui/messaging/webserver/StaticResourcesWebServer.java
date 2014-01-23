@@ -1,4 +1,4 @@
-package org.syncany.gui.util;
+package org.syncany.gui.messaging.webserver;
 
 import java.util.logging.Logger;
 
@@ -11,11 +11,17 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.eclipse.jetty.util.resource.Resource;
 
+/**
+ * Static resources web server
+ * Used to access python script and resources to python script
+ * @author Vincent Wiencek <vwiencek@gmail.com>
+ *
+ */
 public class StaticResourcesWebServer {
 	private static final Logger log = Logger.getLogger(StaticResourcesWebServer.class.getSimpleName());
 
 	private static StaticResourcesWebServer instance;
-	public static int PORT = 8081; // TODO [medium] Use less popular port
+	public static int WEBSERVER_POR = 51601; 
 
 	private Server server;
 
@@ -28,7 +34,7 @@ public class StaticResourcesWebServer {
 			@Override
 			public void run() {
 				try {
-					server = new Server(PORT);
+					server = new Server(WEBSERVER_POR);
 					server.addLifeCycleListener(new Listener() {
 						@Override
 						public void lifeCycleStarted(LifeCycle event) {

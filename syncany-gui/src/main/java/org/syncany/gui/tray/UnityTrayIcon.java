@@ -31,9 +31,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.syncany.gui.messaging.WebsocketClient;
-import org.syncany.gui.util.StaticResourcesWebServer;
-import org.syncany.gui.util.StaticResourcesWebServer.ServerStartedListener;
+import org.syncany.gui.messaging.webserver.StaticResourcesWebServer;
+import org.syncany.gui.messaging.webserver.StaticResourcesWebServer.ServerStartedListener;
+import org.syncany.gui.messaging.websocket.WebsocketClient;
 import org.syncany.util.JsonHelper;
 
 /**
@@ -43,7 +43,7 @@ import org.syncany.util.JsonHelper;
  */
 public class UnityTrayIcon extends TrayIcon {
 	private static final Logger logger = Logger.getLogger(WebsocketClient.class.getSimpleName());
-	private static int WEBSOCKET_SERVER_PORT = 8882;
+	private static int WEBSOCKET_SERVER_PORT = 51600;
 
 	private WebSocketServer webSocketClient;
 	private StaticResourcesWebServer staticWebServer;
@@ -185,7 +185,7 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 
 	private void startUnityProcess() throws IOException {
-		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.PORT;
+		String baseUrl = "http://127.0.0.1:" + StaticResourcesWebServer.WEBSERVER_POR;
 		String scriptUrl = baseUrl + "/scripts/unitytray.py";
 		String webSocketUri = "ws://127.0.0.1:" + WEBSOCKET_SERVER_PORT;
 

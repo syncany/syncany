@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging;
+package org.syncany.gui.messaging.websocket;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +29,7 @@ import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.MainGUI;
+import org.syncany.gui.messaging.DaemonMessagesHandler;
 import org.syncany.util.JsonHelper;
 
 /**

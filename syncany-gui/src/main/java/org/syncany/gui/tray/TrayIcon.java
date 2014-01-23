@@ -28,7 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.EventManager;
+import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.wizard.WizardDialog;

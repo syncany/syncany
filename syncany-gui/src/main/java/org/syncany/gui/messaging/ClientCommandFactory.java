@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.UserInput;
+import org.syncany.gui.messaging.websocket.WebsocketClient;
 
 public class ClientCommandFactory {
 	private static final Logger logger = Logger.getLogger(ClientCommandFactory.class.getSimpleName());
