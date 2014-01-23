@@ -6,10 +6,12 @@ dependencies {
 	compile			project(':syncany-plugins:syncany-plugin-gui')
     
     runtime			project(':syncany-plugins:syncany-plugin-ftp')
+    runtime			project(':syncany-plugins:syncany-plugin-sftp')
     runtime			project(':syncany-plugins:syncany-plugin-rest')  
 	runtime			project(':syncany-plugins:syncany-plugin-webdav')  
 	
 	runtime			project(':syncany-plugins:syncany-plugin-gui-ftp')
+	runtime			project(':syncany-plugins:syncany-plugin-gui-sftp')
     runtime			project(':syncany-plugins:syncany-plugin-gui-rest')  
 	runtime			project(':syncany-plugins:syncany-plugin-gui-webdav')  
 	
