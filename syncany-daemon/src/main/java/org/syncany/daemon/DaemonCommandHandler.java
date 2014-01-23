@@ -124,20 +124,20 @@ public class DaemonCommandHandler {
 		int chunkSize = 512;
 		
 		try{
-			chunkSize = Integer.parseInt((String)parameters.get("chunck_size"));
+			chunkSize = Integer.parseInt((String)parameters.get("chunk_size"));
 		}
 		catch (Exception e){
-			logger.warning("Unable to parse 'chunck_size' " + (String)parameters.get("chunck_size"));
+			logger.warning("Unable to parse 'chunk_size' " + (String)parameters.get("chunk_size"));
 		}
 		
 		boolean gzip = "yes".equals((String)parameters.get("gzip"));
 		boolean encrypted = "yes".equals((String)parameters.get("encryption"));
 		
-		String[] cipherSuitString = ((String)parameters.get("cipherSuit")).split(",");
-		int[] cipherSuit = new int[cipherSuitString.length];
+		String[] cipherSpecString = ((String)parameters.get("cipherSpec")).split(",");
+		int[] cipherSpec = new int[cipherSpecString.length];
 		
-		for (int i = 0 ; i < cipherSuitString.length ; i ++){
-			cipherSuit[i] = Integer.parseInt(cipherSuitString[i]);
+		for (int i = 0 ; i < cipherSpecString.length ; i ++){
+			cipherSpec[i] = Integer.parseInt(cipherSpecString[i]);
 		}
 		
 		// Creation of local Syncany folder
@@ -155,7 +155,7 @@ public class DaemonCommandHandler {
 			}
 		}
 		
-		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize, cipherSuit);
+		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize, cipherSpec);
 		
 		try {
 			GenlinkOperationResult result = ic.execute().getGenLinkResult();

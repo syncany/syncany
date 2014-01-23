@@ -28,9 +28,9 @@ public enum CommonParameters {
 	ENCRYPTION_ENABLED("encryption", true, "yes", "no"), 
 	AVAILABLE_URL("connect_url", false, "yes", "no"),
 	URL("url", false),
-	ENCRYPTION_ALGORITHM("cipherSuit", false), 
+	ENCRYPTION_ALGORITHM("cipherSpec", false), 
 	ENCRYPTION_PASSWORD("password", true),
-	CHUNCK_SIZE("chunck_size", false),
+	CHUNK_SIZE("chunk_size", false),
 	LOCAL_FOLDER("localFolder", true),
 	PLUGIN_ID("pluginId", true), 
 	COMMAND_ID("command_id", false);

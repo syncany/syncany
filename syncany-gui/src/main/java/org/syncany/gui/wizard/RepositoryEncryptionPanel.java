@@ -17,6 +17,9 @@
  */
 package org.syncany.gui.wizard;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -38,6 +41,8 @@ import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.util.I18n;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -47,19 +52,20 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	private Text passwordText;
 	private Text passwordAgainText;
 	private Combo cypherCombo;
-	private Spinner chunckSize;
+	private Spinner chunkSize;
 	private Button enableEncryption;
-	private Label chunckSizeLabel; 
+	private Label chunkSizeLabel; 
 	private Label algorithmLabel;
 	
-	private CipherSpec[][] cipherOptions = new CipherSpec[][]{
-		{CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)},
-		{CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM)},
-		{CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)},
-		{CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)},
-		{CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM), CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)},
-		{CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM), CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)},
-	};
+	@SuppressWarnings("serial")
+	private Map<String, CipherSpec[]> cipherOptions = new LinkedHashMap<String, CipherSpec[]>(){{
+		put("AES (128)", new CipherSpec[]{CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)});
+		put("AES (256)", new CipherSpec[]{CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM)});
+		put("TwoFish (128)", new CipherSpec[]{CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)});
+		put("TwoFish (256)", new CipherSpec[]{CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)});
+		put("AES & TwoFish (128)", new CipherSpec[]{CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM), CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)});
+		put("AES & TwoFish (256)", new CipherSpec[]{CipherSpecs.getCipherSpec(CipherSpecs.AES_256_GCM), CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)});
+	}};
 	
 	public RepositoryEncryptionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -94,19 +100,19 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		passwordAgainText = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		passwordAgainText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		chunckSizeLabel = new Label(this, SWT.NONE);
-		GridData gd_chunckSizeLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_chunckSizeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		chunckSizeLabel.setLayoutData(gd_chunckSizeLabel);
-		chunckSizeLabel.setText(I18n.getString("repository.encryption.chunckSize", true));
+		chunkSizeLabel = new Label(this, SWT.NONE);
+		GridData gd_chunkSizeLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_chunkSizeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		chunkSizeLabel.setLayoutData(gd_chunkSizeLabel);
+		chunkSizeLabel.setText(I18n.getString("repository.encryption.chunkSize", true));
 		
 		
-		chunckSize = new Spinner(this, SWT.BORDER);
-		GridData gd_chunckSize = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
-		gd_chunckSize.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		chunckSize.setLayoutData(gd_chunckSize);
-		chunckSize.setMaximum(10000);
-		chunckSize.setSelection(512);
+		chunkSize = new Spinner(this, SWT.BORDER);
+		GridData gd_chunkSize = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
+		gd_chunkSize.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		chunkSize.setLayoutData(gd_chunkSize);
+		chunkSize.setMaximum(10000);
+		chunkSize.setSelection(512);
 		
 		enableEncryption = new Button(this, SWT.CHECK);
 		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
@@ -125,26 +131,17 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		
 		cypherCombo = new Combo(this, SWT.NONE | SWT.READ_ONLY);
 		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		for (CipherSpec[] specs : cipherOptions){
-			StringBuilder sb = new StringBuilder();
-			StringBuilder id = new StringBuilder();
-			
-			for (int i = 0 ; i < specs.length ; i++){
-				CipherSpec cs = specs[i];
-				sb.append(cs.getAlgorithm());
-				sb.append("/");
-				sb.append(cs.getKeySize());
-
-				id.append(cs.getId());
-				
-				if (i+1 < specs.length) {
-					sb.append(" + ");
-					id.append(",");
-				}
-				
-			}
-			cypherCombo.add(sb.toString());
-			cypherCombo.setData(sb.toString(), id.toString());
+		
+		for (String key : cipherOptions.keySet()){
+			CipherSpec[] cipherSpec = cipherOptions.get(key);
+			String cipherSuitesIdStr = StringUtil.join(cipherSpec, ",", new StringJoinListener<CipherSpec>() {
+				@Override
+				public String getString(CipherSpec cipherSpec) {
+					return ""+cipherSpec.getId();
+				}			
+			});
+			cypherCombo.add(key);
+			cypherCombo.setData(key, cipherSuitesIdStr);
 		}
 
 		cypherCombo.select(4);
@@ -182,14 +179,14 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	public UserInput getUserSelection() {
 		UserInput userInput = new UserInput();
 		userInput.putCommonParameter(CommonParameters.ENCRYPTION_PASSWORD, passwordText.getText());
-		userInput.putCommonParameter(CommonParameters.CHUNCK_SIZE, chunckSize.getText());
+		userInput.putCommonParameter(CommonParameters.CHUNK_SIZE, chunkSize.getText());
 		
 		if (enableEncryption.getSelection()){
 			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ENABLED, enableEncryption.getSelection() ? "yes" : "no");
 			
-			String cipherSuit = cypherCombo.getItem(cypherCombo.getSelectionIndex());
-			String ids = (String)cypherCombo.getData(cipherSuit);
-			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM, ids);
+			String cipherSpecsString = cypherCombo.getItem(cypherCombo.getSelectionIndex());
+			String cipherSpecsId = (String)cypherCombo.getData(cipherSpecsString);
+			userInput.putCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM, cipherSpecsId);
 		}
 		return userInput;
 	}

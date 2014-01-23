@@ -57,16 +57,16 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	private boolean encryptionEnabled;
 	private boolean gzipEnabled;
 	private String localDir;
-	private int chunckSize;
+	private int chunkSize;
 	private List<String> pluginArgs;
 	private String pluginName;
-	private int[] cipherSuit;
+	private int[] cipherSpec;
 	
 	public InitCommand(String pluginName, List<String> pluginArgs, String localDir, String password, 
-			boolean encryptionEnabled, boolean gzipEnabled, int chunckSize, int[] cipherSuit){
-		this.cipherSuit = cipherSuit;
+			boolean encryptionEnabled, boolean gzipEnabled, int chunkSize, int[] cipherSpec){
+		this.cipherSpec = cipherSpec;
 		this.password = password;
-		this.chunckSize = chunckSize;
+		this.chunkSize = chunkSize;
 		this.pluginName = pluginName;
 		this.pluginArgs = pluginArgs;
 		this.localDir = localDir;
@@ -86,7 +86,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 		ConnectionTO connectionTO = initPluginWithOptions(pluginName, pluginArgs);
 		
-		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, cipherSuit);
+		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, cipherSpec);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
@@ -167,7 +167,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		multichunkerTO.setType(ZipMultiChunker.TYPE); 
 		multichunkerTO.setSettings(new HashMap<String, String>());
-		multichunkerTO.getSettings().put(ZipMultiChunker.PROPERTY_SIZE, this.chunckSize+"");
+		multichunkerTO.getSettings().put(ZipMultiChunker.PROPERTY_SIZE, this.chunkSize+"");
 		
 		return multichunkerTO;		
 	}
