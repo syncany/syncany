@@ -147,7 +147,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		cypherCombo.select(4);
 		
 		WidgetDecorator.bold(introductionTextTitle);
-		
+		WidgetDecorator.normal(introductionText, passwordAgainText, passwordText);
 	}
 	
 	protected void toggleEncryptionSelection() {

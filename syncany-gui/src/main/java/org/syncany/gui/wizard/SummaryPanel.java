@@ -20,6 +20,7 @@ package org.syncany.gui.wizard;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -38,12 +39,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.util.I18n;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -52,13 +59,13 @@ import org.syncany.util.I18n;
 public class SummaryPanel extends WizardPanelComposite {
 	private static Logger logger = Logger.getLogger(SummaryPanel.class.getSimpleName());
 	
+	private Label repositoryOperation;
 	private Label repositoryType;
 	private Label localFolder;
 	private Label encryptionType;
 	private Label summaryIntroductionTitleLabel;
 	private Label summaryIntroductionLabel;
 	private Label urlLabel;
-	private Label repositoryTypeLabel;
 	private Label encryptionTypeLabel;
 	private Label successConnectLabel;
 	private Label successUrlLabel;
@@ -102,16 +109,23 @@ public class SummaryPanel extends WizardPanelComposite {
 		summaryIntroductionLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 		summaryIntroductionLabel.setText(I18n.getString("dialog.summary.introduction"));
 		
-		repositoryTypeLabel = new Label(this, SWT.NONE);
+		Label repositoryActionLabel = new Label(this, SWT.NONE);
 		GridData gd_repositoryTypeLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
 		gd_repositoryTypeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		repositoryTypeLabel.setLayoutData(gd_repositoryTypeLabel);
+		repositoryActionLabel.setLayoutData(gd_repositoryTypeLabel);
+		repositoryActionLabel.setText(I18n.getString("dialog.summary.repositoryAction", true));
+		
+		repositoryOperation = new Label(this, SWT.NONE);
+		GridData gd_repositoryType = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		gd_repositoryType.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		repositoryOperation.setLayoutData(gd_repositoryType);
+		
+		Label repositoryTypeLabel = new Label(this, SWT.NONE);
+		repositoryTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		repositoryTypeLabel.setText(I18n.getString("dialog.summary.repositoryType", true));
 		
 		repositoryType = new Label(this, SWT.NONE);
-		GridData gd_repositoryType = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_repositoryType.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		repositoryType.setLayoutData(gd_repositoryType);
+		repositoryType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		
 		Label localFolderLabel = new Label(this, SWT.NONE);
 		localFolderLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -121,11 +135,11 @@ public class SummaryPanel extends WizardPanelComposite {
 		localFolder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 		
 		encryptionTypeLabel = new Label(this, SWT.NONE);
-		encryptionTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+		encryptionTypeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, false, false, 1, 1));
 		encryptionTypeLabel.setText(I18n.getString("dialog.summary.encryptionSettings", true));
 		
 		encryptionType = new Label(this, SWT.NONE);
-		encryptionType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		encryptionType.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false, 1, 1));
 		
 		progressBar = new ProgressBar(this, SWT.INDETERMINATE);
 		GridData gd_progressBar = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
@@ -220,8 +234,8 @@ public class SummaryPanel extends WizardPanelComposite {
 		);
 		WidgetDecorator.bold(
 			successConnectLabel, errorInitLabel, successConnectLabel,
-			summaryIntroductionTitleLabel, 
-			encryptionTypeLabel, repositoryTypeLabel, localFolderLabel
+			summaryIntroductionTitleLabel, repositoryTypeLabel,
+			encryptionTypeLabel, repositoryActionLabel, localFolderLabel
 		);
 	}
 	
@@ -239,16 +253,29 @@ public class SummaryPanel extends WizardPanelComposite {
 
 	public void updateData(){
 		UserInput userInput = getParentWizardDialog().getUserInput();
-		final String type = String.format("%s", userInput.getCommonParameter(CommonParameters.COMMAND_ACTION));
-		final String encryption = String.format("[%s / %s]", userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM), "fifi");
-		final String folder = String.format("%s", userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
+		final String repositoryOperationNatureValue = String.format("%s", userInput.getCommonParameter(CommonParameters.COMMAND_ACTION));
+		
+		String[] cipherSpec = userInput.getCommonParameter(CommonParameters.ENCRYPTION_ALGORITHM).split(",");
+		String cipherSuitesIdStr = StringUtil.join(Arrays.asList(cipherSpec), " + \n", new StringJoinListener<String>() {
+			@Override
+			public String getString(String id) {
+				CipherSpec cs = CipherSpecs.getCipherSpec(Integer.parseInt(id));
+				return cs.getAlgorithm()+ " (" + cs.getKeySize() + ")";
+			}			
+		});
+		
+		final String encryptionDetails = String.format("%s", cipherSuitesIdStr);
+		final String localFolderValue = String.format("%s", userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
+		Plugin p = Plugins.get(userInput.getCommonParameter(CommonParameters.PLUGIN_ID));
+		final String repositoryTypeValue = String.format("%s Repository", p.getName());
 		
 		getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				repositoryType.setText(type);
-				encryptionType.setText(encryption);
-				localFolder.setText(folder);
+				repositoryOperation.setText(repositoryOperationNatureValue);
+				encryptionType.setText(encryptionDetails);
+				localFolder.setText(localFolderValue);
+				repositoryType.setText(repositoryTypeValue);
 			}
 		});
 	}	
