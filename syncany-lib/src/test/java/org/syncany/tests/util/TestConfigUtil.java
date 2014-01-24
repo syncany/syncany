@@ -172,7 +172,7 @@ public class TestConfigUtil {
 	}
 	
 	public static String createUniqueName(String name, Object uniqueHashObj) {
-		return String.format("syncany-%s-%d-%s", RUNDATE, 100 + uniqueHashObj.hashCode() % 899, name);
+		return String.format("syncany-%s-%d-%s", RUNDATE, 10000 + uniqueHashObj.hashCode() % 89999, name);
 	}
 
 	public static void setCrypto(boolean cryptoEnabled) {

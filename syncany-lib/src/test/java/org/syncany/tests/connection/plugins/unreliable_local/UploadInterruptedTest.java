@@ -52,6 +52,7 @@ public class UploadInterruptedTest {
 			Thread.sleep(700);
 		}
 		
+		Thread.sleep(1000);
 		clientThreadA.interrupt();
 		
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000001").exists());
