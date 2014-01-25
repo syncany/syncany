@@ -74,7 +74,7 @@ public class MultiChunkDaoTest {
 	}
 	
 	@Test
-	public void testGetMultiChunksByDatabaseVersion() throws Exception {
+	public void testGetMultiChunksByDatabaseVersion1() throws Exception {
 		// Setup
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
 		Connection databaseConnection = testConfig.createDatabaseConnection();
@@ -125,6 +125,43 @@ public class MultiChunkDaoTest {
 			ChunkChecksum.parseChunkChecksum("f15eace568ea3c324ecd3d01b67e692bbf8a2f1b")			
 		));
 		
+		// Tear down
+		databaseConnection.close();
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
+	
+	@Test
+	public void testGetMultiChunksByDatabaseVersion2() throws Exception {
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		Connection databaseConnection = testConfig.createDatabaseConnection();
+
+		// Run
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+
+		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
+		
+		Map<MultiChunkId, MultiChunkEntry> multiChunksA4 = multiChunkDao.getMultiChunks(TestDatabaseUtil.createVectorClock("A4"));		
+		Map<MultiChunkId, MultiChunkEntry> multiChunksA5 = multiChunkDao.getMultiChunks(TestDatabaseUtil.createVectorClock("A5"));
+
+		// Test
+		
+		// - Database version "A4"		
+		assertNotNull(multiChunksA4);
+		assertEquals(0, multiChunksA4.size());
+		
+		// - Database version "A5"
+		assertNotNull(multiChunksA5);
+		assertEquals(1, multiChunksA5.size());
+		
+		MultiChunkEntry multiChunkInA5 = multiChunksA5.get(MultiChunkId.parseMultiChunkId("dddddddddddddddddddddddddddddddddddddddd"));
+		
+		assertNotNull(multiChunkInA5);
+		assertEquals("dddddddddddddddddddddddddddddddddddddddd", multiChunkInA5.getId().toString());
+		assertTrue(CollectionUtil.containsExactly(multiChunkInA5.getChunks(), 
+			ChunkChecksum.parseChunkChecksum("ffffffffffffffffffffffffffffffffffffffff")			
+		));
+						
 		// Tear down
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);

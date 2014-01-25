@@ -4,16 +4,21 @@
 
 // Global Helpers //////////////////////////////////////////////////////////////
 
-def getRevision = { ->
-	def stdout = new ByteArrayOutputStream()
+String getRevision() {
+	try {
+		def stdout = new ByteArrayOutputStream()
 
-	exec {
-		workingDir rootProject.projectDir
-		commandLine 'git rev-parse --short HEAD'.split()
-		standardOutput = stdout
+		exec {
+			workingDir rootProject.projectDir
+			commandLine 'git rev-parse --short HEAD'.split()
+			standardOutput = stdout
+		}
+
+		return stdout.toString().trim()
 	}
-
-	return stdout.toString().trim()
+	catch (Exception e) {
+		return "UNKNOWN"
+	}
 }
 
 
@@ -123,6 +128,9 @@ subprojects {
 // JavaDoc /////////////////////////////////////////////////////////////////////
 
 task javadocAll(type: Javadoc) {
+	group = "documentation"
+	description = "Creates the JavaDoc for all subprojects and puts it into build/javadoc"
+
 	source subprojects.collect { project -> project.sourceSets.main.allJava } 
 	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
 	destinationDir = new File(projectDir, 'build/javadoc')
@@ -143,7 +151,9 @@ task javadocAll(type: Javadoc) {
 	}
 }
 
-task cleanJavadoc(type: Delete) {
+task cleanJavadocAll(type: Delete) {
+	group = "documentation"
+	description = "Deletes the all subprojects from build/javadoc (completent to javadocAll)"
 	delete 'build/javadoc'	
 }
 
