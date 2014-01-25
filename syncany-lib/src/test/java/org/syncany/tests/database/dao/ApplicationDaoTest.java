@@ -17,8 +17,9 @@
  */
 package org.syncany.tests.database.dao;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.io.File;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
@@ -77,6 +78,31 @@ public class ApplicationDaoTest {
 		
 		// Test
 		assertTrue(CollectionUtil.containsExactly(expectedKnownDatabases, actualKnownDatabases));
+
+		// Tear down
+		databaseConnection.close();
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
+	
+	@Test
+	public void testShutdown() throws Exception {
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		Connection databaseConnection = testConfig.createDatabaseConnection();
+
+		// Prepare
+		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
+		
+		List<DatabaseRemoteFile> expectedKnownDatabases = Arrays.asList(new DatabaseRemoteFile[] { 
+			new DatabaseRemoteFile("db-A-0000000001")
+		});
+		
+		applicationDao.persistNewKnownRemoteDatabases(expectedKnownDatabases);
+
+		// Run & Test
+		assertTrue(new File(testConfig.getDatabaseFile()+".lck").exists());
+		applicationDao.shutdown();
+		assertFalse(new File(testConfig.getDatabaseFile()+".lck").exists());		
 
 		// Tear down
 		databaseConnection.close();

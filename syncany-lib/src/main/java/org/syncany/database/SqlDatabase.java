@@ -151,7 +151,7 @@ public class SqlDatabase {
 
 	// File Version
 
-	public Map<String, FileVersion> getFilesInDatabase() {
+	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
 	}
 

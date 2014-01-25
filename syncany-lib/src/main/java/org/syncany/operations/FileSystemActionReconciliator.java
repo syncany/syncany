@@ -19,18 +19,21 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator;
-import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.actions.ChangeFileSystemAction;
 import org.syncany.operations.actions.DeleteFileSystemAction;
@@ -137,6 +140,12 @@ public class FileSystemActionReconciliator {
 		FileVersionComparator fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
+		// Load file history cache
+		logger.log(Level.INFO, "- Loading current file tree...");
+		
+		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();		
+		Map<FileHistoryId, FileVersion> fileHistoryIdCache = fillFileHistoryIdCache(fileHistoriesWithLastVersion);
+				
 		logger.log(Level.INFO, "- Determine filesystem actions ...");
 		
 		for (PartialFileHistory winningFileHistory : winnersDatabase.getFileHistories()) {
@@ -145,7 +154,7 @@ public class FileSystemActionReconciliator {
 			File winningLastFile = new File(config.getLocalDir()+File.separator+winningLastVersion.getPath());
 			
 			// Get local file version and content
-			FileVersion localLastVersion = localDatabase.getFileVersionByFileHistoryId(winningFileHistory.getFileId());
+			FileVersion localLastVersion = fileHistoryIdCache.get(winningFileHistory.getFileId());
 			File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir()+File.separator+localLastVersion.getPath()) : null;
 			
 			logger.log(Level.INFO, "   + Comparing local version: "+localLastVersion);			
@@ -288,5 +297,14 @@ public class FileSystemActionReconciliator {
 			
 		return fileSystemActions;
 	}
-	
+
+	private Map<FileHistoryId, FileVersion> fillFileHistoryIdCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
+		Map<FileHistoryId, FileVersion> fileHistoryIdCache = new HashMap<FileHistoryId, FileVersion>();
+		
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+			fileHistoryIdCache.put(fileHistory.getFileId(), fileHistory.getLastVersion());
+		}
+		
+		return fileHistoryIdCache;
+	}	
 }

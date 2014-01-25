@@ -78,7 +78,7 @@ public class StatusOperation extends Operation {
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
 
 		// Path to actual file version
-		final Map<String, FileVersion> filesInDatabase = localDatabase.getFilesInDatabase();
+		final Map<String, FileVersion> filesInDatabase = localDatabase.getCurrentFileTree();
 
 		// Find local changes
 		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");								
@@ -96,16 +96,16 @@ public class StatusOperation extends Operation {
 	}
 
 	private ChangeSet findLocalChanges(final Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
-		ChangeSet localChanges = findLocalChangedAndNewFiles(config.getLocalDir());
-		findAndAppendDeletedFiles(localChanges,filesInDatabase);
+		ChangeSet localChanges = findLocalChangedAndNewFiles(config.getLocalDir(), filesInDatabase);
+		findAndAppendDeletedFiles(localChanges, filesInDatabase);
 		
 		return localChanges;
 	}		
 	
-	private ChangeSet findLocalChangedAndNewFiles(final File root) throws FileNotFoundException, IOException {
+	private ChangeSet findLocalChangedAndNewFiles(final File root, Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
 		Path rootPath = Paths.get(root.getAbsolutePath());
 		
-		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath);		
+		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, filesInDatabase);		
 		Files.walkFileTree(rootPath, fileVisitor);
 		
 		return fileVisitor.getChangeSet();		
@@ -131,16 +131,18 @@ public class StatusOperation extends Operation {
 	private class StatusFileVisitor implements FileVisitor<Path> {
 		private Path root;
 		private ChangeSet changeSet;		
+		private Map<String, FileVersion> currentFileTree;
 		
-		public StatusFileVisitor(Path root) {
+		public StatusFileVisitor(Path root, Map<String, FileVersion> currentFileTree) {
 			this.root = root;
 			this.changeSet = new ChangeSet();
+			this.currentFileTree = currentFileTree;
 		}
 
 		public ChangeSet getChangeSet() {
 			return changeSet;
 		}
-		
+		 
 		@Override
 		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
 			String relativeFilePath = FileUtil.getRelativeDatabasePath(root.toFile(), actualLocalFile.toFile()); //root.relativize(actualLocalFile).toString();
@@ -171,7 +173,7 @@ public class StatusOperation extends Operation {
 			}				
 			
 			// Check database by file path
-			FileVersion expectedLastFileVersion = localDatabase.getFileVersionByPath(relativeFilePath);
+			FileVersion expectedLastFileVersion = currentFileTree.get(relativeFilePath);
 			
 			if (expectedLastFileVersion != null) {				
 				// Compare
@@ -205,10 +207,17 @@ public class StatusOperation extends Operation {
 		@Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException { 
 			return visitFile(dir, attrs);
 		}
-		
-		@Override public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }
-		@Override public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }		
-	}	
+
+		@Override
+		public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+			return FileVisitResult.CONTINUE;
+		}
+
+		@Override
+		public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+			return FileVisitResult.CONTINUE;
+		}
+	}
 	
 	public static class StatusOperationOptions implements OperationOptions {
 		private boolean forceChecksum = false;

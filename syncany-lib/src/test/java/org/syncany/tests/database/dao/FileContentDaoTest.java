@@ -116,6 +116,8 @@ public class FileContentDaoTest {
 		FileContent fileContentNonExistingWithChunks = fileContentDao.getFileContent(FileChecksum.parseFileChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), true);
 		FileContent fileContentNonExistingWithoutChunks = fileContentDao.getFileContent(FileChecksum.parseFileChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), false);
 		
+		FileContent fileContentNullChecksum = fileContentDao.getFileContent(null, false);
+		
 		// Test
 		assertNotNull(fileContent1WithChunks);
 		assertEquals(1, fileContent1WithChunks.getChunks().size());
@@ -139,6 +141,8 @@ public class FileContentDaoTest {
 
 		assertNull(fileContentNonExistingWithChunks);
 		assertNull(fileContentNonExistingWithoutChunks);
+		
+		assertNull(fileContentNullChecksum);
 
 		// Tear down
 		databaseConnection.close();

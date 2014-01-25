@@ -19,12 +19,10 @@ package org.syncany.config;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
-import org.syncany.chunk.MimeTypeChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
@@ -136,8 +134,13 @@ public class Config {
 	}
 
 	private void initChunker(RepoTO repoTO) throws Exception {
-		// TODO [feature request] make chunking options configurable
-		chunker = new MimeTypeChunker(
+		// TODO [feature request] make chunking options configurable, something like this:
+		//  chunker = Chunker.getInstance(repoTO.getChunker().getType());
+		//  chunker.init(repoTO.getChunker().getSettings());
+		
+		chunker = new FixedChunker(2*1024*1024, "SHA1");
+		
+		/*new MimeTypeChunker(
 			new FixedChunker(64*1024, "SHA1"),
 			new FixedChunker(2*1024*1024, "SHA1"),
 			Arrays.asList(new String[] {
@@ -153,7 +156,7 @@ public class Config {
 				"audio/.+",
 				"video/.+",				
 			})
-		);
+		);*/
 	}
 
 	private void initMultiChunker(RepoTO repoTO) {

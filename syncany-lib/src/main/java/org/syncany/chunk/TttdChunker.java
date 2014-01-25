@@ -54,8 +54,8 @@ import java.util.logging.Logger;
  * @see <a href="http://www.hpl.hp.com/techreports/2005/HPL-2005-30R1.html">Original TTTD paper: A framework for analyzing and improving content-based chunking algorithms</a>,
  *      2005, Kave Eshghi and Hsiu Khuern Tang 
  */
-public class TTTDChunker extends Chunker {   
-    private static final Logger logger = Logger.getLogger(TTTDChunker.class.getSimpleName());   
+public class TttdChunker extends Chunker {   
+    private static final Logger logger = Logger.getLogger(TttdChunker.class.getSimpleName());   
 
     public static final int DEFAULT_WINDOW_SIZE = 48; // like LBFS
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
@@ -70,15 +70,15 @@ public class TTTDChunker extends Chunker {
     private String fingerprintAlgorithm;
     private String name;   
     
-    public TTTDChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize) {
+    public TttdChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize) {
         this(Tmin, Tmax, D, Ddash, windowSize, DEFAULT_DIGEST_ALG, DEFAULT_FINGERPRINT_ALG);
     }
     
-    public TTTDChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize,  String digestAlg) {
+    public TttdChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize,  String digestAlg) {
         this(Tmin, Tmax, D, Ddash, windowSize, digestAlg, DEFAULT_FINGERPRINT_ALG);
     }    
     
-    public TTTDChunker(int avgChunkSize) {
+    public TttdChunker(int avgChunkSize) {
     	this(avgChunkSize, DEFAULT_WINDOW_SIZE, DEFAULT_DIGEST_ALG, DEFAULT_FINGERPRINT_ALG);
     }
     
@@ -86,7 +86,7 @@ public class TTTDChunker extends Chunker {
      * Infer the optimal values for avgChunkSize from the orginal paper's optimal (measured) values.
      * LBFS: avg. chunk size = 1015 bytes --> Tmin = 460, Tmax = 2800, D = 540, Ddash = 270
      */
-    public TTTDChunker(int avgChunkSize, int windowSize, String digestAlg, String fingerprintAlg) {        
+    public TttdChunker(int avgChunkSize, int windowSize, String digestAlg, String fingerprintAlg) {        
         this(
            /* Tmin */ (int) Math.round(460.0*avgChunkSize/1015.0), 
            /* Tmax */ (int) Math.round(2800.0*avgChunkSize/1015.0),
@@ -95,11 +95,11 @@ public class TTTDChunker extends Chunker {
            /* rest */ windowSize, digestAlg, fingerprintAlg, "TTTD-"+avgChunkSize+"-"+digestAlg+"-"+fingerprintAlg);              
     }
     
-    public TTTDChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize, String digestAlg, String fingerprintAlg) {
+    public TttdChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize, String digestAlg, String fingerprintAlg) {
         this(Tmin, Tmax, D, Ddash, windowSize, digestAlg, fingerprintAlg, "TTTD-"+Tmin+"-"+Tmax+"-"+D+"-"+Ddash+"-"+digestAlg+"-"+fingerprintAlg);
     }
     
-    private TTTDChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize, String digestAlg, String fingerprintAlg, String name) {
+    private TttdChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize, String digestAlg, String fingerprintAlg, String name) {
         this.Tmin = Tmin;
         this.Tmax = Tmax;
         this.D = D;

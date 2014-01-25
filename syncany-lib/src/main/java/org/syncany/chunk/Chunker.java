@@ -31,7 +31,7 @@ import java.util.Enumeration;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class Chunker {
+public abstract class Chunker {	
     /**
      * Opens the given file and creates enumeration of {@link Chunk}s. This method 
      * should not read the file into memory at once, but instead read and emit new 

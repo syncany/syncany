@@ -20,9 +20,12 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -97,19 +100,57 @@ public class Indexer {
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
 		
+		// Load file history cache
+		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
+		
+		// TODO [medium] This should be in FileHistoryDao
+		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
+		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
+		
 		// Find and index new files
-		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion));			
+		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache));			
 		
 		// Find and remove deleted files
-		removeDeletedFiles(newDatabaseVersion);
+		removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 		
 		return newDatabaseVersion;
 	}
 	
-	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
+	private Map<String, PartialFileHistory> fillFilePathCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
+		Map<String, PartialFileHistory> filePathCache = new HashMap<String, PartialFileHistory>();
+		
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+			filePathCache.put(fileHistory.getLastVersion().getPath(), fileHistory);
+		}
+		
+		return filePathCache;
+	}
+
+	private Map<FileChecksum, List<PartialFileHistory>> fillFileChecksumCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
+		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = new HashMap<FileChecksum, List<PartialFileHistory>>();
+		
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+			FileChecksum fileChecksum = fileHistory.getLastVersion().getChecksum();
+			
+			if (fileChecksum != null) {
+				List<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileChecksum);
+				
+				if (fileHistoriesWithSameChecksum == null) {
+					fileHistoriesWithSameChecksum = new ArrayList<PartialFileHistory>();
+				}
+				
+				fileHistoriesWithSameChecksum.add(fileHistory);
+				fileChecksumCache.put(fileChecksum, fileHistoriesWithSameChecksum);
+			}			
+		}
+		
+		return fileChecksumCache;
+	}
+
+	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<PartialFileHistory> fileHistoriesWithLastVersion) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
-		for (PartialFileHistory fileHistory : localDatabase.getFileHistoriesWithLastVersion()) {
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
 			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
 			if (newDatabaseVersion.getFileHistory(fileHistory.getFileId()) != null) {
 				continue;
@@ -167,6 +208,10 @@ public class Indexer {
 		private FileVersionComparator fileVersionComparator;
 		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
+		
+		private Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache;
+		private Map<String, PartialFileHistory> filePathCache;
+		
 		private ChunkEntry chunkEntry;		
 		private MultiChunkEntry multiChunkEntry;	
 		private FileContent fileContent;
@@ -174,10 +219,13 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
 
-		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
+		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache, Map<String, PartialFileHistory> filePathCache) {
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
+			
+			this.fileChecksumCache = fileChecksumCache;
+			this.filePathCache = filePathCache;
 		}				
 
 		@Override
@@ -291,7 +339,7 @@ public class Indexer {
 
 		private PartialFileHistory createNewFileHistory(PartialFileHistory lastFileHistory) {
 			if (lastFileHistory == null) {				
-				FileHistoryId newFileHistoryId = generateNewFileHistoryId();				
+				FileHistoryId newFileHistoryId = FileHistoryId.secureRandomFileId();				
 				return new PartialFileHistory(newFileHistoryId);			
 			} 
 			else {
@@ -346,30 +394,6 @@ public class Indexer {
 			return fileVersion;
 		}
 
-		private FileHistoryId generateNewFileHistoryId() {
-			int newFileHistoryIdAttempts = 0;
-			FileHistoryId newFileHistoryId = null;
-			
-			// TODO[low]: this is probably useless as the collision probability should be super tiny
-			do {
-				newFileHistoryId = FileHistoryId.secureRandomFileId();
-				
-				if (localDatabase.getFileHistoryWithLastVersion(newFileHistoryId) == null 
-					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {
-					
-					break;
-				}
-				
-				newFileHistoryIdAttempts++;
-			} while (newFileHistoryIdAttempts < 10);
-			
-			if (newFileHistoryIdAttempts >= 10) {
-				throw new IndexerException("Cannot generate a unique file id, aborting");
-			}
-			
-			return newFileHistoryId;
-		}
-
 		private void resetFileEnd() {
 			fileContent = null;	
 			startFileProperties = null;
@@ -400,7 +424,7 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistoryForFolderOrSymlink(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = localDatabase.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
+			PartialFileHistory lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", "+fileProperties.getType()+")");
@@ -424,12 +448,12 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = null;
 			
 			// 1a. by path
-			lastFileHistory = localDatabase.getFileHistoryWithLastVersion(fileProperties.getRelativePath());
+			lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				// 1b. by checksum
 				if (fileProperties.getChecksum() != null) {
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = localDatabase.getFileHistoriesWithLastVersionByChecksum(fileProperties.getChecksum());
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileProperties.getChecksum()); 
 					
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!

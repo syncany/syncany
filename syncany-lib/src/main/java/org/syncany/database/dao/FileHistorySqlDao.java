@@ -40,11 +40,11 @@ import org.syncany.database.VectorClock;
 public class FileHistorySqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(FileHistorySqlDao.class.getSimpleName());
 
-	private FileVersionSqlDao fileVersionDao;
-
+	private FileVersionSqlDao fileVersionDao;	
+	
 	public FileHistorySqlDao(Connection connection, FileVersionSqlDao fileVersionDao) {
-		super(connection);
-		this.fileVersionDao = fileVersionDao;
+		super(connection);		
+		this.fileVersionDao = fileVersionDao;		
 	}
 
 	public void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
