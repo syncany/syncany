@@ -31,8 +31,11 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.VectorClock;
 
 /**
- * @author pheckel
- *
+ * The chunk data access object (DAO) writes and queries the SQL database for information
+ * on {@link ChunkEntry}s. It translates the relational data in the "chunk" table to
+ * Java objects.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChunkSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(ChunkSqlDao.class.getSimpleName());
@@ -43,7 +46,15 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		this.chunkCache = null;
 	}
 
-	// TODO [low] Mark "no commit"
+	/**
+	 * Writes a list of {@link ChunkEntry}s to the database using <tt>INSERT</tt>s and the given connection.
+	 * 
+	 * <p><b>Note:</b> This method executes, but does not commit the query.
+	 * 
+	 * @param connection The connection used to execute the statements
+	 * @param chunks List of {@link ChunkEntry}s to be inserted in the database
+	 * @throws SQLException If the SQL statement fails
+	 */
 	public void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
 		if (chunks.size() > 0) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/chunk.insert.all.writeChunks.sql");
@@ -60,6 +71,18 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	/**
+	 * Queries the database of a chunk with the given checksum. 
+	 * 
+	 * <p>Note: When first called, this method loads the <b>chunk cache</b> and keeps
+	 * this cache until it is cleared explicitly with {@link #clearCache()}. 
+	 * 
+	 * <p>Also note that this method will return <tt>null</tt> if the chunk has been
+	 * added after the cache has been filled. 
+	 * 
+	 * @param chunkChecksum Chunk checksum of the chunk to be selected
+	 * @return Returns the chunk entry, or <tt>null</tt> if the chunk does not exist.
+	 */	
 	public synchronized ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		if (chunkCache == null) {
 			loadChunkCache();
@@ -68,6 +91,11 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		return chunkCache.get(chunkChecksum);
 	}
 	
+	/**
+	 * Clears the chunk cache loaded by {@link #getChunk(ChunkChecksum) getChunk()}
+	 * and resets the cache. If {@link #getChunk(ChunkChecksum) getChunk()} is called
+	 * after the cache is cleared, it is re-populated.
+	 */
 	public synchronized void clearCache() {
 		if (chunkCache != null) {
 			chunkCache.clear();
@@ -75,17 +103,17 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	private void loadChunkCache() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.loadChunkCache.sql")) {
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				chunkCache = createChunkEntries(resultSet);
-			}
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
+	/**
+	 * Queries the SQL database for all chunks that <b>originally appeared</b> in the
+	 * database version identified by the given vector clock.
+	 * 
+	 * <p><b>Note:</b> This method does <b>not</b> select all the chunks that are referenced
+	 * in the database version. In particular, it <b>does not return</b> chunks that appeared
+	 * in previous other database versions.
+	 * 
+	 * @param vectorClock Vector clock that identifies the database version
+	 * @return Returns all chunks that originally belong to a database version
+	 */
 	public Map<ChunkChecksum, ChunkEntry> getChunks(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.getChunksForDatabaseVersion.sql")) {
 
@@ -115,5 +143,16 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	protected ChunkEntry createChunkEntryFromRow(ResultSet resultSet) throws SQLException {
 		ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(resultSet.getString("checksum"));
 		return new ChunkEntry(chunkChecksum, resultSet.getInt("size"));
+	}
+	
+	protected void loadChunkCache() {
+		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.loadChunkCache.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				chunkCache = createChunkEntries(resultSet);
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

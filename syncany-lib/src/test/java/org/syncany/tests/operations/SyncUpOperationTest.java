@@ -34,7 +34,7 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.dao.XmlDatabaseDao;
+import org.syncany.database.dao.XmlDatabaseSerializer;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -76,7 +76,7 @@ public class SyncUpOperationTest {
 		assertTrue(remoteDatabaseFile.exists());
 		
 		// - Memory database
-		XmlDatabaseDao dDAO = new XmlDatabaseDao(testConfig.getTransformer());
+		XmlDatabaseSerializer dDAO = new XmlDatabaseSerializer(testConfig.getTransformer());
 		
 		MemoryDatabase remoteDatabase = new MemoryDatabase();		
 		dDAO.load(remoteDatabase, remoteDatabaseFile);

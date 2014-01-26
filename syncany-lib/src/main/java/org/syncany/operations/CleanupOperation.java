@@ -34,7 +34,7 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.dao.XmlDatabaseDao;
+import org.syncany.database.dao.XmlDatabaseSerializer;
 
 public class CleanupOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
@@ -103,7 +103,7 @@ public class CleanupOperation extends Operation {
 		long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
 		Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(config.getMachineName(), lastLocalClientVersion);
 		
-		XmlDatabaseDao databaseDAO = new XmlDatabaseDao(config.getTransformer());
+		XmlDatabaseSerializer databaseDAO = new XmlDatabaseSerializer(config.getTransformer());
 		databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
 		
 		// 3. Uploading merge file		

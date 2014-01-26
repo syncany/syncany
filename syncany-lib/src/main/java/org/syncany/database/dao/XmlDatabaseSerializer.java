@@ -58,17 +58,17 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class XmlDatabaseDao {
-	private static final Logger logger = Logger.getLogger(XmlDatabaseDao.class.getSimpleName());
+public class XmlDatabaseSerializer {
+	private static final Logger logger = Logger.getLogger(XmlDatabaseSerializer.class.getSimpleName());
 	private static final int XML_FORMAT_VERSION = 1;
 
 	private Transformer transformer;
 	
-	public XmlDatabaseDao() {
+	public XmlDatabaseSerializer() {
 		this(null);
 	}
 	
-	public XmlDatabaseDao(Transformer transformer) {
+	public XmlDatabaseSerializer(Transformer transformer) {
 		this.transformer = transformer;
 	}
 	

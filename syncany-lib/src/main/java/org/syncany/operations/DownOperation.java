@@ -50,7 +50,7 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.XmlDatabaseDao;
+import org.syncany.database.dao.XmlDatabaseSerializer;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
@@ -402,7 +402,7 @@ public class DownOperation extends Operation {
 		}
 
 		// Load individual databases for branch ranges
-		XmlDatabaseDao databaseDAO = new XmlDatabaseDao(config.getTransformer());
+		XmlDatabaseSerializer databaseDAO = new XmlDatabaseSerializer(config.getTransformer());
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 		String clientName = null;
@@ -448,7 +448,7 @@ public class DownOperation extends Operation {
 
 		// Read database files
 		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
-		XmlDatabaseDao dbDAO = new XmlDatabaseDao(config.getTransformer());
+		XmlDatabaseSerializer dbDAO = new XmlDatabaseSerializer(config.getTransformer());
 
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
