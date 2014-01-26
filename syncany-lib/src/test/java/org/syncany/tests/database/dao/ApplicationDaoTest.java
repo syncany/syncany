@@ -73,7 +73,7 @@ public class ApplicationDaoTest {
 			new DatabaseRemoteFile("db-A-0000000002")
 		});
 		
-		applicationDao.persistNewKnownRemoteDatabases(expectedKnownDatabases);
+		applicationDao.writeKnownRemoteDatabases(expectedKnownDatabases);
 		List<DatabaseRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
 		
 		// Test
@@ -97,7 +97,7 @@ public class ApplicationDaoTest {
 			new DatabaseRemoteFile("db-A-0000000001")
 		});
 		
-		applicationDao.persistNewKnownRemoteDatabases(expectedKnownDatabases);
+		applicationDao.writeKnownRemoteDatabases(expectedKnownDatabases);
 
 		// Run & Test
 		assertTrue(new File(testConfig.getDatabaseFile()+".lck").exists());

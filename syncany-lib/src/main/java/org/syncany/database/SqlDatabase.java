@@ -46,6 +46,13 @@ import org.syncany.operations.DatabaseBranch;
  * <p>This class combines all specific SQL database data access objects (DAOs) into
  * a single class, and forwards all method calls to the responsible DAO.  
  * 
+ * @see {@link ApplicationSqlDao}
+ * @see {@link ChunkSqlDao}
+ * @see {@link FileContentSqlDao}
+ * @see {@link FileVersionSqlDao}
+ * @see {@link FileHistorySqlDao}
+ * @see {@link MultiChunkSqlDao}
+ * @see {@link DatabaseVersionSqlDao}
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SqlDatabase {
@@ -73,8 +80,8 @@ public class SqlDatabase {
 
 	// Application
 
-	public void persistNewKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
-		applicationDao.persistNewKnownRemoteDatabases(remoteDatabases);
+	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
+		applicationDao.writeKnownRemoteDatabases(remoteDatabases);
 	}
 
 	public List<DatabaseRemoteFile> getKnownDatabases() {

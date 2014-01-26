@@ -17,8 +17,6 @@
  */
 package org.syncany.operations;
 
-import java.util.logging.Logger;
-
 import org.syncany.config.Config;
 
 /**
@@ -36,7 +34,6 @@ import org.syncany.config.Config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Operation {
-	private static final Logger logger = Logger.getLogger(Operation.class.getSimpleName());
 	protected Config config;
 	
 	public Operation(Config config) {

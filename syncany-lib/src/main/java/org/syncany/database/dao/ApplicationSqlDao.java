@@ -28,8 +28,10 @@ import java.util.logging.Logger;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 
 /**
- * @author pheckel
- *
+ * The application data access object (DAO) writes and queries the SQL database for 
+ * general information about the application. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ApplicationSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(ApplicationSqlDao.class.getSimpleName());	
@@ -38,7 +40,14 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		super(connection);
 	}	
 	
-	public void persistNewKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
+	/**
+	 * Writes a list of {@link DatabaseRemoteFile}s to the database using the given connection.
+	 * <p><b>Note:</b> This method executes, but does not commit the query.
+	 * 
+	 * @param remoteDatabases List of remote databases to write to the database
+	 * @throws SQLException If the SQL statement fails
+	 */
+	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/application.insert.all.persistNewKnownRemoteDatabases.sql");
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
@@ -51,6 +60,12 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}
 	
+	/**
+	 * Queries the database for already known {@link DatabaseRemoteFile}s and returns a
+	 * list of all of them. 
+	 * 
+	 * @return Returns a list of all known/processed remote databases
+	 */
 	public List<DatabaseRemoteFile> getKnownDatabases() {
 		List<DatabaseRemoteFile> knownDatabases = new ArrayList<DatabaseRemoteFile>();
 				
@@ -68,6 +83,12 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	/**
+	 * Shuts down the HSQL database, i.e. persists all data, closes all connections
+	 * and unlocks the database for other processes. 
+	 * 
+	 * <p>The command sends the <b><tt>SHUTDOWN</tt></b> SQL command.
+	 */
 	public void shutdown() {
 		try {
 			connection.prepareStatement("shutdown").execute();

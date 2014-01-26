@@ -159,7 +159,7 @@ public class DownOperation extends Operation {
 		applyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 
 		// 7. Write names of newly analyzed remote databases (so we don't download them again)
-		localDatabase.persistNewKnownRemoteDatabases(unknownRemoteDatabases);
+		localDatabase.writeKnownRemoteDatabases(unknownRemoteDatabases);
 
 		disconnectTransferManager();
 

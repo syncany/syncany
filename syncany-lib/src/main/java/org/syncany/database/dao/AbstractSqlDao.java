@@ -24,8 +24,10 @@ import java.sql.SQLException;
 import org.syncany.database.DatabaseConnectionFactory;
 
 /**
- * @author pheckel
- *
+ * Small helper class to implement common tasks for the inheriting 
+ * SQL data access objects.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractSqlDao {
 	protected Connection connection;
