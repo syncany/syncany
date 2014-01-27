@@ -254,21 +254,18 @@ public class SftpTransferManager extends AbstractTransferManager {
 			// List folder
 			String remoteFilePath = getRemoteFilePath(remoteFileClass);
 			
-			@SuppressWarnings("unchecked")
-			List<LsEntry> entries = channel.ls(remoteFilePath + "/");
+			List<LsEntry> entries = listEntries(remoteFilePath + "/");
 			
 			// Create RemoteFile objects
 			Map<String, T> remoteFiles = new HashMap<String, T>();
 
 			for (LsEntry entry : entries) {
-				if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
-					try {
-						T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
-						remoteFiles.put(entry.getFilename(), remoteFile);
-					}
-					catch (Exception e) {
-						logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
-					}
+				try {
+					T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
+					remoteFiles.put(entry.getFilename(), remoteFile);
+				}
+				catch (Exception e) {
+					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
 				}
 			}
 
@@ -308,7 +305,12 @@ public class SftpTransferManager extends AbstractTransferManager {
 				List<LsEntry> entries = listEntries(repoPath);
 				
 				if (entries.size() == 0){
-					
+					if (canWrite(repoPath)) {
+						return StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO;
+					}
 				}
 				else {
 					boolean existingMultichunkFolder = false;
@@ -416,6 +418,11 @@ public class SftpTransferManager extends AbstractTransferManager {
 	     };
 		channel.ls(absolutePath, selector);
 		return result;
+	}
+	
+	private boolean canWrite(String path) throws SftpException{
+		SftpATTRS stat = channel.stat(path);
+		return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0; 
 	}
 	
 	private boolean folderExists(String absolutePath){
