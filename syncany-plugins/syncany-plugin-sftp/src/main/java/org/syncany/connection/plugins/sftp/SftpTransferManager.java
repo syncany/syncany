@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +41,10 @@ import org.syncany.connection.plugins.TransferManager;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
+import com.jcraft.jsch.ChannelSftp.LsEntrySelector;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 
 /**
@@ -292,6 +295,137 @@ public class SftpTransferManager extends AbstractTransferManager {
 		}
 		else {
 			return repoPath;
+		}
+	}
+	
+	@Override
+	public StorageTestResult test() {
+		try{
+			connect();
+			boolean folderExists = folderExists(repoPath);
+			
+			if (folderExists) {
+				List<LsEntry> entries = listEntries(repoPath);
+				
+				if (entries.size() == 0){
+					
+				}
+				else {
+					boolean existingMultichunkFolder = false;
+					boolean existingDatabaseFolder = false;
+					
+					for (LsEntry entry : entries){
+						if (entry.getAttrs().isDir() && entry.getFilename().equals("multichunks")){
+							existingMultichunkFolder = true;
+						}
+						if (entry.getAttrs().isDir() && entry.getFilename().equals("databases")){
+							existingDatabaseFolder = true;
+						}
+					}
+					
+					if (existingDatabaseFolder && existingMultichunkFolder){
+						disconnect();
+						return StorageTestResult.REPO_ALREADY_EXISTS;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY;
+					}
+				}
+			}
+			else {
+				
+			}
+			
+			return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+		}
+		catch (Exception e){
+			return StorageTestResult.INVALID_PARAMETERS;
+		}
+	}
+	
+	/**
+	 * FTPFile[] ftpFiles = ftp.listFiles(repoPath);
+
+			boolean folderExists = ftp.changeWorkingDirectory(repoPath);
+			
+			if (folderExists){
+				if (ftpFiles.length == 0){
+					ftp.cdup();
+					
+					FTPFile[] parentFolderFiles = ftp.listFiles();
+					for (FTPFile file : parentFolderFiles){
+						if (file.getName().equals(getFolderName(repoPath))) {
+							boolean permission = hasCurrentUserWritePermission(file, getConnection().getUsername()); 
+							disconnect();
+							return permission ? 
+									StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK : 
+									StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO;
+						}
+					}
+					return StorageTestResult.INVALID_PARAMETERS;
+				}
+				else {
+					boolean existingMultichunkFolder = false;
+					boolean existingDatabaseFolder = false;
+					
+					for (FTPFile file : ftpFiles){
+						if (file.isDirectory() && file.getName().equals("multichunks")){
+							existingMultichunkFolder = true;
+						}
+						if (file.isDirectory() && file.getName().equals("databases")){
+							existingDatabaseFolder = true;
+						}
+					}
+					
+					if (existingDatabaseFolder && existingMultichunkFolder){
+						disconnect();
+						return StorageTestResult.REPO_ALREADY_EXISTS;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY;
+					}
+				}
+			}
+			else{
+				FTPFile[] files = ftp.listFiles(getParentPath(getParentPath(repoPath)));
+				String match = getFolderName(getParentPath(repoPath));
+				for (FTPFile file : files){
+					if (file.getName().equals(match)) {
+						boolean permission = hasCurrentUserWritePermission(file, getConnection().getUsername()); 
+						disconnect();
+						return permission ? 
+								StorageTestResult.NO_REPO_PERMISSIONS_OK : 
+								StorageTestResult.NO_REPO_PERMISSIONS_KO;
+						
+					}
+				}
+				return StorageTestResult.INVALID_PARAMETERS;
+			}
+	 * @throws SftpException 
+	 */
+	
+	private List<LsEntry> listEntries(String absolutePath) throws SftpException{
+		final List<LsEntry> result = new ArrayList<>();
+		LsEntrySelector selector = new LsEntrySelector(){
+	       public int select(LsEntry entry){
+	    	   if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
+	    		   result.add(entry);
+	    	   }
+	    	   return CONTINUE;
+	       }
+	     };
+		channel.ls(absolutePath, selector);
+		return result;
+	}
+	
+	private boolean folderExists(String absolutePath){
+		SftpATTRS attrs = null;
+		try {
+		    attrs = channel.stat(absolutePath);
+		    return attrs.isDir();
+		} 
+		catch (Exception e) {
+		    return false;
 		}
 	}
 }

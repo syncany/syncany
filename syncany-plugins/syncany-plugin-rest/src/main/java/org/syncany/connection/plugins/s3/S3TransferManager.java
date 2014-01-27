@@ -46,5 +46,11 @@ public class S3TransferManager extends RestTransferManager {
     @Override
     protected StorageBucket createBucket() {
         return new S3Bucket(getConnection().getBucket(), getConnection().getLocation());
-    }    
+    }
+
+	@Override
+	public StorageTestResult test() {
+		//TODO
+		return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+	}
 }
