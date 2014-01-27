@@ -50,11 +50,23 @@ public abstract class TypedPropertyListTO {
 		this.type = type;
 	}
 	
+	public int getInt(String propertyName){
+		String property = settings.get(propertyName);
+		if(property == null){
+			throw new IllegalArgumentException(String.format("Property %s is not set.", propertyName));
+		}
+		try{
+			return Integer.parseInt(property);
+		}catch(NumberFormatException nfe){
+			throw new IllegalArgumentException(String.format(" Value of property %s could not be parsed as Integer.", propertyName));
+		}
+	}
+	
 	public Map<String, String> getSettings() {
 		return settings;
 	}
 
 	public void setSettings(Map<String, String> settings) {
 		this.settings = settings;
-	}				
+	}
 }
