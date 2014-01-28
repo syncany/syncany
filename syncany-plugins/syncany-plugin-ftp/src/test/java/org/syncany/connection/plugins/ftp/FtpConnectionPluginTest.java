@@ -42,6 +42,7 @@ import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.ftpserver.usermanager.SaltedPasswordEncryptor;
 import org.apache.ftpserver.usermanager.impl.BaseUser;
 import org.apache.ftpserver.usermanager.impl.WritePermission;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,10 +56,12 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.tests.util.TestFileUtil;
 
 public class FtpConnectionPluginTest {
-	private static File tempLocalSourceDir;
+	private File tempLocalSourceDir;
+	private File localRootDir;
 
-	private Map<String, String> sshPluginSettings;
+	private Map<String, String> ftpPluginSettings;
 	private String HOST = "127.0.0.1";
+
 	private static String USER1 = "user_write";
 	private static String PASSWORD1 = "password";
 	
@@ -69,7 +72,6 @@ public class FtpConnectionPluginTest {
 	private static int PORT = 2221;
 	private static FtpServer server;
 	private static File rootDir;
-	private static File localRootDir;
 
 	@BeforeClass
 	public static void beforeTestSetup() throws Exception {
@@ -126,20 +128,23 @@ public class FtpConnectionPluginTest {
 		tempLocalSourceDir = new File(localRootDir + "/local");
 		tempLocalSourceDir.mkdir();
 
-		sshPluginSettings = new HashMap<String, String>();
-		sshPluginSettings.put("hostname", HOST);
-		sshPluginSettings.put("username", USER1);
-		sshPluginSettings.put("password", PASSWORD1);
-		sshPluginSettings.put("port", "" + PORT);
-		sshPluginSettings.put("path", remoteRepo);
+		ftpPluginSettings = new HashMap<String, String>();
+		ftpPluginSettings.put("hostname", HOST);
+		ftpPluginSettings.put("username", USER1);
+		ftpPluginSettings.put("password", PASSWORD1);
+		ftpPluginSettings.put("port", "" + PORT);
+		ftpPluginSettings.put("path", remoteRepo);
 	}
 
-	@AfterClass
-	public static void tearDown() {
+	@After
+	public void tearDown() {
 		TestFileUtil.deleteDirectory(tempLocalSourceDir);
-		TestFileUtil.deleteDirectory(rootDir);
 		TestFileUtil.deleteDirectory(localRootDir);
-
+	}
+	
+	@AfterClass
+	public static void stop(){
+		TestFileUtil.deleteDirectory(rootDir);
 		server.stop();
 	}
 
@@ -153,7 +158,7 @@ public class FtpConnectionPluginTest {
 		Plugin pluginInfo = Plugins.get("ftp");
 
 		assertNotNull("PluginInfo should not be null.", pluginInfo);
-		assertEquals("Plugin ID should be 'ssh'.", "ftp", pluginInfo.getId());
+		assertEquals("Plugin ID should be 'ftp'.", "ftp", pluginInfo.getId());
 		assertNotNull("Plugin version should not be null.", pluginInfo.getVersion());
 		assertNotNull("Plugin name should not be null.", pluginInfo.getName());
 	}
@@ -268,7 +273,7 @@ public class FtpConnectionPluginTest {
 		Plugin pluginInfo = Plugins.get("ftp");
 
 		Connection connection = pluginInfo.createConnection();
-		connection.init(sshPluginSettings);
+		connection.init(ftpPluginSettings);
 
 		TransferManager transferManager = connection.createTransferManager();
 

@@ -35,11 +35,14 @@ import org.apache.sshd.SshServer;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.file.nativefs.NativeFileSystemFactory;
 import org.apache.sshd.server.Command;
+import org.apache.sshd.server.PasswordAuthenticator;
 import org.apache.sshd.server.UserAuth;
-import org.apache.sshd.server.auth.UserAuthNone;
+import org.apache.sshd.server.auth.UserAuthPassword;
 import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.server.sftp.SftpSubsystem;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -57,7 +60,6 @@ import org.syncany.tests.util.TestFileUtil;
 
 public class SftpConnectionPluginTest {
 	private static File tempLocalSourceDir;
-	private static File tempRepoSourceDir;
 	
 	private Map<String, String> sshPluginSettings;
 	private String HOST = "127.0.0.1";
@@ -72,16 +74,21 @@ public class SftpConnectionPluginTest {
 		sshd.setFileSystemFactory(new NativeFileSystemFactory());
 		
 		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
-		userAuthFactories.add(new UserAuthNone.Factory());
+		userAuthFactories.add(new UserAuthPassword.Factory());
 		sshd.setUserAuthFactories(userAuthFactories);
-		//sshd.setPublickeyAuthenticator(new PublickeyAuthenticator());
 
 		sshd.setCommandFactory(new ScpCommandFactory());
 
 		List<NamedFactory<Command>> namedFactoryList = new ArrayList<NamedFactory<Command>>();
 		namedFactoryList.add(new SftpSubsystem.Factory());
 		sshd.setSubsystemFactories(namedFactoryList);
-
+		sshd.setPasswordAuthenticator(new PasswordAuthenticator() {
+			@Override
+			public boolean authenticate(String username, String password, ServerSession session) {
+				return true;
+			}
+		});
+		
 		try {
 			sshd.start();
 		}
@@ -94,22 +101,23 @@ public class SftpConnectionPluginTest {
 		File rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
 
 		tempLocalSourceDir = new File(rootDir+"/local");
-		tempRepoSourceDir = new File(rootDir+"/repo");
 		tempLocalSourceDir.mkdir();
-		tempRepoSourceDir.mkdir();
 		
 		sshPluginSettings = new HashMap<String, String>();
 		sshPluginSettings.put("hostname", HOST);
 		sshPluginSettings.put("username", "user");
 		sshPluginSettings.put("password", "pass");
 		sshPluginSettings.put("port", "" + PORT);
-		sshPluginSettings.put("path", tempRepoSourceDir.getAbsolutePath());
+		sshPluginSettings.put("path", "/repo");
+	}
+	
+	@After
+	public void tear(){
+		TestFileUtil.deleteDirectory(tempLocalSourceDir);
 	}
 	
 	@AfterClass
 	public static void tearDown() {
-		TestFileUtil.deleteDirectory(tempLocalSourceDir);
-		TestFileUtil.deleteDirectory(tempRepoSourceDir);
 		try {
 			sshd.stop(true);
 		}
