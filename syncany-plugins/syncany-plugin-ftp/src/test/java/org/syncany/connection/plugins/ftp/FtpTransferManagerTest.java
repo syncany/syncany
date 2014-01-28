@@ -27,19 +27,20 @@ import org.syncany.connection.plugins.TransferManager.StorageTestResult;
  *
  */
 public class FtpTransferManagerTest {
+	private final static String SANDBOX = "XXX";
 	private final static String USERNAME = "XXX";
 	private final static String PASSWORD = "XXX";
 	private final static String HOST = "XXX";
-	
 	@Test
 	public void testFtpTransferManager() {
-		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, test("/home/vwiencek/sandbox/repoValid"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, test("/home/vwiencek/sandbox/repoEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO, test("/home/vwiencek/sandbox/repoEmptyKO"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, test("/home/vwiencek/sandbox/notEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test("/home/vwiencek/sandbox/repoNewPermOk"));
+		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, test(SANDBOX + "repoValid"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, test(SANDBOX + "repoEmpty"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO, test(SANDBOX + "repoEmptyKO"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, test(SANDBOX + "notEmpty"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test(SANDBOX + "repoNewPermOk"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test(SANDBOX + "repoNewPermOk/new/b"));
 		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_KO, test("/root/notAllowed"));
-		Assert.assertEquals(StorageTestResult.INVALID_PARAMETERS, test("blabla", "/root/notAllowed"));
+		Assert.assertEquals(StorageTestResult.INVALID_PARAMETERS, test("unknownhost", "/root/notAllowed"));
 	}
 		
 	public StorageTestResult test(String host, String path){

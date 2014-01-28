@@ -1,4 +1,5 @@
 dependencies {
     compile			project(':syncany-lib')
-	compile			"commons-net:commons-net:2.2"          
+	compile			"commons-net:commons-net:2.2"    
+	testCompile		"org.apache.ftpserver:ftpserver-core:1.0.6"      
 }

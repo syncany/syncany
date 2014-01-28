@@ -225,11 +225,16 @@ public class FtpTransferManager extends AbstractTransferManager {
 		String remotePath = getRemoteFile(remoteFile);
 
 		try {
-			return ftp.deleteFile(remotePath);
+			boolean delete = ftp.deleteFile(remotePath);
+			if (delete) {
+				return true;
+			}
+			else {
+				throw new IOException("cannot delete file");
+			}
 		}
 		catch (IOException ex) {
 			forceFtpDisconnect();
-
 			logger.log(Level.SEVERE, "Could not delete file " + remoteFile.getName(), ex);
 			throw new StorageException(ex);
 		}
