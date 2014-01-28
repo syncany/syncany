@@ -25,23 +25,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ftpserver.FtpServer;
-import org.apache.ftpserver.FtpServerFactory;
-import org.apache.ftpserver.filesystem.nativefs.NativeFileSystemFactory;
-import org.apache.ftpserver.ftplet.Authority;
-import org.apache.ftpserver.ftplet.FtpException;
-import org.apache.ftpserver.ftplet.UserManager;
-import org.apache.ftpserver.listener.ListenerFactory;
-import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
-import org.apache.ftpserver.usermanager.SaltedPasswordEncryptor;
-import org.apache.ftpserver.usermanager.impl.BaseUser;
-import org.apache.ftpserver.usermanager.impl.WritePermission;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -60,64 +48,21 @@ public class FtpConnectionPluginTest {
 	private File localRootDir;
 
 	private Map<String, String> ftpPluginSettings;
-	private String HOST = "127.0.0.1";
-
-	private static String USER1 = "user_write";
-	private static String PASSWORD1 = "password";
 	
-	private static String USER2 = "user_read";
-	private static String PASSWORD2 = "password";
-	
-	
-	private static int PORT = 2221;
-	private static FtpServer server;
-	private static File rootDir;
-
 	@BeforeClass
 	public static void beforeTestSetup() throws Exception {
-		rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
-
-		PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
-		userManagerFactory.setFile(new File("user.properties"));
-		userManagerFactory.setPasswordEncryptor(new SaltedPasswordEncryptor());
-		UserManager um = userManagerFactory.createUserManager();
-		
-		BaseUser user1 = new BaseUser();
-		user1.setName(USER1);
-		user1.setPassword(PASSWORD1);
-		user1.setHomeDirectory(rootDir.getAbsolutePath() + "/user1");
-		List<Authority> authorities = new ArrayList<Authority>();
-		authorities.add(new WritePermission());
-		user1.setAuthorities(authorities);
-		
-		BaseUser user2 = new BaseUser();
-		user2.setName(USER2);
-		user2.setPassword(PASSWORD2);
-		user2.setHomeDirectory(rootDir.getAbsolutePath() + "/user2");
-		authorities = new ArrayList<Authority>();
-		authorities.add(new WritePermission());
-		user2.setAuthorities(authorities);
-		
-		um.save(user1);
-		um.save(user2);
-
-		FtpServerFactory serverFactory = new FtpServerFactory();
-		serverFactory.setUserManager(um);
-		ListenerFactory factory = new ListenerFactory();
-		factory.setPort(PORT);
-		serverFactory.addListener("default", factory.createListener());
-		NativeFileSystemFactory nfs = new NativeFileSystemFactory();
-		nfs.setCaseInsensitive(false);
-		nfs.setCreateHome(true);
-		serverFactory.setFileSystem(nfs);
-		server = serverFactory.createServer();
-
-		try {
-			server.start();
-		}
-		catch (FtpException e) {
-			e.printStackTrace();
-		}
+		EmbeddedFtpServerTest.startServer();
+	}
+	
+	@AfterClass
+	public static void stop(){
+		EmbeddedFtpServerTest.stopServer();
+	}
+	
+	@After
+	public void tearDown() {
+		TestFileUtil.deleteDirectory(tempLocalSourceDir);
+		TestFileUtil.deleteDirectory(localRootDir);
 	}
 
 	@Before
@@ -129,23 +74,11 @@ public class FtpConnectionPluginTest {
 		tempLocalSourceDir.mkdir();
 
 		ftpPluginSettings = new HashMap<String, String>();
-		ftpPluginSettings.put("hostname", HOST);
-		ftpPluginSettings.put("username", USER1);
-		ftpPluginSettings.put("password", PASSWORD1);
-		ftpPluginSettings.put("port", "" + PORT);
+		ftpPluginSettings.put("hostname", EmbeddedFtpServerTest.HOST);
+		ftpPluginSettings.put("username", EmbeddedFtpServerTest.USER1);
+		ftpPluginSettings.put("password", EmbeddedFtpServerTest.PASSWORD1);
+		ftpPluginSettings.put("port", "" + EmbeddedFtpServerTest.PORT);
 		ftpPluginSettings.put("path", remoteRepo);
-	}
-
-	@After
-	public void tearDown() {
-		TestFileUtil.deleteDirectory(tempLocalSourceDir);
-		TestFileUtil.deleteDirectory(localRootDir);
-	}
-	
-	@AfterClass
-	public static void stop(){
-		TestFileUtil.deleteDirectory(rootDir);
-		server.stop();
 	}
 
 	@Test

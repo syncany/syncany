@@ -301,7 +301,6 @@ public class FtpTransferManager extends AbstractTransferManager {
 	public StorageTestResult test() {
 		try {
 			connect();
-			
 
 			boolean folderExists = ftp.changeWorkingDirectory(repoPath);
 			

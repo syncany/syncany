@@ -19,6 +19,8 @@ package org.syncany.connection.plugins.ftp;
 
 import junit.framework.Assert;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 
@@ -27,44 +29,58 @@ import org.syncany.connection.plugins.TransferManager.StorageTestResult;
  *
  */
 public class FtpTransferManagerTest {
-	private final static String SANDBOX = "XXX";
-	private final static String USERNAME = "XXX";
-	private final static String PASSWORD = "XXX";
-	private final static String HOST = "XXX";
+	@BeforeClass
+	public static void beforeTestSetup() throws Exception {
+		EmbeddedFtpServerTest.startServer();
+		
+		EmbeddedFtpServerTest.mkdir("repoValid");
+		EmbeddedFtpServerTest.mkdir("repoValid/multichunks");
+		EmbeddedFtpServerTest.mkdir("repoValid/databases");
+		EmbeddedFtpServerTest.mkdir("repoEmpty");
+		EmbeddedFtpServerTest.mkdir("notEmpty");
+		EmbeddedFtpServerTest.mkdir("notEmpty/notEmpty");
+	}
+	
+	@AfterClass
+	public static void stop(){
+		EmbeddedFtpServerTest.stopServer();
+	}
+	
 	@Test
 	public void testFtpTransferManager() {
-		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, test(SANDBOX + "repoValid"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, test(SANDBOX + "repoEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO, test(SANDBOX + "repoEmptyKO"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, test(SANDBOX + "notEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test(SANDBOX + "repoNewPermOk"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test(SANDBOX + "repoNewPermOk/new/b"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_KO, test("/root/notAllowed"));
-		Assert.assertEquals(StorageTestResult.INVALID_PARAMETERS, test("unknownhost", "/root/notAllowed"));
+		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, test("/repoValid"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, test("/repoEmpty"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, test("/notEmpty"));
+		Assert.assertEquals(StorageTestResult.INVALID_PARAMETERS, testUnknownHost("/root/notAllowed"));
 	}
 		
-	public StorageTestResult test(String host, String path){
-		FtpConnection cnx = con(host);
-		cnx.setPath(path);
-		return cnx.createTransferManager().test();
-	}
-	
 	public StorageTestResult test(String path){
-		FtpConnection cnx = con();
+		FtpConnection cnx = workingConnection();
 		cnx.setPath(path);
 		return cnx.createTransferManager().test();
 	}
 	
-	public FtpConnection con(){
-		return con(HOST);
+	public StorageTestResult testUnknownHost(String path){
+		FtpConnection cnx = invalidConnection();
+		cnx.setPath(path);
+		return cnx.createTransferManager().test();
 	}
 	
-	public FtpConnection con(String host){
+	public FtpConnection workingConnection(){
 		FtpConnection connection = new FtpConnection();
-		connection.setHostname(host);
-		connection.setPort(21);
-		connection.setUsername(USERNAME);
-		connection.setPassword(PASSWORD);
+		connection.setHostname(EmbeddedFtpServerTest.HOST);
+		connection.setPort(EmbeddedFtpServerTest.PORT);
+		connection.setUsername(EmbeddedFtpServerTest.USER1);
+		connection.setPassword(EmbeddedFtpServerTest.PASSWORD1);
+		return connection;
+	}
+	
+	public FtpConnection invalidConnection(){
+		FtpConnection connection = new FtpConnection();
+		connection.setHostname(EmbeddedFtpServerTest.HOST_WRONG);
+		connection.setPort(EmbeddedFtpServerTest.PORT);
+		connection.setUsername(EmbeddedFtpServerTest.USER1);
+		connection.setPassword(EmbeddedFtpServerTest.PASSWORD1);
 		return connection;
 	}
 }
