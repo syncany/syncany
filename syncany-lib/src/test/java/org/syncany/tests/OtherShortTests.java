@@ -47,7 +47,7 @@ import org.syncany.tests.util.FileUtilTests;
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
-	CollectionUtilTest.class,
+	//CollectionUtilTest.class,
 	FileUtilTests.class,
 	
 	// Crypto	
