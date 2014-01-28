@@ -42,6 +42,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,176 +68,221 @@ import org.syncany.util.FileUtil;
 public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
 
-    private static boolean initialized = false;
-    private static boolean unlimitedStrengthEnabled = false;
-    private static SecureRandom secureRandom = new SecureRandom();
-    
-    static {
+	private static AtomicBoolean initialized = new AtomicBoolean(false);
+	private static AtomicBoolean unlimitedStrengthEnabled = new AtomicBoolean(false);
+	private static SecureRandom secureRandom = new SecureRandom();
+
+	static {
 		init();
-    }
-    
-    public static synchronized void init() {
-    	if (!initialized) {
-    		logger.log(Level.INFO, "Initializing crypto settings and security provider ...");
-    		
-    		// Bouncy Castle
-    		if (Security.getProvider(CRYPTO_PROVIDER_ID) == null) {
-    			Security.addProvider(CRYPTO_PROVIDER); 
-    		}
-    		
-    		// Unlimited strength
-    		try {
-        		unlimitedStrengthEnabled = Cipher.getMaxAllowedKeyLength("AES") > 128;
-        	}
-        	catch (Exception e) {
-        		unlimitedStrengthEnabled = false;
-        	}
-    		
-    		initialized = true;
-    	}    		
-    }
-    
-    public static boolean unlimitedStrengthEnabled() {
-    	return unlimitedStrengthEnabled;
-    }
-    
-    public static void enableUnlimitedStrength() throws CipherException {
-    	if (!unlimitedStrengthEnabled) {
-    		logger.log(Level.INFO, "Enabling unlimited strength/crypto ...");
-    		
+	}
+
+	/**
+	 * Initializes the crypto provider ("Bouncy Castle") and tests whether the unlimited
+	 * strength policy has been enabled. Unlimited crypto allows for stronger crypto algorithms
+	 * such as AES-256 or Twofish-256.
+	 * 
+	 * <p>The method is called in the <tt>static</tt> block of this class and hence initialized
+	 * whenever then class is used.
+	 * 
+	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a> 
+	 */
+	public static synchronized void init() {
+		if (!initialized.get()) {
+			logger.log(Level.INFO, "Initializing crypto settings and security provider ...");
+
+			// Bouncy Castle
+			if (Security.getProvider(CRYPTO_PROVIDER_ID) == null) {
+				Security.addProvider(CRYPTO_PROVIDER);
+			}
+
+			// Unlimited strength
+			try {
+				unlimitedStrengthEnabled.set(Cipher.getMaxAllowedKeyLength("AES") > 128);
+			}
+			catch (Exception e) {
+				unlimitedStrengthEnabled.set(false);
+			}
+
+			initialized.set(true);
+		}
+	}
+
+	/**
+	 * Returns whether the unlimited strength policy is enabled in the current JVM.
+	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a> 
+	 */
+	public static boolean unlimitedStrengthEnabled() {
+		return unlimitedStrengthEnabled.get();
+	}
+
+	/**
+	 * Attempts to programatically enable the unlimited strength Java crypto extension
+	 * using the reflection API. 
+	 * 
+	 * <p>This class tries to set the property <tt>isRestricted</tt> of the class
+	 * <tt>javax.crypto.JceSecurity</tt> to <tt>false</tt> -- effectively disabling 
+	 * the artificial limitations (and the disallowed algorithms).
+	 * 
+	 * <p><b>Note</b>: Be aware that enabling the unlimited strength extension needs to 
+	 * be acknowledged by the end-user to avoid legal issues!  
+	 * 
+	 * @throws CipherException If the unlimited strength policy cannot be enabled.
+	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a> 
+	 */
+	public static void enableUnlimitedStrength() throws CipherException {
+		if (!unlimitedStrengthEnabled.get()) {
+			logger.log(Level.INFO, "Enabling unlimited strength/crypto ...");
+
 			try {
 				Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
-	
+
 				field.setAccessible(true);
-				field.set(null, false);		
+				field.set(null, false);
 			}
 			catch (Exception e) {
 				throw new CipherException(e);
 			}
-    	}
-    }
-    
+		}
+	}
+
+	/**
+	 * Creates a random array of bytes using the default {@link SecureRandom} implementation
+	 * of the currently active JVM. The returned array can be used as a basis for secret keys,
+	 * IVs or salts. 
+	 * 
+	 * @param size Size of the returned array (in bytes)
+	 * @return Returns a random byte array (using a secure pseudo random generator) 
+	 */
 	public static byte[] createRandomArray(int size) {
-    	byte[] salt = new byte[size];    	
-    	secureRandom.nextBytes(salt);
-    	
-    	return salt;
-    }
-	
-	public static SaltedSecretKey createDerivedKey(SecretKey inputMasterKey, byte[] inputSalt, CipherSpec outputCipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		return createDerivedKey(inputMasterKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
-    }
-	
-	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		logger.log(Level.INFO, "Creating secret key using ...");		
+		byte[] randomByteArray = new byte[size];
+		secureRandom.nextBytes(randomByteArray);
+
+		return randomByteArray;
+	}
+
+	public static SaltedSecretKey createDerivedKey(SecretKey inputMasterKey, byte[] inputSalt, CipherSpec outputCipherSpec)
+			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		
+		return createDerivedKey(inputMasterKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
+	}
+
+	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize)
+			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		
+		logger.log(Level.INFO, "Creating secret key using ...");
+
 		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
 		hkdf.init(new HKDFParameters(inputKeyMaterial, inputSalt, KEY_DERIVATION_INFO));
-		
-		byte[] derivedKey = new byte[outputKeySize/8];
+
+		byte[] derivedKey = new byte[outputKeySize / 8];
 		hkdf.generateBytes(derivedKey, 0, derivedKey.length);
-		
-        return toSaltedSecretKey(derivedKey, inputSalt, outputKeyAlgorithm);
-    }
-	
+
+		return toSaltedSecretKey(derivedKey, inputSalt, outputKeyAlgorithm);
+	}
+
 	public static SecretKey toSecretKey(byte[] secretKeyBytes, String algorithm) {
 		String plainAlgorithm = (algorithm.indexOf('/') != -1) ? algorithm.substring(0, algorithm.indexOf('/')) : algorithm;
-        SecretKey secretKey = new SecretKeySpec(secretKeyBytes, plainAlgorithm);  
-        
-        return secretKey;
+		SecretKey secretKey = new SecretKeySpec(secretKeyBytes, plainAlgorithm);
+
+		return secretKey;
 	}
-	
+
 	public static SaltedSecretKey toSaltedSecretKey(byte[] secretKeyBytes, byte[] saltBytes, String algorithm) {
 		return new SaltedSecretKey(toSecretKey(secretKeyBytes, algorithm), saltBytes);
 	}
-	
-	public static SaltedSecretKey createMasterKey(String password) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		byte[] salt = createRandomArray(MASTER_KEY_SALT_SIZE/8);
-		return createMasterKey(password, salt);
-    }
 
-	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		logger.log(Level.INFO, "Creating secret key using "+MASTER_KEY_DERIVATION_FUNCTION+" with "+MASTER_KEY_DERIVATION_ROUNDS+" rounds, key size "+MASTER_KEY_SIZE+" bit ...");
-		
-    	SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);
-        KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE);
-        SecretKey masterKey = factory.generateSecret(pbeKeySpec);
-        
-        return new SaltedSecretKey(masterKey, salt);
-    }
-		
+	public static SaltedSecretKey createMasterKey(String password) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+		byte[] salt = createRandomArray(MASTER_KEY_SALT_SIZE / 8);
+		return createMasterKey(password, salt);
+	}
+
+	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException,
+			NoSuchProviderException {
+
+		logger.log(Level.INFO, "Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] { MASTER_KEY_DERIVATION_FUNCTION,
+				MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE });
+
+		SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);
+		KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE);
+		SecretKey masterKey = factory.generateSecret(pbeKeySpec);
+
+		return new SaltedSecretKey(masterKey, salt);
+	}
+
 	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws CipherException {
-		logger.log(Level.INFO, "Creating cipher using "+cipherSpec+" ...");
+		logger.log(Level.INFO, "Creating cipher using " + cipherSpec + " ...");
 
 		try {
 			if (cipherSpec.needsUnlimitedStrength()) {
 				enableUnlimitedStrength();
 			}
-			
-            Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), CRYPTO_PROVIDER_ID);
-        	cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
 
-            return cipher;
-        }
-        catch (Exception e) {
-            throw new CipherException(e);
-        }
+			Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), CRYPTO_PROVIDER_ID);
+			cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
+
+			return cipher;
+		}
+		catch (Exception e) {
+			throw new CipherException(e);
+		}
 	}
 
 	public static Cipher createEncCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
 		return createCipher(cipherSpec, Cipher.ENCRYPT_MODE, secretKey, iv);
-	}   
-	
+	}
+
 	public static Cipher createDecCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
 		return createCipher(cipherSpec, Cipher.DECRYPT_MODE, secretKey, iv);
-	}    	
-	
+	}
+
 	public static boolean isEncrypted(File file) throws IOException {
 		byte[] actualMagic = new byte[MultiCipherOutputStream.STREAM_MAGIC.length];
-		
+
 		RandomAccessFile rFile = new RandomAccessFile(file, "r");
 		rFile.read(actualMagic);
 		rFile.close();
-		
+
 		return Arrays.equals(actualMagic, MultiCipherOutputStream.STREAM_MAGIC);
 	}
-	
-	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
+
+	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSpec> cipherSpecs,
+			SaltedSecretKey masterKey) throws IOException {
+
 		CipherSession cipherSession = new CipherSession(masterKey);
-		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSuites, cipherSession);
-		
-		FileUtil.appendToOutputStream(plaintextInputStream, multiCipherOutputStream);		
-		
+		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSpecs, cipherSession);
+
+		FileUtil.appendToOutputStream(plaintextInputStream, multiCipherOutputStream);
+
 		multiCipherOutputStream.close();
 		ciphertextOutputStream.close();
 	}
-	
+
 	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
 		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
-		
+
 		return ciphertextOutputStream.toByteArray();
 	}
-	
+
 	public static byte[] encrypt(byte[] plaintext, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
-		ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(plaintext);	
+		ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(plaintext);
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
-		
+
 		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
-		
+
 		return ciphertextOutputStream.toByteArray();
 	}
-	
-	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {		
+
+	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {
 		CipherSession cipherSession = new CipherSession(masterKey);
 		MultiCipherInputStream cipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		
+
 		FileUtil.appendToOutputStream(cipherInputStream, plaintextOutputStream);
-					
+
 		cipherInputStream.close();
 		plaintextOutputStream.close();
-		
-		return plaintextOutputStream.toByteArray();		
-	}	
+
+		return plaintextOutputStream.toByteArray();
+	}
 }

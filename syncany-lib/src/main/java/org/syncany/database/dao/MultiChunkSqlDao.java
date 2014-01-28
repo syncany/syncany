@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.syncany.chunk.MultiChunk;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileContent.FileChecksum;
@@ -36,8 +37,11 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.VectorClock;
 
 /**
- * @author pheckel
- *
+ * The multi-chunk data access object (DAO) queries and modifies the <i>multichunk</i> and
+ * <i>multichunk_chunk</t> table in the SQL database. These tables correspond to the Java
+ * object {@link MultiChunk}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class MultiChunkSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(MultiChunkSqlDao.class.getSimpleName());	
