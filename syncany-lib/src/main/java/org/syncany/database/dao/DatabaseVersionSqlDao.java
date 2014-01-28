@@ -156,7 +156,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			fileHistoryDao.removeDirtyFileHistories();
 
 			// Now, remove all unreferenced file contents
-			fileContentDao.removeUnreferencedFileContentChunkRefs(); 
 			fileContentDao.removeUnreferencedFileContents();
 						
 			// And the database versions

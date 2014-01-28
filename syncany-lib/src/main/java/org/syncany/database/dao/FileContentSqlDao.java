@@ -32,8 +32,11 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.VectorClock;
 
 /**
- * @author pheckel
- *
+ * The file content data access object (DAO) writes and queries the SQL database for information
+ * on {@link FileContent}s. It translates the relational data in the <i>filecontent</i> table to
+ * Java objects.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileContentSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(FileContentSqlDao.class.getSimpleName());
@@ -42,6 +45,21 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		super(connection);
 	}
 
+	/**
+	 * Writes a list of {@link FileContent}s to the database using <tt>INSERT</tt>s and the given connection.
+	 * It fills two tables, the <i>filecontent</i> table ({@link FileContent}) and the <i>filecontent_chunk</i> 
+	 * table ({@link ChunkChecksum}).
+	 * 
+	 * <p>To do the latter (write chunk references), this method calls
+	 * {@link #writeFileContentChunkRefs(Connection, FileContent) writeFileContentChunkRefs()} for every 
+	 * {@link FileContent}. 
+	 * 
+	 * <p><b>Note:</b> This method executes, but does not commit the queries.
+	 * 
+	 * @param connection The connection used to execute the statements
+	 * @param fileContents List of {@link FileContent}s to be inserted in the database
+	 * @throws SQLException If the SQL statement fails
+	 */
 	public void writeFileContents(Connection connection, Collection<FileContent> fileContents) throws SQLException {
 		for (FileContent fileContent : fileContents) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContents.sql");
@@ -50,11 +68,13 @@ public class FileContentSqlDao extends AbstractSqlDao {
 			preparedStatement.setLong(2, fileContent.getSize());
 			
 			preparedStatement.executeUpdate();
-			preparedStatement.close();		
+			preparedStatement.close();	
+			
+			// Write chunk references
 			writeFileContentChunkRefs(connection, fileContent);			
 		}
 	}
-
+	
 	private void writeFileContentChunkRefs(Connection connection, FileContent fileContent) throws SQLException {
 		PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContentChunkRefs.sql");
 		int order = 0;
@@ -74,18 +94,43 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}
 
+	/**
+	 * Removes unreferenced {@link FileContent}s from the database table <i>filecontent</i>,
+	 * as well as the corresponding chunk references (list of {@link ChunkChecksum}s) from the
+	 * table <i>filecontent_chunk</i>. 
+	 * 
+	 * <p><b>Note:</b> This method executes, but does not commit the query.
+	 * 
+	 * @throws SQLException If the SQL statement fails
+	 */
 	public void removeUnreferencedFileContents() throws SQLException {
+		// Note: Chunk references (filcontent_chunk) must be removed first, because
+		//       of the foreign key constraints. 
+		
+		removeUnreferencedFileContentChunkRefs();
+		removeUnreferencedFileContentsInt();
+	}
+	
+	private void removeUnreferencedFileContentsInt() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/filecontent.delete.all.removeUnreferencedFileContents.sql");
 		preparedStatement.executeUpdate();	
 		preparedStatement.close();
 	}
 	
-	public void removeUnreferencedFileContentChunkRefs() throws SQLException {
+	private void removeUnreferencedFileContentChunkRefs() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/filecontent.delete.all.removeUnreferencedFileContentRefs.sql");
 		preparedStatement.executeUpdate();	
 		preparedStatement.close();
 	}
 	
+	/**
+	 * Queries the database for a particular {@link FileContent}, either with or without the
+	 * corresponding chunk references (list of {@link ChunkChecksum}). 
+	 * 
+	 * @param fileChecksum {@link FileContent}-identifying file checksum
+	 * @param includeChunkChecksums If <tt>true</tt>, the resulting {@link FileContent} will contain its chunk references  
+	 * @return Returns a {@link FileContent} either with or without chunk references, or <tt>null</tt> if it does not exist. 
+	 */
 	public FileContent getFileContent(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		if (fileChecksum == null) {
 			return null;
@@ -98,6 +143,17 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		}
 	}
 
+	/**
+	 * Queries the SQL database for all {@link FileContent}s that <b>originally appeared</b> in the
+	 * database version identified by the given vector clock.
+	 * 
+	 * <p><b>Note:</b> This method does <b>not</b> select all the file contents that are referenced
+	 * in the database version. In particular, it <b>does not return</b> file contents that appeared
+	 * in previous other database versions.
+	 * 
+	 * @param vectorClock Vector clock that identifies the database version
+	 * @return Returns all {@link FileContent}s that originally belong to a database version
+	 */
 	public Map<FileChecksum, FileContent> getFileContents(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql")) {
 			

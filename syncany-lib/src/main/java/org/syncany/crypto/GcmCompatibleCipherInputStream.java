@@ -30,6 +30,7 @@ import java.io.InputStream;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NullCipher;
 
@@ -59,8 +60,16 @@ import javax.crypto.NullCipher;
  * classes), because the design and implementation of those methods
  * are unlikely to have considered security impact with regard to
  * CipherInputStream.
+ * 
+ * <p> <b>Note:</b> This is an exact copy of the regular {@link CipherInputStream}
+ * with the exception of one line in the {@link #close()} method that fixes 
+ * the handling of <b>GCM</b> mode, e.g. AES/GCM/NoPadding. 
+ * 
+ * <p> This GCM-fix was originally proposed here:
+ * http://cr.openjdk.java.net/~valeriep/8012637/webrev.00/src/share/classes/javax/crypto/CipherInputStream.java.patch
  *
  * @author  Li Gong
+ * @author  Philipp C. Heckel <philipp.heckel@gmail.com> (GCM-fix only!)
  * @see     java.io.InputStream
  * @see     java.io.FilterInputStream
  * @see     javax.crypto.Cipher
@@ -68,7 +77,6 @@ import javax.crypto.NullCipher;
  *
  * @since 1.4
  */
-
 public class GcmCompatibleCipherInputStream extends FilterInputStream {
 
     // the cipher engine to use to process stream data
