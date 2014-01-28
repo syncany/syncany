@@ -182,23 +182,32 @@ Setup Eclipse IDE for development
    
    - Select "/home/user/workplace/syncany"
    - [x] Tick the *Search nested projects* checkbox (only available in *Eclipse Kepler*)
-
+   
 5. Click "Finish"
 
 
 How can I help?
 ---------------
-Check out the <a href="TODO.md">TODO list</a> for starting points. If you have questions,
-don't hesitate to ask!  
-We're **actively** discussing stuff on the [Syncany mailing list](https://launchpad.net/~syncany-team), 
-feel free to join!
+If you'd like to help developing Syncany, there are a few ways to do so.
+
+1. **TODO markers**: The Java code contains lots of `TODO` markers, classified in *high*,
+   *medium* and *low*. Using the *Tasks* tab in Eclipse, pick one or two and start coding. To get
+   started, check out the *Setup Eclipse* section above.
+
+2. **Issues, features and tasks**: Besides the markers in the code, there are lots of other things 
+   that need doing. There is an always up-to-date list in the 
+   [issue tracker](https://github.com/binwiederhier/syncany/issues) with the label
+   [status:help-needed](https://github.com/binwiederhier/syncany/issues?labels=status%3Ahelp-needed).
+
+If you have questions, feel free to ask. There are maaaany ways to do so. Check out the section below!
 
  
 Licensing, website and contact
 ------------------------------
 
-Syncany is licensed under the GPLv2 open source license. It is mainly developed by [Philipp C. Heckel](http://blog.philippheckel.com/) and [Steffen Dangmann](https://www.xing.com/profiles/Steffen_Dangmann). We are always looking for people to join or help out. Feel free to contact us:
+Syncany is licensed under the GPLv2 open source license. It is mainly developed by [Philipp C. Heckel](http://blog.philippheckel.com/). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany website](http://www.syncany.org/), still with screenshots of the old interface
+- [Mailing list](https://launchpad.net/~syncany-team), still on Launchpad (**active!**)
+- [IRC channel #syncany on Freenode](http://webchat.freenode.net/?channels=syncany) (my nick is *binwiederhier*)
 - [@syncany on Twitter](http://twitter.com/#!/syncany), somewhat quiet there, though ...
-- [Mailing list](https://launchpad.net/~syncany-team), still on Launchpad
