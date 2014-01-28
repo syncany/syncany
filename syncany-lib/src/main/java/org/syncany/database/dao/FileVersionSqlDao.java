@@ -32,6 +32,7 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
@@ -48,9 +49,16 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	/**
-	 * Write a list of {@link FileVersion} to the database. 
+	 * Writes a list of {@link FileVersion} to the database table <i>fileversion</i> using <tt>INSERT</tt>s
+	 * and the given connection.
 	 * 
-	 * <p>Please note:
+	 * <p><b>Note:</b> This method executes, but does not commit the queries.
+	 * 
+	 * @param connection The connection used to execute the statements
+	 * @param fileHistoryId References the {@link PartialFileHistory} to which the list of file versions belongs 
+	 * @param databaseVersionId References the {@link PartialFileHistory} to which the list of file versions belongs
+	 * @param fileVersions List of {@link FileVersion}s to be written to the database
+	 * @throws SQLException If the SQL statement fails
 	 */
 	public void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId, Collection<FileVersion> fileVersions) throws SQLException {
 		PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.insert.writeFileVersions.sql");
@@ -79,12 +87,29 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}
 
+	/**
+	 * Removes unreferenced {@link FileVersion}s from the database table 
+	 * <i>fileversion</i>.
+	 * 
+	 * <p><b>Note:</b> This method executes, but does not commit the query.
+	 * 
+	 * @throws SQLException If the SQL statement fails
+	 */	
 	public void removeDirtyFileVersions() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql");
 		preparedStatement.executeUpdate();	
 		preparedStatement.close();
 	}
 	
+	/**
+	 * Queries the database for the currently active {@link FileVersion}s and returns it
+	 * as a map. 
+	 * 
+	 * <p>Keys in the returned map correspond to the file version's relative file path,
+	 * and values to the actual {@link FileVersion} object.
+	 * 
+	 * @return Returns the current file tree as a map of relative paths to {@link FileVersion} objects
+	 */
 	public Map<String, FileVersion> getCurrentFileTree() {		
 		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getCurrentFileTree.sql")) {
 			return getFileTree(preparedStatement);				
@@ -122,6 +147,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByPath.sql")) {
 			preparedStatement.setString(1, path);
@@ -138,6 +164,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	@Deprecated
 	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByFileHistoryId.sql")) {
 			preparedStatement.setString(1, fileHistoryId.toString());

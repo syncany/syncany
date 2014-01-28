@@ -162,10 +162,12 @@ public class SqlDatabase {
 		return fileVersionDao.getCurrentFileTree();
 	}
 
+	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {
 		return fileVersionDao.getFileVersionByPath(path);
 	}
 
+	@Deprecated
 	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
 		return fileVersionDao.getFileVersionByFileHistoryId(fileHistoryId);
 	}
