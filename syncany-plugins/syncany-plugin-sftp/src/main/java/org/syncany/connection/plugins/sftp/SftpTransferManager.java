@@ -335,76 +335,53 @@ public class SftpTransferManager extends AbstractTransferManager {
 				}
 			}
 			else {
+				String parentPath = repoPath;
 				
+ 				while (parentPath.length() > 0) {
+ 					parentPath = getParentPath(parentPath);
+ 					if (folderExists(parentPath)) {
+	 					if (canWrite(parentPath)) {
+	 						return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+	 					}
+	 					else {
+	 						return StorageTestResult.NO_REPO_PERMISSIONS_KO;
+	 					}
+ 					}
+ 				}
+ 				return StorageTestResult.INVALID_PARAMETERS;
 			}
-			
-			return StorageTestResult.NO_REPO_PERMISSIONS_OK;
 		}
 		catch (Exception e){
 			return StorageTestResult.INVALID_PARAMETERS;
 		}
 	}
 	
-	/**
-	 * FTPFile[] ftpFiles = ftp.listFiles(repoPath);
-
-			boolean folderExists = ftp.changeWorkingDirectory(repoPath);
-			
-			if (folderExists){
-				if (ftpFiles.length == 0){
-					ftp.cdup();
-					
-					FTPFile[] parentFolderFiles = ftp.listFiles();
-					for (FTPFile file : parentFolderFiles){
-						if (file.getName().equals(getFolderName(repoPath))) {
-							boolean permission = hasCurrentUserWritePermission(file, getConnection().getUsername()); 
-							disconnect();
-							return permission ? 
-									StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK : 
-									StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO;
-						}
-					}
-					return StorageTestResult.INVALID_PARAMETERS;
-				}
-				else {
-					boolean existingMultichunkFolder = false;
-					boolean existingDatabaseFolder = false;
-					
-					for (FTPFile file : ftpFiles){
-						if (file.isDirectory() && file.getName().equals("multichunks")){
-							existingMultichunkFolder = true;
-						}
-						if (file.isDirectory() && file.getName().equals("databases")){
-							existingDatabaseFolder = true;
-						}
-					}
-					
-					if (existingDatabaseFolder && existingMultichunkFolder){
-						disconnect();
-						return StorageTestResult.REPO_ALREADY_EXISTS;
-					}
-					else {
-						return StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY;
-					}
-				}
+	public String getParentPath(String path){
+		String[] pathTokens = path.split("/");
+		String folder;
+		
+		if (pathTokens.length > 2){
+			StringBuilder sb = new StringBuilder();
+			for (int i = 1 ; i <= pathTokens.length-2 ; i ++){
+				sb.append("/").append(pathTokens[i]);
 			}
-			else{
-				FTPFile[] files = ftp.listFiles(getParentPath(getParentPath(repoPath)));
-				String match = getFolderName(getParentPath(repoPath));
-				for (FTPFile file : files){
-					if (file.getName().equals(match)) {
-						boolean permission = hasCurrentUserWritePermission(file, getConnection().getUsername()); 
-						disconnect();
-						return permission ? 
-								StorageTestResult.NO_REPO_PERMISSIONS_OK : 
-								StorageTestResult.NO_REPO_PERMISSIONS_KO;
-						
-					}
-				}
-				return StorageTestResult.INVALID_PARAMETERS;
-			}
-	 * @throws SftpException 
-	 */
+			folder = sb.toString();
+		}
+		else{
+			folder = "/";
+		}
+		return folder;
+	}
+	
+	public String getFolderName(String path){
+		String[] pathTokens = path.split("/");
+		if (pathTokens.length > 0){
+			return pathTokens[pathTokens.length-1];
+		}
+		else {
+			return "";
+		}
+	}
 	
 	private List<LsEntry> listEntries(String absolutePath) throws SftpException{
 		final List<LsEntry> result = new ArrayList<>();
@@ -421,8 +398,16 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 	
 	private boolean canWrite(String path) throws SftpException{
-		SftpATTRS stat = channel.stat(path);
-		return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0; 
+		try {
+			SftpATTRS stat = channel.stat(path);
+			return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0;
+		}
+		catch (SftpException ex) {
+			if (ex.id == 3 /* access denied */ || ex.id == 2 /* file not found */) {
+				return false;
+			}
+			throw ex;
+		}
 	}
 	
 	private boolean folderExists(String absolutePath){
