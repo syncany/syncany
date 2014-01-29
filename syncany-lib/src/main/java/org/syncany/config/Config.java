@@ -369,10 +369,6 @@ public class Config {
 		this.logDir = logDir;
 	}
 	
-	static{
-		
-	}
-	
 	/**
 	 * Immutable registry for mappings between type strings (e.g. "zip") and 
 	 * <code>Class</code>es (e.g. <code>Class&lt;ZipMultiChunker&gt;</code>).
