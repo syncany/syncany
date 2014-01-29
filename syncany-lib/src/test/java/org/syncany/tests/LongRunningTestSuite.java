@@ -30,6 +30,6 @@ import org.syncany.tests.scenarios.longrunning.LongRunningNewAndDeleteScenarioTe
 	LongRunningLotsOfSmallFilesScenarioTest.class,
 	LongRunningNewAndDeleteScenarioTest.class
 })
-public class LongRunningTestsSuit {
+public class LongRunningTestSuite {
 	// This class executes all tests
 }

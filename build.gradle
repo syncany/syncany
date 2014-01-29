@@ -74,9 +74,9 @@ subprojects {
 	task testAll(type: Test, dependsOn: testClasses, group: 'Verification') {
 		description = "All tests"
 		ignoreFailures = true
-        maxParallelForks = 2
-        testLogging { events 'started', 'passed'}
-        exclude '**/*TestsSuit*'
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		exclude '**/*TestSuite*'
 	}
 	
 	task testAllButLongCrypto(type: Test, dependsOn: testClasses, group: 'Verification') {
@@ -85,7 +85,7 @@ subprojects {
 		ignoreFailures = true
 		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
-		exclude '**/LongRunning*', '**/*TestsSuit*'
+		exclude '**/LongRunning*', '**/*TestSuite*'
 	}
 	
 	test {
@@ -94,7 +94,7 @@ subprojects {
 		ignoreFailures = true
 		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
-		exclude '**/LongRunning*', '**/*TestsSuit*'
+		exclude '**/LongRunning*', '**/*TestSuite*'
 	}
 	
 	// JAR /////////////////////////////////////////////////////////////////////

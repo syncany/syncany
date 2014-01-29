@@ -74,6 +74,6 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	SymlinkSyncScenarioTest.class,
 	ThreeClientsOneLoserScenarioTest.class
 })
-public class ScenarioTestsSuit {
+public class ScenarioTestSuite {
 	// This class executes all tests
 }

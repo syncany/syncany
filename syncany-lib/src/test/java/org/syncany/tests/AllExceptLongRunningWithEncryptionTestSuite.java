@@ -17,15 +17,20 @@
  */
 package org.syncany.tests;
 
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.util.TestConfigUtil;
 
 @RunWith(Suite.class)
-@SuiteClasses({	
-	ScenarioTestsSuit.class,
-	OtherShortTestsSuit.class
+@SuiteClasses({	 
+	AllExceptLongRunningTestSuite.class
 })
-public class AllExceptLongRunningTestsSuit {
-	// This class executes all tests
+public class AllExceptLongRunningWithEncryptionTestSuite {
+	@BeforeClass
+	public static void enableEncryption() {
+		System.out.println("Enabling encryption ...");
+		TestConfigUtil.setCrypto(true);
+	}
 }

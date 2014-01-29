@@ -79,6 +79,6 @@ import org.syncany.tests.util.FileUtilTests;
 	SyncUpOperationTest.class,
 	StatusOperationTest.class
 })
-public class OtherShortTestsSuit {
+public class OtherShortTestSuite {
 	// This class executes all tests
 }
