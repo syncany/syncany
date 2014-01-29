@@ -81,7 +81,7 @@ launch4j {
 
 // Windows Installer ///////////////////////////////////////////////////////////
 
-task exe(dependsOn: ["installApp", "launch4j"]) << {
+task installerGui(dependsOn: ["installApp", "launch4j"]) << {
 	def innoSetupDir = new File("${buildDir}/innosetup")
 
 	delete innoSetupDir	
