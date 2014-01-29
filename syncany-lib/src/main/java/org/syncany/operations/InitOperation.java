@@ -105,13 +105,15 @@ public class InitOperation extends AbstractInitOperation {
 			transferManager.init();
 		}
 		catch (StorageException e) {
-			//Storing remotely failed. Remove all the directories and files we just created
+			// Storing remotely failed. Remove all the directories and files we just created
 			try {
 				deleteAppDirs(options.getLocalDir());
 			}
 			catch (Exception e1) {
 				throw new Exception("StorageException for remote. Cleanup failed. There may be local directories left");
 			}
+			
+			// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
 			throw new Exception("StorageException for remote. Cleaned local repository.");
  		}
 		

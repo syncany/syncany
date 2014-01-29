@@ -109,7 +109,8 @@ public class CipherUtil {
 
 	/**
 	 * Returns whether the unlimited strength policy is enabled in the current JVM.
-	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a> 
+	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography
+	 *      Extension (JCE) Unlimited Strength</a> 
 	 */
 	public static boolean unlimitedStrengthEnabled() {
 		return unlimitedStrengthEnabled.get();
@@ -160,12 +161,40 @@ public class CipherUtil {
 		return randomByteArray;
 	}
 
-	public static SaltedSecretKey createDerivedKey(SecretKey inputMasterKey, byte[] inputSalt, CipherSpec outputCipherSpec)
+	/**
+	 * Creates a derived key from the given {@link SecretKey} an input salt and wraps the key in 
+	 * a {@link SecretKeySpec} using the given {@link CipherSpec}. 
+	 * 
+	 * <p>This method simply uses the {@link #createDerivedKey(byte[], byte[], String, int) createDerivedKey()}
+	 * method using the encoded input key and the algorithm and key size given by the cipher spec.
+	 * 
+	 * @param inputKey The source key to derive the new key from
+	 * @param inputSalt Input salt used to generate the new key (a non-secret random value!)
+	 * @param outputCipherSpec Defines the algorithm and key size of the new output key
+	 * @return Returns a derived key (including the given input salt)
+	 */
+	public static SaltedSecretKey createDerivedKey(SecretKey inputKey, byte[] inputSalt, CipherSpec outputCipherSpec)
 			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		
-		return createDerivedKey(inputMasterKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
+		return createDerivedKey(inputKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
 	}
 
+	/**
+	 * Creates a derived key from the given input key material (raw byte array) and an input salt
+	 * and wraps the key in  a {@link SecretKeySpec} using the given output key algorithm and output
+	 * key size.
+	 * 
+	 * <p>The algorithm used to derive the new key from the input key material (IKM) is the 
+	 * <b>HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</b> (see 
+	 * <a href="http://tools.ietf.org/html/rfc5869">RFC 5869</a>)
+	 * 
+	 * @param inputKeyMaterial The input key material as raw data bytes, e.g. determined from {@link SecretKey#getEncoded()}
+	 * @param inputSalt Input salt used to generate the new key (a non-secret random value!)
+	 * @param outputKeyAlgorithm Defines the algorithm of the new output key (for {@link SecretKeySpec#getAlgorithm()})
+	 * @param outputKeySize Defines the key size of the new output key 
+	 * @return Returns a new pseudorandom key derived from the input key material using HKDF
+	 * @see <a href="http://tools.ietf.org/html/rfc5869">RFC 5869</a>
+	 */
 	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize)
 			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		
