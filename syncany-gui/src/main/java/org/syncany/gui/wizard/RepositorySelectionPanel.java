@@ -37,13 +37,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.daemon.command.ConnectCommand;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.gui.panel.PluginPanel.PluginPanelPurpose;
-import org.syncany.operations.ConnectOperation;
 import org.syncany.util.I18n;
 import org.syncany.util.StringUtil;
 
@@ -71,6 +69,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	private Label urlIntroductionTitleLabel;
 	
 	private Map<String, PluginPanel> panels = new HashMap<>();
+	private Label urlInvalidLabel;
 	/**
 	 * Create the dialog.
 	 * @param parent
@@ -185,6 +184,9 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 			chooseRepositoryLabel, 
 			urlText, urlLabel
 		);
+		
+		urlInvalidLabel = new Label(urlComposite, SWT.NONE);
+		urlInvalidLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 	}
 	
 	private void showPLuginPanel(String id){
@@ -202,37 +204,36 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 
 	@Override
 	public boolean isValid() {
-		boolean urlAvailable = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL));
+		boolean urlAvailable = getParentWizardDialog().getUserInput().getCommonParameterAsBoolean(CommonParameters.AVAILABLE_URL);
+		boolean valid = true;
 		
 		if (urlAvailable){
 			Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
 			
 			Matcher linkMatcher = LINK_PATTERN.matcher(urlText.getText());
 			
-			if (!linkMatcher.matches()) {
+			if (urlText.getText() == null || urlText.getText().length() == 0 || !linkMatcher.matches()) {
 				urlText.setBackground(WidgetDecorator.INVALID_TEXT_COLOR);
-				return false;
-			}
-			
-			boolean valid = urlText.getText() != null && urlText.getText().length() > 0;
-			if (valid){
-				urlText.setBackground(WidgetDecorator.BLACK);
-			}
+				urlInvalidLabel.setText("Invalid URL");
+				valid = false;
+			} 
 			else {
-				urlText.setBackground(WidgetDecorator.INVALID_TEXT_COLOR);
+				urlText.setBackground(WidgetDecorator.WHITE);
+				urlInvalidLabel.setText("");
 			}
-			return valid;
 		}
 		else{
 			PluginPanel ppanel = panels.get(selectedPluginId);
-			return ppanel.isValid();
+			valid = ppanel.isValid();
 		}
+		
+		return valid;
 	}
 
 	@Override
 	public UserInput getUserSelection() {
 		UserInput userInput = new UserInput();
-		boolean urlAvailable = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL));
+		boolean urlAvailable = getParentWizardDialog().getUserInput().getCommonParameterAsBoolean(CommonParameters.AVAILABLE_URL);
 		
 		if (urlAvailable){
 			userInput.putCommonParameter(CommonParameters.URL, urlText.getText());
@@ -265,7 +266,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	public void updateData() {
 		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
 		
-		boolean url = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL)) ? true : false;
+		boolean url = getParentWizardDialog().getUserInput().getCommonParameterAsBoolean(CommonParameters.AVAILABLE_URL);
 		
 		if (action.equals("create")  || (action.equals("connect") && !url)){
 			rootStackLayout.topControl = createComposite;

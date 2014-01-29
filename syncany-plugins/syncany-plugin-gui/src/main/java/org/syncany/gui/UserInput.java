@@ -45,6 +45,18 @@ public class UserInput {
 		commonParameters.put(key, value);
 	}
 	
+	public boolean getCommonParameterAsBoolean(CommonParameters key){
+		String parameter = getCommonParameter(key);
+		
+		switch (parameter.toLowerCase()){
+			case "yes":
+			case "true":
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	public String getCommonParameter(CommonParameters key) {
 		if (!(key instanceof CommonParameters)) {
 			throw new RuntimeException(String.format("Key should be of type SyncanyParameters"));
