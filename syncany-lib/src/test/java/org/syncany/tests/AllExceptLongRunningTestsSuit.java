@@ -20,16 +20,12 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.scenarios.longrunning.LongRunningLargeFileScenarioTest;
-import org.syncany.tests.scenarios.longrunning.LongRunningLotsOfSmallFilesScenarioTest;
-import org.syncany.tests.scenarios.longrunning.LongRunningNewAndDeleteScenarioTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({
-	LongRunningLargeFileScenarioTest.class,
-	LongRunningLotsOfSmallFilesScenarioTest.class,
-	LongRunningNewAndDeleteScenarioTest.class
+@SuiteClasses({	
+	ScenarioTestsSuit.class,
+	OtherShortTestsSuit.class
 })
-public class LongRunningTests {
+public class AllExceptLongRunningTestsSuit {
 	// This class executes all tests
 }

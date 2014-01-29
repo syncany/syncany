@@ -27,7 +27,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class ManySyncUpsAndDatabaseFileCleanupTest {
+public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 	@Test
 	public void testManySyncUpsAndDatabaseFileCleanup() throws Exception {
 		// Setup 
