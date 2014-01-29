@@ -23,9 +23,9 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({	
-	ScenarioTests.class,
-	OtherShortTests.class
+	AllExceptLongRunningTestsSuit.class,
+	LongRunningTestsSuit.class
 })
-public class AllTestsExceptLongRunning {
+public class AllTestsSuit {
 	// This class executes all tests
 }

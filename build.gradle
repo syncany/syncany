@@ -55,10 +55,47 @@ subprojects {
 		}
 	}
 	
-	test {
+	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
+		description = "Test long running scenarios"
 		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		include '**/LongRunning*'
 	}
 	
+	task testScenario(type: Test, dependsOn: testClasses, group: 'Verification') {
+		description = "Test all scenarios"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		include '**/*ScenarioTest*'
+	}
+	
+	task testAll(type: Test, dependsOn: testClasses, group: 'Verification') {
+		description = "All tests"
+		ignoreFailures = true
+        maxParallelForks = 2
+        testLogging { events 'started', 'passed'}
+        exclude '**/*TestsSuit*'
+	}
+	
+	task testAllButLongCrypto(type: Test, dependsOn: testClasses, group: 'Verification') {
+		jvmArgs '-Dcrypto.enable=true'
+		description = "All tests except long running with crypto"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		exclude '**/LongRunning*', '**/*TestsSuit*'
+	}
+	
+	test {
+		group = "verification"	
+		description = "All tests except long running"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		exclude '**/LongRunning*', '**/*TestsSuit*'
+	}
 	
 	// JAR /////////////////////////////////////////////////////////////////////
 	
@@ -82,8 +119,7 @@ subprojects {
 	artifacts {
 		tests testJar
 	}	
-	
-
+		
 	// Eclipse Settings and Hooks //////////////////////////////////////////////
 	
 	eclipse {
@@ -160,4 +196,12 @@ task wrapper(type: Wrapper) {
 
 task clean(type: Delete) {
 	delete 'build'	
+}
+
+// Global Tests 
+
+task testGlobal(type: TestReport) {
+	destinationDir = file("$buildDir/reports/allTests")
+	// Include the results from the `test` task in all subprojects
+	reportOn subprojects*.test
 }
