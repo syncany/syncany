@@ -55,10 +55,44 @@ subprojects {
 		}
 	}
 	
-	test {
+	task testAllButLong(type: Test, dependsOn: testClasses) {
+		ignoreFailures = true
+		maxParallelForks = 4
+		testLogging { events 'started', 'passed'}
+		exclude '**/LongRunning*'
+	}
+	
+	task testAllButLongCrypto(type: Test, dependsOn: testClasses) {
+		jvmArgs '-Dcrypto.enable=true'
+		ignoreFailures = true
+		maxParallelForks = 4
+		testLogging { events 'started', 'passed'}
+		exclude '**/LongRunning*'
+	}
+	
+	task testAllLong(type: Test, dependsOn: testClasses) {
+		ignoreFailures = true
+		maxParallelForks = 4
+		testLogging { events 'started', 'passed'}
+		include '**/LongRunning*'
+	}
+	
+	task testScenario(type: Test, dependsOn: testClasses) {
+		ignoreFailures = true
+		maxParallelForks = 4
+		testLogging { events 'started', 'passed'}
+		include '**/*ScenarioTest*'
+	}
+	
+	task testAll(type: Test, dependsOn: ['testAllButLong', 'testAllLong']) {
 		ignoreFailures = true
 	}
 	
+	test {
+		ignoreFailures = true
+		maxParallelForks = 4
+		testLogging { events 'started', 'passed'}
+	}
 	
 	// JAR /////////////////////////////////////////////////////////////////////
 	
@@ -82,8 +116,7 @@ subprojects {
 	artifacts {
 		tests testJar
 	}	
-	
-
+		
 	// Eclipse Settings and Hooks //////////////////////////////////////////////
 	
 	eclipse {
@@ -160,4 +193,12 @@ task wrapper(type: Wrapper) {
 
 task clean(type: Delete) {
 	delete 'build'	
+}
+
+// Global Tests 
+
+task testGlobal(type: TestReport) {
+	destinationDir = file("$buildDir/reports/allTests")
+	// Include the results from the `test` task in all subprojects
+	reportOn subprojects*.test
 }

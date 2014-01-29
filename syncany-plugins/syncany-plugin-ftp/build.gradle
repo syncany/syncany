@@ -1,4 +1,7 @@
 dependencies {
     compile			project(':syncany-lib')
-	compile			"commons-net:commons-net:2.2"          
+	compile			"commons-net:commons-net:2.2"    
+	
+	testCompile     "junit:junit:4.3"
+	testCompile     project(path : ':syncany-lib', configuration: 'tests')      
 }
