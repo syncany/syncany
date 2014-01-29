@@ -47,6 +47,8 @@ import java.io.OutputStream;
  */
 // TODO [low] The multichunk API is really odd; Think of something more sensible 
 public abstract class MultiChunker {
+	public static final String PROPERTY_SIZE = "size";
+	
     protected int minMultiChunkSize;
     
     /**
