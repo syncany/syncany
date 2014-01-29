@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import javax.swing.JOptionPane;
-
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.GzipTransformer;
 import org.syncany.config.Config;
@@ -44,7 +42,17 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
 public class TestConfigUtil {
+	static {
+		try {
+			TestConfigUtil.cryptoEnabled = Boolean.parseBoolean(System.getProperty("crypto.enable"));
+		}
+		catch (Exception e){
+			TestConfigUtil.cryptoEnabled = false;
+		}
+	}
+	
 	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
+	private static boolean cryptoEnabled = false;
 	private static SaltedSecretKey masterKey = null;
 	
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
@@ -65,14 +73,6 @@ public class TestConfigUtil {
 	}
 	
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
-		boolean cryptoEnabled;
-		try {
-			cryptoEnabled = Boolean.parseBoolean(System.getProperty("crypto.enable"));
-		}
-		catch (Exception e){
-			cryptoEnabled = false;
-		}
-		
 		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));		
 		tempLocalDir.mkdirs();
 		
@@ -182,5 +182,9 @@ public class TestConfigUtil {
 	
 	public static String createUniqueName(String name, Object uniqueHashObj) {
 		return String.format("syncany-%s-%d-%s", RUNDATE, 100 + uniqueHashObj.hashCode() % 899, name);
+	}
+
+	public static void setCrypto(boolean cryptoEnabled) {
+		TestConfigUtil.cryptoEnabled = cryptoEnabled;
 	}
 }
