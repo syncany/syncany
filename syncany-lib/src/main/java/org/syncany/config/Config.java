@@ -18,8 +18,14 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
@@ -31,6 +37,7 @@ import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
@@ -51,6 +58,8 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Config {
+    private static MultiChunkerRegistry multiChunkerRegistry;
+	
 	public static final String DIR_APPLICATION = ".syncany";
 	public static final String DIR_CACHE = "cache";
 	public static final String DIR_DATABASE = "db";
@@ -58,6 +67,8 @@ public class Config {
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "repo";
 	public static final String FILE_MASTER = "master";
+	
+	private static final Logger logger = Logger.getLogger(Config.class.getSimpleName());
 	
 	private byte[] repoId;
 	private String machineName;
@@ -78,6 +89,12 @@ public class Config {
       
     static {    	    	
     	Logging.init();
+    	
+    	// Init Multichunk registry
+    	Map<String,Class<? extends MultiChunker>> multiChunkEntries = new HashMap<>();
+    	multiChunkEntries.put(ZipMultiChunker.TYPE, ZipMultiChunker.class);
+    	multiChunkerRegistry = new MultiChunkerRegistry(multiChunkEntries);
+    	
     }
     
 	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {		
@@ -155,7 +172,35 @@ public class Config {
 	}
 
 	private void initMultiChunker(RepoTO repoTO) {
-		multiChunker = new ZipMultiChunker(2*1024*1024);
+		MultiChunkerTO multiChunkerTO = repoTO.getMultichunker();
+
+		// Test if type is present
+		if (!multiChunkerRegistry.hasClass(multiChunkerTO.getType())) {
+			logger.log(Level.SEVERE, String.format("MultiChunker type %s not known.", multiChunkerTO.getType()));
+			throw new RuntimeException(String.format("MultiChunker type %s not known.", multiChunkerTO.getType()));
+		}
+
+		// Get parameters
+		int size = multiChunkerTO.getInt(MultiChunker.PROPERTY_SIZE);
+
+		// Get class
+		Class<? extends MultiChunker> multiChunkerClass = multiChunkerRegistry.getClass(multiChunkerTO.getType());
+
+		// Get constructor
+		Constructor<? extends MultiChunker> constructor;
+
+		try {
+			// Instantiate
+			constructor = multiChunkerClass.getConstructor(Integer.TYPE);
+			multiChunker = constructor.newInstance(size);
+		}
+		catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			
+			logger.log(Level.SEVERE, "Could not create multichunker.", e);
+			throw new RuntimeException("Could not create multichunker.", e);
+			
+		}
+
 	}
 
 	private void initTransformers(RepoTO repoTO) throws Exception {
@@ -329,6 +374,45 @@ public class Config {
 	
 	public void setLogDir(File logDir) {
 		this.logDir = logDir;
+	}
+	
+	/**
+	 * Immutable registry for mappings between type strings (e.g. "zip") and 
+	 * <code>Class</code>es (e.g. <code>Class&lt;ZipMultiChunker&gt;</code>).
+	 * 
+	 * @param <T> Type of the <code>Class</code> registry entries.
+	 * @author Gregor Trefs
+	 */
+	private abstract static class Registry<T> {
+		private final Map<String,Class<? extends T>> entries;
+		
+		
+		public Registry(Map<String,Class<? extends T>> entries){
+			this.entries = entries;
+		}
+		
+		/**
+		 * Returns true if there is a mapping between the given type 
+		 * <code>String</code> and a <code>Class</code>.
+		 */
+		public boolean hasClass(String type){
+			return entries.containsKey(type);
+		}
+		
+		/**
+		 * Returns the <code>Class</code> object referred by the type 
+		 * <code>String</code> or null.
+		 */
+		public Class<? extends T> getClass(String type){
+			return entries.get(type);
+		}
+	}
+	
+	private static final class MultiChunkerRegistry extends Registry<MultiChunker>{
+
+		public MultiChunkerRegistry(Map<String, Class<? extends MultiChunker>> entries) {
+			super(entries);
+		}
 	}
 	
 	public static class ConfigException extends Exception {
