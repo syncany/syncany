@@ -173,27 +173,34 @@ public class Config {
 
 	private void initMultiChunker(RepoTO repoTO) {
 		MultiChunkerTO multiChunkerTO = repoTO.getMultichunker();
+
 		// Test if type is present
-		if(!multiChunkerRegistry.hasClass(multiChunkerTO.getType())){
+		if (!multiChunkerRegistry.hasClass(multiChunkerTO.getType())) {
 			logger.log(Level.SEVERE, String.format("MultiChunker type %s not known.", multiChunkerTO.getType()));
-			throw new RuntimeException(String.format("MultiChunker type %s not known.", multiChunkerTO.getType()));	
+			throw new RuntimeException(String.format("MultiChunker type %s not known.", multiChunkerTO.getType()));
 		}
+
 		// Get parameters
 		int size = multiChunkerTO.getInt(MultiChunker.PROPERTY_SIZE);
+
 		// Get class
 		Class<? extends MultiChunker> multiChunkerClass = multiChunkerRegistry.getClass(multiChunkerTO.getType());
+
 		// Get constructor
 		Constructor<? extends MultiChunker> constructor;
+
 		try {
 			// Instantiate
 			constructor = multiChunkerClass.getConstructor(Integer.TYPE);
 			multiChunker = constructor.newInstance(size);
 		}
 		catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			
 			logger.log(Level.SEVERE, "Could not create multichunker.", e);
-			throw new RuntimeException("Could not create multichunker.",e);	
+			throw new RuntimeException("Could not create multichunker.", e);
+			
 		}
-		
+
 	}
 
 	private void initTransformers(RepoTO repoTO) throws Exception {

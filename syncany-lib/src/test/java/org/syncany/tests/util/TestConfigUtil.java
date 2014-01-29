@@ -103,9 +103,11 @@ public class TestConfigUtil {
 		if(!cryptoEnabled){
 			return null;
 		}
+		
 		if (masterKey == null) {
 			masterKey = CipherUtil.createMasterKey("some password");
 		}
+		
 		return masterKey;
 	}
 	
@@ -113,6 +115,7 @@ public class TestConfigUtil {
 		// All is dummy
 		final ConfigTO configTO = new ConfigTO();
 		configTO.setMachineName("dummymachine");
+		
 		final RepoTO repoTO = new RepoTO();
 		repoTO.setTransformers(null);
 		repoTO.setChunker(createMimeChunkerTO());
@@ -139,7 +142,6 @@ public class TestConfigUtil {
 		List<TransformerTO> transformerTOs = createTransformerTOs();
 		repoTO.setTransformers(transformerTOs);
 		
-		
 		// Create config TO
 		final ConfigTO configTO = new ConfigTO();
 		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
@@ -149,7 +151,6 @@ public class TestConfigUtil {
 		configTO.setMasterKey(masterKey);
 						
 		// Skip configTO.setConnection()		
-		
 		final Config config = new Config(tempLocalDir, configTO, repoTO);
 		
 		config.setConnection(connection);
