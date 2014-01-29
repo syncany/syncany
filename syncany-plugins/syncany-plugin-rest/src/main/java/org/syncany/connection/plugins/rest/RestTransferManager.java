@@ -27,6 +27,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.jets3t.service.ServiceException;
+import org.jets3t.service.acl.CanonicalGrantee;
+import org.jets3t.service.acl.GranteeInterface;
+import org.jets3t.service.acl.Permission;
 import org.jets3t.service.impl.rest.httpclient.RestStorageService;
 import org.jets3t.service.model.StorageBucket;
 import org.jets3t.service.model.StorageObject;
@@ -250,4 +253,9 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 			return null;
 		}
 	}
+	
+	public boolean hasWritePermission() {
+		GranteeInterface grantee = new CanonicalGrantee(bucket.getOwner().getId());
+		return bucket.getAcl().hasGranteeAndPermission(grantee, Permission.PERMISSION_WRITE);
+	}   
 }

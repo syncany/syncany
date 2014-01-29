@@ -222,4 +222,49 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public String getAbsoluteParentDirectory(File file) {
 		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
 	}
+
+	@Override
+	public StorageTestResult test() {
+
+		if (repoPath.exists()){
+			if (repoPath.isDirectory()) {
+				if (repoPath.list().length > 0) {
+					File syncanyFila = new File(repoPath, "syncany");
+					if (syncanyFila.exists()){
+						return StorageTestResult.REPO_ALREADY_EXISTS;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY;
+					}
+				}
+				else {
+					if (repoPath.canWrite()){
+						return StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO;
+					}
+				}
+			}
+			else {
+				return StorageTestResult.INVALID_PARAMETERS;
+			}
+		}
+		else {
+			File parentFile = new File(repoPath.getAbsolutePath());
+			
+			while ((parentFile = parentFile.getParentFile()) != null){
+				if (parentFile.exists()){
+					if (parentFile.canWrite()){
+						return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+					}
+					else {
+						return StorageTestResult.NO_REPO_PERMISSIONS_KO;
+					}
+				}
+			}
+			
+			return StorageTestResult.INVALID_PARAMETERS;
+		}
+	}
 }

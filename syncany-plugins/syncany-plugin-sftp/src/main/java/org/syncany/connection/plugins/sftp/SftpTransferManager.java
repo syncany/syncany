@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +41,10 @@ import org.syncany.connection.plugins.TransferManager;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
+import com.jcraft.jsch.ChannelSftp.LsEntrySelector;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 
 /**
@@ -251,21 +254,18 @@ public class SftpTransferManager extends AbstractTransferManager {
 			// List folder
 			String remoteFilePath = getRemoteFilePath(remoteFileClass);
 			
-			@SuppressWarnings("unchecked")
-			List<LsEntry> entries = channel.ls(remoteFilePath + "/");
+			List<LsEntry> entries = listEntries(remoteFilePath + "/");
 			
 			// Create RemoteFile objects
 			Map<String, T> remoteFiles = new HashMap<String, T>();
 
 			for (LsEntry entry : entries) {
-				if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
-					try {
-						T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
-						remoteFiles.put(entry.getFilename(), remoteFile);
-					}
-					catch (Exception e) {
-						logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
-					}
+				try {
+					T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
+					remoteFiles.put(entry.getFilename(), remoteFile);
+				}
+				catch (Exception e) {
+					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
 				}
 			}
 
@@ -292,6 +292,132 @@ public class SftpTransferManager extends AbstractTransferManager {
 		}
 		else {
 			return repoPath;
+		}
+	}
+	
+	@Override
+	public StorageTestResult test() {
+		try{
+			connect();
+			boolean folderExists = folderExists(repoPath);
+			
+			if (folderExists) {
+				List<LsEntry> entries = listEntries(repoPath);
+				
+				if (entries.size() == 0){
+					if (canWrite(repoPath)) {
+						return StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO;
+					}
+				}
+				else {
+					boolean existingMultichunkFolder = false;
+					boolean existingDatabaseFolder = false;
+					
+					for (LsEntry entry : entries){
+						if (entry.getAttrs().isDir() && entry.getFilename().equals("multichunks")){
+							existingMultichunkFolder = true;
+						}
+						if (entry.getAttrs().isDir() && entry.getFilename().equals("databases")){
+							existingDatabaseFolder = true;
+						}
+					}
+					
+					if (existingDatabaseFolder && existingMultichunkFolder){
+						disconnect();
+						return StorageTestResult.REPO_ALREADY_EXISTS;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY;
+					}
+				}
+			}
+			else {
+				String parentPath = repoPath;
+				
+ 				while (parentPath.length() > 0) {
+ 					parentPath = getParentPath(parentPath);
+ 					if (folderExists(parentPath)) {
+	 					if (canWrite(parentPath)) {
+	 						return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+	 					}
+	 					else {
+	 						return StorageTestResult.NO_REPO_PERMISSIONS_KO;
+	 					}
+ 					}
+ 				}
+ 				return StorageTestResult.INVALID_PARAMETERS;
+			}
+		}
+		catch (Exception e){
+			return StorageTestResult.INVALID_PARAMETERS;
+		}
+	}
+	
+	public String getParentPath(String path){
+		String[] pathTokens = path.split("/");
+		String folder;
+		
+		if (pathTokens.length > 2){
+			StringBuilder sb = new StringBuilder();
+			for (int i = 1 ; i <= pathTokens.length-2 ; i ++){
+				sb.append("/").append(pathTokens[i]);
+			}
+			folder = sb.toString();
+		}
+		else{
+			folder = "/";
+		}
+		return folder;
+	}
+	
+	public String getFolderName(String path){
+		String[] pathTokens = path.split("/");
+		if (pathTokens.length > 0){
+			return pathTokens[pathTokens.length-1];
+		}
+		else {
+			return "";
+		}
+	}
+	
+	private List<LsEntry> listEntries(String absolutePath) throws SftpException{
+		final List<LsEntry> result = new ArrayList<>();
+		LsEntrySelector selector = new LsEntrySelector(){
+	       public int select(LsEntry entry){
+	    	   if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
+	    		   result.add(entry);
+	    	   }
+	    	   return CONTINUE;
+	       }
+	     };
+		channel.ls(absolutePath, selector);
+		return result;
+	}
+	
+	private boolean canWrite(String path) throws SftpException{
+		try {
+			SftpATTRS stat = channel.stat(path);
+			return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0;
+		}
+		catch (SftpException ex) {
+			if (ex.id == 3 /* access denied */ || ex.id == 2 /* file not found */) {
+				return false;
+			}
+			throw ex;
+		}
+	}
+	
+	private boolean folderExists(String absolutePath){
+		SftpATTRS attrs = null;
+		try {
+		    attrs = channel.stat(absolutePath);
+		    return attrs.isDir();
+		} 
+		catch (Exception e) {
+		    return false;
 		}
 	}
 }

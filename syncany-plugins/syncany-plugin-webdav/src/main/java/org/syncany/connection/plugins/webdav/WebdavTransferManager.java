@@ -211,4 +211,10 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			return repoPath;
 		}
 	}
+	
+	@Override
+	public StorageTestResult test() {
+		//TODO
+		return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+	}
 }

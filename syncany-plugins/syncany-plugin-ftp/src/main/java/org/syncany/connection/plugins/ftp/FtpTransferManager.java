@@ -225,11 +225,16 @@ public class FtpTransferManager extends AbstractTransferManager {
 		String remotePath = getRemoteFile(remoteFile);
 
 		try {
-			return ftp.deleteFile(remotePath);
+			boolean delete = ftp.deleteFile(remotePath);
+			if (delete) {
+				return true;
+			}
+			else {
+				throw new IOException("cannot delete file");
+			}
 		}
 		catch (IOException ex) {
 			forceFtpDisconnect();
-
 			logger.log(Level.SEVERE, "Could not delete file " + remoteFile.getName(), ex);
 			throw new StorageException(ex);
 		}
@@ -289,6 +294,112 @@ public class FtpTransferManager extends AbstractTransferManager {
 		}
 		else {
 			return repoPath;
+		}
+	}
+
+	@Override
+	public StorageTestResult test() {
+		try {
+			connect();
+
+			boolean folderExists = ftp.changeWorkingDirectory(repoPath);
+			
+			if (folderExists){
+				FTPFile[] ftpFiles = ftp.listFiles(repoPath);
+				if (ftpFiles.length == 0){
+					ftp.cdup();
+					
+					FTPFile[] parentFolderFiles = ftp.listFiles();
+					for (FTPFile file : parentFolderFiles){
+						if (file.getName().equals(getFolderName(repoPath))) {
+							boolean permission = hasCurrentUserWritePermission(file, getConnection().getUsername()); 
+							disconnect();
+							return permission ? 
+									StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK : 
+									StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO;
+						}
+					}
+					return StorageTestResult.INVALID_PARAMETERS;
+				}
+				else {
+					boolean existingMultichunkFolder = false;
+					boolean existingDatabaseFolder = false;
+					
+					for (FTPFile file : ftpFiles){
+						if (file.isDirectory() && file.getName().equals("multichunks")){
+							existingMultichunkFolder = true;
+						}
+						if (file.isDirectory() && file.getName().equals("databases")){
+							existingDatabaseFolder = true;
+						}
+					}
+					
+					if (existingDatabaseFolder && existingMultichunkFolder){
+						disconnect();
+						return StorageTestResult.REPO_ALREADY_EXISTS;
+					}
+					else {
+						return StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY;
+					}
+				}
+			}
+			else{
+				FTPFile[] files = ftp.listFiles(getParentPath(getParentPath(repoPath)));
+				String match = getFolderName(getParentPath(repoPath));
+				for (FTPFile file : files){
+					if (file.getName().equals(match)) {
+						boolean permission = hasCurrentUserWritePermission(file, getConnection().getUsername()); 
+						disconnect();
+						return permission ? 
+								StorageTestResult.NO_REPO_PERMISSIONS_OK : 
+								StorageTestResult.NO_REPO_PERMISSIONS_KO;
+						
+					}
+				}
+				return StorageTestResult.INVALID_PARAMETERS;
+			}
+		}
+		catch (StorageException | IOException e) {
+			disconnect();
+			return StorageTestResult.INVALID_PARAMETERS;
+		}
+	}
+	
+	public String getParentPath(String path){
+		String[] pathTokens = path.split("/");
+		String folder;
+		
+		if (pathTokens.length > 2){
+			StringBuilder sb = new StringBuilder();
+			for (int i = 1 ; i <= pathTokens.length-2 ; i ++){
+				sb.append("/").append(pathTokens[i]);
+			}
+			folder = sb.toString();
+		}
+		else{
+			folder = "/";
+		}
+		return folder;
+	}
+	
+	public String getFolderName(String path){
+		String[] pathTokens = path.split("/");
+		if (pathTokens.length > 0){
+			return pathTokens[pathTokens.length-1];
+		}
+		else {
+			return "";
+		}
+	}
+	
+	private boolean hasCurrentUserWritePermission(FTPFile file, String user){
+		if (user.equals(file.getUser())){
+			return file.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
+		}
+		else{
+			return 
+				file.hasPermission(FTPFile.GROUP_ACCESS, FTPFile.WRITE_PERMISSION)
+			 || file.hasPermission(FTPFile.WORLD_ACCESS, FTPFile.WRITE_PERMISSION);
 		}
 	}
 }

@@ -42,6 +42,22 @@ import java.util.Map;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public interface TransferManager {
+	public enum StorageTestResult {
+		/**
+		 * 
+		 */
+		INVALID_PARAMETERS,
+		
+		REPO_ALREADY_EXISTS,      	
+		NO_REPO_LOCATION_NOT_EMPTY,
+		
+		NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO,
+		NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK,
+		
+		NO_REPO_PERMISSIONS_OK,   	
+		NO_REPO_PERMISSIONS_KO;   	
+	}
+		
 	/**
 	 * Establish a connection with the remote storage and initialize the repository
 	 * if necessary (e.g. create folders).
@@ -130,4 +146,11 @@ public interface TransferManager {
 	 *         authentication errors, etc
 	 */
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException;
+	
+	/**
+	 * Tests if repository parameters are valid
+	 * 
+	 * @return {@link StorageTestResult}
+	 */
+	public StorageTestResult test() ;
 }
