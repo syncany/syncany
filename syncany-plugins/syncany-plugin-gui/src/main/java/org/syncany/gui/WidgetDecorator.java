@@ -21,6 +21,7 @@ package org.syncany.gui;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -32,6 +33,18 @@ import org.syncany.util.EnvironmentUtil;
  *
  */
 public class WidgetDecorator {
+	public static final int VERTICAL_INDENT = 20;
+
+	public static final int DEFAULT_BUTTON_WIDTH = 90;
+	public static final int DEFAULT_BUTTON_HEIGHT = 30;
+	
+	public static final Color INVALID_TEXT_COLOR = SWTResourceManager.getColor(255, 218, 185);
+	public static final Color RED = SWTResourceManager.getColor(SWT.COLOR_RED);
+	public static final Color WHITE = SWTResourceManager.getColor(SWT.COLOR_WHITE);
+	public static final Color BLACK = SWTResourceManager.getColor(SWT.COLOR_BLACK);
+	public static final Color GRAY = SWTResourceManager.getColor(SWT.COLOR_GRAY);
+	public static final Color COLOR_WIDGET = SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND);
+	
 	private static String FONT_NAME = "Segoe UI";
 	private static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 12 : EnvironmentUtil.isWindows() ? 9 : 10;
 	
@@ -75,5 +88,20 @@ public class WidgetDecorator {
 			}			
 		});
 	}
+	private static void markAsInvalid(Control c){
+		c.setBackground(INVALID_TEXT_COLOR);
+	}
+	
+	private static void markAsValid(Control c){
+		c.setBackground(WHITE);
+	}
+	
+	public static void markAs(boolean valid, Control c){
+		if (valid) {
+			markAsValid(c);
+		}
+		else {
+			 markAsInvalid(c);
+		}
+	}
 }
-

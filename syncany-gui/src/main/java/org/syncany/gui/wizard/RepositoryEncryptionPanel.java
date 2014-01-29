@@ -21,9 +21,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -34,10 +34,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
-import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.util.I18n;
@@ -56,6 +53,10 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	private Button enableEncryption;
 	private Label chunkSizeLabel; 
 	private Label algorithmLabel;
+	private Composite stackComposite;
+	private Composite encryptionComposite;
+	private Composite emptyComposite;
+	private StackLayout stackLayout = new StackLayout();
 	
 	@SuppressWarnings("serial")
 	private Map<String, CipherSpec[]> cipherOptions = new LinkedHashMap<String, CipherSpec[]>(){{
@@ -70,7 +71,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	public RepositoryEncryptionPanel(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
 		initComposite();
-		enableEncryption.setSelection(true);
+		
 		toggleEncryptionSelection();
 	}
 	
@@ -100,24 +101,29 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		passwordAgainText = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		passwordAgainText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
-		chunkSizeLabel = new Label(this, SWT.NONE);
-		GridData gd_chunkSizeLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_chunkSizeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		chunkSizeLabel.setLayoutData(gd_chunkSizeLabel);
+		stackComposite = new Composite(this, SWT.NONE);
+		stackComposite.setLayout(stackLayout);
+		GridData gd_composite = new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1);
+		gd_composite.verticalIndent = 23;
+		stackComposite.setLayoutData(gd_composite);
+		
+		encryptionComposite = new Composite(stackComposite, SWT.NONE);
+		encryptionComposite.setLayout(new GridLayout(2, false));
+		
+		chunkSizeLabel = new Label(encryptionComposite, SWT.NONE);
+		chunkSizeLabel.setSize(169, 15);
 		chunkSizeLabel.setText(I18n.getString("repository.encryption.chunkSize", true));
 		
 		
-		chunkSize = new Spinner(this, SWT.BORDER);
-		GridData gd_chunkSize = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
-		gd_chunkSize.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		chunkSize.setLayoutData(gd_chunkSize);
+		chunkSize = new Spinner(encryptionComposite, SWT.BORDER);
+		chunkSize.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		chunkSize.setSize(208, 22);
 		chunkSize.setMaximum(10000);
 		chunkSize.setSelection(512);
 		
-		enableEncryption = new Button(this, SWT.CHECK);
-		GridData gd_enableEncryption = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1);
-		gd_enableEncryption.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
-		enableEncryption.setLayoutData(gd_enableEncryption);
+		enableEncryption = new Button(encryptionComposite, SWT.CHECK);
+		enableEncryption.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		enableEncryption.setSize(172, 16);
 		enableEncryption.setText(I18n.getString("repository.encryption.enable"));
 		enableEncryption.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -126,12 +132,16 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 			}
 		});
 		
-		algorithmLabel = new Label(this, SWT.NONE);
+		enableEncryption.setSelection(true);
+		
+		algorithmLabel = new Label(encryptionComposite, SWT.NONE);
+		algorithmLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		algorithmLabel.setSize(168, 15);
 		algorithmLabel.setText(I18n.getString("repository.encryption.algorithm", true));
-		
-		cypherCombo = new Combo(this, SWT.NONE | SWT.READ_ONLY);
+				
+		cypherCombo = new Combo(encryptionComposite, SWT.NONE | SWT.READ_ONLY);
 		cypherCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		
+		cypherCombo.setSize(208, 23);
 		for (String key : cipherOptions.keySet()){
 			CipherSpec[] cipherSpec = cipherOptions.get(key);
 			String cipherSuitesIdStr = StringUtil.join(cipherSpec, ",", new StringJoinListener<CipherSpec>() {
@@ -143,8 +153,9 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 			cypherCombo.add(key);
 			cypherCombo.setData(key, cipherSuitesIdStr);
 		}
-
 		cypherCombo.select(4);
+						
+		emptyComposite = new Composite(stackComposite, SWT.NONE);
 		
 		WidgetDecorator.bold(introductionTextTitle);
 		WidgetDecorator.normal(introductionText, passwordAgainText, passwordText);
@@ -152,10 +163,7 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 	
 	protected void toggleEncryptionSelection() {
 		cypherCombo.setEnabled(enableEncryption.getSelection());
-		
-		Color black = SWTResourceManager.getColor(SWT.COLOR_BLACK);
-		Color gray = SWTResourceManager.getColor(SWT.COLOR_GRAY);
-		algorithmLabel.setForeground(enableEncryption.getSelection() ? black : gray);
+		algorithmLabel.setForeground(enableEncryption.getSelection() ? WidgetDecorator.BLACK : WidgetDecorator.GRAY);
 	}
 
 	public boolean issValid() {
@@ -169,8 +177,8 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 		String password = passwordText.getText();
 		String passwordAgain = passwordAgainText.getText();
 		
-		SWTUtil.markAs(password != null && password.length() > 6, passwordText);
-		SWTUtil.markAs(password != null && password.length() > 6 && password.equals(passwordAgain), passwordAgainText);
+		WidgetDecorator.markAs(password != null && password.length() > 6, passwordText);
+		WidgetDecorator.markAs(password != null && password.length() > 6 && password.equals(passwordAgain), passwordAgainText);
 		
 		return password != null && password.length() > 6 && password.equals(passwordAgain);
 	}
@@ -208,6 +216,18 @@ public class RepositoryEncryptionPanel extends WizardPanelComposite {
 
 	@Override
 	public void updateData() {
+		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
 		
+		if (action.equals("create")) {
+			showPanel(this.encryptionComposite);
+		}
+		else {
+			showPanel(this.emptyComposite);
+		}
+	}
+	
+	private void showPanel(Composite composite) {
+		stackLayout.topControl = composite;
+		stackComposite.layout();
 	}
 }

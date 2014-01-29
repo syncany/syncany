@@ -29,8 +29,6 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.gui.ApplicationResourcesManager;
-import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
@@ -71,13 +69,13 @@ public class S3PluginPanel extends PluginPanel {
 		
 		Label accessKeyLabel =  new Label(this, SWT.NONE);
 		GridData gd_accessKeyLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_accessKeyLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_accessKeyLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		accessKeyLabel.setLayoutData(gd_accessKeyLabel);
 		accessKeyLabel.setText(I18n.getString("plugin.s3.accessKey", true));
 		
 		accessKeyText = new Text(this, SWT.BORDER);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
-		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostText.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
 		accessKeyText.setLayoutData(gd_hostText);
 		
@@ -157,25 +155,25 @@ public class S3PluginPanel extends PluginPanel {
 		OptionValidationResult res;
 		
 		res = poc.get("accessKey").validateInput(accessKeyText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), accessKeyText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), accessKeyText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("secretKey").validateInput(secretKeyText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), secretKeyText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), secretKeyText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("bucket").validateInput(bucketText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), bucketText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), bucketText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("location").validateInput(locationText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), locationText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), locationText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}

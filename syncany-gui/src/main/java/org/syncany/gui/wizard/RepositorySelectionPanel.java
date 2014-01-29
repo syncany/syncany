@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -35,12 +37,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.gui.ApplicationResourcesManager;
+import org.syncany.daemon.command.ConnectCommand;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.gui.panel.PluginPanel.PluginPanelPurpose;
+import org.syncany.operations.ConnectOperation;
 import org.syncany.util.I18n;
 import org.syncany.util.StringUtil;
 
@@ -104,7 +107,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		
 		urlLabel = new Label(urlComposite, SWT.NONE);
 		GridData gd_urlLabel = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_urlLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_urlLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		urlLabel.setLayoutData(gd_urlLabel);
 		urlLabel.setText(I18n.getString("dialog.chooseRepository.url", true));
 		
@@ -128,7 +131,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		
 		repositorySelectionCombo = new Combo(createComposite, SWT.READ_ONLY);
 		GridData gd_repositorySelectionCombo = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_repositorySelectionCombo.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_repositorySelectionCombo.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		repositorySelectionCombo.setLayoutData(gd_repositorySelectionCombo);
 		repositorySelectionCombo.setSize(387, 25);
 		repositorySelectionCombo.addSelectionListener(new SelectionAdapter() {
@@ -202,7 +205,23 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		boolean urlAvailable = "yes".equals(getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.AVAILABLE_URL));
 		
 		if (urlAvailable){
-			return urlText.getText() != null && urlText.getText().length() > 0;
+			Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+			
+			Matcher linkMatcher = LINK_PATTERN.matcher(urlText.getText());
+			
+			if (!linkMatcher.matches()) {
+				urlText.setBackground(WidgetDecorator.INVALID_TEXT_COLOR);
+				return false;
+			}
+			
+			boolean valid = urlText.getText() != null && urlText.getText().length() > 0;
+			if (valid){
+				urlText.setBackground(WidgetDecorator.BLACK);
+			}
+			else {
+				urlText.setBackground(WidgetDecorator.INVALID_TEXT_COLOR);
+			}
+			return valid;
 		}
 		else{
 			PluginPanel ppanel = panels.get(selectedPluginId);

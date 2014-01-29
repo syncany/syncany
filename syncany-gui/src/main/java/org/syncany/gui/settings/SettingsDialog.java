@@ -17,9 +17,6 @@
  */
 package org.syncany.gui.settings;
 
-import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
-import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
-
 import java.io.File;
 import java.util.Map;
 
@@ -191,7 +188,7 @@ public class SettingsDialog extends Dialog {
 		buttonComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false, 3, 1));
 		
 		Button cancelButton = new Button(buttonComposite, SWT.NONE);
-		cancelButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		cancelButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		cancelButton.setText(I18n.getString("dialog.default.cancel"));
 		cancelButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -201,7 +198,7 @@ public class SettingsDialog extends Dialog {
 		});
 		
 		Button okButton = new Button(buttonComposite, SWT.NONE);
-		okButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		okButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		okButton.setText(I18n.getString("dialog.default.ok"));
 		okButton.addSelectionListener(new SelectionAdapter() {
 			@Override

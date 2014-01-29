@@ -33,9 +33,7 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.SWTResourceManager;
-import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
@@ -69,13 +67,13 @@ public class LocalPluginPanel extends PluginPanel {
 		
 		Label hostLabel = new Label(this, SWT.NONE);
 		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.local.localFolder", true));
 		
 		pathText = new Text(this, SWT.BORDER);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostText.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
 		pathText.setLayoutData(gd_hostText);
 		
@@ -112,8 +110,8 @@ public class LocalPluginPanel extends PluginPanel {
 		final Button testLocalRepositoryButton = new Button(buttonComposite, SWT.NONE);
 
 		GridData gd_testFtpButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
-		gd_testFtpButton.heightHint = ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
-		gd_testFtpButton.widthHint = ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
+		gd_testFtpButton.heightHint = WidgetDecorator.DEFAULT_BUTTON_HEIGHT;
+		gd_testFtpButton.widthHint = WidgetDecorator.DEFAULT_BUTTON_WIDTH;
 		testLocalRepositoryButton.setLayoutData(gd_testFtpButton);
 		
 		testLocalRepositoryButton.setText("Test");
@@ -122,7 +120,7 @@ public class LocalPluginPanel extends PluginPanel {
 			public void widgetSelected(SelectionEvent e) {
 				Display.getCurrent().syncExec(new Runnable() {
 				    public void run() {
-				    	boolean isValid = isValid() && testPluginConnection();
+				    	boolean isValid = isValid();// && testPluginConnection();
 				    	
 				    	if (isValid){
 				    		testResultLabel.setText(I18n.getString("plugin.local.validDirectory"));
@@ -184,7 +182,7 @@ public class LocalPluginPanel extends PluginPanel {
     			valid = false;
     		}
     	}
-    	SWTUtil.markAs(valid, pathText);
+    	WidgetDecorator.markAs(valid, pathText);
     	return valid;
 	}
 

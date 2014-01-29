@@ -1,8 +1,5 @@
 package org.syncany.gui.settings;
 
-import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
-import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
-
 import java.io.File;
 
 import org.eclipse.swt.SWT;
@@ -86,7 +83,7 @@ public class AccountSettingsPanel extends Composite {
 		
 		addProfileButton = new Button(composite, SWT.NONE);
 		addProfileButton.setText(I18n.getString("dialog.settings.account.addProfile"));
-		addProfileButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		addProfileButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		addProfileButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
 				handleAddProfile();
@@ -95,7 +92,7 @@ public class AccountSettingsPanel extends Composite {
 		
 		deleteProfileButton = new Button(composite, SWT.NONE);
 		deleteProfileButton.setText(I18n.getString("dialog.settings.account.deleteProfile"));
-		deleteProfileButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		deleteProfileButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		deleteProfileButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
 				handleDeleteProfile();

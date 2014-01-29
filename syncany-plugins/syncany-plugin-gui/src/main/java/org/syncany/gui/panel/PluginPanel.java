@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 
 
 /**
@@ -52,17 +53,11 @@ public abstract class PluginPanel extends Composite implements UserParametersChe
 		this.purpose = purpose;
 	}
 	
-	public boolean testPluginConnection(){
-		try {
-			Map<String, String> params = getUserSelection().getPluginParameters();
-			Connection connection = Plugins.get(getPluginId()).createConnection();
-			connection.init(params);
-			connection.createTransferManager().connect();
-			return true;
-		}
-		catch (StorageException se){
-			return false;
-		}
+	public StorageTestResult testPluginConnection() throws StorageException{
+		Map<String, String> params = getUserSelection().getPluginParameters();
+		Connection connection = Plugins.get(getPluginId()).createConnection();
+		connection.init(params);
+		return connection.createTransferManager().test();
 	}
 	
 	// Anstract Methods

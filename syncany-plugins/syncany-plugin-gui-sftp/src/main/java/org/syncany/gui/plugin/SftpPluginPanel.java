@@ -30,11 +30,9 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.gui.ApplicationResourcesManager;
-import org.syncany.gui.SWTUtil;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
@@ -76,19 +74,19 @@ public class SftpPluginPanel extends PluginPanel {
 		
 		Label hostLabel = new Label(this, SWT.NONE);
 		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("plugin.sftp.host", true));
 		
 		hostText = new Text(this, SWT.BORDER);
 		
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
-		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostText.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		hostText.setLayoutData(gd_hostText);
 		
 		Label portLabel = new Label(this, SWT.NONE);
 		GridData gd_portLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_portLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_portLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		portLabel.setLayoutData(gd_portLabel);
 		portLabel.setText(I18n.getString("plugin.sftp.port", true));
 		
@@ -97,7 +95,7 @@ public class SftpPluginPanel extends PluginPanel {
 		portSpinner.setMaximum(100000);
 		portSpinner.setSelection(22);
 		GridData gd_spinner = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
-		gd_spinner.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_spinner.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		gd_spinner.widthHint = 50;
 		gd_spinner.heightHint = 15;
 		portSpinner.setLayoutData(gd_spinner);
@@ -149,7 +147,7 @@ public class SftpPluginPanel extends PluginPanel {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				testFtpButton.setEnabled(false);
-				final boolean isValid = isValid() && testPluginConnection();
+				final boolean isValid = isValid();// && testPluginConnection();
 				testFtpButton.setEnabled(true);
 				
 				Display.getCurrent().syncExec(new Runnable() {
@@ -200,31 +198,31 @@ public class SftpPluginPanel extends PluginPanel {
 		OptionValidationResult res;
 		
 		res = poc.get("hostname").validateInput(hostText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), hostText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), hostText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("username").validateInput(usernameText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), usernameText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), usernameText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("password").validateInput(passwordText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), passwordText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), passwordText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("path").validateInput(pathText.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), pathText);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), pathText);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}
 		
 		res = poc.get("port").validateInput(portSpinner.getText());
-		SWTUtil.markAs(res.equals(OptionValidationResult.VALID), portSpinner);
+		WidgetDecorator.markAs(res.equals(OptionValidationResult.VALID), portSpinner);
 		if (!res.equals(OptionValidationResult.VALID)){
 			valid = false;
 		}

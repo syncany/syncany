@@ -17,9 +17,6 @@
  */
 package org.syncany.gui.wizard;
 
-import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_HEIGHT;
-import static org.syncany.gui.ApplicationResourcesManager.DEFAULT_BUTTON_WIDTH;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -129,7 +126,7 @@ public class WizardDialog extends Dialog {
 	private void createContents() {
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
 		shell.setToolTipText("");
-		shell.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
+		shell.setBackground(WidgetDecorator.COLOR_WIDGET);
 		shell.setSize(700, 500);
 		shell.setText(getText());
 		GridLayout gl_shell = new GridLayout(2, false);
@@ -157,7 +154,7 @@ public class WizardDialog extends Dialog {
 		buttonComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false, 1, 1));
 
 		cancelButton = new Button(buttonComposite, SWT.NONE);
-		cancelButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		cancelButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		cancelButton.setText(I18n.getString("dialog.default.cancel"));
 		cancelButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -167,7 +164,7 @@ public class WizardDialog extends Dialog {
 		});
 
 		previousButton = new Button(buttonComposite, SWT.NONE);
-		previousButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		previousButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		previousButton.setText(I18n.getString("dialog.default.previous"));
 		previousButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -177,7 +174,7 @@ public class WizardDialog extends Dialog {
 		});
 
 		nextButton = new Button(buttonComposite, SWT.NONE);
-		nextButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		nextButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		nextButton.setText(I18n.getString("dialog.default.next"));
 		nextButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -187,7 +184,7 @@ public class WizardDialog extends Dialog {
 		});
 		
 		finishButton = new Button(buttonComposite, SWT.NONE);
-		finishButton.setLayoutData(new RowData(DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT));
+		finishButton.setLayoutData(new RowData(WidgetDecorator.DEFAULT_BUTTON_WIDTH, WidgetDecorator.DEFAULT_BUTTON_HEIGHT));
 		finishButton.setText(I18n.getString("dialog.default.finish"));
 		finishButton.addListener(SWT.Selection, new Listener() {
 			@Override

@@ -43,7 +43,6 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
@@ -111,13 +110,13 @@ public class SummaryPanel extends WizardPanelComposite {
 		
 		Label repositoryActionLabel = new Label(this, SWT.NONE);
 		GridData gd_repositoryTypeLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_repositoryTypeLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_repositoryTypeLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		repositoryActionLabel.setLayoutData(gd_repositoryTypeLabel);
 		repositoryActionLabel.setText(I18n.getString("dialog.summary.repositoryAction", true));
 		
 		repositoryOperation = new Label(this, SWT.NONE);
 		GridData gd_repositoryType = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_repositoryType.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_repositoryType.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		repositoryOperation.setLayoutData(gd_repositoryType);
 		
 		Label repositoryTypeLabel = new Label(this, SWT.NONE);

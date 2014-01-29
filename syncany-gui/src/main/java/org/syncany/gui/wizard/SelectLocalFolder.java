@@ -10,7 +10,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.gui.ApplicationResourcesManager;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
@@ -46,13 +45,13 @@ public class SelectLocalFolder extends WizardPanelComposite {
 		
 		Label hostLabel = new Label(this, SWT.WRAP);
 		GridData gd_hostLabel = new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1);
-		gd_hostLabel.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostLabel.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		hostLabel.setLayoutData(gd_hostLabel);
 		hostLabel.setText(I18n.getString("dialog.selectLocalFolder.selectLocalFolder", true));
 		
 		localDir = new Text(this, SWT.BORDER);
 		GridData gd_hostText = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
-		gd_hostText.verticalIndent = ApplicationResourcesManager.VERTICAL_INDENT;
+		gd_hostText.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
 		gd_hostText.minimumWidth = 200;
 		localDir.setLayoutData(gd_hostText);
 		
