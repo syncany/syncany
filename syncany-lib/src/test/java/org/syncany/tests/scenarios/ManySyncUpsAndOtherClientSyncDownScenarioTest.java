@@ -25,7 +25,7 @@ import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class ManySyncUpsAndOtherClientSyncDownTest {
+public class ManySyncUpsAndOtherClientSyncDownScenarioTest {
 	@Test
 	public void testManySyncUpsAndOtherClientSyncDown() throws Exception {
 		// Setup 
