@@ -28,7 +28,6 @@ import java.io.OutputStream;
  */
 public class ZipMultiChunker extends MultiChunker {
     public static final String TYPE = "zip";
-	public static final String PROPERTY_SIZE = "size";
 
 	public ZipMultiChunker(int minMultiChunkSize) {
         super(minMultiChunkSize);
