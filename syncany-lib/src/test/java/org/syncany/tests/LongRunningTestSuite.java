@@ -17,20 +17,19 @@
  */
 package org.syncany.tests;
 
-import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.scenarios.longrunning.LongRunningLargeFileScenarioTest;
+import org.syncany.tests.scenarios.longrunning.LongRunningLotsOfSmallFilesScenarioTest;
+import org.syncany.tests.scenarios.longrunning.LongRunningNewAndDeleteScenarioTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({	 
-	AllTestsExceptLongRunning.class
+@SuiteClasses({
+	LongRunningLargeFileScenarioTest.class,
+	LongRunningLotsOfSmallFilesScenarioTest.class,
+	LongRunningNewAndDeleteScenarioTest.class
 })
-public class AllTestsExceptLongRunningWithEncryption {
-	@BeforeClass
-	public static void enableEncryption() {
-		System.out.println("Enabling encryption ...");
-		TestConfigUtil.setCrypto(true);
-	}
+public class LongRunningTestSuite {
+	// This class executes all tests
 }

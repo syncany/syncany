@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
