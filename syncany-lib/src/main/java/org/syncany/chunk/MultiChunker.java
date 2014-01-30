@@ -21,6 +21,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.syncany.util.StringUtil;
 
 /**
  * A multichunker combines a set of {@link Chunk}s into a single file. It can be implemented
@@ -47,9 +52,43 @@ import java.io.OutputStream;
  */
 // TODO [low] The multichunk API is really odd; Think of something more sensible 
 public abstract class MultiChunker {
-	public static final String PROPERTY_SIZE = "size";
 	
-    protected int minMultiChunkSize;
+	/**
+	 * Minimal multi chunk size in KB.
+	 */
+	public static final String PROPERTY_SIZE = "size";
+    
+	private static Logger logger = Logger.getLogger(MultiChunker.class.getSimpleName());
+	
+	protected int minMultiChunkSize;
+    
+	/**
+	 * Creates new multichunker without setting the minimum size of a multichunk.
+	 */
+    public MultiChunker(){
+    }
+    
+    /**
+     * Initializes the multichunker using a settings map. 
+     * <br>
+     * Required settings are: 
+     * <ul>
+     *  <li> key: {@link #PROPERTY_SIZE}, value: integer encoded as String 
+     * </ul>
+     */
+    public void init(Map<String, String> settings){
+    	String size = settings.get(PROPERTY_SIZE);
+    	if(size == null){
+    		logger.log(Level.SEVERE, String.format("Property %s must not be null.", PROPERTY_SIZE));
+    		throw new IllegalArgumentException(String.format("Property %s must not be null.", PROPERTY_SIZE));
+    	}
+    	try{
+    		this.minMultiChunkSize = Integer.parseInt(size);
+    	}catch(NumberFormatException nfe){
+    		logger.log(Level.SEVERE, String.format("Property %s could not be parsed as Integer.", PROPERTY_SIZE));
+    		throw new IllegalArgumentException(String.format("Property %s could not be parsed as Integer.", PROPERTY_SIZE));
+    	}
+    }
     
     /**
      * Creates a new multichunker, and sets the minimum size of a multichunk.
@@ -102,5 +141,33 @@ public abstract class MultiChunker {
     /**
      * Returns a comprehensive string representation of a multichunker
      */
-    public abstract String toString();    
+    public abstract String toString();
+    
+    /**
+     * Instantiates a multichunker by its name using the default constructor. 
+     * <br>
+     * After creating a new multichunker, it must be initialized using the 
+     * {@link #init(Map) init()} method. The given type attribute is mapped to fully 
+     * qualified class name (FQCN) of the form <tt>org.syncany.chunk.XMultiChunker</tt>, 
+     * where <tt>X</tt> is the camel-cased type attribute.  
+     * 
+     * @param type Type/name of the multichunker (corresponds to its camel case class name)
+     * @return a new multichunker
+     * @throws Exception If the FQCN cannot be found or the class cannot be instantiated
+     */
+    public static MultiChunker getInstance(String type){
+		String thisPackage = MultiChunker.class.getPackage().getName();
+		String camelCaseName = StringUtil.toCamelCase(type);
+		String fqClassName = thisPackage+"."+camelCaseName+MultiChunker.class.getSimpleName();
+		
+		// Try to load!
+		try {
+			Class<?> clazz = Class.forName(fqClassName);
+			return (MultiChunker) clazz.newInstance();
+		} 
+		catch (Exception ex) {
+			logger.log(Level.INFO, "Could not find multichunker FQCN " + fqClassName, ex);
+			return null;
+		}
+    }
 }
