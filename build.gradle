@@ -27,12 +27,16 @@ project.ext {
 	applicationVersionFull = "${applicationVersion}-${applicationDate.format('yyMMddHHmm')}-${applicationRevision}"
 }
 
+// All projects settings  //////////////////////////////////////////////////////
+
+allprojects {
+	apply plugin: 'eclipse'	
+}
 
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
 
 subprojects {
 	apply plugin: 'java'
-	apply plugin: 'eclipse'
 	
 	group = 'org.syncany'		
 		
