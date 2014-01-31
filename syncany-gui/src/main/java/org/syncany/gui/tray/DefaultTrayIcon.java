@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
+import org.syncany.daemon.command.CommandStatus;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.util.EnvironmentUtil;
 
@@ -90,6 +91,7 @@ public class DefaultTrayIcon extends TrayIcon {
 	}
 
 	private void buildMenuItems(final Map<String, Map<String, String>> folders) {
+		boolean needSyncing = false;
 		if (menu != null) {
 			clearMenuItems();
 		}
@@ -125,48 +127,60 @@ public class DefaultTrayIcon extends TrayIcon {
 
 			for (final String key : folders.keySet()) {
 				final File folder = new File(folders.get(key).get("folder"));
-
+				CommandStatus status = CommandStatus.valueOf(folders.get(key).get("status"));
+						
 				if (folder.exists()) {
-					String status = folders.get(key).get("status");
+					MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
+					folderMenuItem.setText(folder.getName() + " [" + status + "]");
 					
-					if (!status.equals("STOPPED")){
-						MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
-						folderMenuItem.setText(folder.getName() + " [" + status + "]");
-						
-						Menu subMenu = new Menu(folderMenuItem);
-						folderMenuItem.setMenu(subMenu);
-						
-						final MenuItem pauseMI = new MenuItem(subMenu, SWT.PUSH);
-						pauseMI.setText(messages.get("tray.menuitem.pause"));
-						pauseMI.setImage(SWTResourceManager.getImage("/images/tray/pause.png"));
-						pauseMI.addSelectionListener(new SelectionAdapter() {
-							@Override
-							public void widgetSelected(SelectionEvent e) {
-								pause(folder);
-							}
-						});
-						
-						MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
-						resumetMI.setText(messages.get("tray.menuitem.resume"));
-						resumetMI.setImage(SWTResourceManager.getImage("/images/tray/resume.png"));
-						resumetMI.addSelectionListener(new SelectionAdapter() {
-							@Override
-							public void widgetSelected(SelectionEvent e) {
-								resume(folder);
-							}
-						});
-						
-						new MenuItem(subMenu, SWT.SEPARATOR);
-						
-						MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
-						openMI.setText(messages.get("tray.menuitem.open"));
-						openMI.addSelectionListener(new SelectionAdapter() {
-							@Override
-							public void widgetSelected(SelectionEvent e) {
-								showFolder(folder);
-							}
-						});
+					switch (status) {
+						case SYNCING:
+							needSyncing = true;
+							break;
+						case STOPPED:
+						case PAUSED:
+							folderMenuItem.setImage(SWTResourceManager.getResizedImage("/images/tray/pause.png", 14, 14));
+							break;
+						case STARTING:
+						case STOPPING:
+						case UP_TODATE:
+							folderMenuItem.setImage(SWTResourceManager.getResizedImage("/images/tray/tray-uptodate.png", 14, 14));
+							break;
 					}
+						
+					Menu subMenu = new Menu(folderMenuItem);
+					folderMenuItem.setMenu(subMenu);
+					
+					MenuItem pauseMI = new MenuItem(subMenu, SWT.PUSH);
+					pauseMI.setText(messages.get("tray.menuitem.pause"));
+					pauseMI.setImage(SWTResourceManager.getResizedImage("/images/tray/pause.png", 14, 14));
+					pauseMI.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							pause(folder);
+						}
+					});
+					
+					MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
+					resumetMI.setText(messages.get("tray.menuitem.resume"));
+					resumetMI.setImage(SWTResourceManager.getResizedImage("/images/tray/resume.png", 14, 14));
+					resumetMI.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							resume(folder);
+						}
+					});
+					
+					new MenuItem(subMenu, SWT.SEPARATOR);
+					
+					MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
+					openMI.setText(messages.get("tray.menuitem.open"));
+					openMI.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							showFolder(folder);
+						}
+					});
 				}
 			}
 		}
@@ -201,6 +215,10 @@ public class DefaultTrayIcon extends TrayIcon {
 				quit();
 			}
 		});
+		
+		if (needSyncing) {
+			makeSystemTrayStartSync();
+		}
 	}
 
 	private void clearMenuItems() {

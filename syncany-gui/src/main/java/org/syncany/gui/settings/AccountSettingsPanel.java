@@ -1,7 +1,5 @@
 package org.syncany.gui.settings;
 
-import java.io.File;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
@@ -109,11 +107,14 @@ public class AccountSettingsPanel extends Composite {
 					fileList = (String[])event.data;
 					
 					for (String fileName : fileList){
-						File folder = new File(fileName);
-						File configFolder = new File(folder, ".syncany");
-						if (folder.exists() && configFolder.exists()){
-							ClientCommandFactory.handleWatch(folder.getAbsolutePath(), 3000);
-							Launcher.updateProfiles(folder.getAbsolutePath(), 3000);
+						Profile p = new Profile();
+						p.setFolder(fileName);
+						p.setAutomaticSync(true);
+						p.setWatchInterval(3000);
+						
+						if (p.isValid()) {
+							ClientCommandFactory.handleWatch(p.getFolder(), p.getWatchInterval());
+							Launcher.updateProfiles(p);
 						}
 					}
 				}
@@ -178,6 +179,10 @@ public class AccountSettingsPanel extends Composite {
 		colonne3.setText("Automatic ?");
 		colonne3.setWidth(100);
 		
+		TableColumn colonne4 = new TableColumn(table, SWT.LEFT);
+		colonne4.setText("Valid folder ?");
+		colonne4.setWidth(100);
+		
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true); 
 		
@@ -192,7 +197,8 @@ public class AccountSettingsPanel extends Composite {
 			item.setText(new String[] {
 				p.getFolder(),
 				p.getWatchInterval()+"", 
-				p.isAutomaticSync()+"" 
+				p.isAutomaticSync()+"" ,
+				p.isValid()+""
 			});
 		}
 	}

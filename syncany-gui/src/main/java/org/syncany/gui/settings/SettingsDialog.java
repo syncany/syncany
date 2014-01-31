@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
+import org.syncany.gui.Application;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
@@ -233,7 +234,7 @@ public class SettingsDialog extends Dialog {
 		Launcher.applicationConfiguration.setProxyAuthType(proxyParams.get("proxy.authType"));
 		
 		String userHome = System.getProperty("user.home");
-		File f = new File(userHome + File.separator + ".syncany" + File.separator + "syncany-gui-config.xml");
+		File f = new File(userHome + File.separator + Application.APPLICATION_CONFIGURATION);
 		
 		ApplicationConfigurationTO to = ApplicationConfiguration.toTO(Launcher.applicationConfiguration);
 		try {

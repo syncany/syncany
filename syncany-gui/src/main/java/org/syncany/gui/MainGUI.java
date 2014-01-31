@@ -1,6 +1,5 @@
 package org.syncany.gui;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -69,9 +68,7 @@ public class MainGUI {
 		}
 
 		for (Profile profil : profiles) {
-			File folderFile = new File(profil.getFolder());
-			
-			if (folderFile.exists()) {
+			if (profil.isValid()) {
 				ClientCommandFactory.handleWatch(profil.getFolder(), 3000);
 			}
 		}
@@ -88,14 +85,14 @@ public class MainGUI {
 		if (tray != null) {
 
 			switch (event.getState()) {
-			case SYNCING:
-				tray.makeSystemTrayStartSync();
-				break;
-
-			case SYNCED:
-				tray.makeSystemTrayStopSync();
-				break;
-			}
+				case SYNCING:
+					tray.makeSystemTrayStartSync();
+					break;
+	
+				case UP_TODATE:
+					tray.makeSystemTrayStopSync();
+					break;
+				}
 		}
 	}
 

@@ -15,25 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.gui;
 
-import org.syncany.daemon.command.CommandStatus;
-
+import java.io.File;
 
 /**
  * @author vincent
  *
  */
-public class SyncingEvent extends ApplicationEvent {
-	private CommandStatus state;
-//	public enum SyncyngState{
-//		SYNCING, SYNCED;
-//	}
-
-	public void setState(CommandStatus state) {
-		this.state = state;
-	}
-	public CommandStatus getState() {
-		return state;
-	}
+public class Application {
+	public static final String APPLICATION_DIRECTORY = ".syncany";
+	public static final String APPLICATION_CONFIGURATION = APPLICATION_DIRECTORY 
+			+ File.separator + "syncany-gui-config.xml";
 }

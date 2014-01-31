@@ -134,7 +134,7 @@ public class Launcher {
 	}
 
 	public static void saveConfiguration() {
-		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File saHome = new File(System.getProperty("user.home") + File.separator + Application.APPLICATION_DIRECTORY);
 		File f = new File(saHome, "syncany-gui-config.xml");
 
 		try {
@@ -146,7 +146,7 @@ public class Launcher {
 	}
 
 	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
-		File saHome = new File(System.getProperty("user.home") + File.separator + ".syncany");
+		File saHome = new File(System.getProperty("user.home") + File.separator + Application.APPLICATION_DIRECTORY);
 		File f = new File(saHome, "syncany-gui-config.xml");
 
 		if (!f.exists()) {
@@ -162,11 +162,11 @@ public class Launcher {
 		return acto;
 	}
 	
-	public static void updateProfiles(String folder, int watchInterval){
-		Profile p = new Profile();
-		p.setFolder(folder);
-		p.setAutomaticSync(true);
-		p.setWatchInterval(watchInterval);
+	public static void updateProfiles(Profile p){
+//		Profile p = new Profile();
+//		p.setFolder(folder);
+//		p.setAutomaticSync(true);
+//		p.setWatchInterval(watchInterval);
 		
 		Launcher.applicationConfiguration.addProfile(p);
 		Launcher.saveConfiguration();

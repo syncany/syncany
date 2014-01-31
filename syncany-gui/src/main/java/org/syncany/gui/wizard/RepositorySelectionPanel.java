@@ -70,6 +70,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	
 	private Map<String, PluginPanel> panels = new HashMap<>();
 	private Label urlInvalidLabel;
+	
 	/**
 	 * Create the dialog.
 	 * @param parent

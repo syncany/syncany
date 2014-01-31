@@ -47,14 +47,17 @@ public class UserInput {
 	
 	public boolean getCommonParameterAsBoolean(CommonParameters key){
 		String parameter = getCommonParameter(key);
-		
-		switch (parameter.toLowerCase()){
-			case "yes":
-			case "true":
-				return true;
-			default:
-				return false;
+	
+		if (parameter != null){
+			switch (parameter.toLowerCase()){
+				case "yes":
+				case "true":
+					return true;
+				default:
+					return false;
+			}
 		}
+		return false;
 	}
 
 	public String getCommonParameter(CommonParameters key) {

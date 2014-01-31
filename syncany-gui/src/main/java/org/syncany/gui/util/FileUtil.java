@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.config.Config;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -43,7 +44,7 @@ public class FileUtil {
 	}
 
 	public static boolean isSyncanyFolder(Shell shell, String folder) {
-		return isSystemValidFolder(folder) && folderContainsFolder(folder, ".syncany");
+		return isSystemValidFolder(folder) && folderContainsFolder(folder, Config.DIR_APPLICATION);
 	}
 
 	public static boolean isExistingFolder(Shell shell, String folder) {

@@ -17,6 +17,10 @@
  */
 package org.syncany.gui.config;
 
+import java.io.File;
+
+import org.syncany.config.Config;
+
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -52,5 +56,27 @@ public class Profile {
 		return obj != null 
 			&& (obj instanceof Profile) 
 			&& ((Profile)obj).getFolder().equals(this.getFolder());
+	}
+	
+	public boolean isValid() {
+		File folderFile = new File(getFolder());
+		
+		if (folderFile.exists()) {
+			for (File file : folderFile.listFiles()) {
+				if (file.isDirectory() && file.getName().equals(Config.DIR_APPLICATION)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return false;
+	}
+	
+	public static Profile getDefault(String f) {
+		Profile p = new Profile();
+		p.setFolder(f);
+		p.setWatchInterval(3000);
+		p.setAutomaticSync(true);
+		return p;
 	}
 }
