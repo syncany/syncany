@@ -44,13 +44,9 @@ public class WatchCommand extends Command {
 	
 	private AtomicBoolean started = new AtomicBoolean(false);
 	
-	public WatchCommand(String localFolder, Integer interval){
+	public WatchCommand(String localFolder, Integer interval, boolean watcher){
 		this.localFolder = localFolder;
 		this.interval = interval;
-	}
-	
-	public WatchCommand(String localFolder, boolean watcher){
-		this.localFolder = localFolder;
 		this.watcher = watcher;
 	}
 	

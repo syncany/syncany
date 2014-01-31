@@ -69,7 +69,7 @@ public class MainGUI {
 
 		for (Profile profil : profiles) {
 			if (profil.isValid()) {
-				ClientCommandFactory.handleWatch(profil.getFolder(), 3000);
+				ClientCommandFactory.handleWatch(profil.getFolder(), 120000, true);
 			}
 		}
 	}

@@ -24,6 +24,7 @@ public class DaemonCommandHandler {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		String localDir = (String)parameters.get("localfolder");
 		int interval = Integer.parseInt((String)parameters.get("interval"));
+		boolean watcher = Boolean.parseBoolean((String)parameters.get("automatic"));
 		
 		logger.log(Level.INFO, String.format("Watching folder %s", localDir));
 		
@@ -35,7 +36,7 @@ public class DaemonCommandHandler {
 			}
 		}
 
-		WatchCommand wc = new WatchCommand(localDir, interval);
+		WatchCommand wc = new WatchCommand(localDir, interval, watcher);
 		commands.put(wc.getId(), wc);
 		wc.execute();
 		return null;
