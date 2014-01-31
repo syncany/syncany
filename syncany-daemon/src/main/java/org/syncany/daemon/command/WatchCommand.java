@@ -109,7 +109,7 @@ public class WatchCommand extends Command {
 				try {
 					Config config = initConfigOption(localFolder);
 					watchOperation = new WatchOperation(config, operationOptions);
-					setStatus(CommandStatus.STARTED);
+					setStatus(CommandStatus.SYNCING);
 					started.set(true);
 					watchOperation.execute();
 					setStatus(CommandStatus.STOPPED);
@@ -180,12 +180,12 @@ public class WatchCommand extends Command {
 	
 	public void resume() {
 		watchOperation.resume();
-		setStatus(CommandStatus.STARTED);
+		setStatus(CommandStatus.SYNCING);
 	}
 	
 	public void stop() {
 		watchOperation.stop();
-		setStatus(CommandStatus.STOPPING);
+		setStatus(CommandStatus.STOPPED);
 	}
 
 	@Override

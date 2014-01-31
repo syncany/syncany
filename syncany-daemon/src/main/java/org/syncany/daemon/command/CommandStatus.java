@@ -23,8 +23,9 @@ package org.syncany.daemon.command;
  */
 public enum CommandStatus {
 	STARTING, 
-	STARTED, 
-	PAUSED,
 	STOPPING, 
+	PAUSED,
+	SYNCING, 
+	UP_TODATE,
 	STOPPED;
 }

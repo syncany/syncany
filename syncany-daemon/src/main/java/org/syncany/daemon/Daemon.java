@@ -136,7 +136,7 @@ public class Daemon {
 
 		if (cl instanceof WatchCommand) {
 			if (event.getAction().equals(WatchEventAction.START_WATCH)) {
-				cl.setStatus(CommandStatus.STARTED);
+				cl.setStatus(CommandStatus.SYNCING);
 			}
 
 			if (event.getAction().equals(WatchEventAction.STOP_WATCH)) {

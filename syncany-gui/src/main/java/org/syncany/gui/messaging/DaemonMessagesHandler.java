@@ -19,11 +19,11 @@ package org.syncany.gui.messaging;
 
 import java.util.Map;
 
+import org.syncany.daemon.command.CommandStatus;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.messaging.event.InitCommandEvent;
 import org.syncany.gui.messaging.event.SyncingEvent;
-import org.syncany.gui.messaging.event.SyncingEvent.SyncyngState;
 import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.util.JsonHelper;
 
@@ -64,10 +64,10 @@ public class DaemonMessagesHandler {
 			String syncingState = (String) parameters.get("syncing_state");
 			SyncingEvent se = new SyncingEvent();
 			if (syncingState.equals("syncing")) {
-				se.setState(SyncyngState.SYNCING);
+				se.setState(CommandStatus.SYNCING);
 			}
-			else if (syncingState.equals("in-sync")) {
-				se.setState(SyncyngState.SYNCED);
+			else if (syncingState.equals("up_to_date")) {
+				se.setState(CommandStatus.UP_TODATE);
 			}
 			EventManager.post(se);
 			break;
