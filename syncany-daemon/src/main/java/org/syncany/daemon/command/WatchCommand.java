@@ -40,12 +40,18 @@ public class WatchCommand extends Command {
 	
 	private String localFolder;
 	private Integer interval;
+	private boolean watcher;
 	
 	private AtomicBoolean started = new AtomicBoolean(false);
 	
 	public WatchCommand(String localFolder, Integer interval){
 		this.localFolder = localFolder;
 		this.interval = interval;
+	}
+	
+	public WatchCommand(String localFolder, boolean watcher){
+		this.localFolder = localFolder;
+		this.watcher = watcher;
 	}
 	
 	/**
@@ -63,6 +69,8 @@ public class WatchCommand extends Command {
 		if (interval != null) {
 			operationOptions.setInterval(interval.intValue());
 		}
+		
+		operationOptions.setWatcher(watcher);
 		
 		// Conflicting options: --no-announcements and --announce=<..>
 //		if (options.has(optionNoAnnouncements) && options.has(optionAnnouncements)) {
@@ -101,7 +109,7 @@ public class WatchCommand extends Command {
 //		if (options.has(optionNoWatcher)) {
 //			operationOptions.setWatcher(false);
 //		}
-		
+
 		// Run!
 		
 		new Thread(new Runnable() {
