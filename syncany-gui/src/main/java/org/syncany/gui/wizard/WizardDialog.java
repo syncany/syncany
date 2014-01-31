@@ -229,7 +229,7 @@ public class WizardDialog extends Dialog {
 							toggleButtons(false);
 							summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
 
-							ClientCommandFactory.handleWatch(folder, 3000);
+							ClientCommandFactory.handleWatch(folder, 120000, true);
 							Launcher.updateProfiles(Profile.getDefault(folder));
 						}
 					});
@@ -245,7 +245,7 @@ public class WizardDialog extends Dialog {
 				SelectLocalFolder wp = (SelectLocalFolder)panels.get(selectedPanel);
 				String f = wp.getUserSelection().getCommonParameter(CommonParameters.LOCAL_FOLDER);
 				
-				ClientCommandFactory.handleWatch(f, 3000);
+				ClientCommandFactory.handleWatch(f, 120000, true);
 				Launcher.updateProfiles(Profile.getDefault(f));
 				shell.dispose();
 				break;

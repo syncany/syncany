@@ -110,10 +110,10 @@ public class AccountSettingsPanel extends Composite {
 						Profile p = new Profile();
 						p.setFolder(fileName);
 						p.setAutomaticSync(true);
-						p.setWatchInterval(3000);
+						p.setWatchInterval(120000);
 						
 						if (p.isValid()) {
-							ClientCommandFactory.handleWatch(p.getFolder(), p.getWatchInterval());
+							ClientCommandFactory.handleWatch(p.getFolder(), p.getWatchInterval(), p.isAutomaticSync());
 							Launcher.updateProfiles(p);
 						}
 					}
