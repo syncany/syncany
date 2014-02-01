@@ -177,6 +177,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	
 	public Long getMaxDirtyVectorClock(String machineName) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getMaxDirtyVectorClock.sql")) {
+			preparedStatement.setMaxRows(1);
 			preparedStatement.setString(1, machineName);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
