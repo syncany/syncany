@@ -1,0 +1,3 @@
+[submodule "syncany-plugins/syncany-plugin-hazelcast"]
+	path = syncany-plugins/syncany-plugin-hazelcast
+	url = https://github.com/vwiencek/syncany-plugin-hazelcast.git
