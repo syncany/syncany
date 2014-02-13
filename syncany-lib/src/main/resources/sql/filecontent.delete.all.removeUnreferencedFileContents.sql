@@ -1,12 +1,7 @@
 -- Remove file contents that are not used by any file versions anymore
 
 delete from filecontent
-where checksum in (
-	select distinct checksum
-	from filecontent
-
-		minus
-	
+where checksum not in (
 	select distinct filecontent_checksum
 	from fileversion
 )
