@@ -65,10 +65,13 @@ public class SftpConnectionPluginTest {
 	private static SshServer sshd;
 	
 	@BeforeClass
-	public static void beforeTestSetup() {
+	public static void beforeTestSetup() throws IOException {
+		File hostKeyFile = File.createTempFile("hostkey", "ser");
+		hostKeyFile.deleteOnExit();
+		
 		sshd = SshServer.setUpDefaultServer();
 		sshd.setPort(PORT);
-		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("hostkey.ser"));
+		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(hostKeyFile.getAbsolutePath()));
 		sshd.setFileSystemFactory(new NativeFileSystemFactory());
 		
 		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();

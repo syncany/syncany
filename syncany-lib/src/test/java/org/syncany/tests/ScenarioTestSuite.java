@@ -34,8 +34,8 @@ import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.scenarios.FileVanishedScenarioTest;
 import org.syncany.tests.scenarios.FilenameCapitalizationWindowsScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
-import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupTest;
-import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownTest;
+import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest;
+import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
 import org.syncany.tests.scenarios.RenameDeleteScenarioTest;
 import org.syncany.tests.scenarios.RenameFileWithDiffModifiedDateScenarioTest;
@@ -63,8 +63,8 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	FileTreeMoveToSubfolderScenarioTest.class,
 	FileVanishedScenarioTest.class,
 	ManyRenamesScenarioTest.class,
-	ManySyncUpsAndDatabaseFileCleanupTest.class,
-	ManySyncUpsAndOtherClientSyncDownTest.class,
+	ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
+	ManySyncUpsAndOtherClientSyncDownScenarioTest.class,
 	MixedUpDownScenarioTest.class,
 	RenameToExistingFileScenarioTest.class,
 	RenameNoDownloadMultiChunksScenarioTest.class,
@@ -74,6 +74,6 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	SymlinkSyncScenarioTest.class,
 	ThreeClientsOneLoserScenarioTest.class
 })
-public class ScenarioTests {
+public class ScenarioTestSuite {
 	// This class executes all tests
 }

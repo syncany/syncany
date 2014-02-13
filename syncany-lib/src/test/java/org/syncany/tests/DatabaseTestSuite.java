@@ -48,6 +48,6 @@ import org.syncany.tests.database.dao.XmlDatabaseDaoTest;
 	ChunkDaoTest.class,
 	DatabaseVersionDaoTest.class
 })
-public class DatabaseTests {
+public class DatabaseTestSuite {
 	// This class executes all tests	
 }

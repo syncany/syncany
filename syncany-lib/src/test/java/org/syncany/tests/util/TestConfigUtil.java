@@ -42,6 +42,15 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
 public class TestConfigUtil {
+	static {
+		try {
+			TestConfigUtil.cryptoEnabled = Boolean.parseBoolean(System.getProperty("crypto.enable"));
+		}
+		catch (Exception e){
+			TestConfigUtil.cryptoEnabled = false;
+		}
+	}
+	
 	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
 	private static boolean cryptoEnabled = false;
 	private static SaltedSecretKey masterKey = null;

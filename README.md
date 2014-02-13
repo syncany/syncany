@@ -151,14 +151,8 @@ There is quite a bit of reading material on Syncany already. Check out the follo
 - [Diagram: Storage plugins class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Connection%20Plugins.png)
 - [Diagram: Database class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Database.png)
 
-**JavaDoc**
-
-We have a quite exhaustive JavaDoc (or at least we're trying to build it up). If you're a developer, be sure to check that out. A few starting points:
-
-- Command line interface: [Syncany.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/Syncany.java), [Command.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/cli/Command.java)
-- Chunking framework: [Deduper.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/Deduper.java), [Chunker.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/Chunker.java), [MultiChunker.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/chunk/MultiChunker.java)
-- Storage plugins: [Plugins.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/connection/plugins/Plugins.java), [Connection.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/connection/plugins/Connection.java)
-- Cryptography / Encryption: [MultiCipherOutputStream.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/MultiCipherOutputStream.java), [CipherSpec.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSpec.java), [CipherSession.java](https://github.com/binwiederhier/syncany/blob/15efd1df039253a3884dea36ca21f58628b32c04/src/org/syncany/crypto/CipherSession.java)
+**JavaDoc**    
+The up-to-date JavaDoc of the master branch is always compiled to [syncany.org/docs/javadoc](http://syncany.org/docs/javadoc). It includes the JavaDoc of all Gradle modules in the repo.
 
 
 Setup Eclipse IDE for development

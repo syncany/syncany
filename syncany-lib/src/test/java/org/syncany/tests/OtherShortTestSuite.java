@@ -36,16 +36,12 @@ import org.syncany.tests.operations.OperationPerformanceTest;
 import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTest;
-import org.syncany.tests.util.StringUtilTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
-	CollectionUtilTest.class,
 	FileUtilTest.class,
-	StringUtilTest.class,
 	
 	// Crypto	
 	CipherSpecsTest.class,
@@ -71,6 +67,6 @@ import org.syncany.tests.util.StringUtilTest;
 	SyncUpOperationTest.class,
 	StatusOperationTest.class
 })
-public class OtherShortTests {
+public class OtherShortTestSuite {
 	// This class executes all tests
 }
