@@ -58,7 +58,7 @@ public class TestConfigUtil {
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 
-		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", pluginSettings));		
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));		
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 		
 		return pluginSettings;

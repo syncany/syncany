@@ -28,6 +28,7 @@ import org.syncany.tests.cli.StatusCommandTest;
 import org.syncany.tests.cli.SyncCommandTest;
 import org.syncany.tests.cli.UpCommandTest;
 import org.syncany.tests.cli.WatchCommandTest;
+import org.syncany.tests.connection.plugins.PluginsTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -38,8 +39,9 @@ import org.syncany.tests.cli.WatchCommandTest;
 	StatusCommandTest.class,
 	SyncCommandTest.class,
 	UpCommandTest.class,	
-	WatchCommandTest.class
+	WatchCommandTest.class,
+	PluginsTest.class
 })
-public class CliTests {
+public class CliTestSuite {
 	// This class executes all tests
 }

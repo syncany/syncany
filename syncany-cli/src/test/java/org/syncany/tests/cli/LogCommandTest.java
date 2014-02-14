@@ -60,7 +60,7 @@ public class LogCommandTest {
 			"log"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 7, cliOut.length);
+		assertEquals("Different number of output lines expected.", 6, cliOut.length);
 		// TODO [low] How to test the log command any further? Non-deterministic output!
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
