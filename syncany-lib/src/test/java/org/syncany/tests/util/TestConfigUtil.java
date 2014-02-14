@@ -46,158 +46,162 @@ import org.syncany.crypto.SaltedSecretKey;
 import com.google.common.collect.Lists;
 
 public class TestConfigUtil {
+	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
+	private static boolean cryptoEnabled = false;
+	private static SaltedSecretKey masterKey = null;
+
 	static {
 		try {
 			TestConfigUtil.cryptoEnabled = Boolean.parseBoolean(System.getProperty("crypto.enable"));
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			TestConfigUtil.cryptoEnabled = false;
 		}
 	}
-	
-	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
-	private static boolean cryptoEnabled = false;
-	private static SaltedSecretKey masterKey = null;
-	
+
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 
-		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", pluginSettings));		
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", pluginSettings));
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
-		
+
 		return pluginSettings;
 	}
-		
+
 	public static Config createTestLocalConfig() throws Exception {
 		return createTestLocalConfig("syncanyclient");
 	}
-	
+
 	public static Config createTestLocalConfig(String machineName) throws Exception {
 		return createTestLocalConfig(machineName, createTestLocalConnection());
 	}
-	
-	private static MultiChunkerTO createZipMultichunkerTO(){
-		final MultiChunkerTO multiChunkerTO = new MultiChunkerTO();
-		multiChunkerTO.setType(ZipMultiChunker.TYPE);
-		final Map<String,String> settings = new HashMap<>();
+
+	private static MultiChunkerTO createZipMultiChunkerTO() {		
+		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(ZipMultiChunker.PROPERTY_SIZE, "4096");
+		
+		MultiChunkerTO multiChunkerTO = new MultiChunkerTO();
+		multiChunkerTO.setType(ZipMultiChunker.TYPE);
 		multiChunkerTO.setSettings(settings);
+		
 		return multiChunkerTO;
 	}
-	
-	private static ChunkerTO createMimeChunkerTO(){
-		ChunkerTO chunkerTO = new ChunkerTO();
+
+	private static ChunkerTO createMimeChunkerTO() {
+		ChunkerTO chunkerTO = new ChunkerTO(); // TODO [low] This does not actually create a mime chunker TO
 		return chunkerTO;
 	}
-	
-	private static List<TransformerTO> createTransformerTOs(){
-		if(!cryptoEnabled){
+
+	private static List<TransformerTO> createTransformerTOs() {
+		if (!cryptoEnabled) {
 			return null;
 		}
-		
-		final TransformerTO gzipTransformerTO = new TransformerTO();
-		gzipTransformerTO.setType(GzipTransformer.TYPE);
-		
-		final Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
-		cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, "1,2");
-		
-		final TransformerTO cipherTransformerTO = new TransformerTO();
-		cipherTransformerTO.setType(CipherTransformer.TYPE);
-		cipherTransformerTO.setSettings(cipherTransformerSettings);
-		
-		return Lists.newArrayList(gzipTransformerTO, cipherTransformerTO);
-	}
+		else {
+			TransformerTO gzipTransformerTO = new TransformerTO();
+			gzipTransformerTO.setType(GzipTransformer.TYPE);
 	
-	private static SaltedSecretKey getMasterKey() throws Exception{
-		if(!cryptoEnabled){
+			Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
+			cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, "1,2");
+	
+			TransformerTO cipherTransformerTO = new TransformerTO();
+			cipherTransformerTO.setType(CipherTransformer.TYPE);
+			cipherTransformerTO.setSettings(cipherTransformerSettings);
+	
+			return Lists.newArrayList(gzipTransformerTO, cipherTransformerTO);
+		}
+	}
+
+	private static SaltedSecretKey getMasterKey() throws Exception {
+		if (!cryptoEnabled) {
 			return null;
 		}
-		if (masterKey == null) {
-			masterKey = CipherUtil.createMasterKey("some password");
+		else {
+			if (masterKey == null) {
+				masterKey = CipherUtil.createMasterKey("some password");
+			}
+			
+			return masterKey;
 		}
-		return masterKey;
 	}
-	
-	public static Config createDummyConfig() throws Exception{
-		// All is dummy
-		final ConfigTO configTO = new ConfigTO();
+
+	public static Config createDummyConfig() throws Exception {
+		ConfigTO configTO = new ConfigTO();
 		configTO.setMachineName("dummymachine");
-		final RepoTO repoTO = new RepoTO();
+		
+		RepoTO repoTO = new RepoTO();
 		repoTO.setTransformers(null);
 		repoTO.setChunker(createMimeChunkerTO());
-		repoTO.setMultiChunker(createZipMultichunkerTO());
-		
+		repoTO.setMultiChunker(createZipMultiChunkerTO());
+
 		return new Config(new File("/dummy"), configTO, repoTO);
 	}
-	
-	
+
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
-		final File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-"+machineName, connection));		
-		tempLocalDir.mkdirs();	
-		
+		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-" + machineName, connection));
+		tempLocalDir.mkdirs();
+
 		// Create Repo TO
-		final RepoTO repoTO = new RepoTO();
-		
+		RepoTO repoTO = new RepoTO();
+
 		// Create ChunkerTO and MultiChunkerTO
-		MultiChunkerTO multiChunkerTO = createZipMultichunkerTO();
+		MultiChunkerTO multiChunkerTO = createZipMultiChunkerTO();
 		ChunkerTO chunkerTO = createMimeChunkerTO();
 		repoTO.setChunker(chunkerTO); // TODO [low] Chunker not configurable right now. Not used.
 		repoTO.setMultiChunker(multiChunkerTO);
-		
+
 		// Create TransformerTO
 		List<TransformerTO> transformerTOs = createTransformerTOs();
 		repoTO.setTransformers(transformerTOs);
-		
-		
+
 		// Create config TO
-		final ConfigTO configTO = new ConfigTO();
-		configTO.setMachineName(machineName+Math.abs(new Random().nextInt()));
-		
+		ConfigTO configTO = new ConfigTO();
+		configTO.setMachineName(machineName + Math.abs(new Random().nextInt()));
+
 		// Get Masterkey
-		final SaltedSecretKey masterKey = getMasterKey();
+		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
-						
-		// Skip configTO.setConnection()		
-		
-		final Config config = new Config(tempLocalDir, configTO, repoTO);
-		
+
+		// Skip configTO.setConnection()
+
+		Config config = new Config(tempLocalDir, configTO, repoTO);
+
 		config.setConnection(connection);
 		config.getAppDir().mkdirs();
 		config.getCacheDir().mkdirs();
 		config.getDatabaseDir().mkdirs();
 		config.getLogDir().mkdirs();
-		
+
 		return config;
 	}
-	
+
 	public static Connection createTestLocalConnection() throws Exception {
 		Plugin plugin = Plugins.get("local");
 		Connection conn = plugin.createConnection();
-		
+
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", conn));
-		
+
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
-		
-		conn.init(pluginSettings);		
+
+		conn.init(pluginSettings);
 		conn.createTransferManager().init();
-		
+
 		return conn;
-	}	
-	
+	}
+
 	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
-				
+
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", unreliableLocalConnection));
-		
+
 		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
 		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);
 
 		unreliableLocalConnection.createTransferManager().init();
-		
+
 		return unreliableLocalConnection;
-	}	
+	}
 
 	public static void deleteTestLocalConfigAndData(Config config) {
 		TestFileUtil.deleteDirectory(config.getLocalDir());
@@ -207,18 +211,18 @@ public class TestConfigUtil {
 		if (config.getAppDir() != null) {
 			TestFileUtil.deleteDirectory(config.getAppDir());
 		}
-		
+
 		// TODO [low] workaround: delete empty parent folder of getAppDir() --> ROOT/app/.. --> ROOT/
 		config.getLocalDir().getParentFile().delete(); // if empty!
-		
+
 		deleteTestLocalConnection(config);
 	}
 
 	private static void deleteTestLocalConnection(Config config) {
 		LocalConnection connection = (LocalConnection) config.getConnection();
-		TestFileUtil.deleteDirectory(connection.getRepositoryPath());		
+		TestFileUtil.deleteDirectory(connection.getRepositoryPath());
 	}
-	
+
 	public static String createUniqueName(String name, Object uniqueHashObj) {
 		return String.format("syncany-%s-%d-%s", RUNDATE, 100 + uniqueHashObj.hashCode() % 899, name);
 	}

@@ -156,19 +156,18 @@ public class Config {
 	}
 
 	private void initMultiChunker(RepoTO repoTO) {
-		MultiChunkerTO multiChunkerTO = repoTO.getMultichunker();
-		// Load class
+		MultiChunkerTO multiChunkerTO = repoTO.getMultiChunker();
+
 		multiChunker = MultiChunker.getInstance(multiChunkerTO.getType());
-		// Initialize with settings
 		multiChunker.init(multiChunkerTO.getSettings());
 	}
 
 	private void initTransformers(RepoTO repoTO) throws Exception {
-		if (repoTO.getTransformerTOs() == null || repoTO.getTransformerTOs().size() == 0) {
+		if (repoTO.getTransformers() == null || repoTO.getTransformers().size() == 0) {
 			transformer = new NoTransformer();
 		}
 		else {			
-			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformerTOs());
+			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformers());
 			Transformer lastTransformer = null;
 			
 			for (int i=transformerTOs.size()-1; i>=0; i--) {

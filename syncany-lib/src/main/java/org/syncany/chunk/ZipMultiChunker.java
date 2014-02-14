@@ -27,18 +27,20 @@ import java.io.OutputStream;
  * @author pheckel
  */
 public class ZipMultiChunker extends MultiChunker {
-    public static final String TYPE = "zip";
-    
-    public ZipMultiChunker(){}
+	public static final String TYPE = "zip";
+
+	public ZipMultiChunker() {
+		// Nothing
+	}
 
 	public ZipMultiChunker(int minMultiChunkSize) {
-        super(minMultiChunkSize);
-    }
+		super(minMultiChunkSize);
+	}
 
-    @Override
-    public MultiChunk createMultiChunk(InputStream is) {
-        return new ZipMultiChunk(is);
-    }    
+	@Override
+	public MultiChunk createMultiChunk(InputStream is) {
+		return new ZipMultiChunk(is);
+	}
 
 	@Override
 	public MultiChunk createMultiChunk(File file) throws IOException {
@@ -50,14 +52,14 @@ public class ZipMultiChunker extends MultiChunker {
 		}
 	}
 
-    @Override
-    public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
-        return new ZipMultiChunk(id, minMultiChunkSize, os);
-    }
-    
-    @Override
-    public String toString() {
-        return "Zip-"+minMultiChunkSize;
-    }
-    
+	@Override
+	public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
+		return new ZipMultiChunk(id, minMultiChunkSize, os);
+	}
+
+	@Override
+	public String toString() {
+		return "Zip-" + minMultiChunkSize;
+	}
+
 }
