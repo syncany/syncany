@@ -87,7 +87,7 @@ public class RepoTO {
 		this.chunker = chunker;
 	}
 
-	public MultiChunkerTO getMultichunker() {
+	public MultiChunkerTO getMultiChunker() {
 		return multiChunker;
 	}
 
@@ -95,7 +95,7 @@ public class RepoTO {
 		this.multiChunker = multiChunker;
 	}
 
-	public List<TransformerTO> getTransformerTOs() {
+	public List<TransformerTO> getTransformers() {
 		return transformers;
 	}
 
