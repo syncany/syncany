@@ -21,6 +21,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.syncany.util.StringUtil;
 
 /**
  * A multichunker combines a set of {@link Chunk}s into a single file. It can be implemented
@@ -45,60 +50,128 @@ import java.io.OutputStream;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-// TODO [low] The multichunk API is really odd; Think of something more sensible 
+// TODO [low] The multichunk API is really odd; Think of something more sensible
 public abstract class MultiChunker {
-    protected int minMultiChunkSize;
-    
-    /**
-     * Creates a new multichunker, and sets the minimum size of a multichunk.
-     * 
-     * <p>Implementations should react on the minimum multichunk size by allowing
-     * at least the given amount of KBs to be written to a multichunk, and declaring
-     * a multichunk 'full' if this limit is reached.
-     * 
-     * @param minMultiChunkSize Minimum multichunk file size in kilo-bytes
-     */
-    public MultiChunker(int minMultiChunkSize)  {
-        this.minMultiChunkSize = minMultiChunkSize;
-    }
-    
-    /**
-     * Create a new multichunk in <b>write mode</b>.
-     * 
-     * <p>Using this method only allows writing to the returned multichunk. The resulting
-     * data will be written to the underlying output stream given in the parameter. 
-     *   
-     * @param id Identifier of the newly created multichunk 
-     * @param os Underlying output stream to write the new multichunk to
-     * @return Returns a new multichunk object which can only be used for writing 
-     * @throws IOException
-     */
-    public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
-        
-    /**
-     * Open existing multichunk in <b>read mode</b> using an underlying input stream.
-     * 
-     * <p>Using this method only allows reading from the returned multichunk. The underlying
-     * input stream is opened and can be used to retrieve chunk data.
-     * 
-     * @param is InputStream to initialize an existing multichunk for read-operations only
-     * @return Returns an existing multichunk object that allows read operations only
-     */
-    public abstract MultiChunk createMultiChunk(InputStream is);
-    
-    /**
-     * Open existing multichunk in <b>read mode</b> using an underlying file.
-     * 
-     * <p>Using this method only allows reading from the returned multichunk. The underlying
-     * input stream is opened and can be used to retrieve chunk data.
-     * 
-     * @param is InputStream to initialize an existing multichunk for read-operations only
-     * @return Returns an existing multichunk object that allows read operations only
-     */    
-    public abstract MultiChunk createMultiChunk(File file) throws IOException;
-    
-    /**
-     * Returns a comprehensive string representation of a multichunker
-     */
-    public abstract String toString();    
+
+	/**
+	 * Minimal multi chunk size in KB.
+	 */
+	public static final String PROPERTY_SIZE = "size";
+
+	private static Logger logger = Logger.getLogger(MultiChunker.class.getSimpleName());
+
+	protected int minMultiChunkSize;
+
+	/**
+	 * Creates new multichunker without setting the minimum size of a multichunk.
+	 */
+	public MultiChunker() {
+		// Nothing.
+	}
+
+	/**
+	 * Initializes the multichunker using a settings map. 
+	 * <br>
+	 * Required settings are: 
+	 * <ul>
+	 *  <li> key: {@link #PROPERTY_SIZE}, value: integer encoded as String 
+	 * </ul>
+	 */
+	public void init(Map<String, String> settings) {
+		String size = settings.get(PROPERTY_SIZE);
+		
+		if (size == null) {
+			logger.log(Level.SEVERE, String.format("Property %s must not be null.", PROPERTY_SIZE));
+			throw new IllegalArgumentException(String.format("Property %s must not be null.", PROPERTY_SIZE));
+		}
+		
+		try {
+			this.minMultiChunkSize = Integer.parseInt(size);
+		}
+		catch (NumberFormatException nfe) {
+			logger.log(Level.SEVERE, String.format("Property %s could not be parsed as Integer.", PROPERTY_SIZE));
+			throw new IllegalArgumentException(String.format("Property %s could not be parsed as Integer.", PROPERTY_SIZE));
+		}
+	}
+
+	/**
+	 * Creates a new multichunker, and sets the minimum size of a multichunk.
+	 * 
+	 * <p>Implementations should react on the minimum multichunk size by allowing
+	 * at least the given amount of KBs to be written to a multichunk, and declaring
+	 * a multichunk 'full' if this limit is reached.
+	 * 
+	 * @param minMultiChunkSize Minimum multichunk file size in kilo-bytes
+	 */
+	public MultiChunker(int minMultiChunkSize) {
+		this.minMultiChunkSize = minMultiChunkSize;
+	}
+
+	/**
+	 * Create a new multichunk in <b>write mode</b>.
+	 * 
+	 * <p>Using this method only allows writing to the returned multichunk. The resulting
+	 * data will be written to the underlying output stream given in the parameter. 
+	 *   
+	 * @param id Identifier of the newly created multichunk 
+	 * @param os Underlying output stream to write the new multichunk to
+	 * @return Returns a new multichunk object which can only be used for writing 
+	 * @throws IOException
+	 */
+	public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
+
+	/**
+	 * Open existing multichunk in <b>read mode</b> using an underlying input stream.
+	 * 
+	 * <p>Using this method only allows reading from the returned multichunk. The underlying
+	 * input stream is opened and can be used to retrieve chunk data.
+	 * 
+	 * @param is InputStream to initialize an existing multichunk for read-operations only
+	 * @return Returns an existing multichunk object that allows read operations only
+	 */
+	public abstract MultiChunk createMultiChunk(InputStream is);
+
+	/**
+	 * Open existing multichunk in <b>read mode</b> using an underlying file.
+	 * 
+	 * <p>Using this method only allows reading from the returned multichunk. The underlying
+	 * input stream is opened and can be used to retrieve chunk data.
+	 * 
+	 * @param is InputStream to initialize an existing multichunk for read-operations only
+	 * @return Returns an existing multichunk object that allows read operations only
+	 */
+	public abstract MultiChunk createMultiChunk(File file) throws IOException;
+
+	/**
+	 * Returns a comprehensive string representation of a multichunker
+	 */
+	public abstract String toString();
+
+	/**
+	 * Instantiates a multichunker by its name using the default constructor. 
+	 * <br>
+	 * After creating a new multichunker, it must be initialized using the 
+	 * {@link #init(Map) init()} method. The given type attribute is mapped to fully 
+	 * qualified class name (FQCN) of the form <tt>org.syncany.chunk.XMultiChunker</tt>, 
+	 * where <tt>X</tt> is the camel-cased type attribute.  
+	 * 
+	 * @param type Type/name of the multichunker (corresponds to its camel case class name)
+	 * @return a new multichunker
+	 * @throws Exception If the FQCN cannot be found or the class cannot be instantiated
+	 */
+	public static MultiChunker getInstance(String type) {
+		String thisPackage = MultiChunker.class.getPackage().getName();
+		String camelCaseName = StringUtil.toCamelCase(type);
+		String fqClassName = thisPackage + "." + camelCaseName + MultiChunker.class.getSimpleName();
+
+		// Try to load!
+		try {
+			Class<?> clazz = Class.forName(fqClassName);
+			return (MultiChunker) clazz.newInstance();
+		}
+		catch (Exception ex) {
+			logger.log(Level.INFO, "Could not find multichunker FQCN " + fqClassName, ex);
+			return null;
+		}
+	}
 }
