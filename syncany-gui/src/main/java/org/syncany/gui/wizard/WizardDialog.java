@@ -251,6 +251,7 @@ public class WizardDialog extends Dialog {
 				break;
 				
 			case SUMMARY:
+				updateFinishButton(false);
 				this.commandId = UUID.randomUUID().toString();
 				userInput.putCommonParameter(CommonParameters.COMMAND_ID, this.commandId);
 				ClientCommandFactory.handleCommand(userInput);
