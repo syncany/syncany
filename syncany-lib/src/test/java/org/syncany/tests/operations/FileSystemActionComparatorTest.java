@@ -19,14 +19,11 @@ package org.syncany.tests.operations;
 
 import static org.junit.Assert.assertArrayEquals;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.RepoTO;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.FileSystemActionComparator;
@@ -34,6 +31,7 @@ import org.syncany.operations.actions.DeleteFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.NewFileSystemAction;
 import org.syncany.operations.actions.RenameFileSystemAction;
+import org.syncany.tests.util.TestConfigUtil;
 
 public class FileSystemActionComparatorTest {
 	// TODO [low] write more unit tests for FileSystemActionComparator
@@ -119,10 +117,7 @@ public class FileSystemActionComparatorTest {
 	}		
 
 	private Config createDummyConfig() throws Exception {
-		ConfigTO configTO = new ConfigTO();
-		configTO.setMachineName("dummymachine");
-		
-		return new Config(new File("/dummy"), configTO, new RepoTO());
+		return TestConfigUtil.createDummyConfig();
 	}
 	
 	private String[] toArray(List<FileSystemAction> actions) {
