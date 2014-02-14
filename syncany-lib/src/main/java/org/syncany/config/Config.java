@@ -28,9 +28,9 @@ import org.syncany.chunk.MimeTypeChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
-import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
@@ -51,6 +51,7 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Config {
+	
 	public static final String DIR_APPLICATION = ".syncany";
 	public static final String DIR_CACHE = "cache";
 	public static final String DIR_DATABASE = "db";
@@ -155,7 +156,11 @@ public class Config {
 	}
 
 	private void initMultiChunker(RepoTO repoTO) {
-		multiChunker = new ZipMultiChunker(2*1024*1024);
+		MultiChunkerTO multiChunkerTO = repoTO.getMultichunker();
+		// Load class
+		multiChunker = MultiChunker.getInstance(multiChunkerTO.getType());
+		// Initialize with settings
+		multiChunker.init(multiChunkerTO.getSettings());
 	}
 
 	private void initTransformers(RepoTO repoTO) throws Exception {
