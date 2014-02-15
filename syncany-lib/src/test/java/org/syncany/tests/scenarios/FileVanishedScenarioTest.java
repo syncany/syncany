@@ -80,6 +80,7 @@ public class FileVanishedScenarioTest {
 			@Override
 			public void run() {
 				try {
+					Thread.sleep(40);
 					clientA.up();
 				}
 				catch (Exception e) {
@@ -98,7 +99,7 @@ public class FileVanishedScenarioTest {
 		logger.log(Level.INFO, "Starting 'up' thread ...");		
 		runUpThread.start();
 		
-		Thread.sleep(200);
+		
 
 		logger.log(Level.INFO, "Starting 'delete' thread ...");
 		deleteFilesThread.start();		
