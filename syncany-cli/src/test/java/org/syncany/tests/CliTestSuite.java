@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.syncany.tests.cli.StatusCommandTest;
 import org.syncany.tests.cli.SyncCommandTest;
 import org.syncany.tests.cli.UpCommandTest;
 import org.syncany.tests.cli.WatchCommandTest;
+import org.syncany.tests.connection.plugins.PluginsTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -38,8 +39,9 @@ import org.syncany.tests.cli.WatchCommandTest;
 	StatusCommandTest.class,
 	SyncCommandTest.class,
 	UpCommandTest.class,	
-	WatchCommandTest.class
+	WatchCommandTest.class,
+	PluginsTest.class
 })
-public class CliTests {
+public class CliTestSuite {
 	// This class executes all tests
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,27 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.xml.bind.DatatypeConverter;
+
 /**
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StringUtil {    
+	/**
+	 * Transforms a string to a camel case representation, including the
+	 * first character.
+	 * 
+	 * <p>Examples:
+	 * <ul>
+	 *  <li><tt>toCamelCase("hello world") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("hello_world") -&gt; "HelloWorld"</tt></li>
+	 * </ul>
+	 */
     public static String toCamelCase(String str) {
         StringBuilder sb = new StringBuilder();
 
-        for (String s : str.split("[_-]")) {
+        for (String s : str.split("[-_ ]")) {
         	if (s.length() > 0) {
 	            sb.append(Character.toUpperCase(s.charAt(0)));
 	
@@ -47,29 +59,12 @@ public class StringUtil {
     		return "";
     	}
     	else {
-    		// Note: The BigInteger variant is more elegant, but struggles
-    		// with extremely long byte arrays (~500 KB)
-    		
-    		StringBuilder str = new StringBuilder();
-    		
-    		for(int i = 0; i < bytes.length; i++) {
-    			str.append(String.format("%02x", bytes[i]));
-    		}
-    		
-    		return str.toString();
+    		return DatatypeConverter.printHexBinary(bytes).toLowerCase();
     	}
     }
     
     public static byte[] fromHex(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                + Character.digit(s.charAt(i+1), 16));
-        }
-        
-        return data;        
+    	return DatatypeConverter.parseHexBinary(s); // fast!    	
     }
     
     public static byte[] toBytesUTF8(String s) {

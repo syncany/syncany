@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertFalse;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class RenameDeleteScenarioTest {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// A moves, and up
 		clientA.deleteFile("A-original");
@@ -61,7 +61,7 @@ public class RenameDeleteScenarioTest {
 		assertFalse("File A-orginal should not be recreated.", clientA.getLocalFile("A-original").exists());
 		assertFalse("File A-orginal should not be recreated.", clientB.getLocalFile("A-original").exists());
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());		
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
 		
 		// Tear down
 		clientA.cleanup();

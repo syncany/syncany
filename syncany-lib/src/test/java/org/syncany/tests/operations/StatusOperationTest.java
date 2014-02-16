@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,11 +104,11 @@ public class StatusOperationTest {
 		
 		// Perform 'up' and immediately change test file
 		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
-		new UpOperation(config, null, syncUpOptions).execute();		
+		new UpOperation(config, syncUpOptions).execute();		
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison
-		ChangeSet changeSet = (new StatusOperation(config, null, statusOptions).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config, statusOptions).execute()).getChangeSet();						
 		assertEquals(changeSet.getChangedFiles().size(), 1);
 				
 		// Cleanup 

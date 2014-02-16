@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
@@ -114,7 +114,7 @@ public class AllFilePossibilitiesScenarioTest {
 				@Override
 				public void execute() throws Exception {
 					// Nothing.
-				}			
+			 	}			
 			},
 			new AbstractClientAction[] {
 				new CreateFileTree(),
@@ -160,7 +160,7 @@ public class AllFilePossibilitiesScenarioTest {
 					
 					clientB.down();
 					assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-					assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
+					assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());					
 				}			
 			}
 		);
@@ -181,7 +181,7 @@ public class AllFilePossibilitiesScenarioTest {
 		clientA.upWithForceChecksum();		
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());					
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());					
 		
 		clientA.cleanup();
 		clientB.cleanup();

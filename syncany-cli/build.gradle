@@ -139,6 +139,8 @@ task exe(dependsOn: ["installApp"]) << {
 String osName = System.getProperty("os.name").toLowerCase();
 
 task fakeinstall(dependsOn: ["fakeuninstall"]) << {
+	description = "Must be run as root: Makes syncany/sy command available everywhere (symlink to syncany-cli/build/..)"
+	
 	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
 	// running fakeinstall as "root"; manually calling installApp required
 	
@@ -156,6 +158,8 @@ task fakeinstall(dependsOn: ["fakeuninstall"]) << {
 }
 
 task fakeuninstall << {
+	description = "Must be run as root: Removes symlink for syncany/sy command (complement to fakeinstall)"
+
 	if (osName.startsWith("windows")) {
 		new File(System.getenv()["windir"] + "/syncany.bat").delete()
 	}

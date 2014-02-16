@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,12 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,9 +36,9 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -43,6 +46,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
@@ -61,7 +65,7 @@ import org.syncany.util.StringUtil;
  * added/changed/removed files. This functionality is entirely implemented by the
  * {@link #index(List) index()} method.
  * 
- * <p>The class uses the currently loaded {@link Database} as well as a potential  
+ * <p>The class uses the currently loaded {@link MemoryDatabase} as well as a potential  
  * dirty database into account. Lookups for chunks and file histories are performed 
  * on both databases.
  * 
@@ -72,14 +76,12 @@ public class Indexer {
 	
 	private Config config;
 	private Deduper deduper;
-	private Database database;
-	private Database dirtyDatabase;
+	private SqlDatabase localDatabase;
 	
-	public Indexer(Config config, Deduper deduper, Database database, Database dirtyDatabase) {
+	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
 		this.deduper = deduper;
-		this.database = database;
-		this.dirtyDatabase = dirtyDatabase;
+		this.localDatabase = new SqlDatabase(config);
 	}
 	
 	/**
@@ -95,48 +97,60 @@ public class Indexer {
 	 * @return New database version containing new/changed/deleted entities
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
-	// TODO [medium] Performance: To avoid having to parse the checksum twice (status and indexer), the status operation should pass over the FileProperties object in the ChangeSet
 	public DatabaseVersion index(List<File> files) throws IOException {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
 		
-		// Add dirty database's chunks/multichunks/file contents
-		if (dirtyDatabase != null) {
-			addDirtyChunkData(newDatabaseVersion);
-		}
+		// Load file history cache
+		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
+		
+		// TODO [medium] This should be in FileHistoryDao
+		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
+		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 		
 		// Find and index new files
-		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion));			
+		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache));			
 		
 		// Find and remove deleted files
-		removeDeletedFiles(newDatabaseVersion);
+		removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 		
 		return newDatabaseVersion;
 	}
 	
-	private void addDirtyChunkData(DatabaseVersion newDatabaseVersion) {
-		logger.log(Level.INFO, "- Adding dirty chunks/multichunks/file contents (from dirty database) ...");
-		for (DatabaseVersion dirtyDatabaseVersion : dirtyDatabase.getDatabaseVersions()) {
-			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getChunks().size()+" chunks ...");
-			for (ChunkEntry dirtyChunk : dirtyDatabaseVersion.getChunks()) {
-				newDatabaseVersion.addChunk(dirtyChunk);
-			}
-			
-			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getMultiChunks().size()+" multichunks ...");
-			for (MultiChunkEntry dirtyMultiChunk : dirtyDatabaseVersion.getMultiChunks()) {
-				newDatabaseVersion.addMultiChunk(dirtyMultiChunk);
-			}
-			
-			logger.log(Level.FINER, "   + Adding "+dirtyDatabaseVersion.getFileContents().size()+" file contents ...");
-			for (FileContent dirtyFileContent : dirtyDatabaseVersion.getFileContents()) {
-				newDatabaseVersion.addFileContent(dirtyFileContent);
-			}
+	private Map<String, PartialFileHistory> fillFilePathCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
+		Map<String, PartialFileHistory> filePathCache = new HashMap<String, PartialFileHistory>();
+		
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+			filePathCache.put(fileHistory.getLastVersion().getPath(), fileHistory);
 		}
+		
+		return filePathCache;
 	}
 
-	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion) {
+	private Map<FileChecksum, List<PartialFileHistory>> fillFileChecksumCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
+		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = new HashMap<FileChecksum, List<PartialFileHistory>>();
+		
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+			FileChecksum fileChecksum = fileHistory.getLastVersion().getChecksum();
+			
+			if (fileChecksum != null) {
+				List<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileChecksum);
+				
+				if (fileHistoriesWithSameChecksum == null) {
+					fileHistoriesWithSameChecksum = new ArrayList<PartialFileHistory>();
+				}
+				
+				fileHistoriesWithSameChecksum.add(fileHistory);
+				fileChecksumCache.put(fileChecksum, fileHistoriesWithSameChecksum);
+			}			
+		}
+		
+		return fileChecksumCache;
+	}
+
+	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<PartialFileHistory> fileHistoriesWithLastVersion) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");		
 
-		for (PartialFileHistory fileHistory : database.getFileHistories()) {
+		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
 			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
 			if (newDatabaseVersion.getFileHistory(fileHistory.getFileId()) != null) {
 				continue;
@@ -157,11 +171,13 @@ public class Indexer {
 			// If file has VANISHED, mark as DELETED			
 			if (!FileUtil.exists(lastLocalVersionOnDisk) || newFileWithSameName != null) {
 				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileId());
-				FileVersion deletedVersion = (FileVersion) lastLocalVersion.clone();
+				FileVersion deletedVersion = lastLocalVersion.clone();
 				deletedVersion.setStatus(FileStatus.DELETED);
 				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion()+1);
 				
-				logger.log(Level.FINER, "  + Deleted: {0}, adding deleted version {1}", new Object[] { lastLocalVersion, deletedVersion });
+				logger.log(Level.FINER, "  + Deleted: Adding DELETED version: {0}", deletedVersion);
+				logger.log(Level.FINER, "                           based on: {0}", lastLocalVersion);
+				
 				deletedFileHistory.addFileVersion(deletedVersion);
 				newDatabaseVersion.addFileHistory(deletedFileHistory);			
 			}
@@ -192,6 +208,10 @@ public class Indexer {
 		private FileVersionComparator fileVersionComparator;
 		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
+		
+		private Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache;
+		private Map<String, PartialFileHistory> filePathCache;
+		
 		private ChunkEntry chunkEntry;		
 		private MultiChunkEntry multiChunkEntry;	
 		private FileContent fileContent;
@@ -199,10 +219,13 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
 
-		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
+		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache, Map<String, PartialFileHistory> filePathCache) {
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
+			
+			this.fileChecksumCache = fileChecksumCache;
+			this.filePathCache = filePathCache;
 		}				
 
 		@Override
@@ -275,63 +298,16 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = guessLastFileHistory(fileProperties);						
 			FileVersion lastFileVersion = (lastFileHistory != null) ? lastFileHistory.getLastVersion() : null;
 			
-			// 2. Add new file version
-			PartialFileHistory fileHistory = null;
-			FileVersion fileVersion = null;			
+			// 2. Create new file history/version
+			PartialFileHistory fileHistory = createNewFileHistory(lastFileHistory);
+			FileVersion fileVersion = createNewFileVersion(lastFileVersion, fileProperties);	
 			
-			if (lastFileVersion == null) {				
-				// TODO [low] move this generation to a better place. Where?
-				FileHistoryId newFileHistoryId = generateNewFileHistoryId();
-				
-				fileHistory = new PartialFileHistory(newFileHistoryId);
-				
-				fileVersion = new FileVersion();
-				fileVersion.setVersion(1L);
-				fileVersion.setStatus(FileStatus.NEW);
-			} 
-			else {
-				fileHistory = new PartialFileHistory(lastFileHistory.getFileId());
-				
-				fileVersion = lastFileVersion.clone();
-				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
-			}			
-
-			fileVersion.setPath(fileProperties.getRelativePath());
-			fileVersion.setLinkTarget(fileProperties.getLinkTarget());
-			fileVersion.setType(fileProperties.getType());
-			fileVersion.setSize(fileProperties.getSize());
-			fileVersion.setChecksum(fileProperties.getChecksum());
-			fileVersion.setLastModified(new Date(fileProperties.getLastModified()));
-			fileVersion.setUpdated(new Date());
-			fileVersion.setCreatedBy(config.getMachineName());
-			
-			if (FileUtil.isWindows()) {
-				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
-			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
-				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
-			}
-
-			// Determine status
-			if (lastFileVersion != null) {
-				if (fileVersion.getType() == FileType.FILE && FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
-					fileVersion.setStatus(FileStatus.CHANGED);
-				}
-				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
-					fileVersion.setStatus(FileStatus.RENAMED);
-				}
-				else {
-					fileVersion.setStatus(FileStatus.CHANGED); 
-				}						
-			}	
-			
-			// Compare new and last version 
+			// 3. Compare new and last version 
 			FileProperties lastFileVersionProperties = fileVersionComparator.captureFileProperties(lastFileVersion);
 			FileVersionComparison lastToNewFileVersionComparison = fileVersionComparator.compare(fileProperties, lastFileVersionProperties, true);
 			
 			boolean newVersionDiffersFromToLastVersion = !lastToNewFileVersionComparison.equals();
 			
-			// Only add new version if it differs!			
 			if (newVersionDiffersFromToLastVersion) {
 				fileHistory.addFileVersion(fileVersion);
 				newDatabaseVersion.addFileHistory(fileHistory);
@@ -344,42 +320,78 @@ public class Indexer {
 				logger.log(Level.INFO, "         b/c IDENTICAL prev.: "+lastFileVersion);
 			}
 			
-			// 3. Add file content (if not a directory)			
+			// 4. Add file content (if not a directory)			
 			if (fileProperties.getChecksum() != null && fileContent != null) {
 				fileContent.setSize(fileProperties.getSize());
 				fileContent.setChecksum(fileProperties.getChecksum());
 
 				// Check if content already exists, throw gathered content away if it does!
-				FileContent existingContent = database.getContent(fileProperties.getChecksum());
+				FileContent existingContent = localDatabase.getFileContent(fileProperties.getChecksum(), false);
 				
 				if (existingContent == null) { 
 					newDatabaseVersion.addFileContent(fileContent);
 				}
+				else {
+					// Uses existing content (already in database); ref. by checksum
+				}
 			}						
 		}	
 
-		private FileHistoryId generateNewFileHistoryId() {
-			int newFileHistoryIdAttempts = 0;
-			FileHistoryId newFileHistoryId = null;
+		private PartialFileHistory createNewFileHistory(PartialFileHistory lastFileHistory) {
+			if (lastFileHistory == null) {				
+				FileHistoryId newFileHistoryId = FileHistoryId.secureRandomFileId();				
+				return new PartialFileHistory(newFileHistoryId);			
+			} 
+			else {
+				return new PartialFileHistory(lastFileHistory.getFileId());
+			}			
+		}
+		
+		private FileVersion createNewFileVersion(FileVersion lastFileVersion, FileProperties fileProperties) {
+			FileVersion fileVersion = null;
 			
-			// TODO[low]: this is probably useless as the collision probability should be super tiny
-			do {
-				newFileHistoryId = FileHistoryId.secureRandomFileId();
-				
-				if (database.getFileHistory(newFileHistoryId) == null 
-					&& newDatabaseVersion.getFileHistory(newFileHistoryId) == null) {
-					
-					break;
-				}
-				
-				newFileHistoryIdAttempts++;
-			} while (newFileHistoryIdAttempts < 10);
+			// Version
+			if (lastFileVersion == null) {				
+				fileVersion = new FileVersion();
+				fileVersion.setVersion(1L);
+				fileVersion.setStatus(FileStatus.NEW);
+			} 
+			else {
+				fileVersion = lastFileVersion.clone();
+				fileVersion.setVersion(lastFileVersion.getVersion()+1);	
+			}			
+
+			// Simple attributes
+			fileVersion.setPath(fileProperties.getRelativePath());
+			fileVersion.setLinkTarget(fileProperties.getLinkTarget());
+			fileVersion.setType(fileProperties.getType());
+			fileVersion.setSize(fileProperties.getSize());
+			fileVersion.setChecksum(fileProperties.getChecksum());
+			fileVersion.setLastModified(new Date(fileProperties.getLastModified()));
+			fileVersion.setUpdated(new Date());
 			
-			if (newFileHistoryIdAttempts >= 10) {
-				throw new IndexerException("Cannot generate a unique file id, aborting");
+			// Permissions
+			if (FileUtil.isWindows()) {
+				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
+			}
+			else if (FileUtil.isUnixLikeOperatingSystem()) {
+				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
 			}
 			
-			return newFileHistoryId;
+			// Status
+			if (lastFileVersion != null) {
+				if (fileVersion.getType() == FileType.FILE && FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
+					fileVersion.setStatus(FileStatus.CHANGED);
+				}
+				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
+					fileVersion.setStatus(FileStatus.RENAMED);
+				}
+				else {
+					fileVersion.setStatus(FileStatus.CHANGED); 
+				}						
+			}	
+			
+			return fileVersion;
 		}
 
 		private void resetFileEnd() {
@@ -412,7 +424,7 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistoryForFolderOrSymlink(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
+			PartialFileHistory lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				logger.log(Level.FINER, "   * No old file history found, starting new history (path: "+fileProperties.getRelativePath()+", "+fileProperties.getType()+")");
@@ -436,12 +448,12 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = null;
 			
 			// 1a. by path
-			lastFileHistory = database.getFileHistory(fileProperties.getRelativePath());
+			lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				// 1b. by checksum
 				if (fileProperties.getChecksum() != null) {
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = database.getFileHistories(fileProperties.getChecksum());
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileProperties.getChecksum()); 
 					
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!
@@ -523,17 +535,15 @@ public class Indexer {
 			fileContent.addChunk(new ChunkChecksum(chunk.getChecksum()));				
 		}		
 
-		/*
-		 * Checks if chunk already exists in all database versions (db)
-		 * Afterwards checks if chunk exists in new introduced databaseversion. 
-		 * (non-Javadoc)
-		 * @see org.syncany.chunk.DeduperListener#onChunk(org.syncany.chunk.Chunk)
+		/**
+		 * Checks if chunk already exists in all database versions
+		 * Afterwards checks if chunk exists in new introduced database version. 
 		 */
 		@Override
 		public boolean onChunk(Chunk chunk) {
 			ChunkChecksum chunkChecksum = new ChunkChecksum(chunk.getChecksum());
-			chunkEntry = database.getChunk(chunkChecksum);
-
+			chunkEntry = localDatabase.getChunk(chunkChecksum);
+			
 			if (chunkEntry == null) {
 				chunkEntry = newDatabaseVersion.getChunk(chunkChecksum);
 				

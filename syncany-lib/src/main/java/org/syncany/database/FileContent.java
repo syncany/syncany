@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 package org.syncany.database;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,16 +39,16 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
  */
 public class FileContent {
     private FileChecksum checksum;
-    private long contentSize;
+    private long size;
     
-    private List<ChunkChecksum> chunks;
+    private List<ChunkChecksum> chunkChecksums;
     
     public FileContent() {
-        this.chunks = new ArrayList<ChunkChecksum>();
+        this.chunkChecksums = new ArrayList<ChunkChecksum>();
     }
        
     public void addChunk(ChunkChecksum chunk) {
-        chunks.add(chunk);        
+        chunkChecksums.add(chunk);        
     }    
 
     public FileChecksum getChecksum() {
@@ -61,15 +60,15 @@ public class FileContent {
     }
 
     public long getSize() {
-        return contentSize;
+        return size;
     }
 
     public void setSize(long contentSize) {
-        this.contentSize = contentSize;
+        this.size = contentSize;
     }
 
-    public Collection<ChunkChecksum> getChunks() {
-    	return Collections.unmodifiableCollection(chunks);
+    public List<ChunkChecksum> getChunks() {
+    	return Collections.unmodifiableList(chunkChecksums);
     }
 
 	@Override
@@ -77,8 +76,8 @@ public class FileContent {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((checksum == null) ? 0 : checksum.hashCode());
-		result = prime * result + ((chunks == null) ? 0 : chunks.hashCode());
-		result = prime * result + (int) (contentSize ^ (contentSize >>> 32));
+		result = prime * result + ((chunkChecksums == null) ? 0 : chunkChecksums.hashCode());
+		result = prime * result + (int) (size ^ (size >>> 32));
 		return result;
 	}
 
@@ -97,20 +96,20 @@ public class FileContent {
 		}
 		else if (!checksum.equals(other.checksum))
 			return false;
-		if (chunks == null) {
-			if (other.chunks != null)
+		if (chunkChecksums == null) {
+			if (other.chunkChecksums != null)
 				return false;
 		}
-		else if (!chunks.equals(other.chunks))
+		else if (!chunkChecksums.equals(other.chunkChecksums))
 			return false;
-		if (contentSize != other.contentSize)
+		if (size != other.size)
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "FileContent [checksum=" + checksum + ", contentSize=" + contentSize + ", chunks=" + chunks + "]";
+		return "FileContent [checksum=" + checksum + ", contentSize=" + size + ", chunks=" + chunkChecksums + "]";
 	}
        
 	public static class FileChecksum extends ObjectId {
@@ -119,7 +118,7 @@ public class FileContent {
 		}
 
 		public static FileChecksum parseFileChecksum(String s) {
-			return new FileChecksum(ObjectId.parseBytes(s));
+			return new FileChecksum(ObjectId.parseObjectId(s));
 		}
 		
 		public static boolean fileChecksumEquals(FileChecksum checksum1, FileChecksum checksum2) {

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ public class ChunkEntry {
 		}
 
 		public static ChunkChecksum parseChunkChecksum(String s) {
-			return new ChunkChecksum(ObjectId.parseBytes(s));
+			return new ChunkChecksum(ObjectId.parseObjectId(s));
 		}		
 	}
 }

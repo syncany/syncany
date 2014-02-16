@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,16 +25,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.chunk.Transformer;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.XmlDatabaseDAO;
+import org.syncany.database.dao.XmlDatabaseSerializer;
 import org.syncany.operations.DatabaseBranch;
 
 public class TestDatabaseUtil {
@@ -52,6 +51,18 @@ public class TestDatabaseUtil {
 		String vectorClockString = databaseVersionHeaderMatcher.group(2);
 		long databaseVersionHeaderTime = Long.parseLong(databaseVersionHeaderMatcher.group(3));
 		
+		VectorClock vectorClock = createVectorClock(vectorClockString);		
+		
+		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
+		
+		newDatabaseVersionHeader.setDate(new Date(databaseVersionHeaderTime));
+		newDatabaseVersionHeader.setVectorClock(vectorClock);
+		newDatabaseVersionHeader.setClient(client);	
+		
+		return newDatabaseVersionHeader;
+	}
+	
+	public static VectorClock createVectorClock(String vectorClockString) throws Exception {
 		String[] vectorClockElements = vectorClockString.split(",");		
 		VectorClock vectorClock = new VectorClock();
 		
@@ -72,15 +83,9 @@ public class TestDatabaseUtil {
 			vectorClock.setClock(vectorClockMachineName, vectorClockTime);
 		}
 		
-		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
-		
-		newDatabaseVersionHeader.setDate(new Date(databaseVersionHeaderTime));
-		newDatabaseVersionHeader.setVectorClock(vectorClock);
-		newDatabaseVersionHeader.setClient(client);	
-		
-		return newDatabaseVersionHeader;
+		return vectorClock;
 	}
-	
+
 	public static TreeMap<String, DatabaseVersionHeader> createMapWithMachineKey(String[] keysAndDatabaseVersionHeaderStrings) throws Exception {
 		TreeMap<String, DatabaseVersionHeader> databaseVersionHeaderMap = new TreeMap<String, DatabaseVersionHeader>();
 		
@@ -105,17 +110,17 @@ public class TestDatabaseUtil {
 		return branch;
 	}
 	
-	public static Database readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
-		Database db = new Database();
+	public static MemoryDatabase readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
+		MemoryDatabase db = new MemoryDatabase();
 		
-		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
+		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(transformer);
 		dao.load(db, databaseFile);
 		
 		return db;
 	}
 	
-	public static void writeDatabaseFileToDisk(Database db, File writtenDatabaseFile, Transformer transformer) throws IOException {
-		DatabaseDAO dao = new XmlDatabaseDAO(transformer);
+	public static void writeDatabaseFileToDisk(MemoryDatabase db, File writtenDatabaseFile, Transformer transformer) throws IOException {
+		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(transformer);
 		dao.save(db, writtenDatabaseFile);
 	}
 	
@@ -123,7 +128,6 @@ public class TestDatabaseUtil {
 		FileVersion fileVersion = new FileVersion();
 		
 		fileVersion.setChecksum(new FileChecksum(TestFileUtil.createRandomArray(20)));
-		fileVersion.setCreatedBy("A");		
 		fileVersion.setLastModified(new Date());
 		fileVersion.setPath(path);
 		fileVersion.setStatus(FileStatus.NEW);
@@ -144,8 +148,7 @@ public class TestDatabaseUtil {
 		return fileVersion;
 	}
 
-	// TODO [medium] Add functionality tests for the rest of the cache
-	// TODO [high] Add performance tests for the cache and optimize Database.addDatabaseVersion()-cache handling
+	// TODO [medium] Add performance tests for the cache and optimize Database.addDatabaseVersion()-cache handling
 	
 	public static DatabaseVersion createDatabaseVersion() {
 		return createDatabaseVersion(null, new Date());
@@ -171,6 +174,4 @@ public class TestDatabaseUtil {
 		
 		return databaseVersion;
 	}
-
-	
 }

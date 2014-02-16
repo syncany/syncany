@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.Chunker;
-import org.syncany.chunk.TTTDChunker;
+import org.syncany.chunk.TttdChunker;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.FileUtil;
 
@@ -56,8 +56,8 @@ public class TTTDChunkerTest {
 	public void testStringSerialization() {
 		final int CHUNK_SIZE = 512*1024;
 		
-		Chunker chunker = new TTTDChunker(CHUNK_SIZE);
-		assertEquals("Other toString() result expected.", "TTTD-"+CHUNK_SIZE+"-"+TTTDChunker.DEFAULT_DIGEST_ALG+"-"+TTTDChunker.DEFAULT_FINGERPRINT_ALG, chunker.toString());
+		Chunker chunker = new TttdChunker(CHUNK_SIZE);
+		assertEquals("Other toString() result expected.", "TTTD-"+CHUNK_SIZE+"-"+TttdChunker.DEFAULT_DIGEST_ALG+"-"+TttdChunker.DEFAULT_FINGERPRINT_ALG, chunker.toString());
 	}
 	
 	@Test
@@ -72,7 +72,7 @@ public class TTTDChunkerTest {
 		File outputCopyOfRandom5MBFile = TestFileUtil.getRandomFilenameInDirectory(tempDir);
 		FileOutputStream outputCopyOfRandom5MBFileOutputStream = new FileOutputStream(outputCopyOfRandom5MBFile);
 		
-		Chunker chunker = new TTTDChunker(AVG_CHUNK_SIZE);
+		Chunker chunker = new TttdChunker(AVG_CHUNK_SIZE);
 		
 		// Create chunks
 		Enumeration<Chunk> chunkEnumeration = chunker.createChunks(inputRandom5MBFile);
@@ -93,8 +93,8 @@ public class TTTDChunkerTest {
 		// TODO [low] How to test the number of chunks?
 
 		// Checksums
-		byte[] inputFileChecksum = FileUtil.createChecksum(inputRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
-		byte[] outputFileChecksum = FileUtil.createChecksum(outputCopyOfRandom5MBFile, TTTDChunker.DEFAULT_DIGEST_ALG);
+		byte[] inputFileChecksum = FileUtil.createChecksum(inputRandom5MBFile, TttdChunker.DEFAULT_DIGEST_ALG);
+		byte[] outputFileChecksum = FileUtil.createChecksum(outputCopyOfRandom5MBFile, TttdChunker.DEFAULT_DIGEST_ALG);
 		
 		assertArrayEquals("Checksums of input and output file do not match.", inputFileChecksum, outputFileChecksum);
 		assertArrayEquals("Last chunk's getFileChecksum() should be the file checksum.", inputFileChecksum, lastChunk.getFileChecksum());
@@ -114,7 +114,7 @@ public class TTTDChunkerTest {
 		
 		// Setup				
 		File inputFile = TestFileUtil.createRandomFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
-		Chunker chunker = new TTTDChunker(CHUNK_SIZE);
+		Chunker chunker = new TttdChunker(CHUNK_SIZE);
 		
 		// Create chunks
 		Enumeration<Chunk> chunkEnumeration = chunker.createChunks(inputFile);

@@ -10,29 +10,29 @@ dependencies {
 	compile			"commons-codec:commons-codec:1.8"            
 	compile			"org.reflections:reflections:0.9.8"
 	compile			"org.slf4j:slf4j-api:1.6.0" // for reflections
-            
-	testCompile     "junit:junit:4.3"
-}
-
-def getRevision = { ->
-    def stdout = new ByteArrayOutputStream()
-    
-    exec {
-		workingDir rootProject.projectDir
-        commandLine 'git rev-parse --short HEAD'.split()
-        standardOutput = stdout
-    }
-    
-    return stdout.toString().trim()
-}
-
-processResources {
-	String applicationRevision = getRevision()
-	Date compileDate = new Date()
 	
+	compile			"org.hsqldb:hsqldb:2.3.1"
+	
+	testCompile		project(path: ':syncany-util', configuration: 'tests')
+	testCompile		"junit:junit:4.3"
+}
+
+processResources {	
 	filter{ String line -> line.replaceAll('%RELEASE%', "${applicationRelease}") }        	            
 	filter{ String line -> line.replaceAll('%VERSION%', "${applicationVersion}") }        	            
 	filter{ String line -> line.replaceAll('%REVISION%', "${applicationRevision}") }
-	filter{ String line -> line.replaceAll('%COMPILEDATE%', "${compileDate}") }          	            
+	filter{ String line -> line.replaceAll('%COMPILEDATE%', "${applicationDate}") }          	            
 }
 	
+	
+// Test helper tasks ///////////////////////////////////////////////////////////
+
+task(runSql, dependsOn: "classes", type: JavaExec) {
+	String db = (project.ext.has("db")) ? $db : ""
+	String sql = (project.ext.has("sql")) ? $sql : ""
+
+	description = "Creates database and runs SQL query, syntax: runSql -Pdb=DBPATH -P=SCRIPTRESOURCE"
+	main = "org.syncany.tests.util.TestSqlDatabaseUtil"
+	classpath = sourceSets.test.runtimeClasspath
+	args = [ "${db}", "${sql}" ]
+}		

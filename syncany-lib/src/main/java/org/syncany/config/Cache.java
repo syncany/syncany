@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,20 @@ public class Cache {
     	this.cacheDir = cacheDir;
     }
 
-    public File getEncryptedMultiChunkFile(byte[] multiChunkId) {
+    /* 
+    
+     TODO [medium] Implement methods like this:    
+
+    public File getEncryptedMultiChunkFile(MultiChunkId multiChunkId) {
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, multiChunkId.toString());
+    }
+    
+    public File getDecryptedMultiChunkFile(MultiChunkId multiChunkId) {
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_DECRYPTED, multiChunkId.toString());
+    }    
+    */
+    
+    public File getEncryptedMultiChunkFile(byte[] multiChunkId) {    	
     	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, StringUtil.toHex(multiChunkId));
     }
     

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
  * The database version represents an incremental addition to the local database of 
- * a client. A user's {@link Database} consists of many incremental database versions.
+ * a client. A user's {@link MemoryDatabase} consists of many incremental database versions.
  * 
  * <p>A <tt>DatabaseVersion</tt> is identified by a {@link DatabaseVersionHeader}, a 
  * combination of a {@link VectorClock}, a local timestamp and the original client name.
@@ -43,7 +43,12 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersion {
+	private DatabaseVersionStatus status;
     private DatabaseVersionHeader header; 
+    
+    public enum DatabaseVersionStatus {
+    	MASTER, DIRTY
+    }
     
     // Full DB in RAM
     private Map<ChunkChecksum, ChunkEntry> chunks;
@@ -52,7 +57,7 @@ public class DatabaseVersion {
     private Map<FileHistoryId, PartialFileHistory> fileHistories;
 
     // Quick access cache
-    private Map<ChunkChecksum, MultiChunkEntry> chunkMultiChunkCache;    
+    private Map<ChunkChecksum, MultiChunkId> chunkMultiChunkCache;    
 
     public DatabaseVersion() {
     	header = new DatabaseVersionHeader();
@@ -64,11 +69,15 @@ public class DatabaseVersion {
         fileHistories = new HashMap<FileHistoryId, PartialFileHistory>();          
 
         // Quick access cache
-        chunkMultiChunkCache = new HashMap<ChunkChecksum, MultiChunkEntry>();
+        chunkMultiChunkCache = new HashMap<ChunkChecksum, MultiChunkId>();
     }
     
 	public DatabaseVersionHeader getHeader() {
 		return header;
+	}
+	
+	public void setHeader(DatabaseVersionHeader header) {
+		this.header = header;
 	}
 
 	public Date getTimestamp() {
@@ -94,10 +103,18 @@ public class DatabaseVersion {
 	public String getClient() {
 		return header.getClient();
 	}
+	
+	public DatabaseVersionStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(DatabaseVersionStatus status) {
+		this.status = status;
+	}	
 
     // Chunk
-    
-    public ChunkEntry getChunk(ChunkChecksum checksum) {
+	
+	public ChunkEntry getChunk(ChunkChecksum checksum) {
         return chunks.get(checksum);
     }    
     
@@ -116,7 +133,7 @@ public class DatabaseVersion {
         
         // Populate cache
         for (ChunkChecksum chunkChecksum : multiChunk.getChunks()) {
-        	chunkMultiChunkCache.put(chunkChecksum, multiChunk);
+        	chunkMultiChunkCache.put(chunkChecksum, multiChunk.getId());
         }
     }
     
@@ -127,7 +144,7 @@ public class DatabaseVersion {
     /**
      * Get a multichunk that this chunk is contained in.
      */
-    public MultiChunkEntry getMultiChunk(ChunkChecksum chunk) {
+    public MultiChunkId getMultiChunkId(ChunkChecksum chunk) {
     	return chunkMultiChunkCache.get(chunk);
     }
     
@@ -164,7 +181,31 @@ public class DatabaseVersion {
         
     public Collection<PartialFileHistory> getFileHistories() {
         return fileHistories.values();
-    }     
+    }    
+    
+    @Override
+    public DatabaseVersion clone() {
+    	DatabaseVersion clonedDatabaseVersion = new DatabaseVersion();
+    	clonedDatabaseVersion.setHeader(getHeader());
+		
+		for (ChunkEntry chunkEntry : getChunks()) {
+			clonedDatabaseVersion.addChunk(chunkEntry);
+		}
+		
+		for (MultiChunkEntry multiChunkEntry : getMultiChunks()) {
+			clonedDatabaseVersion.addMultiChunk(multiChunkEntry);
+		}
+		
+		for (FileContent fileContent : getFileContents()) {
+			clonedDatabaseVersion.addFileContent(fileContent);
+		}
+		
+		for (PartialFileHistory fileHistory : getFileHistories()) {
+			clonedDatabaseVersion.addFileHistory(fileHistory);
+		}		
+		
+		return clonedDatabaseVersion;
+    }
     
     @Override
   	public int hashCode() {

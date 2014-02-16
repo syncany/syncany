@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class LogCommandTest {
 			"log"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 7, cliOut.length);
+		assertEquals("Different number of output lines expected.", 6, cliOut.length);
 		// TODO [low] How to test the log command any further? Non-deterministic output!
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		

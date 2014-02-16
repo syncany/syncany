@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,6 @@ public class FileVersion implements Cloneable {
     private String linkTarget;
     
     // Optional
-    private String createdBy;
     private FileChecksum checksum;
     private Date updated;
     private String posixPermissions;
@@ -58,14 +57,6 @@ public class FileVersion implements Cloneable {
     public FileVersion() {
         // Fressen.
     }      
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
 
     public Long getVersion() {
         return version;
@@ -162,7 +153,7 @@ public class FileVersion implements Cloneable {
 	@Override
 	public String toString() {
 		return "FileVersion [version=" + version + ", path=" + path + ", type=" + type + ", status=" + status + ", size=" + size + ", lastModified="
-				+ lastModified + ", linkTarget=" + linkTarget + ", createdBy=" + createdBy + ", checksum=" + checksum + ", updated="
+				+ lastModified + ", linkTarget=" + linkTarget + ", checksum=" + checksum + ", updated="
 				+ updated + ", posixPermissions=" + posixPermissions + ", dosAttributes=" + dosAttributes + "]";
 	}
 
@@ -172,7 +163,6 @@ public class FileVersion implements Cloneable {
             FileVersion clone = (FileVersion) super.clone();
             
             clone.setChecksum(getChecksum());
-            clone.setCreatedBy(getCreatedBy());
             clone.setLastModified(getLastModified());
             clone.setUpdated(getUpdated());
             clone.setPath(getPath());
@@ -196,7 +186,6 @@ public class FileVersion implements Cloneable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((checksum == null) ? 0 : checksum.hashCode());
-		result = prime * result + ((createdBy == null) ? 0 : createdBy.hashCode());
 		result = prime * result + ((dosAttributes == null) ? 0 : dosAttributes.hashCode());
 		result = prime * result + ((lastModified == null) ? 0 : lastModified.hashCode());
 		result = prime * result + ((linkTarget == null) ? 0 : linkTarget.hashCode());
@@ -224,12 +213,6 @@ public class FileVersion implements Cloneable {
 				return false;
 		}
 		else if (!checksum.equals(other.checksum))
-			return false;
-		if (createdBy == null) {
-			if (other.createdBy != null)
-				return false;
-		}
-		else if (!createdBy.equals(other.createdBy))
 			return false;
 		if (dosAttributes == null) {
 			if (other.dosAttributes != null)

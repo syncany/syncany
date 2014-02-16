@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,15 +29,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.XmlDatabaseDAO;
+import org.syncany.database.SqlDatabase;
+import org.syncany.database.dao.XmlDatabaseSerializer;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.CollectionUtil;
 
 public class SyncUpOperationTest {
 	private Config testConfig;	
@@ -65,30 +65,34 @@ public class SyncUpOperationTest {
 		UpOperation op = new UpOperation(testConfig);		
 		op.execute();
 
-		//Compare dbs
+		// Get databases (for comparison)
 		LocalConnection localConnection = (LocalConnection) testConfig.getConnection();
 		
-		File localDatabaseFile = new File(testConfig.getDatabaseDir() + "/local.db");
+		File localDatabaseDir = testConfig.getDatabaseDir();
 		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/databases/db-" + testConfig.getMachineName()+"-0000000001");
 		
-		assertTrue(localDatabaseFile.exists());
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
 		assertTrue(remoteDatabaseFile.exists());
 		
-		DatabaseDAO dDAO = new XmlDatabaseDAO(testConfig.getTransformer());
-		Database localDatabase = new Database();
-		Database remoteDatabase = new Database();
-		dDAO.load(localDatabase, localDatabaseFile);
+		// - Memory database
+		XmlDatabaseSerializer dDAO = new XmlDatabaseSerializer(testConfig.getTransformer());
+		
+		MemoryDatabase remoteDatabase = new MemoryDatabase();		
 		dDAO.load(remoteDatabase, remoteDatabaseFile);
 		
-		DatabaseVersion localDatabaseVersion = localDatabase.getLastDatabaseVersion();
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 		
-		assertEquals(localDatabaseVersion.getHeader(), remoteDatabaseVersion.getHeader());
-
-		assertEquals(localDatabaseVersion.getFileHistories().size(),fileAmount);
-		assertEquals(localDatabaseVersion.getFileHistories().size(),remoteDatabaseVersion.getFileHistories().size());
+		// - Sql Database
+		SqlDatabase localDatabase = new SqlDatabase(testConfig);
+		Collection<PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		
-		Collection<PartialFileHistory> localFileHistories = localDatabaseVersion.getFileHistories();
+		// Compare!
+		assertEquals(localDatabase.getLastDatabaseVersionHeader(), remoteDatabaseVersion.getHeader());
+
+		assertEquals(localFileHistories.size(), fileAmount);
+		assertEquals(localDatabase.getFileHistoriesWithFileVersions().size(), remoteDatabaseVersion.getFileHistories().size());
+		
 		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
 	
 		List<FileVersion> remoteFileVersions = new ArrayList<FileVersion>(); 
@@ -103,7 +107,7 @@ public class SyncUpOperationTest {
 			localFileVersions.add(partialFileHistory.getLastVersion());
 		}
 		
-		assertEquals(localFileVersions,remoteFileVersions);
+		assertTrue(CollectionUtil.containsExactly(localFileVersions, remoteFileVersions));
 		
 		compareFileVersionsAgainstOriginalFiles(originalFiles, localFileVersions);
 		compareFileVersionsAgainstOriginalFiles(originalFiles, remoteFileVersions);
@@ -124,5 +128,4 @@ public class SyncUpOperationTest {
 		}
 		assertEquals(0, toFind);
 	}
-
 }

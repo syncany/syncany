@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,13 +105,15 @@ public class InitOperation extends AbstractInitOperation {
 			transferManager.init();
 		}
 		catch (StorageException e) {
-			//Storing remotely failed. Remove all the directories and files we just created
+			// Storing remotely failed. Remove all the directories and files we just created
 			try {
 				deleteAppDirs(options.getLocalDir());
 			}
 			catch (Exception e1) {
 				throw new Exception("StorageException for remote. Cleanup failed. There may be local directories left");
 			}
+			
+			// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
 			throw new Exception("StorageException for remote. Cleaned local repository.");
  		}
 		

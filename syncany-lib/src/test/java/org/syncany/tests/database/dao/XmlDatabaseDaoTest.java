@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.database;
+package org.syncany.tests.database.dao;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
@@ -46,13 +46,13 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.dao.XmlDatabaseSerializer;
 import org.syncany.database.VectorClock;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class XmlDatabaseDAOTest {
+public class XmlDatabaseDaoTest {
 	private File tempDir;
 	
 	static {
@@ -72,7 +72,7 @@ public class XmlDatabaseDAOTest {
 	@Test
 	public void testWriteAndReadChunks() throws IOException {
 		// Prepare
-		Database newDatabase = new Database();
+		MemoryDatabase newDatabase = new MemoryDatabase();
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
@@ -90,7 +90,7 @@ public class XmlDatabaseDAOTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		
 		// Check chunks
 		assertEquals("Chunk not found in database loaded.", chunkA1, loadedDatabase.getChunk(chunkA1.getChecksum()));
@@ -119,7 +119,7 @@ public class XmlDatabaseDAOTest {
 	@Test
 	public void testWriteAndReadChunksWithMultiChunks() throws IOException {
 		// Prepare
-		Database newDatabase = new Database();
+		MemoryDatabase newDatabase = new MemoryDatabase();
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
@@ -155,7 +155,7 @@ public class XmlDatabaseDAOTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		
 		// Check chunks
 		assertEquals("Chunk not found in database loaded.", chunkA1, loadedDatabase.getChunk(chunkA1.getChecksum()));
@@ -180,7 +180,7 @@ public class XmlDatabaseDAOTest {
 	@Test
 	public void testWriteAndReadChunksWithFileContents() throws IOException {
 		// Prepare
-		Database newDatabase = new Database();
+		MemoryDatabase newDatabase = new MemoryDatabase();
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 		
 		// Create chunks
@@ -218,7 +218,7 @@ public class XmlDatabaseDAOTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		
 		// Check chunks
 		assertEquals("Chunk not found in database loaded.", chunkA1, loadedDatabase.getChunk(chunkA1.getChecksum()));
@@ -243,7 +243,7 @@ public class XmlDatabaseDAOTest {
 	@Test
 	public void testWriteAndReadFileHistoryAndFileVersion() throws IOException {
 		// Prepare
-		Database newDatabase = new Database();
+		MemoryDatabase newDatabase = new MemoryDatabase();
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 	
 		// Create directories (no content!)
@@ -296,7 +296,7 @@ public class XmlDatabaseDAOTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		 
 		// File histories
 		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
@@ -315,7 +315,7 @@ public class XmlDatabaseDAOTest {
 	@Test
 	public void testWriteAndReadVectorClock() throws IOException {
 		// Prepare
-		Database newDatabase = new Database();
+		MemoryDatabase newDatabase = new MemoryDatabase();
 		DatabaseVersion newDatabaseVersion = createDatabaseVersion();
 
 		// Create new vector clock
@@ -331,7 +331,7 @@ public class XmlDatabaseDAOTest {
 		newDatabase.addDatabaseVersion(newDatabaseVersion);
 		
 		// Write database to disk, read it again, and compare them
-		Database loadedDatabase = writeReadAndCompareDatabase(newDatabase);
+		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		
 		// Check VC
 		DatabaseVersion loadedDatabaseVersionSelectedByVectorClock = loadedDatabase.getDatabaseVersion(vc);
@@ -344,7 +344,7 @@ public class XmlDatabaseDAOTest {
 		
 	@Test
 	public void testWriteAndReadMultipleDatabaseVersions() throws IOException {
-		Database writtenDatabase = new Database();
+		MemoryDatabase writtenDatabase = new MemoryDatabase();
 		List<DatabaseVersion> writtenDatabaseVersions = new ArrayList<DatabaseVersion>();
 		
 		for (int i=0; i<10; i++) {
@@ -369,7 +369,7 @@ public class XmlDatabaseDAOTest {
 	
 	@Test
 	public void testWritePartialDatabaseOneToFive() throws IOException {
-		Database writtenDatabase = new Database();
+		MemoryDatabase writtenDatabase = new MemoryDatabase();
 		List<DatabaseVersion> writtenDatabaseVersions = new ArrayList<DatabaseVersion>();
 		
 		for (int i=0; i<10; i++) {
@@ -391,16 +391,16 @@ public class XmlDatabaseDAOTest {
 		// Write database to disk, read it again, and compare them
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		
-		XmlDatabaseDAO writeDAO = new XmlDatabaseDAO();
-		writeDAO.save(writtenDatabase, writtenDatabaseVersions.get(0), writtenDatabaseVersions.get(4), writtenDatabaseFile);
+		XmlDatabaseSerializer writeDAO = new XmlDatabaseSerializer();
+		writeDAO.save(writtenDatabase, writtenDatabaseFile);
 		
 		// Read again
-		Database readDatabase = new Database();
+		MemoryDatabase readDatabase = new MemoryDatabase();
 		
-		XmlDatabaseDAO readDAO = new XmlDatabaseDAO();
+		XmlDatabaseSerializer readDAO = new XmlDatabaseSerializer();
 		readDAO.load(readDatabase, writtenDatabaseFile);
 		
-		for (int i=0; i<=4; i++) {
+		for (int i=0; i<10; i++) {
 			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersions.get(i);
 			DatabaseVersion readDatabaseVersion = readDatabase.getDatabaseVersion(writtenDatabaseVersion.getVectorClock());
 			
@@ -408,13 +408,13 @@ public class XmlDatabaseDAOTest {
 			assertDatabaseVersionEquals(writtenDatabaseVersion, readDatabaseVersion);
 		}
 		
-		assertEquals(5, readDatabase.getDatabaseVersions().size());
+		assertEquals(10, readDatabase.getDatabaseVersions().size());
 	}	
 	
-	private Database writeReadAndCompareDatabase(Database writtenDatabase) throws IOException {
+	private MemoryDatabase writeReadAndCompareDatabase(MemoryDatabase writtenDatabase) throws IOException {
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		TestDatabaseUtil.writeDatabaseFileToDisk(writtenDatabase, writtenDatabaseFile, null);
-		Database readDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(writtenDatabaseFile, null);
+		MemoryDatabase readDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(writtenDatabaseFile, null);
 		
 		TestAssertUtil.assertDatabaseEquals(writtenDatabase, readDatabase);
 		
