@@ -61,6 +61,8 @@ public class UploadInterruptedTest {
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000004").exists());
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
 		
+		// TODO [medium] This test fails in ScenarioTestSuite and DatabaseTestSuite is run before, but not if OtherShortTestSuite is run in standalone?!
+		
 		// Tear down
 		clientA.cleanup();
 	}				

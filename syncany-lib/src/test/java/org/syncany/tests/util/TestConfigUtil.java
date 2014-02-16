@@ -193,7 +193,7 @@ public class TestConfigUtil {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
 
-		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", unreliableLocalConnection));
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 
 		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
 		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);

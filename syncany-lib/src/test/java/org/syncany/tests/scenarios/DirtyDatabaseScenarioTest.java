@@ -17,16 +17,30 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileExists;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
+
+import java.util.Iterator;
+import java.util.List;
 
 import org.junit.Test;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.database.dao.ChunkSqlDao;
+import org.syncany.database.dao.DatabaseVersionSqlDao;
+import org.syncany.database.dao.FileContentSqlDao;
+import org.syncany.database.dao.FileHistorySqlDao;
+import org.syncany.database.dao.FileVersionSqlDao;
+import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.tests.util.TestClient;
+import org.syncany.tests.util.TestCollectionUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class DirtyDatabaseScenarioTest {
@@ -45,24 +59,48 @@ public class DirtyDatabaseScenarioTest {
 		clientA.createNewFile("A-file1.jpg", 50*1024);
 		clientA.up(upOptionsForceEnabled);
 				
-		clientB.createNewFile("A-file1.jpg", 50*1024);
+		clientB.createNewFile("A-file1.jpg", 51*1024);
 		clientB.up(upOptionsForceEnabled);
 		
-		clientB.down(); // This creates a dirty database		
+		clientB.down(); // This creates a dirty database				
 		
+		// Test (for dirty database existence) 
+		Config configB = clientB.getConfig();
+		java.sql.Connection databaseConnectionB = configB.createDatabaseConnection();
+
+		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnectionB);
+		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnectionB);
+		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnectionB);
+		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnectionB, fileVersionDao);
+		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnectionB);
+		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnectionB, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 		
+		Iterator<DatabaseVersion> databaseVersionsDirtyB = databaseVersionDao.getDirtyDatabaseVersions();
+		List<DatabaseVersion> databaseVersionsDirtyListB = TestCollectionUtil.toList(databaseVersionsDirtyB);
 		
-		fail("IMPLEMENT THIS TEST");
+		assertEquals(1, databaseVersionsDirtyListB.size());
 		
+		DatabaseVersion dirtyDatabaseVersionB = databaseVersionsDirtyListB.get(0);
+		assertNotNull(dirtyDatabaseVersionB);
+		assertEquals(1, dirtyDatabaseVersionB.getFileHistories().size());
 		
-		
-		//assertTrue("Dirty database should exist.", clientB.getDirtyDatabaseFile().exists());
+		PartialFileHistory fileHistoryFile1B = dirtyDatabaseVersionB.getFileHistories().iterator().next();		
+		assertNotNull(fileHistoryFile1B);
+		assertEquals(1, fileHistoryFile1B.getFileVersions().size());
+		assertEquals("A-file1.jpg", fileHistoryFile1B.getLastVersion().getPath());
+				
 		assertFileEquals("Files should be identical", clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
-		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFilesExcludeLockedAndNoRead());		
 		
+		// Run (part 2)
 		clientB.up(); // This deletes the dirty database file
-		//assertFalse("Dirty database should NOT exist.", clientB.getDirtyDatabaseFile().exists());
 		
+		Iterator<DatabaseVersion> databaseVersionsDirtyB2 = databaseVersionDao.getDirtyDatabaseVersions();
+		List<DatabaseVersion> databaseVersionsDirtyListB2 = TestCollectionUtil.toList(databaseVersionsDirtyB2);
+		
+		assertEquals(0, databaseVersionsDirtyListB2.size());
+
+		// Run (part 3)
 		clientA.down(); // This pulls down the conflicting file
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());

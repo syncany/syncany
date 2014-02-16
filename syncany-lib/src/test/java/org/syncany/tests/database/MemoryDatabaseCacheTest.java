@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.database;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -356,40 +354,54 @@ public class MemoryDatabaseCacheTest {
 
 		database.addDatabaseVersion(databaseVersion1);
 		
-		// - history 2, version 2
-		
+		// - history 1, version 2		
 		DatabaseVersion databaseVersion2 = TestDatabaseUtil.createDatabaseVersion(databaseVersion1);
 		FileVersion fileVersion2 = TestDatabaseUtil.createFileVersion("file.jpg", fileVersion1);
 
-		FileHistoryId idFile2 = FileHistoryId.parseFileId("1111111111111111");
-		PartialFileHistory fileHistory2 = new PartialFileHistory(idFile1);
+		FileHistoryId idFile1b = FileHistoryId.parseFileId("1111111111111111");
+		PartialFileHistory fileHistory1b = new PartialFileHistory(idFile1b);
 
-		fileHistory2.addFileVersion(fileVersion2);
-		databaseVersion2.addFileHistory(fileHistory2);
+		fileHistory1b.addFileVersion(fileVersion2);
+		databaseVersion2.addFileHistory(fileHistory1b);
 
 		database.addDatabaseVersion(databaseVersion2);
-		//Database should have 2 versions of file
+				
+		// Tests: Database should have 2 versions of file
 		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(2, database.getFileHistory(idFile1b).getFileVersions().size());
 		
+		
+		// Round 2: Remove second database version
 		database.removeDatabaseVersion(databaseVersion2);
-		//Second version removed, 1 version left
+		
+		// Tests: Second version removed, 1 version left
 		assertEquals(1, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(1, database.getFileHistory(idFile1b).getFileVersions().size());
 		assertEquals(fileVersion1, database.getFileHistory(idFile1).getLastVersion());
 		
-		database.addDatabaseVersion(databaseVersion2);
-		//Second version added, 2 versions of file
-		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
 		
+		// Round 3: Add database version again
+		database.addDatabaseVersion(databaseVersion2);
+		
+		// Tests: Second version added, 2 versions of file
+		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(2, database.getFileHistory(idFile1b).getFileVersions().size());
+		
+		
+		// Round 4: Remove FIRST database version		
 		database.removeDatabaseVersion(databaseVersion1);
-		//First version removed, 1 version left
+		
+		// Tests: First version removed, 1 version left
 		assertEquals(1, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(1, database.getFileHistory(idFile1b).getFileVersions().size());
 		assertEquals(fileVersion2, database.getFileHistory(idFile1).getLastVersion());
 		
+
+		// Round 5: Remove second database version		
 		database.removeDatabaseVersion(databaseVersion2);
-		//Second version removed, none left
-		assertNull(database.getFileHistory(idFile1));
-		
-		
+
+		// Tests: Second version removed, none left
+		assertNull(database.getFileHistory(idFile1));		
 	}
 
 }

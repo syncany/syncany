@@ -19,6 +19,8 @@ package org.syncany.connection.plugins.unreliable_local;
 
 import java.io.File;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
@@ -29,6 +31,7 @@ import org.syncany.connection.plugins.local.LocalTransferManager;
  * @author Philipp C. Heckel
  */
 public class UnreliableLocalTransferManager extends LocalTransferManager {
+	private static final Logger logger = Logger.getLogger(UnreliableLocalTransferManager.class.getSimpleName());
 	private UnreliableLocalConnection connection;
 	
     public UnreliableLocalTransferManager(UnreliableLocalConnection connection) {
@@ -52,12 +55,12 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
     	// Check if it fails
     	for (String failingOperationPattern : connection.getFailingOperationPatterns()) {
     		if (operationLine.matches(".*"+failingOperationPattern+".*")) {
-        		System.out.println("Operation NOT successful: "+operationLine);
+        		logger.log(Level.INFO, "Operation NOT successful: "+operationLine);
         		return false;    			
     		}
     	}
     	
-    	System.out.println("Operation successful:     "+operationLine);
+		logger.log(Level.INFO, "Operation successful:     "+operationLine);
         return true;
     }
     

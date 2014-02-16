@@ -45,19 +45,21 @@ import org.junit.internal.ArrayComparisonFailure;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseConnectionFactory;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
+
+import com.google.common.collect.Lists;
 
 public class TestAssertUtil {
 	private static final Logger logger = Logger.getLogger(TestAssertUtil.class.getSimpleName());
@@ -189,27 +191,33 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertSqlDatabaseEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException, SQLException {
-		String[] compareTables = new String[] { 
-			"chunk",
-			"databaseversion", 
-			"databaseversion_vectorclock",
-			"filecontent",
-			"filecontent_chunk",
-			"filehistory",
-			"fileversion",
+		// Compare tables + ignore columns
+		String[][] compareTablesAndIgnoreColumns = new String[][] { 
+			new String[] { "chunk" },
+			new String[] { "databaseversion", "ID" }, 
+			new String[] { "databaseversion_vectorclock", "DATABASEVERSION_ID" },
+			new String[] { "filecontent" },
+			new String[] { "filecontent_chunk" },
+			new String[] { "filehistory", "DATABASEVERSION_ID" },
+			new String[] { "fileversion", "DATABASEVERSION_ID" },
 				// skipped known_databases
-			"multichunk",
-			"multichunk_chunk"
+			new String[] { "multichunk" },
+			new String[] { "multichunk_chunk" }
 		};
 		
-		assertSqlDatabaseTablesEqual(expectedDatabaseFile, actualDatabaseFile, compareTables);
+		assertSqlDatabaseTablesEqual(expectedDatabaseFile, actualDatabaseFile, compareTablesAndIgnoreColumns);
 	}
 	
-	public static void assertSqlDatabaseTablesEqual(File expectedDatabaseFile, File actualDatabaseFile, String... compareTables) throws IOException, SQLException {
+	public static void assertSqlDatabaseTablesEqual(File expectedDatabaseFile, File actualDatabaseFile, String[]... compareTablesAndIgnoreColumns) throws IOException, SQLException {
 		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createConnection(expectedDatabaseFile);
 		Connection actualDatabaseConnection = DatabaseConnectionFactory.createConnection(actualDatabaseFile);
 				
-		for (String tableName : compareTables) {
+		for (String[] tableNameAndIgnoreColumns : compareTablesAndIgnoreColumns) {
+			String tableName = tableNameAndIgnoreColumns[0];
+			
+			List<String> ignoreColumnNames = Lists.newArrayList(tableNameAndIgnoreColumns);
+			ignoreColumnNames.remove(0);
+					
 			// Get table's primary keys
 			List<String> primaryKeys = new ArrayList<String>();			
 			ResultSet resultSet = actualDatabaseConnection.getMetaData().getPrimaryKeys(null, null, tableName.toUpperCase());
@@ -218,9 +226,22 @@ public class TestAssertUtil {
 				primaryKeys.add(resultSet.getString("COLUMN_NAME"));
 			}
 			
+			// Get table's columns
+			List<String> tableColumns = new ArrayList<String>();
+			resultSet = actualDatabaseConnection.getMetaData().getColumns(null, null, tableName.toUpperCase(), null);
+			
+			while (resultSet.next()) {
+				String columnName = resultSet.getString("COLUMN_NAME");
+				
+				if (!ignoreColumnNames.contains(columnName)) {
+					tableColumns.add(columnName);
+				}
+			}
+			
 			// Get all entries of both tables, sorted by the primary keys
+			String columnNameList = StringUtil.join(tableColumns, ", ");
 			String primaryKeysOrderByClause = StringUtil.join(primaryKeys, " asc, ") + " asc";
-			String selectQuery = "select * from "+tableName+" order by "+primaryKeysOrderByClause;
+			String selectQuery = String.format("select %s from %s order by %s", columnNameList, tableName, primaryKeysOrderByClause);
 			
 			logger.log(Level.FINE, " Comparing database table: " + selectQuery);
 			
@@ -249,7 +270,7 @@ public class TestAssertUtil {
 						//logger.log(Level.FINEST, "  Actual:   "+actualFormattedColumn);
 					}
 					
-					assertEquals("Columns of actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
+					assertEquals("Columns of table "+tableName+" actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
 				}								
 			}		
 		}
