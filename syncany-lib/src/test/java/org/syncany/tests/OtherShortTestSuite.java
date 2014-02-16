@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,23 +30,18 @@ import org.syncany.tests.connection.plugins.unreliable_local.UploadInterruptedTe
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
-import org.syncany.tests.database.DatabaseCacheTest;
-import org.syncany.tests.database.DatabaseReconciliatorTest;
-import org.syncany.tests.database.FileVersionComparatorTest;
-import org.syncany.tests.database.VectorClockTest;
-import org.syncany.tests.database.XmlDatabaseDAOTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.OperationPerformanceTest;
 import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.util.FileUtilTests;
+import org.syncany.tests.util.FileUtilTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
-	FileUtilTests.class,
+	FileUtilTest.class,
 	
 	// Crypto	
 	CipherSpecsTest.class,
@@ -63,13 +58,6 @@ import org.syncany.tests.util.FileUtilTests;
 	PluginsTest.class,
 	LocalConnectionPluginTest.class,
 	UploadInterruptedTest.class,
-	
-	// Database
-	DatabaseCacheTest.class,
-	DatabaseReconciliatorTest.class,
-	FileVersionComparatorTest.class,
-	XmlDatabaseDAOTest.class,
-	VectorClockTest.class,
 	
 	// Operations
 	FileSystemActionComparatorTest.class,

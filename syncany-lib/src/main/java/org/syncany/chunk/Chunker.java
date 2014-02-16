@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import java.util.Enumeration;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class Chunker {
+public abstract class Chunker {	
     /**
      * Opens the given file and creates enumeration of {@link Chunk}s. This method 
      * should not read the file into memory at once, but instead read and emit new 

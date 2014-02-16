@@ -6,3 +6,4 @@ sandbox/results
 .classpath
 .project
 .metadata
+*.bak

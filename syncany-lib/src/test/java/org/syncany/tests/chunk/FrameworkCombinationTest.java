@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
-import org.syncany.chunk.TTTDChunker;
+import org.syncany.chunk.TttdChunker;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.Logging;
@@ -129,7 +129,7 @@ public class FrameworkCombinationTest {
 				//chunkers.add(new FixedOffsetChunker(chunkSizes[i], digestAlgs[j]));
 
 				for (int k = 0; k < fingerprinters.length; k++) {
-					chunkers.add(new TTTDChunker(chunkSizes[i], TTTDChunker.DEFAULT_WINDOW_SIZE, digestAlgs[j], fingerprinters[k]));
+					chunkers.add(new TttdChunker(chunkSizes[i], TttdChunker.DEFAULT_WINDOW_SIZE, digestAlgs[j], fingerprinters[k]));
 				}
 			}
 		}

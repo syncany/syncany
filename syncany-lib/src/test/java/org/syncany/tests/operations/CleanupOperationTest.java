@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,32 +17,8 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.junit.Test;
-import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.operations.CleanupOperation;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.CleanupOperation.CleanupStrategy;
-import org.syncany.tests.util.TestClient;
-import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestDatabaseUtil;
-
 public class CleanupOperationTest {
-
+/*
 	Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-1"));
 
 	@Test
@@ -98,7 +74,7 @@ public class CleanupOperationTest {
 	public void testIdentifyDatabaseVersions() throws Exception {
 		Config config = TestConfigUtil.createTestLocalConfig();
 
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		List<DatabaseVersion> olderDatabaseVersions = createConsistentDatabaseVersions(5, 5, -40, null);
 		List<DatabaseVersion> newerDatabaseVersions = createConsistentDatabaseVersions(5, 5, 40,
@@ -150,5 +126,5 @@ public class CleanupOperationTest {
 			databaseVersions.add(databaseVersion);
 		}
 		return databaseVersions;
-	}
+	}*/
 }

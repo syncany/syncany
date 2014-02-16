@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.database;
+package org.syncany.database.dao;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,39 +39,44 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.syncany.chunk.Transformer;
+import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MemoryDatabase;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
-import org.syncany.util.FileUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class XmlDatabaseDAO implements DatabaseDAO {
-	private static final Logger logger = Logger.getLogger(XmlDatabaseDAO.class.getSimpleName());
+public class XmlDatabaseSerializer {
+	private static final Logger logger = Logger.getLogger(XmlDatabaseSerializer.class.getSimpleName());
 	private static final int XML_FORMAT_VERSION = 1;
 
 	private Transformer transformer;
 	
-	public XmlDatabaseDAO() {
+	public XmlDatabaseSerializer() {
 		this(null);
 	}
 	
-	public XmlDatabaseDAO(Transformer transformer) {
+	public XmlDatabaseSerializer(Transformer transformer) {
 		this.transformer = transformer;
 	}
 	
-	@Override
-	public void save(Database db, File destinationFile) throws IOException {
-		save(db, null, null, destinationFile);
+	public void save(MemoryDatabase db, File destinationFile) throws IOException {
+		save(db.getDatabaseVersions().iterator(), destinationFile);
 	}
 
-	@Override
-	public void save(Database db, DatabaseVersion versionFrom, DatabaseVersion versionTo, File destinationFile) throws IOException {				 
+	public void save(Iterator<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {	
 		try {
 			PrintWriter out;
 			
@@ -93,13 +99,9 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 			 
 			xmlOut.writeStartElement("databaseVersions");
 			 			
-			for (DatabaseVersion databaseVersion : db.getDatabaseVersions()) {
-				boolean databaseVersionInSaveRange = databaseVersionInRange(databaseVersion, versionFrom, versionTo);
-
-				if (!databaseVersionInSaveRange) {				
-					continue;
-				}						
-
+			while (databaseVersions.hasNext()) {
+				DatabaseVersion databaseVersion = databaseVersions.next();
+				
 				// Database version
 				xmlOut.writeStartElement("databaseVersion");
 				
@@ -127,7 +129,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
-	}			
+	}		
 
 	private void writeDatabaseVersionHeader(IndentXmlStreamWriter xmlOut, DatabaseVersion databaseVersion) throws IOException, XMLStreamException {
 		if (databaseVersion.getTimestamp() == null || databaseVersion.getClient() == null
@@ -254,10 +256,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					xmlOut.writeAttribute("linkTarget", fileVersion.getLinkTarget());
 				}
 
-				if (fileVersion.getCreatedBy() != null) {
-					xmlOut.writeAttribute("createdBy", fileVersion.getCreatedBy());
-				}
-				
 				if (fileVersion.getUpdated() != null) {
 					xmlOut.writeAttribute("updated", fileVersion.getUpdated().getTime());
 				}
@@ -312,33 +310,21 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		}
 
 		return greaterOrEqualToVersionFrom && lowerOrEqualToVersionTo;		
-	}
-	
-	private boolean databaseVersionInRange(DatabaseVersion databaseVersion, DatabaseVersion databaseVersionFrom, DatabaseVersion databaseVersionTo) {
-		VectorClock vectorClock = databaseVersion.getVectorClock();
-		VectorClock vectorClockRangeFrom = (databaseVersionFrom != null) ? databaseVersionFrom.getVectorClock() : null;
-		VectorClock vectorClockRangeTo = (databaseVersionTo != null) ? databaseVersionTo.getVectorClock() : null;
-		
-		return vectorClockInRange(vectorClock, vectorClockRangeFrom, vectorClockRangeTo);
 	}	
 
-	@Override
-	public void load(Database db, File databaseFile) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile) throws IOException {
         load(db, databaseFile, false);
 	}
 	
-	@Override
-	public void load(Database db, File databaseFile, boolean headersOnly) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, boolean headersOnly) throws IOException {
         load(db, databaseFile, null, null, headersOnly);
 	}
 	
-	@Override
-	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
 		load(db, databaseFile, fromVersion, toVersion, false);
 	}
 	
-	@Override
-	public void load(Database db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) throws IOException {
         InputStream is;
         
 		if (transformer == null) {
@@ -425,7 +411,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 	}
 	
 	public class DatabaseXmlHandler extends DefaultHandler {
-		private Database database;
+		private MemoryDatabase database;
 		private VectorClock versionFrom;
 		private VectorClock versionTo;
 		private boolean headersOnly;
@@ -438,7 +424,7 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 		private MultiChunkEntry multiChunk;
 		private PartialFileHistory fileHistory;
 		
-		public DatabaseXmlHandler(Database database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) {
+		public DatabaseXmlHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) {
 			this.elementPath = "";
 			this.database = database;
 			this.versionFrom = fromVersion;
@@ -522,7 +508,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					String statusStr = attributes.getValue("status");
 					String lastModifiedStr = attributes.getValue("lastModified");
 					String updatedStr = attributes.getValue("updated");
-					String createdBy = attributes.getValue("createdBy");
 					String checksumStr = attributes.getValue("checksum");
 					String linkTarget = attributes.getValue("linkTarget");
 					String dosAttributes = attributes.getValue("dosattrs");
@@ -543,10 +528,6 @@ public class XmlDatabaseDAO implements DatabaseDAO {
 					
 					if (updatedStr != null) {
 						fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
-					}
-					
-					if (createdBy != null) {
-						fileVersion.setCreatedBy(createdBy);
 					}
 					
 					if (checksumStr != null) {

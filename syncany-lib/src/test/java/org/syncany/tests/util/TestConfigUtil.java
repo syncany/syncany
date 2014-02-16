@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ public class TestConfigUtil {
 	public static Map<String, String> createTestLocalConnectionSettings() throws Exception {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 
-		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", pluginSettings));
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 
 		return pluginSettings;
@@ -76,14 +76,14 @@ public class TestConfigUtil {
 		return createTestLocalConfig(machineName, createTestLocalConnection());
 	}
 
-	private static MultiChunkerTO createZipMultiChunkerTO() {		
+	private static MultiChunkerTO createZipMultiChunkerTO() {
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(ZipMultiChunker.PROPERTY_SIZE, "4096");
-		
+
 		MultiChunkerTO multiChunkerTO = new MultiChunkerTO();
 		multiChunkerTO.setType(ZipMultiChunker.TYPE);
 		multiChunkerTO.setSettings(settings);
-		
+
 		return multiChunkerTO;
 	}
 
@@ -99,14 +99,14 @@ public class TestConfigUtil {
 		else {
 			TransformerTO gzipTransformerTO = new TransformerTO();
 			gzipTransformerTO.setType(GzipTransformer.TYPE);
-	
+
 			Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
 			cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, "1,2");
-	
+
 			TransformerTO cipherTransformerTO = new TransformerTO();
 			cipherTransformerTO.setType(CipherTransformer.TYPE);
 			cipherTransformerTO.setSettings(cipherTransformerSettings);
-	
+
 			return Lists.newArrayList(gzipTransformerTO, cipherTransformerTO);
 		}
 	}
@@ -119,7 +119,7 @@ public class TestConfigUtil {
 			if (masterKey == null) {
 				masterKey = CipherUtil.createMasterKey("some password");
 			}
-			
+
 			return masterKey;
 		}
 	}
@@ -127,7 +127,7 @@ public class TestConfigUtil {
 	public static Config createDummyConfig() throws Exception {
 		ConfigTO configTO = new ConfigTO();
 		configTO.setMachineName("dummymachine");
-		
+
 		RepoTO repoTO = new RepoTO();
 		repoTO.setTransformers(null);
 		repoTO.setChunker(createMimeChunkerTO());
@@ -193,7 +193,7 @@ public class TestConfigUtil {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
 
-		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", unreliableLocalConnection));
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 
 		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
 		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);
@@ -224,7 +224,7 @@ public class TestConfigUtil {
 	}
 
 	public static String createUniqueName(String name, Object uniqueHashObj) {
-		return String.format("syncany-%s-%d-%s", RUNDATE, 100 + uniqueHashObj.hashCode() % 899, name);
+		return String.format("syncany-%s-%d-%s", RUNDATE, 10000 + uniqueHashObj.hashCode() % 89999, name);
 	}
 
 	public static void setCrypto(boolean cryptoEnabled) {

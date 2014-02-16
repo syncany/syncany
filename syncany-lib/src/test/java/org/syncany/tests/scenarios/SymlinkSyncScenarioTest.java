@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,7 @@ import java.nio.file.Paths;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseVersion;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
@@ -65,11 +64,10 @@ public class SymlinkSyncScenarioTest {
 		assertTrue("File should be uploaded.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		Database database = clientA.loadLocalDatabase();
-		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
+		SqlDatabase database = clientA.loadLocalDatabase();
 
-		assertNotNull("File should be uploaded.", database.getFileHistory("symlink-name"));		
-		assertNotNull("There should be a new database version, because file should not have been added.", databaseVersion);
+		assertNotNull("File should be uploaded.", database.getFileVersionByPath("symlink-name"));		
+		assertNotNull("There should be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 		
 		// Test 3: Check file system for inconsistencies
 		File repoPath = new File(((LocalConnection) testConnection).getRepositoryPath()+"/databases");
@@ -118,7 +116,19 @@ public class SymlinkSyncScenarioTest {
 		clientA.up();
 
 		// B down
-		clientB.down();
+		clientB.down(); // TODO [medium] This test fails non-deterministically
+		/*
+			org.syncany.connection.plugins.StorageException: No such file in local repository: /tmp/syncany-140111020110031-109-repo/multichunks/multichunk-74dbca0d3a4f7f952b4d811d1f5907898d22e2cd
+			at org.syncany.connection.plugins.local.LocalTransferManager.download(LocalTransferManager.java:106)
+			at org.syncany.operations.DownOperation.downloadAndDecryptMultiChunks(DownOperation.java:376)
+			at org.syncany.operations.DownOperation.applyWinnersBranch(DownOperation.java:183)
+			at org.syncany.operations.DownOperation.execute(DownOperation.java:156)
+			at org.syncany.Client.down(Client.java:130)
+			at org.syncany.Client.down(Client.java:126)
+			at org.syncany.tests.scenarios.SymlinkSyncScenarioTest.testSymlinkMultipleUpsAndDowns(SymlinkSyncScenarioTest.java:119)
+			at ...
+		 */
+		
 		assertEquals("Local folder should contain two files (symlink and target!)", 2, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		File localSymlinkFile = clientB.getLocalFile("symlink-name");

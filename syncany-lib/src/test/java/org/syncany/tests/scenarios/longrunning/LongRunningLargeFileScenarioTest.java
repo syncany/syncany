@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 package org.syncany.tests.scenarios.longrunning;
 
 import static junit.framework.Assert.assertEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.util.Date;
 
@@ -88,7 +88,7 @@ public class LongRunningLargeFileScenarioTest {
 		
 		try {
 			assertEquals("File checksum should be equal. ", checksumFileA, checksumFileB);
-			assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+			assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		}
 		finally {
 			// Tear down

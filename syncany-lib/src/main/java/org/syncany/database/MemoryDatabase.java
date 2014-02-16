@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * @see DatabaseVersion
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class Database {
+public class MemoryDatabase {
     private List<DatabaseVersion> databaseVersions;    
 	
     // Caches
@@ -57,7 +57,7 @@ public class Database {
     private Map<VectorClock, DatabaseVersion> databaseVersionIdCache;
     private Map<FileChecksum, List<PartialFileHistory>> contentChecksumFileHistoriesCache;
 
-    public Database() {
+    public MemoryDatabase() {
     	databaseVersions = new ArrayList<DatabaseVersion>();    	
         
     	// Caches
@@ -74,14 +74,6 @@ public class Database {
 		
 		return databaseVersions.get(databaseVersions.size()-1);
 	}
-	
-	public DatabaseVersion getFirstDatabaseVersion() {
-		if (databaseVersions.size() == 0) {
-			return null;
-		}
-		
-		return databaseVersions.get(0);
-	}		
 		
 	public List<DatabaseVersion> getDatabaseVersions() {
 		return Collections.unmodifiableList(databaseVersions);
@@ -93,10 +85,10 @@ public class Database {
 
 	public FileContent getContent(FileChecksum checksum) {
 		return (checksum != null) ? fullDatabaseVersionCache.getFileContent(checksum) : null;
-	}
+	}	
 	
-	public ChunkEntry getChunk(ChunkChecksum checksum) {
-		return fullDatabaseVersionCache.getChunk(checksum);
+	public Object getChunk(ChunkChecksum checksum) {
+		return (checksum != null) ? fullDatabaseVersionCache.getChunk(checksum) : null;
 	}
 	
 	public MultiChunkEntry getMultiChunk(MultiChunkId id) {
@@ -106,8 +98,8 @@ public class Database {
 	/**
      * Get a multichunk that this chunk is contained in.
      */
-	public MultiChunkEntry getMultiChunkForChunk(ChunkChecksum chunk) {
-		return fullDatabaseVersionCache.getMultiChunk(chunk);
+	public MultiChunkId getMultiChunkIdForChunk(ChunkChecksum chunk) {
+		return fullDatabaseVersionCache.getMultiChunkId(chunk);
 	}	
 	
 	public PartialFileHistory getFileHistory(String relativeFilePath) {
@@ -177,33 +169,6 @@ public class Database {
 				
 	}
 	
-	/*private void updateContentChecksumCache(DatabaseVersion databaseVersion) {
-		int i=1;
-		
-		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
-			byte[] lastVersionChecksum = fileHistory.getLastVersion().getChecksum();
-			
-			if (lastVersionChecksum != null) {
-				ByteArray lastVersionChecksumByteArray = new ByteArray(lastVersionChecksum);
-				List<PartialFileHistory> historiesWithVersionsWithSameChecksum = contentChecksumFileHistoriesCache.get(lastVersionChecksumByteArray);
-				
-				// Create if it does not exist
-				if (historiesWithVersionsWithSameChecksum == null) {
-					historiesWithVersionsWithSameChecksum = new ArrayList<PartialFileHistory>();
-				}
-				
-				// TODO [low] Throw out old file histories
-				XXXXXXXXX
-				
-				// Add to cache
-				historiesWithVersionsWithSameChecksum.add(fileHistory);
-				contentChecksumFileHistoriesCache.put(lastVersionChecksumByteArray, historiesWithVersionsWithSameChecksum);
-			}
-		}
-		
-		return; // for breakpoint
-	}	*/
-		
 	private void updateFilenameHistoryCache() {
 		// TODO [medium] Performance: This throws away the unchanged entries. It should only update new database version
 		filenameHistoryCache.clear(); 

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -34,7 +34,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.Database;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -78,10 +78,10 @@ public class ChangedAttributesScenarioTest {
 		assertTrue("File should be uploaded.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		Database database = clientB.loadLocalDatabase();
+		SqlDatabase database = clientB.loadLocalDatabase();
 
-		assertNotNull("File should be uploaded.", database.getFileHistory("file1.jpg"));		
-		assertEquals("There should be a new database version, because file should not have been added.", 2, database.getDatabaseVersions().size());
+		assertNotNull("File should be uploaded.", database.getFileVersionByPath("file1.jpg"));		
+		assertEquals("There should be a new database version, because file should not have been added.", 2, database.getLocalDatabaseBranch().size());
 		
 		// B down
 		clientA.down();
@@ -101,7 +101,7 @@ public class ChangedAttributesScenarioTest {
 		
 		// Test 2: The rest
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// Tear down
 		clientA.cleanup();
@@ -155,7 +155,7 @@ public class ChangedAttributesScenarioTest {
 		
 		// Test 3: The rest
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// Tear down
 		clientA.cleanup();

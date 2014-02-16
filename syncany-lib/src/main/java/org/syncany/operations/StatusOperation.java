@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.util.FileUtil;
 
 /**
@@ -49,19 +49,19 @@ public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
 	
 	private FileVersionComparator fileVersionComparator; 
-	private Database loadedDatabase;
+	private SqlDatabase localDatabase;
 	private StatusOperationOptions options;
 	
 	public StatusOperation(Config config) {
-		this(config, null, new StatusOperationOptions());
+		this(config, new StatusOperationOptions());
 	}	
 	
-	public StatusOperation(Config config, Database database, StatusOperationOptions options) {
+	public StatusOperation(Config config, StatusOperationOptions options) {
 		super(config);		
 		
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
-		this.loadedDatabase = database;
-		this.options = options;
+		this.localDatabase = new SqlDatabase(config);
+		this.options = options;		
 	}	
 	
 	@Override
@@ -74,39 +74,46 @@ public class StatusOperation extends Operation {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
 		
-		// Load database, or use already loaded database
-		Database database = (loadedDatabase != null) ? loadedDatabase : loadLocalDatabase();		
+		// Get local database
+		logger.log(Level.INFO, "Querying current file tree from database ...");				
+
+		// Path to actual file version
+		final Map<String, FileVersion> filesInDatabase = localDatabase.getCurrentFileTree();
+
+		// Find local changes
+		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");								
+		ChangeSet localChanges = findLocalChanges(filesInDatabase);
 		
-		// Find changed and deleted files
-		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");				
-		
-		ChangeSet changeSet = findChangedAndNewFiles(config.getLocalDir(), database);
-		changeSet = findDeletedFiles(changeSet, database);
-		
-		if (!changeSet.hasChanges()) {
+		if (!localChanges.hasChanges()) {
 			logger.log(Level.INFO, "- No changes to local database");
 		}
 		
 		// Return result
 		StatusOperationResult statusResult = new StatusOperationResult();
-		statusResult.setChangeSet(changeSet);
+		statusResult.setChangeSet(localChanges);
 		
 		return statusResult;
-	}		
+	}
 
-	private ChangeSet findChangedAndNewFiles(final File root, final Database database) throws FileNotFoundException, IOException {
+	private ChangeSet findLocalChanges(final Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
+		ChangeSet localChanges = findLocalChangedAndNewFiles(config.getLocalDir(), filesInDatabase);
+		findAndAppendDeletedFiles(localChanges, filesInDatabase);
+		
+		return localChanges;
+	}		
+	
+	private ChangeSet findLocalChangedAndNewFiles(final File root, Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
 		Path rootPath = Paths.get(root.getAbsolutePath());
 		
-		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, database);		
+		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, filesInDatabase);		
 		Files.walkFileTree(rootPath, fileVisitor);
 		
 		return fileVisitor.getChangeSet();		
 	}
 	
-	private ChangeSet findDeletedFiles(ChangeSet changeSet, Database database) {
-		for (PartialFileHistory fileHistory : database.getFileHistories()) {
+	private void findAndAppendDeletedFiles(ChangeSet localChanges, Map<String,FileVersion> filesInDatabase) {
+		for (FileVersion lastLocalVersion : filesInDatabase.values()) {
 			// Check if file exists, remove if it doesn't
-			FileVersion lastLocalVersion = fileHistory.getLastVersion();
 			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
 			
 			// Ignore this file history if the last version is marked "DELETED"
@@ -116,28 +123,26 @@ public class StatusOperation extends Operation {
 			
 			// If file has VANISHED, mark as DELETED 
 			if (!FileUtil.exists(lastLocalVersionOnDisk)) {
-				changeSet.getDeletedFiles().add(lastLocalVersion.getPath());
+				localChanges.getDeletedFiles().add(lastLocalVersion.getPath());
 			}
 		}		
-		
-		return changeSet;
 	}
 	
 	private class StatusFileVisitor implements FileVisitor<Path> {
 		private Path root;
-		private Database database;
-		private ChangeSet changeSet;
+		private ChangeSet changeSet;		
+		private Map<String, FileVersion> currentFileTree;
 		
-		public StatusFileVisitor(Path root, Database database) {
+		public StatusFileVisitor(Path root, Map<String, FileVersion> currentFileTree) {
 			this.root = root;
-			this.database = database;
 			this.changeSet = new ChangeSet();
+			this.currentFileTree = currentFileTree;
 		}
 
 		public ChangeSet getChangeSet() {
 			return changeSet;
 		}
-		
+		 
 		@Override
 		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
 			String relativeFilePath = FileUtil.getRelativeDatabasePath(root.toFile(), actualLocalFile.toFile()); //root.relativize(actualLocalFile).toString();
@@ -168,11 +173,9 @@ public class StatusOperation extends Operation {
 			}				
 			
 			// Check database by file path
-			PartialFileHistory expectedFileHistory = database.getFileHistory(relativeFilePath);				
+			FileVersion expectedLastFileVersion = currentFileTree.get(relativeFilePath);
 			
-			if (expectedFileHistory != null) {
-				FileVersion expectedLastFileVersion = expectedFileHistory.getLastVersion();
-				
+			if (expectedLastFileVersion != null) {				
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
 				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
@@ -204,10 +207,17 @@ public class StatusOperation extends Operation {
 		@Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException { 
 			return visitFile(dir, attrs);
 		}
-		
-		@Override public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }
-		@Override public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException { return FileVisitResult.CONTINUE; }		
-	}	
+
+		@Override
+		public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+			return FileVisitResult.CONTINUE;
+		}
+
+		@Override
+		public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+			return FileVisitResult.CONTINUE;
+		}
+	}
 	
 	public static class StatusOperationOptions implements OperationOptions {
 		private boolean forceChecksum = false;

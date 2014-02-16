@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.database;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -27,26 +25,26 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.tests.util.TestDatabaseUtil;
 
-public class DatabaseCacheTest {
+public class MemoryDatabaseCacheTest {
 	static {
 		Logging.init();
 	}
 
 	@Test
 	public void testChunkCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add chunk to new database version, then add database version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -81,7 +79,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testMultiChunkCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add chunk to multichunk
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -134,7 +132,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testFilenameCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -185,7 +183,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testFilenameCacheDeleteAndNewOfSameFileInOneDatabaseVersion() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -234,7 +232,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testContentChecksumCache() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -296,7 +294,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testGetFileHistory() throws IOException {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -340,7 +338,7 @@ public class DatabaseCacheTest {
 
 	@Test
 	public void testRemoveDatabaseVersion() {
-		Database database = new Database();
+		MemoryDatabase database = new MemoryDatabase();
 
 		// Round 1: Add file history & version
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
@@ -356,40 +354,54 @@ public class DatabaseCacheTest {
 
 		database.addDatabaseVersion(databaseVersion1);
 		
-		// - history 2, version 2
-		
+		// - history 1, version 2		
 		DatabaseVersion databaseVersion2 = TestDatabaseUtil.createDatabaseVersion(databaseVersion1);
 		FileVersion fileVersion2 = TestDatabaseUtil.createFileVersion("file.jpg", fileVersion1);
 
-		FileHistoryId idFile2 = FileHistoryId.parseFileId("1111111111111111");
-		PartialFileHistory fileHistory2 = new PartialFileHistory(idFile1);
+		FileHistoryId idFile1b = FileHistoryId.parseFileId("1111111111111111");
+		PartialFileHistory fileHistory1b = new PartialFileHistory(idFile1b);
 
-		fileHistory2.addFileVersion(fileVersion2);
-		databaseVersion2.addFileHistory(fileHistory2);
+		fileHistory1b.addFileVersion(fileVersion2);
+		databaseVersion2.addFileHistory(fileHistory1b);
 
 		database.addDatabaseVersion(databaseVersion2);
-		//Database should have 2 versions of file
+				
+		// Tests: Database should have 2 versions of file
 		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(2, database.getFileHistory(idFile1b).getFileVersions().size());
 		
+		
+		// Round 2: Remove second database version
 		database.removeDatabaseVersion(databaseVersion2);
-		//Second version removed, 1 version left
+		
+		// Tests: Second version removed, 1 version left
 		assertEquals(1, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(1, database.getFileHistory(idFile1b).getFileVersions().size());
 		assertEquals(fileVersion1, database.getFileHistory(idFile1).getLastVersion());
 		
-		database.addDatabaseVersion(databaseVersion2);
-		//Second version added, 2 versions of file
-		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
 		
+		// Round 3: Add database version again
+		database.addDatabaseVersion(databaseVersion2);
+		
+		// Tests: Second version added, 2 versions of file
+		assertEquals(2, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(2, database.getFileHistory(idFile1b).getFileVersions().size());
+		
+		
+		// Round 4: Remove FIRST database version		
 		database.removeDatabaseVersion(databaseVersion1);
-		//First version removed, 1 version left
+		
+		// Tests: First version removed, 1 version left
 		assertEquals(1, database.getFileHistory(idFile1).getFileVersions().size());
+		assertEquals(1, database.getFileHistory(idFile1b).getFileVersions().size());
 		assertEquals(fileVersion2, database.getFileHistory(idFile1).getLastVersion());
 		
+
+		// Round 5: Remove second database version		
 		database.removeDatabaseVersion(databaseVersion2);
-		//Second version removed, none left
-		assertNull(database.getFileHistory(idFile1));
-		
-		
+
+		// Tests: Second version removed, none left
+		assertNull(database.getFileHistory(idFile1));		
 	}
 
 }

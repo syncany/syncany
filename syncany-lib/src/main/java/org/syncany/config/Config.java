@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,10 @@ package org.syncany.config;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
-import org.syncany.chunk.MimeTypeChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
@@ -37,6 +35,7 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -59,7 +58,7 @@ public class Config {
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "repo";
 	public static final String FILE_MASTER = "master";
-	
+		
 	private byte[] repoId;
 	private String machineName;
 	private String displayName;
@@ -89,7 +88,7 @@ public class Config {
 		initRepo(repoTO);
     	initConnection(configTO);    
 	}		
-
+	
 	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
 			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
@@ -136,9 +135,14 @@ public class Config {
 	}
 
 	private void initChunker(RepoTO repoTO) throws Exception {
-		// TODO [feature request] make chunking options configurable
-		chunker = new MimeTypeChunker(
-			new FixedChunker(16*1024, "SHA1"),
+		// TODO [feature request] make chunking options configurable, something like this:
+		//  chunker = Chunker.getInstance(repoTO.getChunker().getType());
+		//  chunker.init(repoTO.getChunker().getSettings());
+		
+		chunker = new FixedChunker(2*1024*1024, "SHA1");
+		
+		/*new MimeTypeChunker(
+			new FixedChunker(64*1024, "SHA1"),
 			new FixedChunker(2*1024*1024, "SHA1"),
 			Arrays.asList(new String[] {
 				"application/x-gzip",
@@ -148,11 +152,12 @@ public class Config {
 				"application/octet-stream",
 				"application/x-sharedlib",
 				"application/x-executable",
+				"application/x-iso9660-image",
 				"image/.+",
 				"audio/.+",
 				"video/.+",				
 			})
-		);
+		);*/
 	}
 
 	private void initMultiChunker(RepoTO repoTO) {
@@ -214,10 +219,14 @@ public class Config {
 		}
 	}
 	
+	public java.sql.Connection createDatabaseConnection() {
+		return DatabaseConnectionFactory.createConnection(getDatabaseFile());
+	}
+	
 	public void setCacheDir(File file) {
 		cacheDir = file;
 		cache = new Cache(cacheDir);
-	}
+	}	
 
 	public File getCacheDir() {
 		return cacheDir;
@@ -313,15 +322,7 @@ public class Config {
 
 	public File getDatabaseFile() {
 		return new File(databaseDir+File.separator+"local.db");	
-	}
-	
-	public File getDirtyDatabaseFile() {
-		return new File(databaseDir+File.separator+"dirty.db");	
-	}
-	
-	public File getKnownDatabaseListFile() {
-		return new File(databaseDir+File.separator+"knowndbs.list");	
-	}
+	}	
 
 	public void setDatabaseDir(File databaseDir) {
 		this.databaseDir = databaseDir;

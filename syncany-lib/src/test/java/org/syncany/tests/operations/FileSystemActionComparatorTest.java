@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,19 +78,19 @@ public class FileSystemActionComparatorTest {
 		FileVersion firstFileVersion = createFileVersion(path, type);
 		FileVersion secondFileVersion = createFileVersion(path, type, firstFileVersion);
 		
-		return new DeleteFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null, null);
+		return new DeleteFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null);
 	}	
 
 	private NewFileSystemAction createNewFileSystemAction(String path, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(path, type);
-		return new NewFileSystemAction(createDummyConfig(), firstFileVersion, null, null);
+		return new NewFileSystemAction(createDummyConfig(), firstFileVersion, null);
 	}
 	
 	private RenameFileSystemAction createRenameFileSystemAction(String fromPath, String toPath, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(fromPath, type);
 		FileVersion secondFileVersion = createFileVersion(toPath, type, firstFileVersion);
 		
-		return new RenameFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null, null);
+		return new RenameFileSystemAction(createDummyConfig(), firstFileVersion, secondFileVersion, null);
 	}
 
 	private FileVersion createFileVersion(String path, FileType type) {

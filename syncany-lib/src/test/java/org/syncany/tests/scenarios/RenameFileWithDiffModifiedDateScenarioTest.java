@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,16 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.Database;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestSqlDatabase;
 
 public class RenameFileWithDiffModifiedDateScenarioTest {
 	@Test
@@ -50,16 +50,16 @@ public class RenameFileWithDiffModifiedDateScenarioTest {
 		// B, down, then move BOTH files
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientB.moveFile("A-file1.jpg", "A-file1-moved.jpg");
 		clientB.moveFile("A-file1-with-different-modified-date.jpg", "A-file1-with-different-modified-date-moved.jpg");				
 		clientB.up();
 		
-		Database clientDatabaseB = clientB.loadLocalDatabase();
+		TestSqlDatabase clientDatabaseB = clientB.loadLocalDatabase();
 		
-		PartialFileHistory file1Orig = clientDatabaseB.getFileHistory("A-file1-moved.jpg");
-		PartialFileHistory file1WithDiffLastModDate = clientDatabaseB.getFileHistory("A-file1-with-different-modified-date-moved.jpg");
+		PartialFileHistory file1Orig = clientDatabaseB.getFileHistoryWithFileVersions("A-file1-moved.jpg");
+		PartialFileHistory file1WithDiffLastModDate = clientDatabaseB.getFileHistoryWithFileVersions("A-file1-with-different-modified-date-moved.jpg");
 		
 		assertNotNull(file1Orig);
 		assertNotNull(file1WithDiffLastModDate);

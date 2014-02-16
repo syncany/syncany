@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
@@ -44,7 +44,7 @@ public class DatabaseBranch {
 		this.branch = new ArrayList<DatabaseVersionHeader>();
 	}
 		
-	public DatabaseBranch(Database database) {
+	public DatabaseBranch(MemoryDatabase database) {
 		this();
 		
 		for (DatabaseVersion databaseVersion : database.getDatabaseVersions()) {
@@ -105,6 +105,32 @@ public class DatabaseBranch {
 		return branch.toString();
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((branch == null) ? 0 : branch.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DatabaseBranch other = (DatabaseBranch) obj;
+		if (branch == null) {
+			if (other.branch != null)
+				return false;
+		}
+		else if (!branch.equals(other.branch))
+			return false;
+		return true;
+	}
+
 	public class BranchIterator implements Iterator<DatabaseVersionHeader> {		
         private int current;
         

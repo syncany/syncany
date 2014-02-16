@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.database.Database;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
@@ -48,15 +48,13 @@ public abstract class FileSystemAction {
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName()); 
 	
 	protected Config config;
-	protected Database localDatabase;
-	protected Database winningDatabase;
+	protected MemoryDatabase winningDatabase;
 	protected FileVersion fileVersion1;
 	protected FileVersion fileVersion2;
 	protected FileVersionComparator fileVersionHelper;
 	
-	public FileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
+	public FileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
-		this.localDatabase = localDatabase;
 		this.winningDatabase = winningDatabase;
 		this.fileVersion1 = file1;
 		this.fileVersion2 = file2;

@@ -1,0 +1,20 @@
+Empty all tables
+----------------
+SET FOREIGN_KEY_CHECKS=0;
+TRUNCATE `chunk`;
+TRUNCATE `databaseversion`;
+TRUNCATE `filecontent`;
+TRUNCATE `filecontent_chunk`;
+TRUNCATE `filehistory`;
+TRUNCATE `fileversion`;
+TRUNCATE `multichunk`;
+TRUNCATE `multichunk_chunk`;
+TRUNCATE `vectorclock`;
+SET FOREIGN_KEY_CHECKS=1;
+
+Get current file tree
+---------------------
+select *
+from fileversion fv
+where fv.status<>'DELETED' 
+  and fv.version=(select max(fv1.version) from fileversion fv1 where fv.filehistory_id=fv1.filehistory_id)
