@@ -230,7 +230,11 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repopathIsEmpty() throws StorageException {
-		
-		return true;
+		try {
+			return sardine.list(repoPath).size() == 0;
+		}
+		catch (IOException e) {
+			throw new StorageException(e);
+		}
 	}
 }
