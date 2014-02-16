@@ -43,19 +43,10 @@ import java.util.Map;
  */
 public interface TransferManager {
 	public enum StorageTestResult {
-		/**
-		 * 
-		 */
-		INVALID_PARAMETERS,
-		
-		REPO_ALREADY_EXISTS,      	
-		NO_REPO_LOCATION_NOT_EMPTY,
-		
-		NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO,
-		NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK,
-		
-		NO_REPO_PERMISSIONS_OK,   	
-		NO_REPO_PERMISSIONS_KO;   	
+		REPO_EXISTS,         	// repopath exists && repopath is not empty
+		NO_REPO,				// (repopath exists && repopath is empty) or 
+								// (repopath does not exist && write permission)
+		NO_REPO_CANNOT_CREATE;  // repopath does not exist &&  cannot write
 	}
 		
 	/**
@@ -152,5 +143,5 @@ public interface TransferManager {
 	 * 
 	 * @return {@link StorageTestResult}
 	 */
-	public StorageTestResult test() ;
+	public StorageTestResult test() throws StorageException;
 }

@@ -211,10 +211,26 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			return repoPath;
 		}
 	}
-	
+
 	@Override
-	public StorageTestResult test() {
-		//TODO
-		return StorageTestResult.NO_REPO_PERMISSIONS_OK;
+	public boolean canCreateRepoPath() throws StorageException {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	@Override
+	public boolean repopathExists() throws StorageException {
+		try {
+			return sardine.exists(repoPath);
+		}
+		catch (IOException e) {
+			throw new StorageException(e);
+		}
+	}
+
+	@Override
+	public boolean repopathIsEmpty() throws StorageException {
+		
+		return true;
 	}
 }

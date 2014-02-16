@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.jets3t.service.ServiceException;
+import org.jets3t.service.StorageService;
 import org.jets3t.service.acl.CanonicalGrantee;
 import org.jets3t.service.acl.GranteeInterface;
 import org.jets3t.service.acl.Permission;
@@ -254,8 +255,30 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 		}
 	}
 	
-	public boolean hasWritePermission() {
+	@Override
+	public boolean canCreateRepoPath() throws StorageException {
 		GranteeInterface grantee = new CanonicalGrantee(bucket.getOwner().getId());
 		return bucket.getAcl().hasGranteeAndPermission(grantee, Permission.PERMISSION_WRITE);
-	}   
+	}
+
+	@Override
+	public boolean repopathExists() throws StorageException {
+		try {
+			int status = service.checkBucketStatus(bucket.getName());
+			return (status != StorageService.BUCKET_STATUS__DOES_NOT_EXIST);
+		}
+		catch (ServiceException e) {
+			throw new StorageException(e);
+		}
+	}
+	
+	@Override
+	public boolean repopathIsEmpty() throws StorageException {
+		try {
+			return service.listObjects(bucket.getName()).length == 0;
+		}
+		catch (ServiceException e) {
+			throw new StorageException(e);
+		}
+	}
 }

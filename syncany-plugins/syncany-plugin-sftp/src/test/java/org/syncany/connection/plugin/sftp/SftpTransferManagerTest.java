@@ -20,6 +20,7 @@ package org.syncany.connection.plugin.sftp;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.connection.plugins.sftp.SftpConnection;
 
@@ -34,24 +35,19 @@ public class SftpTransferManagerTest {
 	private final static String HOST = "XXX";
 	
 	@Test
-	public void testSftpTransferManager() {
-		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, test(SANDBOX + "repoValid"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, test(SANDBOX + "repoEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO, test(SANDBOX + "repoEmptyKO"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, test(SANDBOX + "notEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test(SANDBOX + "repoNewPermOk"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, test(SANDBOX + "repoNewPermOk/new/b"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_KO, test("/root/notAllowed"));
-		Assert.assertEquals(StorageTestResult.INVALID_PARAMETERS, test("unknownhost", "/root/notAllowed"));
+	public void testSftpTransferManager() throws StorageException {
+		Assert.assertEquals(StorageTestResult.NO_REPO, test(SANDBOX + "repoValid"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_CANNOT_CREATE, test(SANDBOX + "repoEmpty"));
+		Assert.assertEquals(StorageTestResult.REPO_EXISTS, test(SANDBOX + "repoEmptyKO"));
 	}
 		
-	public StorageTestResult test(String host, String path){
+	public StorageTestResult test(String host, String path) throws StorageException{
 		SftpConnection cnx = con(host);
 		cnx.setPath(path);
 		return cnx.createTransferManager().test();
 	}
 	
-	public StorageTestResult test(String path){
+	public StorageTestResult test(String path) throws StorageException{
 		SftpConnection cnx = con();
 		cnx.setPath(path);
 		return cnx.createTransferManager().test();
