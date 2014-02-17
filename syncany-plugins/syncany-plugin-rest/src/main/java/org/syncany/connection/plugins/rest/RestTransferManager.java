@@ -256,6 +256,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
+	//TODO not tested
 	public boolean repopathWriteAccess() throws StorageException {
 		GranteeInterface grantee = new CanonicalGrantee(bucket.getOwner().getId());
 		return bucket.getAcl().hasGranteeAndPermission(grantee, Permission.PERMISSION_WRITE);
@@ -263,6 +264,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repopathExists() throws StorageException {
+		//TODO not tested
 		try {
 			int status = service.checkBucketStatus(bucket.getName());
 			return (status != StorageService.BUCKET_STATUS__DOES_NOT_EXIST);
@@ -273,6 +275,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
+	//TODO not tested
 	public boolean repopathIsEmpty() throws StorageException {
 		try {
 			return service.listObjects(bucket.getName()).length == 0;

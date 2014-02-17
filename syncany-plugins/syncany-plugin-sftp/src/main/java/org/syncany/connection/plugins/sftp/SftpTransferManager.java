@@ -38,6 +38,7 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.util.FileUtil;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
@@ -336,7 +337,8 @@ public class SftpTransferManager extends AbstractTransferManager {
 	@Override
 	public boolean repopathWriteAccess() throws StorageException {
 		try {
-			SftpATTRS stat = channel.stat(repoPath);
+			String parentPath = FileUtil.getParentPath(repoPath);
+			SftpATTRS stat = channel.stat(parentPath);
 			return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0;
 		}
 		catch (SftpException ex) {

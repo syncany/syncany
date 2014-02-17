@@ -217,12 +217,20 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repopathWriteAccess() throws StorageException {
-		// TODO Auto-generated method stub
-		return true;
+		//TODO not tested
+		try {
+			sardine.createDirectory(repoPath);
+			sardine.delete(repoPath);
+			return true;
+		}
+		catch (IOException e) {
+			return false;
+		}
 	}
 
 	@Override
 	public boolean repopathExists() throws StorageException {
+		//TODO not tested
 		try {
 			return sardine.exists(repoPath);
 		}
@@ -233,6 +241,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repopathIsEmpty() throws StorageException {
+		//TODO not tested
 		try {
 			return sardine.list(repoPath).size() == 0;
 		}
