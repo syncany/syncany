@@ -68,8 +68,55 @@ public class CleanupOperation extends Operation {
 			mergeRemoteFiles();
 		}
 		
+		removeOldVersions();		
+		
 		return null;
 	}	
+
+	private void removeOldVersions() {
+		/*
+		 *  WARNING: Syntax errors; still DRAFTING / BRAIN STORMING here ... 
+		 *
+		 * 
+		 *  - All remote operations SHOULD be performed atomically. HOW to achieve this??
+		 */
+		
+				
+		lockRemoteRepository();
+				
+		
+		List<PartialFileHistory> oldVersions = findOldVersions(options.getKeepVersionsNumber());
+		List<MultiChunkEntry> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsNumber());
+		
+		// Local
+		localDeleteUnusedMultiChunks(unusedMultiChunks);
+		localDeleteOldVersions(oldVersions);
+		
+		// Remote
+		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
+		
+		
+		if (options.isRepackageMultiChunksEnabled()) { // This could be done at a later stage; maybe skip this for the first iteration?
+			List<Map<MultiChunkEntry, ChunkEntry>> partiallyUnusedMultiChunks = findPartiallyUnusedMultiChunks(options.getKeepVersionsNumber(), options.getRepackageUnusedThreshold());			
+			Map<MultiChunkEntry, File> newRepackagedMultiChunks = repackagePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+						
+			// Remote changes 
+			uploadRepackagedMultiChunks(repackagedMultiChunks);
+			remoteDeletePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+			
+			// Local changes
+			removeLocalPartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+			insertLocalNewRepackagedMultiChunks(newRepackagedMultiChunks);
+		}
+		
+		
+		
+		// Metadata???
+		// -- upload prune files: prune-A-0000001    OR     db-PRUNE-0000001  ??
+		
+	
+		unlockRemoteRepository();
+	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		// Retrieve and sort machine's database versions
@@ -136,10 +183,20 @@ public class CleanupOperation extends Operation {
 	
 	public static class CleanupOperationOptions implements OperationOptions {
 		private boolean mergeRemoteFiles = true;
+		private int keepVersionsNumber = 5;
+		private double repackageUnusedThreshold = 0.7;
 
 		public boolean isMergeRemoteFiles() {
 			return mergeRemoteFiles;
-		}		
+		}	
+		
+		public double getRepackageUnusedThreshold() {
+			return repackageUnusedThreshold;
+		}
+
+		public int getKeepVersionsNumber() {
+			return keepVersionsNumber;
+		}
 	}	
 
 }
