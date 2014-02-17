@@ -33,12 +33,13 @@ project.ext {
 }
 
 configurations {
-  doclet
+	doclet
 }
 
 dependencies {
-  doclet group: 'org.jboss.apiviz', name: 'apiviz', version: '1.3.2.GA'
+	doclet group: 'org.jboss.apiviz', name: 'apiviz', version: '1.3.2.GA'
 }
+
 repositories {
 	mavenCentral()
 }
@@ -178,12 +179,15 @@ subprojects {
 task javadocAll(type: Javadoc) {
 	group = "documentation"
 	description = "Creates the JavaDoc for all subprojects and puts it into build/javadoc"
+	
 	source subprojects.collect { project -> project.sourceSets.main.allJava } 
 	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
 	destinationDir = new File(projectDir, 'build/javadoc')
+	
 	doFirst {
 	  subprojects.each { project -> project.sourceSets.main.output.each { dir -> dir.mkdirs() } }
 	}
+	
 	options.linkSource = true
         options.addStringOption('sourceclasspath', files(subprojects.collect { project -> project.sourceSets.main.output }).getAsPath())
 
@@ -224,7 +228,8 @@ task clean(type: Delete) {
 	delete 'build'	
 }
 
-// Global Tests 
+
+// Global Tests ////////////////////////////////////////////////////////////////
 
 task testGlobal(type: TestReport) {
 	destinationDir = file("$buildDir/reports/allTests")
