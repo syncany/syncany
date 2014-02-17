@@ -20,7 +20,6 @@ package org.syncany.tests.connection.plugins.local;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,9 +46,8 @@ import org.syncany.tests.util.TestFileUtil;
  */
 public class LocalTransferManagerPluginTest {
 	private File tempLocalSourceDir;
-	private File tempLocalRepoDir;
+	private File tempRepoPath;
 	private Map<String, String> localPluginSettings;
-	private Map<String, String> localPluginSettingsLongFolder;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -58,51 +56,23 @@ public class LocalTransferManagerPluginTest {
 		tempLocalSourceDir = new File(rootDir+"/local");
 		tempLocalSourceDir.mkdir();
 		
-		tempLocalRepoDir = new File(rootDir+"/repo");		
-		tempLocalRepoDir.mkdir();
+		tempRepoPath = new File(rootDir+"/repo");		
+		tempRepoPath.mkdir();
 				
 		localPluginSettings = new HashMap<String, String>();
-		localPluginSettings.put("path", tempLocalRepoDir.getAbsolutePath());
-		
-		localPluginSettingsLongFolder = new HashMap<String, String>();
-		localPluginSettingsLongFolder.put("path", tempLocalRepoDir.getAbsolutePath() + "/f1/f2/f3");
+		localPluginSettings.put("path", tempRepoPath.getAbsolutePath());
 	}
 	
 	@Test
 	public void testTestFunctionEmptyRepoPermissionOk() throws StorageException{
 		TransferManager tm = loadPluginAndCreateTransferManager();
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, tm.test());
-	}
-	
-	@Test
-	public void testTestFunctionRepoNotEmpty() throws StorageException{
-		TransferManager tm = loadPluginAndCreateTransferManager();
-		File subFolder = new File(tempLocalRepoDir, "temp");
-		subFolder.mkdir();
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, tm.test());
-	}
-	
-	@Test
-	public void testTestFunctionExistingRepo() throws StorageException, IOException{
-		TransferManager tm = loadPluginAndCreateTransferManager();
-		File subFolder = new File(tempLocalRepoDir, "syncany");
-		subFolder.createNewFile();
-		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, tm.test());
-	}
-	
-	@Test
-	public void testTestFunction() throws StorageException, IOException{
-		Plugin pluginInfo = Plugins.get("local");	
-		Connection connection = pluginInfo.createConnection();				
-		connection.init(localPluginSettingsLongFolder);
-		TransferManager tm = connection.createTransferManager();
-		Assert.assertEquals(StorageTestResult.NO_REPO_PERMISSIONS_OK, tm.test());
+		Assert.assertEquals(StorageTestResult.NO_REPO, tm.test());
 	}
 	
 	@After
 	public void tearDown() {
 		TestFileUtil.deleteDirectory(tempLocalSourceDir);
-		TestFileUtil.deleteDirectory(tempLocalRepoDir);
+		TestFileUtil.deleteDirectory(tempRepoPath);
 	}
 	
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {

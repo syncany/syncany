@@ -224,5 +224,13 @@ public class FileUtilTest {
 		assertEquals("/home/philipp/file:with:colons", NormalizedPath.get(null, "/home/philipp/file:with:colons").toString());
 		assertEquals("/home/philipp/file\\with\\backslashes.txt", NormalizedPath.get(null, "/home/philipp/file\\with\\backslashes.txt").toString());
 		assertEquals("/home/philipp/folder\\with\\backslashes", NormalizedPath.get(null, "/home/philipp/folder\\with\\backslashes/").toString());		
-	}	
+	}
+	
+	@Test
+	public void testGetParnetPath() {
+		assertEquals("/parent", FileUtil.getParentPath("/parent/folder"));
+		assertEquals("/parent", FileUtil.getParentPath("/parent/folder/"));
+		assertEquals("/", FileUtil.getParentPath("/parent"));
+		assertEquals("/", FileUtil.getParentPath("/parent/"));
+	}
 }

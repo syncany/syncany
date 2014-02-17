@@ -48,6 +48,7 @@ public class EmbeddedFtpServerTest {
 	public static int PORT = 2221;
 
 	public static String USER1 = "user";
+	public static String USER2 = "otherUser";
 	public static String PASSWORD1 = "password";
 	
 	private static FtpServer server;
@@ -92,14 +93,14 @@ public class EmbeddedFtpServerTest {
 	}
 	
 	// FTP Client
-	public static void mkdir(String path) throws SocketException, IOException {
+	public static void mkdir(String path, String user) throws SocketException, IOException {
 		FTPClient ftp = new FTPClient();
 		ftp.setConnectTimeout(3000);
 		ftp.setDataTimeout(3000);
 		ftp.setDefaultTimeout(3000);
 
 		ftp.connect(HOST, PORT);
-		ftp.login(USER1, PASSWORD1);
+		ftp.login(user, PASSWORD1);
 		ftp.enterLocalPassiveMode();
 		ftp.setFileType(FTPClient.BINARY_FILE_TYPE); // Important !!!
 		ftp.makeDirectory(path);
