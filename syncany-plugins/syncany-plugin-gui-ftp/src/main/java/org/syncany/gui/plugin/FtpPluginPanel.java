@@ -18,14 +18,9 @@
 package org.syncany.gui.plugin;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -34,7 +29,6 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
@@ -49,8 +43,6 @@ public class FtpPluginPanel extends PluginPanel {
 	private Text usernameText;
 	private Text passwordText;
 	private Text pathText;
-	private Button testFtpButton;
-	private Label testResultLabel;
 	private Spinner portSpinner;
 
 	/**
@@ -97,7 +89,6 @@ public class FtpPluginPanel extends PluginPanel {
 		portSpinner = new Spinner(this, SWT.BORDER);
 		portSpinner.setPageIncrement(1);
 		portSpinner.setMaximum(100000);
-//		WidgetDecorator.decorateControl(spinner, FontDecorator.NORMAL);
 		portSpinner.setSelection(21);
 		GridData gd_spinner = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		gd_spinner.verticalIndent = WidgetDecorator.VERTICAL_INDENT;
@@ -125,114 +116,8 @@ public class FtpPluginPanel extends PluginPanel {
 		
 		pathText = new Text(this, SWT.BORDER);
 		pathText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-
-		Composite buttonComposite = new Composite(this, SWT.NONE);
-		GridLayout gl_buttonComposite = new GridLayout(2, false);
-		gl_buttonComposite.horizontalSpacing = 0;
-		gl_buttonComposite.verticalSpacing = 0;
-		gl_buttonComposite.marginWidth = 0;
-		gl_buttonComposite.marginHeight = 0;
-		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1);
-		gd_buttonComposite.minimumHeight = 30;
-		buttonComposite.setLayoutData(gd_buttonComposite);
-		
-		testResultLabel = new Label(buttonComposite, SWT.WRAP);
-		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-		testResultLabel.setAlignment(SWT.CENTER);
-		
-		testFtpButton = new Button(buttonComposite, SWT.NONE);
-
-		GridData gd_testFtpButton = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
-		gd_testFtpButton.heightHint = 30;
-		gd_testFtpButton.widthHint = 100;
-		testFtpButton.setLayoutData(gd_testFtpButton);
-		testFtpButton.setText(I18n.getString("plugin.ftp.test"));
-		testFtpButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				handleTest();
-			}
-		});
 		
 		WidgetDecorator.bold(introductionTitleLabel);
-		WidgetDecorator.normal(
-			introductionLabel,
-			hostText,hostLabel,
-			portLabel,portSpinner, 
-			usernameLabel, usernameText,
-			passwordLabel,passwordText,
-			pathLabel,pathText,
-			testFtpButton
-		);
-	}
-
-	protected void handleTest() {
-		testFtpButton.setEnabled(false);
-		try{
-			boolean isValid = isValid();
-			StorageTestResult testResult = testPluginConnection();
-			String tempMessage = "message";
-			Color tempColor = WidgetDecorator.BLACK;
-			
-			if (isValid){
-	    		switch (testResult){
-		    		case INVALID_PARAMETERS:
-		    			tempMessage = I18n.getString("plugin.ftp.testFails");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
-		    		case NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO:
-		    			tempMessage = I18n.getString("plugin.noRepoLocationEmptyPermissionOK");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
-		    		case NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK:
-		    			tempMessage = I18n.getString(
-		    				"plugin.ftp.testSucceed", 
-		    				I18n.getString("plugin.noRepoLocationEmptyPermissionOK")
-		    			);
-		    			break;
-		    		case NO_REPO_LOCATION_NOT_EMPTY:
-		    			tempMessage = I18n.getString("plugin.noRepoLocationNotEmpty");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
-		    		case NO_REPO_PERMISSIONS_KO:
-		    			tempMessage = I18n.getString("plugin.noRepoPermissionKO");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
-		    		case NO_REPO_PERMISSIONS_OK:
-		    			tempMessage = I18n.getString(
-		    				"plugin.ftp.testSucceed", 
-		    				I18n.getString("plugin.noRepoPermissionOK")
-		    			);
-		    			break;
-		    		case REPO_ALREADY_EXISTS:
-		    			tempMessage = I18n.getString("plugin.repoAlreadyExists");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
-	    		}
-	    	}
-	    	else {
-	    		tempMessage = I18n.getString("plugin.ftp.testFails");
-	    		tempColor = WidgetDecorator.RED;
-	    	}
-	    	
-	    	final String message = tempMessage;
-	    	final Color color = tempColor;
-	    	
-			Display.getCurrent().syncExec(new Runnable() {
-			    public void run() {
-			    	testResultLabel.setText(message);
-			    	testResultLabel.setForeground(color);
-			    	testFtpButton.setEnabled(true);
-			    }
-			});
-		}
-		catch (Exception e){
-			
-		}
-		finally {
-			testFtpButton.setEnabled(true);
-		}
 	}
 
 	@Override

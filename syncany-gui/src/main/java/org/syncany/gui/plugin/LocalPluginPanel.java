@@ -25,7 +25,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Connection;
@@ -103,44 +102,12 @@ public class LocalPluginPanel extends PluginPanel {
 		gd_buttonComposite.minimumHeight = 30;
 		buttonComposite.setLayoutData(gd_buttonComposite);
 		
-		final Label testResultLabel = new Label(buttonComposite, SWT.NONE);
-		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
-		testResultLabel.setAlignment(SWT.CENTER);
-		
-		final Button testLocalRepositoryButton = new Button(buttonComposite, SWT.NONE);
-
-		GridData gd_testFtpButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
-		gd_testFtpButton.heightHint = WidgetDecorator.DEFAULT_BUTTON_HEIGHT;
-		gd_testFtpButton.widthHint = WidgetDecorator.DEFAULT_BUTTON_WIDTH;
-		testLocalRepositoryButton.setLayoutData(gd_testFtpButton);
-		
-		testLocalRepositoryButton.setText("Test");
-		testLocalRepositoryButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Display.getCurrent().syncExec(new Runnable() {
-				    public void run() {
-				    	boolean isValid = isValid();// && testPluginConnection();
-				    	
-				    	if (isValid){
-				    		testResultLabel.setText(I18n.getString("plugin.local.validDirectory"));
-				    	}
-				    	else{
-				    		testResultLabel.setText(I18n.getString("plugin.local.notValidDirectory"));
-				    	}
-					}
-				});
-			}
-		});
-		
 		WidgetDecorator.bold(introductionTitleLabel);
 		
 		WidgetDecorator.normal(introductionLabel);
 		WidgetDecorator.normal(hostLabel);
 		WidgetDecorator.normal(pathText);
 		WidgetDecorator.normal(selectFolderButton);
-		WidgetDecorator.normal(testResultLabel);
-		WidgetDecorator.normal(testLocalRepositoryButton);
 	}	
 
 	@Override
@@ -173,12 +140,12 @@ public class LocalPluginPanel extends PluginPanel {
     	}
     	
     	if (getPurpose().equals(PluginPanelPurpose.CONNECT)){
-    		if (!FileUtil.isExistingFolder(getShell(), folder)){
+    		if (!FileUtil.isExistingFolder(folder)){
     			valid = false;
     		}
     	}
     	else if (getPurpose().equals(PluginPanelPurpose.CREATE)){
-    		if (!FileUtil.isExistingAndEmptyFolder(getShell(), folder)){
+    		if (!FileUtil.isExistingAndEmptyFolder(folder)){
     			valid = false;
     		}
     	}

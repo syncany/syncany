@@ -3,7 +3,6 @@ package org.syncany.gui.plugin;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -75,29 +74,6 @@ public class WebdavPluginPanel extends PluginPanel {
 		
 		password = new Text(this, SWT.BORDER | SWT.PASSWORD);
 		password.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		
-		Composite buttonComposite = new Composite(this, SWT.NONE);
-		GridLayout gl_buttonComposite = new GridLayout(2, false);
-		gl_buttonComposite.horizontalSpacing = 0;
-		gl_buttonComposite.verticalSpacing = 0;
-		gl_buttonComposite.marginWidth = 0;
-		gl_buttonComposite.marginHeight = 0;
-		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.RIGHT, SWT.BOTTOM, false, false, 4, 1);
-		gd_buttonComposite.minimumHeight = 30;
-		buttonComposite.setLayoutData(gd_buttonComposite);
-		
-		final Label testResultLabel = new Label(buttonComposite, SWT.NONE);
-		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
-		testResultLabel.setAlignment(SWT.CENTER);
-		
-		final Button testButton = new Button(buttonComposite, SWT.NONE);
-
-		GridData gd_testButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
-		gd_testButton.heightHint = 30;
-		gd_testButton.widthHint = 100;
-		testButton.setLayoutData(gd_testButton);
-		testButton.setText(I18n.getString("plugin.webdav.testConnection"));
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package org.syncany.gui.wizard;
 
+import java.io.File;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -9,6 +11,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.SWTResourceManager;
@@ -24,6 +28,7 @@ import org.syncany.util.I18n;
 public class SelectLocalFolder extends WizardPanelComposite {
 	private Text localDir;
 	private Label introductionLabel;
+	private Label messageLabel;
 	
 	public SelectLocalFolder(WizardDialog wizardParentDialog, Composite parent, int style) {
 		super(wizardParentDialog, parent, style);
@@ -69,8 +74,12 @@ public class SelectLocalFolder extends WizardPanelComposite {
 				}
 			}
 		});
+		
+		messageLabel = new Label(this, SWT.WRAP);
+		messageLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1));
+		
 		WidgetDecorator.bold(introductionTitleLabel);
-		WidgetDecorator.normal(introductionLabel, localDir, hostLabel);
+		WidgetDecorator.normal(introductionLabel, localDir, hostLabel, messageLabel);
 	}	
 
 	@Override
@@ -83,17 +92,68 @@ public class SelectLocalFolder extends WizardPanelComposite {
 	@Override
 	public boolean isValid() {
 		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
+		String folder = localDir.getText();
 		
 		switch (action){
 			case "watch":
 				//test if .syncany folder exists
-				return FileUtil.isSyncanyFolder(getShell(), localDir.getText());
+				if (FileUtil.isRepositoryFolder(folder)) {
+					return true;
+				}
+				else {
+					WidgetDecorator.markAs(false, localDir);
+					return false;
+				}
+			
 			case "create":
 				//test if folder exists && is empty
-				return FileUtil.isExistingAndEmptyFolder(getShell(), localDir.getText());
+				
+				if (FileUtil.isExistingFolder(folder)) {
+					if (FileUtil.isEmptyFolder(folder)) {
+						WidgetDecorator.markAs(true, localDir);
+						return true;
+					}
+					else {
+						MessageBox dialog = new MessageBox(getShell(), SWT.ICON_INFORMATION | SWT.CANCEL);
+						dialog.setText("Warning");
+						dialog.setMessage("Folder is not empty, please choose an empty folder");
+						dialog.open();
+						WidgetDecorator.markAs(false, localDir);
+						return false;
+					}
+				}
+				else {
+					boolean create = askCreateFolder(getShell(), folder);
+					WidgetDecorator.markAs(create, localDir);
+					return create;
+				}
+				
 			case "connect":
 				// test if folder exists only : folder might be full of files
-				return FileUtil.isExistingFolder(getShell(), localDir.getText());
+				if (FileUtil.isExistingFolder(folder)) {
+					WidgetDecorator.markAs(false, localDir);
+					return false;
+				}
+				else {
+					boolean create = askCreateFolder(getShell(), folder);
+					WidgetDecorator.markAs(create, localDir);
+					return create;
+				}
+			default:
+				return false;
+		}
+	}
+	
+	private static boolean askCreateFolder(Shell shell, String f) {
+		File localDirFile = new File(f);
+		MessageBox dialog = new MessageBox(shell, SWT.ICON_QUESTION | SWT.OK | SWT.CANCEL);
+		dialog.setText("Create Folder");
+		dialog.setMessage(String.format("Would you like to create the folder [%s]?", localDirFile.getAbsolutePath()));
+
+		int ret = dialog.open();
+
+		if (ret == SWT.OK) {
+			return true;
 		}
 		return false;
 	}
