@@ -124,7 +124,7 @@ public class SftpConnectionPluginTest {
 		
 		// This should cause a Storage exception, because the path does not exist
 		transferManager.connect();	
-		transferManager.init();
+		transferManager.init(true);
 	}
 	
 	@Test(expected=StorageException.class)

@@ -69,10 +69,12 @@ public interface TransferManager {
 	/**
 	 * Initialize remote storage. This method is called to set up a new repository.
 	 * 
+	 * @param  createIfRequired true if the method should handle repo creation
+	 * 	       if it does not exists
 	 * @throws StorageException If the repository is already initialized, or any other
 	 *         exception occurs. 
 	 */
-	public void init() throws StorageException;
+	public void init(boolean createIfRequired) throws StorageException;
 
 	/**
 	 * Download an existing remote file to the local disk.

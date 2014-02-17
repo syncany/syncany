@@ -84,9 +84,15 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
+		if (!repopathExists() && createIfRequired) {
+			if (!repoPath.mkdir()) {
+				throw new StorageException("Cannot create repository directory: " + repoPath);
+			}
+		}
+		
 		if (!multichunksPath.mkdir()) {
 			throw new StorageException("Cannot create multichunk directory: " + multichunksPath);
 		}
@@ -224,7 +230,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean canCreateRepoPath() {
+	public boolean repopathWriteAccess() {
 		return repoPath.getParentFile().canWrite();
 	}
 	

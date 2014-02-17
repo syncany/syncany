@@ -102,7 +102,7 @@ public class InitOperation extends AbstractInitOperation {
 		
 		// Make remote changes
 		try {
-			transferManager.init();
+			transferManager.init(true); //TODO [medium] get command line option
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created

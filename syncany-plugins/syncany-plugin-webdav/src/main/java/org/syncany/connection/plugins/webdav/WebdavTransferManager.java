@@ -91,10 +91,13 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
+			if (!repopathExists() && createIfRequired) {
+				sardine.createDirectory(repoPath);
+			}
 			sardine.createDirectory(multichunkPath);
 			sardine.createDirectory(databasePath);
 		}
@@ -213,7 +216,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean canCreateRepoPath() throws StorageException {
+	public boolean repopathWriteAccess() throws StorageException {
 		// TODO Auto-generated method stub
 		return true;
 	}

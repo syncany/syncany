@@ -146,10 +146,13 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
+			if (!repopathExists() && createIfRequired) {
+				channel.mkdir(repoPath);
+			}
 			channel.mkdir(multichunkPath);
 			channel.mkdir(databasePath);
 		}
@@ -331,7 +334,7 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean canCreateRepoPath() throws StorageException {
+	public boolean repopathWriteAccess() throws StorageException {
 		try {
 			SftpATTRS stat = channel.stat(repoPath);
 			return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0;

@@ -110,7 +110,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
@@ -256,7 +256,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean canCreateRepoPath() throws StorageException {
+	public boolean repopathWriteAccess() throws StorageException {
 		GranteeInterface grantee = new CanonicalGrantee(bucket.getOwner().getId());
 		return bucket.getAcl().hasGranteeAndPermission(grantee, Permission.PERMISSION_WRITE);
 	}

@@ -56,7 +56,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 			}
 		}
 		else {
-			if (canCreateRepoPath()) {
+			if (repopathWriteAccess()) {
 				result = StorageTestResult.NO_REPO;
 			}
 			else {
@@ -68,7 +68,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return result;
 	}
 	
-	public abstract boolean canCreateRepoPath() throws StorageException ;
+	public abstract boolean repopathWriteAccess() throws StorageException ;
 	
 	public abstract boolean repopathExists() throws StorageException ;
 	

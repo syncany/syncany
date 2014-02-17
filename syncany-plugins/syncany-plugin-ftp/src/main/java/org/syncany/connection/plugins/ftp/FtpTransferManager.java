@@ -131,10 +131,13 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
+			if (!repopathExists() && createIfRequired) {
+				ftp.mkd(repoPath);
+			}
 			ftp.mkd(multichunkPath);
 			ftp.mkd(databasePath);
 		}
@@ -298,7 +301,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean canCreateRepoPath() throws StorageException {
+	public boolean repopathWriteAccess() throws StorageException {
 		try {
 			boolean create = ftp.makeDirectory(repoPath);
 			ftp.removeDirectory(repoPath);
