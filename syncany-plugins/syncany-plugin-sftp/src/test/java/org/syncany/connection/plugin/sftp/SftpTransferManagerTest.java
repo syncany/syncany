@@ -17,6 +17,10 @@
  */
 package org.syncany.connection.plugin.sftp;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -29,10 +33,27 @@ import org.syncany.connection.plugins.sftp.SftpConnection;
  *
  */
 public class SftpTransferManagerTest {
-	private final static String SANDBOX = "/home/vwiencek/sandbox/";
-	private final static String USERNAME = "vwiencek";
-	private final static String PASSWORD = "ulysse32";
-	private final static String HOST = "jrisk.fr";
+	static {
+		try {
+			String credentialFile = System.getProperty("user.home") 
+				+ File.separator + "syncany.test.credential";
+		
+			Properties prop = new Properties();
+			prop.load(new FileInputStream(credentialFile));
+			SANDBOX = prop.getProperty("sftp.sandbox");
+			USERNAME = prop.getProperty("sftp.username");
+			PASSWORD = prop.getProperty("sftp.password");
+			HOST = prop.getProperty("sftp.host");
+		}
+		catch (Exception e) {
+			
+		}
+	}
+
+	private static String SANDBOX;
+	private static String USERNAME;
+	private static String PASSWORD;
+	private static String HOST;
 	
 	@Test
 	public void testSftpTransferManager() throws StorageException {
