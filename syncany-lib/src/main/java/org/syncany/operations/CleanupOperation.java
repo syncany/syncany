@@ -32,7 +32,11 @@ import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileContent;
+import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.XmlDatabaseSerializer;
 
@@ -73,50 +77,64 @@ public class CleanupOperation extends Operation {
 		return null;
 	}	
 
+	/**
+	 * <b>WARNING: Syntax errors; still DRAFTING / BRAIN STORMING here ...</b> 
+	 * 
+	 * High level strategy:
+	 * 1. Lock repo and start thread that renews the lock every X seconds
+	 * 2. Find old versions / contents / ... from database
+	 * 3. Write and upload old versions to PRUNE file
+	 * 4. Remotely delete unused multichunks 
+	 * 5. Stop lock renewal thread and unlock repo
+	 * 
+	 * Important issues:
+	 *  - All remote operations MUST be performed atomically. How to achieve this? 
+	 *    How to react if one operation works and the other one fails?
+	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
+	 */
 	private void removeOldVersions() {
-		/*
-		 *  WARNING: Syntax errors; still DRAFTING / BRAIN STORMING here ... 
-		 *
-		 * 
-		 *  - All remote operations SHOULD be performed atomically. HOW to achieve this??
-		 */
-		
-				
-		lockRemoteRepository();
-				
-		
-		List<PartialFileHistory> oldVersions = findOldVersions(options.getKeepVersionsNumber());
-		List<MultiChunkEntry> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsNumber());
+		lockRemoteRepository(); // Write-lock sufficient?
+		startLockRenewalThread();
+						
+		List<PartialFileHistory> oldVersions = findOldVersions(options.getKeepVersionsCount());
+		List<ChunkEntry> unusedChunks = findUnusedChunks(options.getKeepVersionsCount());
+		List<FileContent> unusedFileContents = findUnusedFileContents(options.getKeepVersionsCount());
+		List<MultiChunkEntry> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsCount());
 		
 		// Local
-		localDeleteUnusedMultiChunks(unusedMultiChunks);
-		localDeleteOldVersions(oldVersions);
+		File tempPruneFile = writePruneFile(oldVersions, unusedChunks, unusedFileContents, unusedMultiChunks);
+		PruneRemoteFile newPruneRemoteFile = findNewPruneRemoteFile();
 		
-		// Remote
-		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
-		
-		
-		if (options.isRepackageMultiChunksEnabled()) { // This could be done at a later stage; maybe skip this for the first iteration?
-			List<Map<MultiChunkEntry, ChunkEntry>> partiallyUnusedMultiChunks = findPartiallyUnusedMultiChunks(options.getKeepVersionsNumber(), options.getRepackageUnusedThreshold());			
-			Map<MultiChunkEntry, File> newRepackagedMultiChunks = repackagePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+		deleteLocalUnusedChunks(deleteLocalUnusedChunks);
+		deleteLocalUnusedFileContents(unusedFileContents);
+		deleteLocalUnusedMultiChunks(unusedMultiChunks);
+		deleteLocalOldVersions(oldVersions);
 						
-			// Remote changes 
-			uploadRepackagedMultiChunks(repackagedMultiChunks);
-			remoteDeletePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-			
-			// Local changes
-			removeLocalPartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-			insertLocalNewRepackagedMultiChunks(newRepackagedMultiChunks);
-		}
+		// Remote
+		uploadPruneFile(tempPruneFile, newPruneRemoteFile); // prune-A-0000001    OR     db-PRUNE-0000001  ??
+		remoteDeleteUnusedMultiChunks(unusedMultiChunks);		
 		
-		
-		
-		// Metadata???
-		// -- upload prune files: prune-A-0000001    OR     db-PRUNE-0000001  ??
-		
+		if (options.isRepackageMultiChunks()) {
+			// To be done at a later time
+			// repackageMultiChunks();
+		}				
 	
+		stopLockRenewalThread();
 		unlockRemoteRepository();
 	}
+
+	/*private void repackageMultiChunks() {
+		List<Map<MultiChunkEntry, ChunkEntry>> partiallyUnusedMultiChunks = findPartiallyUnusedMultiChunks(options.getKeepVersionsCount(), options.getRepackageUnusedThreshold());			
+		Map<MultiChunkEntry, File> newRepackagedMultiChunks = repackagePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+					
+		// Remote changes 
+		uploadRepackagedMultiChunks(repackagedMultiChunks);
+		remoteDeletePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+		
+		// Local changes
+		removeLocalPartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
+		insertLocalNewRepackagedMultiChunks(newRepackagedMultiChunks);
+	}*/
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		// Retrieve and sort machine's database versions
@@ -183,7 +201,8 @@ public class CleanupOperation extends Operation {
 	
 	public static class CleanupOperationOptions implements OperationOptions {
 		private boolean mergeRemoteFiles = true;
-		private int keepVersionsNumber = 5;
+		private int keepVersionsCount = 5;
+		private boolean repackageMultiChunks = true;
 		private double repackageUnusedThreshold = 0.7;
 
 		public boolean isMergeRemoteFiles() {
@@ -194,9 +213,12 @@ public class CleanupOperation extends Operation {
 			return repackageUnusedThreshold;
 		}
 
-		public int getKeepVersionsNumber() {
-			return keepVersionsNumber;
+		public int getKeepVersionsCount() {
+			return keepVersionsCount;
+		}
+
+		public boolean isRepackageMultiChunks() {
+			return repackageMultiChunks;
 		}
 	}	
-
 }
