@@ -17,114 +17,64 @@
  */
 package org.syncany.tests.operations;
 
-public class CleanupOperationTest {
-/*
-	Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-1"));
+import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+
+import org.junit.Test;
+import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.database.DatabaseConnectionFactory;
+import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
+import org.syncany.tests.util.TestAssertUtil;
+import org.syncany.tests.util.TestClient;
+import org.syncany.tests.util.TestConfigUtil;
+
+public class CleanupOperationTest {
 	@Test
-	public void testCleanupScenario() throws Exception {
+	public void testEasyCleanup() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
-
-		// Prepare Test 1: Add two versions of a file (first to be 'outdated')
-		clientA.createNewFile("file-first-version-outdated.jpg"); // outdated
-		clientA.upWithForceChecksum();
 		
-		clientA.changeFile("file-first-version-outdated.jpg"); // NOT outdated, because current
-		clientA.upWithForceChecksum();
-		
-		// Prepare Test 2: Add one file, delete it again (= to be 'outdated') 
-		clientA.createNewFile("file-deleted-and-outdated.jpg"); // outdated
-		clientA.upWithForceChecksum();
-		
-		clientA.deleteFile("file-deleted-and-outdated.jpg"); // outdated, because deleted
-		clientA.upWithForceChecksum();
-		
-		// WAIT, everything from here on is NOT outdated
-		Thread.sleep(1200);
-		
-		// Prepare Test 3: Add one file, delete it again (NOT outdated) 
-		clientA.createNewFile("file-deleted-but-NOT-outdated.jpg");
-		clientA.upWithForceChecksum();
-		
-		clientA.deleteFile("file-deleted-but-NOT-outdated.jpg");
-		clientA.upWithForceChecksum();		
-		
-		// Prepare Test 4: Add new file (NOT outdated)
-		clientA.createNewFile("file-newnewnew.jpg");
-		clientA.upWithForceChecksum(); 
-		
-		// Run		
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setCleanUpOlderThanSeconds(1);
-		options.setStrategy(CleanupStrategy.EXPIRATION_DATE);
-		
-		new CleanupOperation(clientA.getConfig(), null,options).execute();
+		options.setMergeRemoteFiles(false);
+		options.setRemoveOldVersions(true);
+		options.setRepackageMultiChunks(false);
+		options.setKeepVersionsCount(2);
 
-		fail("add asserts");
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");
+
+		for (int i=1; i<=10; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());		
+		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
+
+		// B: Sync down by other client
+		clientB.down();
+		
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());		
+		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));
+		
+		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!!
+		clientA.cleanup(options);		
+		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
+		
+		// B: Sync down cleanup
+		clientB.down();
+		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));
+
+		// Test the repo
+		assertEquals(2, new File(testConnection.getRepositoryPath()+"/multichunks/").list().length);
+		assertEquals(4, new File(testConnection.getRepositoryPath()+"/databases/").list().length); 
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();		
 	}
-
-	@Test
-	public void testIdentifyDatabaseVersions() throws Exception {
-		Config config = TestConfigUtil.createTestLocalConfig();
-
-		MemoryDatabase database = new MemoryDatabase();
-
-		List<DatabaseVersion> olderDatabaseVersions = createConsistentDatabaseVersions(5, 5, -40, null);
-		List<DatabaseVersion> newerDatabaseVersions = createConsistentDatabaseVersions(5, 5, 40,
-				olderDatabaseVersions.get(olderDatabaseVersions.size() - 1));
-
-		database.addDatabaseVersions(olderDatabaseVersions);
-		database.addDatabaseVersions(newerDatabaseVersions);
-
-		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setCleanUpOlderThanSeconds(30);
-		options.setStrategy(CleanupStrategy.EXPIRATION_DATE);
-
-		CleanupOperation operation = new CleanupOperation(config, database, options);
-		operation.execute();
-		// List<DatabaseVersion> identifiedDatabaseVersions = operation.identifyDatabaseVersions(options);
-
-		// assertEquals(identifiedDatabaseVersions, olderDatabaseVersions);
-	}
-
-	private List<DatabaseVersion> createConsistentDatabaseVersions(int amount, int minuteOffset, int dayOffset, DatabaseVersion basedOnDatabaseVersion) {
-		List<DatabaseVersion> databaseVersions = new ArrayList<DatabaseVersion>();
-
-		DatabaseVersion databaseVersion = basedOnDatabaseVersion;
-		calendar.add(Calendar.DATE, dayOffset);
-
-		for (int i = 0; i < amount; i++) {
-			calendar.add(Calendar.MINUTE, minuteOffset);
-			Date databaseVersionDate = calendar.getTime();
-
-			databaseVersion = TestDatabaseUtil.createDatabaseVersion(databaseVersion, databaseVersionDate);
-
-			for (int j = 10; j < 20; j++) {
-				PartialFileHistory fileHistory = new PartialFileHistory(FileHistoryId.parseFileId("" + j));
-
-				for (int k = 0; k < 3; k++) {
-					FileVersion fileVersion = new FileVersion();
-
-					fileVersion.setVersion((long) k + 1);
-					fileVersion.setType(FileType.FOLDER);
-					fileVersion.setPath("dbv-" + i + "-file" + j + "-version-" + k + ".jpg");
-					fileVersion.setUpdated(new Date(databaseVersionDate.getTime() + k * 1000));
-
-					fileHistory.addFileVersion(fileVersion);
-				}
-
-				databaseVersion.addFileHistory(fileHistory);
-			}
-
-			databaseVersions.add(databaseVersion);
-		}
-		return databaseVersions;
-	}*/
 }

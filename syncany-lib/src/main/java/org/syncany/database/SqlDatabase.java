@@ -155,6 +155,10 @@ public class SqlDatabase {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
 		return fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum);
 	}
+	
+	public List<PartialFileHistory> getFileHistoriesWithPurgeVersions(int keepVersionsCount) {
+		return fileHistoryDao.getFileHistoriesWithPurgeVersions(keepVersionsCount);
+	}
 
 	// File Version
 

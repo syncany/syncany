@@ -64,6 +64,6 @@ public class UploadInterruptedTest {
 		// TODO [medium] This test fails in ScenarioTestSuite and DatabaseTestSuite is run before, but not if OtherShortTestSuite is run in standalone?!
 		
 		// Tear down
-		clientA.cleanup();
+		clientA.deleteTestData();
 	}				
 }

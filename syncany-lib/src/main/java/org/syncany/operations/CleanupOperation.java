@@ -35,6 +35,7 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
@@ -63,7 +64,7 @@ public class CleanupOperation extends Operation {
 	}
 
 	@Override
-	public OperationResult execute() throws Exception {
+	public CleanupOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Cleanup' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -72,7 +73,14 @@ public class CleanupOperation extends Operation {
 			mergeRemoteFiles();
 		}
 		
-		removeOldVersions();		
+		if (options.isRemoveOldVersions()) {
+			removeOldVersions();	
+		}
+				
+		if (options.isRepackageMultiChunks()) {
+			// To be done at a later time
+			// repackageMultiChunks();
+		}	
 		
 		return null;
 	}	
@@ -91,10 +99,16 @@ public class CleanupOperation extends Operation {
 	 *  - All remote operations MUST be performed atomically. How to achieve this? 
 	 *    How to react if one operation works and the other one fails?
 	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
+	 *  
+	 * @throws Exception 
 	 */
-	private void removeOldVersions() {
+	private void removeOldVersions() throws Exception {
+		if (hasDirtyDatabaseVersions()) {
+			throw new Exception("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
+		}
+		
 		lockRemoteRepository(); // Write-lock sufficient?
-		startLockRenewalThread();
+		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
 						
 		List<PartialFileHistory> oldVersions = findOldVersions(options.getKeepVersionsCount());
 		List<ChunkEntry> unusedChunks = findUnusedChunks(options.getKeepVersionsCount());
@@ -105,7 +119,7 @@ public class CleanupOperation extends Operation {
 		File tempPruneFile = writePruneFile(oldVersions, unusedChunks, unusedFileContents, unusedMultiChunks);
 		PruneRemoteFile newPruneRemoteFile = findNewPruneRemoteFile();
 		
-		deleteLocalUnusedChunks(deleteLocalUnusedChunks);
+		deleteLocalUnusedChunks(unusedChunks);
 		deleteLocalUnusedFileContents(unusedFileContents);
 		deleteLocalUnusedMultiChunks(unusedMultiChunks);
 		deleteLocalOldVersions(oldVersions);
@@ -113,15 +127,108 @@ public class CleanupOperation extends Operation {
 		// Remote
 		uploadPruneFile(tempPruneFile, newPruneRemoteFile); // prune-A-0000001    OR     db-PRUNE-0000001  ??
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);		
-		
-		if (options.isRepackageMultiChunks()) {
-			// To be done at a later time
-			// repackageMultiChunks();
-		}				
-	
-		stopLockRenewalThread();
+								
+		// stopLockRenewalThread();
 		unlockRemoteRepository();
 	}
+
+	private void uploadPruneFile(File tempPruneFile, PruneRemoteFile newPruneRemoteFile) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private class PruneRemoteFile extends RemoteFile {
+		public PruneRemoteFile(String name) throws StorageException {
+			super(name);
+		}		
+	}
+	
+	private void deleteLocalUnusedChunks(List<ChunkEntry> unusedChunks) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private List<ChunkEntry> findUnusedChunks(int keepVersionsCount) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<FileContent> findUnusedFileContents(int keepVersionsCount) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<MultiChunkEntry> findUnusedMultiChunks(int keepVersionsCount) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private File writePruneFile(List<PartialFileHistory> oldVersions, List<ChunkEntry> unusedChunks, List<FileContent> unusedFileContents,
+			List<MultiChunkEntry> unusedMultiChunks) {
+		
+		DatabaseVersion pruneDatabaseVersion = new DatabaseVersion();
+		
+		for (PartialFileHistory partialFileHistory : oldVersions) {
+			pruneDatabaseVersion.addFileHistory(partialFileHistory);
+			
+			if (logger.isLoggable(Level.FINE)) {
+				logger.log(Level.FINE, "- Pruning partial file history "+partialFileHistory.getFileId()+ "...");
+				
+				for (FileVersion fileVersion : partialFileHistory.getFileVersions().values()) {
+					logger.log(Level.FINE, "  + "+fileVersion);
+				}
+			}
+		}
+		
+		return null;
+	}
+
+	private PruneRemoteFile findNewPruneRemoteFile() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private void deleteLocalUnusedFileContents(List<FileContent> unusedFileContents) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void deleteLocalUnusedMultiChunks(List<MultiChunkEntry> unusedMultiChunks) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void deleteLocalOldVersions(List<PartialFileHistory> oldVersions) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void remoteDeleteUnusedMultiChunks(List<MultiChunkEntry> unusedMultiChunks) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private boolean hasDirtyDatabaseVersions() {
+		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDirtyDatabaseVersions();		
+		return dirtyDatabaseVersions.hasNext(); // TODO [low] Is this a resource creeper?		
+	}
+
+	private List<PartialFileHistory> findOldVersions(int keepVersionsCount) {		
+		return localDatabase.getFileHistoriesWithPurgeVersions(keepVersionsCount);	
+	}
+
+	private void lockRemoteRepository() throws StorageException, IOException {
+		File tempLockFile = File.createTempFile("syncany", "lock");
+		tempLockFile.deleteOnExit();
+		
+		transferManager.upload(tempLockFile, new DatabaseRemoteFile("lock", System.currentTimeMillis()));
+		tempLockFile.delete();
+	}
+
+	private void unlockRemoteRepository() throws StorageException {
+		transferManager.delete(new DatabaseRemoteFile("lock", 0));
+	}
+	
 
 	/*private void repackageMultiChunks() {
 		List<Map<MultiChunkEntry, ChunkEntry>> partiallyUnusedMultiChunks = findPartiallyUnusedMultiChunks(options.getKeepVersionsCount(), options.getRepackageUnusedThreshold());			
@@ -201,6 +308,7 @@ public class CleanupOperation extends Operation {
 	
 	public static class CleanupOperationOptions implements OperationOptions {
 		private boolean mergeRemoteFiles = true;
+		private boolean removeOldVersions = false;
 		private int keepVersionsCount = 5;
 		private boolean repackageMultiChunks = true;
 		private double repackageUnusedThreshold = 0.7;
@@ -208,6 +316,10 @@ public class CleanupOperation extends Operation {
 		public boolean isMergeRemoteFiles() {
 			return mergeRemoteFiles;
 		}	
+		
+		public boolean isRemoveOldVersions() {
+			return removeOldVersions;
+		}
 		
 		public double getRepackageUnusedThreshold() {
 			return repackageUnusedThreshold;
@@ -220,5 +332,29 @@ public class CleanupOperation extends Operation {
 		public boolean isRepackageMultiChunks() {
 			return repackageMultiChunks;
 		}
+
+		public void setMergeRemoteFiles(boolean mergeRemoteFiles) {
+			this.mergeRemoteFiles = mergeRemoteFiles;
+		}
+
+		public void setRemoveOldVersions(boolean removeOldVersions) {
+			this.removeOldVersions = removeOldVersions;
+		}
+
+		public void setKeepVersionsCount(int keepVersionsCount) {
+			this.keepVersionsCount = keepVersionsCount;
+		}
+
+		public void setRepackageMultiChunks(boolean repackageMultiChunks) {
+			this.repackageMultiChunks = repackageMultiChunks;
+		}
+
+		public void setRepackageUnusedThreshold(double repackageUnusedThreshold) {
+			this.repackageUnusedThreshold = repackageUnusedThreshold;
+		}				
 	}	
+	
+	public static class CleanupOperationResult implements OperationResult {
+		// Nothing
+	}
 }

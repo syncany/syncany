@@ -156,7 +156,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}
+	}		
 	
 	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {

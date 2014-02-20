@@ -83,8 +83,8 @@ public class ThreeClientsOneLoserScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
-		clientC.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
 	}	
 }

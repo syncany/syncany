@@ -122,7 +122,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		assertEquals("Repository should NOT contain any files.", 0, repoFileList.length);
 	
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

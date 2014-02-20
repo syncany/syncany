@@ -71,7 +71,7 @@ public class FileLockedScenarioTest {
 		lockedFileLock.release();
 		lockedFile.close();
 		
-		clientA.cleanup();
+		clientA.deleteTestData();
 	}
 	
 	@Test
@@ -97,7 +97,7 @@ public class FileLockedScenarioTest {
 		runUpAndTestForConsistentDatabase(testConnection, clientA);		
 		
 		// Tear down
-		clientA.cleanup();
+		clientA.deleteTestData();
 	}	
 
 	@Test
@@ -113,7 +113,7 @@ public class FileLockedScenarioTest {
 		runUpAndTestForConsistentDatabase(testConnection, clientA);		
 		
 		// Tear down
-		clientA.cleanup();
+		clientA.deleteTestData();
 	}	
 	
 	private void runUpAndTestForConsistentDatabase(Connection connection, TestClient client) throws Exception {
@@ -198,7 +198,7 @@ public class FileLockedScenarioTest {
 			}			
 		});
 		
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

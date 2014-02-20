@@ -276,6 +276,33 @@ public class TestAssertUtil {
 		}
 	}
 	
+	public static String runSqlQuery(String sqlQuery, Connection databaseConnection) throws SQLException {
+		StringBuilder queryResult = new StringBuilder();
+		
+		ResultSet actualResultSet = databaseConnection.prepareStatement(sqlQuery).executeQuery();
+		ResultSetMetaData metaData = actualResultSet.getMetaData();
+
+		boolean isFirstRow = true;
+		int columnsCount = metaData.getColumnCount();
+		
+		while (actualResultSet.next()) {
+			if (!isFirstRow) {
+				queryResult.append("\n");
+				isFirstRow = false;
+			}
+			
+			for (int i=1; i<=columnsCount; i++) {
+				queryResult.append(actualResultSet.getString(i));
+				
+				if (i != columnsCount) {
+					queryResult.append(",");
+				}
+			}
+		}
+		
+		return queryResult.toString();
+	}
+	
 	private static String getFormattedColumn(ResultSet resultSet) throws SQLException {
 		ResultSetMetaData metaData = resultSet.getMetaData();
 		List<String> formattedColumnLine = new ArrayList<String>();

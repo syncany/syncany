@@ -107,7 +107,7 @@ public class DirtyDatabaseScenarioTest {
 		assertConflictingFileExists("A-file1.jpg", clientA.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

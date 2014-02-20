@@ -165,8 +165,8 @@ public class AllFilePossibilitiesScenarioTest {
 			}
 		);
 		
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 	
 	@Test
@@ -183,8 +183,8 @@ public class AllFilePossibilitiesScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());					
 		
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 	
 }

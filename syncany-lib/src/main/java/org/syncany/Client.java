@@ -22,6 +22,9 @@ import java.util.Properties;
 
 import org.syncany.config.Config;
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.CleanupOperation;
+import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
+import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 import org.syncany.operations.ConnectOperation;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
@@ -180,5 +183,9 @@ public class Client {
 	
 	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws Exception {
         return new ConnectOperation(options, listener).execute();                
+	}
+	
+	public CleanupOperationResult cleanup(CleanupOperationOptions options) throws Exception {
+		return new CleanupOperation(config, options).execute();
 	}
 }
