@@ -1,3 +1,13 @@
 language: java
 jdk: oraclejdk7
-script: ./gradlew test
+
+before_install:
+- sudo apt-get install -qq ruby ruby-dev build-essential rubygems
+- sudo gem install fpm
+
+script: 
+- ./gradlew test
+- ./gradlew distTar distZip debian
+
+env:
+- TERM=dumb
