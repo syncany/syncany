@@ -1,4 +1,4 @@
-Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=travis)](https://travis-ci.org/binwiederhier/syncany)
+Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=master)](https://travis-ci.org/binwiederhier/syncany)
 =======
 > **Important:** Please be aware that this is still ALPHA code! Do not use it
                  for important files.
