@@ -3,12 +3,14 @@ jdk: openjdk7
 
 before_install:
 - sudo rm /etc/profile.d/rvm.sh
-- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp
+- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp graphviz
 - rvmsudo gem install fpm
 - fpm --help | grep "This is fpm" 
+- lftp -v | grep "LFTP"
 
 script: 
 - ./gradlew test installApp distTar distZip debian
+- ./gradle/lftp/upload-to-ftp.sh
 
 env:
   global:
