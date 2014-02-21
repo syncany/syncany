@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -488,6 +488,13 @@ public class FileUtil {
 		}
 	}
 
-
-	
+	/**
+	 * Returs the unix style parent path of a folder
+	 * @param path the folder for which method returns parent path
+	 */
+	public static String getParentPath(String path) {
+		String cleanPath = removeTrailingSlash(path);
+		String parentPath = cleanPath.substring(0, cleanPath.lastIndexOf("/"));
+		return parentPath.length() == 0 ? "/" : parentPath;
+	}
 }

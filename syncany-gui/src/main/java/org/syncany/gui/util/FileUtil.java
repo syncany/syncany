@@ -20,9 +20,6 @@ package org.syncany.gui.util;
 import java.io.File;
 import java.io.IOException;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.syncany.config.Config;
 
 /**
@@ -43,16 +40,23 @@ public class FileUtil {
 		}
 	}
 
-	public static boolean isSyncanyFolder(Shell shell, String folder) {
-		return isSystemValidFolder(folder) && folderContainsFolder(folder, Config.DIR_APPLICATION);
+	public static boolean isRepositoryFolder(String folder) {
+		return 
+			isSystemValidFolder(folder) && 
+			folderContainsFolder(folder, Config.DIR_APPLICATION);
 	}
 
-	public static boolean isExistingFolder(Shell shell, String folder) {
-		return isSystemValidFolder(folder) && isFolderExisting(shell, folder);
+	public static boolean isExistingFolder( String folder) {
+		return 
+			isSystemValidFolder(folder) && 
+			isFolderExisting(folder);
 	}
 
-	public static boolean isExistingAndEmptyFolder(Shell shell, String folder) {
-		return isSystemValidFolder(folder) && isFolderExisting(shell, folder) && isEmptyFolder(shell, folder);
+	public static boolean isExistingAndEmptyFolder(String folder) {
+		return 
+			isSystemValidFolder(folder) && 
+			isFolderExisting(folder) && 
+			isEmptyFolder(folder);
 	}
 
 	public static boolean folderContainsFolder(String root, String folder) {
@@ -61,40 +65,18 @@ public class FileUtil {
 		return rootFolder.exists() && syncanyFolder.exists();
 	}
 
-	public static boolean isEmptyFolder(Shell shell, String folder) {
+	public static boolean isEmptyFolder(String folder) {
 		File f = new File(folder);
 		
 		if (!f.exists()){
 			return true;
 		}
 		
-		boolean ret = f.list().length == 0;
-
-		if (!ret) {
-			MessageBox dialog = new MessageBox(shell, SWT.ICON_INFORMATION | SWT.CANCEL);
-			dialog.setText("Warning");
-			dialog.setMessage("Folder is not empty, please choose an empty folder");
-			dialog.open();
-		}
-		return ret;
+		return f.list().length == 0;
 	}
 
-	public static boolean isFolderExisting(Shell shell, String folder) {
+	public static boolean isFolderExisting(String folder) {
 		File f = new File(folder);
-		return f.exists() ? true : askCreateFolder(shell, folder);
-	}
-
-	public static boolean askCreateFolder(Shell shell, String f) {
-		File localDirFile = new File(f);
-		MessageBox dialog = new MessageBox(shell, SWT.ICON_QUESTION | SWT.OK | SWT.CANCEL);
-		dialog.setText("Create Folder");
-		dialog.setMessage(String.format("Would you like to create the folder [%s]?", localDirFile.getAbsolutePath()));
-
-		int ret = dialog.open();
-
-		if (ret == SWT.OK) {
-			return true;
-		}
-		return false;
+		return f.exists();
 	}
 }

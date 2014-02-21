@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 package org.syncany.operations;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.UpOperation.UpOperationOptions;
@@ -32,24 +31,21 @@ import org.syncany.operations.UpOperation.UpOperationResult;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SyncOperation extends Operation {
-	private Database loadedDatabase;
 	private SyncOperationOptions options;
 	
 	public SyncOperation(Config config) {
-		this(config, null, new SyncOperationOptions());
+		this(config, new SyncOperationOptions());
 	}	
 	
-	public SyncOperation(Config config, Database database, SyncOperationOptions options) {
+	public SyncOperation(Config config, SyncOperationOptions options) {
 		super(config);		
-		
-		this.loadedDatabase = database;
 		this.options = options;
 	}		
 	
 	@Override
 	public SyncOperationResult execute() throws Exception {
-		DownOperation syncDown = new DownOperation(config, loadedDatabase, options.getSyncDownOptions());
-		UpOperation syncUp = new UpOperation(config, loadedDatabase, options.getSyncUpOptions());
+		DownOperation syncDown = new DownOperation(config, options.getSyncDownOptions());
+		UpOperation syncUp = new UpOperation(config, options.getSyncUpOptions());
 		
 		DownOperationResult syncDownResults = syncDown.execute();
 		UpOperationResult syncUpResults = syncUp.execute();

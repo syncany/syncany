@@ -29,14 +29,18 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
@@ -70,6 +74,9 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	
 	private Map<String, PluginPanel> panels = new HashMap<>();
 	private Label urlInvalidLabel;
+	private Button testButton;
+	private Label testResultLabel;
+	private Composite composite_1;
 	
 	/**
 	 * Create the dialog.
@@ -186,6 +193,30 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 			urlText, urlLabel
 		);
 		
+		composite_1 = new Composite(createComposite, SWT.NONE);
+		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
+		composite_1.setLayout(new GridLayout(2, false));
+		
+		testResultLabel = new Label(composite_1, SWT.WRAP);
+		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		testResultLabel.setSize(55, 15);
+		
+		testButton = new Button(composite_1, SWT.NONE);
+		
+		GridData gd_testFtpButton = new GridData(SWT.CENTER, SWT.FILL, false, false, 1, 1);
+		gd_testFtpButton.heightHint = WidgetDecorator.DEFAULT_BUTTON_HEIGHT;
+		gd_testFtpButton.widthHint = WidgetDecorator.DEFAULT_BUTTON_WIDTH;
+		testButton.setLayoutData(gd_testFtpButton);
+		
+		testButton.setSize(75, 25);
+		testButton.setText(I18n.getString("plugin.test"));
+		testButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				handleTest();
+			}
+		});
+		
 		urlInvalidLabel = new Label(urlComposite, SWT.NONE);
 		urlInvalidLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 	}
@@ -195,11 +226,61 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		PluginPanel ppanel = panels.get(id);
 		stackLayout.topControl = ppanel;
 		pluginStackComposite.layout();
+		createComposite.layout();
 		String action = getParentWizardDialog().getUserInput().getCommonParameter(CommonParameters.COMMAND_ACTION);
 		
-		if (action != null){
+		if (action != null && ppanel != null){
 			PluginPanelPurpose purpose = PluginPanelPurpose.valueOf(action.toUpperCase());
 			ppanel.setPurpose(purpose);
+		}
+	}
+	
+	private void handleTest() {
+		PluginPanel ppanel = panels.get(selectedPluginId);
+		
+		testButton.setEnabled(false);
+		try{
+			boolean isValid = isValid();
+			StorageTestResult testResult = ppanel.testPluginConnection();
+			String tempMessage = "message";
+			Color tempColor = WidgetDecorator.BLACK;
+			
+			if (isValid){
+	    		switch (testResult){
+		    		case NO_REPO:
+		    			tempMessage = I18n.getString("plugin.storageTestResult.no_repo");
+		    			break;
+		    		case REPO_EXISTS:
+		    			tempMessage = I18n.getString("plugin.storageTestResult.repo_exists");
+		    			tempColor = WidgetDecorator.RED;
+		    			break;
+		    		case NO_REPO_CANNOT_CREATE:
+		    			tempMessage = I18n.getString("plugin.storageTestResult.no_repo_cannot_create");
+		    			tempColor = WidgetDecorator.RED;
+		    			break;
+	    		}
+	    	}
+	    	else {
+	    		tempMessage = I18n.getString("plugin.storageTestResult.notValid");
+	    		tempColor = WidgetDecorator.RED;
+	    	}
+	    	
+	    	final String message = tempMessage;
+	    	final Color color = tempColor;
+	    	
+			Display.getCurrent().syncExec(new Runnable() {
+			    public void run() {
+			    	testResultLabel.setText(message);
+			    	testResultLabel.setForeground(color);
+			    	testButton.setEnabled(true);
+			    }
+			});
+		}
+		catch (Exception e){
+			
+		}
+		finally {
+			testButton.setEnabled(true);
 		}
 	}
 

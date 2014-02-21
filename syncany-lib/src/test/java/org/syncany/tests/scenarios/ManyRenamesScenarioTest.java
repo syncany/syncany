@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class ManyRenamesScenarioTest {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientB.moveFile("A-original", "B-moved");
 		clientB.up();
@@ -49,7 +49,7 @@ public class ManyRenamesScenarioTest {
 		// A down/move/up
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientA.moveFile("B-moved", "A-moved");
 		clientA.up();
@@ -57,12 +57,12 @@ public class ManyRenamesScenarioTest {
 		// B down only
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// A down/move/up
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientA.moveFile("A-moved", "A-moved-again");
 		clientA.up();
@@ -70,7 +70,7 @@ public class ManyRenamesScenarioTest {
 		// B down/move/up
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientB.moveFile("A-moved-again", "B-moved"); // same filename as above!
 		clientB.up();
@@ -78,7 +78,7 @@ public class ManyRenamesScenarioTest {
 		// A down/move/up
 		clientA.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		clientA.moveFile("B-moved", "A-moved");  // same filename as above!
 		clientA.up();
@@ -86,7 +86,7 @@ public class ManyRenamesScenarioTest {
 		// B down only
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// Tear down
 		clientA.cleanup();

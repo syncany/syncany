@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,16 +30,17 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.Database;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MemoryDatabase;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.SqlDatabase;
 import org.syncany.util.FileUtil;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
-	public FileCreatingFileSystemAction(Config config, Database localDatabase, Database winningDatabase, FileVersion file1, FileVersion file2) {
-		super(config, localDatabase, winningDatabase, file1, file2);
+	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
+		super(config, winningDatabase, file1, file2);		
 	}
 
 	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
@@ -85,13 +86,20 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	private File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
+		SqlDatabase localDatabase = new SqlDatabase(config);
+
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
 		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");
 
-		FileContent fileContent = localDatabase.getContent(reconstructedFileVersion.getChecksum());
+		FileContent fileContent = localDatabase.getFileContent(reconstructedFileVersion.getChecksum(), true);
 
 		if (fileContent == null) {
 			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
+		}
+		
+		// Check consistency!
+		if (fileContent == null && reconstructedFileVersion.getChecksum() != null) {
+			throw new Exception("Cannot determine file content for checksum "+reconstructedFileVersion.getChecksum());
 		}
 
 		// Create file
@@ -103,13 +111,13 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
-				MultiChunkEntry multiChunkForChunk = localDatabase.getMultiChunkForChunk(chunkChecksum);
+				MultiChunkId multiChunkIdForChunk = localDatabase.getMultiChunkId(chunkChecksum);
 
-				if (multiChunkForChunk == null) {
-					multiChunkForChunk = winningDatabase.getMultiChunkForChunk(chunkChecksum);
+				if (multiChunkIdForChunk == null) {
+					multiChunkIdForChunk = winningDatabase.getMultiChunkIdForChunk(chunkChecksum);
 				}
 
-				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkForChunk.getId().getRaw());
+				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkIdForChunk.getRaw());
 
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());

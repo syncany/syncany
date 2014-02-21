@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 package org.syncany.config;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,9 +47,7 @@ import org.reflections.Reflections;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Logging {
-	private static final String LOG_PROPERTIES_JAR_RESOURCE = "/logging.properties";
-	private static final File LOG_PROPERTIES_LOCAL_FILE = new File("logging.properties");
-	
+	private static final String LOG_PROPERTIES_JAR_RESOURCE = "/logging.properties";	
 	private static AtomicBoolean loggingInitialized = new AtomicBoolean(false);
 	
 	public synchronized static void init() {
@@ -61,18 +57,12 @@ public class Logging {
 
 		// Turn off INFO message of Reflections library (dirty, but the only way!) 
 		Reflections.log = null;
+		System.setProperty("hsqldb.reconfig_logging", "false");
 		
 		// Load logging.properties
     	try {
     		// Use file if exists, else use file embedded in JAR
-    		InputStream logConfigInputStream;
-    		
-    		if (LOG_PROPERTIES_LOCAL_FILE.exists() && LOG_PROPERTIES_LOCAL_FILE.canRead()) {
-    			logConfigInputStream = new FileInputStream(LOG_PROPERTIES_LOCAL_FILE);
-    		}
-    		else {
-    			logConfigInputStream = Config.class.getResourceAsStream(LOG_PROPERTIES_JAR_RESOURCE);
-    		}
+    		InputStream logConfigInputStream = Config.class.getResourceAsStream(LOG_PROPERTIES_JAR_RESOURCE);
     		
     	    if (logConfigInputStream != null) {
     	    	LogManager.getLogManager().readConfiguration(logConfigInputStream);
@@ -81,12 +71,11 @@ public class Logging {
     	    loggingInitialized.set(true);
     	}
     	catch (Exception e) {
-    	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from file system or JAR.");
+    	    Logger.getAnonymousLogger().severe("Could not load logging.properties file from resource "+LOG_PROPERTIES_JAR_RESOURCE);
     	    Logger.getAnonymousLogger().severe(e.getMessage());
     	    
     	    e.printStackTrace();
-    	}
-		
+    	}		
 	}	
 	
 	public static void setGlobalLogLevel(Level targetLogLevel) {

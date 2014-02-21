@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,19 +43,10 @@ import java.util.Map;
  */
 public interface TransferManager {
 	public enum StorageTestResult {
-		/**
-		 * 
-		 */
-		INVALID_PARAMETERS,
-		
-		REPO_ALREADY_EXISTS,      	
-		NO_REPO_LOCATION_NOT_EMPTY,
-		
-		NO_REPO_LOCATION_EMPTY_PERMISSIONS_KO,
-		NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK,
-		
-		NO_REPO_PERMISSIONS_OK,   	
-		NO_REPO_PERMISSIONS_KO;   	
+		REPO_EXISTS,         	// repopath exists && repopath is not empty
+		NO_REPO,				// (repopath exists && repopath is empty) or 
+								// (repopath does not exist && write permission)
+		NO_REPO_CANNOT_CREATE;  // repopath does not exist &&  cannot write
 	}
 		
 	/**
@@ -78,10 +69,12 @@ public interface TransferManager {
 	/**
 	 * Initialize remote storage. This method is called to set up a new repository.
 	 * 
+	 * @param  createIfRequired true if the method should handle repo creation
+	 * 	       if it does not exists
 	 * @throws StorageException If the repository is already initialized, or any other
 	 *         exception occurs. 
 	 */
-	public void init() throws StorageException;
+	public void init(boolean createIfRequired) throws StorageException;
 
 	/**
 	 * Download an existing remote file to the local disk.
@@ -152,5 +145,5 @@ public interface TransferManager {
 	 * 
 	 * @return {@link StorageTestResult}
 	 */
-	public StorageTestResult test() ;
+	public StorageTestResult test() throws StorageException;
 }

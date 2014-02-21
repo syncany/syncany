@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,4 +41,36 @@ public abstract class AbstractTransferManager implements TransferManager {
 	protected File createTempFile(String name) throws IOException {
 		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
 	}
+	
+	@Override
+	public final StorageTestResult test() throws StorageException {
+		connect();
+
+		StorageTestResult result;
+		if (repopathExists()){
+			if (repopathIsEmpty()) {
+				result = StorageTestResult.NO_REPO;
+			}
+			else {
+				result = StorageTestResult.REPO_EXISTS;
+			}
+		}
+		else {
+			if (repopathWriteAccess()) {
+				result = StorageTestResult.NO_REPO;
+			}
+			else {
+				result = StorageTestResult.NO_REPO_CANNOT_CREATE;
+			}
+		}
+		
+		disconnect();
+		return result;
+	}
+	
+	public abstract boolean repopathWriteAccess() throws StorageException ;
+	
+	public abstract boolean repopathExists() throws StorageException ;
+	
+	public abstract boolean repopathIsEmpty() throws StorageException ;
 }

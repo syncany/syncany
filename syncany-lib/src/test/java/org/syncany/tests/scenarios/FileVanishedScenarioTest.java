@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.syncany.tests.util.TestAssertUtil.assertDatabaseFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.Database;
-import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.PartialFileHistory;
+import org.syncany.database.SqlDatabase;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -76,12 +74,13 @@ public class FileVanishedScenarioTest {
 					catch (Exception e) { }
 				}
 			}			
-		});
+		}, "A-delete");
 		
 		Thread runUpThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
+					Thread.sleep(40);
 					clientA.up();
 				}
 				catch (Exception e) {
@@ -89,14 +88,18 @@ public class FileVanishedScenarioTest {
 					fail(e.getMessage());
 				}				
 			}			
-		});
+		}, "A-up");
+		
+		// Before we start: init database (this takes a while)
+		clientA.status();
+		clientB.status();
 		
 		// Delete files and run up simultaneously
 		// --> This will hopefully lead to a couple of 'vanished' files
 		logger.log(Level.INFO, "Starting 'up' thread ...");		
 		runUpThread.start();
 		
-		Thread.sleep(200);
+		
 
 		logger.log(Level.INFO, "Starting 'delete' thread ...");
 		deleteFilesThread.start();		
@@ -105,20 +108,20 @@ public class FileVanishedScenarioTest {
 		deleteFilesThread.join();
 		
 		// Test 1: There should be between 50 and 100 file histories in the database
-		Database databaseClientA = clientA.loadLocalDatabase();
+		SqlDatabase databaseClientA = clientA.loadLocalDatabase();
 		
-		assertTrue("There should be less file histories than originally added files.", databaseClientA.getFileHistories().size() < numFiles);
-		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistories().size() >= numFilesRemaining);
+		assertTrue("There should be less file histories than originally added files.", databaseClientA.getFileHistoriesWithFileVersions().size() < numFiles);
+		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistoriesWithFileVersions().size() >= numFilesRemaining);
 		
 		// Test 2: Now up the rest, there should be exactly 50 files in the database
 		clientA.up();		
 		databaseClientA = clientA.loadLocalDatabase();
-		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, getNumNotDeletedFileHistories(databaseClientA));
+		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, databaseClientA.getFileHistoriesWithFileVersions().size());
 		
 		// Test 3: After that, the sync between the clients should of course still work
 		clientB.down();
 		assertFileListEquals("Files of both clients should be identical.", clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
-		assertDatabaseFileEquals(clientA.getLocalDatabaseFile(), clientB.getLocalDatabaseFile(), clientA.getConfig().getTransformer());				
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());				
 		
 		// Tear down
 		clientA.cleanup();
@@ -154,17 +157,5 @@ public class FileVanishedScenarioTest {
 		// Tear down
 		clientA.cleanup();
 		clientB.cleanup();
-	}
-	
-	private int getNumNotDeletedFileHistories(Database db) {
-		int numNotDeletedFileHistories = 0;
-		
-		for (PartialFileHistory fileHistory : db.getFileHistories()) {
-			if (fileHistory.getLastVersion().getStatus() != FileStatus.DELETED) {
-				numNotDeletedFileHistories++;
-			}
-		}
-		
-		return numNotDeletedFileHistories;
-	}
+	}	
 }

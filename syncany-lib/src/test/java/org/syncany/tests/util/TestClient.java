@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseDAO;
-import org.syncany.database.XmlDatabaseDAO;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -59,6 +56,9 @@ public class TestClient extends Client {
 			public void run() {
 				try {
 					WatchOperationOptions watchOperationOptions = new WatchOperationOptions();
+					
+					watchOperationOptions.setAnnouncements(false);
+					watchOperationOptions.setWatcher(false);
 					watchOperationOptions.setInterval(interval);
 					
 					watch(watchOperationOptions);
@@ -84,7 +84,7 @@ public class TestClient extends Client {
 	
 	public File createNewFile(String name, long size) throws IOException {
 		File localFile = getLocalFile(name);		
-		TestFileUtil.createRandomFile(localFile, size);
+		TestFileUtil.createNonRandomFile(localFile, size);
 		
 		return localFile;
 	}
@@ -138,23 +138,11 @@ public class TestClient extends Client {
 		return TestFileUtil.getLocalFilesExcludeLockedAndNoRead(config.getLocalDir());		
 	}
  
-	public File getLocalDatabaseFile() {
+	public File getDatabaseFile() {
 		return config.getDatabaseFile();
 	}
-
-	public File getDirtyDatabaseFile() {
-		return config.getDirtyDatabaseFile();
-	}
 	
-	public Database loadLocalDatabase() throws IOException {
-		File localDatabaseFile = getLocalDatabaseFile();
-		Database db = new Database();
-		
-		if (localDatabaseFile.exists()) {			
-			DatabaseDAO dao = new XmlDatabaseDAO(config.getTransformer());
-			dao.load(db, getLocalDatabaseFile());		
-		}
-
-		return db;
+	public TestSqlDatabase loadLocalDatabase() throws IOException {
+		return new TestSqlDatabase(config);
 	}
 }

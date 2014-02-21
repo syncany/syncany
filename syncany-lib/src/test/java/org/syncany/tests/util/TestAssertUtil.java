@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -39,19 +44,22 @@ import java.util.regex.Pattern;
 import org.junit.internal.ArrayComparisonFailure;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
-import org.syncany.database.Database;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
+
+import com.google.common.collect.Lists;
 
 public class TestAssertUtil {
 	private static final Logger logger = Logger.getLogger(TestAssertUtil.class.getSimpleName());
@@ -166,14 +174,127 @@ public class TestAssertUtil {
 		}		
 	}
 	
-	public static void assertDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
-		Database expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
-		Database actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
+	public static void assertSqlResultEquals(File databaseFile, String sqlQuery, String expectedResultStr) throws SQLException {
+		Connection databaseConnection = DatabaseConnectionFactory.createConnection(databaseFile);		
+		ResultSet resultSet = databaseConnection.prepareStatement(sqlQuery).executeQuery();
+		
+		List<String> actualResultStrList = new ArrayList<String>();		
+		
+		while (resultSet.next()) {
+			for (int i=1; i<=resultSet.getMetaData().getColumnCount(); i++) {
+				actualResultStrList.add(resultSet.getString(i));
+			}
+		}
+		
+		String actualResultStr = StringUtil.join(actualResultStrList, ",");
+		assertEquals("SQL query result differs: "+sqlQuery, expectedResultStr, actualResultStr);
+	}
+	
+	public static void assertSqlDatabaseEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException, SQLException {
+		// Compare tables + ignore columns
+		String[][] compareTablesAndIgnoreColumns = new String[][] { 
+			new String[] { "chunk" },
+			new String[] { "databaseversion", "ID" }, 
+			new String[] { "databaseversion_vectorclock", "DATABASEVERSION_ID" },
+			new String[] { "filecontent" },
+			new String[] { "filecontent_chunk" },
+			new String[] { "filehistory", "DATABASEVERSION_ID" },
+			new String[] { "fileversion", "DATABASEVERSION_ID" },
+				// skipped known_databases
+			new String[] { "multichunk" },
+			new String[] { "multichunk_chunk" }
+		};
+		
+		assertSqlDatabaseTablesEqual(expectedDatabaseFile, actualDatabaseFile, compareTablesAndIgnoreColumns);
+	}
+	
+	public static void assertSqlDatabaseTablesEqual(File expectedDatabaseFile, File actualDatabaseFile, String[]... compareTablesAndIgnoreColumns) throws IOException, SQLException {
+		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createConnection(expectedDatabaseFile);
+		Connection actualDatabaseConnection = DatabaseConnectionFactory.createConnection(actualDatabaseFile);
+				
+		for (String[] tableNameAndIgnoreColumns : compareTablesAndIgnoreColumns) {
+			String tableName = tableNameAndIgnoreColumns[0];
+			
+			List<String> ignoreColumnNames = Lists.newArrayList(tableNameAndIgnoreColumns);
+			ignoreColumnNames.remove(0);
+					
+			// Get table's primary keys
+			List<String> primaryKeys = new ArrayList<String>();			
+			ResultSet resultSet = actualDatabaseConnection.getMetaData().getPrimaryKeys(null, null, tableName.toUpperCase());
+			
+			while (resultSet.next()) {
+				primaryKeys.add(resultSet.getString("COLUMN_NAME"));
+			}
+			
+			// Get table's columns
+			List<String> tableColumns = new ArrayList<String>();
+			resultSet = actualDatabaseConnection.getMetaData().getColumns(null, null, tableName.toUpperCase(), null);
+			
+			while (resultSet.next()) {
+				String columnName = resultSet.getString("COLUMN_NAME");
+				
+				if (!ignoreColumnNames.contains(columnName)) {
+					tableColumns.add(columnName);
+				}
+			}
+			
+			// Get all entries of both tables, sorted by the primary keys
+			String columnNameList = StringUtil.join(tableColumns, ", ");
+			String primaryKeysOrderByClause = StringUtil.join(primaryKeys, " asc, ") + " asc";
+			String selectQuery = String.format("select %s from %s order by %s", columnNameList, tableName, primaryKeysOrderByClause);
+			
+			logger.log(Level.FINE, " Comparing database table: " + selectQuery);
+			
+			ResultSet expectedResultSet = expectedDatabaseConnection.prepareStatement(selectQuery).executeQuery();
+			ResultSet actualResultSet = actualDatabaseConnection.prepareStatement(selectQuery).executeQuery();
+			
+			while (true) {
+				boolean expectedNext = expectedResultSet.next();
+				boolean actualNext = actualResultSet.next();
+				
+				if (expectedNext && !actualNext) {
+					fail("Actual is missing the following row from expected: "+getFormattedColumn(expectedResultSet));
+				}
+				else if (!expectedNext && actualNext) {
+					fail("Actual has a row that was not expected: "+getFormattedColumn(actualResultSet));
+				}
+				else if (!expectedNext && !actualNext) {
+					break;
+				}
+				else {
+					String expectedFormattedColumn = getFormattedColumn(expectedResultSet);
+					String actualFormattedColumn = getFormattedColumn(actualResultSet);
+					
+					if (logger.isLoggable(Level.FINEST)) {
+						//logger.log(Level.FINEST, "  Expected: "+expectedFormattedColumn);
+						//logger.log(Level.FINEST, "  Actual:   "+actualFormattedColumn);
+					}
+					
+					assertEquals("Columns of table "+tableName+" actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
+				}								
+			}		
+		}
+	}
+	
+	private static String getFormattedColumn(ResultSet resultSet) throws SQLException {
+		ResultSetMetaData metaData = resultSet.getMetaData();
+		List<String> formattedColumnLine = new ArrayList<String>();
+		
+		for (int i=0; i<metaData.getColumnCount(); i++) {
+			formattedColumnLine.add(metaData.getColumnName(i+1) + "=" + resultSet.getString(i+1)); 
+		}
+		
+		return StringUtil.join(formattedColumnLine, ", ");
+	}
+
+	public static void assertXmlDatabaseFileEquals(File expectedDatabaseFile, File actualDatabaseFile, Transformer transformer) throws IOException {		
+		MemoryDatabase expectedDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(expectedDatabaseFile, transformer);
+		MemoryDatabase actualDatabase = TestDatabaseUtil.readDatabaseFileFromDisk(actualDatabaseFile, transformer);
 		
 		assertDatabaseEquals(expectedDatabase, actualDatabase);
 	}
 
-	public static void assertDatabaseEquals(Database expectedDatabase, Database actualDatabase) {
+	public static void assertDatabaseEquals(MemoryDatabase expectedDatabase, MemoryDatabase actualDatabase) {
 		logger.log(Level.INFO, "--");
 		logger.log(Level.INFO, "Now comparing two databases.");
 		logger.log(Level.INFO, "DON'T WORRY. This can take a long time or even overload the heap space.");

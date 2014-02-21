@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.Database;
 import org.syncany.operations.NotificationListener.NotificationListenerListener;
 import org.syncany.operations.RecursiveWatcher.WatchListener;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -63,7 +62,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private WatchOperationOptions options;
 
-	private Database database;
 	private AtomicBoolean syncRunning;
 	private AtomicBoolean stopRequired;
 	private AtomicBoolean pauseRequired;
@@ -79,7 +77,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 		this.options = options;
 
-		this.database = null;
 		this.syncRunning = new AtomicBoolean(false);
 		this.stopRequired = new AtomicBoolean(false);
 		this.pauseRequired = new AtomicBoolean(false);
@@ -93,8 +90,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	@Override
 	public WatchOperationResult execute() throws Exception {
-		database = loadLocalDatabase();
-
 		if (options.announcementsEnabled()) {
 			startNotificationListener();
 		}
@@ -120,7 +115,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				Thread.sleep(options.getInterval());
 			}
 			catch (Exception e) {
-				logger.log(Level.INFO, "Sync FAILED, waiting {0} seconds ...", options.getInterval() / 1000);
+				logger.log(Level.INFO, String.format("Sync FAILED, waiting %d seconds ...", options.getInterval() / 1000), e);
 				Thread.sleep(options.getInterval());
 			}
 		}
@@ -160,9 +155,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Running sync ...");
 
 			try {
-				new DownOperation(config, database).execute();
+				new DownOperation(config).execute();
 
-				UpOperationResult upOperationResult = new UpOperation(config, database).execute();
+				UpOperationResult upOperationResult = new UpOperation(config).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES && upOperationResult.getChangeSet().hasChanges()) {
 					notifyChanges();

@@ -17,3 +17,4 @@ syncany-plugins/syncany-plugin-gui-ftp/.gitignore
 syncany-plugins/syncany-plugin-gui-rest/.gitignore
 syncany-plugins/syncany-plugin-gui-webdav/.gitignore
 syncany-plugins/syncany-plugin-webdav/.gitignore
+*.bak

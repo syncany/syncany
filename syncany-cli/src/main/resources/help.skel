@@ -1,4 +1,4 @@
-Syncany, %VERSION%, copyright (c) 2011-2013 Philipp C. Heckel
+Syncany, %VERSION%, copyright (c) 2011-2014 Philipp C. Heckel
 Usage: sy [-l|--localdir=<path>] [--log=<path>]
           [--loglevel=OFF|SEVERE|..] [--print]
           [-d|--debug] [-h|--help] <command> [<args>]

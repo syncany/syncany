@@ -18,13 +18,9 @@
 package org.syncany.gui.plugin;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -120,48 +116,6 @@ public class SftpPluginPanel extends PluginPanel {
 		
 		pathText = new Text(this, SWT.BORDER);
 		pathText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
-
-		Composite buttonComposite = new Composite(this, SWT.NONE);
-		GridLayout gl_buttonComposite = new GridLayout(2, false);
-		gl_buttonComposite.horizontalSpacing = 0;
-		gl_buttonComposite.verticalSpacing = 0;
-		gl_buttonComposite.marginWidth = 0;
-		gl_buttonComposite.marginHeight = 0;
-		buttonComposite.setLayout(gl_buttonComposite);
-		GridData gd_buttonComposite = new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1);
-		gd_buttonComposite.minimumHeight = 30;
-		buttonComposite.setLayoutData(gd_buttonComposite);
-		
-		final Label testResultLabel = new Label(buttonComposite, SWT.NONE);
-		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 1, 1));
-		testResultLabel.setAlignment(SWT.CENTER);
-		
-		final Button testFtpButton = new Button(buttonComposite, SWT.NONE);
-
-		GridData gd_testFtpButton = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
-		gd_testFtpButton.heightHint = 30;
-		gd_testFtpButton.widthHint = 100;
-		testFtpButton.setLayoutData(gd_testFtpButton);
-		testFtpButton.setText(I18n.getString("plugin.sftp.test"));
-		testFtpButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				testFtpButton.setEnabled(false);
-				final boolean isValid = isValid();// && testPluginConnection();
-				testFtpButton.setEnabled(true);
-				
-				Display.getCurrent().syncExec(new Runnable() {
-				    public void run() {
-				    	if (isValid){
-				    		testResultLabel.setText(I18n.getString("plugin.sftp.testSucceed"));
-				    	}
-				    	else{
-				    		testResultLabel.setText(I18n.getString("plugin.sftp.testFails"));
-				    	}
-				    }
-				});
-			}
-		});
 		
 		WidgetDecorator.bold(introductionTitleLabel);
 		WidgetDecorator.normal(
@@ -170,8 +124,7 @@ public class SftpPluginPanel extends PluginPanel {
 			portLabel,portSpinner, 
 			usernameLabel, usernameText,
 			passwordLabel,passwordText,
-			pathLabel,pathText,
-			testFtpButton
+			pathLabel,pathText
 		);
 	}
 

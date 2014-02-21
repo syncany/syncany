@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.EnvironmentUtil.OperatingSystem;
 
-public class FileUtilTests {
+public class FileUtilTest {
 	private OperatingSystem originalOperatingSystem;
 	
 	@Before
@@ -224,5 +224,13 @@ public class FileUtilTests {
 		assertEquals("/home/philipp/file:with:colons", NormalizedPath.get(null, "/home/philipp/file:with:colons").toString());
 		assertEquals("/home/philipp/file\\with\\backslashes.txt", NormalizedPath.get(null, "/home/philipp/file\\with\\backslashes.txt").toString());
 		assertEquals("/home/philipp/folder\\with\\backslashes", NormalizedPath.get(null, "/home/philipp/folder\\with\\backslashes/").toString());		
-	}	
+	}
+	
+	@Test
+	public void testGetParnetPath() {
+		assertEquals("/parent", FileUtil.getParentPath("/parent/folder"));
+		assertEquals("/parent", FileUtil.getParentPath("/parent/folder/"));
+		assertEquals("/", FileUtil.getParentPath("/parent"));
+		assertEquals("/", FileUtil.getParentPath("/parent/"));
+	}
 }

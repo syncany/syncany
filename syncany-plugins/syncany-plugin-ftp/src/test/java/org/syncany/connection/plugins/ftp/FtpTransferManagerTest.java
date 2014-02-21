@@ -22,6 +22,7 @@ import junit.framework.Assert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 
 /**
@@ -33,12 +34,10 @@ public class FtpTransferManagerTest {
 	public static void beforeTestSetup() throws Exception {
 		EmbeddedFtpServerTest.startServer();
 		
-		EmbeddedFtpServerTest.mkdir("repoValid");
-		EmbeddedFtpServerTest.mkdir("repoValid/multichunks");
-		EmbeddedFtpServerTest.mkdir("repoValid/databases");
-		EmbeddedFtpServerTest.mkdir("repoEmpty");
-		EmbeddedFtpServerTest.mkdir("notEmpty");
-		EmbeddedFtpServerTest.mkdir("notEmpty/notEmpty");
+		EmbeddedFtpServerTest.mkdir("newRepo", EmbeddedFtpServerTest.USER1);
+		EmbeddedFtpServerTest.mkdir("nonEmptyRepo", EmbeddedFtpServerTest.USER1);
+		EmbeddedFtpServerTest.mkdir("nonEmptyRepo/folder", EmbeddedFtpServerTest.USER1);
+		EmbeddedFtpServerTest.mkdir("canNotCreate", EmbeddedFtpServerTest.USER2);
 	}
 	
 	@AfterClass
@@ -47,21 +46,15 @@ public class FtpTransferManagerTest {
 	}
 	
 	@Test
-	public void testFtpTransferManager() {
-		Assert.assertEquals(StorageTestResult.REPO_ALREADY_EXISTS, test("/repoValid"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_EMPTY_PERMISSIONS_OK, test("/repoEmpty"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_LOCATION_NOT_EMPTY, test("/notEmpty"));
-		Assert.assertEquals(StorageTestResult.INVALID_PARAMETERS, testUnknownHost("/root/notAllowed"));
+	public void testFtpTransferManager() throws StorageException {
+		Assert.assertEquals(StorageTestResult.NO_REPO, test("/newRepo"));
+		Assert.assertEquals(StorageTestResult.NO_REPO, test("/randomRepo"));
+		Assert.assertEquals(StorageTestResult.REPO_EXISTS, test("/nonEmptyRepo"));
+		Assert.assertEquals(StorageTestResult.NO_REPO_CANNOT_CREATE, test("/canNotCreate/inside"));
 	}
 		
-	public StorageTestResult test(String path){
+	public StorageTestResult test(String path) throws StorageException{
 		FtpConnection cnx = workingConnection();
-		cnx.setPath(path);
-		return cnx.createTransferManager().test();
-	}
-	
-	public StorageTestResult testUnknownHost(String path){
-		FtpConnection cnx = invalidConnection();
 		cnx.setPath(path);
 		return cnx.createTransferManager().test();
 	}

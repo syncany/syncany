@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.Database;
-import org.syncany.database.DatabaseVersion;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
@@ -84,6 +83,10 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		});
 		
 		Logging.setGlobalLogLevel(Level.SEVERE);
+				
+		// Before start: setup up databases (takes a while)
+		clientA.status();
+		clientB.status();
 		
 		// Run!
 		writeFileThread.start();
@@ -102,14 +105,13 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		assertFalse("File should NOT be uploaded while still writing (no half-file upload).", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies
-		Database database = clientA.loadLocalDatabase();
-		DatabaseVersion databaseVersion = database.getLastDatabaseVersion();
+		SqlDatabase database = clientA.loadLocalDatabase();
 
-		assertNull("File should NOT be uploaded while still writing (no half-file upload).", database.getFileHistory("large-test-file"));		
-		assertNull("There should NOT be a new database version, because file should not have been added.", databaseVersion);
+		assertNull("File should NOT be uploaded while still writing (no half-file upload).", database.getFileVersionByPath("large-test-file"));		
+		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 		
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) testConnection).getRepositoryPath();	
+		File repoPath = new File(((LocalConnection) testConnection).getRepositoryPath()+"/databases");	
 		String[] repoFileList = repoPath.list(new FilenameFilter() {			
 			@Override
 			public boolean accept(File dir, String name) {
