@@ -156,14 +156,18 @@ public class SqlDatabase {
 		return fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum);
 	}
 	
-	public List<PartialFileHistory> getFileHistoriesWithPurgeVersions(int keepVersionsCount) {
-		return fileHistoryDao.getFileHistoriesWithPurgeVersions(keepVersionsCount);
+	public Map<FileHistoryId, Long> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
+		return fileHistoryDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}
 
 	// File Version
 
 	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
+	}
+	
+	public void removeFileVersions(int keepVersionsCount) throws SQLException {
+		fileVersionDao.removeFileVersions(keepVersionsCount);		
 	}
 
 	@Deprecated

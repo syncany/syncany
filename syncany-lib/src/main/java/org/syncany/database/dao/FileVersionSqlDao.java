@@ -96,9 +96,18 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */	
 	public void removeDirtyFileVersions() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql");
-		preparedStatement.executeUpdate();	
-		preparedStatement.close();
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql")) {
+			preparedStatement.executeUpdate();
+		}
+	}
+	
+	public void removeFileVersions(int keepVersionCount) throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeFileVersions.sql")) {
+			preparedStatement.setInt(1, keepVersionCount);		
+			preparedStatement.executeUpdate();
+			
+			connection.commit();
+		}						
 	}
 	
 	/**

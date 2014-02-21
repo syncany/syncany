@@ -47,9 +47,14 @@ public class CleanupOperationTest {
 		
 		// A: Create some file versions
 		clientA.createNewFile("file.jpg");
-
-		for (int i=1; i<=10; i++) {
+		for (int i=1; i<=7; i++) {
 			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		clientA.createNewFile("otherfile.txt");
+		for (int i=1; i<=3; i++) {
+			clientA.changeFile("otherfile.txt");
 			clientA.upWithForceChecksum();			
 		}
 		
@@ -64,15 +69,15 @@ public class CleanupOperationTest {
 		
 		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!!
 		clientA.cleanup(options);		
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("4", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
 		
+		// Test the repo
+		assertEquals(4, new File(testConnection.getRepositoryPath()+"/multichunks/").list().length);
+		assertEquals(4, new File(testConnection.getRepositoryPath()+"/databases/").list().length); 
+
 		// B: Sync down cleanup
 		clientB.down();
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));
-
-		// Test the repo
-		assertEquals(2, new File(testConnection.getRepositoryPath()+"/multichunks/").list().length);
-		assertEquals(4, new File(testConnection.getRepositoryPath()+"/databases/").list().length); 
+		assertEquals("4", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));
 		
 		// Tear down
 		clientA.deleteTestData();		
