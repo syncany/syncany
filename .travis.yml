@@ -11,10 +11,11 @@ script:
 - ./gradlew test installApp distTar distZip debian
 
 env:
-- TERM=dumb
-- secure: "OWv7tJZiDQYxZpxw25Qs4B086veBPzjGvrVApfd8tAAOI7xG8Ifp9+TFsRO27xw99ZDFDLzjSZyffR45sgGCTuRapdSWNwIEmma4dAn299bFl1ayU5IXQYtIRsaXjyAm8QPmLbdl5YHFE77ArzFIsaysb7ZXB3cKnYfJGkiNLFs="
-- secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
-- secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
+  global:
+  - TERM=dumb
+  - secure: "OWv7tJZiDQYxZpxw25Qs4B086veBPzjGvrVApfd8tAAOI7xG8Ifp9+TFsRO27xw99ZDFDLzjSZyffR45sgGCTuRapdSWNwIEmma4dAn299bFl1ayU5IXQYtIRsaXjyAm8QPmLbdl5YHFE77ArzFIsaysb7ZXB3cKnYfJGkiNLFs="
+  - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
+  - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
 
 notifications:
   email: false
