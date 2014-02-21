@@ -3,7 +3,7 @@ jdk: openjdk7
 
 before_install:
 - sudo apt-get install -qq ruby ruby-dev build-essential rubygems
-- sudo gem install bundler fpm
+- sudo gem install travis bundler fpm
 - fpm --help | grep "This is fpm" 
 
 script: 
@@ -11,3 +11,6 @@ script:
 
 env:
 - TERM=dumb PATH="$PATH:/usr/local/bin"
+
+notifications:
+  email: false
