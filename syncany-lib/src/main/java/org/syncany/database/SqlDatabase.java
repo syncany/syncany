@@ -196,6 +196,10 @@ public class SqlDatabase {
 
 	public List<MultiChunkId> getDirtyMultiChunkIds() {
 		return multiChunkDao.getDirtyMultiChunkIds();
+	}	
+
+	public List<MultiChunkId> getUnusedMultiChunkIds(int keepVersionsCount) {
+		return multiChunkDao.getUnusedMultiChunkIds(keepVersionsCount);
 	}
 
 	// Chunk

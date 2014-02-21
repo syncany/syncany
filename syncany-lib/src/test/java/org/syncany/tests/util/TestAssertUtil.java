@@ -287,10 +287,11 @@ public class TestAssertUtil {
 				boolean isFirstRow = true;
 				int columnsCount = metaData.getColumnCount();
 				
-				while (actualResultSet.next()) {
-					System.out.println(actualResultSet.getString(1));
+				while (actualResultSet.next()) {					
 					if (!isFirstRow) {
-						queryResult.append("\n");
+						queryResult.append("\n");						
+					}
+					else {
 						isFirstRow = false;
 					}
 					

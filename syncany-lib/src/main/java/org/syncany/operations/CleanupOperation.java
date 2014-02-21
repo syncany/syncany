@@ -32,13 +32,14 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
-import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.XmlDatabaseSerializer;
@@ -117,7 +118,7 @@ public class CleanupOperation extends Operation {
 		Map<FileHistoryId, Long> mostRecentPurgeFileVersions = findMostRecentPurgeFileVersions(options.getKeepVersionsCount());
 		List<ChunkEntry> unusedChunks = findUnusedChunks(options.getKeepVersionsCount());
 		List<FileContent> unusedFileContents = findUnusedFileContents(options.getKeepVersionsCount());
-		List<MultiChunkEntry> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsCount());
+		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsCount());
 
 		// Local
 		File tempPurgeFile = writePruneFile(mostRecentPurgeFileVersions);
@@ -174,9 +175,8 @@ public class CleanupOperation extends Operation {
 		return null;
 	}
 
-	private List<MultiChunkEntry> findUnusedMultiChunks(int keepVersionsCount) {
-		// TODO Auto-generated method stub
-		return null;
+	private List<MultiChunkId> findUnusedMultiChunks(int keepVersionsCount) {
+		return localDatabase.getUnusedMultiChunkIds(keepVersionsCount);
 	}
 
 	private File writePruneFile(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {
@@ -200,7 +200,7 @@ public class CleanupOperation extends Operation {
 
 	}
 
-	private void deleteLocalUnusedMultiChunks(List<MultiChunkEntry> unusedMultiChunks) {
+	private void deleteLocalUnusedMultiChunks(List<MultiChunkId> unusedMultiChunks) {
 		// TODO Auto-generated method stub
 
 	}
@@ -209,9 +209,13 @@ public class CleanupOperation extends Operation {
 		localDatabase.removeFileVersions(keepVersionsCount);
 	}
 
-	private void remoteDeleteUnusedMultiChunks(List<MultiChunkEntry> unusedMultiChunks) {
-		// TODO Auto-generated method stub
-
+	private void remoteDeleteUnusedMultiChunks(List<MultiChunkId> unusedMultiChunks) throws StorageException {
+		logger.log(Level.INFO, "- Deleting remote multichunks ...");
+		
+		for (MultiChunkId multiChunkId : unusedMultiChunks) {
+			logger.log(Level.FINE, "  + Deleting remote multichunk " + multiChunkId + " ...");
+			transferManager.delete(new MultiChunkRemoteFile(multiChunkId));
+		}
 	}
 
 	private boolean hasDirtyDatabaseVersions() {
