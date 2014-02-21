@@ -5,9 +5,11 @@ before_install:
 - sudo apt-get install -qq ruby ruby-dev build-essential rubygems
 - sudo gem install fpm
 
+before_script:
+- fpm --help | grep "This is fpm" 
+
 script: 
-- ./gradlew test
-- ./gradlew distTar distZip debian
+- ./gradlew test installApp distTar distZip debian
 
 env:
 - TERM=dumb PATH="$PATH:/usr/local/bin"
