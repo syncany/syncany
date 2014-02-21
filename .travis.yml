@@ -9,7 +9,7 @@ before_install:
 - lftp -v | grep "LFTP"
 
 script: 
-- ./gradlew test installApp distTar distZip debian
+- ./gradlew test installApp distTar distZip debian javadocAll
 - ./gradle/lftp/upload-to-ftp.sh
 
 env:
