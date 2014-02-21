@@ -11,3 +11,4 @@ script:
 
 env:
 - TERM=dumb
+- PATH="$PATH:/usr/local/bin"
