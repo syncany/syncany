@@ -36,9 +36,7 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileContent;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
@@ -91,8 +89,6 @@ public class CleanupOperation extends Operation {
 	}
 
 	/**
-	 * <b>WARNING: Syntax errors; still DRAFTING / BRAIN STORMING here ...</b> 
-	 * 
 	 * High level strategy:
 	 * 1. Lock repo and start thread that renews the lock every X seconds
 	 * 2. Find old versions / contents / ... from database
@@ -116,28 +112,26 @@ public class CleanupOperation extends Operation {
 		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
 
 		Map<FileHistoryId, Long> mostRecentPurgeFileVersions = findMostRecentPurgeFileVersions(options.getKeepVersionsCount());
-		List<ChunkEntry> unusedChunks = findUnusedChunks(options.getKeepVersionsCount());
-		List<FileContent> unusedFileContents = findUnusedFileContents(options.getKeepVersionsCount());
 		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsCount());
 
 		// Local
-		File tempPurgeFile = writePruneFile(mostRecentPurgeFileVersions);
-		PurgeRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile();
-
-		deleteLocalUnusedChunks(unusedChunks);
-		deleteLocalUnusedFileContents(unusedFileContents);
-		deleteLocalUnusedMultiChunks(unusedMultiChunks);
+		deleteLocalUnusedChunks(options.getKeepVersionsCount());
+		deleteLocalUnusedFileContents(options.getKeepVersionsCount());
+		deleteLocalUnusedMultiChunks(options.getKeepVersionsCount());
 		removeFileVersions(options.getKeepVersionsCount());
 
 		// Remote
-		uploadPruneFile(tempPurgeFile, newPurgeRemoteFile); // prune-A-0000001 OR db-PRUNE-0000001 ??
+		File tempPurgeFile = writePurgeFile(mostRecentPurgeFileVersions);
+		PurgeRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile();
+
+		uploadPurgeFile(tempPurgeFile, newPurgeRemoteFile); // prune-A-0000001 OR db-PRUNE-0000001 ??
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// stopLockRenewalThread();
 		unlockRemoteRepository();
 	}
 
-	private void uploadPruneFile(File tempPruneFile, PurgeRemoteFile newPruneRemoteFile) {
+	private void uploadPurgeFile(File tempPruneFile, PurgeRemoteFile newPruneRemoteFile) {
 		// TODO Auto-generated method stub
 
 	}
@@ -160,26 +154,16 @@ public class CleanupOperation extends Operation {
 		}
 	}
 
-	private void deleteLocalUnusedChunks(List<ChunkEntry> unusedChunks) {
+	private void deleteLocalUnusedChunks(int keepVersionsCount) {
 		// TODO Auto-generated method stub
 
-	}
-
-	private List<ChunkEntry> findUnusedChunks(int keepVersionsCount) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private List<FileContent> findUnusedFileContents(int keepVersionsCount) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	private List<MultiChunkId> findUnusedMultiChunks(int keepVersionsCount) {
 		return localDatabase.getUnusedMultiChunkIds(keepVersionsCount);
 	}
 
-	private File writePruneFile(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {
+	private File writePurgeFile(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {
 		PurgeDatabaseVersion pruneDatabaseVersion = new PurgeDatabaseVersion();
 
 		for (Entry<FileHistoryId, Long> fileHistoryEntry : mostRecentPurgeFileVersions.entrySet()) {
@@ -195,12 +179,12 @@ public class CleanupOperation extends Operation {
 		return null;
 	}
 
-	private void deleteLocalUnusedFileContents(List<FileContent> unusedFileContents) {
+	private void deleteLocalUnusedFileContents(int keepVersionsCount) {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void deleteLocalUnusedMultiChunks(List<MultiChunkId> unusedMultiChunks) {
+	private void deleteLocalUnusedMultiChunks(int keepVersionsCount) {
 		// TODO Auto-generated method stub
 
 	}
