@@ -3,10 +3,13 @@ jdk: openjdk7
 
 env:
   global:
-  - TERM=dumb
-  - secure: "OWv7tJZiDQYxZpxw25Qs4B086veBPzjGvrVApfd8tAAOI7xG8Ifp9+TFsRO27xw99ZDFDLzjSZyffR45sgGCTuRapdSWNwIEmma4dAn299bFl1ayU5IXQYtIRsaXjyAm8QPmLbdl5YHFE77ArzFIsaysb7ZXB3cKnYfJGkiNLFs="
-  - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
-  - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
+    # Terminal does not support colors (Gradle display issue)
+    - TERM=dumb
+    
+    # Syncany FTP credentials (SYNCANY_FTP_* environment variables)
+    - secure: "OWv7tJZiDQYxZpxw25Qs4B086veBPzjGvrVApfd8tAAOI7xG8Ifp9+TFsRO27xw99ZDFDLzjSZyffR45sgGCTuRapdSWNwIEmma4dAn299bFl1ayU5IXQYtIRsaXjyAm8QPmLbdl5YHFE77ArzFIsaysb7ZXB3cKnYfJGkiNLFs="
+    - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
+    - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
 
 branches:
   only:
@@ -16,22 +19,30 @@ notifications:
   email: false
   
 before_install:
-- sudo rm /etc/profile.d/rvm.sh
-- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp graphviz wine python-software-properties
-- sudo add-apt-repository --yes ppa:arx/release
-- sudo apt-get update
-- sudo apt-get install innoextract
-- rvmsudo gem install fpm
-- fpm --help | grep "This is fpm" 
-- lftp -v 
-- wine --version 
-- innoextract --version 
+  # FPM setup (Ruby-based)
+  - sudo rm /etc/profile.d/rvm.sh
+  - sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm 
+  - rvmsudo gem install fpm
+  - fpm --help | grep "This is fpm" 
+  
+  # LFTP (to upload the distributables and JavaDoc)
+  - sudo apt-get install -y -q lftp graphviz wine python-software-properties
+  - lftp -v 
 
-before_script:
-- ./gradle/innosetup/innoinstall.sh
-- ./gradle/innosetup/iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
+  # Graphviz (for JavaDoc images; see Gradle tasks)
+  - sudo apt-get install -y -q graphviz 
+  
+  # Inno Setup (for Windows executable/installer)
+  - sudo add-apt-repository --yes ppa:arx/release
+  - sudo apt-get update -d
+  - sudo apt-get install -y -q innoextract wine python-software-properties
+  - wine --version 
+  - innoextract --version 
+  - ./gradle/innosetup/innoinstall.sh
+  - ./gradle/innosetup/iscc /? 
 
 script: 
-- ./gradlew test installApp distTar distZip debian javadocAll
+# - ./gradlew test 
+- ./gradlew installApp distTar distZip debian exe javadocAll
 # - ./gradle/lftp/upload-to-ftp.sh
 
