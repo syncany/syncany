@@ -17,7 +17,9 @@ mkdir $TEMPDIR
 mkdir $TEMPDISTDIR
 
 # Gather deb/tar-gz/zip
+echo ""
 echo "Gathering distributables ..."
+echo "----------------------------"
 cp $REPODIR/syncany-cli/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
 cp $REPODIR/syncany-cli/build/linux-package/*.deb $TEMPDISTDIR
 cp $REPODIR/syncany-cli/build/innosetup/*.exe $TEMPDISTDIR
@@ -31,14 +33,19 @@ if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
 	exit 2
 fi
 
-# Gather JavaDoc
-echo "Gathering JavaDoc ..."
+# Gather JavaDoc & Test Reports
+echo ""
+echo "Gathering JavaDoc & Test Reports ..."
+echo "---------------------"
 
 PWD=`pwd`
 cd $REPODIR/build
-rm javadoc.tar.gz
+rm javadoc.tar.gz 2> /dev/null
+rm reports.tar.gz 2> /dev/null
 tar -czf javadoc.tar.gz javadoc/
+tar -czf reports.tar.gz reports/
 mv javadoc.tar.gz $TEMPDIR/
+mv reports.tar.gz $TEMPDIR/
 cd "$PWD"
 
 ls $TEMPDIR
@@ -48,7 +55,7 @@ echo "Uploading files to Syncany FTP ..."
 
 lftp -c "open ftp://$SYNCANY_FTP_HOST
 user $SYNCANY_FTP_USER $SYNCANY_FTP_PASS
-mirror --reverse --exclude javadoc --delete --parallel=3 --verbose $TEMPDIR /
+mirror --reverse --exclude javadoc --exclude reports --delete --parallel=3 --verbose $TEMPDIR /
 bye
 "
 
