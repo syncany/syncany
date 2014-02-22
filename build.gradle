@@ -237,6 +237,6 @@ task clean(type: Delete) {
 task testGlobal(type: TestReport) {
 	group = "verification"	
 	description = "All the results from the 'test' task in all subprojects (global report!)"
-	destinationDir = file("$buildDir/reports/allTests")
+	destinationDir = file("$buildDir/reports/all")
 	reportOn subprojects*.test
 }
