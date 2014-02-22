@@ -1,4 +1,4 @@
-Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=master)](https://travis-ci.org/binwiederhier/syncany)
+Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=master)](https://travis-ci.org/binwiederhier/syncany) 
 =======
 > **Important:** Please be aware that this is still ALPHA code! Do not use it
                  for important files.
@@ -30,8 +30,13 @@ terms of storage type and provider:
 
 Download and install daily snapshots
 ------------------------------------
-We're building daily snapshots from the master branch from the latest commit (older commit
-builds are removed). You can check out the latest build at [syncany.org/dist](http://syncany.org/dist/).
+We're building snapshots of the latest master-branch commit as soon as they are committed (older snapshots
+are removed). At the moment, the build process outputs a \*.tar.gz and a \*.zip archive, as well as
+an executable for Windows (\*.exe installer) and a Debian/Ubuntu package (\*.deb).
+
+**To download it, check out the [latest builds](http://syncany.org/dist/)!**  
+The corresponding [JavaDoc](http://syncany.org/docs/javadoc/) and the
+[JUnit test reports](http://syncany.org/reports/) is also available.
 
 **Please note**: These builds are created from *unstable*, sometimes *erroneous* code. 
 Things might change very often and newer versions might not support older repositories.
@@ -152,8 +157,9 @@ There is quite a bit of reading material on Syncany already. Check out the follo
 - [Diagram: Storage plugins class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Connection%20Plugins.png)
 - [Diagram: Database class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Database.png)
 
-**JavaDoc**    
-The up-to-date JavaDoc of the master branch is always compiled to [syncany.org/docs/javadoc](http://syncany.org/docs/javadoc). It includes the JavaDoc of all Gradle modules in the repo.
+**Generated JavaDoc and JUnit Reports**    
+The up-to-date JavaDoc of the master branch is always compiled to [syncany.org/docs/javadoc](http://syncany.org/docs/javadoc). It includes the JavaDoc of all Gradle
+modules in the repo. All results of the JUnit tests are compiled to [syncany.org/reports](http://syncany.org/reports/). The corresponding distributables for this code are located at [syncany.org/dist](http://syncany.org/dist/).
 
 
 Setup Eclipse IDE for development
