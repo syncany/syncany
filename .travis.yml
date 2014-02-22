@@ -10,18 +10,25 @@ env:
 
 branches:
   only:
-    - master
+    - travis
     
 notifications:
   email: false
   
 before_install:
 - sudo rm /etc/profile.d/rvm.sh
-- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp graphviz
+- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp graphviz innoextract wine
 - rvmsudo gem install fpm
 - fpm --help | grep "This is fpm" 
 - lftp -v | grep "LFTP"
+- wine --version | grep "wine"
+- innoextract --version | grep "Inno Extract"
+
+before_script:
+- ./gradle/innosetup/innoinstall.sh
+- ./gradle/innosetup/iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
 
 script: 
 - ./gradlew test installApp distTar distZip debian javadocAll
-- ./gradle/lftp/upload-to-ftp.sh
+# - ./gradle/lftp/upload-to-ftp.sh
+
