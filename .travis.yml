@@ -50,5 +50,5 @@ script:
   - ./gradlew installApp distTar distZip debian exe javadocAll
   
   # Upload distributables and JavaDoc
-  # - ./gradle/lftp/upload-to-ftp.sh
+  - ./gradle/lftp/upload-to-ftp.sh
 
