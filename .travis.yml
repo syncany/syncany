@@ -39,10 +39,15 @@ before_install:
   - wine --version 
   - innoextract --version 
   - ./gradle/innosetup/innoinstall.sh
-  - ./gradle/innosetup/iscc /? 
+  - ./gradle/innosetup/iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
 
 script: 
-# - ./gradlew test 
-- ./gradlew installApp distTar distZip debian exe javadocAll
-# - ./gradle/lftp/upload-to-ftp.sh
+  # Run JUnit tests
+  # - ./gradlew test 
+
+  # Create distributables and JavaDoc
+  - ./gradlew installApp distTar distZip debian exe javadocAll
+  
+  # Upload distributables and JavaDoc
+  # - ./gradle/lftp/upload-to-ftp.sh
 
