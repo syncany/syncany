@@ -44,7 +44,7 @@ before_install:
 
 script: 
   # Run JUnit tests
-  - ./gradlew test 
+  - ./gradlew testGlobal 
 
   # Create distributables and JavaDoc
   - ./gradlew installApp distTar distZip debian exe javadocAll
