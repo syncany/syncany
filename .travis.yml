@@ -17,7 +17,10 @@ notifications:
   
 before_install:
 - sudo rm /etc/profile.d/rvm.sh
-- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp graphviz innoextract wine
+- sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm lftp graphviz wine python-software-properties
+- sudo add-apt-repository --yes ppa:arx/release
+- sudo apt-get update
+- sudo apt-get install innoextract
 - rvmsudo gem install fpm
 - fpm --help | grep "This is fpm" 
 - lftp -v | grep "LFTP"
