@@ -17,9 +17,12 @@ mkdir $TEMPDIR
 mkdir $TEMPDISTDIR
 
 # Gather deb/tar-gz/zip
+echo "Gathering distributables ..."
 cp $REPODIR/syncany-cli/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
 cp $REPODIR/syncany-cli/build/linux-package/*.deb $TEMPDISTDIR
 cp $REPODIR/syncany-cli/build/innosetup/*.exe $TEMPDISTDIR
+
+ls $TEMPDISTDIR
 
 if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
 	echo "ERROR: Wrong files in $TEMPDISTDIR: "
@@ -29,6 +32,8 @@ if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
 fi
 
 # Gather JavaDoc
+echo "Gathering JavaDoc ..."
+
 PWD=`pwd`
 cd $REPODIR/build
 rm javadoc.tar.gz
@@ -36,12 +41,14 @@ tar -czf javadoc.tar.gz javadoc/
 mv javadoc.tar.gz $TEMPDIR/
 cd "$PWD"
 
+ls $TEMPDIR
+
 # Copy to FTP 
 echo "Uploading files to Syncany FTP ..."
 
 lftp -c "open ftp://$SYNCANY_FTP_HOST
 user $SYNCANY_FTP_USER $SYNCANY_FTP_PASS
-mirror --reverse --only-newer --delete --parallel=3 --verbose $TEMPDIR /
+mirror --reverse --exclude javadoc --delete --parallel=3 --verbose $TEMPDIR /
 bye
 "
 

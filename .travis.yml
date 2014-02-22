@@ -44,11 +44,10 @@ before_install:
 
 script: 
   # Run JUnit tests
-  # - ./gradlew test 
+  - ./gradlew test 
 
   # Create distributables and JavaDoc
   - ./gradlew installApp distTar distZip debian exe javadocAll
   
   # Upload distributables and JavaDoc
-  - ./gradle/lftp/upload-to-ftp.sh
-
+  - ./gradle/lftp/lftpupload.sh
