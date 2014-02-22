@@ -23,11 +23,9 @@ before_install:
 - sudo apt-get install innoextract
 - rvmsudo gem install fpm
 - fpm --help | grep "This is fpm" 
-- lftp -v | grep "LFTP"
-- wine --version | grep "wine"
+- lftp -v 
+- wine --version 
 - innoextract --version 
-
-# | grep "Inno Extract"
 
 before_script:
 - ./gradle/innosetup/innoinstall.sh
