@@ -25,7 +25,9 @@ before_install:
 - fpm --help | grep "This is fpm" 
 - lftp -v | grep "LFTP"
 - wine --version | grep "wine"
-- innoextract --version | grep "Inno Extract"
+- innoextract --version 
+
+# | grep "Inno Extract"
 
 before_script:
 - ./gradle/innosetup/innoinstall.sh
