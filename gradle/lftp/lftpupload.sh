@@ -36,7 +36,7 @@ fi
 # Gather JavaDoc & Test Reports
 echo ""
 echo "Gathering JavaDoc & Test Reports ..."
-echo "---------------------"
+echo "------------------------------------"
 
 PWD=`pwd`
 cd $REPODIR/build
@@ -48,14 +48,16 @@ mv javadoc.tar.gz $TEMPDIR/
 mv reports.tar.gz $TEMPDIR/
 cd "$PWD"
 
-ls $TEMPDIR
+find $TEMPDIR
 
 # Copy to FTP 
+echo ""
 echo "Uploading files to Syncany FTP ..."
+echo "------------------------------------"
 
 lftp -c "open ftp://$SYNCANY_FTP_HOST
 user $SYNCANY_FTP_USER $SYNCANY_FTP_PASS
-mirror --reverse --exclude javadoc --exclude reports --delete --parallel=3 --verbose $TEMPDIR /
+mirror --reverse --exclude javadoc/ --exclude reports/ --delete --parallel=3 --verbose $TEMPDIR /
 bye
 "
 
