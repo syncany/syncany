@@ -39,7 +39,8 @@ before_install:
   - wine --version 
   - innoextract --version 
   - ./gradle/innosetup/innoinstall.sh
-  - ./gradle/innosetup/iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
+  - sudo cp gradle/innosetup/iscc /usr/local/bin/iscc
+  - iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
 
 script: 
   # Run JUnit tests
