@@ -17,9 +17,13 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
@@ -27,48 +31,53 @@ import org.syncany.operations.NotificationListener;
 import org.syncany.operations.NotificationListener.NotificationListenerListener;
 
 public class NotificationListenerTest {
+	private static final Logger logger = Logger.getLogger(NotificationListenerTest.class.getName());
+	
 	static {
 		Logging.init();
 	}
 	
 	@Test
-	public void testDeduperWithDatabase() throws IOException, InterruptedException {
-		final NotificationListener notificationListener1 = new NotificationListener("localhost", 1986, new NotificationListenerListener() {			
+	public void testNotificationListener() throws IOException, InterruptedException {
+		String randomChannelName = NotificationListenerTest.class.getName() + new Random().nextInt();
+
+		final AtomicInteger messagesReceivedBy1 = new AtomicInteger(0);
+		final AtomicInteger messagesReceivedBy2 = new AtomicInteger(0);
+		
+		final NotificationListener notificationListener1 = new NotificationListener("notify.syncany.org", 8080, new NotificationListenerListener() {			
 			@Override
 			public void pushNotificationReceived(String channel, String message) {
-				System.out.println("1 NEW channel = "+channel+", message = "+message);
+				logger.log(Level.INFO, "Client 1: pushNotificationReceived(channel = "+channel+", message = "+message+")");
+				messagesReceivedBy1.addAndGet(1);
 			}
 		});
 		
-		final NotificationListener notificationListener2 = new NotificationListener("localhost", 1986, new NotificationListenerListener() {			
+		final NotificationListener notificationListener2 = new NotificationListener("notify.syncany.org", 8080, new NotificationListenerListener() {			
 			@Override
 			public void pushNotificationReceived(String channel, String message) {
-				System.out.println("2 NEW channel = "+channel+", message = "+message);
+				logger.log(Level.INFO, "Client 2: pushNotificationReceived(channel = "+channel+", message = "+message+")");				
+				messagesReceivedBy2.addAndGet(1);		
 			}
-		});
+		});		
 		
+		// Start
 		notificationListener1.start();
 		notificationListener2.start();
 		
-		notificationListener1.subscribe("syncanychannel");
-		notificationListener2.subscribe("syncanychannel");
+		notificationListener1.subscribe(randomChannelName);
+		notificationListener2.subscribe(randomChannelName);
+				
+		Thread.sleep(1000); // Let them settle
+		
+		notificationListener1.announce(randomChannelName, "Message from 1");
+		notificationListener2.announce(randomChannelName, "Message from 2");
+		
+		Thread.sleep(1000); // Wait for messages
+		
+		assertEquals("Different amount of messages received by 1", 2, messagesReceivedBy1.get());
+		assertEquals("Different amount of messages received by 2", 2, messagesReceivedBy2.get());
 
-		
-		new Thread(new Runnable() {			
-			@Override
-			public void run() {
-				while (true) {
-					notificationListener1.announce("syncanychannel", ""+System.currentTimeMillis());
-					
-					try { Thread.sleep(2000); }
-					catch (Exception e) { }
-				}
-			}
-		}).start();		
-		
-		Thread.sleep(60000);
-		
-		fail("Test me!!!");
+		notificationListener1.stop();
+		notificationListener2.stop();
 	}
-
 }
