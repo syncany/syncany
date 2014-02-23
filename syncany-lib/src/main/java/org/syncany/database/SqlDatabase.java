@@ -212,8 +212,8 @@ public class SqlDatabase {
 		return multiChunkDao.getDirtyMultiChunkIds();
 	}	
 
-	public List<MultiChunkId> getUnusedMultiChunkIds(int keepVersionsCount) {
-		return multiChunkDao.getUnusedMultiChunkIds(keepVersionsCount);
+	public List<MultiChunkId> getUnusedMultiChunkIds() {
+		return multiChunkDao.getUnusedMultiChunkIds();
 	}
 	
 	public void removeUnreferencedMultiChunks() throws SQLException {

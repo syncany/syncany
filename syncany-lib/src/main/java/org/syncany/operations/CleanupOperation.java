@@ -112,15 +112,19 @@ public class CleanupOperation extends Operation {
 		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
 
 		Map<FileHistoryId, Long> mostRecentPurgeFileVersions = findMostRecentPurgeFileVersions(options.getKeepVersionsCount());
-		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsCount());
 
 		// Local
+		
+		// First, remove file versions that are not longer needed
 		removeFileVersions(options.getKeepVersionsCount());
 		
 		if (options.isRemoveDeletedVersions()) {
 			removeDeletedVersons();
 		}
-		
+
+		// Then, determine what must be changed remotely and remove it locally
+		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
+
 		deleteUnusedFileHistories();
 		deleteUnusedFileContents();
 		deleteUnusedMultiChunks();
@@ -174,8 +178,8 @@ public class CleanupOperation extends Operation {
 		localDatabase.removeUnreferencedChunks();
 	}
 
-	private List<MultiChunkId> findUnusedMultiChunks(int keepVersionsCount) {
-		return localDatabase.getUnusedMultiChunkIds(keepVersionsCount);
+	private List<MultiChunkId> findUnusedMultiChunkIds() {
+		return localDatabase.getUnusedMultiChunkIds();
 	}
 
 	private File writePurgeFile(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {

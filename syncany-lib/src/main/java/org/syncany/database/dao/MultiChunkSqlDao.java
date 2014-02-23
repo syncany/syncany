@@ -176,12 +176,10 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public List<MultiChunkId> getUnusedMultiChunkIds(int keepVersionsCount) {
+	public List<MultiChunkId> getUnusedMultiChunkIds() {
 		List<MultiChunkId> unusedMultiChunkIds = new ArrayList<MultiChunkId>();		
 		
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getUnusedMultiChunks.sql")) {
-			preparedStatement.setInt(1, keepVersionsCount);
-			
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					unusedMultiChunkIds.add(MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id")));

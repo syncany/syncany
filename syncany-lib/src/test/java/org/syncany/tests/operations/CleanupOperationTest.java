@@ -86,14 +86,14 @@ public class CleanupOperationTest {
 		assertEquals("11", TestAssertUtil.runSqlQuery("select count(*) from filecontent", databaseConnectionB));
 		assertEquals("4", TestAssertUtil.runSqlQuery("select count(distinct id) from filehistory", databaseConnectionB));
 		
-		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!!
+		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		clientA.cleanup(options);		
 		
 		// 2 versions for "file.jpg", 2 versions for "otherfile.txt" and one version for "someotherfile.jpg"
 		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion where path='file.jpg'", databaseConnectionA));
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion where path='otherfile.txt'", databaseConnectionA));
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from fileversion where path='someotherfile.jpg'", databaseConnectionA));
+		assertEquals("7", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='file.jpg'", databaseConnectionA)); // 3+4
+		assertEquals("5", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='otherfile.txt'", databaseConnectionA)); // 2+3
+		assertEquals("1", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='someotherfile.jpg'", databaseConnectionA));
 				
 		// Normally this should be 5, but because the chunk of "someotherfile.jpg" and "file.jpg" (version 1) 
 		// are in the same multichunk, the chunk of "file1.jpg" (version 1) cannot be deleted
