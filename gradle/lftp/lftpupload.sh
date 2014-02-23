@@ -6,6 +6,11 @@ REPODIR="$SCRIPTDIR/../.."
 TEMPDIR="$SCRIPTDIR/temp"
 TEMPDISTDIR="$TEMPDIR/dist"
 
+if [ -n "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
+	echo "NOTE: Skipping FTP upload. This job is a PULL REQUEST."
+	exit 0
+fi
+
 if [ "$SYNCANY_FTP_HOST" == "" -o "$SYNCANY_FTP_USER" == "" -o "$SYNCANY_FTP_PASS" == "" ]; then
 	echo "ERROR: SYNCANY_FTP_* environment variables not set."
 	exit 1
