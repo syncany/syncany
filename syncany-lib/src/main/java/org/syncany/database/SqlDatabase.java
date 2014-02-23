@@ -58,6 +58,7 @@ import org.syncany.operations.DatabaseBranch;
 public class SqlDatabase {
 	protected static final Logger logger = Logger.getLogger(SqlDatabase.class.getSimpleName());
 
+	protected Connection connection;
 	protected ApplicationSqlDao applicationDao;
 	protected ChunkSqlDao chunkDao;
 	protected FileContentSqlDao fileContentDao;
@@ -67,8 +68,7 @@ public class SqlDatabase {
 	protected DatabaseVersionSqlDao databaseVersionDao;
 
 	public SqlDatabase(Config config) {
-		Connection connection = config.createDatabaseConnection();
-
+		this.connection = config.createDatabaseConnection();
 		this.applicationDao = new ApplicationSqlDao(connection);
 		this.chunkDao = new ChunkSqlDao(connection);
 		this.fileContentDao = new FileContentSqlDao(connection);
@@ -78,6 +78,12 @@ public class SqlDatabase {
 		this.databaseVersionDao = new DatabaseVersionSqlDao(connection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 	}
 
+	// General
+	
+	public void commit() throws SQLException {
+		connection.commit();
+	}
+	
 	// Application
 
 	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
@@ -159,6 +165,10 @@ public class SqlDatabase {
 	public Map<FileHistoryId, Long> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
 		return fileHistoryDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}
+	
+	public void removeUnreferencedFileHistories() throws SQLException {
+		fileHistoryDao.removeUnreferencedFileHistories();
+	}
 
 	// File Version
 
@@ -168,6 +178,10 @@ public class SqlDatabase {
 	
 	public void removeFileVersions(int keepVersionsCount) throws SQLException {
 		fileVersionDao.removeFileVersions(keepVersionsCount);		
+	}
+	
+	public void removeDeletedVersions() throws SQLException {
+		fileVersionDao.removeDeletedVersions();
 	}
 
 	@Deprecated
@@ -216,8 +230,8 @@ public class SqlDatabase {
 		return chunkDao.getChunk(chunkChecksum);
 	}	
 
-	public void removeUnusedChunks(int keepVersionsCount) {
-		chunkDao.removeUnusedChunks(keepVersionsCount);
+	public void removeUnreferencedChunks() {
+		chunkDao.removeUnreferencedChunks();
 	}
 
 	// File Content

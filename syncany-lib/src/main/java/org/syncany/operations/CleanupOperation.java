@@ -116,9 +116,17 @@ public class CleanupOperation extends Operation {
 
 		// Local
 		removeFileVersions(options.getKeepVersionsCount());
-		deleteLocalUnusedFileContents();
-		deleteLocalUnusedMultiChunks();
-		deleteLocalUnusedChunks(options.getKeepVersionsCount());
+		
+		if (options.isRemoveDeletedVersions()) {
+			removeDeletedVersons();
+		}
+		
+		deleteUnusedFileHistories();
+		deleteUnusedFileContents();
+		deleteUnusedMultiChunks();
+		deleteUnusedChunks();
+		
+		localDatabase.commit();
 
 		// Remote
 		File tempPurgeFile = writePurgeFile(mostRecentPurgeFileVersions);
@@ -129,6 +137,14 @@ public class CleanupOperation extends Operation {
 
 		// stopLockRenewalThread();
 		unlockRemoteRepository();
+	}
+
+	private void deleteUnusedFileHistories() throws SQLException {
+		localDatabase.removeUnreferencedFileHistories();
+	}
+
+	private void removeDeletedVersons() throws SQLException {
+		localDatabase.removeDeletedVersions();
 	}
 
 	private void uploadPurgeFile(File tempPruneFile, PurgeRemoteFile newPruneRemoteFile) {
@@ -154,8 +170,8 @@ public class CleanupOperation extends Operation {
 		}
 	}
 
-	private void deleteLocalUnusedChunks(int keepVersionsCount) {
-		localDatabase.removeUnusedChunks(keepVersionsCount);
+	private void deleteUnusedChunks() {
+		localDatabase.removeUnreferencedChunks();
 	}
 
 	private List<MultiChunkId> findUnusedMultiChunks(int keepVersionsCount) {
@@ -178,11 +194,11 @@ public class CleanupOperation extends Operation {
 		return null;
 	}
 
-	private void deleteLocalUnusedFileContents() throws SQLException {
+	private void deleteUnusedFileContents() throws SQLException {
 		localDatabase.removeUnreferencedFileContents();
 	}
 
-	private void deleteLocalUnusedMultiChunks() throws SQLException {
+	private void deleteUnusedMultiChunks() throws SQLException {
 		localDatabase.removeUnreferencedMultiChunks(); 
 	}
 
@@ -283,6 +299,7 @@ public class CleanupOperation extends Operation {
 
 		logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
 				lastLocalMergeDatabaseFile });
+		
 		transferManager.delete(lastRemoteMergeDatabaseFile);
 		transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 	}
@@ -304,6 +321,7 @@ public class CleanupOperation extends Operation {
 		private boolean mergeRemoteFiles = true;
 		private boolean removeOldVersions = false;
 		private int keepVersionsCount = 5;
+		private boolean removeDeletedVersions = true;
 		private boolean repackageMultiChunks = true;
 		private double repackageUnusedThreshold = 0.7;
 
@@ -346,6 +364,14 @@ public class CleanupOperation extends Operation {
 		public void setRepackageUnusedThreshold(double repackageUnusedThreshold) {
 			this.repackageUnusedThreshold = repackageUnusedThreshold;
 		}
+
+		public boolean isRemoveDeletedVersions() {
+			return removeDeletedVersions;
+		}
+
+		public void setRemoveDeletedVersions(boolean removeDeletedVersions) {
+			this.removeDeletedVersions = removeDeletedVersions;
+		}				
 	}
 
 	public static class CleanupOperationResult implements OperationResult {

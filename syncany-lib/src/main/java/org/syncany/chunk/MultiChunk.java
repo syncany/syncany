@@ -44,7 +44,7 @@ import java.util.Arrays;
 public abstract class MultiChunk {
     protected byte[] id;
     protected long size;
-    protected int minSize;
+    protected int minSize; // in KB
     
     /**
      * Creates a new multichunk. 

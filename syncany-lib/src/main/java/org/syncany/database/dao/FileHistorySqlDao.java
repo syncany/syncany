@@ -68,6 +68,12 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			preparedStatement.executeUpdate();
 		}		
 	}
+	
+	public void removeUnreferencedFileHistories() throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
+			preparedStatement.executeUpdate();
+		}	
+	}
 
 	/**
 	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}

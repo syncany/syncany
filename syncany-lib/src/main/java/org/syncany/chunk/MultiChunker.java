@@ -60,7 +60,7 @@ public abstract class MultiChunker {
 
 	private static Logger logger = Logger.getLogger(MultiChunker.class.getSimpleName());
 
-	protected int minMultiChunkSize;
+	protected int minMultiChunkSize; // in KB
 
 	/**
 	 * Creates new multichunker without setting the minimum size of a multichunk.

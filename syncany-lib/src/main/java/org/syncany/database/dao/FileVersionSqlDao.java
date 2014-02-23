@@ -105,9 +105,13 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeFileVersions.sql")) {
 			preparedStatement.setInt(1, keepVersionCount);		
 			preparedStatement.executeUpdate();
-			
-			connection.commit();
 		}						
+	}
+
+	public void removeDeletedVersions() throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeDeletedVersions.sql")) {	
+			preparedStatement.executeUpdate();
+		}
 	}
 	
 	/**
