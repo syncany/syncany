@@ -42,26 +42,24 @@ public class UploadInterruptedTest {
 		));
 		
 		TestClient clientA = new TestClient("A", testConnection);
-		Thread clientThreadA = clientA.watchAsThread(200);
+		Thread clientThreadA = clientA.watchAsThread(1000);
 		
 		clientThreadA.start();
 		
 		int i = 0;
 		while (i++ < 5) {
 			clientA.createNewFile("A-original-"+i, 50*1024);
-			Thread.sleep(700);
+			Thread.sleep(1000);
+			if (i == 3) {
+				clientThreadA.interrupt();
+			}
 		}
-		
-		Thread.sleep(1000);
-		clientThreadA.interrupt();
-		
+				
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000001").exists());
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000002").exists());
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000003").exists());
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000004").exists());
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
-		
-		// TODO [medium] This test fails in ScenarioTestSuite and DatabaseTestSuite is run before, but not if OtherShortTestSuite is run in standalone?!
 		
 		// Tear down
 		clientA.cleanup();
