@@ -115,10 +115,10 @@ public class CleanupOperation extends Operation {
 		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunks(options.getKeepVersionsCount());
 
 		// Local
-		deleteLocalUnusedChunks(options.getKeepVersionsCount());
-		deleteLocalUnusedFileContents(options.getKeepVersionsCount());
-		deleteLocalUnusedMultiChunks(options.getKeepVersionsCount());
 		removeFileVersions(options.getKeepVersionsCount());
+		deleteLocalUnusedFileContents();
+		deleteLocalUnusedMultiChunks();
+		deleteLocalUnusedChunks(options.getKeepVersionsCount());
 
 		// Remote
 		File tempPurgeFile = writePurgeFile(mostRecentPurgeFileVersions);
@@ -155,8 +155,7 @@ public class CleanupOperation extends Operation {
 	}
 
 	private void deleteLocalUnusedChunks(int keepVersionsCount) {
-		// TODO Auto-generated method stub
-
+		localDatabase.removeUnusedChunks(keepVersionsCount);
 	}
 
 	private List<MultiChunkId> findUnusedMultiChunks(int keepVersionsCount) {
@@ -179,14 +178,12 @@ public class CleanupOperation extends Operation {
 		return null;
 	}
 
-	private void deleteLocalUnusedFileContents(int keepVersionsCount) {
-		// TODO Auto-generated method stub
-
+	private void deleteLocalUnusedFileContents() throws SQLException {
+		localDatabase.removeUnreferencedFileContents();
 	}
 
-	private void deleteLocalUnusedMultiChunks(int keepVersionsCount) {
-		// TODO Auto-generated method stub
-
+	private void deleteLocalUnusedMultiChunks() throws SQLException {
+		localDatabase.removeUnreferencedMultiChunks(); 
 	}
 
 	private void removeFileVersions(int keepVersionsCount) throws SQLException {

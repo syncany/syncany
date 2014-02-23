@@ -60,16 +60,19 @@ public class CleanupOperationTest {
 		
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());		
 		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionA));
 
 		// B: Sync down by other client
 		clientB.down();
 		
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());		
 		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));
+		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionB));
 		
 		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!!
 		clientA.cleanup(options);		
 		assertEquals("4", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("4", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionA));
 		
 		// Test the repo
 		assertEquals(4, new File(testConnection.getRepositoryPath()+"/multichunks/").list().length);

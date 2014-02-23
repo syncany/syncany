@@ -73,6 +73,26 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		
 		preparedStatement.executeBatch();
 		preparedStatement.close();
+	}	
+
+	public void removeUnreferencedMultiChunks() throws SQLException {
+		// Note: Chunk references (multichunk_chunk) must be removed first, because
+		//       of the foreign key constraints. 
+		
+		removeUnreferencedMultiChunkChunkRefs();
+		removeUnreferencedMultiChunksInt();
+	}
+	
+	private void removeUnreferencedMultiChunksInt() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/multichunk.delete.all.removeUnreferencedMultiChunks.sql");
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
+	}
+	
+	private void removeUnreferencedMultiChunkChunkRefs() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/multichunk.delete.all.removeUnreferencedMultiChunkChunkRefs.sql");
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
 	}
 	
 	/**
@@ -197,5 +217,5 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 		
 		return multiChunkEntries;
-	}	
+	}
 }

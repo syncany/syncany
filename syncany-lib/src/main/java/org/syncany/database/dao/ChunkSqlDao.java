@@ -69,6 +69,18 @@ public class ChunkSqlDao extends AbstractSqlDao {
 			preparedStatement.executeBatch();
 			preparedStatement.close();
 		}
+	}	
+
+	public void removeUnusedChunks(int keepVersionsCount) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.delete.all.removeUnusedChunks.sql")) {
+			preparedStatement.setInt(1, keepVersionsCount);
+			
+			preparedStatement.execute();
+			preparedStatement.close();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	/**

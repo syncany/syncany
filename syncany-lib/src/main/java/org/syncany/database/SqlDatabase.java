@@ -201,6 +201,10 @@ public class SqlDatabase {
 	public List<MultiChunkId> getUnusedMultiChunkIds(int keepVersionsCount) {
 		return multiChunkDao.getUnusedMultiChunkIds(keepVersionsCount);
 	}
+	
+	public void removeUnreferencedMultiChunks() throws SQLException {
+		multiChunkDao.removeUnreferencedMultiChunks();
+	}
 
 	// Chunk
 
@@ -210,11 +214,19 @@ public class SqlDatabase {
 
 	public ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		return chunkDao.getChunk(chunkChecksum);
+	}	
+
+	public void removeUnusedChunks(int keepVersionsCount) {
+		chunkDao.removeUnusedChunks(keepVersionsCount);
 	}
 
 	// File Content
 
 	public FileContent getFileContent(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		return fileContentDao.getFileContent(fileChecksum, includeChunkChecksums);
+	}
+
+	public void removeUnreferencedFileContents() throws SQLException {
+		fileContentDao.removeUnreferencedFileContents();
 	}
 }
