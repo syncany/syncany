@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.util.List;
 
 import org.syncany.chunk.Chunker.ChunkEnumeration;
+import org.syncany.operations.WatchEvent;
+import org.syncany.operations.WatchEventListener;
+import org.syncany.operations.WatchEvent.WatchEventType;
 
 /**
  * The Deduper implements the core deduplication algorithm used by Syncany. 
@@ -46,11 +49,13 @@ public class Deduper {
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
+	private WatchEventListener watchEventListener;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer) {		
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, WatchEventListener watchEventListener) {		
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
 		this.transformer = transformer;
+		this.watchEventListener = watchEventListener;
 	}
 	
 	/**
@@ -67,7 +72,9 @@ public class Deduper {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		
+		int i = 0;
 		for (File file : files) {
+			i++;
 			// Filter ignored files
 			boolean fileAccepted = listener.onFileFilter(file);
 			
@@ -83,6 +90,9 @@ public class Deduper {
 				ChunkEnumeration chunksEnum = chunker.createChunks(file);
 
 				while (chunksEnum.hasMoreElements()) {
+					if (watchEventListener != null) {
+						watchEventListener.update(new WatchEvent(file.getName(), WatchEventType.INDEXING, i, files.size()));
+					}
 					chunk = chunksEnum.nextElement();
 
 					// old chunk

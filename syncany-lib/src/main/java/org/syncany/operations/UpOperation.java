@@ -50,6 +50,7 @@ import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.WatchEvent.WatchEventType;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -79,14 +80,20 @@ public class UpOperation extends Operation {
 	private UpOperationOptions options;
 	private TransferManager transferManager;
 	private SqlDatabase localDatabase;
-
+	private WatchEventListener watchEventListener;
+	
 	public UpOperation(Config config) {
-		this(config, new UpOperationOptions());
+		this(config, new UpOperationOptions(), null);
+	}
+	
+	public UpOperation(Config config, WatchEventListener watchEventListener) {
+		this(config, new UpOperationOptions(), watchEventListener);
 	}
 
-	public UpOperation(Config config, UpOperationOptions options) {
+	public UpOperation(Config config, UpOperationOptions options, WatchEventListener watchEventListener) {
 		super(config);
 
+		this.watchEventListener = watchEventListener;
 		this.options = options;
 		this.transferManager = config.getConnection().createTransferManager();
 		this.localDatabase = new SqlDatabase(config);
@@ -154,7 +161,7 @@ public class UpOperation extends Operation {
 
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
-		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
+		uploadMultiChunks(newDatabaseVersion);
 
 		// Create delta database
 		writeAndUploadDeltaDatabase(newDatabaseVersion);
@@ -283,9 +290,10 @@ public class UpOperation extends Operation {
 		}
 	}
 
-	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
+	private void uploadMultiChunks(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException {
+		Collection<MultiChunkEntry> multiChunksEntries = newDatabaseVersion.getMultiChunks();
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
-		
+		int i = 0;
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			if (dirtyMultiChunkIds.contains(multiChunkEntry.getId())) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
@@ -297,6 +305,10 @@ public class UpOperation extends Operation {
 				logger.log(Level.INFO, "- Uploading multichunk " + multiChunkEntry.getId() + " from " + localMultiChunkFile + " to "
 						+ remoteMultiChunkFile + " ...");
 				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
+				i++;
+				if (watchEventListener != null) {
+					watchEventListener.update(new WatchEvent(remoteMultiChunkFile.getName(), WatchEventType.UPLOADING, i, multiChunksEntries.size()));
+				}
 
 				logger.log(Level.INFO, "  + Removing " + multiChunkEntry.getId() + " locally ...");
 				localMultiChunkFile.delete();
@@ -318,7 +330,7 @@ public class UpOperation extends Operation {
 		VectorClock newVectorClock = findNewVectorClock(lastVectorClock);
 
 		// Index
-		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), watchEventListener);
 		Indexer indexer = new Indexer(config, deduper);
 
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
