@@ -94,10 +94,9 @@ public class WebsocketClient {
 		client.close();
 	}
 
-	public void handleCommand(Map<String, ?> parameters) {
+	public void handleCommand(Object command) {
 		try{
-			String text = JsonHelper.fromMapToString(parameters);
-			client.send(text);
+			client.send(JsonHelper.fromObjectToString(command));
 		}
 		catch (NotYetConnectedException e){
 			log.warning("Not yet connected " + e.getMessage());

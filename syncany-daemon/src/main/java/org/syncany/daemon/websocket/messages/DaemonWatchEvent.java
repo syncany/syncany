@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
+
+import org.syncany.operations.WatchEvent;
 
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author vincent
  *
  */
-public abstract class ApplicationEvent {
-
+public class DaemonWatchEvent extends DaemonMessage {
+	private WatchEvent event;
+	
+	/**
+	 * @return the event
+	 */
+	public WatchEvent getEvent() {
+		return event;
+	}
+	/**
+	 * @param event the event to set
+	 */
+	public void setEvent(WatchEvent event) {
+		this.event = event;
+	}
 }

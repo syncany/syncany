@@ -20,11 +20,14 @@ package org.syncany.tests.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.util.JsonHelper;
+
+import com.google.gson.reflect.TypeToken;
 
 /**
  * @author vincent
@@ -39,9 +42,9 @@ public class JsonHelperTest {
 		map.put("key_B", "value_B");
 		map.put("key_C", "value_C");
 		
-		String  json = JsonHelper.fromMapToString(map);
-		
-		Map<String, Object> res = JsonHelper.fromStringToMap(json);
+		Type type = new TypeToken<Map<String, Object>>() {}.getType();
+		String  json = JsonHelper.fromObjectToString(map);
+		Map<String, Object> res = JsonHelper.fromStringToObject(json, type);
 		
 		assertTrue(res.containsKey("key_A"));
 		assertTrue(res.containsKey("key_B"));
@@ -75,9 +78,9 @@ public class JsonHelperTest {
 		map.put("key_B", map2);
 		map.put("key_C", map3);
 		
-		String  json = JsonHelper.fromMapToString(map);
-		Map<String, Object> res = JsonHelper.fromStringToMap(json);
-		
+		Type type = new TypeToken<Map<String, Object>>() {}.getType();
+		String json = JsonHelper.fromObjectToString(map);
+		Map<String, Object> res = JsonHelper.fromStringToObject(json, type);
 		
 		assertTrue(res.containsKey("key_A"));
 		assertTrue(res.containsKey("key_B"));

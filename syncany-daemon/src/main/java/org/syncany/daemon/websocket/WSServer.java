@@ -20,7 +20,6 @@ package org.syncany.daemon.websocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.java_websocket.WebSocket;
@@ -80,8 +79,8 @@ public class WSServer {
 		}
 	}
 	
-	public static void sendToAll(Map<String, Object> res) {
-		String text = JsonHelper.fromMapToString(res);
+	public static void sendToAll(Object message) {
+		String text = JsonHelper.fromObjectToString(message);
 		sendToAll(text);
 	}
 	

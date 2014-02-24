@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,6 +36,8 @@ import org.syncany.gui.messaging.webserver.StaticResourcesWebServer;
 import org.syncany.gui.messaging.webserver.StaticResourcesWebServer.ServerStartedListener;
 import org.syncany.gui.messaging.websocket.WebsocketClient;
 import org.syncany.util.JsonHelper;
+
+import com.google.common.reflect.TypeToken;
 
 /**
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -68,7 +71,8 @@ public class UnityTrayIcon extends TrayIcon {
 				@Override
 				public void onMessage(WebSocket conn, String message) {
 					logger.fine("Unity Received from " + conn.getRemoteSocketAddress().toString() + ": " + message);
-					handleCommand(JsonHelper.fromStringToMap(message));
+					Type type = new TypeToken<Map<String, Object>>() {}.getType();
+					handleCommand((Map<String, Object>)JsonHelper.fromStringToObject(message, type));
 				}
 
 				@Override
@@ -220,8 +224,7 @@ public class UnityTrayIcon extends TrayIcon {
 		Map<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("action", "update_tray_menu");
 		parameters.put("folders", folders);
-		
-		sendToAll(JsonHelper.fromMapToString(parameters));
+		sendToAll(JsonHelper.fromObjectToString(parameters));
 	}
 
 	@Override
@@ -229,8 +232,7 @@ public class UnityTrayIcon extends TrayIcon {
 		Map<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("action", "update_tray_status_text");
 		parameters.put("text", statusText);
-
-		sendToAll(JsonHelper.fromMapToString(parameters));
+		sendToAll(JsonHelper.fromObjectToString(parameters));
 	}
 
 	@Override
@@ -238,7 +240,6 @@ public class UnityTrayIcon extends TrayIcon {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("action", "update_tray_icon");
 		parameters.put("imageFileName", image.getFileName());
-
-		sendToAll(JsonHelper.fromMapToString(parameters));
+		sendToAll(JsonHelper.fromObjectToString(parameters));
 	}
 }

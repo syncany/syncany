@@ -15,20 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
+
+
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class CommandEvent extends ApplicationEvent {
-	private String commandId;
-	
-	public CommandEvent(String commandId) {
-		this.commandId = commandId;
-	}
+public class DaemonResultMessage extends DaemonMessage {
 
-	public String getCommandId() {
-		return commandId;
+	public DaemonResultMessage(DaemonMessage parent) {
+		super(parent);
+	}
+	
+	private String originalAction;
+	private boolean success;
+	
+	public boolean isSuccess() {
+		return success;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	
+	public String getOriginalAction() {
+		return originalAction;
+	}
+	public void setOriginalAction(String originalAction) {
+		this.originalAction = originalAction;
 	}
 }
