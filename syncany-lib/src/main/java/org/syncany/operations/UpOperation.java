@@ -211,7 +211,7 @@ public class UpOperation extends Operation {
 		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
 		
 		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(config.getTransformer());
-		dao.save(db, localDatabaseFile);		
+		dao.save(db.getDatabaseVersions(), localDatabaseFile);		
 	}			
 	
 	private void addDirtyData(DatabaseVersion newDatabaseVersion) {

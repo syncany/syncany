@@ -121,7 +121,7 @@ public class TestDatabaseUtil {
 	
 	public static void writeDatabaseFileToDisk(MemoryDatabase db, File writtenDatabaseFile, Transformer transformer) throws IOException {
 		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(transformer);
-		dao.save(db, writtenDatabaseFile);
+		dao.save(db.getDatabaseVersions(), writtenDatabaseFile);
 	}
 	
 	public static FileVersion createFileVersion(String path) {

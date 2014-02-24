@@ -392,7 +392,7 @@ public class XmlDatabaseDaoTest {
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		
 		XmlDatabaseSerializer writeDAO = new XmlDatabaseSerializer();
-		writeDAO.save(writtenDatabase, writtenDatabaseFile);
+		writeDAO.save(writtenDatabase.getDatabaseVersions(), writtenDatabaseFile);
 		
 		// Read again
 		MemoryDatabase readDatabase = new MemoryDatabase();

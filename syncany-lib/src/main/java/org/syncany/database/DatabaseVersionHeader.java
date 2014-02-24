@@ -30,16 +30,30 @@ import java.util.Date;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionHeader {
+	public enum DatabaseVersionType {
+		DEFAULT, PURGE
+	}
+	
+	private DatabaseVersionType type;
     private Date date;
     private VectorClock vectorClock;
     private String client;
     
     public DatabaseVersionHeader() {
+    	this.type = DatabaseVersionType.DEFAULT;
     	this.date = new Date();
     	this.vectorClock = new VectorClock();
     	this.client = "UnknownMachine";
     }    
 
+    public DatabaseVersionType getType() {
+		return type;
+	}
+    
+    public void setType(DatabaseVersionType type) {
+		this.type = type;
+	}
+	
 	public Date getDate() {
 		return date;
 	}

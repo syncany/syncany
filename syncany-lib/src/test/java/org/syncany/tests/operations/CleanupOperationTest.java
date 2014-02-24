@@ -107,7 +107,7 @@ public class CleanupOperationTest {
 		
 		// Test the repo
 		assertEquals(5, new File(testConnection.getRepositoryPath()+"/multichunks/").list().length);
-		assertEquals(4, new File(testConnection.getRepositoryPath()+"/databases/").list().length); 
+		assertEquals(12, new File(testConnection.getRepositoryPath()+"/databases/").list().length); 
 
 		// B: Sync down cleanup
 		clientB.down();

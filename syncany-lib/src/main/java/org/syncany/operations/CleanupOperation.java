@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +37,19 @@ import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
+import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.database.VectorClock;
 import org.syncany.database.dao.XmlDatabaseSerializer;
+
+import com.google.common.collect.Lists;
 
 public class CleanupOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
@@ -97,7 +106,7 @@ public class CleanupOperation extends Operation {
 	 * 5. Stop lock renewal thread and unlock repo
 	 * 
 	 * Important issues:
-	 *  - All remote operations MUST be performed atomically. How to achieve this? 
+	 *  - TODO [high] All remote operations MUST be performed atomically. How to achieve this? 
 	 *    How to react if one operation works and the other one fails?
 	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
 	 *  
@@ -133,10 +142,12 @@ public class CleanupOperation extends Operation {
 		localDatabase.commit();
 
 		// Remote
-		File tempPurgeFile = writePurgeFile(mostRecentPurgeFileVersions);
-		PurgeRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile();
+		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
+		
+		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
+		File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
 
-		uploadPurgeFile(tempPurgeFile, newPurgeRemoteFile); // prune-A-0000001 OR db-PRUNE-0000001 ??
+		uploadPurgeFile(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// stopLockRenewalThread();
@@ -151,27 +162,8 @@ public class CleanupOperation extends Operation {
 		localDatabase.removeDeletedVersions();
 	}
 
-	private void uploadPurgeFile(File tempPruneFile, PurgeRemoteFile newPruneRemoteFile) {
-		// TODO Auto-generated method stub
-
-	}
-
-	private class PurgeRemoteFile extends RemoteFile {
-		public PurgeRemoteFile(String name) throws StorageException {
-			super(name);
-		}
-	}
-
-	public static class PurgeDatabaseVersion {
-		private Map<FileHistoryId, Long> mostRecentPurgeFileVersions;
-
-		public PurgeDatabaseVersion() {
-			this.mostRecentPurgeFileVersions = new HashMap<FileHistoryId, Long>();
-		}
-
-		public void addMostRecentPurgeFileVersion(FileHistoryId fileHistoryId, Long mostRecentPurgeFileVersion) {
-			this.mostRecentPurgeFileVersions.put(fileHistoryId, mostRecentPurgeFileVersion);
-		}
+	private void uploadPurgeFile(File tempPruneFile, DatabaseRemoteFile newPruneRemoteFile) throws StorageException {
+		transferManager.upload(tempPruneFile, newPruneRemoteFile);
 	}
 
 	private void deleteUnusedChunks() {
@@ -182,20 +174,55 @@ public class CleanupOperation extends Operation {
 		return localDatabase.getUnusedMultiChunkIds();
 	}
 
-	private File writePurgeFile(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {
-		PurgeDatabaseVersion pruneDatabaseVersion = new PurgeDatabaseVersion();
+	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {
+		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
+		VectorClock lastVectorClock = lastDatabaseVersionHeader.getVectorClock();
+		
+		VectorClock purgeVectorClock = lastVectorClock.clone();
+		purgeVectorClock.incrementClock(config.getMachineName());		
+		
+		DatabaseVersionHeader purgeDatabaseVersionHeader = new DatabaseVersionHeader();
+		purgeDatabaseVersionHeader.setType(DatabaseVersionType.PURGE);
+		purgeDatabaseVersionHeader.setDate(new Date());
+		purgeDatabaseVersionHeader.setClient(config.getMachineName());
+		purgeDatabaseVersionHeader.setVectorClock(purgeVectorClock);
+		
+		DatabaseVersion purgeDatabaseVersion = new DatabaseVersion();
+		purgeDatabaseVersion.setHeader(purgeDatabaseVersionHeader);	
 
 		for (Entry<FileHistoryId, Long> fileHistoryEntry : mostRecentPurgeFileVersions.entrySet()) {
-			pruneDatabaseVersion.addMostRecentPurgeFileVersion(fileHistoryEntry.getKey(), fileHistoryEntry.getValue());
+			PartialFileHistory purgeFileHistory = new PartialFileHistory(fileHistoryEntry.getKey());
+			
+			FileVersion purgeFileVersion = new FileVersion();
+			
+			purgeFileVersion.setVersion(fileHistoryEntry.getValue());
+			purgeFileVersion.setType(FileType.FILE);
+			purgeFileVersion.setPath("");
+			purgeFileVersion.setLastModified(new Date(0));
+			purgeFileVersion.setSize(0L);
+			purgeFileVersion.setStatus(FileStatus.DELETED);
+			
+			purgeFileHistory.addFileVersion(purgeFileVersion);			
+			purgeDatabaseVersion.addFileHistory(purgeFileHistory);
+						
 			logger.log(Level.FINE, "- Pruning file history " + fileHistoryEntry.getKey() + " versions <= " + fileHistoryEntry.getValue() + " ...");
 		}
-
-		return null;
+		
+		return purgeDatabaseVersion;		
+	}
+	
+	private File writePurgeFile(DatabaseVersion purgeDatabaseVersion, DatabaseRemoteFile newPurgeDatabaseFile) throws IOException {		
+		File localPurgeDatabaseFile = config.getCache().getDatabaseFile(newPurgeDatabaseFile.getName());
+		
+		XmlDatabaseSerializer xmlSerializer = new XmlDatabaseSerializer(config.getTransformer());
+		xmlSerializer.save(Lists.newArrayList(purgeDatabaseVersion), localPurgeDatabaseFile);
+		
+		return localPurgeDatabaseFile;
 	}
 
-	private PurgeRemoteFile findNewPurgeRemoteFile() {
-		// TODO Auto-generated method stub
-		return null;
+	private DatabaseRemoteFile findNewPurgeRemoteFile(DatabaseVersionHeader purgeDatabaseVersionHeader) throws StorageException {
+		Long localMachineVersion = purgeDatabaseVersionHeader.getVectorClock().getClock(config.getMachineName());
+		return new DatabaseRemoteFile(config.getMachineName(), localMachineVersion);
 	}
 
 	private void deleteUnusedFileContents() throws SQLException {

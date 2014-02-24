@@ -4,3 +4,4 @@
 select filehistory_id, max(version)-? as most_recent_purge_version
 from fileversion
 group by filehistory_id
+having max(version)-? > 0

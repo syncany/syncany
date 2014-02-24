@@ -223,6 +223,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	public Map<FileHistoryId, Long> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithMostRecentPurgeVersion.sql")) {
 			preparedStatement.setInt(1, keepVersionsCount);
+			preparedStatement.setInt(2, keepVersionsCount);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				Map<FileHistoryId, Long> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, Long>();

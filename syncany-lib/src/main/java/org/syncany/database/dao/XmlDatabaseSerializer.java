@@ -28,6 +28,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +43,7 @@ import org.syncany.chunk.Transformer;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
@@ -72,8 +74,8 @@ public class XmlDatabaseSerializer {
 		this.transformer = transformer;
 	}
 	
-	public void save(MemoryDatabase db, File destinationFile) throws IOException {
-		save(db.getDatabaseVersions().iterator(), destinationFile);
+	public void save(List<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {
+		save(databaseVersions.iterator(), destinationFile);
 	}
 
 	public void save(Iterator<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {	
@@ -140,6 +142,11 @@ public class XmlDatabaseSerializer {
 		}
 		
 		xmlOut.writeStartElement("header");
+		
+		if (databaseVersion.getHeader().getType() != DatabaseVersionType.DEFAULT) {
+			xmlOut.writeEmptyElement("type");
+			xmlOut.writeAttribute("value", databaseVersion.getHeader().getType().toString());
+		}
 		
 		xmlOut.writeEmptyElement("time");
 		xmlOut.writeAttribute("value", databaseVersion.getTimestamp().getTime());
@@ -436,11 +443,13 @@ public class XmlDatabaseSerializer {
 		public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 			elementPath += "/"+qName;
 			
-			//System.out.println(elementPath+" (start) ");
-			
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {				
 				databaseVersion = new DatabaseVersion();				
 			}			
+			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/type")) {
+				String typeStr = attributes.getValue("value");
+				databaseVersion.getHeader().setType(DatabaseVersionType.valueOf(typeStr));
+			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/time")) {
 				Date timeValue = new Date(Long.parseLong(attributes.getValue("value")));
 				databaseVersion.setTimestamp(timeValue);
@@ -553,8 +562,6 @@ public class XmlDatabaseSerializer {
 		
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {
-			//System.out.println(elementPath+" (end ) ");
-			
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
 				if (vectorClockInLoadRange) {
 					database.addDatabaseVersion(databaseVersion);
