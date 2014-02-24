@@ -32,6 +32,7 @@ import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.operations.IndexerTest;
+import org.syncany.tests.operations.NotificationListenerTest;
 import org.syncany.tests.operations.OperationPerformanceTest;
 import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
@@ -65,7 +66,8 @@ import org.syncany.tests.util.FileUtilTest;
 	OperationPerformanceTest.class,
 	RecursiveWatcherTest.class,
 	SyncUpOperationTest.class,
-	StatusOperationTest.class
+	StatusOperationTest.class,
+	NotificationListenerTest.class
 })
 public class OtherShortTestSuite {
 	// This class executes all tests
