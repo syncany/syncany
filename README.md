@@ -74,9 +74,9 @@ from other clients.
 **2. Add files and synchronize**
 
 To let Syncany do everything automatically, simple use the `syncany watch` command. 
-This command will synchronize your local files in a given interval. 
+This command will synchronize your local files. 
 
-        $ syncany watch --interval=20
+        $ syncany watch 
 
 You can also manually trigger the upload of your local files or the download of remote changes:
 
@@ -92,7 +92,7 @@ Build and test Syncany
 **0. Requirements**: Syncany is based on Java 7 and we use Gradle for dependency management
 and as build tool. Gradle does all the dependency magic. All you need to build Syncany
 is a **JDK 7**. If you like to create a Debian package (optional), you also need
-[fpm](https://github.com/jordansissel/fpm) installed.
+[FPM](https://github.com/jordansissel/fpm) installed.
 
 On a Debian-based system that would be:
 
@@ -143,7 +143,7 @@ There is quite a bit of reading material on Syncany already. Check out the follo
 
 **Posts and papers**
 - [Blog post: Syncany explained: idea, progress, development and future (part 1)](http://blog.philippheckel.com/2013/10/18/syncany-explained-idea-progress-development-future/) (Oct 2013)
-- [Blog post: Deep into the code of Syncany – command line client, application flow and data model (part 2)](http://blog.philippheckel.com/2014/02/14/deep-into-the-code-of-syncany-cli-application-flow-and-data-model/) (Feb 2014)
+- [Blog post: Deep into the code of Syncany – CLI, application flow and data model (part 2)](http://blog.philippheckel.com/2014/02/14/deep-into-the-code-of-syncany-cli-application-flow-and-data-model/) (Feb 2014)
 - [Master's thesis: Minimizing remote storage usage and synchronization time using deduplication and multichunking: Syncany as an example](http://blog.philippheckel.com/2013/05/20/minimizing-remote-storage-usage-and-synchronization-time-using-deduplication-and-multichunking-syncany-as-an-example/) (2011)
 
 **Screencasts**
@@ -156,6 +156,7 @@ There is quite a bit of reading material on Syncany already. Check out the follo
 - [Diagram: Chunking framework class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Chunking%20Framework.png)
 - [Diagram: Storage plugins class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Connection%20Plugins.png)
 - [Diagram: Database class diagram](https://raw.github.com/binwiederhier/syncany/15efd1df039253a3884dea36ca21f58628b32c04/docs/Diagram%20Database.png)
+- [Diagram: Cryptography concept](https://raw.github.com/binwiederhier/syncany/a51fafbe736c304dd809a89af7e1144b20316642/syncany-assets/documentation/Diagram%20Crypto%20Concept.png)
 
 **Generated JavaDoc and JUnit Reports**    
 The up-to-date JavaDoc of the master branch is always compiled to [syncany.org/docs/javadoc](http://syncany.org/docs/javadoc). It includes the JavaDoc of all Gradle
