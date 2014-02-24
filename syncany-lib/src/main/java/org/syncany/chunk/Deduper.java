@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.syncany.chunk.Chunker.ChunkEnumeration;
 import org.syncany.operations.WatchEvent;
-import org.syncany.operations.WatchEventListener;
 import org.syncany.operations.WatchEvent.WatchEventType;
+import org.syncany.operations.WatchEventListener;
 
 /**
  * The Deduper implements the core deduplication algorithm used by Syncany. 
@@ -88,7 +88,7 @@ public class Deduper {
 			if (dedupContents) {
 				// Create chunks from file
 				ChunkEnumeration chunksEnum = chunker.createChunks(file);
-
+				
 				while (chunksEnum.hasMoreElements()) {
 					if (watchEventListener != null) {
 						watchEventListener.update(new WatchEvent(file.getName(), WatchEventType.INDEXING, i, files.size()));

@@ -148,6 +148,7 @@ public class UpOperation extends Operation {
 		localChanges = null; // allow GC to clean up
 
 		// Index
+		// produces WatchEventType.INDEXING events
 		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles);
 
 		if (newDatabaseVersion.getFileHistories().size() == 0) {
@@ -160,6 +161,7 @@ public class UpOperation extends Operation {
 		}		
 
 		// Upload multichunks
+		// produces WatchEventType.UPLOADING events
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		uploadMultiChunks(newDatabaseVersion);
 
