@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugin.sftp;
+package org.syncany.tests.connection.plugin.sftp;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -241,9 +241,9 @@ public class SftpConnectionPluginTest {
 		
 		TransferManager transferManager = connection.createTransferManager();
 
-		assertEquals("LocalPluginInfo expected.", SftpPlugin.class, pluginInfo.getClass());
-		assertEquals("LocalConnection expected.", SftpConnection.class, connection.getClass());
-		assertEquals("LocalTransferManager expected.", SftpTransferManager.class, transferManager.getClass());
+		assertEquals("SftpPlugin expected.", SftpPlugin.class, pluginInfo.getClass());
+		assertEquals("SftpConnection expected.", SftpConnection.class, connection.getClass());
+		assertEquals("SftpTransferManager expected.", SftpTransferManager.class, transferManager.getClass());
 		
 		return transferManager;
 	}

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.ftp;
+package org.syncany.tests.connection.plugins.ftp;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +40,7 @@ import org.syncany.tests.util.TestFileUtil;
  * @author vincent
  *
  */
-public class EmbeddedFtpServerTest {
+public class EmbeddedTestFtpServer {
 	// FTP Server
 	public static String HOST = "127.0.0.1";
 	public static String HOST_WRONG = "noHost";

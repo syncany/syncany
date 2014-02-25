@@ -15,11 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugin.sftp;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Properties;
+package org.syncany.tests.connection.plugin.sftp;
 
 import junit.framework.Assert;
 
@@ -33,27 +29,10 @@ import org.syncany.connection.plugins.sftp.SftpConnection;
  *
  */
 public class SftpTransferManagerTest {
-	static {
-		try {
-			String credentialFile = System.getProperty("user.home") 
-				+ File.separator + "syncany.test.credential";
-		
-			Properties prop = new Properties();
-			prop.load(new FileInputStream(credentialFile));
-			SANDBOX = prop.getProperty("sftp.sandbox");
-			USERNAME = prop.getProperty("sftp.username");
-			PASSWORD = prop.getProperty("sftp.password");
-			HOST = prop.getProperty("sftp.host");
-		}
-		catch (Exception e) {
-			
-		}
-	}
-
-	private static String SANDBOX;
-	private static String USERNAME;
-	private static String PASSWORD;
-	private static String HOST;
+	private final static String SANDBOX = "/home/xxxxxxxxxxx/";
+	private final static String USERNAME = "xxxxxxxx";
+	private final static String PASSWORD = "xxxxxxx";
+	private final static String HOST = "xxxxxxxxxx";
 	
 	@Test
 	public void testSftpTransferManager() throws StorageException {

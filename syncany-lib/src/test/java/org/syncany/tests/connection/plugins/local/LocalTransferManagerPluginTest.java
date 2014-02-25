@@ -40,9 +40,7 @@ import org.syncany.connection.plugins.local.LocalTransferManager;
 import org.syncany.tests.util.TestFileUtil;
 
 /**
- * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
- *
  */
 public class LocalTransferManagerPluginTest {
 	private File tempLocalSourceDir;
@@ -68,6 +66,8 @@ public class LocalTransferManagerPluginTest {
 		TransferManager tm = loadPluginAndCreateTransferManager();
 		Assert.assertEquals(StorageTestResult.NO_REPO, tm.test());
 	}
+	
+	// TODO [low] More tests for test() / StorageTestResult are missing
 	
 	@After
 	public void tearDown() {
