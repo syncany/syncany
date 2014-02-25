@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +38,14 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.util.FileUtil;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
+import com.jcraft.jsch.ChannelSftp.LsEntrySelector;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 
 /**
@@ -143,10 +147,13 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
+			if (!repopathExists() && createIfRequired) {
+				channel.mkdir(repoPath);
+			}
 			channel.mkdir(multichunkPath);
 			channel.mkdir(databasePath);
 		}
@@ -251,21 +258,18 @@ public class SftpTransferManager extends AbstractTransferManager {
 			// List folder
 			String remoteFilePath = getRemoteFilePath(remoteFileClass);
 			
-			@SuppressWarnings("unchecked")
-			List<LsEntry> entries = channel.ls(remoteFilePath + "/");
+			List<LsEntry> entries = listEntries(remoteFilePath + "/");
 			
 			// Create RemoteFile objects
 			Map<String, T> remoteFiles = new HashMap<String, T>();
 
 			for (LsEntry entry : entries) {
-				if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
-					try {
-						T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
-						remoteFiles.put(entry.getFilename(), remoteFile);
-					}
-					catch (Exception e) {
-						logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
-					}
+				try {
+					T remoteFile = RemoteFile.createRemoteFile(entry.getFilename(), remoteFileClass);
+					remoteFiles.put(entry.getFilename(), remoteFile);
+				}
+				catch (Exception e) {
+					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + entry.getFilename() + "; maybe invalid file name pattern. Ignoring file.");
 				}
 			}
 
@@ -292,6 +296,56 @@ public class SftpTransferManager extends AbstractTransferManager {
 		}
 		else {
 			return repoPath;
+		}
+	}
+	
+	private List<LsEntry> listEntries(String absolutePath) throws SftpException{
+		final List<LsEntry> result = new ArrayList<>();
+		LsEntrySelector selector = new LsEntrySelector(){
+	       public int select(LsEntry entry){
+	    	   if (!entry.getFilename().equals(".") && !entry.getFilename().equals("..")){
+	    		   result.add(entry);
+	    	   }
+	    	   return CONTINUE;
+	       }
+	     };
+		channel.ls(absolutePath, selector);
+		return result;
+	}
+	
+	@Override
+	public boolean repopathExists() throws StorageException {
+		try {
+			SftpATTRS attrs = channel.stat(repoPath);
+		    return attrs.isDir();
+		} 
+		catch (Exception e) {
+		    return false;
+		}
+	}
+	
+	@Override
+	public boolean repopathIsEmpty() throws StorageException {
+		try {
+			return channel.ls(repoPath).size() == 2; // "." and ".."
+		}
+		catch (SftpException e) {
+			throw new StorageException(e.getMessage());
+		}
+	}
+	
+	@Override
+	public boolean repopathWriteAccess() throws StorageException {
+		try {
+			String parentPath = FileUtil.getParentPath(repoPath);
+			SftpATTRS stat = channel.stat(parentPath);
+			return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0;
+		}
+		catch (SftpException ex) {
+			if (ex.id == 3 /* access denied */ || ex.id == 2 /* file not found */) {
+				return false;
+			}
+			throw new StorageException(ex.getMessage());
 		}
 	}
 }

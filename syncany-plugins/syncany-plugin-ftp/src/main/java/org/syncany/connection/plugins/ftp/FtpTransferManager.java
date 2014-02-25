@@ -131,10 +131,13 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
+			if (!repopathExists() && createIfRequired) {
+				ftp.mkd(repoPath);
+			}
 			ftp.mkd(multichunkPath);
 			ftp.mkd(databasePath);
 		}
@@ -225,11 +228,16 @@ public class FtpTransferManager extends AbstractTransferManager {
 		String remotePath = getRemoteFile(remoteFile);
 
 		try {
-			return ftp.deleteFile(remotePath);
+			boolean delete = ftp.deleteFile(remotePath);
+			if (delete) {
+				return true;
+			}
+			else {
+				throw new IOException("cannot delete file");
+			}
 		}
 		catch (IOException ex) {
 			forceFtpDisconnect();
-
 			logger.log(Level.SEVERE, "Could not delete file " + remoteFile.getName(), ex);
 			throw new StorageException(ex);
 		}
@@ -289,6 +297,38 @@ public class FtpTransferManager extends AbstractTransferManager {
 		}
 		else {
 			return repoPath;
+		}
+	}
+	
+	@Override
+	public boolean repopathWriteAccess() throws StorageException {
+		try {
+			boolean create = ftp.makeDirectory(repoPath);
+			ftp.removeDirectory(repoPath);
+			return create;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean repopathExists() throws StorageException {
+		try {
+			return ftp.changeWorkingDirectory(repoPath);
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean repopathIsEmpty() throws StorageException {
+		try {
+			return repopathExists() && ftp.listFiles(repoPath).length == 0;
+		}
+		catch (Exception e) {
+			return false;
 		}
 	}
 }

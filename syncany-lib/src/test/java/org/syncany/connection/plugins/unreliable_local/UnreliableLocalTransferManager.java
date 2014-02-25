@@ -96,12 +96,12 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
     }
 
     @Override
-    public void init() throws StorageException {
+    public void init(boolean createIfRequired) throws StorageException {
     	String operationType = "init";
     	String operationDescription = "init";
 
     	if (isNextOperationSuccessful(operationType, operationDescription)) {
-    		super.init();
+    		super.init(createIfRequired);
     	}
     	else {
     		throw new StorageException("Operation failed: "+operationDescription);

@@ -184,7 +184,7 @@ public class TestConfigUtil {
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 
 		conn.init(pluginSettings);
-		conn.createTransferManager().init();
+		conn.createTransferManager().init(true);
 
 		return conn;
 	}
@@ -198,7 +198,7 @@ public class TestConfigUtil {
 		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
 		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);
 
-		unreliableLocalConnection.createTransferManager().init();
+		unreliableLocalConnection.createTransferManager().init(true);
 
 		return unreliableLocalConnection;
 	}

@@ -42,6 +42,13 @@ import java.util.Map;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public interface TransferManager {
+	public enum StorageTestResult {
+		REPO_EXISTS,         	// repopath exists && repopath is not empty
+		NO_REPO,				// (repopath exists && repopath is empty) or 
+								// (repopath does not exist && write permission)
+		NO_REPO_CANNOT_CREATE;  // repopath does not exist &&  cannot write
+	}
+		
 	/**
 	 * Establish a connection with the remote storage and initialize the repository
 	 * if necessary (e.g. create folders).
@@ -62,10 +69,12 @@ public interface TransferManager {
 	/**
 	 * Initialize remote storage. This method is called to set up a new repository.
 	 * 
+	 * @param  createIfRequired true if the method should handle repo creation
+	 * 	       if it does not exists
 	 * @throws StorageException If the repository is already initialized, or any other
 	 *         exception occurs. 
 	 */
-	public void init() throws StorageException;
+	public void init(boolean createIfRequired) throws StorageException;
 
 	/**
 	 * Download an existing remote file to the local disk.
@@ -130,4 +139,11 @@ public interface TransferManager {
 	 *         authentication errors, etc
 	 */
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException;
+	
+	/**
+	 * Tests if repository parameters are valid
+	 * 
+	 * @return {@link StorageTestResult}
+	 */
+	public StorageTestResult test() throws StorageException;
 }

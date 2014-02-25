@@ -27,6 +27,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.jets3t.service.ServiceException;
+import org.jets3t.service.StorageService;
+import org.jets3t.service.acl.CanonicalGrantee;
+import org.jets3t.service.acl.GranteeInterface;
+import org.jets3t.service.acl.Permission;
 import org.jets3t.service.impl.rest.httpclient.RestStorageService;
 import org.jets3t.service.model.StorageBucket;
 import org.jets3t.service.model.StorageObject;
@@ -106,7 +110,7 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
 		try {
@@ -248,6 +252,36 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 		}
 		else {
 			return null;
+		}
+	}
+	
+	@Override
+	//TODO not tested
+	public boolean repopathWriteAccess() throws StorageException {
+		GranteeInterface grantee = new CanonicalGrantee(bucket.getOwner().getId());
+		return bucket.getAcl().hasGranteeAndPermission(grantee, Permission.PERMISSION_WRITE);
+	}
+
+	@Override
+	public boolean repopathExists() throws StorageException {
+		//TODO not tested
+		try {
+			int status = service.checkBucketStatus(bucket.getName());
+			return (status != StorageService.BUCKET_STATUS__DOES_NOT_EXIST);
+		}
+		catch (ServiceException e) {
+			throw new StorageException(e);
+		}
+	}
+	
+	@Override
+	//TODO not tested
+	public boolean repopathIsEmpty() throws StorageException {
+		try {
+			return service.listObjects(bucket.getName()).length == 0;
+		}
+		catch (ServiceException e) {
+			throw new StorageException(e);
 		}
 	}
 }
