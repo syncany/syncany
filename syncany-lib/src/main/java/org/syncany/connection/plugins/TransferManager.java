@@ -43,6 +43,29 @@ import java.util.Map;
  */
 public interface TransferManager {
 	/**
+	 * Represents the result of the {@link TransferManager#test() test()} method,
+	 * indicating the status of the repository path/folder.
+	 */
+	public enum StorageTestResult {
+		/**
+		 * Repository path exists and it is not empty
+		 */
+		REPO_EXISTS,
+
+		/**
+		 * Repository path exists and is not empty,
+		 * or repository path does not exist, but is writable
+		 */
+		NO_REPO,
+
+		/**
+		 * Repository path does not exist, and 
+		 * it cannot be created
+		 */
+		NO_REPO_CANNOT_CREATE
+	}
+
+	/**
 	 * Establish a connection with the remote storage and initialize the repository
 	 * if necessary (e.g. create folders).
 	 *
@@ -62,10 +85,12 @@ public interface TransferManager {
 	/**
 	 * Initialize remote storage. This method is called to set up a new repository.
 	 * 
+	 * @param  createIfRequired true if the method should handle repo creation
+	 * 	       if it does not exists
 	 * @throws StorageException If the repository is already initialized, or any other
 	 *         exception occurs. 
 	 */
-	public void init() throws StorageException;
+	public void init(boolean createIfRequired) throws StorageException;
 
 	/**
 	 * Download an existing remote file to the local disk.
@@ -130,4 +155,42 @@ public interface TransferManager {
 	 *         authentication errors, etc
 	 */
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException;
+
+	/**
+	 * Tests whether the repository parameters are valid. In particular, the method tests
+	 * whether a repository exists or, if not, whether it can be created.
+	 * 
+	 * @return Returns the result of testing the repository. 
+	 * @throws StorageException If the connection fails due to no Internet connection,
+	 *         authentication errors, etc
+	 * @see {@link StorageTestResult}
+	 */
+	public StorageTestResult test() throws StorageException;
+
+	/**
+	 * Tests whether the repository path/folder is <b>writable</b> by the application. This method is
+	 * called by the {@link #test()} method (only during repository initialization (or initial
+	 * connection).
+	 * 
+	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise
+	 */
+	public boolean hasWriteAccess() throws StorageException;
+
+	/**
+	 * Tests whether the repository path/folder is accessible and <b>exists</b>. This method is
+	 * called by the {@link #test()} method (only during repository initialization (or initial
+	 * connection).
+	 * 
+	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
+	 */
+	public boolean repoExists() throws StorageException;
+
+	/**
+	 * Tests whether the repository path/folder is accessible and <b>empty</b>. This method is
+	 * called by the {@link #test()} method (only during repository initialization (or initial
+	 * connection).
+	 * 
+	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
+	 */
+	public boolean repoIsEmpty() throws StorageException;
 }

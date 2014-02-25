@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.plugin.ssh;
+package org.syncany.tests.connection.plugin.sftp;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -25,21 +25,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sshd.SshServer;
-import org.apache.sshd.common.NamedFactory;
-import org.apache.sshd.common.file.nativefs.NativeFileSystemFactory;
-import org.apache.sshd.server.Command;
-import org.apache.sshd.server.UserAuth;
-import org.apache.sshd.server.auth.UserAuthNone;
-import org.apache.sshd.server.command.ScpCommandFactory;
-import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
-import org.apache.sshd.server.sftp.SftpSubsystem;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -57,68 +48,47 @@ import org.syncany.tests.util.TestFileUtil;
 
 public class SftpConnectionPluginTest {
 	private static File tempLocalSourceDir;
-	private static File tempRepoSourceDir;
 	
 	private Map<String, String> sshPluginSettings;
-	private String HOST = "127.0.0.1";
-	private static int PORT = 2338;
-	private static SshServer sshd;
 	
 	@BeforeClass
-	public static void beforeTestSetup() throws IOException {
-		File hostKeyFile = File.createTempFile("hostkey", "ser");
-		hostKeyFile.deleteOnExit();
-		
-		sshd = SshServer.setUpDefaultServer();
-		sshd.setPort(PORT);
-		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(hostKeyFile.getAbsolutePath()));
-		sshd.setFileSystemFactory(new NativeFileSystemFactory());
-		
-		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
-		userAuthFactories.add(new UserAuthNone.Factory());
-		sshd.setUserAuthFactories(userAuthFactories);
-		//sshd.setPublickeyAuthenticator(new PublickeyAuthenticator());
-
-		sshd.setCommandFactory(new ScpCommandFactory());
-
-		List<NamedFactory<Command>> namedFactoryList = new ArrayList<NamedFactory<Command>>();
-		namedFactoryList.add(new SftpSubsystem.Factory());
-		sshd.setSubsystemFactories(namedFactoryList);
-
+	public static void beforeTestSetup() {
 		try {
-			sshd.start();
+			EmbeddedSftpServerTest.startServer();
 		}
-		catch (Exception e) {
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+	
+	@AfterClass
+	public static void tearDown() {
+		try {
+			EmbeddedSftpServerTest.stopServer();
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		File rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
 
 		tempLocalSourceDir = new File(rootDir+"/local");
-		tempRepoSourceDir = new File(rootDir+"/repo");
 		tempLocalSourceDir.mkdir();
-		tempRepoSourceDir.mkdir();
 		
 		sshPluginSettings = new HashMap<String, String>();
-		sshPluginSettings.put("hostname", HOST);
+		sshPluginSettings.put("hostname", EmbeddedSftpServerTest.HOST);
 		sshPluginSettings.put("username", "user");
 		sshPluginSettings.put("password", "pass");
-		sshPluginSettings.put("port", "" + PORT);
-		sshPluginSettings.put("path", tempRepoSourceDir.getAbsolutePath());
+		sshPluginSettings.put("port", "" + EmbeddedSftpServerTest.PORT);
+		sshPluginSettings.put("path", "/repo");
 	}
 	
-	@AfterClass
-	public static void tearDown() {
+	@After
+	public void tear(){
 		TestFileUtil.deleteDirectory(tempLocalSourceDir);
-		TestFileUtil.deleteDirectory(tempRepoSourceDir);
-		try {
-			sshd.stop(true);
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Test
@@ -141,10 +111,10 @@ public class SftpConnectionPluginTest {
 		Plugin pluginInfo = Plugins.get("sftp");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
-		invalidPluginSettings.put("hostname", HOST);
+		invalidPluginSettings.put("hostname", EmbeddedSftpServerTest.HOST);
 		invalidPluginSettings.put("username", "user");
 		invalidPluginSettings.put("password", "pass");
-		invalidPluginSettings.put("port", "" + PORT);
+		invalidPluginSettings.put("port", "" + EmbeddedSftpServerTest.PORT);
 		invalidPluginSettings.put("path", "/path/does/not/exist");
 		
 		Connection connection = pluginInfo.createConnection();
@@ -154,7 +124,7 @@ public class SftpConnectionPluginTest {
 		
 		// This should cause a Storage exception, because the path does not exist
 		transferManager.connect();	
-		transferManager.init();
+		transferManager.init(true);
 	}
 	
 	@Test(expected=StorageException.class)
@@ -271,9 +241,9 @@ public class SftpConnectionPluginTest {
 		
 		TransferManager transferManager = connection.createTransferManager();
 
-		assertEquals("LocalPluginInfo expected.", SftpPlugin.class, pluginInfo.getClass());
-		assertEquals("LocalConnection expected.", SftpConnection.class, connection.getClass());
-		assertEquals("LocalTransferManager expected.", SftpTransferManager.class, transferManager.getClass());
+		assertEquals("SftpPlugin expected.", SftpPlugin.class, pluginInfo.getClass());
+		assertEquals("SftpConnection expected.", SftpConnection.class, connection.getClass());
+		assertEquals("SftpTransferManager expected.", SftpTransferManager.class, transferManager.getClass());
 		
 		return transferManager;
 	}
