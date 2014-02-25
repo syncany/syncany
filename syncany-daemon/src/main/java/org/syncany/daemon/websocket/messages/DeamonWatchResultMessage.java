@@ -15,26 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
 
 import java.util.Map;
+
+
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class WatchUpdateEvent extends ApplicationEvent {
-	private Map<String, Map<String, String>> watchUpdate;
-
-	public WatchUpdateEvent(Map<String, Map<String, String>> watchUpdate) {
-		this.watchUpdate = watchUpdate;
+public class DeamonWatchResultMessage extends DaemonResultMessage {
+	private Map<String, Map<String, String>> foldersUpdate;
+	
+	public DeamonWatchResultMessage(DaemonMessage parent) {
+		super(parent);
 	}
 
-	public void setWatchUpdate(Map<String, Map<String, String>> watchUpdate) {
-		this.watchUpdate = watchUpdate;
+	public Map<String, Map<String, String>> getFoldersUpdate() {
+		return foldersUpdate;
 	}
-
-	public Map<String, Map<String, String>> getWatchUpdate() {
-		return watchUpdate;
+	public void setFoldersUpdate(Map<String, Map<String, String>> foldersUpdate) {
+		this.foldersUpdate = foldersUpdate;
 	}
 }

@@ -9,10 +9,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.daemon.websocket.messages.DeamonWatchResultMessage;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.SyncingEvent;
-import org.syncany.gui.messaging.event.WatchUpdateEvent;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
 
@@ -75,8 +75,8 @@ public class MainGUI {
 	}
 
 	@Subscribe
-	public void updateInterface(WatchUpdateEvent event) {
-		Map<String, Map<String, String>> folders = event.getWatchUpdate();
+	public void updateInterface(DeamonWatchResultMessage event) {
+		Map<String, Map<String, String>> folders = event.getFoldersUpdate();
 		tray.updateFolders(folders);
 	}
 
@@ -90,6 +90,7 @@ public class MainGUI {
 					break;
 	
 				case UP_TODATE:
+				default:
 					tray.makeSystemTrayStopSync();
 					break;
 				}

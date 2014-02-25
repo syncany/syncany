@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
@@ -42,7 +43,6 @@ import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
-import org.syncany.gui.messaging.event.InitCommandEvent;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.util.I18n;
 
@@ -200,42 +200,39 @@ public class WizardDialog extends Dialog {
 	private String commandId;
 	
 	@Subscribe
-	public void update(InitCommandEvent event){
+	public void update(DaemonResultInitMessage event){
 		String id = event.getCommandId();
 		if (commandId.equals(id)){
 			final SummaryPanel summaryPanel = (SummaryPanel)panels.get(Panel.SUMMARY);
 			summaryPanel.stopIndeterminateProgressBar();
 			
-			String result = event.getResult();
+			boolean result = event.isSuccess();
 			final String shareLink = event.getShareLink();
 			final String folder = event.getLocalFolder();
 			final boolean shareLinkEncrypted = event.isShareLinkEncrypted();
 			
-			switch (result){
-				case "failed":
-					Display.getDefault().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							finishButton.setText("Retry ...");
-							summaryPanel.showErrorMessage();
-						}
-					});
-					
-					break;
-				case "succeed":
-					Display.getDefault().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							toggleButtons(false);
-							summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
+			if(result) {
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						toggleButtons(false);
+						summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
 
-							ClientCommandFactory.handleWatch(folder, 120000, true);
-							Launcher.updateProfiles(Profile.getDefault(folder));
-						}
-					});
-					
-					break;
+						ClientCommandFactory.handleWatch(folder, 120000, true);
+						Launcher.updateProfiles(Profile.getDefault(folder));
+					}
+				});
 			}
+			else {
+				
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						finishButton.setText("Retry ...");
+						summaryPanel.showErrorMessage();
+					}
+				});
+			}					
 		}
 	}
 	

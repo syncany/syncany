@@ -15,22 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
 
-import org.syncany.daemon.command.CommandStatus;
 
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class SyncingEvent {
-	private CommandStatus state;
-
-	public void setState(CommandStatus state) {
-		this.state = state;
+public class DaemonResultInitMessage extends DaemonResultMessage {
+	private String shareLink;
+	private boolean isShareLinkEncrypted;
+	
+	public DaemonResultInitMessage(DaemonResultMessage buildReturnObject) {
+		super(buildReturnObject);
+		setAction("daemon_init_result");
 	}
-	public CommandStatus getState() {
-		return state;
+	
+	public String getShareLink() {
+		return shareLink;
+	}
+	public void setShareLink(String shareLink) {
+		this.shareLink = shareLink;
+	}
+
+	public boolean isShareLinkEncrypted() {
+		return isShareLinkEncrypted;
+	}
+	public void setShareLinkEncrypted(boolean isShareLinkEncrypted) {
+		this.isShareLinkEncrypted = isShareLinkEncrypted;
 	}
 }

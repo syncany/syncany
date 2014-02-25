@@ -48,8 +48,8 @@ import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
-import org.syncany.chunk.TttdChunker;
 import org.syncany.chunk.Transformer;
+import org.syncany.chunk.TttdChunker;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.Logging;
 import org.syncany.crypto.CipherSpec;
@@ -186,7 +186,7 @@ public class FrameworkCombinationTest {
 
 		final ChunkIndex chunkIndex = new ChunkIndex();
 		
-		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer);
+		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer, null);
 		deduper.deduplicate(inputFiles, new DeduperListener() {			
 			@Override
 			public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {

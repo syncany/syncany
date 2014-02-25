@@ -15,20 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
+
+import org.syncany.operations.WatchEvent;
+
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author vincent
  *
  */
-public class CommandEvent extends ApplicationEvent {
-	private String commandId;
+public class DaemonWatchEvent extends DaemonMessage {
+	private WatchEvent event;
 	
-	public CommandEvent(String commandId) {
-		this.commandId = commandId;
+	/**
+	 * @return the event
+	 */
+	public WatchEvent getEvent() {
+		return event;
 	}
-
-	public String getCommandId() {
-		return commandId;
+	/**
+	 * @param event the event to set
+	 */
+	public void setEvent(WatchEvent event) {
+		this.event = event;
 	}
 }

@@ -59,6 +59,17 @@ public class UserInput {
 		}
 		return false;
 	}
+	
+	public int getCommonParameterAsInt(CommonParameters key, int defaultValue) {
+		String parameter = getCommonParameter(key);
+		
+		try {
+			return Integer.parseInt(parameter);
+		}
+		catch (Exception e){
+			return defaultValue;
+		}
+	}
 
 	public String getCommonParameter(CommonParameters key) {
 		if (!(key instanceof CommonParameters)) {
@@ -72,10 +83,6 @@ public class UserInput {
 		pluginParameters.put(key, value);
 	}
 	
-//	public String getPluginParameter(String key){
-//		return pluginParameters.get(key);
-//	}
-
 	public void merge(UserInput userSelection) {
 		getCommonParameters().putAll(userSelection.getCommonParameters());
 		getPluginParameters().putAll(userSelection.getPluginParameters());
