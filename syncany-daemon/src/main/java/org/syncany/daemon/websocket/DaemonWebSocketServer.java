@@ -28,15 +28,15 @@ import org.java_websocket.server.WebSocketServer;
 import org.syncany.daemon.DaemonCommandHandler;
 import org.syncany.util.JsonHelper;
 
-public class WSServer {
-	private static final Logger log = Logger.getLogger(WSServer.class.getSimpleName());
+public class DaemonWebSocketServer {
+	private static final Logger log = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
 	
 	private static int DEFAULT_PORT = 8887;
-	private static WSServer instance;
+	private static DaemonWebSocketServer instance;
 	
 	private WebSocketServer delegate;
 	
-	public WSServer() {
+	public DaemonWebSocketServer() {
 		delegate = new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
 			public void onOpen(WebSocket conn, ClientHandshake handshake) {
@@ -104,9 +104,9 @@ public class WSServer {
 	/**
 	 * @return the instance
 	 */
-	public static WSServer getInstance() {
+	public static DaemonWebSocketServer getInstance() {
 		if (instance == null){
-			instance = new WSServer();
+			instance = new DaemonWebSocketServer();
 		}
 		return instance;
 	}

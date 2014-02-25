@@ -18,31 +18,50 @@
 package org.syncany.daemon.websocket.messages;
 
 
-
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DeamonResultConnectMessage extends DaemonResultMessage {
-	private String shareLink;
-	private boolean isShareLinkEncrypted;
+public class DaemonInitMessage extends DaemonAbstractInitMessage {
+	private int chunkSize;
+	private boolean gzip;
+	private boolean encryption;
+	private String cipherSpec;
 	
-	public DeamonResultConnectMessage(DaemonMessage parent) {
+	public DaemonInitMessage(DaemonMessage parent) {
 		super(parent);
-		setAction("daemon_connect_result");
+		setAction("create");
 	}
 	
-	public String getShareLink() {
-		return shareLink;
+	public String getCipherSpec() {
+		return cipherSpec;
 	}
-	public void setShareLink(String shareLink) {
-		this.shareLink = shareLink;
+	public void setCipherSpec(String cipherSpec) {
+		this.cipherSpec = cipherSpec;
 	}
-
-	public boolean isShareLinkEncrypted() {
-		return isShareLinkEncrypted;
+	
+	public boolean isGzip() {
+		return gzip;
 	}
-	public void setShareLinkEncrypted(boolean isShareLinkEncrypted) {
-		this.isShareLinkEncrypted = isShareLinkEncrypted;
+	public void setGzip(boolean gzip) {
+		this.gzip = gzip;
+	}
+	
+	public boolean isEncryption() {
+		return encryption;
+	}
+	public void setEncryption(boolean encryption) {
+		this.encryption = encryption;
+	}
+	
+	public DaemonInitMessage(DaemonInitMessage buildReturnObject) {
+		super(buildReturnObject);
+	}
+	
+	public int getChunkSize() {
+		return chunkSize;
+	}
+	public void setChunkSize(int chunkSize) {
+		this.chunkSize = chunkSize;
 	}
 }

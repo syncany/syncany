@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 import org.syncany.daemon.websocket.messages.DaemonMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
-import org.syncany.daemon.websocket.messages.DeamonResultConnectMessage;
-import org.syncany.daemon.websocket.messages.DeamonWatchResultMessage;
+import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
+import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.util.JsonHelper;
@@ -54,7 +54,7 @@ public class DaemonMessagesHandler {
 				break;
 				
 			case "daemon_connect_result":
-				DeamonResultConnectMessage r2 = JsonHelper.fromStringToObject(messageString, DeamonResultConnectMessage.class);
+				DaemonResultConnectMessage r2 = JsonHelper.fromStringToObject(messageString, DaemonResultConnectMessage.class);
 				// test if daemon update
 				if (MainGUI.getClientIdentification().equals(r2.getClientId()) && r2.getClientType().equals("syncany-gui")) {
 					EventManager.post(r2);
@@ -62,7 +62,7 @@ public class DaemonMessagesHandler {
 				break;
 	
 			case "update_watched_folders":
-				DeamonWatchResultMessage rr = JsonHelper.fromStringToObject(messageString, DeamonWatchResultMessage.class);
+				DaemonWatchResultMessage rr = JsonHelper.fromStringToObject(messageString, DaemonWatchResultMessage.class);
 				EventManager.post(rr);
 				break;
 

@@ -7,9 +7,9 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.syncany.daemon.websocket.messages.DaemonMessage;
-import org.syncany.daemon.websocket.messages.DeamonConnectMessage;
-import org.syncany.daemon.websocket.messages.DeamonInitMessage;
-import org.syncany.daemon.websocket.messages.DeamonWatchMessage;
+import org.syncany.daemon.websocket.messages.DaemonConnectMessage;
+import org.syncany.daemon.websocket.messages.DaemonInitMessage;
+import org.syncany.daemon.websocket.messages.DaemonWatchMessage;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.UserInput;
@@ -57,7 +57,7 @@ public class ClientCommandFactory {
 
 		switch (action){
 			case "create":
-				DeamonInitMessage dim = new DeamonInitMessage(command);
+				DaemonInitMessage dim = new DaemonInitMessage(command);
 				dim.setPluginArgs(pluginParameters);
 				dim.setLocalFolder(userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 				dim.setPassword(userInput.getCommonParameter(CommonParameters.ENCRYPTION_PASSWORD));
@@ -70,7 +70,7 @@ public class ClientCommandFactory {
 				break;
 				
 			case "connect":
-				DeamonConnectMessage dcm = new DeamonConnectMessage(command);
+				DaemonConnectMessage dcm = new DaemonConnectMessage(command);
 				dcm.setPluginArgs(pluginParameters);
 				dcm.setLocalFolder(userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 				dcm.setCommandId(userInput.getCommonParameter(CommonParameters.COMMAND_ID));
@@ -81,7 +81,7 @@ public class ClientCommandFactory {
 				break;
 				
 			case "watch":
-				DeamonWatchMessage dwm = new DeamonWatchMessage(command);
+				DaemonWatchMessage dwm = new DaemonWatchMessage(command);
 				dwm.setLocalFolder(userInput.getCommonParameter(CommonParameters.LOCAL_FOLDER));
 				dwm.setCommandId(UUID.randomUUID().toString());
 				dwm.setCommandId(userInput.getCommonParameter(CommonParameters.COMMAND_ID));
@@ -93,7 +93,7 @@ public class ClientCommandFactory {
 	}
 	
 	public static void handleWatch(String folder, int interval, boolean automatic) {
-		DeamonWatchMessage command = new DeamonWatchMessage(buildParameters());
+		DaemonWatchMessage command = new DaemonWatchMessage(buildParameters());
 		command.setAction("watch");
 		command.setLocalFolder(folder);
 		command.setInterval(interval);

@@ -13,15 +13,15 @@ import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.ConnectCommand;
 import org.syncany.daemon.command.InitCommand;
 import org.syncany.daemon.command.WatchCommand;
-import org.syncany.daemon.websocket.WSServer;
+import org.syncany.daemon.websocket.DaemonWebSocketServer;
 import org.syncany.daemon.websocket.messages.DaemonMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultMessage;
-import org.syncany.daemon.websocket.messages.DeamonConnectMessage;
-import org.syncany.daemon.websocket.messages.DeamonInitMessage;
-import org.syncany.daemon.websocket.messages.DeamonResultConnectMessage;
-import org.syncany.daemon.websocket.messages.DeamonWatchMessage;
-import org.syncany.daemon.websocket.messages.DeamonWatchResultMessage;
+import org.syncany.daemon.websocket.messages.DaemonConnectMessage;
+import org.syncany.daemon.websocket.messages.DaemonInitMessage;
+import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
+import org.syncany.daemon.websocket.messages.DaemonWatchMessage;
+import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
 import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.JsonHelper;
 
@@ -29,7 +29,7 @@ import org.syncany.util.JsonHelper;
 public class DaemonCommandHandler {
 	private static Logger logger = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
 		
-	private static String handleWatch(DeamonWatchMessage message) {
+	private static String handleWatch(DaemonWatchMessage message) {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		String localDir = message.getLocalFolder();
 		int interval = message.getInterval();
@@ -116,7 +116,7 @@ public class DaemonCommandHandler {
 		return null;
 	}
 
-	private static DaemonResultInitMessage handleInit(DeamonInitMessage message) {
+	private static DaemonResultInitMessage handleInit(DaemonInitMessage message) {
 		List<String> pluginArgs= new ArrayList<>();
 		
 		Map<String, String> args = message.getPluginArgs();
@@ -180,7 +180,7 @@ public class DaemonCommandHandler {
 		return ret;
 	}
 	
-	private static DeamonResultConnectMessage handleConnect(DeamonConnectMessage message) {
+	private static DaemonResultConnectMessage handleConnect(DaemonConnectMessage message) {
 		List<String> pluginArgs= new ArrayList<>();
 		
 		Map<String, String> args = message.getPluginArgs();
@@ -201,7 +201,7 @@ public class DaemonCommandHandler {
 		
 		ConnectCommand ic = new ConnectCommand(url, pluginName, pluginArgs, localDir, passsword);
 	
-		DeamonResultConnectMessage ret = new DeamonResultConnectMessage(message);
+		DaemonResultConnectMessage ret = new DaemonResultConnectMessage(message);
 		
 		try {
 			ic.execute();
@@ -228,7 +228,7 @@ public class DaemonCommandHandler {
 		Map<String, Command> commands = Daemon.getInstance().getCommands();
 		
 		Map<String, Map<String, String>> folders = new HashMap<>();
-		DeamonWatchResultMessage ret = new DeamonWatchResultMessage(parent);
+		DaemonWatchResultMessage ret = new DaemonWatchResultMessage(parent);
 		
 		if (commands.size() > 0){
 			for (String key : commands.keySet()){
@@ -247,7 +247,7 @@ public class DaemonCommandHandler {
 		ret.setAction("update_watched_folders");
 		ret.setOriginalAction(parent.getAction());
 		ret.setFoldersUpdate(folders);
-		WSServer.sendToAll(ret);
+		DaemonWebSocketServer.sendToAll(ret);
 	}
 
 	public static void handle(String s) {
@@ -255,7 +255,7 @@ public class DaemonCommandHandler {
 				
 		switch (message.getAction()){
 			case "watch":
-				handleWatch(JsonHelper.fromStringToObject(s, DeamonWatchMessage.class));
+				handleWatch(JsonHelper.fromStringToObject(s, DaemonWatchMessage.class));
 				break;
 				
 			case "pause_watch":
@@ -271,14 +271,14 @@ public class DaemonCommandHandler {
 				break;
 				
 			case "create":
-				DeamonInitMessage dim = JsonHelper.fromStringToObject(s, DeamonInitMessage.class);
+				DaemonInitMessage dim = JsonHelper.fromStringToObject(s, DaemonInitMessage.class);
 				DaemonMessage retInit = handleInit(dim);
-				WSServer.sendToAll(JsonHelper.fromObjectToString(retInit));
+				DaemonWebSocketServer.sendToAll(JsonHelper.fromObjectToString(retInit));
 				break;
 				
 			case "connect":
-				DaemonMessage retConn = handleConnect(JsonHelper.fromStringToObject(s, DeamonConnectMessage.class));
-				WSServer.sendToAll(JsonHelper.fromObjectToString(retConn));
+				DaemonMessage retConn = handleConnect(JsonHelper.fromStringToObject(s, DaemonConnectMessage.class));
+				DaemonWebSocketServer.sendToAll(JsonHelper.fromObjectToString(retConn));
 				break;
 				
 			case "quit":

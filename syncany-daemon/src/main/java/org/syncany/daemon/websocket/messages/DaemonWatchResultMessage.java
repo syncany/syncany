@@ -25,10 +25,10 @@ import java.util.Map;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DeamonWatchResultMessage extends DaemonResultMessage {
+public class DaemonWatchResultMessage extends DaemonResultMessage {
 	private Map<String, Map<String, String>> foldersUpdate;
 	
-	public DeamonWatchResultMessage(DaemonMessage parent) {
+	public DaemonWatchResultMessage(DaemonMessage parent) {
 		super(parent);
 	}
 

@@ -22,9 +22,9 @@ package org.syncany.daemon.websocket.messages;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DeamonWatchMessage extends DaemonMessage {
+public class DaemonWatchMessage extends DaemonMessage {
 
-	public DeamonWatchMessage(DaemonMessage parent) {
+	public DaemonWatchMessage(DaemonMessage parent) {
 		super(parent);
 		setAction("watch");
 	}

@@ -18,22 +18,31 @@
 package org.syncany.daemon.websocket.messages;
 
 
+
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DeamonConnectMessage extends DaemonAbstractInitMessage {
-	public DeamonConnectMessage(DaemonMessage parent) {
+public class DaemonResultConnectMessage extends DaemonResultMessage {
+	private String shareLink;
+	private boolean isShareLinkEncrypted;
+	
+	public DaemonResultConnectMessage(DaemonMessage parent) {
 		super(parent);
-		setAction("connect");
+		setAction("daemon_connect_result");
+	}
+	
+	public String getShareLink() {
+		return shareLink;
+	}
+	public void setShareLink(String shareLink) {
+		this.shareLink = shareLink;
 	}
 
-	private String url;
-	
-	public String getUrl() {
-		return url;
+	public boolean isShareLinkEncrypted() {
+		return isShareLinkEncrypted;
 	}
-	public void setUrl(String url) {
-		this.url = url;
+	public void setShareLinkEncrypted(boolean isShareLinkEncrypted) {
+		this.isShareLinkEncrypted = isShareLinkEncrypted;
 	}
 }

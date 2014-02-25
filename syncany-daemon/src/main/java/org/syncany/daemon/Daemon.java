@@ -16,7 +16,7 @@ import org.syncany.daemon.exception.DaemonAlreadyStartedException;
 import org.syncany.daemon.util.SocketLock;
 import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
-import org.syncany.daemon.websocket.WSServer;
+import org.syncany.daemon.websocket.DaemonWebSocketServer;
 import org.syncany.daemon.websocket.messages.DaemonMessage;
 
 import com.google.common.eventbus.EventBus;
@@ -96,7 +96,7 @@ public class Daemon {
 
 		killWatchingThreads();
 
-		WSServer.stop();
+		DaemonWebSocketServer.stop();
 
 		daemonSocketLock.free();
 		instance = null;
@@ -117,7 +117,7 @@ public class Daemon {
 		}
 
 		// 2- Starting websocket server
-		WSServer.start();
+		DaemonWebSocketServer.start();
 	}
 
 	public static Daemon getInstance() {
@@ -147,7 +147,7 @@ public class Daemon {
 
 		log.fine("Pushing update to client");
 
-		WSServer.sendToAll("update");
+		DaemonWebSocketServer.sendToAll("update");
 	}
 
 	private static DaemonConfigurationTO loadDaemonConfiguration() throws Exception {

@@ -30,7 +30,7 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.daemon.websocket.WSServer;
+import org.syncany.daemon.websocket.DaemonWebSocketServer;
 import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
 import org.syncany.operations.WatchEvent;
 import org.syncany.operations.WatchEventListener;
@@ -118,7 +118,7 @@ public class WatchCommand extends Command {
 				DaemonWatchEvent dwe = new DaemonWatchEvent();
 				dwe.setAction("daemon_watch_event");
 				dwe.setEvent(event);
-				WSServer.sendToAll(dwe);
+				DaemonWebSocketServer.sendToAll(dwe);
 			}
 		};
 		

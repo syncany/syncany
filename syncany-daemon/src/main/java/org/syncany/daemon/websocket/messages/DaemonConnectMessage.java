@@ -22,46 +22,18 @@ package org.syncany.daemon.websocket.messages;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DeamonInitMessage extends DaemonAbstractInitMessage {
-	private int chunkSize;
-	private boolean gzip;
-	private boolean encryption;
-	private String cipherSpec;
-	
-	public DeamonInitMessage(DaemonMessage parent) {
+public class DaemonConnectMessage extends DaemonAbstractInitMessage {
+	public DaemonConnectMessage(DaemonMessage parent) {
 		super(parent);
-		setAction("create");
+		setAction("connect");
 	}
+
+	private String url;
 	
-	public String getCipherSpec() {
-		return cipherSpec;
+	public String getUrl() {
+		return url;
 	}
-	public void setCipherSpec(String cipherSpec) {
-		this.cipherSpec = cipherSpec;
-	}
-	
-	public boolean isGzip() {
-		return gzip;
-	}
-	public void setGzip(boolean gzip) {
-		this.gzip = gzip;
-	}
-	
-	public boolean isEncryption() {
-		return encryption;
-	}
-	public void setEncryption(boolean encryption) {
-		this.encryption = encryption;
-	}
-	
-	public DeamonInitMessage(DeamonInitMessage buildReturnObject) {
-		super(buildReturnObject);
-	}
-	
-	public int getChunkSize() {
-		return chunkSize;
-	}
-	public void setChunkSize(int chunkSize) {
-		this.chunkSize = chunkSize;
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }
