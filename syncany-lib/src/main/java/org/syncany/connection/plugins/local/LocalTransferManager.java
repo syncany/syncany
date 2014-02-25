@@ -84,8 +84,14 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public void init() throws StorageException {
+	public void init(boolean createIfRequired) throws StorageException {
 		connect();
+
+		if (!repoExists() && createIfRequired) {
+			if (!repoPath.mkdir()) {
+				throw new StorageException("Cannot create repository directory: " + repoPath);
+			}
+		}
 
 		if (!multichunksPath.mkdir()) {
 			throw new StorageException("Cannot create multichunk directory: " + multichunksPath);
@@ -181,7 +187,8 @@ public class LocalTransferManager extends AbstractTransferManager {
 				remoteFiles.put(file.getName(), remoteFile);
 			}
 			catch (Exception e) {
-				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file + "; maybe invalid file name pattern. Ignoring file.");
+				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file
+						+ "; maybe invalid file name pattern. Ignoring file.");
 			}
 		}
 
@@ -221,5 +228,21 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 	public String getAbsoluteParentDirectory(File file) {
 		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
+	}
+
+	@Override
+	public boolean hasWriteAccess() {
+		return repoPath.getParentFile().canWrite();
+	}
+
+	@Override
+	public boolean repoExists() throws StorageException {
+		return repoPath.exists();
+	}
+
+	@Override
+	public boolean repoIsEmpty() throws StorageException {
+		String[] listResult = repoPath.list();		
+		return (listResult != null) ? listResult.length == 0 : true;
 	}
 }

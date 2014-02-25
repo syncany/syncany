@@ -26,6 +26,7 @@ import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.connection.plugins.PluginsTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
+import org.syncany.tests.connection.plugins.local.LocalTransferManagerPluginTest;
 import org.syncany.tests.connection.plugins.unreliable_local.UploadInterruptedTest;
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
@@ -58,6 +59,7 @@ import org.syncany.tests.util.FileUtilTest;
 	// Connection
 	PluginsTest.class,
 	LocalConnectionPluginTest.class,
+	LocalTransferManagerPluginTest.class,
 	UploadInterruptedTest.class,
 	
 	// Operations
