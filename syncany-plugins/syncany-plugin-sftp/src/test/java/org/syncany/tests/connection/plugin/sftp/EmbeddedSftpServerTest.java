@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugin.sftp;
+package org.syncany.tests.connection.plugin.sftp;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,21 +41,23 @@ import org.apache.sshd.server.sftp.SftpSubsystem;
 public class EmbeddedSftpServerTest {
 	public static int PORT = 2338;
 	public static String HOST = "127.0.0.1";
-	
+
 	private static SshServer sshd;
-	
+
 	public static void stopServer() throws InterruptedException {
 		if (sshd != null) {
 			sshd.stop();
 		}
 	}
-	
-	public static void startServer() throws IOException{
+
+	public static void startServer() throws IOException {
+		File hostKeyFile = File.createTempFile("hostkey", "ser");
+		
 		sshd = SshServer.setUpDefaultServer();
 		sshd.setPort(PORT);
-		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("hostkey.ser"));
+		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(hostKeyFile.getAbsolutePath()));
 		sshd.setFileSystemFactory(new NativeFileSystemFactory());
-		
+
 		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
 		userAuthFactories.add(new UserAuthPassword.Factory());
 		sshd.setUserAuthFactories(userAuthFactories);
@@ -70,7 +73,7 @@ public class EmbeddedSftpServerTest {
 				return true;
 			}
 		});
-		
+
 		sshd.start();
 	}
 }

@@ -135,9 +135,10 @@ public class FtpTransferManager extends AbstractTransferManager {
 		connect();
 
 		try {
-			if (!repopathExists() && createIfRequired) {
+			if (!repoExists() && createIfRequired) {
 				ftp.mkd(repoPath);
 			}
+			
 			ftp.mkd(multichunkPath);
 			ftp.mkd(databasePath);
 		}
@@ -228,8 +229,9 @@ public class FtpTransferManager extends AbstractTransferManager {
 		String remotePath = getRemoteFile(remoteFile);
 
 		try {
-			boolean delete = ftp.deleteFile(remotePath);
-			if (delete) {
+			boolean deleteSuccessful = ftp.deleteFile(remotePath);
+			
+			if (deleteSuccessful) {
 				return true;
 			}
 			else {
@@ -238,6 +240,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 		}
 		catch (IOException ex) {
 			forceFtpDisconnect();
+			
 			logger.log(Level.SEVERE, "Could not delete file " + remoteFile.getName(), ex);
 			throw new StorageException(ex);
 		}
@@ -301,11 +304,12 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repopathWriteAccess() throws StorageException {
+	public boolean hasWriteAccess() throws StorageException {
 		try {
-			boolean create = ftp.makeDirectory(repoPath);
+			boolean createSuccessful = ftp.makeDirectory(repoPath);
 			ftp.removeDirectory(repoPath);
-			return create;
+			
+			return createSuccessful;
 		}
 		catch (Exception e) {
 			return false;
@@ -313,7 +317,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repopathExists() throws StorageException {
+	public boolean repoExists() throws StorageException {
 		try {
 			return ftp.changeWorkingDirectory(repoPath);
 		}
@@ -323,9 +327,9 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repopathIsEmpty() throws StorageException {
+	public boolean repoIsEmpty() throws StorageException {
 		try {
-			return repopathExists() && ftp.listFiles(repoPath).length == 0;
+			return repoExists() && ftp.listFiles(repoPath).length == 0;
 		}
 		catch (Exception e) {
 			return false;

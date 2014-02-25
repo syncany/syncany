@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugin.sftp;
+package org.syncany.tests.connection.plugin.sftp;
 
 import junit.framework.Assert;
 
@@ -29,10 +29,10 @@ import org.syncany.connection.plugins.sftp.SftpConnection;
  *
  */
 public class SftpTransferManagerTest {
-	private final static String SANDBOX = "/home/vwiencek/sandbox/";
-	private final static String USERNAME = "vwiencek";
-	private final static String PASSWORD = "ulysse32";
-	private final static String HOST = "jrisk.fr";
+	private final static String SANDBOX = "/home/xxxxxxxxxxx/";
+	private final static String USERNAME = "xxxxxxxx";
+	private final static String PASSWORD = "xxxxxxx";
+	private final static String HOST = "xxxxxxxxxx";
 	
 	@Test
 	public void testSftpTransferManager() throws StorageException {

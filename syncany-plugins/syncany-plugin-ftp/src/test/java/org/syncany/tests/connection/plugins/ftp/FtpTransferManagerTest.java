@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.ftp;
+package org.syncany.tests.connection.plugins.ftp;
 
 import junit.framework.Assert;
 
@@ -24,25 +24,25 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager.StorageTestResult;
+import org.syncany.connection.plugins.ftp.FtpConnection;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
- *
  */
 public class FtpTransferManagerTest {
 	@BeforeClass
 	public static void beforeTestSetup() throws Exception {
-		EmbeddedFtpServerTest.startServer();
+		EmbeddedTestFtpServer.startServer();
 		
-		EmbeddedFtpServerTest.mkdir("newRepo", EmbeddedFtpServerTest.USER1);
-		EmbeddedFtpServerTest.mkdir("nonEmptyRepo", EmbeddedFtpServerTest.USER1);
-		EmbeddedFtpServerTest.mkdir("nonEmptyRepo/folder", EmbeddedFtpServerTest.USER1);
-		EmbeddedFtpServerTest.mkdir("canNotCreate", EmbeddedFtpServerTest.USER2);
+		EmbeddedTestFtpServer.mkdir("newRepo", EmbeddedTestFtpServer.USER1);
+		EmbeddedTestFtpServer.mkdir("nonEmptyRepo", EmbeddedTestFtpServer.USER1);
+		EmbeddedTestFtpServer.mkdir("nonEmptyRepo/folder", EmbeddedTestFtpServer.USER1);
+		EmbeddedTestFtpServer.mkdir("canNotCreate", EmbeddedTestFtpServer.USER2);
 	}
 	
 	@AfterClass
 	public static void stop(){
-		EmbeddedFtpServerTest.stopServer();
+		EmbeddedTestFtpServer.stopServer();
 	}
 	
 	@Test
@@ -61,19 +61,19 @@ public class FtpTransferManagerTest {
 	
 	public FtpConnection workingConnection(){
 		FtpConnection connection = new FtpConnection();
-		connection.setHostname(EmbeddedFtpServerTest.HOST);
-		connection.setPort(EmbeddedFtpServerTest.PORT);
-		connection.setUsername(EmbeddedFtpServerTest.USER1);
-		connection.setPassword(EmbeddedFtpServerTest.PASSWORD1);
+		connection.setHostname(EmbeddedTestFtpServer.HOST);
+		connection.setPort(EmbeddedTestFtpServer.PORT);
+		connection.setUsername(EmbeddedTestFtpServer.USER1);
+		connection.setPassword(EmbeddedTestFtpServer.PASSWORD1);
 		return connection;
 	}
 	
 	public FtpConnection invalidConnection(){
 		FtpConnection connection = new FtpConnection();
-		connection.setHostname(EmbeddedFtpServerTest.HOST_WRONG);
-		connection.setPort(EmbeddedFtpServerTest.PORT);
-		connection.setUsername(EmbeddedFtpServerTest.USER1);
-		connection.setPassword(EmbeddedFtpServerTest.PASSWORD1);
+		connection.setHostname(EmbeddedTestFtpServer.HOST_WRONG);
+		connection.setPort(EmbeddedTestFtpServer.PORT);
+		connection.setUsername(EmbeddedTestFtpServer.USER1);
+		connection.setPassword(EmbeddedTestFtpServer.PASSWORD1);
 		return connection;
 	}
 }

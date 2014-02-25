@@ -487,12 +487,12 @@ public class FileUtil {
 			return file.canRead();
 		}
 	}
-
+	
 	/**
-	 * Returs the unix style parent path of a folder
+	 * Returns the Unix style parent path of a folder
 	 * @param path the folder for which method returns parent path
 	 */
-	public static String getParentPath(String path) {
+	public static String getUnixParentPath(String path) {
 		String cleanPath = removeTrailingSlash(path);
 		String parentPath = cleanPath.substring(0, cleanPath.lastIndexOf("/"));
 		return parentPath.length() == 0 ? "/" : parentPath;

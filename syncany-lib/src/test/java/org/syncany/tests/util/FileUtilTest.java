@@ -227,10 +227,10 @@ public class FileUtilTest {
 	}
 	
 	@Test
-	public void testGetParnetPath() {
-		assertEquals("/parent", FileUtil.getParentPath("/parent/folder"));
-		assertEquals("/parent", FileUtil.getParentPath("/parent/folder/"));
-		assertEquals("/", FileUtil.getParentPath("/parent"));
-		assertEquals("/", FileUtil.getParentPath("/parent/"));
+	public void testGetUnixParentPath() {
+		assertEquals("/parent", FileUtil.getUnixParentPath("/parent/folder"));
+		assertEquals("/parent", FileUtil.getUnixParentPath("/parent/folder/"));
+		assertEquals("/", FileUtil.getUnixParentPath("/parent"));
+		assertEquals("/", FileUtil.getUnixParentPath("/parent/"));
 	}
 }
