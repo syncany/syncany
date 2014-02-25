@@ -33,7 +33,7 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.DatabaseBranch;
 
 public class TestDatabaseUtil {
@@ -113,14 +113,14 @@ public class TestDatabaseUtil {
 	public static MemoryDatabase readDatabaseFileFromDisk(File databaseFile, Transformer transformer) throws IOException {
 		MemoryDatabase db = new MemoryDatabase();
 		
-		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(transformer);
+		DatabaseXmlSerializer dao = new DatabaseXmlSerializer(transformer);
 		dao.load(db, databaseFile);
 		
 		return db;
 	}
 	
 	public static void writeDatabaseFileToDisk(MemoryDatabase db, File writtenDatabaseFile, Transformer transformer) throws IOException {
-		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(transformer);
+		DatabaseXmlSerializer dao = new DatabaseXmlSerializer(transformer);
 		dao.save(db.getDatabaseVersions(), writtenDatabaseFile);
 	}
 	

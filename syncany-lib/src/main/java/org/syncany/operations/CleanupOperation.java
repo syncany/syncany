@@ -47,7 +47,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer;
 
 import com.google.common.collect.Lists;
 
@@ -214,7 +214,7 @@ public class CleanupOperation extends Operation {
 	private File writePurgeFile(DatabaseVersion purgeDatabaseVersion, DatabaseRemoteFile newPurgeDatabaseFile) throws IOException {		
 		File localPurgeDatabaseFile = config.getCache().getDatabaseFile(newPurgeDatabaseFile.getName());
 		
-		XmlDatabaseSerializer xmlSerializer = new XmlDatabaseSerializer(config.getTransformer());
+		DatabaseXmlSerializer xmlSerializer = new DatabaseXmlSerializer(config.getTransformer());
 		xmlSerializer.save(Lists.newArrayList(purgeDatabaseVersion), localPurgeDatabaseFile);
 		
 		return localPurgeDatabaseFile;
@@ -314,7 +314,7 @@ public class CleanupOperation extends Operation {
 		long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
 		Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(config.getMachineName(), lastLocalClientVersion);
 
-		XmlDatabaseSerializer databaseDAO = new XmlDatabaseSerializer(config.getTransformer());
+		DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
 		databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
 
 		// 3. Uploading merge file

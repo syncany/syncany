@@ -50,7 +50,7 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
@@ -393,6 +393,27 @@ public class DownOperation extends Operation {
 		transferManager.disconnect();
 	}
 
+	/**
+	 * Loads the winner's database branch into the memory in a {@link MemoryDatabase} object, by using
+	 * the already downloaded list of remote database files.
+	 * 
+	 * <p>Because database files can contain multiple {@link DatabaseVersion}s per client, a range for which
+	 * to load the database versions must be determined.
+	 * 
+	 * <p><b>Example:</b><br />
+	 * <pre>
+	 *  db-A-0001   (A1)     Already known
+	 *  db-A-0004   (A2)     Already known
+	 *              (A3)     Already known
+	 *              (A4)     Part of winner's branch
+	 *  db-B-0001   (A4,B1)  Part of winner's branch
+	 *  db-A-0005   (A5,B1)  Part of winner's branch
+	 * </pre>
+	 * 
+	 * <p>In this example, only (A4) must be loaded from db-A-004, and not all three database versions.
+	 * 
+	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
+	 */
 	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
 		// Make map 'short filename' -> 'full filename'
 		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
@@ -402,7 +423,7 @@ public class DownOperation extends Operation {
 		}
 
 		// Load individual databases for branch ranges
-		XmlDatabaseSerializer databaseDAO = new XmlDatabaseSerializer(config.getTransformer());
+		DatabaseXmlSerializer xmlDatabaseSerializer = new DatabaseXmlSerializer(config.getTransformer());
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 		String clientName = null;
@@ -424,11 +445,12 @@ public class DownOperation extends Operation {
 
 			DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientVersionTo.getClock(clientName));
 			File databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
-
-			if (databaseFileForRange != null) {
+			boolean isLoadableDatabaseFile = databaseFileForRange != null;
+			
+			if (isLoadableDatabaseFile) {
 				// Load database
 				logger.log(Level.INFO, "- Loading " + databaseFileForRange + " (from " + clientVersionFrom + ", to " + clientVersionTo + ") ...");
-				databaseDAO.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo);
+				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo);
 
 				// Reset range
 				clientName = null;
@@ -448,7 +470,7 @@ public class DownOperation extends Operation {
 
 		// Read database files
 		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
-		XmlDatabaseSerializer dbDAO = new XmlDatabaseSerializer(config.getTransformer());
+		DatabaseXmlSerializer dbDAO = new DatabaseXmlSerializer(config.getTransformer());
 
 		for (File remoteDatabaseFileInCache : remoteDatabases) {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
