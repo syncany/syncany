@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.NotificationListener.NotificationListenerListener;
 import org.syncany.operations.RecursiveWatcher.WatchListener;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -68,13 +69,15 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
+	private WatchEventListener watchEventListener;
 
 	private String notificationChannel;
 	private String notificationInstanceId;
 
-	public WatchOperation(Config config, WatchOperationOptions options) {
+	public WatchOperation(Config config, WatchOperationOptions options, WatchEventListener watchEventListener) {
 		super(config);
 
+		this.watchEventListener = watchEventListener;
 		this.options = options;
 
 		this.syncRunning = new AtomicBoolean(false);
@@ -155,9 +158,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Running sync ...");
 
 			try {
-				new DownOperation(config).execute();
-
-				UpOperationResult upOperationResult = new UpOperation(config).execute();
+				DownOperationResult downResult = new DownOperation(config, watchEventListener).execute();
+				UpOperationResult upOperationResult = new UpOperation(config, watchEventListener).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES && upOperationResult.getChangeSet().hasChanges()) {
 					notifyChanges();

@@ -17,6 +17,7 @@ import org.syncany.daemon.util.SocketLock;
 import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
 import org.syncany.daemon.websocket.WSServer;
+import org.syncany.daemon.websocket.messages.DaemonMessage;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -72,7 +73,7 @@ public class Daemon {
 
 	@Subscribe
 	public void update(DaemonEvent event) {
-		DaemonCommandHandler.updateWatchedFolders();
+		DaemonCommandHandler.updateWatchedFolders(new DaemonMessage(null));
 	}
 
 	private void killWatchingThreads() {

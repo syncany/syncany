@@ -32,20 +32,27 @@ import org.syncany.operations.UpOperation.UpOperationResult;
  */
 public class SyncOperation extends Operation {
 	private SyncOperationOptions options;
+	private WatchEventListener watchEventListener;
 	
 	public SyncOperation(Config config) {
-		this(config, new SyncOperationOptions());
+		this(config, new SyncOperationOptions(), null);
 	}	
 	
-	public SyncOperation(Config config, SyncOperationOptions options) {
-		super(config);		
+	public SyncOperation(Config config, WatchEventListener watchEventListener) {
+		this(config, new SyncOperationOptions(), watchEventListener);
+	}	
+	
+	public SyncOperation(Config config, SyncOperationOptions options, WatchEventListener watchEventListener) {
+		super(config);	
+
+		this.watchEventListener = watchEventListener;
 		this.options = options;
 	}		
 	
 	@Override
 	public SyncOperationResult execute() throws Exception {
-		DownOperation syncDown = new DownOperation(config, options.getSyncDownOptions());
-		UpOperation syncUp = new UpOperation(config, options.getSyncUpOptions());
+		DownOperation syncDown = new DownOperation(config, options.getSyncDownOptions(), watchEventListener);
+		UpOperation syncUp = new UpOperation(config, options.getSyncUpOptions(), watchEventListener);
 		
 		DownOperationResult syncDownResults = syncDown.execute();
 		UpOperationResult syncUpResults = syncUp.execute();

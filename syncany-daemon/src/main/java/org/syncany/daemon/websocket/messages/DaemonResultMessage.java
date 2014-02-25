@@ -15,22 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
 
-import org.syncany.daemon.command.CommandStatus;
 
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class SyncingEvent {
-	private CommandStatus state;
+public class DaemonResultMessage extends DaemonMessage {
 
-	public void setState(CommandStatus state) {
-		this.state = state;
+	public DaemonResultMessage(DaemonMessage parent) {
+		super(parent);
 	}
-	public CommandStatus getState() {
-		return state;
+	
+	private String originalAction;
+	private boolean success;
+	
+	public boolean isSuccess() {
+		return success;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	
+	public String getOriginalAction() {
+		return originalAction;
+	}
+	public void setOriginalAction(String originalAction) {
+		this.originalAction = originalAction;
 	}
 }

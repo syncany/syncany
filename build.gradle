@@ -34,6 +34,16 @@ project.ext {
 
 // All projects settings  //////////////////////////////////////////////////////
 
+repositories {
+	mavenCentral()
+}
+
+// JavaDoc Requirements ////////////////////////////////////////////////////////
+
+configurations {
+	doclet 
+}
+
 allprojects {
 	apply plugin: 'eclipse'	
 
@@ -279,7 +289,8 @@ public String getSwtLibrary(){
 // Global Tests ////////////////////////////////////////////////////////////////
 
 task testGlobal(type: TestReport) {
-	destinationDir = file("$buildDir/reports/allTests")
-	// Include the results from the `test` task in all subprojects
+	group = "verification"	
+	description = "All the results from the 'test' task in all subprojects (global report!)"
+	destinationDir = file("$buildDir/reports/all")
 	reportOn subprojects*.test
 }

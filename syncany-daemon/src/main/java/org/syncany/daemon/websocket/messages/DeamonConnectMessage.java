@@ -15,39 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
+
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class InitCommandEvent extends CommandEvent {
-	private String result;
-	private String shareLink;
-	private String localFolder;
-	private boolean shareLinkEncrypted;
-
-	public InitCommandEvent(String commandId, String result, String shareLink, String localFolder, boolean shareLinkEncrypted) {
-		super(commandId);
-		this.result = result;
-		this.shareLink = shareLink;
-		this.localFolder = localFolder;
-		this.shareLinkEncrypted = shareLinkEncrypted;
+public class DeamonConnectMessage extends DaemonAbstractInitMessage {
+	public DeamonConnectMessage(DaemonMessage parent) {
+		super(parent);
+		setAction("connect");
 	}
 
-	public String getResult() {
-		return result;
+	private String url;
+	
+	public String getUrl() {
+		return url;
 	}
-
-	public String getShareLink() {
-		return shareLink;
-	}
-
-	public String getLocalFolder() {
-		return localFolder;
-	}
-
-	public boolean isShareLinkEncrypted() {
-		return shareLinkEncrypted;
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

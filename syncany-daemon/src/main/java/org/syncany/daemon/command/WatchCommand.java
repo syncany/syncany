@@ -30,6 +30,10 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.daemon.websocket.WSServer;
+import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
+import org.syncany.operations.WatchEvent;
+import org.syncany.operations.WatchEventListener;
 import org.syncany.operations.WatchOperation;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
 
@@ -43,6 +47,7 @@ public class WatchCommand extends Command {
 	private boolean watcher;
 	
 	private AtomicBoolean started = new AtomicBoolean(false);
+	private WatchOperation watchOperation;
 	
 	public WatchCommand(String localFolder, Integer interval, boolean watcher){
 		this.localFolder = localFolder;
@@ -107,12 +112,21 @@ public class WatchCommand extends Command {
 //		}
 
 		// Run!
+		final WatchEventListener wl = new WatchEventListener() {
+			@Override
+			public void update(WatchEvent event) {
+				DaemonWatchEvent dwe = new DaemonWatchEvent();
+				dwe.setAction("daemon_watch_event");
+				dwe.setEvent(event);
+				WSServer.sendToAll(dwe);
+			}
+		};
 		
 		new Thread(new Runnable() {
 			public void run() {
 				try {
 					Config config = initConfigOption(localFolder);
-					watchOperation = new WatchOperation(config, operationOptions);
+					watchOperation = new WatchOperation(config, operationOptions, wl);
 					setStatus(CommandStatus.SYNCING);
 					started.set(true);
 					watchOperation.execute();
@@ -122,12 +136,10 @@ public class WatchCommand extends Command {
 					setStatus(CommandStatus.STOPPED);
 				}
 			}
-		}, "watching "+ localFolder).start();;
+		}, "watching "+ localFolder).start();
 		
 		return 0;
 	}
-	
-	private WatchOperation watchOperation;
 	
 	private Config initConfigOption(String localDir) throws ConfigException, Exception {
 		// Load config

@@ -15,22 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
-
-import org.syncany.daemon.command.CommandStatus;
+package org.syncany.daemon.websocket.messages;
 
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class SyncingEvent {
-	private CommandStatus state;
+public class DeamonWatchMessage extends DaemonMessage {
 
-	public void setState(CommandStatus state) {
-		this.state = state;
+	public DeamonWatchMessage(DaemonMessage parent) {
+		super(parent);
+		setAction("watch");
 	}
-	public CommandStatus getState() {
-		return state;
+	
+	private int interval;
+	boolean automaticWatcher;
+	
+	public int getInterval() {
+		return interval;
+	}
+	public void setInterval(int interval) {
+		this.interval = interval;
+	}
+	
+	public boolean isAutomaticWatcher() {
+		return automaticWatcher;
+	}
+	public void setAutomaticWatcher(boolean automaticWatcher) {
+		this.automaticWatcher = automaticWatcher;
 	}
 }

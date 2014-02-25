@@ -15,22 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
+package org.syncany.daemon.websocket.messages;
 
-import org.syncany.daemon.command.CommandStatus;
-
+import java.util.Map;
 
 /**
  * @author vincent
  *
  */
-public class SyncingEvent {
-	private CommandStatus state;
-
-	public void setState(CommandStatus state) {
-		this.state = state;
+public class DaemonAbstractInitMessage extends DaemonMessage {
+	
+	private Map<String, String> pluginArgs;
+	private String pluginId;
+	private String password;
+	
+	public Map<String, String> getPluginArgs() {
+		return pluginArgs;
 	}
-	public CommandStatus getState() {
-		return state;
+	public void setPluginArgs(Map<String, String> pluginArgs) {
+		this.pluginArgs = pluginArgs;
+	}
+	
+	public DaemonAbstractInitMessage(DaemonMessage parent) {
+		super(parent);
+	}
+
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+	public String getPluginId() {
+		return pluginId;
+	}
+	public void setPluginId(String pluginId) {
+		this.pluginId = pluginId;
 	}
 }

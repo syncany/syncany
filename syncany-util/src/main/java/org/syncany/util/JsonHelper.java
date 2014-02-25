@@ -18,11 +18,9 @@
 package org.syncany.util;
 
 import java.lang.reflect.Type;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -36,22 +34,15 @@ public class JsonHelper {
 		gson = new GsonBuilder().create();
 	}
 
-	/**
-	 * Returns a JSon String corresponding the the Map<String, ?> 
-	 * parameter
-	 * @param params the java object to be serialised to JSon String
-	 */
-	public static String fromMapToString(Map<String, ?> params){
-		String text = gson.toJson(params).toString();
-		return text;
+	public static String fromObjectToString(Object object){
+		return gson.toJson(object).toString();
 	}
-
-	/**
-	 *  Returns a valid Map<String, ?> from JSon String
-	 */
-	public static Map<String, Object> fromStringToMap(String s){
-		Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
-		Map<String, Object> parameters = gson.fromJson(s, mapType);
-		return parameters;
+	
+	public static <T> T fromStringToObject(String string, Class<T> clazz) {
+		return gson.fromJson(string,  clazz);
+	}
+	
+	public static <T> T fromStringToObject(String string, Type type) {
+		return gson.fromJson(string,  type);
 	}
 }

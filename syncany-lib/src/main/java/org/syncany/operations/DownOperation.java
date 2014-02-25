@@ -51,6 +51,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.operations.WatchEvent.WatchEventType;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
@@ -97,14 +98,20 @@ public class DownOperation extends Operation {
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
-
+	private WatchEventListener watchEventListener;
+	
 	public DownOperation(Config config) {
-		this(config, new DownOperationOptions());
+		this(config, new DownOperationOptions(), null);
+	}
+	
+	public DownOperation(Config config, WatchEventListener watchEventListener) {
+		this(config, new DownOperationOptions(), watchEventListener);
 	}
 
-	public DownOperation(Config config, DownOperationOptions options) {
+	public DownOperation(Config config, DownOperationOptions options, WatchEventListener watchEventListener) {
 		super(config);
 
+		this.watchEventListener = watchEventListener;
 		this.options = options;
 		this.result = new DownOperationResult();
 		this.localDatabase = new SqlDatabase(config);
@@ -468,7 +475,7 @@ public class DownOperation extends Operation {
 
 		return unknownRemoteBranches;
 	}
-
+	
 	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager) throws Exception {
 		return (new LsRemoteOperation(config, transferManager).execute()).getUnknownRemoteDatabases();
 	}
@@ -477,12 +484,19 @@ public class DownOperation extends Operation {
 			throws StorageException {
 		logger.log(Level.INFO, "Downloading unknown databases.");
 		List<File> unknownRemoteDatabasesInCache = new ArrayList<File>();
-
+		
+		int i = 0;
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
+			
 			transferManager.download(new DatabaseRemoteFile(remoteFile.getName()), unknownRemoteDatabaseFileInCache);
+			i++;
+			if (watchEventListener != null) {
+				watchEventListener.update(new WatchEvent(remoteFile.getName(), WatchEventType.DOWNLOADING, i, unknownRemoteDatabases.size()));
+			}
+			
 
 			unknownRemoteDatabasesInCache.add(unknownRemoteDatabaseFileInCache);
 			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
