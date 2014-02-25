@@ -17,17 +17,23 @@
  */
 package org.syncany.tests.connection.plugins.unreliable_local;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class UploadInterruptedTest {
+	private static final Logger logger = Logger.getLogger(UploadInterruptedTest.class.getSimpleName());
+	
 	@Test
 	public void testUnreliableUpload() throws Exception {
 		// Setup 
@@ -35,33 +41,34 @@ public class UploadInterruptedTest {
 			Arrays.asList(new String[] { 
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+				// 1st upload (= multichunk) fails	
+				"rel=1 .+upload.+multichunk",    
+				// first upload of a database fails 
+				// this is the fourth upload operation, because the first multichunk fails
+				// then for the second try two multichuncks are uploaded
+				"rel=4 .+upload.+db" 
 					
-				"rel=1 .+upload.+multichunk",     // 1st upload (= multichunk) fails
-				"rel=5 .+upload.+db-A-0000000002" // 2nd upload of db-A-2 fails
 			}
 		));
 		
 		TestClient clientA = new TestClient("A", testConnection);
-		Thread clientThreadA = clientA.watchAsThread(200);
-		
-		clientThreadA.start();
 		
 		int i = 0;
 		while (i++ < 5) {
 			clientA.createNewFile("A-original-"+i, 50*1024);
-			Thread.sleep(700);
+			try {
+				clientA.sync();
+			}
+			catch (StorageException e) {
+				logger.log(Level.INFO, e.getMessage());
+			}
 		}
-		
-		Thread.sleep(1000);
-		clientThreadA.interrupt();
-		
+				
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000001").exists());
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000002").exists());
 		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000003").exists());
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000004").exists());
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
-		
-		// TODO [medium] This test fails in ScenarioTestSuite and DatabaseTestSuite is run before, but not if OtherShortTestSuite is run in standalone?!
 		
 		// Tear down
 		clientA.cleanup();
