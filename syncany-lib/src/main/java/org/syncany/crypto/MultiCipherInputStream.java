@@ -50,12 +50,14 @@ public class MultiCipherInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (!headerRead) {
-			readHeader();		
-			headerRead = true;
-		}
-		
+		readHeader();
 		return cipherInputStream.read();
+	}
+	
+	@Override
+	public int read(byte[] b, int off, int len) throws IOException {
+		readHeader();
+		return cipherInputStream.read(b, off, len);
 	}
 	
 	@Override
@@ -64,18 +66,21 @@ public class MultiCipherInputStream extends InputStream {
 	}	
 	
 	private void readHeader() throws IOException {
-		try {
-			readAndVerifyMagicNoHmac(underlyingInputStream);
-			readAndVerifyVersionNoHmac(underlyingInputStream);
-			
-			headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
-			cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
-			
-			readAndVerifyHmac(underlyingInputStream, headerHmac);			
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}
+		if (!headerRead) {
+			try {
+				readAndVerifyMagicNoHmac(underlyingInputStream);
+				readAndVerifyVersionNoHmac(underlyingInputStream);
+
+				headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
+				cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
+
+				readAndVerifyHmac(underlyingInputStream, headerHmac);			
+			}
+			catch (Exception e) {
+				throw new IOException(e);
+			}
+			headerRead = true;
+		}
 	}
 
 	private void readAndVerifyMagicNoHmac(InputStream inputStream) throws IOException {
