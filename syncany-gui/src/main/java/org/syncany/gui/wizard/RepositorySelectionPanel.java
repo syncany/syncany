@@ -77,6 +77,7 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 	private Button testButton;
 	private Label testResultLabel;
 	private Composite composite_1;
+	private Button btnCheckButton;
 	
 	/**
 	 * Create the dialog.
@@ -196,6 +197,10 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 		composite_1 = new Composite(createComposite, SWT.NONE);
 		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
 		composite_1.setLayout(new GridLayout(2, false));
+		
+		btnCheckButton = new Button(composite_1, SWT.CHECK);
+		btnCheckButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		btnCheckButton.setText("Create repository if required");
 		
 		testResultLabel = new Label(composite_1, SWT.WRAP);
 		testResultLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
