@@ -17,6 +17,7 @@ branches:
     
 notifications:
   email: false
+  irc: "chat.freenode.net#syncany"
   
 before_install:
   # FPM setup (Ruby-based)
