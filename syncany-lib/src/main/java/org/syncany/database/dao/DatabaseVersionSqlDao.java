@@ -97,48 +97,57 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException("Cannot persist database.", e);
 		}
 	}
-
-	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
-		long databaseVersionId = -1;
+	
+	public long writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
+		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersionHeader);
+		writeVectorClock(connection, databaseVersionId, databaseVersionHeader.getVectorClock());
 		
-		try(PreparedStatement preparedStatement = connection.prepareStatement(
+		return databaseVersionId;
+	}
+	
+	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
+		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader());
+		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
+		
+		chunkDao.writeChunks(connection, databaseVersion.getChunks());
+		multiChunkDao.writeMultiChunks(connection, databaseVersion.getMultiChunks());
+		fileContentDao.writeFileContents(connection, databaseVersion.getFileContents());
+		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
+	}	
+	
+	private long writeDatabaseVersionHeaderInternal(Connection connection, DatabaseVersionHeader databaseVersionHeader) throws SQLException {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				DatabaseConnectionFactory.getStatement("/sql/databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 	
 			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
-			preparedStatement.setTimestamp(2, new Timestamp(databaseVersion.getHeader().getDate().getTime()));
-			preparedStatement.setString(3, databaseVersion.getHeader().getClient());
-			preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
+			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
+			preparedStatement.setString(3, databaseVersionHeader.getClient());
+			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
 	
 			preparedStatement.executeUpdate();	
 			
 			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {				
 				if (resultSet.next()) {
-					databaseVersionId = resultSet.getLong(1);
+					return resultSet.getLong(1);
 				}
 				else {
 					throw new SQLException("Cannot get new database version ID");
 				}
 			}
 		}
-
-		writeVectorClock(connection, databaseVersionId, databaseVersion.getVectorClock());
-
-		chunkDao.writeChunks(connection, databaseVersion.getChunks());
-		multiChunkDao.writeMultiChunks(connection, databaseVersion.getMultiChunks());
-		fileContentDao.writeFileContents(connection, databaseVersion.getFileContents());
-		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
 	}
 
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {
-		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/databaseversion.insert.all.writeVectorClock.sql");
-
-			preparedStatement.setLong(1, databaseVersionId);
-			preparedStatement.setString(2, vectorClockEntry.getKey());
-			preparedStatement.setLong(3, vectorClockEntry.getValue());
-
-			preparedStatement.executeUpdate();
-			preparedStatement.close();
+		try (PreparedStatement preparedStatement = getStatement(connection, "/sql/databaseversion.insert.all.writeVectorClock.sql")) {
+			for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
+				preparedStatement.setLong(1, databaseVersionId);
+				preparedStatement.setString(2, vectorClockEntry.getKey());
+				preparedStatement.setLong(3, vectorClockEntry.getValue());
+	
+				preparedStatement.addBatch();				
+			}
+			
+			preparedStatement.executeBatch();
 		}
 	}
 

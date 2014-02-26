@@ -19,7 +19,6 @@ package org.syncany.operations;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -48,11 +47,14 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 
 import com.google.common.collect.Lists;
 
 public class CleanupOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
+	private static final String LOCK_CLIENT_NAME = "lock";
 
 	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
@@ -81,6 +83,8 @@ public class CleanupOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Cleanup' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		checkPreconditions();		
+		
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
 		}
@@ -95,6 +99,25 @@ public class CleanupOperation extends Operation {
 		}
 
 		return null;
+	}
+
+	private void checkPreconditions() throws Exception {
+		if (hasDirtyDatabaseVersions()) {
+			throw new Exception("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
+		}
+		
+		if (hasLocalChanges()) {
+			throw new Exception("Local changes detected. Please call 'up' first'.");
+		}
+		
+		if (hasRemoteChanges()) {
+			throw new Exception("Remote changes detected or repository is locked by another user. Please call 'down' first.");
+		}
+	}
+
+	private boolean hasLocalChanges() throws Exception {
+		StatusOperationResult statusOperationResult = new StatusOperation(config).execute();
+		return statusOperationResult.getChangeSet().hasChanges();
 	}
 
 	/**
@@ -113,45 +136,39 @@ public class CleanupOperation extends Operation {
 	 * @throws Exception 
 	 */
 	private void removeOldVersions() throws Exception {
-		if (hasDirtyDatabaseVersions()) {
-			throw new Exception("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
-		}
-
 		lockRemoteRepository(); // Write-lock sufficient?
 		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
 
 		Map<FileHistoryId, Long> mostRecentPurgeFileVersions = findMostRecentPurgeFileVersions(options.getKeepVersionsCount());
-
-		// Local
+		boolean purgeDatabaseVersionNecessary = mostRecentPurgeFileVersions.size() > 0;
 		
-		// First, remove file versions that are not longer needed
-		removeFileVersions(options.getKeepVersionsCount());
-		
-		if (options.isRemoveDeletedVersions()) {
-			removeDeletedVersons();
+		if (purgeDatabaseVersionNecessary) {
+			// Local: First, remove file versions that are not longer needed
+			localDatabase.removeFileVersions(options.getKeepVersionsCount());
+			localDatabase.removeDeletedVersions();
+	
+			// Local: Then, determine what must be changed remotely and remove it locally
+			List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
+	
+			localDatabase.removeUnreferencedDatabaseEntities();		
+			localDatabase.commit();
+	
+			// Local: Create "purge database version"
+			DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
+			
+			localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
+			localDatabase.commit();
+			
+			// Remote: serialize purge database version to file and upload
+			DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
+			File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
+	
+			uploadPurgeFile(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
+			remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 		}
-
-		// Then, determine what must be changed remotely and remove it locally
-		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
-
-		localDatabase.removeUnreferencedDatabaseEntities();		
-		localDatabase.commit();
-
-		// Remote
-		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
-		
-		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
-		File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
-
-		uploadPurgeFile(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
-		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// stopLockRenewalThread();
 		unlockRemoteRepository();
-	}
-
-	private void removeDeletedVersons() throws SQLException {
-		localDatabase.removeDeletedVersions();
 	}
 
 	private void uploadPurgeFile(File tempPruneFile, DatabaseRemoteFile newPruneRemoteFile) throws StorageException {
@@ -213,10 +230,6 @@ public class CleanupOperation extends Operation {
 		return new DatabaseRemoteFile(config.getMachineName(), localMachineVersion);
 	}
 
-	private void removeFileVersions(int keepVersionsCount) throws SQLException {
-		localDatabase.removeFileVersions(keepVersionsCount);
-	}
-
 	private void remoteDeleteUnusedMultiChunks(List<MultiChunkId> unusedMultiChunks) throws StorageException {
 		logger.log(Level.INFO, "- Deleting remote multichunks ...");
 		
@@ -235,11 +248,16 @@ public class CleanupOperation extends Operation {
 		return localDatabase.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}
 
+	private boolean hasRemoteChanges() throws Exception { 
+		LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config).execute();		
+		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
+	}
+	
 	private void lockRemoteRepository() throws StorageException, IOException {
 		File tempLockFile = File.createTempFile("syncany", "lock");
 		tempLockFile.deleteOnExit();
 
-		lockFile = new DatabaseRemoteFile("lock", System.currentTimeMillis());
+		lockFile = new DatabaseRemoteFile(LOCK_CLIENT_NAME, System.currentTimeMillis());
 		transferManager.upload(tempLockFile, lockFile);
 
 		tempLockFile.delete();
@@ -332,7 +350,6 @@ public class CleanupOperation extends Operation {
 		private boolean mergeRemoteFiles = true;
 		private boolean removeOldVersions = false;
 		private int keepVersionsCount = 5;
-		private boolean removeDeletedVersions = true;
 		private boolean repackageMultiChunks = true;
 		private double repackageUnusedThreshold = 0.7;
 
@@ -375,14 +392,6 @@ public class CleanupOperation extends Operation {
 		public void setRepackageUnusedThreshold(double repackageUnusedThreshold) {
 			this.repackageUnusedThreshold = repackageUnusedThreshold;
 		}
-
-		public boolean isRemoveDeletedVersions() {
-			return removeDeletedVersions;
-		}
-
-		public void setRemoveDeletedVersions(boolean removeDeletedVersions) {
-			this.removeDeletedVersions = removeDeletedVersions;
-		}				
 	}
 
 	public static class CleanupOperationResult implements OperationResult {

@@ -126,6 +126,10 @@ public class SqlDatabase {
 	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
 		databaseVersionDao.persistDatabaseVersion(databaseVersion);
 	}
+	
+	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
+		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
+	}
 
 	public void markDatabaseVersionDirty(VectorClock vectorClock) {
 		databaseVersionDao.markDatabaseVersionDirty(vectorClock);

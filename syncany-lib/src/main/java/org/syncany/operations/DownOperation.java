@@ -43,9 +43,9 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
@@ -114,7 +114,6 @@ public class DownOperation extends Operation {
 		this.localDatabase = new SqlDatabase(config);
 		this.transferManager = config.getConnection().createTransferManager();
 		this.databaseReconciliator = new DatabaseReconciliator();
-
 	}
 
 	@Override
@@ -210,14 +209,14 @@ public class DownOperation extends Operation {
 				
 				purgeFileVersions.put(purgeFileHistory.getFileId(), purgeFileHistory.getLastVersion());				
 			}
-		}
-		
-		if (purgeFileVersions.size() > 0) {
+			
 			localDatabase.removeFileVersions(purgeFileVersions);
-			localDatabase.removeDeletedVersions(); // TODO [high] Note that this mus tbe according to the cleanup performed (--> must be indicated in the database version!) 
+			localDatabase.removeDeletedVersions();  
 			localDatabase.removeUnreferencedDatabaseEntities();
+			localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
+			
 			localDatabase.commit();
-		}
+		}		
 	}
 
 	private void applyDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase) {
@@ -531,6 +530,7 @@ public class DownOperation extends Operation {
 
 	private List<File> downloadUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> unknownRemoteDatabases)
 			throws StorageException {
+		
 		logger.log(Level.INFO, "Downloading unknown databases.");
 		List<File> unknownRemoteDatabasesInCache = new ArrayList<File>();
 

@@ -254,24 +254,19 @@ public class TestAssertUtil {
 				boolean actualNext = actualResultSet.next();
 				
 				if (expectedNext && !actualNext) {
-					fail("Actual is missing the following row from expected: "+getFormattedColumn(expectedResultSet));
+					fail("Table "+tableName+": Actual is missing the following row from expected: "+getFormattedColumn(expectedResultSet));
 				}
 				else if (!expectedNext && actualNext) {
-					fail("Actual has a row that was not expected: "+getFormattedColumn(actualResultSet));
+					fail("Table "+tableName+": Actual has a row that was not expected: "+getFormattedColumn(actualResultSet));
 				}
 				else if (!expectedNext && !actualNext) {
 					break;
 				}
 				else {
 					String expectedFormattedColumn = getFormattedColumn(expectedResultSet);
-					String actualFormattedColumn = getFormattedColumn(actualResultSet);
+					String actualFormattedColumn = getFormattedColumn(actualResultSet);					
 					
-					if (logger.isLoggable(Level.FINEST)) {
-						//logger.log(Level.FINEST, "  Expected: "+expectedFormattedColumn);
-						//logger.log(Level.FINEST, "  Actual:   "+actualFormattedColumn);
-					}
-					
-					assertEquals("Columns of table "+tableName+" actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
+					assertEquals("Table "+tableName+": Columns of actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
 				}								
 			}		
 		}

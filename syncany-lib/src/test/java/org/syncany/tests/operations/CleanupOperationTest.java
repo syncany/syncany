@@ -41,7 +41,6 @@ public class CleanupOperationTest {
 		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
 		options.setRepackageMultiChunks(false);
-		options.setRemoveDeletedVersions(true);
 		options.setKeepVersionsCount(2);
 
 		// Run
