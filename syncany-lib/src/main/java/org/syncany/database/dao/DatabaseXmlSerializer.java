@@ -35,6 +35,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
 
@@ -76,19 +77,19 @@ public class DatabaseXmlSerializer {
 		}
 	}		
 
-	public void load(MemoryDatabase db, File databaseFile) throws IOException {
-        load(db, databaseFile, false);
+	public void load(MemoryDatabase db, File databaseFile, DatabaseVersionType filterType) throws IOException {
+        load(db, databaseFile, false, filterType);
 	}
 	
-	public void load(MemoryDatabase db, File databaseFile, boolean headersOnly) throws IOException {
-        load(db, databaseFile, null, null, headersOnly);
+	public void load(MemoryDatabase db, File databaseFile, boolean headersOnly, DatabaseVersionType filterType) throws IOException {
+        load(db, databaseFile, null, null, headersOnly, filterType);
 	}
 	
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion) throws IOException {
-		load(db, databaseFile, fromVersion, toVersion, false);
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseVersionType filterType) throws IOException {
+		load(db, databaseFile, fromVersion, toVersion, false, filterType);
 	}
 	
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly, DatabaseVersionType filterType) throws IOException {
         InputStream is;
         
 		if (transformer == null) {
@@ -104,7 +105,7 @@ public class DatabaseXmlSerializer {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
 			
-			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, headersOnly));
+			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, headersOnly, filterType));
         }
         catch (Exception e) {
         	throw new IOException(e);

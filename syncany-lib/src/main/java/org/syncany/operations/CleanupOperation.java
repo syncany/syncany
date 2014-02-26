@@ -134,11 +134,7 @@ public class CleanupOperation extends Operation {
 		// Then, determine what must be changed remotely and remove it locally
 		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
 
-		deleteUnusedFileHistories();
-		deleteUnusedFileContents();
-		deleteUnusedMultiChunks();
-		deleteUnusedChunks();
-		
+		localDatabase.removeUnreferencedDatabaseEntities();		
 		localDatabase.commit();
 
 		// Remote
@@ -154,20 +150,12 @@ public class CleanupOperation extends Operation {
 		unlockRemoteRepository();
 	}
 
-	private void deleteUnusedFileHistories() throws SQLException {
-		localDatabase.removeUnreferencedFileHistories();
-	}
-
 	private void removeDeletedVersons() throws SQLException {
 		localDatabase.removeDeletedVersions();
 	}
 
 	private void uploadPurgeFile(File tempPruneFile, DatabaseRemoteFile newPruneRemoteFile) throws StorageException {
 		transferManager.upload(tempPruneFile, newPruneRemoteFile);
-	}
-
-	private void deleteUnusedChunks() {
-		localDatabase.removeUnreferencedChunks();
 	}
 
 	private List<MultiChunkId> findUnusedMultiChunkIds() {
@@ -223,14 +211,6 @@ public class CleanupOperation extends Operation {
 	private DatabaseRemoteFile findNewPurgeRemoteFile(DatabaseVersionHeader purgeDatabaseVersionHeader) throws StorageException {
 		Long localMachineVersion = purgeDatabaseVersionHeader.getVectorClock().getClock(config.getMachineName());
 		return new DatabaseRemoteFile(config.getMachineName(), localMachineVersion);
-	}
-
-	private void deleteUnusedFileContents() throws SQLException {
-		localDatabase.removeUnreferencedFileContents();
-	}
-
-	private void deleteUnusedMultiChunks() throws SQLException {
-		localDatabase.removeUnreferencedMultiChunks(); 
 	}
 
 	private void removeFileVersions(int keepVersionsCount) throws SQLException {

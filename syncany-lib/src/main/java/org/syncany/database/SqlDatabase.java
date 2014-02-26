@@ -83,6 +83,13 @@ public class SqlDatabase {
 	public void commit() throws SQLException {
 		connection.commit();
 	}
+
+	public void removeUnreferencedDatabaseEntities() throws SQLException {
+		removeUnreferencedFileHistories();
+		removeUnreferencedFileContents();
+		removeUnreferencedMultiChunks();
+		removeUnreferencedChunks();
+	}
 	
 	// Application
 
@@ -166,7 +173,7 @@ public class SqlDatabase {
 		return fileHistoryDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}
 	
-	public void removeUnreferencedFileHistories() throws SQLException {
+	private void removeUnreferencedFileHistories() throws SQLException {
 		fileHistoryDao.removeUnreferencedFileHistories();
 	}
 
@@ -178,6 +185,10 @@ public class SqlDatabase {
 	
 	public void removeFileVersions(int keepVersionsCount) throws SQLException {
 		fileVersionDao.removeFileVersions(keepVersionsCount);		
+	}
+	
+	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
+		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}
 	
 	public void removeDeletedVersions() throws SQLException {
@@ -216,7 +227,7 @@ public class SqlDatabase {
 		return multiChunkDao.getUnusedMultiChunkIds();
 	}
 	
-	public void removeUnreferencedMultiChunks() throws SQLException {
+	private void removeUnreferencedMultiChunks() throws SQLException {
 		multiChunkDao.removeUnreferencedMultiChunks();
 	}
 
@@ -230,7 +241,7 @@ public class SqlDatabase {
 		return chunkDao.getChunk(chunkChecksum);
 	}	
 
-	public void removeUnreferencedChunks() {
+	private void removeUnreferencedChunks() {
 		chunkDao.removeUnreferencedChunks();
 	}
 
@@ -240,7 +251,7 @@ public class SqlDatabase {
 		return fileContentDao.getFileContent(fileChecksum, includeChunkChecksums);
 	}
 
-	public void removeUnreferencedFileContents() throws SQLException {
+	private void removeUnreferencedFileContents() throws SQLException {
 		fileContentDao.removeUnreferencedFileContents();
 	}
 }

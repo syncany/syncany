@@ -52,6 +52,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private VectorClock versionFrom;
 	private VectorClock versionTo;
 	private boolean headersOnly;
+	private DatabaseVersionType filterType;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -61,12 +62,13 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MultiChunkEntry multiChunk;
 	private PartialFileHistory fileHistory;
 	
-	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly) {
+	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly, DatabaseVersionType filterType) {
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
 		this.versionTo = toVersion;
 		this.headersOnly = headersOnly;
+		this.filterType = filterType;
 	}
 	
 	@Override
@@ -78,7 +80,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 		}			
 		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/type")) {
 			String typeStr = attributes.getValue("value");
-			databaseVersion.getHeader().setType(DatabaseVersionType.valueOf(typeStr));
+			databaseVersion.getHeader().setType(DatabaseVersionType.valueOf(typeStr));			
 		}
 		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/time")) {
 			Date timeValue = new Date(Long.parseLong(attributes.getValue("value")));
@@ -193,17 +195,22 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
-			if (vectorClockInLoadRange) {
+			// Type filter is true if no filter is set (null) or the type matches
+			boolean typeFilterMatches = filterType == null || (filterType != null && filterType == databaseVersion.getHeader().getType()); 
+			
+			if (vectorClockInLoadRange && typeFilterMatches) {
 				database.addDatabaseVersion(databaseVersion);
 				logger.log(Level.INFO, "   + Added database version "+databaseVersion.getHeader());
 			}
 			else {
-				logger.log(Level.INFO, "   + Ignoring database version "+databaseVersion.getHeader()+", not in load range: "+versionFrom+" - "+versionTo);
+				logger.log(Level.INFO, "   + IGNORING database version " + databaseVersion.getHeader() + " (not in load range " + versionFrom + " - "
+						+ versionTo + " OR type filter mismatch: " + filterType + " =?= " + databaseVersion.getHeader().getType());
 			}
 
 			databaseVersion = null;
+			vectorClockInLoadRange = true;
 		}	
-		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock")) {				
+		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/vectorClock")) {			
 			vectorClockInLoadRange = vectorClockInRange(vectorClock, versionFrom, versionTo);
 			
 			databaseVersion.setVectorClock(vectorClock);

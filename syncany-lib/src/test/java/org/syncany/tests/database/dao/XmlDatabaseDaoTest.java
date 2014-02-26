@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
@@ -398,7 +399,7 @@ public class XmlDatabaseDaoTest {
 		MemoryDatabase readDatabase = new MemoryDatabase();
 		
 		DatabaseXmlSerializer readDAO = new DatabaseXmlSerializer();
-		readDAO.load(readDatabase, writtenDatabaseFile);
+		readDAO.load(readDatabase, writtenDatabaseFile, DatabaseVersionType.DEFAULT);
 		
 		for (int i=0; i<10; i++) {
 			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersions.get(i);

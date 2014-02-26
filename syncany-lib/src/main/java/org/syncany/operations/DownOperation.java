@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,12 +43,15 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
@@ -153,7 +157,7 @@ public class DownOperation extends Operation {
 		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
 
 		// 5. Prune local stuff (if local conflicts exist)
-		pruneConflictingLocalBranch(winnersBranch);
+		purgeConflictingLocalBranch(winnersBranch);
 
 		// 6. Apply winner's branch
 		applyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
@@ -177,7 +181,8 @@ public class DownOperation extends Operation {
 		}
 		else {
 			logger.log(Level.INFO, "- Loading winners database ...");
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache);
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache, DatabaseVersionType.DEFAULT);
+			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache, DatabaseVersionType.PURGE);
 
 			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
 			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
@@ -186,34 +191,62 @@ public class DownOperation extends Operation {
 			downloadAndDecryptMultiChunks(unknownMultiChunks);
 
 			applyFileSystemActions(actions);
-
-			// Add winners database to local database
-			// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
-			logger.log(Level.INFO, "   Adding database versions to SQL database ...");
-			
-			for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
-				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
-
-				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());				
-				localDatabase.persistDatabaseVersion(applyDatabaseVersion);
-			}
+			applyDatabaseVersions(winnersApplyBranch, winnersDatabase);
+			applyPurgeDatabaseVersions(winnersPurgeDatabase);			
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
 	}
 
-	private void pruneConflictingLocalBranch(DatabaseBranch winnersBranch) throws Exception {
-		DatabaseBranch localPruneBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
-		logger.log(Level.INFO, "- Database versions to REMOVE locally: " + localPruneBranch);
+	private void applyPurgeDatabaseVersions(MemoryDatabase winnersPurgeDatabase) throws SQLException {
+		logger.log(Level.INFO, "   Applying PURGE database versions ...");
 
-		if (localPruneBranch.size() == 0) {
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+		
+		for (DatabaseVersion purgeDatabaseVersion : winnersPurgeDatabase.getDatabaseVersions()) {
+			for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
+				logger.log(Level.INFO, "   + Purging file history {0}, with versions <= {1}", new Object[] { 
+						purgeFileHistory.getFileId().toString(), purgeFileHistory.getLastVersion().getVersion() });
+				
+				purgeFileVersions.put(purgeFileHistory.getFileId(), purgeFileHistory.getLastVersion());				
+			}
+		}
+		
+		if (purgeFileVersions.size() > 0) {
+			localDatabase.removeFileVersions(purgeFileVersions);
+			localDatabase.removeDeletedVersions(); // TODO [high] Note that this mus tbe according to the cleanup performed (--> must be indicated in the database version!) 
+			localDatabase.removeUnreferencedDatabaseEntities();
+			localDatabase.commit();
+		}
+	}
+
+	private void applyDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase) {
+		// Add winners database to local database
+		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
+		logger.log(Level.INFO, "   Adding database versions to SQL database ...");
+		
+		for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
+			if (applyDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
+				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
+
+				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());				
+				localDatabase.persistDatabaseVersion(applyDatabaseVersion);
+			}
+		}
+	}
+
+	private void purgeConflictingLocalBranch(DatabaseBranch winnersBranch) throws Exception {
+		DatabaseBranch localPurgeBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
+		logger.log(Level.INFO, "- Database versions to REMOVE locally: " + localPurgeBranch);
+
+		if (localPurgeBranch.size() == 0) {
 			logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
 		}
 		else {
 			// Load dirty database (if existent)
 			logger.log(Level.INFO, "  + Marking databases as DIRTY locally ...");
 
-			for (DatabaseVersionHeader databaseVersionHeader : localPruneBranch.getAll()) {
+			for (DatabaseVersionHeader databaseVersionHeader : localPurgeBranch.getAll()) {
 				logger.log(Level.INFO, "    * MASTER->DIRTY: "+databaseVersionHeader);
 				localDatabase.markDatabaseVersionDirty(databaseVersionHeader.getVectorClock());
 			
@@ -402,19 +435,20 @@ public class DownOperation extends Operation {
 	 * 
 	 * <p><b>Example:</b><br />
 	 * <pre>
-	 *  db-A-0001   (A1)     Already known
-	 *  db-A-0004   (A2)     Already known
-	 *              (A3)     Already known
-	 *              (A4)     Part of winner's branch
-	 *  db-B-0001   (A4,B1)  Part of winner's branch
-	 *  db-A-0005   (A5,B1)  Part of winner's branch
+	 *  db-A-0001   (A1)     Already known             Not loaded 
+	 *  db-A-0005   (A2)     Already known             Not loaded 
+	 *              (A3)     Already known             Not loaded 
+	 *              (A4)     Part of winner's branch   Loaded
+	 *              (A5)     Purge database version    Ignored (only DEFAULT)
+	 *  db-B-0001   (A5,B1)  Part of winner's branch   Loaded
+	 *  db-A-0006   (A6,B1)  Part of winner's branch   Loaded
 	 * </pre>
 	 * 
-	 * <p>In this example, only (A4) must be loaded from db-A-004, and not all three database versions.
+	 * <p>In this example, only (A4)-(A5) must be loaded from db-A-0005, and not all four database versions.
 	 * 
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
 	 */
-	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, List<File> remoteDatabases) throws IOException, StorageException {
+	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, List<File> remoteDatabases, DatabaseVersionType filterType) throws IOException, StorageException {
 		// Make map 'short filename' -> 'full filename'
 		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
 
@@ -450,7 +484,7 @@ public class DownOperation extends Operation {
 			if (isLoadableDatabaseFile) {
 				// Load database
 				logger.log(Level.INFO, "- Loading " + databaseFileForRange + " (from " + clientVersionFrom + ", to " + clientVersionTo + ") ...");
-				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo);
+				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo, filterType);
 
 				// Reset range
 				clientName = null;
@@ -476,7 +510,7 @@ public class DownOperation extends Operation {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 			DatabaseRemoteFile remoteDatabaseFile = new DatabaseRemoteFile(remoteDatabaseFileInCache.getName());
-			dbDAO.load(remoteDatabase, remoteDatabaseFileInCache, true); // only load headers!
+			dbDAO.load(remoteDatabase, remoteDatabaseFileInCache, true, null); // only load headers!
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();
 
 			// Populate branches
