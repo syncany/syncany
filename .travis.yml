@@ -20,6 +20,9 @@ notifications:
   irc: "chat.freenode.net#syncany"
   
 before_install:
+  # Update APT (necessary!)
+  - sudo apt-get update
+
   # FPM setup (Ruby-based)
   - sudo rm /etc/profile.d/rvm.sh
   - sudo apt-get install -y -q ruby ruby-dev build-essential rubygems ruby-rvm 
