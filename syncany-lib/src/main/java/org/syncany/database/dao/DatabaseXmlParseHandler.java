@@ -133,12 +133,13 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk")) {
 				String multChunkIdStr = attributes.getValue("id");
 				MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(multChunkIdStr);
+				long size = Long.parseLong(attributes.getValue("size"));
 
 				if (multiChunkId == null) {
 					throw new SAXException("Cannot read ID from multichunk " + multChunkIdStr);
 				}
 
-				multiChunk = new MultiChunkEntry(multiChunkId);
+				multiChunk = new MultiChunkEntry(multiChunkId, size);
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/multiChunks/multiChunk/chunkRefs/chunkRef")) {
 				String chunkChecksumStr = attributes.getValue("ref");

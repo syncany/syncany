@@ -60,6 +60,8 @@ public class CleanupOperation extends Operation {
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 
 	private CleanupOperationOptions options;
+	private CleanupOperationResult result;
+
 	private TransferManager transferManager;
 	private SqlDatabase localDatabase;
 
@@ -73,8 +75,12 @@ public class CleanupOperation extends Operation {
 		super(config);
 
 		this.options = options;
+		this.result = new CleanupOperationResult();
+
 		this.transferManager = config.getConnection().createTransferManager();
 		this.localDatabase = new SqlDatabase(config);
+		
+		this.lockFile = null;
 	}
 
 	@Override
@@ -82,8 +88,12 @@ public class CleanupOperation extends Operation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Cleanup' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		checkPreconditions();		
+		
+		 CleanupResultCode preconditionResult = checkPreconditions();
+		
+		if (preconditionResult != CleanupResultCode.OK) {
+			return new CleanupOperationResult(preconditionResult);
+		}
 		
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
@@ -98,21 +108,34 @@ public class CleanupOperation extends Operation {
 			// repackageMultiChunks();
 		}
 
-		return null;
+		return updateResultCode(result);
 	}
 
-	private void checkPreconditions() throws Exception {
+	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
+		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunksCount() > 0 || result.getRemovedOldVersionsCount() > 0) {
+			result.setResultCode(CleanupResultCode.OK);			
+		}
+		else {
+			result.setResultCode(CleanupResultCode.OK_NOTHING_DONE);
+		}
+		
+		return result;
+	}
+
+	private CleanupResultCode checkPreconditions() throws Exception {
 		if (hasDirtyDatabaseVersions()) {
-			throw new Exception("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
+			return CleanupResultCode.NOK_DIRTY_LOCAL;
 		}
 		
 		if (hasLocalChanges()) {
-			throw new Exception("Local changes detected. Please call 'up' first'.");
+			return CleanupResultCode.NOK_LOCAL_CHANGES;
 		}
 		
 		if (hasRemoteChanges()) {
-			throw new Exception("Remote changes detected or repository is locked by another user. Please call 'down' first.");
+			return CleanupResultCode.NOK_REMOTE_CHANGES;
 		}
+		
+		return CleanupResultCode.OK;
 	}
 
 	private boolean hasLocalChanges() throws Exception {
@@ -136,39 +159,49 @@ public class CleanupOperation extends Operation {
 	 * @throws Exception 
 	 */
 	private void removeOldVersions() throws Exception {
-		lockRemoteRepository(); // Write-lock sufficient?
-		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
-
 		Map<FileHistoryId, Long> mostRecentPurgeFileVersions = findMostRecentPurgeFileVersions(options.getKeepVersionsCount());
 		boolean purgeDatabaseVersionNecessary = mostRecentPurgeFileVersions.size() > 0;
 		
-		if (purgeDatabaseVersionNecessary) {
-			// Local: First, remove file versions that are not longer needed
-			localDatabase.removeFileVersions(options.getKeepVersionsCount());
-			localDatabase.removeDeletedVersions();
-	
-			// Local: Then, determine what must be changed remotely and remove it locally
-			List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
-	
-			localDatabase.removeUnreferencedDatabaseEntities();		
-			localDatabase.commit();
-	
-			// Local: Create "purge database version"
-			DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
-			
-			localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
-			localDatabase.commit();
-			
-			// Remote: serialize purge database version to file and upload
-			DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
-			File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
-	
-			uploadPurgeFile(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
-			remoteDeleteUnusedMultiChunks(unusedMultiChunks);
-		}
+		if (!purgeDatabaseVersionNecessary) {
+			logger.log(Level.INFO, "- Old verison removal: Not necessary (no file histories longer than {0} versions found).", options.getKeepVersionsCount());
+			return;
+		}		
+		
+		logger.log(Level.INFO, "- Old verison removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
+				mostRecentPurgeFileVersions.size(), options.getKeepVersionsCount() });
+		
+		lockRemoteRepository(); // Write-lock sufficient?
+		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
+
+		// Local: First, remove file versions that are not longer needed
+		localDatabase.removeFileVersions(options.getKeepVersionsCount());
+		localDatabase.removeDeletedVersions();
+
+		// Local: Then, determine what must be changed remotely and remove it locally
+		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
+
+		localDatabase.removeUnreferencedDatabaseEntities();		
+		localDatabase.commit();
+
+		// Local: Create "purge database version"
+		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
+		
+		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
+		localDatabase.commit();
+		
+		// Remote: serialize purge database version to file and upload
+		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
+		File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
+
+		uploadPurgeFile(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
+		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
+		
+		// Update stats
+		result.setRemovedOldVersionsCount(mostRecentPurgeFileVersions.size());
+		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
 
 		// stopLockRenewalThread();
-		unlockRemoteRepository();
+		unlockRemoteRepository();		
 	}
 
 	private void uploadPurgeFile(File tempPruneFile, DatabaseRemoteFile newPruneRemoteFile) throws StorageException {
@@ -258,12 +291,15 @@ public class CleanupOperation extends Operation {
 		tempLockFile.deleteOnExit();
 
 		lockFile = new DatabaseRemoteFile(LOCK_CLIENT_NAME, System.currentTimeMillis());
+
+		logger.log(Level.INFO, "- Setting repository write lock: uploading {0} ...", lockFile);
 		transferManager.upload(tempLockFile, lockFile);
 
 		tempLockFile.delete();
 	}
 
 	private void unlockRemoteRepository() throws StorageException {
+		logger.log(Level.INFO, "- Removing repository lock: deleting {0} ...", lockFile);
 		transferManager.delete(lockFile);
 	}
 
@@ -283,14 +319,15 @@ public class CleanupOperation extends Operation {
 		TreeMap<String, DatabaseRemoteFile> ownDatabaseFilesMap = retrieveOwnRemoteDatabaseFiles();
 
 		if (ownDatabaseFilesMap.size() <= MAX_KEEP_DATABASE_VERSIONS) {
-			logger.log(Level.INFO, "- Merge remote files: Not necessary (" + ownDatabaseFilesMap.size() + " database files, max. "
-					+ MAX_KEEP_DATABASE_VERSIONS + ")");
+			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] { ownDatabaseFilesMap.size(),
+					MAX_KEEP_DATABASE_VERSIONS });
+			
 			return;
 		}
 
 		// // Now do the merge!
-		logger.log(Level.INFO, "- Merge remote files: Merging necessary (" + ownDatabaseFilesMap.size() + " database files, max. "
-				+ MAX_KEEP_DATABASE_VERSIONS + ") ...");
+		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
+				new Object[] { ownDatabaseFilesMap.size(), MAX_KEEP_DATABASE_VERSIONS });
 
 		// 1. Determine files to delete remotely
 		List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
@@ -331,6 +368,9 @@ public class CleanupOperation extends Operation {
 		
 		transferManager.delete(lastRemoteMergeDatabaseFile);
 		transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+		
+		// Update stats
+		result.setMergedDatabaseFilesCount(toDeleteDatabaseFiles.size());
 	}
 
 	private TreeMap<String, DatabaseRemoteFile> retrieveOwnRemoteDatabaseFiles() throws StorageException {
@@ -348,7 +388,7 @@ public class CleanupOperation extends Operation {
 
 	public static class CleanupOperationOptions implements OperationOptions {
 		private boolean mergeRemoteFiles = true;
-		private boolean removeOldVersions = false;
+		private boolean removeOldVersions = true;
 		private int keepVersionsCount = 5;
 		private boolean repackageMultiChunks = true;
 		private double repackageUnusedThreshold = 0.7;
@@ -394,7 +434,54 @@ public class CleanupOperation extends Operation {
 		}
 	}
 
+	public enum CleanupResultCode {
+		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR
+	}
+	
 	public static class CleanupOperationResult implements OperationResult {
-		// Nothing
+		private CleanupResultCode resultCode = CleanupResultCode.OK_NOTHING_DONE;
+		private int mergedDatabaseFilesCount = 0;
+		private int removedOldVersionsCount = 0;
+		private int removedMultiChunksCount = 0;
+
+		public CleanupOperationResult() {
+			// Nothing.
+		}
+
+		public CleanupOperationResult(CleanupResultCode resultCode) {
+			this.resultCode = resultCode;
+		}
+		
+		public void setResultCode(CleanupResultCode resultCode) {
+			this.resultCode = resultCode;
+		}
+		
+		public CleanupResultCode getResultCode() {
+			return resultCode;
+		}
+
+		public int getMergedDatabaseFilesCount() {
+			return mergedDatabaseFilesCount;
+		}
+
+		public void setMergedDatabaseFilesCount(int mergedDatabaseFilesCount) {
+			this.mergedDatabaseFilesCount = mergedDatabaseFilesCount;
+		}
+
+		public int getRemovedOldVersionsCount() {
+			return removedOldVersionsCount;
+		}
+
+		public void setRemovedOldVersionsCount(int removedOldVersionsCount) {
+			this.removedOldVersionsCount = removedOldVersionsCount;
+		}
+
+		public int getRemovedMultiChunksCount() {
+			return removedMultiChunksCount;
+		}
+
+		public void setRemovedMultiChunksCount(int removedMultiChunksCount) {
+			this.removedMultiChunksCount = removedMultiChunksCount;
+		}				
 	}
 }

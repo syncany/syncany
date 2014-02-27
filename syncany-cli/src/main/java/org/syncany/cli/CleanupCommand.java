@@ -45,20 +45,19 @@ public class CleanupCommand extends Command {
 		CleanupOperationOptions operationOptions = new CleanupOperationOptions();
 
 		OptionParser parser = new OptionParser();
-		OptionSpec<Void> optionMergeDatabases = parser.acceptsAll(asList("m", "merge-databases"));
+		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
+		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
 
 		OptionSet options = parser.parse(operationArgs);
-
-		// Cross-checks
-		if (!options.has(optionMergeDatabases) && !options.has(optionKeepVersions)) {
-			throw new Exception("No cleanup option given. Please choose at least one option.");
-		}
 		
-		// --merge-databases
-		operationOptions.setMergeRemoteFiles(options.has(optionMergeDatabases));
+		// -M, --no-database-merge
+		operationOptions.setMergeRemoteFiles(!options.has(optionNoDatabaseMerge));
 		
-		// -k=<count>, --keep-versions=<count>
+		// -V, --no-version-removal
+		operationOptions.setRemoveOldVersions(!options.has(optionNoOldVersionRemoval));
+			
+		// -k=<count>, --keep-versions=<count>		
 		if (options.has(optionKeepVersions)) {
 			int keepVersionCount = options.valueOf(optionKeepVersions);
 			
@@ -66,14 +65,49 @@ public class CleanupCommand extends Command {
 				throw new Exception("Invalid value for --keep-versions="+keepVersionCount+"; must be >= 1");
 			}
 			
-			operationOptions.setRemoveOldVersions(true);
 			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));			
 		}
 		
 		return operationOptions;
 	}
 
-	private void printResults(CleanupOperationResult operationResult) {
-		// Nothing to print (yet)
+	private void printResults(CleanupOperationResult operationResult) {	
+		switch (operationResult.getResultCode()) {
+		case NOK_DIRTY_LOCAL:
+			out.println("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
+			break;
+
+		case NOK_LOCAL_CHANGES:
+			out.println("Local changes detected. Please call 'up' first'.");
+			break;
+
+		case NOK_REMOTE_CHANGES:
+			out.println("Remote changes detected or repository is locked by another user. Please call 'down' first.");
+			break;
+
+		case OK:
+			if (operationResult.getMergedDatabaseFilesCount() > 0) {
+				out.println(operationResult.getMergedDatabaseFilesCount() + " database files merged into one.");
+			}
+			
+			if (operationResult.getRemovedMultiChunksCount() > 0) {
+				out.println(operationResult.getRemovedMultiChunksCount() + " multichunks deleted on remote storage.");
+			}
+
+			if (operationResult.getRemovedOldVersionsCount() > 0) {
+				out.println(operationResult.getRemovedOldVersionsCount() + " file histories shortened.");
+				// TODO [low] This counts only the file histories, not file versions; not very helpful!
+			}
+
+			out.println("Cleanup successful.");			
+			break;
+
+		case OK_NOTHING_DONE:
+			out.println("Cleanup not necessary. Nothing done.");
+			break;
+
+		default:
+			throw new RuntimeException("Invalid result code: " + operationResult.getResultCode().toString());
+		}	
 	}
 }

@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
+import org.syncany.operations.CleanupOperation.CleanupOperationResult;
+import org.syncany.operations.CleanupOperation.CleanupResultCode;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -86,7 +88,11 @@ public class CleanupOperationTest {
 		assertEquals("4", TestAssertUtil.runSqlQuery("select count(distinct id) from filehistory", databaseConnectionB));
 		
 		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		clientA.cleanup(options);		
+		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);		
+		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(5, cleanupOperationResult.getRemovedMultiChunksCount());
+		assertEquals(3, cleanupOperationResult.getRemovedOldVersionsCount());
 		
 		// 2 versions for "file.jpg", 2 versions for "otherfile.txt" and one version for "someotherfile.jpg"
 		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
@@ -113,6 +119,123 @@ public class CleanupOperationTest {
 		TestAssertUtil.assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		
 		// Tear down
-		clientA.deleteTestData();		
+		clientA.deleteTestData();	
+		clientB.deleteTestData();
+	}
+	
+	@Test
+	public void testCleanupFailsBecauseOfLocalChanges() throws Exception {
+		// Setup
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(false);
+		options.setRemoveOldVersions(true);
+		options.setRepackageMultiChunks(false);
+		options.setKeepVersionsCount(2);
+
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");		
+		for (int i=1; i<=4; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		// B: Sync down, add something
+		clientB.down();
+		
+		clientB.changeFile("file.jpg");
+		
+		CleanupOperationResult cleanupOperationResult = clientB.cleanup(options);
+		assertEquals(CleanupResultCode.NOK_LOCAL_CHANGES, cleanupOperationResult.getResultCode());
+		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();	
+	}
+	
+	@Test
+	public void testCleanupFailsBecauseOfRemoteChanges() throws Exception {
+		// Setup
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(false);
+		options.setRemoveOldVersions(true);
+		options.setRepackageMultiChunks(false);
+		options.setKeepVersionsCount(2);
+
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");		
+		for (int i=1; i<=4; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		// B: Sync down, add something
+		clientB.down();
+		
+		// A: Add something
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+		
+		// B: Cleanup
+		CleanupOperationResult cleanupOperationResult = clientB.cleanup(options);
+		assertEquals(CleanupResultCode.NOK_REMOTE_CHANGES, cleanupOperationResult.getResultCode());
+		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();	
+	}
+	
+	@Test
+	public void testCleanupNoChanges() throws Exception {
+		// Setup
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(false);
+		options.setRemoveOldVersions(true);
+		options.setRepackageMultiChunks(false);
+		options.setKeepVersionsCount(10);       // <<<<<< Different!
+
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");		
+		for (int i=1; i<=4; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		// B: Sync down, add something
+		clientB.down();
+				
+		// B: Cleanup
+		CleanupOperationResult cleanupOperationResult = clientB.cleanup(options);
+		assertEquals(CleanupResultCode.OK_NOTHING_DONE, cleanupOperationResult.getResultCode());
+		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();	
 	}
 }

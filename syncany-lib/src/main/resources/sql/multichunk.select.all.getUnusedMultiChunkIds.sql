@@ -1,4 +1,4 @@
-select multichunk_id
+select distinct multichunk_id
 from multichunk_chunk
 where multichunk_id not in (
 	select distinct mcc.multichunk_id

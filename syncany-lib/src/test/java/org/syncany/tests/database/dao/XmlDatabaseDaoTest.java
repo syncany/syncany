@@ -140,13 +140,13 @@ public class XmlDatabaseDaoTest {
         newDatabaseVersion.addChunk(chunkB2);        
         
         // Distribute chunks to multichunks
-        MultiChunkEntry multiChunkA = new MultiChunkEntry(new MultiChunkId(new byte[] {6,6,6,6,6,6,6,6,6}));
+        MultiChunkEntry multiChunkA = new MultiChunkEntry(new MultiChunkId(new byte[] {6,6,6,6,6,6,6,6,6}), 10);
         multiChunkA.addChunk(chunkA1.getChecksum()); 
         multiChunkA.addChunk(chunkA2.getChecksum()); 
         multiChunkA.addChunk(chunkA3.getChecksum());
         newDatabaseVersion.addMultiChunk(multiChunkA);
         
-        MultiChunkEntry multiChunkB = new MultiChunkEntry(new MultiChunkId(new byte[] {7,7,7,7,7,7,7,7,7}));
+        MultiChunkEntry multiChunkB = new MultiChunkEntry(new MultiChunkId(new byte[] {7,7,7,7,7,7,7,7,7}), 11);
         multiChunkB.addChunk(chunkA4.getChecksum());
         multiChunkB.addChunk(chunkB1.getChecksum());
         multiChunkB.addChunk(chunkB2.getChecksum());

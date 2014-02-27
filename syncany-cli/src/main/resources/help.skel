@@ -122,6 +122,7 @@ Commands:
     This command frees up remote storage space.
     
     Arguments:
-    -m, --merge-databases            Merges remote metadata files
-    -k, --keep-versions=<count>      Removes old versions, but keep <count>
+    -M, --no-database-merge          Don't merge databases (default: yes)
+    -V, --no-version-remove          Don't remove old versions (default: yes)    
+    -k, --keep-versions=<count>      Number of versions to keep (if not -V)
     

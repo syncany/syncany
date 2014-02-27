@@ -161,6 +161,7 @@ public class DatabaseXmlWriter {
 			for (MultiChunkEntry multiChunk : multiChunks) {
 				xmlOut.writeStartElement("multiChunk");
 				xmlOut.writeAttribute("id", multiChunk.getId().toString());
+				xmlOut.writeAttribute("size", multiChunk.getSize());
 			
 				xmlOut.writeStartElement("chunkRefs");
 				
