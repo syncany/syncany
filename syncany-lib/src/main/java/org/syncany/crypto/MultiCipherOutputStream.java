@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,12 +89,14 @@ public class MultiCipherOutputStream extends OutputStream {
 	
 	@Override
 	public void write(int b) throws IOException {
-		if (!headerWritten) {
-			writeHeader();
-			headerWritten = true;
-		}
-		
+		writeHeader();
 		cipherOutputStream.write(b);		
+	}
+	
+	@Override
+	public void write(byte[] b, int off, int len) throws IOException {
+		writeHeader();
+		cipherOutputStream.write(b, off, len);
 	}
 	
 	@Override
@@ -103,39 +105,42 @@ public class MultiCipherOutputStream extends OutputStream {
 	}
 		
 	private void writeHeader() throws IOException {
-		try {
-			// Initialize header HMAC
-			SaltedSecretKey hmacSecretKey = cipherSession.getWriteSecretKey(HMAC_SPEC);
-			
-			headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
-			headerHmac.init(hmacSecretKey);
-			
-			// Write header
-			writeNoHmac(underlyingOutputStream, STREAM_MAGIC);
-			writeNoHmac(underlyingOutputStream, STREAM_VERSION);
-			writeNoHmac(underlyingOutputStream, hmacSecretKey.getSalt());			
-			writeAndUpdateHmac(underlyingOutputStream, cipherSpecs.size());
-			
-			cipherOutputStream = underlyingOutputStream;
-			
-			for (CipherSpec cipherSpec : cipherSpecs) { 
-				SaltedSecretKey saltedSecretKey = cipherSession.getWriteSecretKey(cipherSpec);				
-				byte[] iv = CipherUtil.createRandomArray(cipherSpec.getIvSize()/8);
+		if (!headerWritten) {
+			try {
+				// Initialize header HMAC
+				SaltedSecretKey hmacSecretKey = cipherSession.getWriteSecretKey(HMAC_SPEC);
 
-				writeAndUpdateHmac(underlyingOutputStream, cipherSpec.getId());
-				writeAndUpdateHmac(underlyingOutputStream, saltedSecretKey.getSalt());
-				writeAndUpdateHmac(underlyingOutputStream, iv);
-				
-				Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, saltedSecretKey, iv);
-				
-				cipherOutputStream = new CipherOutputStream(cipherOutputStream, encryptCipher);	        
+				headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
+				headerHmac.init(hmacSecretKey);
+
+				// Write header
+				writeNoHmac(underlyingOutputStream, STREAM_MAGIC);
+				writeNoHmac(underlyingOutputStream, STREAM_VERSION);
+				writeNoHmac(underlyingOutputStream, hmacSecretKey.getSalt());			
+				writeAndUpdateHmac(underlyingOutputStream, cipherSpecs.size());
+
+				cipherOutputStream = underlyingOutputStream;
+
+				for (CipherSpec cipherSpec : cipherSpecs) { 
+					SaltedSecretKey saltedSecretKey = cipherSession.getWriteSecretKey(cipherSpec);				
+					byte[] iv = CipherUtil.createRandomArray(cipherSpec.getIvSize()/8);
+
+					writeAndUpdateHmac(underlyingOutputStream, cipherSpec.getId());
+					writeAndUpdateHmac(underlyingOutputStream, saltedSecretKey.getSalt());
+					writeAndUpdateHmac(underlyingOutputStream, iv);
+
+					Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, saltedSecretKey, iv);
+
+					cipherOutputStream = new CipherOutputStream(cipherOutputStream, encryptCipher);	        
+				}	
+
+				writeNoHmac(underlyingOutputStream, headerHmac.doFinal());
+			}
+			catch (Exception e) {
+				throw new IOException(e);
 			}	
-			
-			writeNoHmac(underlyingOutputStream, headerHmac.doFinal());
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}		
+			headerWritten = true;
+		}
 	}	
 
 	private void writeNoHmac(OutputStream outputStream, byte[] bytes) throws IOException {
