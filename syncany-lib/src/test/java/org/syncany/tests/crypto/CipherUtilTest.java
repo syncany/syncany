@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.crypto;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -224,6 +222,174 @@ public class CipherUtilTest {
 		assertTrue(Arrays.equals(originalData, plaintext));	
 	}
 	
+	@Test(expected = Exception.class)
+	public void testIntegrityHeaderMagic() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)),
+			masterKey
+		);
+		
+		// Alter header MAGIC BYTES 
+		ciphertext[0] = 0x12;
+		ciphertext[1] = 0x34;
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+	
+	@Test(expected = Exception.class)
+	public void testIntegrityHeaderVersion() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)),
+			masterKey
+		);
+		
+		// Alter header VERSION 
+		ciphertext[4] = (byte) 0xff;
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+	
+	@Test(expected = Exception.class)
+	public void testIntegrityHeaderCipherSpecId() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)),
+			masterKey
+		);
+		
+		assertEquals(CipherSpecs.AES_128_GCM, ciphertext[18]); // If this fails, fix test!
+
+		// Alter header CIPHER SPEC ID 		
+		ciphertext[18] = (byte) 0xff;
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+	
+	@Test(expected = Exception.class)
+	public void testIntegrityHeaderCipherSalt() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		 
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)),
+			masterKey
+		);
+		
+		// Alter header CIPHER SALT 		
+		ciphertext[19] = (byte) 0xff;
+		ciphertext[20] = (byte) 0xff;
+		ciphertext[21] = (byte) 0xff;
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+	
+	@Test(expected = Exception.class)
+	public void testIntegrityHeaderCipherIV() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)),
+			masterKey
+		);
+		
+		// Alter header CIPHER SALT 		
+		ciphertext[32] = (byte) 0xff;
+		ciphertext[33] = (byte) 0xff;
+		ciphertext[34] = (byte) 0xff;
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+	
+	@Test(expected = Exception.class)
+	public void testIntegrityAesGcmCiphertext() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM)),
+			masterKey
+		);
+		
+		// Alter ciphertext (after header!); ciphertext starts after 75 bytes 
+		ciphertext[80] = (byte) (ciphertext[80] ^ 0x01);
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+	
+	@Test(expected = Exception.class)
+	public void testIntegrityTwofishGcmCiphertext() throws Exception {
+		SaltedSecretKey masterKey = createDummyMasterKey();
+		
+		byte[] originalPlaintext = TestFileUtil.createRandomArray(50);
+		
+		byte[] ciphertext = CipherUtil.encrypt(
+			new ByteArrayInputStream(originalPlaintext), 
+			Arrays.asList(CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_128_GCM)),
+			masterKey
+		);
+		
+		// Alter ciphertext (after header!); ciphertext starts after 75 bytes 
+		ciphertext[80] = (byte) (ciphertext[80] ^ 0x01);
+		
+		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
+		
+		System.out.println(StringUtil.toHex(originalPlaintext));
+		System.out.println(StringUtil.toHex(plaintext));
+		
+		fail("TEST FAILED: Ciphertext was altered without exception.");
+	}	
+
 	private SaltedSecretKey createDummyMasterKey() {
 		return new SaltedSecretKey(
 			new SecretKeySpec(
