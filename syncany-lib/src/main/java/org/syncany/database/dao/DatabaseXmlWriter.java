@@ -30,8 +30,11 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.MultiChunk;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
@@ -42,8 +45,16 @@ import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileVersion.FileType;
 
 /**
- * @author pheckel
- *
+ * This class uses an {@link XMLStreamWriter} to output the given {@link DatabaseVersion}s
+ * to a {@link PrintWriter} (or file). Database versions are written sequentially, i.e. 
+ * according to their position in the given iterator. 
+ * 
+ * <p>A written file includes a representation of the entire database version, including
+ * {@link DatabaseVersionHeader}, {@link PartialFileHistory}, {@link FileVersion}, 
+ * {@link FileContent}, {@link Chunk} and {@link MultiChunk}.
+ * 
+ * @see DatabaseXmlSerializer
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseXmlWriter {
 	private static final Logger logger = Logger.getLogger(DatabaseXmlWriter.class.getSimpleName());
@@ -249,6 +260,14 @@ public class DatabaseXmlWriter {
 		xmlOut.writeEndElement(); // </fileHistories>		
 	}
 	
+	/**
+	 * Wraps an {@link XMLStreamWriter} class to write XML data to
+	 * the given {@link Writer}. 
+	 * 
+	 * <p>The class extends the regular xml stream writer to add 
+	 * tab-based indents to the structure. The output is well-formatted
+	 * human-readable XML. 
+	 */
 	public static class IndentXmlStreamWriter {
 		private int indent;
 		private XMLStreamWriter out;
@@ -260,46 +279,46 @@ public class DatabaseXmlWriter {
 			this.out = factory.createXMLStreamWriter(out);
 		}
 		
-		public void writeStartDocument() throws XMLStreamException {
+		private void writeStartDocument() throws XMLStreamException {
 			out.writeStartDocument();
 		}
 
-		public void writeStartElement(String s) throws XMLStreamException {
+		private void writeStartElement(String s) throws XMLStreamException {
 			writeNewLineAndIndent(indent++);
 			out.writeStartElement(s);	
 		}
 		
-		public void writeEmptyElement(String s) throws XMLStreamException {
+		private void writeEmptyElement(String s) throws XMLStreamException {
 			writeNewLineAndIndent(indent);			
 			out.writeEmptyElement(s);	
 		}
 		
-		public void writeAttribute(String name, String value) throws XMLStreamException {
+		private void writeAttribute(String name, String value) throws XMLStreamException {
 			out.writeAttribute(name, value);
 		}
 		
-		public void writeAttribute(String name, int value) throws XMLStreamException {
+		private void writeAttribute(String name, int value) throws XMLStreamException {
 			out.writeAttribute(name, Integer.toString(value));
 		}
 		
-		public void writeAttribute(String name, long value) throws XMLStreamException {
+		private void writeAttribute(String name, long value) throws XMLStreamException {
 			out.writeAttribute(name, Long.toString(value));
 		}
 		
-		public void writeEndElement() throws XMLStreamException {			
+		private void writeEndElement() throws XMLStreamException {			
 			writeNewLineAndIndent(--indent);
 			out.writeEndElement();			
 		}
 		
-		public void writeEndDocument() throws XMLStreamException {
+		private void writeEndDocument() throws XMLStreamException {
 			out.writeEndDocument();
 		}
 		
-		public void close() throws XMLStreamException {
+		private void close() throws XMLStreamException {
 			out.close();
 		}
 		
-		public void flush() throws XMLStreamException {
+		private void flush() throws XMLStreamException {
 			out.flush();
 		}	
 		

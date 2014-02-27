@@ -46,8 +46,17 @@ import org.syncany.database.VectorClock;
 import org.syncany.operations.DatabaseBranch;
 
 /**
- * @author pheckel
- *
+ * The database version data access object (DAO) writes and queries the SQL database for information
+ * on {@link DatabaseVersion}s. It translates the relational data in the "databaseversion" table to
+ * Java objects; but also uses the other DAOs to persist entire {@link DatabaseVersion} objects.
+ * 
+ * 
+ * @see ChunkSqlDao
+ * @see FileContentSqlDao
+ * @see FileVersionSqlDao
+ * @see FileHistorySqlDao
+ * @see MultiChunkSqlDao
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(DatabaseVersionSqlDao.class.getSimpleName());
@@ -70,6 +79,14 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		this.multiChunkDao = multiChunkDao;
 	}
 
+	/**
+	 * Marks the database version with the given vector clock as DIRTY, i.e.
+	 * sets the {@link DatabaseVersionStatus} to {@link DatabaseVersionStatus#DIRTY DIRTY}.
+	 * Marking a database version dirty will lead to a deletion in the next sync up
+	 * cycle.
+	 * 
+	 * @param vectorClock Identifies the database version to mark dirty
+	 */
 	public void markDatabaseVersionDirty(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.update.master.markDatabaseVersionDirty.sql")){
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
@@ -98,6 +115,19 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	/**
+	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
+	 * contained {@link VectorClock}. Be aware that the method writes the header independent
+	 * of whether or not a corresponding database version actually exists.
+	 * 
+	 * <p>This method can be used to add empty database versions to the database. Current use
+	 * case is adding an empty purge database version to the database.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
+	 * 
+	 * @param databaseVersionHeader The database version header to write to the database
+	 * @return Returns the SQL-internal primary key of the new database version
+	 */
 	public long writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersionHeader);
 		writeVectorClock(connection, databaseVersionId, databaseVersionHeader.getVectorClock());

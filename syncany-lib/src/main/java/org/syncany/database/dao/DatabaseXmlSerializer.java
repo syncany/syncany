@@ -39,6 +39,21 @@ import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
 
+/**
+ * Serializes a {@link MemoryDatabase} or a list of {@link DatabaseVersion}s to an 
+ * XML-based file format, using a {@link Transformer} to compress/encrypt the file 
+ * before writing, and to decompress/decrypt it before reading.
+ * 
+ * <p>The class offers a variety of <tt>save()</tt> to serialize and store a memory
+ * database to a file, and several <tt>load()</tt> methods to load them from disk.
+ * 
+ * <p>It uses a {@link DatabaseXmlWriter} to write XML files to disk and 
+ * {@link DatabaseXmlParseHandler} to parse them while reading. 
+ * 
+ * @see DatabaseXmlParseHandler
+ * @see DatabaseXmlWriter
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class DatabaseXmlSerializer {
 	private static final Logger logger = Logger.getLogger(DatabaseXmlSerializer.class.getSimpleName());
 

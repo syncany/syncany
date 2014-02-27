@@ -49,7 +49,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	/**
 	 * Writes a list of {@link ChunkEntry}s to the database using <tt>INSERT</tt>s and the given connection.
 	 * 
-	 * <p><b>Note:</b> This method executes, but does not commit the query.
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
 	 * 
 	 * @param connection The connection used to execute the statements
 	 * @param chunks List of {@link ChunkEntry}s to be inserted in the database
@@ -71,6 +71,15 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		}
 	}	
 
+	/**
+	 * Removes unreferenced chunks from the database. Unreferenced chunks are chunks
+	 * that are not referenced by any file content or multichunk. 
+	 * 
+	 * <p>During the cleanup process, when file versions are deleted, unused chunks 
+	 * are left over. This method removes these chunks from the database.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query. 
+	 */
 	public void removeUnreferencedChunks() {
 		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.delete.all.removeUnreferencesChunks.sql")) {
 			preparedStatement.execute();
