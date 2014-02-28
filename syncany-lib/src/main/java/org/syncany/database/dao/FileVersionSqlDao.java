@@ -108,6 +108,12 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}						
 	}	
 
+	/**
+	 * Removes all file versions with versions <b>lower or equal</b> than the given file version.
+	 * 
+	 * <p>Note that this method does not just delete the given file version, but also all of its
+	 * previous versions.
+	 */
 	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
 		if (purgeFileVersions.size() > 0) {
 			try (PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.delete.all.removeFileVersionsByIds.sql")) {
@@ -167,6 +173,30 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
 			
 			return getFileTree(preparedStatement);					
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+
+	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.all.getMostRecentPurgeVersions.sql")) {
+			preparedStatement.setInt(1, keepVersionsCount);
+			preparedStatement.setInt(2, keepVersionsCount);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+				
+				while (resultSet.next()) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					FileVersion fileVersion = createFileVersionFromRow(resultSet);
+					
+					mostRecentPurgeFileVersions.put(fileHistoryId, fileVersion);
+				}	 
+				
+				return mostRecentPurgeFileVersions;
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

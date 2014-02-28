@@ -190,48 +190,57 @@ public class DownOperation extends Operation {
 			downloadAndDecryptMultiChunks(unknownMultiChunks);
 
 			applyFileSystemActions(actions);
-			applyDatabaseVersions(winnersApplyBranch, winnersDatabase);
-			applyPurgeDatabaseVersions(winnersPurgeDatabase);			
+			applyDatabaseVersions(winnersApplyBranch, winnersDatabase, winnersPurgeDatabase);
+			//applyPurgeDatabaseVersions(winnersPurgeDatabase);			
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
 	}
 
-	private void applyPurgeDatabaseVersions(MemoryDatabase winnersPurgeDatabase) throws SQLException {
-		logger.log(Level.INFO, "   Applying PURGE database versions ...");
-
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
-		
-		for (DatabaseVersion purgeDatabaseVersion : winnersPurgeDatabase.getDatabaseVersions()) {
-			for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
-				logger.log(Level.INFO, "   + Purging file history {0}, with versions <= {1}", new Object[] { 
-						purgeFileHistory.getFileId().toString(), purgeFileHistory.getLastVersion().getVersion() });
-				
-				purgeFileVersions.put(purgeFileHistory.getFileId(), purgeFileHistory.getLastVersion());				
-			}
-			
-			localDatabase.removeFileVersions(purgeFileVersions);
-			localDatabase.removeDeletedVersions();  
-			localDatabase.removeUnreferencedDatabaseEntities();
-			localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
-			
-			localDatabase.commit();
-		}		
-	}
-
-	private void applyDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase) {
+	private void applyDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase, MemoryDatabase winnersPurgeDatabase) throws SQLException {
 		// Add winners database to local database
 		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
 		logger.log(Level.INFO, "   Adding database versions to SQL database ...");
 		
-		for (DatabaseVersionHeader applyDatabaseVersionHeader : winnersApplyBranch.getAll()) {
-			if (applyDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
-				logger.log(Level.INFO, "   + Applying database version " + applyDatabaseVersionHeader.getVectorClock());
-
-				DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(applyDatabaseVersionHeader.getVectorClock());				
-				localDatabase.persistDatabaseVersion(applyDatabaseVersion);
+		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
+			if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
+				persistDatabaseVersion(winnersDatabase, currentDatabaseVersionHeader);				
+			}
+			else if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.PURGE) {
+				persistPurgeDatabaseVesion(winnersPurgeDatabase, currentDatabaseVersionHeader);					
+			}
+			else {
+				throw new RuntimeException("Unknow database version type: " + currentDatabaseVersionHeader.getType());
 			}
 		}
+	}
+
+	private void persistPurgeDatabaseVesion(MemoryDatabase winnersPurgeDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) throws SQLException {
+		logger.log(Level.INFO, "   + Applying PURGE database version " + currentDatabaseVersionHeader.getVectorClock());
+
+		DatabaseVersion purgeDatabaseVersion = winnersPurgeDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+		
+		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
+			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] { 
+					purgeFileHistory.getFileId().toString(), purgeFileHistory.getLastVersion().getVersion() });
+			
+			purgeFileVersions.put(purgeFileHistory.getFileId(), purgeFileHistory.getLastVersion());				
+		}
+		
+		localDatabase.removeFileVersions(purgeFileVersions);
+		localDatabase.removeDeletedVersions();  
+		localDatabase.removeUnreferencedDatabaseEntities();
+		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());		
+		
+		localDatabase.commit(); // TODO [medium] Harmonize commit behavior		
+	}
+
+	private void persistDatabaseVersion(MemoryDatabase winnersDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) {
+		logger.log(Level.INFO, "   + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
+
+		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());				
+		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
 	}
 
 	private void purgeConflictingLocalBranch(DatabaseBranch winnersBranch) throws Exception {

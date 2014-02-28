@@ -23,9 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
@@ -218,28 +216,5 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}
-	
-	public Map<FileHistoryId, Long> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithMostRecentPurgeVersion.sql")) {
-			preparedStatement.setInt(1, keepVersionsCount);
-			preparedStatement.setInt(2, keepVersionsCount);
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				Map<FileHistoryId, Long> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, Long>();
-				
-				while (resultSet.next()) {
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-					Long mostRecentPurgeFileVersion = resultSet.getLong("most_recent_purge_version");
-					
-					mostRecentPurgeFileVersions.put(fileHistoryId, mostRecentPurgeFileVersion);
-				}	 
-				
-				return mostRecentPurgeFileVersions;
-			}
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	}	
 }

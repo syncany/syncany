@@ -44,7 +44,7 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.util.StringUtil;
 
 public class GcmCipherInputStreamTest {
-	@Test
+	@Test(expected = Exception.class)
 	public void testGcmCipherInputStream() throws InvalidKeyException, InvalidAlgorithmParameterException, IOException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException {
 		byte[] originalPlaintext = StringUtil.fromHex("00000000000000000000000000000000");
 		

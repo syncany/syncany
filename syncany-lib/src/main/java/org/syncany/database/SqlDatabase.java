@@ -173,10 +173,6 @@ public class SqlDatabase {
 		return fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum);
 	}
 	
-	public Map<FileHistoryId, Long> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
-		return fileHistoryDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
-	}
-	
 	private void removeUnreferencedFileHistories() throws SQLException {
 		fileHistoryDao.removeUnreferencedFileHistories();
 	}
@@ -187,6 +183,7 @@ public class SqlDatabase {
 		return fileVersionDao.getCurrentFileTree();
 	}
 	
+	@Deprecated
 	public void removeFileVersions(int keepVersionsCount) throws SQLException {
 		fileVersionDao.removeFileVersions(keepVersionsCount);		
 	}
@@ -213,6 +210,10 @@ public class SqlDatabase {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
 
+	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
+		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
+	}	
+
 	// Multi Chunk
 
 	public List<MultiChunkId> getMultiChunkIds(FileChecksum fileChecksum) {
@@ -227,8 +228,8 @@ public class SqlDatabase {
 		return multiChunkDao.getDirtyMultiChunkIds();
 	}	
 
-	public List<MultiChunkId> getUnusedMultiChunkIds() {
-		return multiChunkDao.getUnusedMultiChunkIds();
+	public List<MultiChunkEntry> getUnusedMultiChunks() {
+		return multiChunkDao.getUnusedMultiChunks();
 	}
 	
 	private void removeUnreferencedMultiChunks() throws SQLException {

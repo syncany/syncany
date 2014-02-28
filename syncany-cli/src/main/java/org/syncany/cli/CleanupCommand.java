@@ -22,6 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 
@@ -90,8 +91,15 @@ public class CleanupCommand extends Command {
 				out.println(operationResult.getMergedDatabaseFilesCount() + " database files merged into one.");
 			}
 			
-			if (operationResult.getRemovedMultiChunksCount() > 0) {
-				out.println(operationResult.getRemovedMultiChunksCount() + " multichunks deleted on remote storage.");
+			if (operationResult.getRemovedMultiChunks().size() > 0) {
+				long totalRemovedMultiChunkSize = 0;
+				
+				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks()) {
+					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
+				}
+				
+				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)", 
+					operationResult.getRemovedMultiChunks().size(), totalRemovedMultiChunkSize / 1024 / 1024);
 			}
 
 			if (operationResult.getRemovedOldVersionsCount() > 0) {
