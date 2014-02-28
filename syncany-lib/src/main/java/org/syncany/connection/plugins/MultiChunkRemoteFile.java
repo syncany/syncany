@@ -20,6 +20,7 @@ package org.syncany.connection.plugins;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.util.StringUtil;
 
 /**
@@ -58,8 +59,8 @@ public class MultiChunkRemoteFile extends RemoteFile {
 	 * @param multiChunkId The identifier of the multichunk
 	 * @throws StorageException Never throws an exception
 	 */
-	public MultiChunkRemoteFile(byte[] multiChunkId) throws StorageException {
-		super(String.format(NAME_FORMAT, StringUtil.toHex(multiChunkId)));
+	public MultiChunkRemoteFile(MultiChunkId multiChunkId) throws StorageException {
+		super(String.format(NAME_FORMAT, multiChunkId.toString()));
 	}
 
 	/**

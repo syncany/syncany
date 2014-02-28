@@ -96,9 +96,40 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */	
 	public void removeDirtyFileVersions() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql");
-		preparedStatement.executeUpdate();	
-		preparedStatement.close();
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql")) {
+			preparedStatement.executeUpdate();
+		}
+	}
+	
+	public void removeFileVersions(int keepVersionCount) throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeFileVersions.sql")) {
+			preparedStatement.setInt(1, keepVersionCount);		
+			preparedStatement.executeUpdate();
+		}						
+	}	
+
+	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
+		if (purgeFileVersions.size() > 0) {
+			try (PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.delete.all.removeFileVersionsByIds.sql")) {
+				for (Map.Entry<FileHistoryId, FileVersion> purgeFileVersionEntry : purgeFileVersions.entrySet()) {
+					FileHistoryId purgeFileHistoryId = purgeFileVersionEntry.getKey();
+					FileVersion purgeFileVersion = purgeFileVersionEntry.getValue();
+					
+					preparedStatement.setString(1, purgeFileHistoryId.toString());
+					preparedStatement.setLong(2, purgeFileVersion.getVersion());
+					
+					preparedStatement.addBatch();
+				}				
+				
+				preparedStatement.executeBatch();
+			}
+		}
+	}
+
+	public void removeDeletedVersions() throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeDeletedVersions.sql")) {	
+			preparedStatement.executeUpdate();
+		}
 	}
 	
 	/**
@@ -156,7 +187,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}
+	}		
 	
 	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {

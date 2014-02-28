@@ -85,8 +85,8 @@ public class EvilCUpWithoutDownScenarioTest {
 		assertFileListEquals(clientB.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
-		clientC.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
 	}
 }

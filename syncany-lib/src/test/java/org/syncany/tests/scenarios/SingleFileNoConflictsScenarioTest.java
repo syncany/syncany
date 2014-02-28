@@ -43,8 +43,8 @@ public class SingleFileNoConflictsScenarioTest {
 		assertFileListEquals(clientA1.getLocalFilesExcludeLockedAndNoRead(), clientA2.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
-		clientA1.cleanup();
-		clientA2.cleanup();
+		clientA1.deleteTestData();
+		clientA2.deleteTestData();
 	}
 	
 	@Test
@@ -62,8 +62,8 @@ public class SingleFileNoConflictsScenarioTest {
 		assertFileEquals(clientA.getLocalFile("file"), clientB.getLocalFile("file"));		
 		
 		// Cleanup
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}		
 	
 	@Test
@@ -89,8 +89,8 @@ public class SingleFileNoConflictsScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}	
 	
 	@Test
@@ -115,8 +115,8 @@ public class SingleFileNoConflictsScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Cleanup
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}		
 	
 	@Test
@@ -141,8 +141,8 @@ public class SingleFileNoConflictsScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Cleanup
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}			
 	
 	@Test
@@ -195,8 +195,8 @@ public class SingleFileNoConflictsScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientC.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
-		clientC.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
 	}
 }

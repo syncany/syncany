@@ -23,7 +23,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
@@ -62,9 +64,15 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public void removeDirtyFileHistories() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql");
-		preparedStatement.executeUpdate();
-		preparedStatement.close();		
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql")) {
+			preparedStatement.executeUpdate();
+		}		
+	}
+	
+	public void removeUnreferencedFileHistories() throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
+			preparedStatement.executeUpdate();
+		}	
 	}
 
 	/**
@@ -102,14 +110,26 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
 
+			// Old history (= same filehistory identifier)
 			if (fileHistory != null && fileHistory.getFileId().equals(fileHistoryId)) { // Same history!
 				fileHistory.addFileVersion(lastFileVersion);
 			}
-			else { // New history!
+			
+			// New history!			
+			else { 
+				// Add the old history
+				if (fileHistory != null) { 
+					fileHistories.add(fileHistory);
+				}
+				
+				// Create a new one
 				fileHistory = new PartialFileHistory(fileHistoryId);
 				fileHistory.addFileVersion(lastFileVersion);
-			}
-			
+			}			
+		}
+		
+		// Add the last history
+		if (fileHistory != null) { 
 			fileHistories.add(fileHistory);
 		}
 
@@ -194,6 +214,29 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			}
 
 			return currentFileTree;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Map<FileHistoryId, Long> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithMostRecentPurgeVersion.sql")) {
+			preparedStatement.setInt(1, keepVersionsCount);
+			preparedStatement.setInt(2, keepVersionsCount);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				Map<FileHistoryId, Long> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, Long>();
+				
+				while (resultSet.next()) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					Long mostRecentPurgeFileVersion = resultSet.getLong("most_recent_purge_version");
+					
+					mostRecentPurgeFileVersions.put(fileHistoryId, mostRecentPurgeFileVersion);
+				}	 
+				
+				return mostRecentPurgeFileVersions;
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

@@ -35,8 +35,8 @@ Commands:
     Arguments:
     -p, --plugin=<plugin>            Specify a plugin to use for storage 
     -P, --plugin-option=<key=value>  Set plugin settings (multi-option)
-    -e, --no-encryption              Don't encrypt new repo
-    -a, --no-gzip                    Don't use gzip-compression in new repo
+    -E, --no-encryption              Don't encrypt new repo
+    -G, --no-compression             Don't use gzip-compression in new repo
     -a, --advanced                   Asks more questions about encryption
 
   connect [<args>] [<syncany link>]
@@ -117,3 +117,12 @@ Commands:
     Arguments:
     -s, --short                      Don't display help text 
                                    
+  cleanup [<args>]
+    Remove old versions from the local database and the remote repository. 
+    This command frees up remote storage space.
+    
+    Arguments:
+    -M, --no-database-merge          Don't merge databases (default: yes)
+    -V, --no-version-remove          Don't remove old versions (default: yes)    
+    -k, --keep-versions=<count>      Number of versions to keep (if not -V)
+    

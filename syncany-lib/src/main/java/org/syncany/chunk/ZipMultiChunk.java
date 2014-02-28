@@ -58,7 +58,7 @@ public class ZipMultiChunk extends MultiChunk {
 
 	@Override
     public boolean isFull() {
-        return size >= minSize;
+        return size >= minSize*1024; // minSize is in KB!
     }
 
     @Override

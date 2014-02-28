@@ -132,7 +132,7 @@ public class RestoreOperation extends Operation {
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId.getRaw());
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId.getRaw());
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId.getRaw());
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
 
 			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
