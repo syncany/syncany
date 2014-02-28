@@ -71,6 +71,6 @@ public class UploadInterruptedTest {
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
 		
 		// Tear down
-		clientA.cleanup();
+		clientA.deleteTestData();
 	}				
 }

@@ -45,7 +45,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
-import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -219,8 +219,8 @@ public class UpOperation extends Operation {
 	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {	
 		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
 		
-		XmlDatabaseSerializer dao = new XmlDatabaseSerializer(config.getTransformer());
-		dao.save(db, localDatabaseFile);		
+		DatabaseXmlSerializer dao = new DatabaseXmlSerializer(config.getTransformer());
+		dao.save(db.getDatabaseVersions(), localDatabaseFile);		
 	}			
 	
 	private void addDirtyData(DatabaseVersion newDatabaseVersion) {
@@ -302,7 +302,7 @@ public class UpOperation extends Operation {
 			}
 			else {
 				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
-				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId().getRaw());
+				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
 
 				logger.log(Level.INFO, "- Uploading multichunk " + multiChunkEntry.getId() + " from " + localMultiChunkFile + " to "
 						+ remoteMultiChunkFile + " ...");

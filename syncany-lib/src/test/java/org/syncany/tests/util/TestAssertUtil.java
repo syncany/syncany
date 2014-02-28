@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -253,27 +254,54 @@ public class TestAssertUtil {
 				boolean actualNext = actualResultSet.next();
 				
 				if (expectedNext && !actualNext) {
-					fail("Actual is missing the following row from expected: "+getFormattedColumn(expectedResultSet));
+					fail("Table "+tableName+": Actual is missing the following row from expected: "+getFormattedColumn(expectedResultSet));
 				}
 				else if (!expectedNext && actualNext) {
-					fail("Actual has a row that was not expected: "+getFormattedColumn(actualResultSet));
+					fail("Table "+tableName+": Actual has a row that was not expected: "+getFormattedColumn(actualResultSet));
 				}
 				else if (!expectedNext && !actualNext) {
 					break;
 				}
 				else {
 					String expectedFormattedColumn = getFormattedColumn(expectedResultSet);
-					String actualFormattedColumn = getFormattedColumn(actualResultSet);
+					String actualFormattedColumn = getFormattedColumn(actualResultSet);					
 					
-					if (logger.isLoggable(Level.FINEST)) {
-						//logger.log(Level.FINEST, "  Expected: "+expectedFormattedColumn);
-						//logger.log(Level.FINEST, "  Actual:   "+actualFormattedColumn);
-					}
-					
-					assertEquals("Columns of table "+tableName+" actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
+					assertEquals("Table "+tableName+": Columns of actual and expected differ.", expectedFormattedColumn, actualFormattedColumn);
 				}								
 			}		
 		}
+	}
+	
+	public static String runSqlQuery(String sqlQuery, Connection databaseConnection) throws SQLException {
+		StringBuilder queryResult = new StringBuilder();
+		
+		try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(sqlQuery)) {
+			try (ResultSet actualResultSet = preparedStatement.executeQuery()) {
+				ResultSetMetaData metaData = actualResultSet.getMetaData();
+		
+				boolean isFirstRow = true;
+				int columnsCount = metaData.getColumnCount();
+				
+				while (actualResultSet.next()) {					
+					if (!isFirstRow) {
+						queryResult.append("\n");						
+					}
+					else {
+						isFirstRow = false;
+					}
+					
+					for (int i=1; i<=columnsCount; i++) {
+						queryResult.append(actualResultSet.getString(i));
+						
+						if (i != columnsCount) {
+							queryResult.append(",");
+						}
+					}
+				}
+			}
+		}
+		
+		return queryResult.toString();
 	}
 	
 	private static String getFormattedColumn(ResultSet resultSet) throws SQLException {

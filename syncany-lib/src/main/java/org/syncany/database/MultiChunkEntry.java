@@ -36,11 +36,13 @@ public class MultiChunkEntry  {
 	private static final byte MULTICHUNK_ID_LENGTH = 20;
 	
     private MultiChunkId id;    
+    private long size;
     private List<ChunkChecksum> chunks;
         
-    public MultiChunkEntry(MultiChunkId id) {
-        this.chunks = new ArrayList<ChunkChecksum>();
+    public MultiChunkEntry(MultiChunkId id, long size) {
         this.id = id;
+        this.size = size;
+        this.chunks = new ArrayList<ChunkChecksum>();
     }
     
     public void addChunk(ChunkChecksum chunk) {
@@ -58,6 +60,14 @@ public class MultiChunkEntry  {
     public List<ChunkChecksum> getChunks() {
         return chunks;
     }   
+    
+	public long getSize() {
+		return size;
+	}
+
+	public void setSize(long size) {
+		this.size = size;
+	}
 
 	@Override
 	public int hashCode() {

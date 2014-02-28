@@ -84,7 +84,7 @@ public class MemoryDatabaseCacheTest {
 		// Round 1: Add chunk to multichunk
 		DatabaseVersion databaseVersion1 = TestDatabaseUtil.createDatabaseVersion();
 
-		MultiChunkEntry multiChunkP1 = new MultiChunkEntry(new MultiChunkId(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 }));
+		MultiChunkEntry multiChunkP1 = new MultiChunkEntry(new MultiChunkId(new byte[] { 8, 8, 8, 8, 8, 8, 8, 8 }), 10);
 		ChunkEntry chunkA1 = new ChunkEntry(new ChunkChecksum(new byte[] { 1, 2, 3, 4, 5, 7, 8, 9, 0 }), 12);
 
 		multiChunkP1.addChunk(chunkA1.getChecksum());
@@ -99,8 +99,8 @@ public class MemoryDatabaseCacheTest {
 		// Round 2: Add chunk to multichunk
 		DatabaseVersion databaseVersion2 = TestDatabaseUtil.createDatabaseVersion(databaseVersion1);
 
-		MultiChunkEntry multiChunkP2 = new MultiChunkEntry(new MultiChunkId(new byte[] { 7, 7, 7, 7, 7, 7, 7, 7, 7 }));
-		MultiChunkEntry multiChunkP3 = new MultiChunkEntry(new MultiChunkId(new byte[] { 5, 5, 5, 5, 5, 5, 5, 5, 5 }));
+		MultiChunkEntry multiChunkP2 = new MultiChunkEntry(new MultiChunkId(new byte[] { 7, 7, 7, 7, 7, 7, 7, 7, 7 }), 11);
+		MultiChunkEntry multiChunkP3 = new MultiChunkEntry(new MultiChunkId(new byte[] { 5, 5, 5, 5, 5, 5, 5, 5, 5 }), 12);
 
 		ChunkEntry chunkA2 = new ChunkEntry(new ChunkChecksum(new byte[] { 9, 2, 3, 4, 5, 7, 8, 9, 0 }), 912);
 		ChunkEntry chunkA3 = new ChunkEntry(new ChunkChecksum(new byte[] { 8, 2, 3, 4, 5, 7, 8, 9, 0 }), 812);

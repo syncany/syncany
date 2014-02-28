@@ -64,7 +64,7 @@ public class RenameDeleteScenarioTest {
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

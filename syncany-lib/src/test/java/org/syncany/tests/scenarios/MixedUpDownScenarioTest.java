@@ -474,8 +474,8 @@ public class MixedUpDownScenarioTest {
 		assertEquals("File list count does not match.", 19, clientA.getLocalFilesExcludeLockedAndNoRead().size());
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
-		clientC.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
 	}
 }
