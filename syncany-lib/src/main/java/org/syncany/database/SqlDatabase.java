@@ -223,6 +223,10 @@ public class SqlDatabase {
 	public MultiChunkId getMultiChunkId(ChunkChecksum chunkChecksum) {
 		return multiChunkDao.getMultiChunkId(chunkChecksum);
 	}
+	
+	public Map<ChunkChecksum, MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
+		return multiChunkDao.getMultiChunkIdsByChecksums(chunkChecksums);
+	}
 
 	public List<MultiChunkId> getDirtyMultiChunkIds() {
 		return multiChunkDao.getDirtyMultiChunkIds();
