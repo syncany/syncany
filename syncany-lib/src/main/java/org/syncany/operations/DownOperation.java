@@ -347,15 +347,15 @@ public class DownOperation extends Operation {
 			boolean winningFileHasContent = winningFileContent != null;
 
 			if (winningFileHasContent) { // File can be empty!
-				Collection<ChunkChecksum> fileChunks = winningFileContent.getChunks(); 
+				List<ChunkChecksum> fileChunks = winningFileContent.getChunks(); 
 				
 				// TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well
 				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
-
+				
+				Map<ChunkChecksum, MultiChunkId> checksumsWithMultiChunkIds = localDatabase.getMultiChunkIdsByChecksums(fileChunks);
+				
 				for (ChunkChecksum chunkChecksum : fileChunks) {
-					MultiChunkId multiChunkIdForChunk = localDatabase.getMultiChunkId(chunkChecksum);
-					// TODO [high] Performance: This queries the database for every chunk, SLOWWW!
-					
+					MultiChunkId multiChunkIdForChunk = checksumsWithMultiChunkIds.get(chunkChecksum);
 					if (multiChunkIdForChunk == null) {
 						multiChunkIdForChunk = winnersDatabase.getMultiChunkIdForChunk(chunkChecksum);
 						
