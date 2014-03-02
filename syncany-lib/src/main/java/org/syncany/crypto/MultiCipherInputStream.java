@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 
@@ -105,25 +104,23 @@ public class MultiCipherInputStream extends InputStream {
 		return hmac;
 	}
 	
-	private InputStream readCipherSpecsAndUpdateHmac(InputStream inputStream, Mac hmac, CipherSession cipherSession) throws Exception {
-		int cipherSpecCount = readByteAndUpdateHmac(inputStream, hmac);		
-		InputStream nestedCipherInputStream = inputStream;
+	private InputStream readCipherSpecsAndUpdateHmac(InputStream underlyingInputStream, Mac hmac, CipherSession cipherSession) throws Exception {
+		int cipherSpecCount = readByteAndUpdateHmac(underlyingInputStream, hmac);		
+		InputStream nestedCipherInputStream = underlyingInputStream;
 		
 		for (int i=0; i<cipherSpecCount; i++) {
-			int cipherSpecId = readByteAndUpdateHmac(inputStream, hmac);				
+			int cipherSpecId = readByteAndUpdateHmac(underlyingInputStream, hmac);				
 			CipherSpec cipherSpec = CipherSpecs.getCipherSpec(cipherSpecId);
 			
 			if (cipherSpec == null) {
 				throw new IOException("Cannot find cipher spec with ID "+cipherSpecId);
 			}
 
-			byte[] salt = readAndUpdateHmac(inputStream, MultiCipherOutputStream.SALT_SIZE, hmac);
-			byte[] iv = readAndUpdateHmac(inputStream, cipherSpec.getIvSize()/8, hmac);
+			byte[] salt = readAndUpdateHmac(underlyingInputStream, MultiCipherOutputStream.SALT_SIZE, hmac);
+			byte[] iv = readAndUpdateHmac(underlyingInputStream, cipherSpec.getIvSize()/8, hmac);
 			
-			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);
-			Cipher decryptCipher = CipherUtil.createDecCipher(cipherSpec, secretKey, iv);
-			
-			nestedCipherInputStream = new GcmCompatibleCipherInputStream(nestedCipherInputStream, decryptCipher);		
+			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);			
+			nestedCipherInputStream = cipherSpec.newCipherInputStream(nestedCipherInputStream, secretKey.getEncoded(), iv);		
 		}	 
 		
 		return nestedCipherInputStream;

@@ -17,7 +17,10 @@
  */
 package org.syncany.tests.crypto;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -164,7 +167,7 @@ public class CipherUtilTest {
 			TestFileUtil.createRandomArray(1024*1024),
 			Arrays.asList(new CipherSpec[] { CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM) })
 		);				
-	}
+	}	
 	
 	@Test
 	public void testEncryptShortArrayAes128Twofish128() throws Exception {
@@ -197,15 +200,7 @@ public class CipherUtilTest {
 				CipherSpecs.getCipherSpec(CipherSpecs.TWOFISH_256_GCM)
 			})
 		);		
-	}
-	
-	@Test(expected=Exception.class)
-	public void testEncryptUnknownCipherSpec() throws Exception {
-		testEncrypt(
-			TestFileUtil.createRandomArray(1024*1024),
-			Arrays.asList(new CipherSpec[] { new CipherSpec(0xFF, "Twofish/GCM/NoPadding", 128, 128, false) })
-		);		
-	}
+	}	
 	
 	private void testEncrypt(byte[] originalData, List<CipherSpec> cipherSpecs) throws IOException {
 		SaltedSecretKey masterKey = createDummyMasterKey();

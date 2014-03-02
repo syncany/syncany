@@ -26,7 +26,6 @@ import static org.syncany.crypto.CipherParams.MASTER_KEY_DERIVATION_ROUNDS;
 import static org.syncany.crypto.CipherParams.MASTER_KEY_SALT_SIZE;
 import static org.syncany.crypto.CipherParams.MASTER_KEY_SIZE;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +48,6 @@ import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -238,32 +236,6 @@ public class CipherUtil {
 		return new SaltedSecretKey(masterKey, salt);
 	}
 
-	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws CipherException {
-		logger.log(Level.INFO, "Creating cipher using " + cipherSpec + " ...");
-
-		try {
-			if (cipherSpec.needsUnlimitedStrength()) {
-				enableUnlimitedStrength();
-			}
-
-			Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), CRYPTO_PROVIDER_ID);
-			cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
-
-			return cipher;
-		}
-		catch (Exception e) {
-			throw new CipherException(e);
-		}
-	}
-
-	public static Cipher createEncCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
-		return createCipher(cipherSpec, Cipher.ENCRYPT_MODE, secretKey, iv);
-	}
-
-	public static Cipher createDecCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
-		return createCipher(cipherSpec, Cipher.DECRYPT_MODE, secretKey, iv);
-	}
-
 	public static boolean isEncrypted(File file) throws IOException {
 		byte[] actualMagic = new byte[MultiCipherOutputStream.STREAM_MAGIC.length];
 
@@ -288,15 +260,6 @@ public class CipherUtil {
 
 	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
-		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
-
-		return ciphertextOutputStream.toByteArray();
-	}
-
-	public static byte[] encrypt(byte[] plaintext, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
-		ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(plaintext);
-		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
-
 		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
 
 		return ciphertextOutputStream.toByteArray();

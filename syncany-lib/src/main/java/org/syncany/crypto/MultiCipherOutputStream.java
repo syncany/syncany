@@ -27,6 +27,8 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.Mac;
 
+import org.syncany.crypto.specs.HmacSha256CipherSpec;
+
 /**
  * Implements an output stream that encrypts the underlying output
  * stream using one to many ciphers. 
@@ -65,7 +67,7 @@ public class MultiCipherOutputStream extends OutputStream {
 	public static final byte STREAM_VERSION = 1;
 
 	public static final int SALT_SIZE = 12;	
-	public static final CipherSpec HMAC_SPEC = new CipherSpec(-1, "HmacSHA256", 256, -1, false);
+	public static final CipherSpec HMAC_SPEC = new HmacSha256CipherSpec();
 	
 	private OutputStream underlyingOutputStream;
 	
@@ -126,9 +128,7 @@ public class MultiCipherOutputStream extends OutputStream {
 				writeAndUpdateHmac(underlyingOutputStream, saltedSecretKey.getSalt());
 				writeAndUpdateHmac(underlyingOutputStream, iv);
 				
-				Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, saltedSecretKey, iv);
-				
-				cipherOutputStream = new CipherOutputStream(cipherOutputStream, encryptCipher);	        
+				cipherOutputStream = cipherSpec.newCipherOutputStream(cipherOutputStream, saltedSecretKey.getEncoded(), iv);	        
 			}	
 			
 			writeNoHmac(underlyingOutputStream, headerHmac.doFinal());
