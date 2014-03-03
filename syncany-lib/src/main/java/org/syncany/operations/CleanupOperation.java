@@ -29,6 +29,8 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.chunk.Chunk;
+import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
@@ -38,10 +40,9 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
+import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
@@ -52,6 +53,21 @@ import org.syncany.operations.StatusOperation.StatusOperationResult;
 
 import com.google.common.collect.Lists;
 
+/**
+ * The purpose of the cleanup operation is to keep the local database and the
+ * remote repository clean -- thereby allowing it to be used indefinitely without
+ * any performance issues or storage shortage.
+ * 
+ * <p>The responsibilities of the cleanup operations include:
+ * <ul>
+ *   <li>Remove old {@link FileVersion} and their corresponding database entities.
+ *       In particular, it also removes {@link PartialFileHistory}s, {@link FileContent}s,
+ *       {@link Chunk}s and {@link MultiChunk}s.</li>
+ *   <li>Merge metadata of a single client and remove old database version files
+ *       from the remote storage.</li>   
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class CleanupOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	private static final String LOCK_CLIENT_NAME = "lock";
@@ -112,8 +128,8 @@ public class CleanupOperation extends Operation {
 	}
 
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
-		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunksCount() > 0 || result.getRemovedOldVersionsCount() > 0) {
-			result.setResultCode(CleanupResultCode.OK);			
+		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunks().size() > 0 || result.getRemovedOldVersionsCount() > 0) {
+			result.setResultCode(CleanupResultCode.OK);
 		}
 		else {
 			result.setResultCode(CleanupResultCode.OK_NOTHING_DONE);
@@ -159,33 +175,30 @@ public class CleanupOperation extends Operation {
 	 * @throws Exception 
 	 */
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, Long> mostRecentPurgeFileVersions = findMostRecentPurgeFileVersions(options.getKeepVersionsCount());
+		Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount());
 		boolean purgeDatabaseVersionNecessary = mostRecentPurgeFileVersions.size() > 0;
 		
 		if (!purgeDatabaseVersionNecessary) {
-			logger.log(Level.INFO, "- Old verison removal: Not necessary (no file histories longer than {0} versions found).", options.getKeepVersionsCount());
+			logger.log(Level.INFO, "- Old version removal: Not necessary (no file histories longer than {0} versions found).", options.getKeepVersionsCount());
 			return;
 		}		
 		
-		logger.log(Level.INFO, "- Old verison removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
+		logger.log(Level.INFO, "- Old version removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
 				mostRecentPurgeFileVersions.size(), options.getKeepVersionsCount() });
 		
 		lockRemoteRepository(); // Write-lock sufficient?
 		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeFileVersions(options.getKeepVersionsCount());
+		localDatabase.removeFileVersions(mostRecentPurgeFileVersions);
 		localDatabase.removeDeletedVersions();
 
 		// Local: Then, determine what must be changed remotely and remove it locally
-		List<MultiChunkId> unusedMultiChunks = findUnusedMultiChunkIds();
-
-		localDatabase.removeUnreferencedDatabaseEntities();		
-		localDatabase.commit();
-
-		// Local: Create "purge database version"
+		List<MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
 		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
 		
+		localDatabase.removeUnreferencedDatabaseEntities();		
+			
 		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
 		localDatabase.commit();
 		
@@ -198,7 +211,7 @@ public class CleanupOperation extends Operation {
 		
 		// Update stats
 		result.setRemovedOldVersionsCount(mostRecentPurgeFileVersions.size());
-		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
+		result.setRemovedMultiChunks(unusedMultiChunks);
 
 		// stopLockRenewalThread();
 		unlockRemoteRepository();		
@@ -208,11 +221,7 @@ public class CleanupOperation extends Operation {
 		transferManager.upload(tempPruneFile, newPruneRemoteFile);
 	}
 
-	private List<MultiChunkId> findUnusedMultiChunkIds() {
-		return localDatabase.getUnusedMultiChunkIds();
-	}
-
-	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, Long> mostRecentPurgeFileVersions) {
+	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions) {
 		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 		VectorClock lastVectorClock = lastDatabaseVersionHeader.getVectorClock();
 		
@@ -228,19 +237,10 @@ public class CleanupOperation extends Operation {
 		DatabaseVersion purgeDatabaseVersion = new DatabaseVersion();
 		purgeDatabaseVersion.setHeader(purgeDatabaseVersionHeader);	
 
-		for (Entry<FileHistoryId, Long> fileHistoryEntry : mostRecentPurgeFileVersions.entrySet()) {
+		for (Entry<FileHistoryId, FileVersion> fileHistoryEntry : mostRecentPurgeFileVersions.entrySet()) {
 			PartialFileHistory purgeFileHistory = new PartialFileHistory(fileHistoryEntry.getKey());
 			
-			FileVersion purgeFileVersion = new FileVersion();
-			
-			purgeFileVersion.setVersion(fileHistoryEntry.getValue());
-			purgeFileVersion.setType(FileType.FILE);
-			purgeFileVersion.setPath("");
-			purgeFileVersion.setLastModified(new Date(0));
-			purgeFileVersion.setSize(0L);
-			purgeFileVersion.setStatus(FileStatus.DELETED);
-			
-			purgeFileHistory.addFileVersion(purgeFileVersion);			
+			purgeFileHistory.addFileVersion(fileHistoryEntry.getValue());			
 			purgeDatabaseVersion.addFileHistory(purgeFileHistory);
 						
 			logger.log(Level.FINE, "- Pruning file history " + fileHistoryEntry.getKey() + " versions <= " + fileHistoryEntry.getValue() + " ...");
@@ -263,22 +263,18 @@ public class CleanupOperation extends Operation {
 		return new DatabaseRemoteFile(config.getMachineName(), localMachineVersion);
 	}
 
-	private void remoteDeleteUnusedMultiChunks(List<MultiChunkId> unusedMultiChunks) throws StorageException {
+	private void remoteDeleteUnusedMultiChunks(List<MultiChunkEntry> unusedMultiChunks) throws StorageException {
 		logger.log(Level.INFO, "- Deleting remote multichunks ...");
 		
-		for (MultiChunkId multiChunkId : unusedMultiChunks) {
-			logger.log(Level.FINE, "  + Deleting remote multichunk " + multiChunkId + " ...");
-			transferManager.delete(new MultiChunkRemoteFile(multiChunkId));
+		for (MultiChunkEntry multiChunkEntry : unusedMultiChunks) {
+			logger.log(Level.FINE, "  + Deleting remote multichunk " + multiChunkEntry + " ...");
+			transferManager.delete(new MultiChunkRemoteFile(multiChunkEntry.getId()));
 		}
 	}
 
 	private boolean hasDirtyDatabaseVersions() {
 		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDirtyDatabaseVersions();
 		return dirtyDatabaseVersions.hasNext(); // TODO [low] Is this a resource creeper?
-	}
-
-	private Map<FileHistoryId, Long> findMostRecentPurgeFileVersions(int keepVersionsCount) {
-		return localDatabase.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}
 
 	private boolean hasRemoteChanges() throws Exception { 
@@ -442,7 +438,7 @@ public class CleanupOperation extends Operation {
 		private CleanupResultCode resultCode = CleanupResultCode.OK_NOTHING_DONE;
 		private int mergedDatabaseFilesCount = 0;
 		private int removedOldVersionsCount = 0;
-		private int removedMultiChunksCount = 0;
+		private List<MultiChunkEntry> removedMultiChunks = new ArrayList<MultiChunkEntry>();
 
 		public CleanupOperationResult() {
 			// Nothing.
@@ -476,12 +472,12 @@ public class CleanupOperation extends Operation {
 			this.removedOldVersionsCount = removedOldVersionsCount;
 		}
 
-		public int getRemovedMultiChunksCount() {
-			return removedMultiChunksCount;
+		public List<MultiChunkEntry> getRemovedMultiChunks() {
+			return removedMultiChunks;
 		}
 
-		public void setRemovedMultiChunksCount(int removedMultiChunksCount) {
-			this.removedMultiChunksCount = removedMultiChunksCount;
-		}				
+		public void setRemovedMultiChunks(List<MultiChunkEntry> removedMultiChunks) {
+			this.removedMultiChunks = removedMultiChunks;
+		}			
 	}
 }
