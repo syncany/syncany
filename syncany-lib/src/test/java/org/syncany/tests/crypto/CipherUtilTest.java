@@ -299,7 +299,7 @@ public class CipherUtilTest {
 		fail("TEST FAILED: Ciphertext was altered without exception.");
 	}	
 	
-	@Test//(expected = Exception.class)
+	@Test(expected = org.bouncycastle.crypto.io.InvalidCipherTextIOException.class)
 	public void testIntegrityAesGcmCiphertext() throws Exception {
 		SaltedSecretKey masterKey = createDummyMasterKey();
 		
@@ -313,11 +313,10 @@ public class CipherUtilTest {
 		
 		// Alter ciphertext (after header!); ciphertext starts after 75 bytes 
 		ciphertext[80] = (byte) (ciphertext[80] ^ 0x01);
+		ciphertext[81] = (byte) (ciphertext[81] ^ 0x02);
+		ciphertext[82] = (byte) (ciphertext[82] ^ 0x03);
 		
-		byte[] plaintext = CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
-		
-		System.out.println(StringUtil.toHex(originalPlaintext));
-		System.out.println(StringUtil.toHex(plaintext));
+		CipherUtil.decrypt(new ByteArrayInputStream(ciphertext), masterKey);
 		
 		fail("TEST FAILED: Ciphertext was altered without exception.");
 	}	

@@ -26,8 +26,6 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 
-import org.syncany.util.StringUtil;
-
 public class MultiCipherInputStream extends InputStream {
 	private InputStream underlyingInputStream;
 
@@ -49,12 +47,20 @@ public class MultiCipherInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (!headerRead) {
-			readHeader();		
-			headerRead = true;
-		}
-		
+		readHeader();
 		return cipherInputStream.read();
+	}
+	
+	@Override
+	public int read(byte[] b) throws IOException {
+		readHeader();
+		return cipherInputStream.read(b, 0, b.length);
+	}
+	
+	@Override
+	public int read(byte[] b, int off, int len) throws IOException {
+		readHeader();
+		return cipherInputStream.read(b, off, len);
 	}
 	
 	@Override
@@ -63,18 +69,22 @@ public class MultiCipherInputStream extends InputStream {
 	}	
 	
 	private void readHeader() throws IOException {
-		try {
-			readAndVerifyMagicNoHmac(underlyingInputStream);
-			readAndVerifyVersionNoHmac(underlyingInputStream);
+		if (!headerRead) {
+			try {
+				readAndVerifyMagicNoHmac(underlyingInputStream);
+				readAndVerifyVersionNoHmac(underlyingInputStream);
+
+				headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
+				cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
+
+				readAndVerifyHmac(underlyingInputStream, headerHmac);			
+			}
+			catch (Exception e) {
+				throw new IOException(e);
+			}
 			
-			headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
-			cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
-			
-			readAndVerifyHmac(underlyingInputStream, headerHmac);			
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}
+			headerRead = true;
+		}
 	}
 
 	private void readAndVerifyMagicNoHmac(InputStream inputStream) throws IOException {
@@ -131,7 +141,7 @@ public class MultiCipherInputStream extends InputStream {
 		byte[] readHeaderHmac = readNoHmac(inputStream, calculatedHeaderHmac.length);
 		
 		if (!Arrays.equals(calculatedHeaderHmac, readHeaderHmac)) {
-			throw new Exception("Integrity exception: Calculated HMAC "+StringUtil.toHex(calculatedHeaderHmac)+" and read HMAC "+StringUtil.toHex(readHeaderHmac)+" do not match.");
+			throw new Exception("Integrity exception: Calculated HMAC and read HMAC do not match.");
 		}			
 	}
 

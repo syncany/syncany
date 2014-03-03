@@ -53,7 +53,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
-import org.syncany.util.FileUtil;
 
 /**
  * The cipher utility provides functions to create a master key using PBKDF2, 
@@ -252,10 +251,15 @@ public class CipherUtil {
 		CipherSession cipherSession = new CipherSession(masterKey);
 		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSpecs, cipherSession);
 
-		FileUtil.appendToOutputStream(plaintextInputStream, multiCipherOutputStream);
+		int read = -1;
+		byte[] buffer = new byte[4096];
 
+		while (-1 != (read = plaintextInputStream.read(buffer))) {
+			multiCipherOutputStream.write(buffer, 0, read);
+		}
+		
+		plaintextInputStream.close();
 		multiCipherOutputStream.close();
-		ciphertextOutputStream.close();
 	}
 
 	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
@@ -267,14 +271,19 @@ public class CipherUtil {
 
 	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {
 		CipherSession cipherSession = new CipherSession(masterKey);
-		MultiCipherInputStream cipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
+		MultiCipherInputStream multiCipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 
-		FileUtil.appendToOutputStream(cipherInputStream, plaintextOutputStream);
+		int read = -1;
+		byte[] buffer = new byte[4096];
 
-		cipherInputStream.close();
+		while (-1 != (read = multiCipherInputStream.read(buffer))) {
+			plaintextOutputStream.write(buffer, 0, read);
+		}
+		
+		multiCipherInputStream.close();
 		plaintextOutputStream.close();
 
 		return plaintextOutputStream.toByteArray();
-	}
+	}		
 }

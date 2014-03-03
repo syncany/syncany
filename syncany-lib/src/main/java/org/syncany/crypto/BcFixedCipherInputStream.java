@@ -1,3 +1,14 @@
+// This is a fixed version of BouncyCastle's CipherInputStream. It will be fixed in 1.51.
+
+// Copied from:
+// https://raw.github.com/bcgit/bc-java/933119114c96f703d1303a3c77d9ac405091270d/core/src/main/java/org/bouncycastle/crypto/io/CipherInputStream.java
+
+// Patch to fix the buffer underflow:
+// https://github.com/bcgit/bc-java/commit/933119114c96f703d1303a3c77d9ac405091270d
+
+// Discussion here:
+// http://bouncycastle.org/devmailarchive/msg13615.html
+
 package org.syncany.crypto;
 
 import java.io.FilterInputStream;
