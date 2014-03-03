@@ -215,7 +215,7 @@ public class DatabaseVersionDaoTest {
 		ChunkEntry newChunkEntry = new ChunkEntry(ChunkChecksum.parseChunkChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f"), 1);
 		newDatabaseVersion.addChunk(newChunkEntry);
 		
-		MultiChunkEntry newMultiChunkEntry = new MultiChunkEntry(MultiChunkId.parseMultiChunkId("1234567890987654321234567876543456555555"));
+		MultiChunkEntry newMultiChunkEntry = new MultiChunkEntry(MultiChunkId.parseMultiChunkId("1234567890987654321234567876543456555555"), 10);
 		newMultiChunkEntry.addChunk(newChunkEntry.getChecksum());
 		newDatabaseVersion.addMultiChunk(newMultiChunkEntry);
 		

@@ -71,7 +71,7 @@ public class EmptyFolderScenarioTest {
 		assertFileListEquals("No change in file lists expected. Nothing changed", beforeSyncDownFileList, clientA.getLocalFilesExcludeLockedAndNoRead()); 				
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

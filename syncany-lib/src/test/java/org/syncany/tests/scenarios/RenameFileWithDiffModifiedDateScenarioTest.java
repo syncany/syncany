@@ -81,7 +81,7 @@ public class RenameFileWithDiffModifiedDateScenarioTest {
 		assertEquals("A-file1-with-different-modified-date-moved.jpg", fileVersion1WithDiffLastModDateV2.getName());
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

@@ -54,7 +54,7 @@ public class ChangedTypeScenarioTest {
 			}
 		);
 		
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

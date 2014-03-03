@@ -29,12 +29,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -76,10 +77,10 @@ public class SyncUpOperationTest {
 		assertTrue(remoteDatabaseFile.exists());
 		
 		// - Memory database
-		XmlDatabaseSerializer dDAO = new XmlDatabaseSerializer(testConfig.getTransformer());
+		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
 		
 		MemoryDatabase remoteDatabase = new MemoryDatabase();		
-		dDAO.load(remoteDatabase, remoteDatabaseFile);
+		dDAO.load(remoteDatabase, remoteDatabaseFile, DatabaseVersionType.DEFAULT);
 		
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 		

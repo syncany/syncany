@@ -124,8 +124,8 @@ public class FileVanishedScenarioTest {
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());				
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 	
 	@Test
@@ -155,7 +155,7 @@ public class FileVanishedScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}	
 }

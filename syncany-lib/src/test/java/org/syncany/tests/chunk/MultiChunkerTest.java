@@ -30,6 +30,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -47,11 +49,11 @@ import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
 public class MultiChunkerTest {
+	private static Logger logger = Logger.getLogger(MultiChunkerTest.class.getSimpleName());
+			
 	@Test
 	public void testChunkFileIntoMultiChunks() throws Exception {
-		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		
-		int minMultiChunkSize = 512 * 1024;
+		int minMultiChunkSize = 512;
 		int chunkSizeB = 16000;
 
 		Chunker[] chunkers = new Chunker[] { 
@@ -65,11 +67,10 @@ public class MultiChunkerTest {
 		
 		for (Chunker chunker : chunkers) {
 			for (MultiChunker multiChunker : multiChunkers) {
+				logger.log(Level.INFO, "Running with "+chunker.getClass()+" and "+multiChunker.getClass());				
 				chunkFileIntoMultiChunks(chunker, multiChunker, minMultiChunkSize);
 			}
 		}
-		
-		TestFileUtil.deleteDirectory(tempDir);
 	}
 	
 	@Test
@@ -133,10 +134,12 @@ public class MultiChunkerTest {
 		List<File> files = TestFileUtil.createRandomFilesInDirectory(tempDir, fileSizeSmall, fileAmountSizeSmall);
 		files.addAll(TestFileUtil.createRandomFilesInDirectory(tempDir, fileSizeBig, fileAmountSizeBig));
 
+		logger.log(Level.INFO, "- In "+tempDir+" ...");			
+
 		Set<MultiChunk> resultMultiChunks = chunkFileIntoMultiChunks(tempDir, files, chunker, multiChunker, new NoTransformer());
 
 		long totalFilesSize = (fileSizeBig * fileAmountSizeBig) + (fileSizeSmall * fileAmountSizeSmall);
-		assertEquals((totalFilesSize / (minMultiChunkSize)), resultMultiChunks.size());
+		assertEquals(totalFilesSize / minMultiChunkSize / 1024, resultMultiChunks.size());
 		
 		TestFileUtil.deleteDirectory(tempDir);
 	}

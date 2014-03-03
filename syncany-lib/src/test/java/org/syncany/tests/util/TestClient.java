@@ -122,7 +122,7 @@ public class TestClient extends Client {
 		return FileUtils.deleteQuietly(getLocalFile(name));		
 	}	
 	
-	public void cleanup() {
+	public void deleteTestData() {
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
 	

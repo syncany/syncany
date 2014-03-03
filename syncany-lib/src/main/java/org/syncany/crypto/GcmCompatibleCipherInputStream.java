@@ -66,8 +66,11 @@ import javax.crypto.NullCipher;
  * the handling of <b>GCM</b> mode, e.g. AES/GCM/NoPadding. 
  * 
  * <p> This GCM-fix was originally proposed here:
- * http://cr.openjdk.java.net/~valeriep/8012637/webrev.00/src/share/classes/javax/crypto/CipherInputStream.java.patch
- *
+ * <ul>
+ *  <li>http://mail.openjdk.java.net/pipermail/security-dev/2013-June/007750.html</li>
+ *  <li>http://cr.openjdk.java.net/~valeriep/8012637/webrev.00/src/share/classes/javax/crypto/CipherInputStream.java.patch</li>
+ * </ul>
+ * 
  * @author  Li Gong
  * @author  Philipp C. Heckel <philipp.heckel@gmail.com> (GCM-fix only!)
  * @see     java.io.InputStream

@@ -79,7 +79,7 @@ public class LongRunningNewAndDeleteScenarioTest {
 		fail("No asserts yet.");
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }
