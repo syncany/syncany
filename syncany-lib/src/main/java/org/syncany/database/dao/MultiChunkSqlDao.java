@@ -179,13 +179,16 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public List<MultiChunkId> getUnusedMultiChunkIds() {
-		List<MultiChunkId> unusedMultiChunkIds = new ArrayList<MultiChunkId>();		
+	public List<MultiChunkEntry> getUnusedMultiChunks() {
+		List<MultiChunkEntry> unusedMultiChunkIds = new ArrayList<MultiChunkEntry>();		
 		
-		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getUnusedMultiChunkIds.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getUnusedMultiChunks.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					unusedMultiChunkIds.add(MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id")));
+					MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+					long multiChunkSize = resultSet.getLong("size");
+								
+					unusedMultiChunkIds.add(new MultiChunkEntry(multiChunkId, multiChunkSize));
 				}
 				
 				return unusedMultiChunkIds;
