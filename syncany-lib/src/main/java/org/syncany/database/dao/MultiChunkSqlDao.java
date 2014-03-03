@@ -162,6 +162,32 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	/**
+	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
+	 */
+	public Map<ChunkChecksum,MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
+		String[] checksums = new String[chunkChecksums.size()];
+		for (int i = 0; i < checksums.length; i++) {
+			checksums[i] = chunkChecksums.get(i).toString();
+		}
+		Map<ChunkChecksum, MultiChunkId> result = new HashMap<ChunkChecksum, MultiChunkId>();
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkIdForChunks.sql")) {
+			preparedStatement.setArray(1, connection.createArrayOf("varchar", checksums));	
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					result.put(ChunkChecksum.parseChunkChecksum(resultSet.getString("chunk_checksum")),
+							MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id")));
+					
+				}
+			}
+
+			return result;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public List<MultiChunkId> getDirtyMultiChunkIds() {
 		List<MultiChunkId> dirtyMultiChunkIds = new ArrayList<MultiChunkId>();		
 		
