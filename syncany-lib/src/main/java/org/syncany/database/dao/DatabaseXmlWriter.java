@@ -209,7 +209,7 @@ public class DatabaseXmlWriter {
 		
 		for (PartialFileHistory fileHistory : fileHistories) {
 			xmlOut.writeStartElement("fileHistory");
-			xmlOut.writeAttribute("id", fileHistory.getFileId().toString());
+			xmlOut.writeAttribute("id", fileHistory.getFileHistoryId().toString());
 			
 			xmlOut.writeStartElement("fileVersions");
 			

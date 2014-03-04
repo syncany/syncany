@@ -172,7 +172,7 @@ public class DatabaseVersion {
     // History
     
     public void addFileHistory(PartialFileHistory history) {
-        fileHistories.put(history.getFileId(), history);
+        fileHistories.put(history.getFileHistoryId(), history);
     }
     
     public PartialFileHistory getFileHistory(FileHistoryId fileId) {

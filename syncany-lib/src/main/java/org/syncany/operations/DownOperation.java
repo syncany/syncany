@@ -223,9 +223,9 @@ public class DownOperation extends Operation {
 		
 		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
 			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] { 
-					purgeFileHistory.getFileId().toString(), purgeFileHistory.getLastVersion().getVersion() });
+					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion().getVersion() });
 			
-			purgeFileVersions.put(purgeFileHistory.getFileId(), purgeFileHistory.getLastVersion());				
+			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());				
 		}
 		
 		localDatabase.removeFileVersions(purgeFileVersions);

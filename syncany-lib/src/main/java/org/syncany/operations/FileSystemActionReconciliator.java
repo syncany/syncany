@@ -154,7 +154,7 @@ public class FileSystemActionReconciliator {
 			File winningLastFile = new File(config.getLocalDir()+File.separator+winningLastVersion.getPath());
 			
 			// Get local file version and content
-			FileVersion localLastVersion = fileHistoryIdCache.get(winningFileHistory.getFileId());
+			FileVersion localLastVersion = fileHistoryIdCache.get(winningFileHistory.getFileHistoryId());
 			File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir()+File.separator+localLastVersion.getPath()) : null;
 			
 			logger.log(Level.INFO, "   + Comparing local version: "+localLastVersion);			
@@ -302,7 +302,7 @@ public class FileSystemActionReconciliator {
 		Map<FileHistoryId, FileVersion> fileHistoryIdCache = new HashMap<FileHistoryId, FileVersion>();
 		
 		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
-			fileHistoryIdCache.put(fileHistory.getFileId(), fileHistory.getLastVersion());
+			fileHistoryIdCache.put(fileHistory.getFileHistoryId(), fileHistory.getLastVersion());
 		}
 		
 		return fileHistoryIdCache;
