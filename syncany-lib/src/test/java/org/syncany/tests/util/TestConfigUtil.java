@@ -25,11 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
@@ -161,8 +163,8 @@ public class TestConfigUtil {
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
-		// Skip configTO.setConnection()
-
+		// Skip configTO.setConnection(), b/c we don't have it
+		
 		Config config = new Config(tempLocalDir, configTO, repoTO);
 
 		config.setConnection(connection);
@@ -170,6 +172,14 @@ public class TestConfigUtil {
 		config.getCacheDir().mkdirs();
 		config.getDatabaseDir().mkdirs();
 		config.getLogDir().mkdirs();
+
+		// Write to config folder (required for some tests)
+		ConnectionTO dummyConnectionTO = new ConnectionTO();
+		dummyConnectionTO.setType("dummy");
+		dummyConnectionTO.setSettings(new HashMap<String, String>());
+		configTO.setConnection(dummyConnectionTO);
+		
+		new Persister().write(configTO, new File(config.getAppDir()+"/"+Config.FILE_CONFIG));
 
 		return config;
 	}

@@ -49,8 +49,7 @@ import org.syncany.util.StringUtil;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class Config {
-	
+public class Config {	
 	public static final String DIR_APPLICATION = ".syncany";
 	public static final String DIR_CACHE = "cache";
 	public static final String DIR_DATABASE = "db";
