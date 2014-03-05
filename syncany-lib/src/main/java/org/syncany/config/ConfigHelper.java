@@ -40,6 +40,10 @@ public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	
 	public static Config loadConfig(File localDir) throws ConfigException {
+		if (localDir == null) {
+			throw new ConfigException("Argument localDir cannot be null.");
+		}
+		
 		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
 		
 		if (appDir.exists()) {

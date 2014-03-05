@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNull;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigHelper;
@@ -132,7 +131,6 @@ public class ConfigHelperTest {
 	}
 	
 	@Test
-	@Ignore
 	public void testConfigHelperLoadRepoTO() throws Exception {		
 		// Setup
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
@@ -146,9 +144,9 @@ public class ConfigHelperTest {
 		assertNotNull(repoConfigTO.getChunker());
 		assertNotNull(repoConfigTO.getMultiChunker());
 		assertNotNull(repoConfigTO.getRepoId());
-		assertNotNull(repoConfigTO.getTransformers());
+		assertNull(repoConfigTO.getTransformers());
 		
-		assertEquals("local", repoConfigTO.getChunker().getType());
+		assertEquals("fixed", repoConfigTO.getChunker().getType());
 		assertEquals(1, repoConfigTO.getChunker().getSettings().size());
 		assertEquals("zip", repoConfigTO.getMultiChunker().getType());
 		assertEquals(1, repoConfigTO.getMultiChunker().getSettings().size());
