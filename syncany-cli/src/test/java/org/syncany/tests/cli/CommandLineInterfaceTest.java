@@ -48,7 +48,7 @@ public class CommandLineInterfaceTest {
 			 "--plugin", "local", 
 			 "--plugin-option", "path="+clientA.get("repopath"),
 			 "--no-encryption", 
-			 "--no-gzip" 
+			 "--no-compression" 
 		}; 
 		
 		logger.log(Level.INFO, "Running syncany with argument: "+StringUtil.join(initArgs, " "));		
