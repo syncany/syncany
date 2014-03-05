@@ -79,7 +79,11 @@ public class Config {
     	Logging.init();
     }
     
-	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {		
+	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
+		if (aLocalDir == null || configTO == null || repoTO == null) {
+			throw new ConfigException("Arguments aLocalDir, configTO and repoTO cannot be null.");
+		}
+		
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
@@ -102,10 +106,6 @@ public class Config {
 	}
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
-		if (aLocalDir == null) {
-			throw new ConfigException("Local dir cannot be null.");
-		}
-		
 		localDir = FileUtil.getCanonicalFile(aLocalDir);		
 		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DIR_APPLICATION));
 		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_CACHE));
@@ -125,7 +125,7 @@ public class Config {
 			initTransformers(repoTO);
 		}
 		catch (Exception e) {
-			throw new ConfigException(e);
+			throw new ConfigException("Unable to initialize repository information from config.", e);
 		}
 	}
 	
@@ -338,10 +338,6 @@ public class Config {
 	public static class ConfigException extends Exception {
 		private static final long serialVersionUID = 4414807565457521855L;
 
-		public ConfigException(Throwable cause) {
-	        super(cause);
-	    }
-
 	    public ConfigException(String message, Throwable cause) {
 	        super(message, cause);
 	    }
@@ -349,8 +345,5 @@ public class Config {
 	    public ConfigException(String message) {
 	        super(message);
 	    }
-
-	    public ConfigException() {
-	    }    
 	}
 }

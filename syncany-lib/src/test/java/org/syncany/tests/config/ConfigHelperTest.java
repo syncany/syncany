@@ -28,8 +28,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigHelper;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.RepoTO;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.EnvironmentUtil;
+import org.syncany.util.StringUtil;
 
 public class ConfigHelperTest {
 	@Test
@@ -80,20 +83,78 @@ public class ConfigHelperTest {
 	}
 	
 	@Test
-	@Ignore
 	public void testConfigHelperLoadConfig() throws Exception {
-		// Config actualConfig = ConfigHelper.loadConfig(expectedConfig.getLocalDir());		
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		
+		// Run
+		Config loadedConfig = ConfigHelper.loadConfig(testConfig.getLocalDir());
+		
+		// Test
+		assertNotNull(loadedConfig);
+		assertEquals(testConfig.getAppDir(), loadedConfig.getAppDir());
+		assertEquals(testConfig.getCacheDir(), loadedConfig.getCacheDir());
+		assertNotNull(loadedConfig.getChunker());
+		assertEquals(testConfig.getChunker().toString(), loadedConfig.getChunker().toString());
+		assertNotNull(loadedConfig.getCache());
+		assertNotNull(loadedConfig.getConnection());
+		assertEquals(testConfig.getDatabaseDir(), loadedConfig.getDatabaseDir());		
+		assertEquals(testConfig.getDatabaseFile(), loadedConfig.getDatabaseFile());
+		assertEquals(testConfig.getDisplayName(), loadedConfig.getDisplayName());
+		assertEquals(testConfig.getLocalDir(), loadedConfig.getLocalDir());
+		assertEquals(testConfig.getLogDir(), loadedConfig.getLogDir());
+		assertEquals(testConfig.getMachineName(), loadedConfig.getMachineName());
+		assertEquals(testConfig.getMasterKey(), loadedConfig.getMasterKey());
+		assertNotNull(loadedConfig.getMultiChunker());
+		assertNotNull(loadedConfig.getRepoId());
+		assertNotNull(loadedConfig.getTransformer());
+
+		// Tear down
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);		
 	}
 	
 	@Test
-	@Ignore
 	public void testConfigHelperLoadConfigTO() throws Exception {
-		// ConfigHelper.loadConfigTO(localDir);	
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		
+		// Run
+		ConfigTO loadedConfigTO = ConfigHelper.loadConfigTO(testConfig.getLocalDir());
+		
+		// Test
+		assertNotNull(loadedConfigTO);
+		assertEquals(testConfig.getDisplayName(), loadedConfigTO.getDisplayName());
+		assertEquals(testConfig.getMachineName(), loadedConfigTO.getMachineName());
+		assertEquals(testConfig.getMasterKey(), loadedConfigTO.getMasterKey());
+		
+		// Tear down
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);		
 	}
 	
 	@Test
 	@Ignore
 	public void testConfigHelperLoadRepoTO() throws Exception {		
-		// ConfigHelper.loadRepoTO(localDir, configTO);		
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		
+		// Run
+		ConfigTO loadedConfigTO = ConfigHelper.loadConfigTO(testConfig.getLocalDir());
+		RepoTO repoConfigTO = ConfigHelper.loadRepoTO(testConfig.getLocalDir(), loadedConfigTO);
+		
+		// Test
+		assertNotNull(repoConfigTO);
+		assertNotNull(repoConfigTO.getChunker());
+		assertNotNull(repoConfigTO.getMultiChunker());
+		assertNotNull(repoConfigTO.getRepoId());
+		assertNotNull(repoConfigTO.getTransformers());
+		
+		assertEquals("local", repoConfigTO.getChunker().getType());
+		assertEquals(1, repoConfigTO.getChunker().getSettings().size());
+		assertEquals("zip", repoConfigTO.getMultiChunker().getType());
+		assertEquals(1, repoConfigTO.getMultiChunker().getSettings().size());
+		assertEquals("010203", StringUtil.toHex(repoConfigTO.getRepoId()));
+		
+		// Tear down
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);			
 	}
 }
