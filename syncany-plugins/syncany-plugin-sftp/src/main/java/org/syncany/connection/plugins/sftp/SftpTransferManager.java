@@ -151,7 +151,7 @@ public class SftpTransferManager extends AbstractTransferManager {
 		connect();
 
 		try {
-			if (!repopathExists() && createIfRequired) {
+			if (!repoExists() && createIfRequired) {
 				channel.mkdir(repoPath);
 			}
 			channel.mkdir(multichunkPath);
@@ -314,7 +314,7 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repopathExists() throws StorageException {
+	public boolean repoExists() throws StorageException {
 		try {
 			SftpATTRS attrs = channel.stat(repoPath);
 		    return attrs.isDir();
@@ -325,7 +325,7 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repopathIsEmpty() throws StorageException {
+	public boolean repoIsEmpty() throws StorageException {
 		try {
 			return channel.ls(repoPath).size() == 2; // "." and ".."
 		}
@@ -335,9 +335,9 @@ public class SftpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repopathWriteAccess() throws StorageException {
+	public boolean hasWriteAccess() throws StorageException {
 		try {
-			String parentPath = FileUtil.getParentPath(repoPath);
+			String parentPath = FileUtil.getUnixParentPath(repoPath);
 			SftpATTRS stat = channel.stat(parentPath);
 			return stat != null && ((stat.getPermissions() & 00200) != 0) && stat.getUId() != 0;
 		}

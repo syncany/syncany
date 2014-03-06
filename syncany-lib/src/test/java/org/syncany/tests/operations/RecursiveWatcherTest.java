@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.operations;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -25,6 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
@@ -195,4 +199,79 @@ public class RecursiveWatcherTest {
 		// Tear down	
 		TestFileUtil.deleteDirectory(tempDir);
 	}
+	
+	@Test
+	public void testWatchFireOnceWhenLargeFileFinishes() throws Exception {
+		// Setup
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();		
+		
+		// Test
+		final AtomicLong watcherEventOccurredTime = new AtomicLong(0L);
+		final AtomicInteger watcherEventOccurredCount = new AtomicInteger(0);
+		final AtomicLong fileWrittenTime = new AtomicLong(0L);
+		
+		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+			@Override
+			public void watchEventsOccurred() { 
+				watcherEventOccurredCount.addAndGet(1);
+				watcherEventOccurredTime.set(System.currentTimeMillis());
+			}			
+		});
+		
+		// Start watcher 
+		watcher.start();		
+		Thread.sleep(200); // Wait for watch service to set watch on all folders
+		
+		File largeFile = new File(tempDir+"/largefile");
+				
+		TestFileUtil.createRandomFile(largeFile, 50*1024*1024);
+		fileWrittenTime.set(System.currentTimeMillis());
+		
+		// Stop watcher (close watches)
+		Thread.sleep(400); // Wait for the watcher to fire an event
+		watcher.stop();
+		
+		// Test
+		assertNotSame(0L, watcherEventOccurredTime.get());
+		assertEquals(1, watcherEventOccurredCount.get());
+		assertNotSame(0L, fileWrittenTime.get());
+		assertTrue(watcherEventOccurredTime.get() >= fileWrittenTime.get());
+		
+		// Tear down	
+		TestFileUtil.deleteDirectory(tempDir);
+	}
+	
+	@Test
+	public void testWatchFireEventCount() throws Exception {
+		// Setup
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();		
+		
+		// Test
+		final AtomicInteger watcherEventOccurredCount = new AtomicInteger(0);
+		
+		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+			@Override
+			public void watchEventsOccurred() { 
+				watcherEventOccurredCount.addAndGet(1);
+			}			
+		});
+		
+		// Start watcher 
+		watcher.start();		
+		Thread.sleep(200); // Wait for watch service to set watch on all folders
+		
+		for (int i=0; i<20; i++) {
+			TestFileUtil.createRandomFile(new File(tempDir+"/"+i), 50*1024);
+		}				
+
+		// Stop watcher (close watches)
+		Thread.sleep(400); // Wait for the watcher to fire an event
+		watcher.stop();
+		
+		// Test
+		assertEquals(1, watcherEventOccurredCount.get()); // not 20!
+		
+		// Tear down	
+		TestFileUtil.deleteDirectory(tempDir);
+	}	
 }

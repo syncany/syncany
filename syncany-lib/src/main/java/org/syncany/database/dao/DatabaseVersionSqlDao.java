@@ -46,8 +46,17 @@ import org.syncany.database.VectorClock;
 import org.syncany.operations.DatabaseBranch;
 
 /**
- * @author pheckel
- *
+ * The database version data access object (DAO) writes and queries the SQL database for information
+ * on {@link DatabaseVersion}s. It translates the relational data in the "databaseversion" table to
+ * Java objects; but also uses the other DAOs to persist entire {@link DatabaseVersion} objects.
+ * 
+ * 
+ * @see ChunkSqlDao
+ * @see FileContentSqlDao
+ * @see FileVersionSqlDao
+ * @see FileHistorySqlDao
+ * @see MultiChunkSqlDao
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(DatabaseVersionSqlDao.class.getSimpleName());
@@ -70,6 +79,14 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		this.multiChunkDao = multiChunkDao;
 	}
 
+	/**
+	 * Marks the database version with the given vector clock as DIRTY, i.e.
+	 * sets the {@link DatabaseVersionStatus} to {@link DatabaseVersionStatus#DIRTY DIRTY}.
+	 * Marking a database version dirty will lead to a deletion in the next sync up
+	 * cycle.
+	 * 
+	 * @param vectorClock Identifies the database version to mark dirty
+	 */
 	public void markDatabaseVersionDirty(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.update.master.markDatabaseVersionDirty.sql")){
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
@@ -97,48 +114,70 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException("Cannot persist database.", e);
 		}
 	}
-
-	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
-		long databaseVersionId = -1;
+	
+	/**
+	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
+	 * contained {@link VectorClock}. Be aware that the method writes the header independent
+	 * of whether or not a corresponding database version actually exists.
+	 * 
+	 * <p>This method can be used to add empty database versions to the database. Current use
+	 * case is adding an empty purge database version to the database.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
+	 * 
+	 * @param databaseVersionHeader The database version header to write to the database
+	 * @return Returns the SQL-internal primary key of the new database version
+	 */
+	public long writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
+		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersionHeader);
+		writeVectorClock(connection, databaseVersionId, databaseVersionHeader.getVectorClock());
 		
-		try(PreparedStatement preparedStatement = connection.prepareStatement(
+		return databaseVersionId;
+	}
+	
+	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
+		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader());
+		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
+		
+		chunkDao.writeChunks(connection, databaseVersion.getChunks());
+		multiChunkDao.writeMultiChunks(connection, databaseVersion.getMultiChunks());
+		fileContentDao.writeFileContents(connection, databaseVersion.getFileContents());
+		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
+	}	
+	
+	private long writeDatabaseVersionHeaderInternal(Connection connection, DatabaseVersionHeader databaseVersionHeader) throws SQLException {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				DatabaseConnectionFactory.getStatement("/sql/databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 	
 			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
-			preparedStatement.setTimestamp(2, new Timestamp(databaseVersion.getHeader().getDate().getTime()));
-			preparedStatement.setString(3, databaseVersion.getHeader().getClient());
-			preparedStatement.setString(4, databaseVersion.getHeader().getVectorClock().toString());
+			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
+			preparedStatement.setString(3, databaseVersionHeader.getClient());
+			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
 	
 			preparedStatement.executeUpdate();	
 			
 			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {				
 				if (resultSet.next()) {
-					databaseVersionId = resultSet.getLong(1);
+					return resultSet.getLong(1);
 				}
 				else {
 					throw new SQLException("Cannot get new database version ID");
 				}
 			}
 		}
-
-		writeVectorClock(connection, databaseVersionId, databaseVersion.getVectorClock());
-
-		chunkDao.writeChunks(connection, databaseVersion.getChunks());
-		multiChunkDao.writeMultiChunks(connection, databaseVersion.getMultiChunks());
-		fileContentDao.writeFileContents(connection, databaseVersion.getFileContents());
-		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
 	}
 
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {
-		for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/databaseversion.insert.all.writeVectorClock.sql");
-
-			preparedStatement.setLong(1, databaseVersionId);
-			preparedStatement.setString(2, vectorClockEntry.getKey());
-			preparedStatement.setLong(3, vectorClockEntry.getValue());
-
-			preparedStatement.executeUpdate();
-			preparedStatement.close();
+		try (PreparedStatement preparedStatement = getStatement(connection, "/sql/databaseversion.insert.all.writeVectorClock.sql")) {
+			for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
+				preparedStatement.setLong(1, databaseVersionId);
+				preparedStatement.setString(2, vectorClockEntry.getKey());
+				preparedStatement.setLong(3, vectorClockEntry.getValue());
+	
+				preparedStatement.addBatch();				
+			}
+			
+			preparedStatement.executeBatch();
 		}
 	}
 

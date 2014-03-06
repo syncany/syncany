@@ -99,7 +99,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 * as well as the corresponding chunk references (list of {@link ChunkChecksum}s) from the
 	 * table <i>filecontent_chunk</i>. 
 	 * 
-	 * <p><b>Note:</b> This method executes, but does not commit the query.
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
 	 * 
 	 * @throws SQLException If the SQL statement fails
 	 */

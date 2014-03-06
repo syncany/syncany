@@ -17,8 +17,8 @@
  */
 package org.syncany.operations;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A change set represents the result of a comparison of two file trees, either 
@@ -31,16 +31,16 @@ import java.util.List;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChangeSet {
-	private List<String> changedFiles;  
-	private List<String> newFiles;
-	private List<String> deletedFiles;
-	private List<String> unchangedFiles;
+	private SortedSet<String> changedFiles;  
+	private SortedSet<String> newFiles;
+	private SortedSet<String> deletedFiles;
+	private SortedSet<String> unchangedFiles;
 	
 	public ChangeSet() {
-		changedFiles = new ArrayList<String>();
-		newFiles = new ArrayList<String>();
-		deletedFiles = new ArrayList<String>();
-		unchangedFiles = new ArrayList<String>();
+		changedFiles = new TreeSet<String>();
+		newFiles = new TreeSet<String>();
+		deletedFiles = new TreeSet<String>();
+		unchangedFiles = new TreeSet<String>();
 	}
 	
 	/**
@@ -55,19 +55,19 @@ public class ChangeSet {
 	}
 	
 	// TODO [low] This is ugly. Use unmutable lists.
-	public List<String> getChangedFiles() {
+	public SortedSet<String> getChangedFiles() {
 		return changedFiles;
 	}
 	
-	public List<String> getNewFiles() {
+	public SortedSet<String> getNewFiles() {
 		return newFiles;
 	}
 	
-	public List<String> getDeletedFiles() {
+	public SortedSet<String> getDeletedFiles() {
 		return deletedFiles;
 	}	
 	
-	public List<String> getUnchangedFiles() {
+	public SortedSet<String> getUnchangedFiles() {
 		return unchangedFiles;
 	}
 }

@@ -113,17 +113,17 @@ public class FileHistoryDaoTest {
 		// Test		
 		assertNotNull(historiesFromA1);
 		assertEquals(1, historiesFromA1.size());
-		assertEquals("851c441915478a539a5bab2b263ffa4cc48e282f", historiesFromA1.get(0).getFileId().toString());
+		assertEquals("851c441915478a539a5bab2b263ffa4cc48e282f", historiesFromA1.get(0).getFileHistoryId().toString());
 		assertEquals("fe83f217d464f6fdfa5b2b1f87fe3a1a47371196", historiesFromA1.get(0).getLastVersion().getChecksum().toString());
 		
 		assertNotNull(historiesFromA2);
 		assertEquals(1, historiesFromA2.size());
-		assertEquals("c021aecb2ae36f2a8430eb10309923454b93b61e", historiesFromA2.get(0).getFileId().toString());
+		assertEquals("c021aecb2ae36f2a8430eb10309923454b93b61e", historiesFromA2.get(0).getFileHistoryId().toString());
 		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", historiesFromA2.get(0).getLastVersion().getChecksum().toString());
 		
 		assertNotNull(historiesFromA3);
 		assertEquals(1, historiesFromA3.size());
-		assertEquals("4fef2d605640813464792b18b16e1a5e07aa4e53", historiesFromA3.get(0).getFileId().toString());
+		assertEquals("4fef2d605640813464792b18b16e1a5e07aa4e53", historiesFromA3.get(0).getFileHistoryId().toString());
 		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", historiesFromA3.get(0).getLastVersion().getChecksum().toString());
 		
 		assertNotNull(historiesFromB1);
@@ -133,25 +133,25 @@ public class FileHistoryDaoTest {
 		PartialFileHistory file2 = historiesFromB1.get(1);
 		
 		assertNotNull(file1);
-		assertEquals("851c441915478a539a5bab2b263ffa4cc48e282f", file1.getFileId().toString());
+		assertEquals("851c441915478a539a5bab2b263ffa4cc48e282f", file1.getFileHistoryId().toString());
 		assertEquals("fe83f217d464f6fdfa5b2b1f87fe3a1a47371196", file1.getLastVersion().getChecksum().toString());
 		assertEquals(2, file1.getLastVersion().getVersion());
 
 		assertNotNull(file2);
-		assertEquals("beef111111111111111111111111111111111111", file2.getFileId().toString());
+		assertEquals("beef111111111111111111111111111111111111", file2.getFileHistoryId().toString());
 		assertEquals("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef", file2.getLastVersion().getChecksum().toString());
 		assertEquals(1, file2.getLastVersion().getVersion());		
 
 		assertNotNull(historiesFromA4);
 		assertEquals(1, historiesFromA4.size());
-		assertEquals("851c441915478a539a5bab2b263ffa4cc48e282f", historiesFromA4.get(0).getFileId().toString());
+		assertEquals("851c441915478a539a5bab2b263ffa4cc48e282f", historiesFromA4.get(0).getFileHistoryId().toString());
 		assertEquals("fe83f217d464f6fdfa5b2b1f87fe3a1a47371196", historiesFromA4.get(0).getLastVersion().getChecksum().toString());
 		assertEquals(2, historiesFromA4.get(0).getLastVersion().getVersion());
 		assertFalse(historiesFromA4.get(0).getLastVersion().equals(historiesFromB1.get(0).getLastVersion()));
 		
 		assertNotNull(historiesFromA5);
 		assertEquals(1, historiesFromA5.size());
-		assertEquals("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", historiesFromA5.get(0).getFileId().toString());
+		assertEquals("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", historiesFromA5.get(0).getFileHistoryId().toString());
 		assertEquals("ffffffffffffffffffffffffffffffffffffffff", historiesFromA5.get(0).getLastVersion().getChecksum().toString());
 				
 		assertNotNull(historiesFromDoesNotExist);

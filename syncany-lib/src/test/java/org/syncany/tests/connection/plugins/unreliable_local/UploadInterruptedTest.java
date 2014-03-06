@@ -34,6 +34,7 @@ import org.syncany.tests.util.TestConfigUtil;
 public class UploadInterruptedTest {
 	private static final Logger logger = Logger.getLogger(UploadInterruptedTest.class.getSimpleName());
 	
+	// TODO [medium] Design and implement specific tests for scenarios where uploads fail
 	@Test
 	public void testUnreliableUpload() throws Exception {
 		// Setup 
@@ -43,10 +44,8 @@ public class UploadInterruptedTest {
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 				// 1st upload (= multichunk) fails	
 				"rel=1 .+upload.+multichunk",    
-				// first upload of a database fails 
-				// this is the fourth upload operation, because the first multichunk fails
-				// then for the second try two multichuncks are uploaded
-				"rel=4 .+upload.+db" 
+				// Make fourth upload fail
+				"rel=4 .+upload" 
 					
 			}
 		));
@@ -57,6 +56,7 @@ public class UploadInterruptedTest {
 		while (i++ < 5) {
 			clientA.createNewFile("A-original-"+i, 50*1024);
 			try {
+				Thread.sleep(100);
 				clientA.sync();
 			}
 			catch (StorageException e) {
@@ -71,6 +71,6 @@ public class UploadInterruptedTest {
 		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
 		
 		// Tear down
-		clientA.cleanup();
+		clientA.deleteTestData();
 	}				
 }

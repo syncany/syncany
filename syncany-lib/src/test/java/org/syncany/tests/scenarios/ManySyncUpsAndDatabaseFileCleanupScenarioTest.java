@@ -105,6 +105,6 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 		
 		// Tear down
 		// TODO [medium] Test the content of these database files
-		clientA.cleanup();		
+		clientA.deleteTestData();		
 	}
 }

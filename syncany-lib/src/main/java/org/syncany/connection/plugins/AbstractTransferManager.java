@@ -41,14 +41,14 @@ public abstract class AbstractTransferManager implements TransferManager {
 	protected File createTempFile(String name) throws IOException {
 		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
 	}
-	
+
 	@Override
-	public final StorageTestResult test() throws StorageException {
+	public StorageTestResult test() throws StorageException {
 		connect();
 
 		StorageTestResult result;
-		if (repopathExists()){
-			if (repopathIsEmpty()) {
+		if (repoExists()) {
+			if (repoIsEmpty()) {
 				result = StorageTestResult.NO_REPO;
 			}
 			else {
@@ -56,21 +56,15 @@ public abstract class AbstractTransferManager implements TransferManager {
 			}
 		}
 		else {
-			if (repopathWriteAccess()) {
+			if (hasWriteAccess()) {
 				result = StorageTestResult.NO_REPO;
 			}
 			else {
 				result = StorageTestResult.NO_REPO_CANNOT_CREATE;
 			}
 		}
-		
+
 		disconnect();
 		return result;
 	}
-	
-	public abstract boolean repopathWriteAccess() throws StorageException ;
-	
-	public abstract boolean repopathExists() throws StorageException ;
-	
-	public abstract boolean repopathIsEmpty() throws StorageException ;
 }

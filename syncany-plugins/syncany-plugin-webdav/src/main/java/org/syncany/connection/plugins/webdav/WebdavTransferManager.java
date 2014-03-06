@@ -95,7 +95,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		connect();
 
 		try {
-			if (!repopathExists() && createIfRequired) {
+			if (!repoExists() && createIfRequired) {
 				sardine.createDirectory(repoPath);
 			}
 			sardine.createDirectory(multichunkPath);
@@ -216,7 +216,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repopathWriteAccess() throws StorageException {
+	public boolean hasWriteAccess() throws StorageException {
 		//TODO not tested
 		try {
 			sardine.createDirectory(repoPath);
@@ -229,7 +229,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repopathExists() throws StorageException {
+	public boolean repoExists() throws StorageException {
 		//TODO not tested
 		try {
 			return sardine.exists(repoPath);
@@ -240,7 +240,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repopathIsEmpty() throws StorageException {
+	public boolean repoIsEmpty() throws StorageException {
 		//TODO not tested
 		try {
 			return sardine.list(repoPath).size() == 0;

@@ -106,13 +106,15 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 
 	@Override
 	public void disconnect() throws StorageException {
-		// Fressen.
+		// Nothing
 	}
 
 	@Override
 	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
+		// TODO [medium] createIfRequired is not used and createBucket() always creates a bucket! This is not the correct behavior!
+		
 		try {
 			StorageObject multichunkPathFolder = new StorageObject(multichunkPath + "/"); // Slash ('/') makes it a folder
 			service.putObject(bucket.getName(), multichunkPathFolder);
@@ -256,15 +258,15 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	//TODO not tested
-	public boolean repopathWriteAccess() throws StorageException {
+	// TODO [high] This code is untested!
+	public boolean hasWriteAccess() throws StorageException {
 		GranteeInterface grantee = new CanonicalGrantee(bucket.getOwner().getId());
 		return bucket.getAcl().hasGranteeAndPermission(grantee, Permission.PERMISSION_WRITE);
 	}
 
 	@Override
-	public boolean repopathExists() throws StorageException {
-		//TODO not tested
+	// TODO [high] This code is untested!
+	public boolean repoExists() throws StorageException {
 		try {
 			int status = service.checkBucketStatus(bucket.getName());
 			return (status != StorageService.BUCKET_STATUS__DOES_NOT_EXIST);
@@ -275,8 +277,8 @@ public abstract class RestTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	//TODO not tested
-	public boolean repopathIsEmpty() throws StorageException {
+	// TODO [high] This code is untested!
+	public boolean repoIsEmpty() throws StorageException {
 		try {
 			return service.listObjects(bucket.getName()).length == 0;
 		}

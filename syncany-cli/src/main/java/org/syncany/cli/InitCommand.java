@@ -30,6 +30,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.GzipTransformer;
@@ -75,8 +76,8 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 		OptionParser parser = new OptionParser();
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
-		OptionSpec<Void> optionNoGzip = parser.acceptsAll(asList("g", "no-gzip"));
-		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("e", "no-encryption"));
+		OptionSpec<Void> optionNoCompression = parser.acceptsAll(asList("G", "no-compression"));
+		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("E", "no-encryption"));
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
 		
@@ -86,14 +87,14 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
-		boolean gzipEnabled = !options.has(optionNoGzip);
+		boolean compressionEnabled = !options.has(optionNoCompression);
 		
 		String password = null;
 		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, advancedModeEnabled);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
-		List<TransformerTO> transformersTO = getTransformersTO(gzipEnabled, cipherSpecs);
+		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 				
 		if (encryptionEnabled) {			
 			password = askPasswordAndConfirm();
@@ -290,7 +291,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		chunkerTO.setType(FixedChunker.TYPE);
 		chunkerTO.setSettings(new HashMap<String, String>());
-		chunkerTO.getSettings().put(FixedChunker.PROPERTY_SIZE, "16");
+		chunkerTO.getSettings().put(Chunker.PROPERTY_SIZE, "16");
 		
 		return chunkerTO;
 	}

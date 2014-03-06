@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,9 +40,7 @@ import org.syncany.connection.plugins.local.LocalTransferManager;
 import org.syncany.tests.util.TestFileUtil;
 
 /**
- * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
- *
  */
 public class LocalTransferManagerPluginTest {
 	private File tempLocalSourceDir;
@@ -68,6 +66,8 @@ public class LocalTransferManagerPluginTest {
 		TransferManager tm = loadPluginAndCreateTransferManager();
 		Assert.assertEquals(StorageTestResult.NO_REPO, tm.test());
 	}
+	
+	// TODO [low] More tests for test() / StorageTestResult are missing
 	
 	@After
 	public void tearDown() {

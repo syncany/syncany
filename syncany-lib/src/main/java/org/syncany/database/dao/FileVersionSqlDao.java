@@ -96,9 +96,46 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */	
 	public void removeDirtyFileVersions() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql");
-		preparedStatement.executeUpdate();	
-		preparedStatement.close();
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql")) {
+			preparedStatement.executeUpdate();
+		}
+	}
+	
+	public void removeFileVersions(int keepVersionCount) throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeFileVersions.sql")) {
+			preparedStatement.setInt(1, keepVersionCount);		
+			preparedStatement.executeUpdate();
+		}						
+	}	
+
+	/**
+	 * Removes all file versions with versions <b>lower or equal</b> than the given file version.
+	 * 
+	 * <p>Note that this method does not just delete the given file version, but also all of its
+	 * previous versions.
+	 */
+	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
+		if (purgeFileVersions.size() > 0) {
+			try (PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.delete.all.removeFileVersionsByIds.sql")) {
+				for (Map.Entry<FileHistoryId, FileVersion> purgeFileVersionEntry : purgeFileVersions.entrySet()) {
+					FileHistoryId purgeFileHistoryId = purgeFileVersionEntry.getKey();
+					FileVersion purgeFileVersion = purgeFileVersionEntry.getValue();
+					
+					preparedStatement.setString(1, purgeFileHistoryId.toString());
+					preparedStatement.setLong(2, purgeFileVersion.getVersion());
+					
+					preparedStatement.addBatch();
+				}				
+				
+				preparedStatement.executeBatch();
+			}
+		}
+	}
+
+	public void removeDeletedVersions() throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeDeletedVersions.sql")) {	
+			preparedStatement.executeUpdate();
+		}
 	}
 	
 	/**
@@ -142,6 +179,30 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+
+	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.all.getMostRecentPurgeVersions.sql")) {
+			preparedStatement.setInt(1, keepVersionsCount);
+			preparedStatement.setInt(2, keepVersionsCount);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+				
+				while (resultSet.next()) {
+					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					FileVersion fileVersion = createFileVersionFromRow(resultSet);
+					
+					mostRecentPurgeFileVersions.put(fileHistoryId, fileVersion);
+				}	 
+				
+				return mostRecentPurgeFileVersions;
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private Map<String, FileVersion> getFileTree(PreparedStatement preparedStatement) {
 		Map<String, FileVersion> fileTree = new HashMap<String, FileVersion>();
 
@@ -156,7 +217,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}
+	}		
 	
 	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {

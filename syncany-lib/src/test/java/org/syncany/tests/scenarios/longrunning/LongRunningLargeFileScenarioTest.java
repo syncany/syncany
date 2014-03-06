@@ -92,8 +92,8 @@ public class LongRunningLargeFileScenarioTest {
 		}
 		finally {
 			// Tear down
-			clientA.cleanup();
-			clientB.cleanup();
+			clientA.deleteTestData();
+			clientB.deleteTestData();
 		}	
 	}	
 	

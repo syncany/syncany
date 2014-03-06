@@ -18,7 +18,6 @@
 package org.syncany.database;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -41,26 +40,58 @@ import java.util.TreeMap;
 public class PartialFileHistory {
     private static final byte FILE_HISTORY_ID_LENGTH = 20;
     
-    private FileHistoryId fileId;
+    private FileHistoryId fileHistoryId;
     private TreeMap<Long, FileVersion> versions;
     
-    public PartialFileHistory(FileHistoryId fileId) {
-        this.fileId = fileId;
+    /**
+     * Creates a new file history instance, given a {@link FileHistoryId} as identifier
+     * of the file over time. After creation, the file history's versions map is empty.
+     * 
+     * @param fileHistoryId Random or non-random file history identifier
+     * @throws IllegalArgumentException If fileHistoryId is null
+     */
+    public PartialFileHistory(FileHistoryId fileHistoryId) {    	
+    	if (fileHistoryId == null) {
+    		throw new IllegalArgumentException("Argument fileHistoryId cannot be null.");
+    	}
+    		
+        this.fileHistoryId = fileHistoryId;
         this.versions = new TreeMap<Long, FileVersion>();    	
     }
 
-    public FileHistoryId getFileId() {
-        return fileId;
+    /**
+     * Returns the file history identifier for this file history. Note that 
+     * this value cannot be null.
+     */
+    public FileHistoryId getFileHistoryId() {
+        return fileHistoryId;
     }
 
+    /**
+     * Returns an unmodifiable map of the {@link FileVersion}s, keyed by the
+     * version number of the corresponding file version.
+     */
     public Map<Long, FileVersion> getFileVersions() {
         return Collections.unmodifiableMap(versions);
     }
     
+    /**
+     * Returns the file version with the given file version number, or null if 
+     * a version with this number does not exist in this file history. 
+     */
     public FileVersion getFileVersion(long version) {
     	return versions.get(version);
     }
     
+    /**
+     * Returns the last file version in this instance of the partial file history,
+     * or <tt>null</tt> if there are no file versions.
+     * 
+     * <p>Note that this method does not necessarily return the actual overall
+     * last file version, only the last of this object instance.
+     * 
+     * @return Returns the last file version, or <tt>null</tt>
+     */
     public FileVersion getLastVersion() {
         if (versions.isEmpty()) {
             return null;
@@ -68,23 +99,34 @@ public class PartialFileHistory {
         
         return versions.lastEntry().getValue();
     }   
-
-    /**
-     * Returns an iterator on the version numbers stored in this partial history, in reverse order. 
-     * 
-     * @return an iterator on the version numbers in reverse order 
-     */
-    public Iterator<Long> getDescendingVersionNumber() {
-    	return Collections.unmodifiableSet(versions.descendingKeySet()).iterator();
-    }
     
+    /**
+     * Adds a new file version of the file history. The given file version is added
+     * to an internal tree map, sorted by the attribute {@link FileVersion#getVersion()}.
+     * 
+     * If a file version version with the same version already exists, it is replaced by
+     * the given file version.  
+     * 
+     * @param fileVersion File version to be added to the file history
+     * @throws IllegalArgumentException If fileVersion or its version number is <tt>null</tt>
+     */
     public void addFileVersion(FileVersion fileVersion) {
+    	if (fileVersion == null || fileVersion.getVersion() == null) {
+    		throw new IllegalArgumentException("Argument fileVersion or fileVersion.getVersion() cannot be null.");
+    	}
+
         versions.put(fileVersion.getVersion(), fileVersion);        
     }
     
+    /**
+     * Clones the file history, including its file versions. Note that file versions
+     * are not cloned, but copied by reference.
+     * 
+     * @return Returns cloned file history
+     */
     @Override
     public PartialFileHistory clone() {
-    	PartialFileHistory clone = new PartialFileHistory(fileId);
+    	PartialFileHistory clone = new PartialFileHistory(fileHistoryId);
     	clone.versions.putAll(versions);
 
     	return clone;
@@ -92,14 +134,14 @@ public class PartialFileHistory {
 
     @Override
     public String toString() {
-    	return PartialFileHistory.class.getSimpleName()+"(fileId="+fileId+", versions="+versions+")";
+    	return PartialFileHistory.class.getSimpleName()+"(fileId="+fileHistoryId+", versions="+versions+")";
     }
     
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((fileId == null) ? 0 : fileId.hashCode());
+		result = prime * result + ((fileHistoryId == null) ? 0 : fileHistoryId.hashCode());
 		result = prime * result + ((versions == null) ? 0 : versions.hashCode());
 		return result;
 	}
@@ -113,10 +155,10 @@ public class PartialFileHistory {
 		if (getClass() != obj.getClass())
 			return false;
 		PartialFileHistory other = (PartialFileHistory) obj;
-		if (fileId == null) {
-			if (other.fileId != null)
+		if (fileHistoryId == null) {
+			if (other.fileHistoryId != null)
 				return false;
-		} else if (!fileId.equals(other.fileId))
+		} else if (!fileHistoryId.equals(other.fileHistoryId))
 			return false;
 		if (versions == null) {
 			if (other.versions != null)
@@ -126,6 +168,11 @@ public class PartialFileHistory {
 		return true;
 	}
 	
+	/**
+	 * The file history identifier (also: file identifier) is a key to identify a single file
+	 * throughout its lifetime. In particular, it does not only identify 
+	 * 
+	 */
 	public static class FileHistoryId extends ObjectId {
 		private FileHistoryId(byte[] array) {
 			super(array);

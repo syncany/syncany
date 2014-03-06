@@ -8,14 +8,16 @@
 
 -- TODO [medium] This is not particularly comprehensive. Refactor this.
 
-select mcc.*
+select mcc.*, mc.size
 from multichunk_full mcf
 join multichunk_chunk mcc on mcf.multichunk_id=mcc.multichunk_id
+join multichunk mc on mcc.multichunk_id=mc.id
 where mcf.databaseversion_vectorclock_serialized=?
 
 minus 
 
-select mcc.*
+select mcc.*, mc.size
 from multichunk_full mcf
 join multichunk_chunk mcc on mcf.multichunk_id=mcc.multichunk_id
+join multichunk mc on mcc.multichunk_id=mc.id
 where mcf.databaseversion_id<(select id from databaseversion where vectorclock_serialized=?)

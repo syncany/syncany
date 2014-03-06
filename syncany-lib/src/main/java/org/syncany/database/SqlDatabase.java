@@ -58,6 +58,7 @@ import org.syncany.operations.DatabaseBranch;
 public class SqlDatabase {
 	protected static final Logger logger = Logger.getLogger(SqlDatabase.class.getSimpleName());
 
+	protected Connection connection;
 	protected ApplicationSqlDao applicationDao;
 	protected ChunkSqlDao chunkDao;
 	protected FileContentSqlDao fileContentDao;
@@ -67,8 +68,7 @@ public class SqlDatabase {
 	protected DatabaseVersionSqlDao databaseVersionDao;
 
 	public SqlDatabase(Config config) {
-		Connection connection = config.createDatabaseConnection();
-
+		this.connection = config.createDatabaseConnection();
 		this.applicationDao = new ApplicationSqlDao(connection);
 		this.chunkDao = new ChunkSqlDao(connection);
 		this.fileContentDao = new FileContentSqlDao(connection);
@@ -78,6 +78,19 @@ public class SqlDatabase {
 		this.databaseVersionDao = new DatabaseVersionSqlDao(connection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
 	}
 
+	// General
+	
+	public void commit() throws SQLException {
+		connection.commit();
+	}
+
+	public void removeUnreferencedDatabaseEntities() throws SQLException {
+		removeUnreferencedFileHistories();
+		removeUnreferencedFileContents();
+		removeUnreferencedMultiChunks();
+		removeUnreferencedChunks();
+	}
+	
 	// Application
 
 	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
@@ -112,6 +125,10 @@ public class SqlDatabase {
 
 	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
 		databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	}
+	
+	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
+		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
 
 	public void markDatabaseVersionDirty(VectorClock vectorClock) {
@@ -155,11 +172,28 @@ public class SqlDatabase {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
 		return fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum);
 	}
+	
+	private void removeUnreferencedFileHistories() throws SQLException {
+		fileHistoryDao.removeUnreferencedFileHistories();
+	}
 
 	// File Version
 
 	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
+	}
+	
+	@Deprecated
+	public void removeFileVersions(int keepVersionsCount) throws SQLException {
+		fileVersionDao.removeFileVersions(keepVersionsCount);		
+	}
+	
+	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
+		fileVersionDao.removeFileVersions(purgeFileVersions);
+	}
+	
+	public void removeDeletedVersions() throws SQLException {
+		fileVersionDao.removeDeletedVersions();
 	}
 
 	@Deprecated
@@ -176,6 +210,10 @@ public class SqlDatabase {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
 
+	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
+		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
+	}	
+
 	// Multi Chunk
 
 	public List<MultiChunkId> getMultiChunkIds(FileChecksum fileChecksum) {
@@ -185,9 +223,21 @@ public class SqlDatabase {
 	public MultiChunkId getMultiChunkId(ChunkChecksum chunkChecksum) {
 		return multiChunkDao.getMultiChunkId(chunkChecksum);
 	}
+	
+	public Map<ChunkChecksum, MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
+		return multiChunkDao.getMultiChunkIdsByChecksums(chunkChecksums);
+	}
 
 	public List<MultiChunkId> getDirtyMultiChunkIds() {
 		return multiChunkDao.getDirtyMultiChunkIds();
+	}	
+
+	public List<MultiChunkEntry> getUnusedMultiChunks() {
+		return multiChunkDao.getUnusedMultiChunks();
+	}
+	
+	private void removeUnreferencedMultiChunks() throws SQLException {
+		multiChunkDao.removeUnreferencedMultiChunks();
 	}
 
 	// Chunk
@@ -198,11 +248,19 @@ public class SqlDatabase {
 
 	public ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		return chunkDao.getChunk(chunkChecksum);
+	}	
+
+	private void removeUnreferencedChunks() {
+		chunkDao.removeUnreferencedChunks();
 	}
 
 	// File Content
 
 	public FileContent getFileContent(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		return fileContentDao.getFileContent(fileChecksum, includeChunkChecksums);
+	}
+
+	private void removeUnreferencedFileContents() throws SQLException {
+		fileContentDao.removeUnreferencedFileContents();
 	}
 }

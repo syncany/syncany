@@ -77,7 +77,9 @@ public class InitOperation extends AbstractInitOperation {
 		if (repoFileExistsOnRemoteStorage(transferManager)) {
 			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository."); 
 		}
+		
 		logger.log(Level.INFO, "Creating local repository");
+		
 		// Create local .syncany directory
 		File appDir = createAppDirs(options.getLocalDir());	
 		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);

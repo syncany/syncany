@@ -40,6 +40,10 @@ public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	
 	public static Config loadConfig(File localDir) throws ConfigException {
+		if (localDir == null) {
+			throw new ConfigException("Argument localDir cannot be null.");
+		}
+		
 		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
 		
 		if (appDir.exists()) {
@@ -104,20 +108,46 @@ public class ConfigHelper {
 		return new Persister().read(RepoTO.class, repoFile);
     }
     
-    public static File findLocalDirInPath(File startingPath) throws IOException {
-		File currentSearchFolder = startingPath.getCanonicalFile();
-		
-		while (currentSearchFolder != null) {
-			File possibleAppDir = new File(currentSearchFolder+"/"+Config.DIR_APPLICATION);
-			File possibleConfigFile = new File(possibleAppDir+"/"+Config.FILE_CONFIG);
+    /**
+     * Helper method to find the local sync directory, starting from a path equal
+     * or inside the local sync directory. If the starting path is not inside or equal
+     * to the local directory, <tt>null</tt> is returned. 
+     * 
+     * <p>To find the local directory, the method looks for a file named 
+     * "{@link Config#DIR_APPLICATION}/{@link Config#FILE_CONFIG}". If it is found, it stops.
+     * If not, it continues looking in the parent directory.
+     * 
+     * <p>Example: If /home/user/Syncany is the local sync directory and /home/user/NotSyncany
+     * is not a local directory, the method will return the following:
+     * 
+     * <ul>
+     *  <li>findLocalDirInPath(/home/user/Syncany) -&gt; /home/user/Syncany</li>
+     *  <li>findLocalDirInPath(/home/user/Syncany/some/subfolder) -&gt; /home/user/Syncany</li>
+     *  <li>findLocalDirInPath(/home/user/NotSyncany) -&gt;null</li>
+     * </ul>
+     * 
+     * @param startingPath Path to start the search from
+     * @return Returns the local directory (if found), or <tt>null</tt> otherwise
+     */
+    public static File findLocalDirInPath(File startingPath) {
+    	try {
+			File currentSearchFolder = startingPath.getCanonicalFile();
 			
-			if (possibleAppDir.exists() && possibleConfigFile.exists()) {
-				return possibleAppDir.getParentFile().getCanonicalFile();
+			while (currentSearchFolder != null) {
+				File possibleAppDir = new File(currentSearchFolder+"/"+Config.DIR_APPLICATION);
+				File possibleConfigFile = new File(possibleAppDir+"/"+Config.FILE_CONFIG);
+					
+				if (possibleAppDir.exists() && possibleConfigFile.exists()) {
+					return possibleAppDir.getParentFile().getCanonicalFile();
+				}
+				
+				currentSearchFolder = currentSearchFolder.getParentFile();
 			}
-			
-			currentSearchFolder = currentSearchFolder.getParentFile();
-		}
-		 
-		return new File(".").getCanonicalFile(); 
+			 
+			return null;
+    	}
+    	catch (IOException e) {
+    		throw new RuntimeException("Unable to determine local directory starting from: "+startingPath, e);
+    	}
 	}
 }

@@ -41,7 +41,7 @@ public class LongRunningLotsOfSmallFilesScenarioTest {
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
 		
 		// Tear down
-		clientA.cleanup();
-		clientB.cleanup();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}	
 }

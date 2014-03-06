@@ -1,1 +1,1 @@
-insert into multichunk (id) values (?)
+insert into multichunk (id, size) values (?, ?)

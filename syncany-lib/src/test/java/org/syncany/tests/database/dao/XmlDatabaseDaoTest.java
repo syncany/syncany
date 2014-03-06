@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
@@ -46,7 +47,7 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.database.dao.XmlDatabaseSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.VectorClock;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
@@ -139,13 +140,13 @@ public class XmlDatabaseDaoTest {
         newDatabaseVersion.addChunk(chunkB2);        
         
         // Distribute chunks to multichunks
-        MultiChunkEntry multiChunkA = new MultiChunkEntry(new MultiChunkId(new byte[] {6,6,6,6,6,6,6,6,6}));
+        MultiChunkEntry multiChunkA = new MultiChunkEntry(new MultiChunkId(new byte[] {6,6,6,6,6,6,6,6,6}), 10);
         multiChunkA.addChunk(chunkA1.getChecksum()); 
         multiChunkA.addChunk(chunkA2.getChecksum()); 
         multiChunkA.addChunk(chunkA3.getChecksum());
         newDatabaseVersion.addMultiChunk(multiChunkA);
         
-        MultiChunkEntry multiChunkB = new MultiChunkEntry(new MultiChunkId(new byte[] {7,7,7,7,7,7,7,7,7}));
+        MultiChunkEntry multiChunkB = new MultiChunkEntry(new MultiChunkId(new byte[] {7,7,7,7,7,7,7,7,7}), 11);
         multiChunkB.addChunk(chunkA4.getChecksum());
         multiChunkB.addChunk(chunkB1.getChecksum());
         multiChunkB.addChunk(chunkB2.getChecksum());
@@ -299,8 +300,8 @@ public class XmlDatabaseDaoTest {
 		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		 
 		// File histories
-		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
-		PartialFileHistory loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileId());
+		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileHistoryId());
+		PartialFileHistory loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileHistoryId());
 		
 		assertEquals("File history not found in database loaded.", fileHistoryA, loadedFileHistoryA);
 		assertEquals("File history not found in database loaded.", fileHistoryB, loadedFileHistoryB);
@@ -391,14 +392,14 @@ public class XmlDatabaseDaoTest {
 		// Write database to disk, read it again, and compare them
 		File writtenDatabaseFile = new File(tempDir+"/db-"+Math.random()+"-" + Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
 		
-		XmlDatabaseSerializer writeDAO = new XmlDatabaseSerializer();
-		writeDAO.save(writtenDatabase, writtenDatabaseFile);
+		DatabaseXmlSerializer writeDAO = new DatabaseXmlSerializer();
+		writeDAO.save(writtenDatabase.getDatabaseVersions(), writtenDatabaseFile);
 		
 		// Read again
 		MemoryDatabase readDatabase = new MemoryDatabase();
 		
-		XmlDatabaseSerializer readDAO = new XmlDatabaseSerializer();
-		readDAO.load(readDatabase, writtenDatabaseFile);
+		DatabaseXmlSerializer readDAO = new DatabaseXmlSerializer();
+		readDAO.load(readDatabase, writtenDatabaseFile, DatabaseVersionType.DEFAULT);
 		
 		for (int i=0; i<10; i++) {
 			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersions.get(i);

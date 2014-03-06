@@ -51,20 +51,26 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		for (PartialFileHistory fileHistory : fileHistories) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/filehistory.insert.all.writeFileHistories.sql");
 
-			preparedStatement.setString(1, fileHistory.getFileId().toString());
+			preparedStatement.setString(1, fileHistory.getFileHistoryId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
 
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
 
-			fileVersionDao.writeFileVersions(connection, fileHistory.getFileId(), databaseVersionId, fileHistory.getFileVersions().values());
+			fileVersionDao.writeFileVersions(connection, fileHistory.getFileHistoryId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
 	}
 
 	public void removeDirtyFileHistories() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql");
-		preparedStatement.executeUpdate();
-		preparedStatement.close();		
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql")) {
+			preparedStatement.executeUpdate();
+		}		
+	}
+	
+	public void removeUnreferencedFileHistories() throws SQLException {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
+			preparedStatement.executeUpdate();
+		}	
 	}
 
 	/**
@@ -102,14 +108,26 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
 
-			if (fileHistory != null && fileHistory.getFileId().equals(fileHistoryId)) { // Same history!
-				fileHistory.addFileVersion(lastFileVersion);
-			}
-			else { // New history!
-				fileHistory = new PartialFileHistory(fileHistoryId);
+			// Old history (= same filehistory identifier)
+			if (fileHistory != null && fileHistory.getFileHistoryId().equals(fileHistoryId)) { // Same history!
 				fileHistory.addFileVersion(lastFileVersion);
 			}
 			
+			// New history!			
+			else { 
+				// Add the old history
+				if (fileHistory != null) { 
+					fileHistories.add(fileHistory);
+				}
+				
+				// Create a new one
+				fileHistory = new PartialFileHistory(fileHistoryId);
+				fileHistory.addFileVersion(lastFileVersion);
+			}			
+		}
+		
+		// Add the last history
+		if (fileHistory != null) { 
 			fileHistories.add(fileHistory);
 		}
 
@@ -198,5 +216,5 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-	}
+	}	
 }
