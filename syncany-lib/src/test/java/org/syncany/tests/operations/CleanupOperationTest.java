@@ -132,11 +132,15 @@ public class CleanupOperationTest {
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 		
-		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(false);
-		options.setRemoveOldVersions(true);
-		options.setRepackageMultiChunks(false);
-		options.setKeepVersionsCount(2);
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setForceChecksum(true);
+		
+		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+		cleanupOptions.setStatusOptions(statusOptions);
+		cleanupOptions.setMergeRemoteFiles(false);
+		cleanupOptions.setRemoveOldVersions(true);
+		cleanupOptions.setRepackageMultiChunks(false);
+		cleanupOptions.setKeepVersionsCount(2);
 
 		// Run
 		
@@ -152,7 +156,7 @@ public class CleanupOperationTest {
 		
 		clientB.changeFile("file.jpg");
 		
-		CleanupOperationResult cleanupOperationResult = clientB.cleanup(options);
+		CleanupOperationResult cleanupOperationResult = clientB.cleanup(cleanupOptions);
 		assertEquals(CleanupResultCode.NOK_LOCAL_CHANGES, cleanupOperationResult.getResultCode());
 		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
 		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());

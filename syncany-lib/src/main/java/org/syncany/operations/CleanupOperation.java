@@ -49,6 +49,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 
 import com.google.common.collect.Lists;
@@ -156,7 +157,7 @@ public class CleanupOperation extends Operation {
 	}
 
 	private boolean hasLocalChanges() throws Exception {
-		StatusOperationResult statusOperationResult = new StatusOperation(config).execute();
+		StatusOperationResult statusOperationResult = new StatusOperation(config, options.getStatusOptions()).execute();
 		return statusOperationResult.getChangeSet().hasChanges();
 	}
 
@@ -384,11 +385,20 @@ public class CleanupOperation extends Operation {
 	}
 
 	public static class CleanupOperationOptions implements OperationOptions {
+		private StatusOperationOptions statusOptions = new StatusOperationOptions();
 		private boolean mergeRemoteFiles = true;
 		private boolean removeOldVersions = true;
 		private int keepVersionsCount = 5;
 		private boolean repackageMultiChunks = true;
 		private double repackageUnusedThreshold = 0.7;
+		
+		public StatusOperationOptions getStatusOptions() {
+			return statusOptions;
+		}
+
+		public void setStatusOptions(StatusOperationOptions statusOptions) {
+			this.statusOptions = statusOptions;
+		}
 
 		public boolean isMergeRemoteFiles() {
 			return mergeRemoteFiles;
