@@ -53,18 +53,23 @@ public class EmbeddedTestFtpServer {
 	
 	private static FtpServer server;
 	private static File rootDir;
+	private static File userFile;
 	
 	public static void stopServer() {
 		server.stop();
 		rootDir.delete();
+		userFile.delete();
 	}
 	
 	public static void startServer() throws Exception {
+		userFile = File.createTempFile("testftpuserfile", "tmp");
+		userFile.deleteOnExit();
+		
 		rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		rootDir.deleteOnExit();
 
 		PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
-		userManagerFactory.setFile(new File("user.properties"));
+		userManagerFactory.setFile(userFile);
 		userManagerFactory.setPasswordEncryptor(new SaltedPasswordEncryptor());
 		UserManager um = userManagerFactory.createUserManager();
 		
