@@ -23,7 +23,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,9 +54,18 @@ public class LogCommand extends Command {
 		printResults(operationResult);
 
 		return 0;
+	}	
+
+	public static List<String> getSupportedFormats() {
+		List<String> localFormats = new ArrayList<String>();
+
+		localFormats.add("full");
+		localFormats.add("last");
+
+		return Collections.unmodifiableList(localFormats);
 	}
 
-	public LogOperationOptions parseOptions(String[] operationArgs) throws Exception {
+	private LogOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		LogOperationOptions operationOptions = new LogOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -86,6 +94,68 @@ public class LogCommand extends Command {
 		return operationOptions;
 	}
 
+	private void printResults(LogOperationResult operationResult) {		
+		if ("full".equals(operationResult.getFormat())) {
+			printFullFormat(operationResult.getFileHistories());				
+		}
+		else if ("last".equals(operationResult.getFormat())) {	
+			printLastFormat(operationResult.getFileHistories());
+		}
+		else {
+			out.println(" unkown format " + operationResult.getFormat());
+			logger.log(Level.SEVERE, "Unrecognized lof format, should have been rejected earlier " + operationResult.getFormat());
+		}		
+	}
+
+	private void printLastFormat(List<PartialFileHistory> fileHistories) {
+		int longestPath = calculateLongestPath(fileHistories, true);
+
+		for (PartialFileHistory fileHistory : fileHistories) {			
+			FileVersion lastVersion = fileHistory.getLastVersion();
+
+			out.printf("%-" + longestPath + "s %s", lastVersion.getPath(), fileHistory.getFileHistoryId());
+			printOneVersion(lastVersion);
+			out.println();
+		}
+	}
+
+	private void printFullFormat(List<PartialFileHistory> fileHistories) {
+		for (PartialFileHistory fileHistory : fileHistories) {			
+			FileVersion lastVersion = fileHistory.getLastVersion();
+	
+			out.printf("%s %s\n", lastVersion.getPath(), fileHistory.getFileHistoryId());
+	
+			for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
+				out.print('\t');
+				printOneVersion(fileVersion);
+	
+				if (fileVersion.getPath().equals(lastVersion.getPath())) {
+					out.println();
+				}
+				else {
+					out.println(" " + fileVersion.getPath());
+				}
+			}
+		}
+	}
+	
+	private int calculateLongestPath(List<PartialFileHistory> fileHistories, boolean lastOnly) {
+		int result = 0;
+		
+		for (PartialFileHistory fileHistory : fileHistories) {
+			if (lastOnly) {
+				result = Math.max(result, fileHistory.getLastVersion().getPath().length());
+			}
+			else {
+				for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
+					result = Math.max(result, fileVersion.getPath().length());
+				}
+			}
+		}
+		
+		return result;	
+	}
+
 	private void printOneVersion(FileVersion fileVersion) {
 		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
@@ -93,62 +163,5 @@ public class LogCommand extends Command {
 		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
 				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
 				fileVersion.getChecksum());
-	}
-
-	private int longestPath(List<PartialFileHistory> fileHistories, boolean lastOnly) {
-		int result = 0;
-		for (PartialFileHistory fileHistory : fileHistories) {
-			if (lastOnly) {
-				result = Math.max(result, fileHistory.getLastVersion().getPath().length());
-			} else {
-				for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
-					result = Math.max(result, fileVersion.getPath().length());
-				}
-			}
-		}
-		return result;
-	}
-
-	private void printResults(LogOperationResult operationResult) {
-		int longestPath = 0;
-		if (operationResult.getFormat().equals("last")) {
-			longestPath = longestPath(operationResult.getFileHistories(), true);
-		}
-		for (PartialFileHistory fileHistory : operationResult.getFileHistories()) {
-			FileVersion lastVersion = fileHistory.getLastVersion();
-			switch (operationResult.getFormat()) {
-			case "full":
-				Iterator<Long> fileVersionNumber = fileHistory.getDescendingVersionNumber();
-				out.printf("%s %s\n", lastVersion.getPath(), fileHistory.getFileId());
-				while (fileVersionNumber.hasNext()) {
-					FileVersion fileVersion = fileHistory.getFileVersion(fileVersionNumber.next());
-					out.print('\t');
-					printOneVersion(fileVersion);
-					if (fileVersion.getPath().equals(lastVersion.getPath())) {
-						out.println();
-					} else {
-						out.println(" " + fileVersion.getPath());
-					}
-				}
-				break;
-			case "last":
-				out.printf("%-" + longestPath + "s %s", lastVersion.getPath(), fileHistory.getFileId());
-				printOneVersion(lastVersion);
-				out.println();
-				break;
-			default:
-				out.println(" unkown format " + operationResult.getFormat());
-				logger.log(Level.SEVERE, "Unrecognized lof format, should have been rejected earlier " + operationResult.getFormat());
-			}
-		}
-	}
-
-	public static List<String> getSupportedFormats() {
-		List<String> localFormats = new ArrayList<String>();
-
-		localFormats.add("full");
-		localFormats.add("last");
-
-		return Collections.unmodifiableList(localFormats);
 	}
 }

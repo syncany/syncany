@@ -23,11 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
-
-import org.syncany.util.StringUtil;
 
 public class MultiCipherInputStream extends InputStream {
 	private InputStream underlyingInputStream;
@@ -50,12 +47,20 @@ public class MultiCipherInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (!headerRead) {
-			readHeader();		
-			headerRead = true;
-		}
-		
+		readHeader();
 		return cipherInputStream.read();
+	}
+	
+	@Override
+	public int read(byte[] b) throws IOException {
+		readHeader();
+		return cipherInputStream.read(b, 0, b.length);
+	}
+	
+	@Override
+	public int read(byte[] b, int off, int len) throws IOException {
+		readHeader();
+		return cipherInputStream.read(b, off, len);
 	}
 	
 	@Override
@@ -64,18 +69,22 @@ public class MultiCipherInputStream extends InputStream {
 	}	
 	
 	private void readHeader() throws IOException {
-		try {
-			readAndVerifyMagicNoHmac(underlyingInputStream);
-			readAndVerifyVersionNoHmac(underlyingInputStream);
+		if (!headerRead) {
+			try {
+				readAndVerifyMagicNoHmac(underlyingInputStream);
+				readAndVerifyVersionNoHmac(underlyingInputStream);
+
+				headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
+				cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
+
+				readAndVerifyHmac(underlyingInputStream, headerHmac);			
+			}
+			catch (Exception e) {
+				throw new IOException(e);
+			}
 			
-			headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
-			cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
-			
-			readAndVerifyHmac(underlyingInputStream, headerHmac);			
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}
+			headerRead = true;
+		}
 	}
 
 	private void readAndVerifyMagicNoHmac(InputStream inputStream) throws IOException {
@@ -105,25 +114,23 @@ public class MultiCipherInputStream extends InputStream {
 		return hmac;
 	}
 	
-	private InputStream readCipherSpecsAndUpdateHmac(InputStream inputStream, Mac hmac, CipherSession cipherSession) throws Exception {
-		int cipherSpecCount = readByteAndUpdateHmac(inputStream, hmac);		
-		InputStream nestedCipherInputStream = inputStream;
+	private InputStream readCipherSpecsAndUpdateHmac(InputStream underlyingInputStream, Mac hmac, CipherSession cipherSession) throws Exception {
+		int cipherSpecCount = readByteAndUpdateHmac(underlyingInputStream, hmac);		
+		InputStream nestedCipherInputStream = underlyingInputStream;
 		
 		for (int i=0; i<cipherSpecCount; i++) {
-			int cipherSpecId = readByteAndUpdateHmac(inputStream, hmac);				
+			int cipherSpecId = readByteAndUpdateHmac(underlyingInputStream, hmac);				
 			CipherSpec cipherSpec = CipherSpecs.getCipherSpec(cipherSpecId);
 			
 			if (cipherSpec == null) {
 				throw new IOException("Cannot find cipher spec with ID "+cipherSpecId);
 			}
 
-			byte[] salt = readAndUpdateHmac(inputStream, MultiCipherOutputStream.SALT_SIZE, hmac);
-			byte[] iv = readAndUpdateHmac(inputStream, cipherSpec.getIvSize()/8, hmac);
+			byte[] salt = readAndUpdateHmac(underlyingInputStream, MultiCipherOutputStream.SALT_SIZE, hmac);
+			byte[] iv = readAndUpdateHmac(underlyingInputStream, cipherSpec.getIvSize()/8, hmac);
 			
-			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);
-			Cipher decryptCipher = CipherUtil.createDecCipher(cipherSpec, secretKey, iv);
-			
-			nestedCipherInputStream = new GcmCompatibleCipherInputStream(nestedCipherInputStream, decryptCipher);		
+			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);			
+			nestedCipherInputStream = cipherSpec.newCipherInputStream(nestedCipherInputStream, secretKey.getEncoded(), iv);		
 		}	 
 		
 		return nestedCipherInputStream;
@@ -134,7 +141,7 @@ public class MultiCipherInputStream extends InputStream {
 		byte[] readHeaderHmac = readNoHmac(inputStream, calculatedHeaderHmac.length);
 		
 		if (!Arrays.equals(calculatedHeaderHmac, readHeaderHmac)) {
-			throw new Exception("Integrity exception: Calculated HMAC "+StringUtil.toHex(calculatedHeaderHmac)+" and read HMAC "+StringUtil.toHex(readHeaderHmac)+" do not match.");
+			throw new Exception("Integrity exception: Calculated HMAC and read HMAC do not match.");
 		}			
 	}
 

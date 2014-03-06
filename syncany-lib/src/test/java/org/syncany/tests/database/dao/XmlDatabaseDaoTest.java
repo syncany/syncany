@@ -300,8 +300,8 @@ public class XmlDatabaseDaoTest {
 		MemoryDatabase loadedDatabase = writeReadAndCompareDatabase(newDatabase);
 		 
 		// File histories
-		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileId());
-		PartialFileHistory loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileId());
+		PartialFileHistory loadedFileHistoryA = loadedDatabase.getFileHistory(fileHistoryA.getFileHistoryId());
+		PartialFileHistory loadedFileHistoryB = loadedDatabase.getFileHistory(fileHistoryB.getFileHistoryId());
 		
 		assertEquals("File history not found in database loaded.", fileHistoryA, loadedFileHistoryA);
 		assertEquals("File history not found in database loaded.", fileHistoryB, loadedFileHistoryB);

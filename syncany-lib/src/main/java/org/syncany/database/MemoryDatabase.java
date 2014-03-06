@@ -227,7 +227,7 @@ public class MemoryDatabase {
 		
 		// Histories
 		for (PartialFileHistory sourceFileHistory : newDatabaseVersion.getFileHistories()) {
-			PartialFileHistory targetFileHistory = fullDatabaseVersionCache.getFileHistory(sourceFileHistory.getFileId());
+			PartialFileHistory targetFileHistory = fullDatabaseVersionCache.getFileHistory(sourceFileHistory.getFileHistoryId());
 			
 			if (targetFileHistory == null) {
 				fullDatabaseVersionCache.addFileHistory((PartialFileHistory) sourceFileHistory.clone());

@@ -59,7 +59,7 @@ public class TestCliUtil {
 			 "--plugin", "local", 
 			 "--plugin-option", "path="+client.get("repopath"),
 			 "--no-encryption", 
-			 "--no-gzip" 
+			 "--no-compression" 
 		}; 
 		
 		logger.log(Level.INFO, "Running syncany with argument: "+StringUtil.join(initArgs, " "));		

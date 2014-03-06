@@ -30,6 +30,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.GzipTransformer;
@@ -290,7 +291,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		chunkerTO.setType(FixedChunker.TYPE);
 		chunkerTO.setSettings(new HashMap<String, String>());
-		chunkerTO.getSettings().put(FixedChunker.PROPERTY_SIZE, "16");
+		chunkerTO.getSettings().put(Chunker.PROPERTY_SIZE, "16");
 		
 		return chunkerTO;
 	}

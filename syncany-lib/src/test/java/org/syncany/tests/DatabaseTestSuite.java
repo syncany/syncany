@@ -21,6 +21,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.database.DatabaseReconciliatorTest;
+import org.syncany.tests.database.ObjectIdTest;
+import org.syncany.tests.database.PartialFileHistoryTest;
 import org.syncany.tests.database.FileVersionComparatorTest;
 import org.syncany.tests.database.MemoryDatabaseCacheTest;
 import org.syncany.tests.database.VectorClockTest;
@@ -35,18 +37,20 @@ import org.syncany.tests.database.dao.XmlDatabaseDaoTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	MemoryDatabaseCacheTest.class,
+	ApplicationDaoTest.class,
+	ChunkDaoTest.class,
 	DatabaseReconciliatorTest.class,
+	DatabaseVersionDaoTest.class,
 	FileVersionComparatorTest.class,
-	XmlDatabaseDaoTest.class,
-	VectorClockTest.class,
 	FileVersionDaoTest.class,
 	FileHistoryDaoTest.class,
 	FileContentDaoTest.class,
 	MultiChunkDaoTest.class,
-	ApplicationDaoTest.class,
-	ChunkDaoTest.class,
-	DatabaseVersionDaoTest.class
+	MemoryDatabaseCacheTest.class,
+	ObjectIdTest.class,
+	PartialFileHistoryTest.class,
+	VectorClockTest.class,
+	XmlDatabaseDaoTest.class
 })
 public class DatabaseTestSuite {
 	// This class executes all tests	

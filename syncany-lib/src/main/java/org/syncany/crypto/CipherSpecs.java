@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.syncany.crypto.specs.AesGcm128CipherSpec;
+import org.syncany.crypto.specs.AesGcm256CipherSpec;
+import org.syncany.crypto.specs.TwofishGcm128CipherSpec;
+
 /**
  * Defines and identifies the application supported {@link CipherSpec}s.
  * 
@@ -61,12 +65,13 @@ public class CipherSpecs {
 	static {
 		CipherSpec[] tmpCipherSpecs = new CipherSpec[] {
 				// Standard
-				new CipherSpec(AES_128_GCM, "AES/GCM/NoPadding", 128, 128, false),
-				new CipherSpec(TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false),
+				new AesGcm128CipherSpec(AES_128_GCM),
+				new TwofishGcm128CipherSpec(TWOFISH_128_GCM),
 
 				// Unlimited crypto
-				new CipherSpec(AES_256_GCM, "AES/GCM/NoPadding", 256, 128, true),
-				new CipherSpec(TWOFISH_256_GCM, "Twofish/GCM/NoPadding", 256, 128, true) };
+				new AesGcm256CipherSpec(AES_256_GCM),
+				new TwofishGcm128CipherSpec(TWOFISH_256_GCM) 
+			};
 
 		for (CipherSpec cipherSpec : tmpCipherSpecs) {
 			registerCipherSpec(cipherSpec.getId(), cipherSpec);

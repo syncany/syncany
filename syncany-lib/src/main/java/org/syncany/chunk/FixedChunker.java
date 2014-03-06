@@ -43,7 +43,6 @@ public class FixedChunker extends Chunker {
 
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
 	public static final String TYPE = "fixed";
-	public static final String PROPERTY_SIZE = "size";
 
     private int chunkSize;   
     private String checksumAlgorithm;

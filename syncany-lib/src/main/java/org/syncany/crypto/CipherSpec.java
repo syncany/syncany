@@ -17,6 +17,8 @@
  */
 package org.syncany.crypto;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.regex.Pattern;
 
 /**
@@ -36,7 +38,7 @@ import java.util.regex.Pattern;
  *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public final class CipherSpec {
+public abstract class CipherSpec {
 	public static final Pattern ALLOWED_CIPHER_ALGORITHMS = Pattern.compile("^HmacSHA256$|(^(AES|Twofish)/(GCM|EAX)/.+)");
 	
 	private int id;
@@ -74,6 +76,9 @@ public final class CipherSpec {
 	public int getIvSize() {
 		return ivSize;
 	}		
+	
+	public abstract OutputStream newCipherOutputStream(OutputStream underlyingOutputStream, byte[] secretKey, byte[] iv) throws CipherException;
+	public abstract InputStream newCipherInputStream(InputStream underlyingInputStream, byte[] secretKey, byte[] iv) throws CipherException;
 	
 	@Override
 	public String toString() {
@@ -121,5 +126,5 @@ public final class CipherSpec {
 		if (needsUnlimitedStrength != other.needsUnlimitedStrength)
 			return false;
 		return true;
-	}	
+	}
 }
