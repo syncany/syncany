@@ -3,6 +3,8 @@ import java.io.File;
 dependencies {
 	compile			project(":syncany-lib")
 	compile			project(":syncany-plugins:syncany-plugin-ftp")
+	compile			project(":syncany-plugins:syncany-plugin-sftp")
+	compile			project(":syncany-plugins:syncany-plugin-rest")
 	compile			project(":syncany-plugins:syncany-plugin-webdav")    	
 	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
    	
