@@ -1,11 +1,12 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
 import java.io.File;
 
 dependencies {
 	compile			project(":syncany-lib")
 	compile			project(":syncany-plugins:syncany-plugin-ftp")
-	compile			project(":syncany-plugins:syncany-plugin-rest")    
 	compile			project(":syncany-plugins:syncany-plugin-webdav")    	
-	compile			project(":syncany-plugins:syncany-plugin-sftp")
 	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
    	
 	testCompile		project(path: ":syncany-lib", configuration: "tests")

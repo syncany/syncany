@@ -1,9 +1,0 @@
-dependencies {
-    compile			project(':syncany-lib')
-	compile			"com.jcraft:jsch:0.1.50"
-	compile			"org.apache.sshd:sshd-core:0.9.0"
-	compile			"org.apache.commons:commons-vfs2:2.0"
-	
-	testCompile     "junit:junit:4.3"
-	testCompile     project(path : ':syncany-lib', configuration: 'tests')
-}
