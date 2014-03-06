@@ -1,6 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
+configurations {
+	tests
+}
+
 dependencies {
 	compile			"commons-io:commons-io:2.4"	
 	testCompile		"junit:junit:4.3"   	      
