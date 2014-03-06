@@ -185,6 +185,10 @@ public class Client {
         return new ConnectOperation(options, listener).execute();                
 	}
 	
+	public CleanupOperationResult cleanup() throws Exception {
+		return new CleanupOperation(config, new CleanupOperationOptions()).execute();
+	}
+	
 	public CleanupOperationResult cleanup(CleanupOperationOptions options) throws Exception {
 		return new CleanupOperation(config, options).execute();
 	}

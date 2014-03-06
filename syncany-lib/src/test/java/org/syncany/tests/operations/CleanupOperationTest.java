@@ -27,6 +27,8 @@ import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 import org.syncany.operations.CleanupOperation.CleanupResultCode;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -286,6 +288,62 @@ public class CleanupOperationTest {
 		// B: Sync down
 		clientB.down();
 		TestAssertUtil.assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();	
+	}
+	
+	@Test
+	public void testCleanupNoChangeBecauseDirty() throws Exception {
+		// Setup
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
+		removeOldCleanupOperationOptions.setMergeRemoteFiles(false);
+		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
+		removeOldCleanupOperationOptions.setRepackageMultiChunks(false);
+		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
+		
+		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
+		forceChecksumStatusOperationOptions.setForceChecksum(true);
+		
+		UpOperationOptions noCleanupAndForceUpOperationOptions = new UpOperationOptions();
+		noCleanupAndForceUpOperationOptions.setCleanupEnabled(false);
+		noCleanupAndForceUpOperationOptions.setForceUploadEnabled(true);
+		noCleanupAndForceUpOperationOptions.setStatusOptions(forceChecksumStatusOperationOptions);
+
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");		
+		for (int i=1; i<=4; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		// B: Sync down, add something
+		clientB.down();
+		
+		// A: Change file.jpg (first step in creating a conflict)
+		clientA.changeFile("file.jpg");
+		clientA.up(noCleanupAndForceUpOperationOptions);
+				
+		// B: Change file.jpg (second step in creating a conflict)
+		clientB.changeFile("file.jpg");
+		clientB.up(noCleanupAndForceUpOperationOptions); // << creates conflict
+		
+		// B: Sync down (creates a local conflict file and marks local changes as DRITY)
+		clientB.down(); // << creates DIRTY database entries
+		
+		// B: Cleanup
+		CleanupOperationResult cleanupOperationResult = clientB.cleanup(removeOldCleanupOperationOptions);
+		assertEquals(CleanupResultCode.NOK_DIRTY_LOCAL, cleanupOperationResult.getResultCode());
+		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 		
 		// Tear down
 		clientA.deleteTestData();
