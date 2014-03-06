@@ -5,6 +5,10 @@ configurations {
 	tests
 }
 
+repositories {
+	mavenCentral()
+}
+
 dependencies {
 	compile			project(':syncany-util')
 	
