@@ -37,3 +37,7 @@ task(runSql, dependsOn: "classes", type: JavaExec) {
 	classpath = sourceSets.test.runtimeClasspath
 	args = [ "${db}", "${sql}" ]
 }		
+
+repositories {
+	mavenCentral()
+}
