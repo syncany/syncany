@@ -51,13 +51,13 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		for (PartialFileHistory fileHistory : fileHistories) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/filehistory.insert.all.writeFileHistories.sql");
 
-			preparedStatement.setString(1, fileHistory.getFileId().toString());
+			preparedStatement.setString(1, fileHistory.getFileHistoryId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
 
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
 
-			fileVersionDao.writeFileVersions(connection, fileHistory.getFileId(), databaseVersionId, fileHistory.getFileVersions().values());
+			fileVersionDao.writeFileVersions(connection, fileHistory.getFileHistoryId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
 	}
 
@@ -109,7 +109,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
 
 			// Old history (= same filehistory identifier)
-			if (fileHistory != null && fileHistory.getFileId().equals(fileHistoryId)) { // Same history!
+			if (fileHistory != null && fileHistory.getFileHistoryId().equals(fileHistoryId)) { // Same history!
 				fileHistory.addFileVersion(lastFileVersion);
 			}
 			

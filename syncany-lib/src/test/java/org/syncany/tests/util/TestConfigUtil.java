@@ -25,11 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.simpleframework.xml.core.Persister;
+import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
@@ -87,8 +90,14 @@ public class TestConfigUtil {
 		return multiChunkerTO;
 	}
 
-	private static ChunkerTO createMimeChunkerTO() {
-		ChunkerTO chunkerTO = new ChunkerTO(); // TODO [low] This does not actually create a mime chunker TO
+	private static ChunkerTO createFixedChunkerTO() {
+		Map<String, String> settings = new HashMap<String, String>();
+		settings.put(Chunker.PROPERTY_SIZE, "32768");
+		
+		ChunkerTO chunkerTO = new ChunkerTO(); 
+		chunkerTO.setType("fixed");
+		chunkerTO.setSettings(settings);
+		
 		return chunkerTO;
 	}
 
@@ -130,7 +139,7 @@ public class TestConfigUtil {
 
 		RepoTO repoTO = new RepoTO();
 		repoTO.setTransformers(null);
-		repoTO.setChunker(createMimeChunkerTO());
+		repoTO.setChunker(createFixedChunkerTO());
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
 		return new Config(new File("/dummy"), configTO, repoTO);
@@ -142,10 +151,11 @@ public class TestConfigUtil {
 
 		// Create Repo TO
 		RepoTO repoTO = new RepoTO();
+		repoTO.setRepoId(new byte[] { 0x01, 0x02, 0x03 });
 
 		// Create ChunkerTO and MultiChunkerTO
 		MultiChunkerTO multiChunkerTO = createZipMultiChunkerTO();
-		ChunkerTO chunkerTO = createMimeChunkerTO();
+		ChunkerTO chunkerTO = createFixedChunkerTO();
 		repoTO.setChunker(chunkerTO); // TODO [low] Chunker not configurable right now. Not used.
 		repoTO.setMultiChunker(multiChunkerTO);
 
@@ -161,8 +171,17 @@ public class TestConfigUtil {
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
-		// Skip configTO.setConnection()
-
+		// Create connection TO
+		Map<String, String> localConnectionSettings = new HashMap<String, String>();
+		localConnectionSettings.put("path", tempLocalDir.getAbsolutePath());
+		
+		ConnectionTO connectionTO = new ConnectionTO();
+		connectionTO.setType("local");
+		connectionTO.setSettings(localConnectionSettings);
+		
+		configTO.setConnection(connectionTO);
+				
+		// Create 
 		Config config = new Config(tempLocalDir, configTO, repoTO);
 
 		config.setConnection(connection);
@@ -171,6 +190,10 @@ public class TestConfigUtil {
 		config.getDatabaseDir().mkdirs();
 		config.getLogDir().mkdirs();
 
+		// Write to config folder (required for some tests)
+		new Persister().write(configTO, new File(config.getAppDir()+"/"+Config.FILE_CONFIG));
+		new Persister().write(repoTO, new File(config.getAppDir()+"/"+Config.FILE_REPO));
+		
 		return config;
 	}
 

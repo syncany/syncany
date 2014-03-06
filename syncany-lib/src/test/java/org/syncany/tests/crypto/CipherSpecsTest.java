@@ -48,11 +48,6 @@ public class CipherSpecsTest {
 		assertNotNull(twofish128CipherSpec.toString());
 	}
 	
-	@Test(expected=Exception.class)
-	public void testNewEcbCipherSpec() {
-		new CipherSpec(0xFF, "AES/ECB/PKCS5Padding", 128, 128, false);
-	}
-	
 	@Test
 	public void testCipherSpecHashCodeEquals() {
 		CipherSpec cipherSpec1 = CipherSpecs.getCipherSpec(CipherSpecs.AES_128_GCM);
@@ -60,6 +55,6 @@ public class CipherSpecsTest {
 		
 		assertNotSame(cipherSpec1.hashCode(), cipherSpec2.hashCode());
 		assertNotSame(cipherSpec1, cipherSpec2);
-		assertEquals(cipherSpec1, new CipherSpec(0x01, "AES/GCM/NoPadding", 128, 128, false));
+		assertEquals(0x01, cipherSpec1.getId());
 	}
 }

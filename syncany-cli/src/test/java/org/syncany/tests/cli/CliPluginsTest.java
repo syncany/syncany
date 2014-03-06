@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.plugins;
+package org.syncany.tests.cli;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 
-public class PluginsTest {
+public class CliPluginsTest {
 	@Test
 	public void testPluginsList() {
 		Collection<Plugin> pluginList = Plugins.list();		

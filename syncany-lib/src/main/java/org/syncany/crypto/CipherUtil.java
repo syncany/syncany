@@ -26,7 +26,6 @@ import static org.syncany.crypto.CipherParams.MASTER_KEY_DERIVATION_ROUNDS;
 import static org.syncany.crypto.CipherParams.MASTER_KEY_SALT_SIZE;
 import static org.syncany.crypto.CipherParams.MASTER_KEY_SIZE;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -49,13 +48,11 @@ import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
-import org.syncany.util.FileUtil;
 
 /**
  * The cipher utility provides functions to create a master key using PBKDF2, 
@@ -238,32 +235,6 @@ public class CipherUtil {
 		return new SaltedSecretKey(masterKey, salt);
 	}
 
-	public static Cipher createCipher(CipherSpec cipherSpec, int cipherInitMode, SecretKey secretKey, byte[] iv) throws CipherException {
-		logger.log(Level.INFO, "Creating cipher using " + cipherSpec + " ...");
-
-		try {
-			if (cipherSpec.needsUnlimitedStrength()) {
-				enableUnlimitedStrength();
-			}
-
-			Cipher cipher = Cipher.getInstance(cipherSpec.getAlgorithm(), CRYPTO_PROVIDER_ID);
-			cipher.init(cipherInitMode, secretKey, new IvParameterSpec(iv));
-
-			return cipher;
-		}
-		catch (Exception e) {
-			throw new CipherException(e);
-		}
-	}
-
-	public static Cipher createEncCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
-		return createCipher(cipherSpec, Cipher.ENCRYPT_MODE, secretKey, iv);
-	}
-
-	public static Cipher createDecCipher(CipherSpec cipherSpec, SecretKey secretKey, byte[] iv) throws CipherException {
-		return createCipher(cipherSpec, Cipher.DECRYPT_MODE, secretKey, iv);
-	}
-
 	public static boolean isEncrypted(File file) throws IOException {
 		byte[] actualMagic = new byte[MultiCipherOutputStream.STREAM_MAGIC.length];
 
@@ -280,10 +251,15 @@ public class CipherUtil {
 		CipherSession cipherSession = new CipherSession(masterKey);
 		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSpecs, cipherSession);
 
-		FileUtil.appendToOutputStream(plaintextInputStream, multiCipherOutputStream);
+		int read = -1;
+		byte[] buffer = new byte[4096];
 
+		while (-1 != (read = plaintextInputStream.read(buffer))) {
+			multiCipherOutputStream.write(buffer, 0, read);
+		}
+		
+		plaintextInputStream.close();
 		multiCipherOutputStream.close();
-		ciphertextOutputStream.close();
 	}
 
 	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
@@ -293,25 +269,21 @@ public class CipherUtil {
 		return ciphertextOutputStream.toByteArray();
 	}
 
-	public static byte[] encrypt(byte[] plaintext, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
-		ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(plaintext);
-		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
-
-		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
-
-		return ciphertextOutputStream.toByteArray();
-	}
-
 	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {
 		CipherSession cipherSession = new CipherSession(masterKey);
-		MultiCipherInputStream cipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
+		MultiCipherInputStream multiCipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 
-		FileUtil.appendToOutputStream(cipherInputStream, plaintextOutputStream);
+		int read = -1;
+		byte[] buffer = new byte[4096];
 
-		cipherInputStream.close();
+		while (-1 != (read = multiCipherInputStream.read(buffer))) {
+			plaintextOutputStream.write(buffer, 0, read);
+		}
+		
+		multiCipherInputStream.close();
 		plaintextOutputStream.close();
 
 		return plaintextOutputStream.toByteArray();
-	}
+	}		
 }

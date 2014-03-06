@@ -65,6 +65,7 @@ import com.google.common.collect.Lists;
  *       {@link Chunk}s and {@link MultiChunk}s.</li>
  *   <li>Merge metadata of a single client and remove old database version files
  *       from the remote storage.</li>   
+ * </ul>
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */

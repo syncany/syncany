@@ -32,6 +32,12 @@ import java.util.Enumeration;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Chunker {	
+	/**
+	 * Property used by the config to indicate the exact or 
+	 * approximate size of a chunk. In bytes. 
+	 */
+	public static final String PROPERTY_SIZE = "size";
+	
     /**
      * Opens the given file and creates enumeration of {@link Chunk}s. This method 
      * should not read the file into memory at once, but instead read and emit new 

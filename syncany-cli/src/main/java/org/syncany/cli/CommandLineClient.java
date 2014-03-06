@@ -187,8 +187,14 @@ public class CommandLineClient extends Client {
 			localDir = options.valueOf(optionLocalDir);
 		}
 		else {
-			localDir = ConfigHelper.findLocalDirInPath(new File("."));
-		}			
+			File currentDir = new File(".").getAbsoluteFile();
+			localDir = ConfigHelper.findLocalDirInPath(currentDir);
+
+			// If no local directory was found, choose current directory
+			if (localDir == null) {
+				localDir = currentDir;
+			}
+		}					
 		
 		// Load config
 		config = ConfigHelper.loadConfig(localDir);
@@ -277,7 +283,7 @@ public class CommandLineClient extends Client {
 		out.println("         Refer to help page using '--help'.");
 		out.println();
 		
-		out.close();		
+		out.close();	
 		System.exit(0);
 		
 		return 0;

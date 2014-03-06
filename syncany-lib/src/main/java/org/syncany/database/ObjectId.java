@@ -31,23 +31,42 @@ import org.syncany.util.StringUtil;
  */
 public abstract class ObjectId {
 	private static SecureRandom secureRng = new SecureRandom();
-	protected byte[] array;
+	protected byte[] identifier;
 	
-	public ObjectId(byte[] array) {
-		this.array = array;
+	public ObjectId(byte[] identifier) {
+		if (identifier == null) {
+			throw new IllegalArgumentException("Argument 'identifier' cannot be null.");
+		}
+		
+		this.identifier = identifier;
 	}
 	
+	/**
+	 * Returns the raw representation of the object identifier in the
+	 * form of a byte array. 
+	 * 
+	 * <b>Note</b>: This method is deprecated and should not be used. Try
+	 * to avoid using the raw array. 
+	 */
 	@Deprecated
 	public byte[] getRaw() {
-		return array;
+		return identifier;
 	}
 
+	/**
+	 * Converts the byte-array based identifier to a lower 
+	 * case hex string and returns this string.
+	 */
 	@Override
 	public String toString() {
-		return StringUtil.toHex(array);
+		return StringUtil.toHex(identifier);
 	}
 
 	public static byte[] parseObjectId(String s) {
+		if (s == null) {
+			throw new IllegalArgumentException("Argument 's' cannot be null.");
+		}
+		
 		return StringUtil.fromHex(s);
 	}
 
@@ -65,7 +84,7 @@ public abstract class ObjectId {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(array);
+		result = prime * result + Arrays.hashCode(identifier);
 		return result;
 	}
 
@@ -81,7 +100,7 @@ public abstract class ObjectId {
 			return false;
 		}
 		ObjectId other = (ObjectId) obj;
-		if (!Arrays.equals(array, other.array)) {
+		if (!Arrays.equals(identifier, other.identifier)) {
 			return false;
 		}
 		return true;

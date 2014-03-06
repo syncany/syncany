@@ -20,15 +20,16 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.cli.CliPluginsTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
 import org.syncany.tests.cli.DownCommandTest;
+import org.syncany.tests.cli.InitCommandTest;
 import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
 import org.syncany.tests.cli.StatusCommandTest;
 import org.syncany.tests.cli.SyncCommandTest;
 import org.syncany.tests.cli.UpCommandTest;
 import org.syncany.tests.cli.WatchCommandTest;
-import org.syncany.tests.connection.plugins.PluginsTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -40,7 +41,8 @@ import org.syncany.tests.connection.plugins.PluginsTest;
 	SyncCommandTest.class,
 	UpCommandTest.class,	
 	WatchCommandTest.class,
-	PluginsTest.class
+	CliPluginsTest.class,
+	InitCommandTest.class
 })
 public class CliTestSuite {
 	// This class executes all tests

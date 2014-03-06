@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.Mac;
+
+import org.syncany.crypto.specs.HmacSha256CipherSpec;
 
 /**
  * Implements an output stream that encrypts the underlying output
@@ -65,7 +65,7 @@ public class MultiCipherOutputStream extends OutputStream {
 	public static final byte STREAM_VERSION = 1;
 
 	public static final int SALT_SIZE = 12;	
-	public static final CipherSpec HMAC_SPEC = new CipherSpec(-1, "HmacSHA256", 256, -1, false);
+	public static final CipherSpec HMAC_SPEC = new HmacSha256CipherSpec();
 	
 	private OutputStream underlyingOutputStream;
 	
@@ -89,12 +89,20 @@ public class MultiCipherOutputStream extends OutputStream {
 	
 	@Override
 	public void write(int b) throws IOException {
-		if (!headerWritten) {
-			writeHeader();
-			headerWritten = true;
-		}
-		
+		writeHeader();
 		cipherOutputStream.write(b);		
+	}
+	
+	@Override
+	public void write(byte[] b) throws IOException {
+		writeHeader();
+		cipherOutputStream.write(b, 0, b.length);
+	}
+	
+	@Override
+	public void write(byte[] b, int off, int len) throws IOException {
+		writeHeader();
+		cipherOutputStream.write(b, off, len);
 	}
 	
 	@Override
@@ -103,39 +111,40 @@ public class MultiCipherOutputStream extends OutputStream {
 	}
 		
 	private void writeHeader() throws IOException {
-		try {
-			// Initialize header HMAC
-			SaltedSecretKey hmacSecretKey = cipherSession.getWriteSecretKey(HMAC_SPEC);
-			
-			headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
-			headerHmac.init(hmacSecretKey);
-			
-			// Write header
-			writeNoHmac(underlyingOutputStream, STREAM_MAGIC);
-			writeNoHmac(underlyingOutputStream, STREAM_VERSION);
-			writeNoHmac(underlyingOutputStream, hmacSecretKey.getSalt());			
-			writeAndUpdateHmac(underlyingOutputStream, cipherSpecs.size());
-			
-			cipherOutputStream = underlyingOutputStream;
-			
-			for (CipherSpec cipherSpec : cipherSpecs) { 
-				SaltedSecretKey saltedSecretKey = cipherSession.getWriteSecretKey(cipherSpec);				
-				byte[] iv = CipherUtil.createRandomArray(cipherSpec.getIvSize()/8);
+		if (!headerWritten) {
+			try {
+				// Initialize header HMAC
+				SaltedSecretKey hmacSecretKey = cipherSession.getWriteSecretKey(HMAC_SPEC);
 
-				writeAndUpdateHmac(underlyingOutputStream, cipherSpec.getId());
-				writeAndUpdateHmac(underlyingOutputStream, saltedSecretKey.getSalt());
-				writeAndUpdateHmac(underlyingOutputStream, iv);
-				
-				Cipher encryptCipher = CipherUtil.createEncCipher(cipherSpec, saltedSecretKey, iv);
-				
-				cipherOutputStream = new CipherOutputStream(cipherOutputStream, encryptCipher);	        
+				headerHmac = Mac.getInstance(HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
+				headerHmac.init(hmacSecretKey);
+
+				// Write header
+				writeNoHmac(underlyingOutputStream, STREAM_MAGIC);
+				writeNoHmac(underlyingOutputStream, STREAM_VERSION);
+				writeNoHmac(underlyingOutputStream, hmacSecretKey.getSalt());			
+				writeAndUpdateHmac(underlyingOutputStream, cipherSpecs.size());
+
+				cipherOutputStream = underlyingOutputStream;
+
+				for (CipherSpec cipherSpec : cipherSpecs) { 
+					SaltedSecretKey saltedSecretKey = cipherSession.getWriteSecretKey(cipherSpec);				
+					byte[] iv = CipherUtil.createRandomArray(cipherSpec.getIvSize()/8);
+
+					writeAndUpdateHmac(underlyingOutputStream, cipherSpec.getId());
+					writeAndUpdateHmac(underlyingOutputStream, saltedSecretKey.getSalt());
+					writeAndUpdateHmac(underlyingOutputStream, iv);
+
+					cipherOutputStream = cipherSpec.newCipherOutputStream(cipherOutputStream, saltedSecretKey.getEncoded(), iv);	        
+				}	
+
+				writeNoHmac(underlyingOutputStream, headerHmac.doFinal());
+			}
+			catch (Exception e) {
+				throw new IOException(e);
 			}	
-			
-			writeNoHmac(underlyingOutputStream, headerHmac.doFinal());
-    	}
-    	catch (Exception e) {
-    		throw new IOException(e);
-    	}		
+			headerWritten = true;
+		}
 	}	
 
 	private void writeNoHmac(OutputStream outputStream, byte[] bytes) throws IOException {
