@@ -35,8 +35,9 @@ are removed). At the moment, the build process outputs a \*.tar.gz and a \*.zip 
 an executable for Windows (\*.exe installer) and a Debian/Ubuntu package (\*.deb).
 
 **To download it, check out the [latest builds](http://syncany.org/dist/)!**  
-The corresponding [JavaDoc](http://syncany.org/docs/javadoc/) and the
-[JUnit test reports](http://syncany.org/reports/) is also available.
+The corresponding [JavaDoc](http://syncany.org/docs/javadoc/), the
+[JUnit test reports](http://syncany.org/reports/tests/) and 
+the [Cobertura coverage reports](http://syncany.org/reports/coverage/) are also available.
 
 **Please note**: These builds are created from *unstable*, sometimes *erroneous* code. 
 Things might change very often and newer versions might not support older repositories.
@@ -160,7 +161,7 @@ There is quite a bit of reading material on Syncany already. Check out the follo
 
 **Generated JavaDoc and JUnit Reports**    
 The up-to-date JavaDoc of the master branch is always compiled to [syncany.org/docs/javadoc](http://syncany.org/docs/javadoc). It includes the JavaDoc of all Gradle
-modules in the repo. All results of the JUnit tests are compiled to [syncany.org/reports](http://syncany.org/reports/). The corresponding distributables for this code are located at [syncany.org/dist](http://syncany.org/dist/).
+modules in the repo. All results of the JUnit tests and Cobertura coverage reports are compiled to [syncany.org/reports](http://syncany.org/reports/). The corresponding distributables for this code are located at [syncany.org/dist](http://syncany.org/dist/).
 
 
 Setup Eclipse IDE for development
