@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,6 +88,7 @@ public class EmbeddedTestFtpServer {
 		rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		rootDir.deleteOnExit();
 
+		// Add FTP users
 		PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
 		userManagerFactory.setFile(userFile);
 		userManagerFactory.setPasswordEncryptor(new SaltedPasswordEncryptor());
@@ -102,17 +104,24 @@ public class EmbeddedTestFtpServer {
 		
 		um.save(user1);
 
+		// Create server
 		FtpServerFactory serverFactory = new FtpServerFactory();
 		serverFactory.setUserManager(um);
+		
+		// Fix port issue (parallel tests are run in multiple JVMs in Travis)
+		PORT = PORT + new Random().nextInt(10000);
 		ListenerFactory factory = new ListenerFactory();
-		factory.setPort(PORT);
-		serverFactory.addListener("default", factory.createListener());
+		factory.setPort(PORT);		
+		
+		// File system 
 		NativeFileSystemFactory nfs = new NativeFileSystemFactory();
 		nfs.setCaseInsensitive(false);
 		nfs.setCreateHome(true);
+		
+		serverFactory.addListener("default", factory.createListener());
 		serverFactory.setFileSystem(nfs);
+		
 		server = serverFactory.createServer();
-
 		server.start();
 	}
 	
