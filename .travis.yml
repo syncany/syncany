@@ -48,7 +48,7 @@ before_install:
 
 script: 
   # Run JUnit tests
-  - ./gradlew testGlobal 
+  - ./gradlew testGlobal coberturaReport performCoverageCheck
 
   # Create distributables and JavaDoc
   - ./gradlew installApp distTar distZip debian exe javadocAll

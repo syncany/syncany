@@ -36,7 +36,7 @@ repositories {
 	mavenCentral()
 }
 
-// Coveralls.io ////////////////////////////////////////////////////////////////
+// Coverage (Cobertura) ////////////////////////////////////////////////////////
 // Run as: gradle testGlobal coberturaReport performCoverageCheck
 
 apply plugin: 'cobertura'
@@ -63,9 +63,9 @@ cobertura {
 	coverageMergeDatafiles = []
 	
 	rootProject.subprojects.each {
-		coverageDirs << file("${it.name}/build/classes/main")
-		coverageSourceDirs << file("${it.name}/src/main/java")
-		coverageMergeDatafiles << file("${it.name}/build/cobertura/cobertura.ser")
+		coverageDirs << file("${it.buildDir}/classes/main")
+		coverageSourceDirs << file("${it.projectDir}/src/main/java")
+		coverageMergeDatafiles << file("${it.buildDir}/cobertura/cobertura.ser")
 	}		
 }
 
