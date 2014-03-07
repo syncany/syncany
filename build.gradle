@@ -36,6 +36,40 @@ repositories {
 	mavenCentral()
 }
 
+// Coveralls.io ////////////////////////////////////////////////////////////////
+// Run as: gradle testGlobal coberturaReport performCoverageCheck
+
+apply plugin: 'cobertura'
+//apply plugin: 'coveralls'
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath 'net.saliman:gradle-cobertura-plugin:2.2.2' 
+		classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:0.2.5'
+	}
+}
+
+cobertura {
+	coverageFormats = ['html', 'xml'] 
+	coverageReportDatafile = file("build/cobertura/cobertura.ser")
+	coverageReportDir = file("build/reports/coverage")
+	
+	coverageDirs = []
+	coverageSourceDirs = []
+	coverageMergeDatafiles = []
+	
+	rootProject.subprojects.each {
+		coverageDirs << file("${it.name}/build/classes/main")
+		coverageSourceDirs << file("${it.name}/src/main/java")
+		coverageMergeDatafiles << file("${it.name}/build/cobertura/cobertura.ser")
+	}		
+}
+
+
 // JavaDoc Requirements ////////////////////////////////////////////////////////
 
 configurations {
@@ -52,6 +86,7 @@ dependencies {
 subprojects {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
+	apply plugin: 'cobertura'
 	
 	group = 'org.syncany'		
 		
@@ -227,9 +262,11 @@ task wrapper(type: Wrapper) {
 
 // Task to clean build folder on project root //////////////////////////////////	
 
-task clean(type: Delete) {
+task cleanBuildDir(type: Delete) {
 	delete 'build'	
 }
+
+tasks["clean"].dependsOn(cleanBuildDir)
 
 
 // Global Tests ////////////////////////////////////////////////////////////////
@@ -237,6 +274,6 @@ task clean(type: Delete) {
 task testGlobal(type: TestReport) {
 	group = "verification"	
 	description = "All the results from the 'test' task in all subprojects (global report!)"
-	destinationDir = file("$buildDir/reports/all")
+	destinationDir = file("$buildDir/reports/tests")
 	reportOn subprojects*.test
 }
