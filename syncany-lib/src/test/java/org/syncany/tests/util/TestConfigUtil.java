@@ -43,8 +43,10 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalPlugin;
+import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.InitOperation.InitOperationOptions;
 
 import com.google.common.collect.Lists;
 
@@ -100,6 +102,23 @@ public class TestConfigUtil {
 		
 		return chunkerTO;
 	}
+	
+	private static RepoTO createRepoTO() {
+		// Create Repo TO
+		RepoTO repoTO = new RepoTO();
+		repoTO.setRepoId(new byte[] { 0x01, 0x02, 0x03 });
+
+		// Create ChunkerTO and MultiChunkerTO
+		MultiChunkerTO multiChunkerTO = createZipMultiChunkerTO();
+		ChunkerTO chunkerTO = createFixedChunkerTO();
+		repoTO.setChunker(chunkerTO); // TODO [low] Chunker not configurable right now. Not used.
+		repoTO.setMultiChunker(multiChunkerTO);
+
+		// Create TransformerTO
+		List<TransformerTO> transformerTOs = createTransformerTOs();
+		repoTO.setTransformers(transformerTOs);
+		return repoTO;
+	}
 
 	private static List<TransformerTO> createTransformerTOs() {
 		if (!cryptoEnabled) {
@@ -149,20 +168,8 @@ public class TestConfigUtil {
 		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-" + machineName, connection));
 		tempLocalDir.mkdirs();
 
-		// Create Repo TO
-		RepoTO repoTO = new RepoTO();
-		repoTO.setRepoId(new byte[] { 0x01, 0x02, 0x03 });
-
-		// Create ChunkerTO and MultiChunkerTO
-		MultiChunkerTO multiChunkerTO = createZipMultiChunkerTO();
-		ChunkerTO chunkerTO = createFixedChunkerTO();
-		repoTO.setChunker(chunkerTO); // TODO [low] Chunker not configurable right now. Not used.
-		repoTO.setMultiChunker(multiChunkerTO);
-
-		// Create TransformerTO
-		List<TransformerTO> transformerTOs = createTransformerTOs();
-		repoTO.setTransformers(transformerTOs);
-
+		RepoTO repoTO = createRepoTO();
+		
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
 		configTO.setMachineName(machineName + Math.abs(new Random().nextInt()));
@@ -195,6 +202,45 @@ public class TestConfigUtil {
 		new Persister().write(repoTO, new File(config.getAppDir()+"/"+Config.FILE_REPO));
 		
 		return config;
+	}
+	
+	public static InitOperationOptions createTestInitOperationOptions(String machineName) throws Exception {
+		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-" + machineName, machineName));
+		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", machineName));
+		tempLocalDir.mkdirs();
+		tempRepoDir.mkdirs();
+		
+		RepoTO repoTO = createRepoTO();
+
+		// Create config TO
+		ConfigTO configTO = new ConfigTO();
+		configTO.setMachineName(machineName + Math.abs(new Random().nextInt()));
+
+		// Get Masterkey
+		SaltedSecretKey masterKey = getMasterKey();
+		configTO.setMasterKey(masterKey);
+
+		// Create connection TO
+		Map<String, String> localConnectionSettings = new HashMap<String, String>();
+		localConnectionSettings.put("path", tempRepoDir.getAbsolutePath());
+		
+		ConnectionTO connectionTO = new ConnectionTO();
+		connectionTO.setType("local");
+		connectionTO.setSettings(localConnectionSettings);
+		
+		configTO.setConnection(connectionTO);
+		
+		InitOperationOptions operationOptions = new InitOperationOptions();
+		
+		operationOptions.setLocalDir(tempLocalDir);
+		operationOptions.setConfigTO(configTO);
+		operationOptions.setRepoTO(repoTO); 
+		
+		operationOptions.setEncryptionEnabled(cryptoEnabled);
+		operationOptions.setCipherSpecs(CipherSpecs.getDefaultCipherSpecs());
+		operationOptions.setPassword(cryptoEnabled ? "some password" : null);
+		
+		return operationOptions;
 	}
 
 	public static Connection createTestLocalConnection() throws Exception {
@@ -252,5 +298,9 @@ public class TestConfigUtil {
 
 	public static void setCrypto(boolean cryptoEnabled) {
 		TestConfigUtil.cryptoEnabled = cryptoEnabled;
+	}
+	
+	public static boolean getCrypto() {
+		return cryptoEnabled;
 	}
 }
