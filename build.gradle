@@ -40,7 +40,7 @@ repositories {
 // Run as: gradle testGlobal coberturaReport performCoverageCheck
 
 apply plugin: 'cobertura'
-//apply plugin: 'coveralls'
+apply plugin: 'coveralls'
 
 buildscript {
 	repositories {
@@ -53,7 +53,7 @@ buildscript {
 	}
 }
 
-cobertura {
+cobertura {	
 	coverageFormats = ['html', 'xml'] 
 	coverageReportDatafile = file("build/cobertura/cobertura.ser")
 	coverageReportDir = file("build/reports/coverage")
@@ -63,6 +63,7 @@ cobertura {
 	coverageMergeDatafiles = []
 	
 	rootProject.subprojects.each {
+		coverageFormats = ['html', 'xml'] 
 		coverageDirs << file("${it.buildDir}/classes/main")
 		coverageSourceDirs << file("${it.projectDir}/src/main/java")
 		coverageMergeDatafiles << file("${it.buildDir}/cobertura/cobertura.ser")
