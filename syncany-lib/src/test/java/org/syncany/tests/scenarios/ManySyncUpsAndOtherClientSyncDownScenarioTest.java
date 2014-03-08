@@ -49,4 +49,42 @@ public class ManySyncUpsAndOtherClientSyncDownScenarioTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 	}
+	
+	@Test
+	public void testManySyncUpsAndOtherClientSyncDownSameFileAddRemove() throws Exception {
+		// Setup 
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
+		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		
+		// TODO Test not finished
+		
+		// ROUND 1: many sync up (cleanups expected)
+		String[] names = new String[] { "one", "two", "three", "four", "five" };
+		int nameIndex= 0;
+		
+		for (int i=1; i<=20; i++) {
+			String filename = names[nameIndex++ % names.length];
+			
+			if (clientA.getLocalFile(filename).exists()) {
+				clientA.deleteFile(filename);
+			}
+			else {
+				clientA.createNewFile(filename);
+			}
+			
+			clientA.up();		
+		}
+		
+		// ROUND 2: sync down by B
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}
 }

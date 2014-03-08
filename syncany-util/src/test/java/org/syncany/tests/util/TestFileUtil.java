@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
-import org.syncany.config.Config;
 import org.syncany.util.FileUtil;
 
 /**
@@ -44,6 +43,7 @@ import org.syncany.util.FileUtil;
  * @author Andreas Fenske
  */
 public class TestFileUtil {
+	private static String IGNORE_DIR_APPLICATION = ".syncany"; // same as Config.DIR_APPLICATION	
 	private static Random randomGen = new Random();
 	private static Random nonRandomGen = new Random(123456789L); // fixed seed!
 
@@ -297,7 +297,7 @@ public class TestFileUtil {
 
 			String relativePath = FileUtil.getRelativePath(root, file);
 
-			if (relativePath.startsWith(Config.DIR_APPLICATION)) {
+			if (relativePath.startsWith(IGNORE_DIR_APPLICATION)) {
 				continue;
 			}
 
