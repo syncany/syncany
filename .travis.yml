@@ -50,6 +50,7 @@ script:
   # Run JUnit tests
   - ./gradlew testGlobal coberturaReport performCoverageCheck
 
+after_success:
   # Create distributables and JavaDoc
   - ./gradlew installApp distTar distZip debian exe javadocAll
   
