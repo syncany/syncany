@@ -144,7 +144,16 @@ public class ConfigHelperTest {
 		assertNotNull(repoConfigTO.getChunker());
 		assertNotNull(repoConfigTO.getMultiChunker());
 		assertNotNull(repoConfigTO.getRepoId());
-		assertNull(repoConfigTO.getTransformers());
+		
+		if (TestConfigUtil.getCrypto()) {
+			assertNotNull(repoConfigTO.getTransformers());
+			assertEquals(2, repoConfigTO.getTransformers().size());
+			assertEquals("gzip", repoConfigTO.getTransformers().get(0).getType());
+			assertEquals("cipher", repoConfigTO.getTransformers().get(1).getType());
+		}
+		else {
+			assertNull(repoConfigTO.getTransformers());
+		}
 		
 		assertEquals("fixed", repoConfigTO.getChunker().getType());
 		assertEquals(1, repoConfigTO.getChunker().getSettings().size());

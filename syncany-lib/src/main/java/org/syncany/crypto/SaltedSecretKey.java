@@ -21,6 +21,8 @@ import java.util.Arrays;
 
 import javax.crypto.SecretKey;
 
+import org.syncany.util.StringUtil;
+
 /**
  * A salted secret key is a convenience class to bundle a {@link SecretKey} with
  * its corresponding salt. It is mainly used to represent the master key and the
@@ -57,7 +59,13 @@ public class SaltedSecretKey implements SecretKey {
 	public byte[] getEncoded() {
 		return secretKey.getEncoded();
 	}
-
+	
+	@Override
+	public String toString() {
+		return "[secretKey={algorithm=" + getAlgorithm() + ", format=" + getFormat() + ", encoded=" + StringUtil.toHex(getEncoded()) + "}, salt="
+				+ StringUtil.toHex(getSalt()) + "]";
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

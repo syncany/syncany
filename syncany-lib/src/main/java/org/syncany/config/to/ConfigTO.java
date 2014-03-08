@@ -29,6 +29,7 @@ import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config.ConfigException;
+import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 
@@ -124,7 +125,7 @@ public class ConfigTO {
 			byte[] saltBytes = StringUtil.fromHex(masterKeyEncodedParts[0]);
 			byte[] masterKeyBytes = StringUtil.fromHex(masterKeyEncodedParts[1]);
 			
-			masterKey = new SaltedSecretKey(new SecretKeySpec(masterKeyBytes, "RAW"), saltBytes);
+			masterKey = new SaltedSecretKey(new SecretKeySpec(masterKeyBytes, CipherParams.MASTER_KEY_DERIVATION_FUNCTION), saltBytes);
 		}
 		else {
 			masterKey = null;
