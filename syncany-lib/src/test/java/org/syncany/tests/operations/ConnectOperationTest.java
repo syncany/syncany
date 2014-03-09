@@ -22,9 +22,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Random;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.config.to.ConfigTO;
+import org.syncany.operations.ConnectOperation;
+import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
@@ -33,39 +37,46 @@ import org.syncany.tests.util.TestFileUtil;
 
 /**
  * This test goes through the creation of a local repo and verifies
- * the existence of files/folders as well as the connect link.
+ * that the repo can be connected to.
  * @author Pim Otte
  *
  */
-public class InitOperationTest {
+public class ConnectOperationTest {
 	
 	@Test
-	public void testInitOperation() throws Exception {	
+	public void testConnectOperation() throws Exception {	
 		InitOperationOptions operationOptions = TestConfigUtil.createTestInitOperationOptions("A");
+		
 		InitOperation op = new InitOperation(operationOptions, null);
 		InitOperationResult res = op.execute();
-		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
-		File localDir = new File(operationOptions.getLocalDir(), ".syncany");
+		File localDir = TestFileUtil.createTempDirectoryInSystemTemp(TestConfigUtil.createUniqueName("client-B", operationOptions));;
+		ConnectOperationOptions connectOperationOptions = new ConnectOperationOptions();
+		ConfigTO connConfigTO = operationOptions.getConfigTO();
+		connConfigTO.setMachineName("client-B"+ Math.abs(new Random().nextInt()));
+		connConfigTO.setMasterKey(null);
+		connectOperationOptions.setConfigTO(connConfigTO);
+		connectOperationOptions.setPassword(operationOptions.getPassword());
+		connectOperationOptions.setLocalDir(localDir);
+		ConnectOperation connOp = new ConnectOperation(connectOperationOptions, null);
+		connOp.execute();
 		
-		//Test the repository
-		assertTrue((new File(repoDir, "databases").exists()));
-		assertTrue((new File(repoDir, "syncany").exists()));
-		assertTrue((new File(repoDir, "multichunks").exists()));
-		assertEquals((new File(repoDir, "master").exists()), TestConfigUtil.getCrypto());
+		File localConnectDir = new File(localDir, ".syncany");
 		
-		//Test the local folder		
-		assertTrue((new File(localDir, Config.DIR_DATABASE).exists()));
-		assertTrue((new File(localDir, Config.DIR_CACHE).exists()));
-		assertTrue((new File(localDir, Config.FILE_CONFIG).exists()));
-		assertTrue((new File(localDir, Config.DIR_LOG).exists()));
-		assertTrue((new File(localDir, Config.FILE_REPO).exists()));
-		assertEquals((new File(localDir, Config.FILE_MASTER).exists()), TestConfigUtil.getCrypto());
-			
 		//Test the existance of generated link
 		String link = res.getGenLinkResult().getShareLink();
 		assertNotNull(link);
 		
+		//Test the local folder		
+		assertTrue((new File(localConnectDir, Config.DIR_DATABASE).exists()));
+		assertTrue((new File(localConnectDir, Config.DIR_CACHE).exists()));
+		assertTrue((new File(localConnectDir, Config.FILE_CONFIG).exists()));
+		assertTrue((new File(localConnectDir, Config.DIR_LOG).exists()));
+		assertTrue((new File(localConnectDir, Config.FILE_REPO).exists()));
+		assertEquals((new File(localConnectDir, Config.FILE_MASTER).exists()), TestConfigUtil.getCrypto());
+		
+		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
 		TestFileUtil.deleteDirectory(repoDir);
+		TestFileUtil.deleteDirectory(localConnectDir);
 		TestFileUtil.deleteDirectory(operationOptions.getLocalDir());
 	}
 }

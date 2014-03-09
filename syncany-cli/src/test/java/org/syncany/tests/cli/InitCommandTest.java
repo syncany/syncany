@@ -65,7 +65,7 @@ public class InitCommandTest {
 		
 		assertTrue(tempDir.exists());
 		assertTrue(new File(tempDir+"/.syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/repo").exists());
+		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
 		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
 
 		// Tear down
