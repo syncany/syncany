@@ -65,6 +65,6 @@ public class InitOperationTest {
 		assertNotNull(link);
 		
 		TestFileUtil.deleteDirectory(repoDir);
-		TestFileUtil.deleteDirectory(localDir);
+		TestFileUtil.deleteDirectory(operationOptions.getLocalDir());
 	}
 }
