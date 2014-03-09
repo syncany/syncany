@@ -55,7 +55,7 @@ public class Config {
 	public static final String DIR_DATABASE = "db";
 	public static final String DIR_LOG = "logs";
 	public static final String FILE_CONFIG = "config.xml";
-	public static final String FILE_REPO = "repo";
+	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
 		
 	private byte[] repoId;

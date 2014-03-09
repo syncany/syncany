@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 
 import org.junit.Test;
+import org.syncany.config.Config;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
@@ -53,12 +54,12 @@ public class InitOperationTest {
 		assertEquals((new File(repoDir, "master").exists()), TestConfigUtil.getCrypto());
 		
 		//Test the local folder		
-		assertTrue((new File(localDir, "db").exists()));
-		assertTrue((new File(localDir, "cache").exists()));
-		assertTrue((new File(localDir, "config.xml").exists()));
-		assertTrue((new File(localDir, "logs").exists()));
-		assertTrue((new File(localDir, "repo").exists()));
-		assertEquals((new File(localDir, "master").exists()), TestConfigUtil.getCrypto());
+		assertTrue((new File(localDir, Config.DIR_DATABASE).exists()));
+		assertTrue((new File(localDir, Config.DIR_CACHE).exists()));
+		assertTrue((new File(localDir, Config.FILE_CONFIG).exists()));
+		assertTrue((new File(localDir, Config.DIR_LOG).exists()));
+		assertTrue((new File(localDir, Config.FILE_REPO).exists()));
+		assertEquals((new File(localDir, Config.FILE_MASTER).exists()), TestConfigUtil.getCrypto());
 			
 		//Test the existance of generated link
 		String link = res.getGenLinkResult().getShareLink();
