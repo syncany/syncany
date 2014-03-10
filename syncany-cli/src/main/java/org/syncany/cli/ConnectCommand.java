@@ -37,7 +37,6 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
@@ -65,32 +64,25 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		boolean doConnect = true;
+		boolean performOperation = true;
 		ConnectOperationOptions operationOptions = parseConnectOptions(operationArgs);
 
-		while (doConnect) {
+		while (performOperation) {
 			ConnectOperationResult operationResult = client.connect(operationOptions, this);			
 			printResults(operationResult);
 			
 			boolean retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK;
 
 			if (retryNeeded) {
-				doConnect = askRetry();
+				performOperation = askRetry();
 			
-				if (doConnect) {
-					updateConnectOptions(operationOptions);
+				if (performOperation) {
+					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
 				}				
 			}
 		} 
 		
 		return 0;		
-	}
-
-	private void updateConnectOptions(ConnectOperationOptions operationOptions) throws StorageException {
-		ConnectionTO connectionTO = operationOptions.getConfigTO().getConnectionTO();
-
-		Map<String, String> newPluginSettings = askPluginSettings(connectionTO.getType(), connectionTO.getSettings());
-		connectionTO.setSettings(newPluginSettings);
 	}
 
 	private ConnectOperationOptions parseConnectOptions(String[] operationArguments) throws OptionException, Exception {
@@ -229,12 +221,7 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		}	
 		
 		return password;
-	}
-	
-	private boolean askRetry() {
-		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
-		return yesno.toLowerCase().startsWith("y");
-	}
+	}	
 
 	@Override
 	public String getPasswordCallback() {

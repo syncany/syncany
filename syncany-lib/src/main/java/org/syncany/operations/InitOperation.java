@@ -31,6 +31,7 @@ import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -54,7 +55,8 @@ import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
-    private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());        
+    private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());  
+    
     private InitOperationOptions options;
     private InitOperationListener listener;
     private TransferManager transferManager;
@@ -74,11 +76,15 @@ public class InitOperation extends AbstractInitOperation {
 
 		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
 		
-		if (repoFileExistsOnRemoteStorage(transferManager)) {
-			throw new Exception("Repo already exists. Use 'connect' command to connect to existing repository."); 
+		// Test the repo
+		StorageTestResult repoTestResult = transferManager.test();
+		
+		if (repoTestResult != StorageTestResult.NO_REPO) {
+			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created.");
+			return translateToInitOperationResult(repoTestResult);			
 		}
 		
-		logger.log(Level.INFO, "Creating local repository");
+		logger.log(Level.INFO, "- Connecting to the repo was successful.");
 		
 		// Create local .syncany directory
 		File appDir = createAppDirs(options.getLocalDir());	
@@ -103,8 +109,40 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Uploading local repository");
 		
 		// Make remote changes
+		initRemoteRepository();		
+		
+		if (options.isEncryptionEnabled()) {
+			uploadMasterFile(masterFile, transferManager);
+		}
+		
+		uploadRepoFile(repoFile, transferManager);
+		
+		// Make link		
+		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
+					
+		return new InitOperationResult(InitResultCode.OK, genlinkOperationResult);
+    }          
+    
+	private InitOperationResult translateToInitOperationResult(StorageTestResult repoTestResult) {
+		switch (repoTestResult) {
+		case NO_CONNECTION:
+			return new InitOperationResult(InitResultCode.NOK_NO_CONNECTION);
+			
+		case NO_REPO_CANNOT_CREATE:
+			return new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
+			
+		case REPO_EXISTS:
+			return new InitOperationResult(InitResultCode.NOK_REPO_EXISTS);
+			
+		case NO_REPO:
+		default:
+			throw new RuntimeException("Test result "+repoTestResult+" should have been handled before.");
+		}
+	}
+
+	private void initRemoteRepository() throws Exception {
 		try {
-			transferManager.init(true); //TODO [medium] get command line option
+			transferManager.init(options.isCreateTargetPath());
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created
@@ -118,19 +156,8 @@ public class InitOperation extends AbstractInitOperation {
 			// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
 			throw new Exception("StorageException for remote. Cleaned local repository.");
  		}
-		
-		if (masterFile.exists()) {
-			uploadMasterFile(masterFile, transferManager);
-		}
-		
-		uploadRepoFile(repoFile, transferManager);
-		
-		// Make link		
-		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
-					
-		return new InitOperationResult(genlinkOperationResult);
-    }          
-    
+	}
+
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
 		return new GenlinkOperation(options.getConfigTO()).execute();
 	}
@@ -167,6 +194,7 @@ public class InitOperation extends AbstractInitOperation {
 	}	
  
     public static class InitOperationOptions implements OperationOptions {
+    	private boolean createTargetPath;
     	private File localDir;
     	private ConfigTO configTO;
     	private RepoTO repoTO;
@@ -174,7 +202,15 @@ public class InitOperation extends AbstractInitOperation {
     	private List<CipherSpec> cipherSpecs;
     	private String password;
 		
-    	public File getLocalDir() {
+		public boolean isCreateTargetPath() {
+			return createTargetPath;
+		}
+
+		public void setCreateTargetPath(boolean createTargetPath) {
+			this.createTargetPath = createTargetPath;
+		}
+
+		public File getLocalDir() {
 			return localDir;
 		}
 
@@ -223,13 +259,27 @@ public class InitOperation extends AbstractInitOperation {
 		}  						
     }
     
+    public enum InitResultCode {
+		OK, NOK_REPO_EXISTS, NOK_NO_REPO_CANNOT_CREATE, NOK_NO_CONNECTION
+	}
+    
     public class InitOperationResult implements OperationResult {
-        private GenlinkOperationResult genLinkResult;
+    	private InitResultCode resultCode = InitResultCode.OK;
+        private GenlinkOperationResult genLinkResult = null;
 
-		public InitOperationResult(GenlinkOperationResult genLinkResult) {
+        public InitOperationResult(InitResultCode resultCode) {
+        	this.resultCode = resultCode;
+        }
+        
+		public InitOperationResult(InitResultCode resultCode, GenlinkOperationResult genLinkResult) {
+			this.resultCode = resultCode;
 			this.genLinkResult = genLinkResult;
 		}
 
+		public InitResultCode getResultCode() {
+			return resultCode;
+		}
+		
 		public GenlinkOperationResult getGenLinkResult() {
 			return genLinkResult;
 		}              

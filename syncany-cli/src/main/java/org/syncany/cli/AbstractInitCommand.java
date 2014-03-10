@@ -255,6 +255,16 @@ public abstract class AbstractInitCommand extends Command {
 		return System.getProperty("user.name");
 	}
 
+	protected boolean askRetry() {
+		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
+		return yesno.toLowerCase().startsWith("y");
+	}
+
+	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
+		Map<String, String> newPluginSettings = askPluginSettings(connectionTO.getType(), connectionTO.getSettings());
+		connectionTO.setSettings(newPluginSettings);
+	}
+	
 	protected void printLink(GenlinkOperationResult operationResult, boolean shortOutput) {
 		if (shortOutput) {
 			out.println(operationResult.getShareLink());

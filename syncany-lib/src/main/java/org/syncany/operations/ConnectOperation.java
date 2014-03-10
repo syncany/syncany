@@ -80,7 +80,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		
 		if (repoTestResult != StorageTestResult.REPO_EXISTS) {
 			logger.log(Level.INFO, "- Connecting to the repo failed; or no repo exists.");
-			return translateToConnectResultCode(repoTestResult);			
+			return translateToConnectOperationResult(repoTestResult);			
 		}
 		
 		logger.log(Level.INFO, "- Connecting to the repo was successful.");
@@ -135,7 +135,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
 
-	private ConnectOperationResult translateToConnectResultCode(StorageTestResult repoTestResult) {
+	private ConnectOperationResult translateToConnectOperationResult(StorageTestResult repoTestResult) {
 		switch (repoTestResult) {
 		case NO_CONNECTION:
 			return new ConnectOperationResult(ConnectResultCode.NOK_NO_CONNECTION);

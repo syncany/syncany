@@ -37,6 +37,7 @@ Commands:
     -P, --plugin-option=<key=value>  Set plugin settings (multi-option)
     -E, --no-encryption              Don't encrypt new repo
     -G, --no-compression             Don't use gzip-compression in new repo
+    -t, --create-target              Create target path (if not existent)
     -a, --advanced                   Asks more questions about encryption
 
   connect [<args>] [<syncany link>]

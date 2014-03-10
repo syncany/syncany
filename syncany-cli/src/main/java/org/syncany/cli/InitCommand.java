@@ -48,12 +48,13 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.InitOperation.InitOperationListener;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
+import org.syncany.operations.InitOperation.InitResultCode;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand implements InitOperationListener {
 	public static final int REPO_ID_LENGTH = 32;
-	public static final int PASSWORD_MIN_LENGTH = 8;
+	public static final int PASSWORD_MIN_LENGTH = 10;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
 	@Override
@@ -63,10 +64,23 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
+		boolean performOperation = true;
 		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
-		InitOperationResult operationResult = client.init(operationOptions, this);
-		
-		printResults(operationResult);
+
+		while (performOperation) {
+			InitOperationResult operationResult = client.init(operationOptions, this);			
+			printResults(operationResult);
+			
+			boolean retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
+
+			if (retryNeeded) {
+				performOperation = askRetry();
+			
+				if (performOperation) {
+					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
+				}				
+			}
+		} 		
 		
 		return 0;		
 	}
@@ -75,6 +89,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
 		OptionParser parser = new OptionParser();
+		OptionSpec<Void> optionCreateTargetPath = parser.acceptsAll(asList("t", "create-target"));
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoCompression = parser.acceptsAll(asList("G", "no-compression"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("E", "no-encryption"));
@@ -85,12 +100,13 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 						
 		ConnectionTO connectionTO = initPluginWithOptions(options, optionPlugin, optionPluginOpts);
 		
+		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
 		
 		String password = null;
-		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, advancedModeEnabled);
+		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
@@ -107,6 +123,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setRepoTO(repoTO); 
 		
+		operationOptions.setCreateTargetPath(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(password);
@@ -115,7 +132,30 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	}		
 
 	private void printResults(InitOperationResult operationResult) {
-		printLink(operationResult.getGenLinkResult(), false);
+		if (operationResult.getResultCode() == InitResultCode.OK) {
+			printLink(operationResult.getGenLinkResult(), false);
+		}
+		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_REPO_CANNOT_CREATE) {
+			out.println();
+			out.println("ERROR: Repository cannot be created.");
+			out.println();
+			out.println("Make sure that the repository path is writable by the");
+			out.println("user in the connection details.");
+			out.println();
+		}
+		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_CONNECTION) {
+			out.println();
+			out.println("ERROR: Cannot init to repository (broken connection).");
+			out.println();
+			out.println("Make sure that you have a working Internet connection and that ");
+			out.println("the connection details (esp. the hostname/IP) are correct.");				
+			out.println();
+		}
+		else {
+			out.println();
+			out.println("ERROR: Cannot connect to repository. Unknown error code: "+operationResult.getResultCode());
+			out.println();
+		}		
 	}
 
 	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
@@ -133,7 +173,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return transformersTO;
 	}
 
-	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
+	private List<CipherSpec> getCipherSpecs(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
 		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
