@@ -37,6 +37,7 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
@@ -64,12 +65,41 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		ConnectOperationOptions operationOptions = parseConnectOptions(operationArgs);
-		ConnectOperationResult operationResult = client.connect(operationOptions, this);
-		
-		printResults(operationResult);
+		ConnectOperationOptions operationOptions = null;
+
+		while (true) {
+			if (operationOptions == null) {
+				operationOptions = parseConnectOptions(operationArgs);
+			}
+			else {
+				operationOptions = updateConnectOptions(operationOptions);
+			}
+			
+			ConnectOperationResult operationResult = client.connect(operationOptions, this);			
+			printResults(operationResult);
+			
+			if (operationResult.getResultCode() != ConnectResultCode.OK) {
+				if (!askRetry()) {
+					break;
+				}
+			}
+		} 
 		
 		return 0;		
+	}
+
+	private ConnectOperationOptions updateConnectOptions(ConnectOperationOptions oldOperationOptions) throws StorageException {
+		ConnectionTO oldConnectionTO = oldOperationOptions.getConfigTO().getConnectionTO();
+		ConnectionTO newConnectionTO = new ConnectionTO();
+		
+		Map<String, String> newPluginSettings = askPluginSettings(oldConnectionTO.getType(), oldConnectionTO.getSettings());
+
+		newConnectionTO.setType(oldConnectionTO.getType());
+		newConnectionTO.setSettings(newPluginSettings);
+
+		oldOperationOptions.getConfigTO().setConnectionTO(newConnectionTO);
+		
+		return oldOperationOptions;		
 	}
 
 	private ConnectOperationOptions parseConnectOptions(String[] operationArguments) throws OptionException, Exception {
@@ -83,6 +113,16 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		List<?> nonOptionArgs = options.nonOptionArguments();		
 		
 		// Plugin
+		ConnectionTO connectionTO = createConnectionTO(options, optionPlugin, optionPluginOpts, nonOptionArgs);		
+		ConfigTO configTO = createConfigTO(masterKey, connectionTO);
+		
+		operationOptions.setLocalDir(localDir);
+		operationOptions.setConfigTO(configTO);
+		
+		return operationOptions;		
+	}	
+
+	private ConnectionTO createConnectionTO(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts, List<?> nonOptionArgs) throws Exception {
 		ConnectionTO connectionTO = new ConnectionTO();
 		
 		if (nonOptionArgs.size() == 1) {
@@ -93,7 +133,7 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		}
 		else if (nonOptionArgs.size() == 0) {
 			String pluginStr = askPlugin();
-			Map<String, String> pluginSettings = askPluginSettings(pluginStr);
+			Map<String, String> pluginSettings = askPluginSettings(pluginStr, null);
 
 			connectionTO.setType(pluginStr);
 			connectionTO.setSettings(pluginSettings);
@@ -102,13 +142,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			throw new Exception("Invalid syntax.");
 		}
 		
-		ConfigTO configTO = createConfigTO(localDir, masterKey, connectionTO);
-		
-		operationOptions.setLocalDir(localDir);
-		operationOptions.setConfigTO(configTO);
-		
-		return operationOptions;		
-	}	
+		return connectionTO;
+	}
 
 	private void printResults(ConnectOperationResult operationResult) {
 		if (operationResult.getResultCode() == ConnectResultCode.OK) {
@@ -117,26 +152,30 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			out.println("You can now use the 'syncany' command to sync your files.");
 			out.println();
 		}
+		else if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_REPO) {
+			out.println();
+			out.println("ERROR: No repository was found at the given location.");
+			out.println();
+			out.println("Make sure that the connection details are correct and that");
+			out.println("a repository actually exists at this location.");
+			out.println();
+		}
+		else if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_CONNECTION) {
+			out.println();
+			out.println("ERROR: Cannot connect to repository (broken connection).");
+			out.println();
+			out.println("Make sure that you have a working Internet connection and that ");
+			out.println("the connection details (esp. the hostname/IP) are correct.");				
+			out.println();
+		}
+		else if (operationResult.getResultCode() == ConnectResultCode.NOK_INVALID_REPO) {
+			out.println();
+			out.println("ERROR: Invalid repository found at location.");
+			out.println();
+		}
 		else {
 			out.println();
-
-			if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_REPO) {
-				out.println("ERROR: No repository was found at the given location.");
-				out.println("Make sure that the connection details are correct and that");
-				out.println("a repository actually exists at this location.");
-			}
-			else if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_CONNECTION) {
-				out.println("ERROR: Cannot connect to repository (broken connection).");
-				out.println("Make sure that you have a working Internet connection and that ");
-				out.println("the connection details (esp. the hostname/IP) are correct.");				
-			}
-			else if (operationResult.getResultCode() == ConnectResultCode.NOK_INVALID_REPO) {
-				out.println("ERROR: Invalid repository found at location.");
-			}
-			else {
-				out.println("ERROR: Cannot connect to repository. Unknown error code: "+operationResult);
-			}
-			
+			out.println("ERROR: Cannot connect to repository. Unknown error code: "+operationResult);
 			out.println();
 		}
 	}
@@ -199,6 +238,11 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		}	
 		
 		return password;
+	}
+	
+	private boolean askRetry() {
+		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
+		return yesno.toLowerCase().startsWith("y");
 	}
 
 	@Override

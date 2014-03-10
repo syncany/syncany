@@ -100,7 +100,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 			password = askPasswordAndConfirm();
 		}
 			
-		ConfigTO configTO = createConfigTO(localDir, null, connectionTO);		
+		ConfigTO configTO = createConfigTO(null, connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
 		operationOptions.setLocalDir(localDir);
