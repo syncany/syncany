@@ -43,28 +43,41 @@ public abstract class AbstractTransferManager implements TransferManager {
 	}
 
 	@Override
-	public StorageTestResult test() throws StorageException {
-		connect();
-
-		StorageTestResult result;
-		if (repoExists()) {
-			if (repoIsEmpty()) {
-				result = StorageTestResult.NO_REPO;
+	public StorageTestResult test() {
+		StorageTestResult result = null;
+		
+		try {
+			connect();
+	
+			if (repoExists()) {
+				if (repoIsEmpty()) {
+					result = StorageTestResult.NO_REPO;
+				}
+				else {
+					result = StorageTestResult.REPO_EXISTS;
+				}
 			}
 			else {
-				result = StorageTestResult.REPO_EXISTS;
+				if (hasWriteAccess()) {
+					result = StorageTestResult.NO_REPO;
+				}
+				else {
+					result = StorageTestResult.NO_REPO_CANNOT_CREATE;
+				}
+			}	
+		}
+		catch (StorageException e) {
+			result = StorageTestResult.NO_CONNECTION;
+		}
+		finally {
+			try {
+				disconnect();
+			}
+			catch (StorageException e) {
+				// Don't care
 			}
 		}
-		else {
-			if (hasWriteAccess()) {
-				result = StorageTestResult.NO_REPO;
-			}
-			else {
-				result = StorageTestResult.NO_REPO_CANNOT_CREATE;
-			}
-		}
-
-		disconnect();
+		
 		return result;
 	}
 }

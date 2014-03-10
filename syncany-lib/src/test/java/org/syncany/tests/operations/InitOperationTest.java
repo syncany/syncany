@@ -34,8 +34,8 @@ import org.syncany.tests.util.TestFileUtil;
 /**
  * This test goes through the creation of a local repo and verifies
  * the existence of files/folders as well as the connect link.
- * @author Pim Otte
  *
+ * @author Pim Otte
  */
 public class InitOperationTest {
 	

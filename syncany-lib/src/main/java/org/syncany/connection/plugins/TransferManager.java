@@ -48,6 +48,12 @@ public interface TransferManager {
 	 */
 	public enum StorageTestResult {
 		/**
+		 * Repository cannot be tested, because the 
+		 * connection failed.
+		 */
+		NO_CONNECTION,
+		
+		/**
 		 * Repository path exists and it is not empty
 		 */
 		REPO_EXISTS,
