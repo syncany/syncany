@@ -65,41 +65,32 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		ConnectOperationOptions operationOptions = null;
+		boolean doConnect = true;
+		ConnectOperationOptions operationOptions = parseConnectOptions(operationArgs);
 
-		while (true) {
-			if (operationOptions == null) {
-				operationOptions = parseConnectOptions(operationArgs);
-			}
-			else {
-				operationOptions = updateConnectOptions(operationOptions);
-			}
-			
+		while (doConnect) {
 			ConnectOperationResult operationResult = client.connect(operationOptions, this);			
 			printResults(operationResult);
 			
-			if (operationResult.getResultCode() != ConnectResultCode.OK) {
-				if (!askRetry()) {
-					break;
-				}
+			boolean retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK;
+
+			if (retryNeeded) {
+				doConnect = askRetry();
+			
+				if (doConnect) {
+					updateConnectOptions(operationOptions);
+				}				
 			}
 		} 
 		
 		return 0;		
 	}
 
-	private ConnectOperationOptions updateConnectOptions(ConnectOperationOptions oldOperationOptions) throws StorageException {
-		ConnectionTO oldConnectionTO = oldOperationOptions.getConfigTO().getConnectionTO();
-		ConnectionTO newConnectionTO = new ConnectionTO();
-		
-		Map<String, String> newPluginSettings = askPluginSettings(oldConnectionTO.getType(), oldConnectionTO.getSettings());
+	private void updateConnectOptions(ConnectOperationOptions operationOptions) throws StorageException {
+		ConnectionTO connectionTO = operationOptions.getConfigTO().getConnectionTO();
 
-		newConnectionTO.setType(oldConnectionTO.getType());
-		newConnectionTO.setSettings(newPluginSettings);
-
-		oldOperationOptions.getConfigTO().setConnectionTO(newConnectionTO);
-		
-		return oldOperationOptions;		
+		Map<String, String> newPluginSettings = askPluginSettings(connectionTO.getType(), connectionTO.getSettings());
+		connectionTO.setSettings(newPluginSettings);
 	}
 
 	private ConnectOperationOptions parseConnectOptions(String[] operationArguments) throws OptionException, Exception {
