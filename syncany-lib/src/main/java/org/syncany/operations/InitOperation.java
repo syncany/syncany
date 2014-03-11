@@ -86,15 +86,22 @@ public class InitOperation extends AbstractInitOperation {
 		
 		logger.log(Level.INFO, "- Connecting to the repo was successful.");
 		
+		// Ask password (if needed)
+		String masterKeyPassword = null;
+		
+		if (options.isEncryptionEnabled()) {
+			masterKeyPassword = getOrAskPassword();
+		}	
+		
 		// Create local .syncany directory
-		File appDir = createAppDirs(options.getLocalDir());	
+		File appDir = createAppDirs(options.getLocalDir());	// TODO [medium] create temp dir first, ask password cannot be done after
 		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);
 		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
 		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
 		
 		// Save config.xml and repo file		
 		if (options.isEncryptionEnabled()) {
-			SaltedSecretKey masterKey = createMasterKeyFromPassword(options.getPassword()); // This takes looong!			
+			SaltedSecretKey masterKey = createMasterKeyFromPassword(masterKeyPassword); // This takes looong!			
 			options.getConfigTO().setMasterKey(masterKey);
 			
 			writeXmlFile(new MasterTO(masterKey.getSalt()), masterFile);
@@ -162,6 +169,19 @@ public class InitOperation extends AbstractInitOperation {
 		return new GenlinkOperation(options.getConfigTO()).execute();
 	}
 
+	private String getOrAskPassword() throws Exception {
+		if (options.getPassword() == null) {
+			if (listener == null) {
+				throw new RuntimeException("Cannot get password from user interface. No listener.");
+			}
+			
+			return listener.getPasswordCallback();
+		}
+		else {
+			return options.getPassword();
+		}		
+	}	
+	
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
 		if (listener != null) {
 			listener.notifyGenerateMasterKey();
@@ -190,6 +210,7 @@ public class InitOperation extends AbstractInitOperation {
 	}    	
 	
 	public static interface InitOperationListener {
+		public String getPasswordCallback();
 		public void notifyGenerateMasterKey();
 	}	
  

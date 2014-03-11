@@ -64,14 +64,16 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
+		boolean retryNeeded = true;
 		boolean performOperation = true;
+		
 		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
 
-		while (performOperation) {
+		while (retryNeeded && performOperation) {
 			InitOperationResult operationResult = client.init(operationOptions, this);			
 			printResults(operationResult);
 			
-			boolean retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
+			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
 
 			if (retryNeeded) {
 				performOperation = askRetry();
@@ -105,17 +107,12 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
 		
-		String password = null;
 		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 		
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
 		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 				
-		if (encryptionEnabled) {			
-			password = askPasswordAndConfirm();
-		}
-			
 		ConfigTO configTO = createConfigTO(null, connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
@@ -126,7 +123,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		operationOptions.setCreateTargetPath(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
-		operationOptions.setPassword(password);
+		operationOptions.setPassword(null); // set by callback in operation 
 		
 		return operationOptions;
 	}		
@@ -149,6 +146,14 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 			out.println();
 			out.println("Make sure that you have a working Internet connection and that ");
 			out.println("the connection details (esp. the hostname/IP) are correct.");				
+			out.println();
+		}
+		else if (operationResult.getResultCode() == InitResultCode.NOK_REPO_EXISTS) {
+			out.println();
+			out.println("ERROR: Cannot init to repository (already exists).");
+			out.println();
+			out.println("If you want to connect to an existing repository, please");
+			out.println("use the 'connect' command.");
 			out.println();
 		}
 		else {
@@ -208,7 +213,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		boolean unlimitedStrengthNeeded = false;
 		
 		while (continueLoop) {
-			String commaSeparatedCipherIdStr = console.readLine("Cipher Suite: ");			
+			String commaSeparatedCipherIdStr = console.readLine("Cipher(s): ");			
 			String[] cipherSuiteIdStrs = commaSeparatedCipherIdStr.split(",");
 			
 			// Choose cipher
@@ -268,13 +273,13 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	protected String askPasswordAndConfirm() {
 		out.println();
 		out.println("The password is used to encrypt data on the remote storage.");
-		out.println("Wisely choose you must!");
+		out.println("Choose wisely!");
 		out.println();
 		
 		String password = null;
 		
 		while (password == null) {
-			char[] passwordChars = console.readPassword("Password: ");
+			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
 			char[] confirmPasswordChars = console.readPassword("Confirm: ");
 			
 			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
@@ -296,7 +301,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
-				if (!yesno.toLowerCase().startsWith("y")) {
+				if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
 					out.println();
 					continue;
 				}
@@ -376,5 +381,10 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	public void notifyGenerateMasterKey() {
 		out.println();
 		out.println("Generating master key from password (this might take a while) ...");
+	}
+
+	@Override
+	public String getPasswordCallback() {
+		return askPasswordAndConfirm();
 	}
 }

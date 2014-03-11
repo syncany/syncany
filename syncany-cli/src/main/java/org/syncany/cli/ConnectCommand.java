@@ -64,14 +64,16 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
+		boolean retryNeeded = true;
 		boolean performOperation = true;
+		
 		ConnectOperationOptions operationOptions = parseConnectOptions(operationArgs);
 
-		while (performOperation) {
+		while (retryNeeded && performOperation) {
 			ConnectOperationResult operationResult = client.connect(operationOptions, this);			
 			printResults(operationResult);
 			
-			boolean retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK;
+			retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK;
 
 			if (retryNeeded) {
 				performOperation = askRetry();

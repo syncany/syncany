@@ -72,8 +72,11 @@ public interface TransferManager {
 	}
 
 	/**
-	 * Establish a connection with the remote storage and initialize the repository
-	 * if necessary (e.g. create folders).
+	 * Establish a connection with the remote storage. 
+	 * 
+	 * <p>This method does not validate the correctness of the repository and 
+	 * it does not create any folders. The former is done by {@link #test()}, the
+	 * latter is done by {@link #init(boolean)}.
 	 *
 	 * @throws StorageException If the connection fails due to no Internet connection,
 	 *         authentication errors, etc.

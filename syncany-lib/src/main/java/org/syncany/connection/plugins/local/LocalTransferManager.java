@@ -73,7 +73,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 	@Override
 	public void connect() throws StorageException {
-		if (repoPath == null || !repoPath.exists() || !repoPath.canRead() || !repoPath.canWrite() || !repoPath.isDirectory()) {
+		if (repoPath == null) {
 			throw new StorageException("Repository folder '" + repoPath + "' does not exist or is not writable.");
 		}
 	}
