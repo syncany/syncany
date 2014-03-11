@@ -304,7 +304,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean hasWriteAccess() throws StorageException {
+	public boolean repoHasWriteAccess() throws StorageException {
 		try {
 			boolean createSuccessful = ftp.makeDirectory(repoPath);
 			ftp.removeDirectory(repoPath);
@@ -327,7 +327,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repoIsEmpty() throws StorageException {
+	public boolean repoIsValid() throws StorageException {
 		try {
 			return repoExists() && ftp.listFiles(repoPath).length == 0;
 		}

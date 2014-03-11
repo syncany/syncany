@@ -66,9 +66,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public LocalTransferManager(LocalConnection connection) {
 		super(connection);
 
-		this.repoPath = connection.getRepositoryPath();
-		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath() + File.separator + "multichunks");
-		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath() + File.separator + "databases");
+		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
+		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
+		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
 	}
 
 	@Override
@@ -231,7 +231,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean hasWriteAccess() {
+	public boolean repoHasWriteAccess() {		
 		return repoPath.getParentFile().canWrite();
 	}
 
@@ -241,7 +241,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repoIsEmpty() throws StorageException {
+	public boolean repoIsValid() throws StorageException {
 		String[] listResult = repoPath.list();		
 		return (listResult != null) ? listResult.length == 0 : true;
 	}

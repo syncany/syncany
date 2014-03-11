@@ -130,19 +130,24 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 	private void printResults(InitOperationResult operationResult) {
 		if (operationResult.getResultCode() == InitResultCode.OK) {
+			out.println();
+			out.println("Repository created, and local folder initialized. To share the same repository");
+			out.println("with others, you can share this link:");
+
 			printLink(operationResult.getGenLinkResult(), false);
 		}
 		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_REPO_CANNOT_CREATE) {
 			out.println();
-			out.println("ERROR: Repository cannot be created.");
+			out.println("ERROR: Cannot initialize repository (not writable, or -t not set).");
 			out.println();
-			out.println("Make sure that the repository path is writable by the");
-			out.println("user in the connection details.");
+			out.println("Make sure that the repository path is writable by the connection user");
+			out.println("and that the --create-target/-t option is set if you want to create");
+			out.println("the remote repository folder/path.");
 			out.println();
 		}
 		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_CONNECTION) {
 			out.println();
-			out.println("ERROR: Cannot init to repository (broken connection).");
+			out.println("ERROR: Cannot initialize repository (broken connection).");
 			out.println();
 			out.println("Make sure that you have a working Internet connection and that ");
 			out.println("the connection details (esp. the hostname/IP) are correct.");				
@@ -150,7 +155,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		}
 		else if (operationResult.getResultCode() == InitResultCode.NOK_REPO_EXISTS) {
 			out.println();
-			out.println("ERROR: Cannot init to repository (already exists).");
+			out.println("ERROR: Cannot initialize repository (already exists).");
 			out.println();
 			out.println("If you want to connect to an existing repository, please");
 			out.println("use the 'connect' command.");
@@ -280,6 +285,14 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		while (password == null) {
 			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
+			
+			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
+				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
+				out.println();
+				
+				continue;
+			}
+			
 			char[] confirmPasswordChars = console.readPassword("Confirm: ");
 			
 			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
@@ -288,13 +301,6 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 				
 				continue;
 			} 
-			
-			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
-				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
-				out.println();
-				
-				continue;
-			}
 			
 			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
 				out.println();

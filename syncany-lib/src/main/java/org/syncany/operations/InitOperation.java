@@ -58,6 +58,7 @@ public class InitOperation extends AbstractInitOperation {
     private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());  
     
     private InitOperationOptions options;
+    private InitOperationResult result;
     private InitOperationListener listener;
     private TransferManager transferManager;
     
@@ -65,6 +66,7 @@ public class InitOperation extends AbstractInitOperation {
         super(null);
         
         this.options = options;
+        this.result = null;
         this.listener = listener;
     }        
             
@@ -77,15 +79,13 @@ public class InitOperation extends AbstractInitOperation {
 		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
 		
 		// Test the repo
-		StorageTestResult repoTestResult = transferManager.test();
-		
-		if (repoTestResult != StorageTestResult.NO_REPO) {
-			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created.");
-			return translateToInitOperationResult(repoTestResult);			
+		if (!performRepoTest()) {
+			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result);			
+			return result;
 		}
-		
-		logger.log(Level.INFO, "- Connecting to the repo was successful.");
-		
+
+		logger.log(Level.INFO, "- Connecting to the repo was successful");
+
 		// Ask password (if needed)
 		String masterKeyPassword = null;
 		
@@ -95,9 +95,9 @@ public class InitOperation extends AbstractInitOperation {
 		
 		// Create local .syncany directory
 		File appDir = createAppDirs(options.getLocalDir());	// TODO [medium] create temp dir first, ask password cannot be done after
-		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);
-		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
-		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
+		File configFile = new File(appDir, Config.FILE_CONFIG);
+		File repoFile = new File(appDir, Config.FILE_REPO);
+		File masterFile = new File(appDir, Config.FILE_MASTER);
 		
 		// Save config.xml and repo file		
 		if (options.isEncryptionEnabled()) {
@@ -130,21 +130,37 @@ public class InitOperation extends AbstractInitOperation {
 		return new InitOperationResult(InitResultCode.OK, genlinkOperationResult);
     }          
     
-	private InitOperationResult translateToInitOperationResult(StorageTestResult repoTestResult) {
+	private boolean performRepoTest() {
+		StorageTestResult repoTestResult = transferManager.test();
+		
 		switch (repoTestResult) {
 		case NO_CONNECTION:
-			return new InitOperationResult(InitResultCode.NOK_NO_CONNECTION);
-			
-		case NO_REPO_CANNOT_CREATE:
-			return new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
-			
+			result = new InitOperationResult(InitResultCode.NOK_NO_CONNECTION);
+			return false;
+						
 		case REPO_EXISTS:
-			return new InitOperationResult(InitResultCode.NOK_REPO_EXISTS);
+			result = new InitOperationResult(InitResultCode.NOK_REPO_EXISTS);
+			return false;
 			
+		case REPO_EXISTS_BUT_INVALID:
+			return true;
+
+		case NO_REPO_CANNOT_CREATE:
+			result = new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
+			return false;
+
 		case NO_REPO:
+			if (!options.isCreateTargetPath()) {
+				result = new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
+				return false;
+			}
+			else {
+				return true;
+			}
+			 
 		default:
 			throw new RuntimeException("Test result "+repoTestResult+" should have been handled before.");
-		}
+		}		
 	}
 
 	private void initRemoteRepository() throws Exception {

@@ -271,9 +271,6 @@ public abstract class AbstractInitCommand extends Command {
 		}
 		else {
 			out.println();
-			out.println("Repository created, and local folder initialized. To share the same repository");
-			out.println("with others, you can share this link:");
-			out.println();
 			out.println("   " + operationResult.getShareLink());
 			out.println();
 
