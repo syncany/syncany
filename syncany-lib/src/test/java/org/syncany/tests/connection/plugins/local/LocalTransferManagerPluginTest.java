@@ -64,7 +64,7 @@ public class LocalTransferManagerPluginTest {
 	@Test
 	public void testTestFunctionEmptyRepoPermissionOk() throws StorageException{
 		TransferManager tm = loadPluginAndCreateTransferManager();
-		Assert.assertEquals(StorageTestResult.NO_REPO, tm.test());
+		Assert.assertEquals(StorageTestResult.REPO_EXISTS_BUT_INVALID, tm.test());
 	}
 	
 	// TODO [low] More tests for test() / StorageTestResult are missing

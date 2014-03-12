@@ -246,13 +246,13 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public boolean repoIsValid() throws StorageException {
 		final RepoRemoteFile repoRemoteFile = new RepoRemoteFile();
 		
-		String[] listResult = repoPath.list(new FilenameFilter() {			
+		String[] listRepoFile = repoPath.list(new FilenameFilter() {			
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.equals(repoRemoteFile.getName());
 			}
 		});
 				
-		return (listResult != null) ? listResult.length == 0 : true;
+		return (listRepoFile != null) ? listRepoFile.length == 0 : true;
 	}
 }

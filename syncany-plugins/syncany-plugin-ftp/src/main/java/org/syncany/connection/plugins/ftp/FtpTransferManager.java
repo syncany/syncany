@@ -35,6 +35,7 @@ import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -327,12 +328,13 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repoIsValid() throws StorageException {
+	public boolean repoIsValid() throws StorageException {				
 		try {
-			return repoExists() && ftp.listFiles(repoPath).length == 0;
+			String[] listRepoFile = ftp.listNames(new RepoRemoteFile().getName());
+			return (listRepoFile != null) ? listRepoFile.length == 0 : true;
 		}
-		catch (Exception e) {
-			return false;
-		}
+		catch (IOException e) {
+			throw new StorageException(e);
+		}		
 	}
 }

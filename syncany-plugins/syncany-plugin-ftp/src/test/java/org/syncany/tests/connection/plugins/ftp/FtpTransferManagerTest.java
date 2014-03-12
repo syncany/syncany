@@ -47,9 +47,9 @@ public class FtpTransferManagerTest {
 	
 	@Test
 	public void testFtpTransferManager() throws StorageException {
-		Assert.assertEquals(StorageTestResult.NO_REPO, test("/newRepo"));
+		Assert.assertEquals(StorageTestResult.REPO_EXISTS_BUT_INVALID, test("/newRepo"));
 		Assert.assertEquals(StorageTestResult.NO_REPO, test("/randomRepo"));
-		Assert.assertEquals(StorageTestResult.REPO_EXISTS, test("/nonEmptyRepo"));
+		Assert.assertEquals(StorageTestResult.REPO_EXISTS_BUT_INVALID, test("/nonEmptyRepo"));
 		Assert.assertEquals(StorageTestResult.NO_REPO_CANNOT_CREATE, test("/canNotCreate/inside"));
 	}
 		
