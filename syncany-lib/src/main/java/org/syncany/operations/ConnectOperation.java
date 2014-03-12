@@ -79,7 +79,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		
 		// Test the repo
 		if (!performRepoTest()) {
-			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result);			
+			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());			
 			return result;
 		}
 
