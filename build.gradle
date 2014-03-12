@@ -37,7 +37,7 @@ repositories {
 }
 
 // Coverage (Cobertura) ////////////////////////////////////////////////////////
-// Run as: gradle testGlobal coberturaReport performCoverageCheck
+// Run as: gradle testGlobal coberturaReport performCoverageCheck coveralls
 
 apply plugin: 'cobertura'
 apply plugin: 'coveralls'
