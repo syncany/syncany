@@ -57,6 +57,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());		
 	
 	private ConnectOperationOptions options;
+	private ConnectOperationResult result;
 	private ConnectOperationListener listener;
     private TransferManager transferManager;
 	
@@ -64,6 +65,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		super(null);
 		
 		this.options = options;
+		this.result = null;
 		this.listener = listener;
 	}		
 	
@@ -76,14 +78,13 @@ public class ConnectOperation extends AbstractInitOperation {
 		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
 		
 		// Test the repo
-		StorageTestResult repoTestResult = transferManager.test();
-		
-		if (repoTestResult != StorageTestResult.REPO_EXISTS) {
-			logger.log(Level.INFO, "- Connecting to the repo failed; or no repo exists.");
-			return translateToConnectOperationResult(repoTestResult);			
+		if (!performRepoTest()) {
+			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result);			
+			return result;
 		}
+
+		logger.log(Level.INFO, "- Connecting to the repo was successful");
 		
-		logger.log(Level.INFO, "- Connecting to the repo was successful.");
 		
 		// Create local .syncany directory		
 		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
@@ -135,19 +136,29 @@ public class ConnectOperation extends AbstractInitOperation {
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
 
-	private ConnectOperationResult translateToConnectOperationResult(StorageTestResult repoTestResult) {
+	private boolean performRepoTest() {
+		StorageTestResult repoTestResult = transferManager.test();
+		
 		switch (repoTestResult) {
 		case NO_CONNECTION:
-			return new ConnectOperationResult(ConnectResultCode.NOK_NO_CONNECTION);
-			
-		case NO_REPO_CANNOT_CREATE:
-		case NO_REPO:
-			return new ConnectOperationResult(ConnectResultCode.NOK_NO_REPO);
-			
+			result = new ConnectOperationResult(ConnectResultCode.NOK_NO_CONNECTION);
+			return false;
+						
 		case REPO_EXISTS:
+			return true;
+			
+		case REPO_EXISTS_BUT_INVALID:
+			result = new ConnectOperationResult(ConnectResultCode.NOK_INVALID_REPO);
+			return false;
+
+		case NO_REPO:
+		case NO_REPO_CANNOT_CREATE:
+			result = new ConnectOperationResult(ConnectResultCode.NOK_NO_REPO);
+			return false;
+			 
 		default:
 			throw new RuntimeException("Test result "+repoTestResult+" should have been handled before.");
-		}
+		}		
 	}
 
 	private String getOrAskPasswordRepoFile() throws Exception {

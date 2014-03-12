@@ -210,11 +210,11 @@ public interface TransferManager {
 	public boolean repoExists() throws StorageException;
 
 	/**
-	 * Tests whether the repository path/folder is accessible and <b>empty</b>. This method is
-	 * called by the {@link #test()} method (only during repository initialization (or initial
-	 * connection).
+	 * Tests whether the repository path/folder is accessible and the repository file
+	 * exists (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
+	 * (only during repository initialization (or initial connection).
 	 * 
-	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
+	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise 
 	 */
 	public boolean repoIsValid() throws StorageException;
 }
