@@ -56,3 +56,7 @@ after_success:
   
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh
+
+after_success:
+  # Send coverage data
+  - ./gradlew coveralls
