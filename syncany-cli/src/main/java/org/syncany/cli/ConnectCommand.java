@@ -42,6 +42,7 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
 import org.syncany.operations.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.ConnectOperation.ConnectResultCode;
 
 public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
 	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
@@ -110,10 +111,34 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}	
 
 	private void printResults(ConnectOperationResult operationResult) {
-		out.println();
-		out.println("Repository connected, and local folder initialized.");
-		out.println("You can now use the 'syncany' command to sync your files.");
-		out.println();		
+		if (operationResult.getResultCode() == ConnectResultCode.OK) {
+			out.println();
+			out.println("Repository connected, and local folder initialized.");
+			out.println("You can now use the 'syncany' command to sync your files.");
+			out.println();
+		}
+		else {
+			out.println();
+
+			if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_REPO) {
+				out.println("ERROR: No repository was found at the given location.");
+				out.println("Make sure that the connection details are correct and that");
+				out.println("a repository actually exists at this location.");
+			}
+			else if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_CONNECTION) {
+				out.println("ERROR: Cannot connect to repository (broken connection).");
+				out.println("Make sure that you have a working Internet connection and that ");
+				out.println("the connection details (esp. the hostname/IP) are correct.");				
+			}
+			else if (operationResult.getResultCode() == ConnectResultCode.NOK_INVALID_REPO) {
+				out.println("ERROR: Invalid repository found at location.");
+			}
+			else {
+				out.println("ERROR: Cannot connect to repository. Unknown error code: "+operationResult);
+			}
+			
+			out.println();
+		}
 	}
 	
 	private ConnectionTO initPluginWithLink(String link) throws Exception {

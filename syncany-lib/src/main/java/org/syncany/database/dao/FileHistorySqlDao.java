@@ -34,8 +34,10 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 
 /**
- * @author pheckel
- *
+ * The file history DAO queries and modifies the <i>filehistory</i> in
+ * the SQL database. This table corresponds to the Java object {@link PartialFileHistory}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileHistorySqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(FileHistorySqlDao.class.getSimpleName());
@@ -47,6 +49,19 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		this.fileVersionDao = fileVersionDao;		
 	}
 
+	/**
+	 * Writes a list of {@link PartialFileHistory}s to the database table <i>filehistory</i> using <tt>INSERT</tt>s
+	 * and the given connection. In addition, this method also writes the corresponding {@link FileVersion}s of 
+	 * each file history to the database using 
+	 * {@link FileVersionSqlDao#writeFileVersions(Connection, FileHistoryId, long, Collection) FileVersionSqlDao#writeFileVersions}.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the queries.
+	 * 
+	 * @param connection The connection used to execute the statements
+	 * @param databaseVersionId References the {@link PartialFileHistory} to which the list of file versions belongs
+	 * @param fileHistories List of {@link PartialFileHistory}s to be written to the database
+	 * @throws SQLException If the SQL statement fails
+	 */
 	public void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
 		for (PartialFileHistory fileHistory : fileHistories) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/filehistory.insert.all.writeFileHistories.sql");
@@ -61,12 +76,21 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
+	
 	public void removeDirtyFileHistories() throws SQLException {
 		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql")) {
 			preparedStatement.executeUpdate();
 		}		
 	}
 	
+	/**
+	 * Removes unreferenced {@link PartialFileHistory}s from the database table 
+	 * <i>filehistory</i>. This method <b>does not</b> remove the corresponding {@link FileVersion}s.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
+	 * 
+	 * @throws SQLException If the SQL statement fails
+	 */	
 	public void removeUnreferencedFileHistories() throws SQLException {
 		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
 			preparedStatement.executeUpdate();

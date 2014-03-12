@@ -33,6 +33,7 @@ import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
@@ -74,8 +75,17 @@ public class ConnectOperation extends AbstractInitOperation {
 		
 		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
 		
-		// Create local .syncany directory
+		// Test the repo
+		StorageTestResult repoTestResult = transferManager.test();
 		
+		if (repoTestResult != StorageTestResult.REPO_EXISTS) {
+			logger.log(Level.INFO, "- Connecting to the repo failed; or no repo exists.");
+			return translateToConnectResultCode(repoTestResult);			
+		}
+		
+		logger.log(Level.INFO, "- Connecting to the repo was successful.");
+		
+		// Create local .syncany directory		
 		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
 		File tmpMasterFile = null;
 		
@@ -83,7 +93,9 @@ public class ConnectOperation extends AbstractInitOperation {
 			SaltedSecretKey masterKey = null;
 			
 			if (options.getConfigTO().getMasterKey() != null) {
-				masterKey = options.getConfigTO().getMasterKey(); // TODO [medium] Also create master file! 
+				masterKey = options.getConfigTO().getMasterKey();
+				tmpMasterFile = File.createTempFile("masterfile", "tmp");
+				writeXmlFile(new MasterTO(masterKey.getSalt()), tmpMasterFile);
 			}
 			else {
 				tmpMasterFile = downloadFile(transferManager, new MasterRemoteFile());
@@ -120,8 +132,23 @@ public class ConnectOperation extends AbstractInitOperation {
 			tmpMasterFile.delete();
 		}
 				
-		return new ConnectOperationResult();
+		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
+
+	private ConnectOperationResult translateToConnectResultCode(StorageTestResult repoTestResult) {
+		switch (repoTestResult) {
+		case NO_CONNECTION:
+			return new ConnectOperationResult(ConnectResultCode.NOK_NO_CONNECTION);
+			
+		case NO_REPO_CANNOT_CREATE:
+		case NO_REPO:
+			return new ConnectOperationResult(ConnectResultCode.NOK_NO_REPO);
+			
+		case REPO_EXISTS:
+		default:
+			throw new RuntimeException("Test result "+repoTestResult+" should have been handled before.");
+		}
+	}
 
 	private String getOrAskPasswordRepoFile() throws Exception {
 		if (options.getPassword() == null) {
@@ -217,7 +244,27 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 	}
 		 
+	public enum ConnectResultCode {
+		OK, NOK_NO_REPO, NOK_INVALID_REPO, NOK_NO_CONNECTION
+	}
+	
     public static class ConnectOperationResult implements OperationResult {
-        // Nothing		
+        private ConnectResultCode resultCode = ConnectResultCode.OK;
+
+        public ConnectOperationResult() {
+			// Nothing here
+		}
+        
+        public ConnectOperationResult(ConnectResultCode resultCode) {
+			this.resultCode = resultCode;
+		}
+
+		public ConnectResultCode getResultCode() {
+			return resultCode;
+		}
+
+		public void setResultCode(ConnectResultCode resultCode) {
+			this.resultCode = resultCode;
+		}                
     }
 }

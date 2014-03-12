@@ -47,11 +47,13 @@ before_install:
   - iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
 
 script: 
-  # Run JUnit tests
-  - ./gradlew testGlobal 
+  # Run JUnit tests, generate report and submit to coverage to coveralls
+  - ./gradlew testGlobal coberturaReport performCoverageCheck coveralls
 
+after_success:
   # Create distributables and JavaDoc
   - ./gradlew installApp distTar distZip debian exe javadocAll
   
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh
+

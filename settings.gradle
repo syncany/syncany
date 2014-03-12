@@ -3,6 +3,4 @@ include 'syncany-cli'
 include 'syncany-util'
 
 include 'syncany-plugins:syncany-plugin-ftp'
-include 'syncany-plugins:syncany-plugin-rest'
 include 'syncany-plugins:syncany-plugin-webdav'
-include 'syncany-plugins:syncany-plugin-sftp'

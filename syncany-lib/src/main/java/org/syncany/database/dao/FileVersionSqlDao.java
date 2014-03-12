@@ -52,7 +52,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * Writes a list of {@link FileVersion} to the database table <i>fileversion</i> using <tt>INSERT</tt>s
 	 * and the given connection.
 	 * 
-	 * <p><b>Note:</b> This method executes, but does not commit the queries.
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the queries.
 	 * 
 	 * @param connection The connection used to execute the statements
 	 * @param fileHistoryId References the {@link PartialFileHistory} to which the list of file versions belongs 
@@ -88,8 +88,8 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Removes unreferenced {@link FileVersion}s from the database table 
-	 * <i>fileversion</i>.
+	 * Removes {@link FileVersion}s from the database table <i>fileversion</i> for which the 
+	 * the corresponding database is marked <tt>DIRTY</tt>. 
 	 * 
 	 * <p><b>Note:</b> This method executes, but does not commit the query.
 	 * 

@@ -15,35 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.s3;
+package org.syncany.tests;
 
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.connection.plugins.ftp.FtpConnectionPluginTest;
+import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerTest;
 
-/**
- *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
-public class S3Plugin extends Plugin {
-    public static final String ID = "s3";
-    
-    @Override
-    public String getId() {
-        return ID;
-    }    
-
-    @Override
-    public String getName() {
-        return "Amazon S3";
-    }
-
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
-    }
-
-    @Override
-    public Connection createConnection() {
-        return new S3Connection();
-    }
+@RunWith(Suite.class)
+@SuiteClasses({
+	FtpConnectionPluginTest.class,
+	FtpTransferManagerTest.class
+})
+public class FtpTestSuite {
+	// This class executes all tests
 }

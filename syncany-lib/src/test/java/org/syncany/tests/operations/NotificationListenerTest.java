@@ -72,8 +72,12 @@ public class NotificationListenerTest {
 		notificationListener1.announce(randomChannelName, "Message from 1");
 		notificationListener2.announce(randomChannelName, "Message from 2");
 		
-		Thread.sleep(1000); // Wait for messages
-		
+		for (int i = 0; i < 100; i++) {
+			Thread.sleep(100); // Wait for messages
+			if (messagesReceivedBy1.get() == 2 && messagesReceivedBy2.get() == 2) {
+				break;
+			}
+		}
 		assertEquals("Different amount of messages received by 1", 2, messagesReceivedBy1.get());
 		assertEquals("Different amount of messages received by 2", 2, messagesReceivedBy2.get());
 

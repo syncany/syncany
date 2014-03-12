@@ -27,6 +27,13 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 
+/**
+ * This operation generates a link which can be shared among users to connect to 
+ * a repository. The operation is used by other initializing operations, e.g. connect
+ * and init.  
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class GenlinkOperation extends AbstractInitOperation {
     private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());            
     private ConfigTO configTO;

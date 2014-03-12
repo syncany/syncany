@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.actions;
+package org.syncany.util;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -29,10 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.EnvironmentUtil.OperatingSystem;
-import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 public class NormalizedPath {
 	protected static final Logger logger = Logger.getLogger(NormalizedPath.class.getSimpleName());	
