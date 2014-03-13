@@ -19,39 +19,25 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.apache.commons.codec.binary.Base64;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.crypto.CipherUtil;
-import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.ConnectOperation.ConnectOperationListener;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
 import org.syncany.operations.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.ConnectOperation.ConnectOptionsStrategy;
 import org.syncany.operations.ConnectOperation.ConnectResultCode;
 
-public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_ENCODED = 4;
-	
-	private SaltedSecretKey masterKey;
+public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {	
+	private boolean isInteractive;
 	
 	public ConnectCommand() {
 		super();
@@ -76,7 +62,7 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK;
 
 			if (retryNeeded) {
-				performOperation = askRetry();
+				performOperation = isInteractive && askRetry();
 			
 				if (performOperation) {
 					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
@@ -93,42 +79,63 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		OptionParser parser = new OptionParser();			
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
+		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
 		
 		OptionSet options = parser.parse(operationArguments);	
 		List<?> nonOptionArgs = options.nonOptionArguments();		
-		
+
+		// --no-interaction
+		isInteractive = !options.has(optionNonInteractive);
+
 		// Plugin
-		ConnectionTO connectionTO = createConnectionTO(options, optionPlugin, optionPluginOpts, nonOptionArgs);		
-		ConfigTO configTO = createConfigTO(masterKey, connectionTO);
+		ConfigTO configTO = null;
+		
+		if (nonOptionArgs.size() == 1) {
+			operationOptions.setStrategy(ConnectOptionsStrategy.CONNECTION_LINK);
+			operationOptions.setConnectLink((String) nonOptionArgs.get(0));			
+
+			configTO = createConfigTO(null);
+		}		
+		else if (nonOptionArgs.size() == 0) {
+			operationOptions.setStrategy(ConnectOptionsStrategy.CONNECTION_TO);
+
+			Plugin plugin = null;
+			Map<String, String> pluginSettings = null;
+			
+			List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
+			Map<String, String> knownPluginSettings = getPluginSettingsFromOptions(pluginOptionStrings);
+
+			if (isInteractive) {
+				if (options.has(optionPlugin)) {
+					plugin = initPlugin(options.valueOf(optionPlugin));
+				}
+				else {
+					plugin = askPlugin();
+				}
+				
+				pluginSettings = askPluginSettings(plugin, knownPluginSettings);
+			}
+			else {
+				plugin = initPlugin(options.valueOf(optionPlugin));				
+				pluginSettings = initPluginSettings(plugin, knownPluginSettings);
+			}
+			
+			// Create configTO
+			ConnectionTO connectionTO = new ConnectionTO();
+			connectionTO.setType(plugin.getId());
+			connectionTO.setSettings(pluginSettings);
+					
+			configTO = createConfigTO(connectionTO);
+		}
+		else {
+			throw new Exception("Invalid syntax.");
+		}
 		
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
 		
 		return operationOptions;		
 	}	
-
-	private ConnectionTO createConnectionTO(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts, List<?> nonOptionArgs) throws Exception {
-		ConnectionTO connectionTO = new ConnectionTO();
-		
-		if (nonOptionArgs.size() == 1) {
-			connectionTO = initPluginWithLink((String) nonOptionArgs.get(0));			
-		}
-		else if (options.has(optionPlugin)) {
-			connectionTO = initPluginWithOptions(options, optionPlugin, optionPluginOpts);
-		}
-		else if (nonOptionArgs.size() == 0) {
-			String pluginStr = askPlugin();
-			Map<String, String> pluginSettings = askPluginSettings(pluginStr, null);
-
-			connectionTO.setType(pluginStr);
-			connectionTO.setSettings(pluginSettings);
-		}
-		else {
-			throw new Exception("Invalid syntax.");
-		}
-		
-		return connectionTO;
-	}
 
 	private void printResults(ConnectOperationResult operationResult) {
 		if (operationResult.getResultCode() == ConnectResultCode.OK) {
@@ -157,6 +164,9 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			out.println();
 			out.println("ERROR: Invalid repository found at location.");
 			out.println();
+			out.println("Make sure that the connection details are correct and that");
+			out.println("a repository actually exists at this location.");
+			out.println();
 		}
 		else {
 			out.println();
@@ -165,64 +175,11 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		}
 	}
 	
-	private ConnectionTO initPluginWithLink(String link) throws Exception {
-		Matcher linkMatcher = LINK_PATTERN.matcher(link);
-		
-		if (!linkMatcher.matches()) {
-			throw new Exception("Invalid link provided, must start with syncany:// and match link pattern.");
-		}
-		
-		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
-		
-		String plaintext = null;
-		boolean isEncryptedLink = notEncryptedFlag == null;
-		
-		if (isEncryptedLink) {
-			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
-			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
-			
-			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
-			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
-
-			String password = askPassword();
-			
-			notifyCreateMasterKey();
-			masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
-			
-			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
-			
-			plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));					
-		}
-		else {
-			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
-			plaintext = new String(Base64.decodeBase64(encodedPlaintext));
-		}
-		
-		//System.out.println(plaintext);
-
-		Serializer serializer = new Persister();
-		ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);		
-		
-		Plugin plugin = Plugins.get(connectionTO.getType());
-		
-		if (plugin == null) {
-			throw new Exception("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");
-		}
-		
-		return connectionTO;			
-	}
-
 	private String askPassword() { 
 		out.println();
 		
-		String password = null;
-		
-		while (password == null) {
-			char[] passwordChars = console.readPassword("Password: ");			
-			password = new String(passwordChars);			
-		}	
-		
-		return password;
+		char[] passwordChars = console.readPassword("Password: ");			
+		return new String(passwordChars);
 	}	
 
 	@Override

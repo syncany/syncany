@@ -17,11 +17,15 @@
  */
 package org.syncany.operations;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -29,7 +33,10 @@ import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.MasterRemoteFile;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.TransferManager;
@@ -56,6 +63,12 @@ import org.syncany.crypto.SaltedSecretKey;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());		
 	
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
+	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
+	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
+	private static final int LINK_PATTERN_GROUP_ENCRYPTED_ENCODED = 4;
+
 	private ConnectOperationOptions options;
 	private ConnectOperationResult result;
 	private ConnectOperationListener listener;
@@ -75,7 +88,9 @@ public class ConnectOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Connect'");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
+		// Create valid configTO & transfer manager
+		ConfigTO configTO = createConfigTO();		
+		transferManager = createTransferManager(configTO.getConnectionTO());
 		
 		// Test the repo
 		if (!performRepoTest()) {
@@ -93,8 +108,8 @@ public class ConnectOperation extends AbstractInitOperation {
 		if (CipherUtil.isEncrypted(tmpRepoFile)) {
 			SaltedSecretKey masterKey = null;
 			
-			if (options.getConfigTO().getMasterKey() != null) {
-				masterKey = options.getConfigTO().getMasterKey();
+			if (configTO.getMasterKey() != null) {
+				masterKey = configTO.getMasterKey();
 				tmpMasterFile = File.createTempFile("masterfile", "tmp");
 				writeXmlFile(new MasterTO(masterKey.getSalt()), tmpMasterFile);
 			}
@@ -111,7 +126,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			String repoFileStr = decryptRepoFile(tmpRepoFile, masterKey);			
 			verifyRepoFile(repoFileStr);
 			
-			options.getConfigTO().setMasterKey(masterKey);
+			configTO.setMasterKey(masterKey);
 		}
 		else {
 			String repoFileStr = FileUtils.readFileToString(tmpRepoFile);			
@@ -124,7 +139,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
 		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
 		
-		writeXmlFile(options.getConfigTO(), configFile);
+		writeXmlFile(configTO, configFile);
 		FileUtils.copyFile(tmpRepoFile, repoFile);
 		tmpRepoFile.delete();
 		
@@ -135,6 +150,73 @@ public class ConnectOperation extends AbstractInitOperation {
 				
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
+
+	private ConfigTO createConfigTO() throws Exception {
+		ConfigTO configTO = options.getConfigTO();
+		
+		if (options.getStrategy() == ConnectOptionsStrategy.CONNECTION_TO) {
+			return configTO;
+		}
+		else if (options.getStrategy() == ConnectOptionsStrategy.CONNECTION_LINK) {
+			return createConfigTOFromLink(configTO, options.getConnectLink());
+		}
+		else {
+			throw new RuntimeException("Unhandled connect strategy: "+options.getStrategy());
+		}
+	}
+
+	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link) throws Exception {
+		Matcher linkMatcher = LINK_PATTERN.matcher(link);
+		
+		if (!linkMatcher.matches()) {
+			throw new Exception("Invalid link provided, must start with syncany:// and match link pattern.");
+		}
+		
+		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
+		
+		String plaintext = null;
+		boolean isEncryptedLink = notEncryptedFlag == null;
+		
+		if (isEncryptedLink) {
+			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
+			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
+			
+			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
+			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
+
+			String password = getOrAskPasswordRepoFile();
+			
+			if (listener != null) {
+				listener.notifyCreateMasterKey();
+			}
+			
+			SaltedSecretKey masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
+			
+			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);			
+			plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));			
+			
+			configTO.setMasterKey(masterKey);
+		}
+		else {
+			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
+			plaintext = new String(Base64.decodeBase64(encodedPlaintext));
+		}
+		
+		//System.out.println(plaintext);
+
+		Serializer serializer = new Persister();
+		ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);		
+		
+		Plugin plugin = Plugins.get(connectionTO.getType());
+		
+		if (plugin == null) {
+			throw new Exception("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");
+		}
+		
+		configTO.setConnectionTO(connectionTO);
+		
+		return configTO;			
+	}
 
 	private boolean performRepoTest() {
 		StorageTestResult repoTestResult = transferManager.test();
@@ -225,11 +307,33 @@ public class ConnectOperation extends AbstractInitOperation {
 		public void notifyCreateMasterKey();
 	}	
 	
+	public enum ConnectOptionsStrategy {
+		CONNECTION_LINK, CONNECTION_TO
+	}
+	
 	public static class ConnectOperationOptions implements OperationOptions {
-		private File localDir;
+		private ConnectOptionsStrategy strategy;
 		private ConfigTO configTO;
+		private String connectLink;
+		private File localDir;
 		private String password;
 		
+		public ConnectOptionsStrategy getStrategy() {
+			return strategy;
+		}
+
+		public void setStrategy(ConnectOptionsStrategy strategy) {
+			this.strategy = strategy;
+		}
+
+		public String getConnectLink() {
+			return connectLink;
+		}
+
+		public void setConnectLink(String connectionLink) {
+			this.connectLink = connectionLink;
+		}
+
 		public File getLocalDir() {
 			return localDir;
 		}

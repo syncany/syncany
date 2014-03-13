@@ -38,7 +38,6 @@ import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
@@ -50,14 +49,13 @@ public abstract class AbstractInitCommand extends Command {
 		console = System.console();
 	}
 
-	protected ConfigTO createConfigTO(SaltedSecretKey masterKey, ConnectionTO connectionTO) throws Exception {
+	protected ConfigTO createConfigTO(ConnectionTO connectionTO) throws Exception {
 		ConfigTO configTO = new ConfigTO();
 
 		configTO.setDisplayName(getDefaultDisplayName());
 		configTO.setMachineName(getDefaultMachineName());
-		configTO.setMasterKey(masterKey); // can be null
-
-		configTO.setConnectionTO(connectionTO);
+		configTO.setMasterKey(null); 
+		configTO.setConnectionTO(connectionTO); // can be null
 
 		return configTO;
 	}
@@ -67,32 +65,32 @@ public abstract class AbstractInitCommand extends Command {
 		
 		ConnectionTO connectionTO = new ConnectionTO();
 
-		String pluginStr = null;
+		Plugin plugin = null;
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 
 		if (options.has(optionPlugin)) {
-			pluginStr = initPlugin(options.valueOf(optionPlugin));
+			plugin = initPlugin(options.valueOf(optionPlugin));
 		}
 		else {
-			pluginStr = askPlugin();
+			plugin = askPlugin();
 		}
 
 		if (options.has(optionPluginOpts)) {
-			pluginSettings = initPluginSettings(pluginStr, options.valuesOf(optionPluginOpts));
+			pluginSettings = initPluginSettingsFromOptions(plugin, options.valuesOf(optionPluginOpts));
 		}
 		else {
-			pluginSettings = askPluginSettings(pluginStr, null);
+			pluginSettings = askPluginSettings(plugin, null);
 		}
 
-		connectionTO.setType(pluginStr);
+		connectionTO.setType(plugin.getId());
 		connectionTO.setSettings(pluginSettings);
 
 		return connectionTO;
 	}
 
-	protected Map<String, String> initPluginSettings(String pluginStr, List<String> pluginSettingsOptList) throws Exception {
+	@Deprecated // duplicate code!
+	protected Map<String, String> initPluginSettingsFromOptions(Plugin plugin, List<String> pluginSettingsOptList) throws Exception {
 		Map<String, String> pluginOptionValues = new HashMap<String, String>();
-		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
 
 		Connection connection = plugin.createConnection();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
@@ -113,23 +111,38 @@ public abstract class AbstractInitCommand extends Command {
 
 		return pluginOptionValues;
 	}
+	
+	protected Map<String, String> getPluginSettingsFromOptions(List<String> pluginSettingsOptList) throws Exception {
+		Map<String, String> pluginOptionValues = new HashMap<String, String>();
 
-	protected String initPlugin(String pluginStr) throws Exception {
+		// Fill settings map
+		for (String pluginSettingKeyValue : pluginSettingsOptList) {
+			String[] keyValue = pluginSettingKeyValue.split("=", 2);
+
+			if (keyValue.length != 2) {
+				throw new Exception("Invalid setting: " + pluginSettingKeyValue);
+			}
+
+			pluginOptionValues.put(keyValue[0], keyValue[1]);
+		}
+
+		return pluginOptionValues;
+	}
+	
+	protected Plugin initPlugin(String pluginStr) throws Exception {
 		Plugin plugin = Plugins.get(pluginStr);
 
 		if (plugin == null) {
 			throw new Exception("ERROR: Plugin '" + pluginStr + "' does not exist.");
 		}
 
-		return pluginStr;
+		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(String pluginStr, Map<String, String> knownPluginOptionValues) throws StorageException {
+	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
 		if (knownPluginOptionValues == null) {
 			knownPluginOptionValues = new HashMap<String, String>();
 		}
-		
-		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
 		
 		Connection connection = plugin.createConnection();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
@@ -147,9 +160,21 @@ public abstract class AbstractInitCommand extends Command {
 		}
 
 		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
-		connection = null; // Connection only needed to to test for exceptions
 		
 		return pluginOptionValues;
+	}
+	
+	protected Map<String, String> initPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
+		if (knownPluginOptionValues == null) {
+			knownPluginOptionValues = new HashMap<String, String>();
+		}
+		
+		Connection connection = plugin.createConnection();
+		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();		
+
+		pluginOptionSpecs.validate(knownPluginOptionValues); // throws error if invalid
+		
+		return knownPluginOptionValues;
 	}
 
 	private String askPluginOption(PluginOptionSpec optionSpec, String knownOptionValue) {
@@ -217,8 +242,8 @@ public abstract class AbstractInitCommand extends Command {
 		}
 	}
 
-	protected String askPlugin() {
-		String pluginStr = null;
+	protected Plugin askPlugin() {
+		Plugin plugin = null;
 
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
 		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
@@ -228,22 +253,20 @@ public abstract class AbstractInitCommand extends Command {
 			}
 		});
 
-		while (pluginStr == null) {
+		while (plugin == null) {
 			out.println("Choose a storage plugin. Available plugins are: " + pluginsList);
 			out.print("Plugin: ");
-			pluginStr = console.readLine();
-
-			Plugin plugin = Plugins.get(pluginStr);
+			String pluginStr = console.readLine();
+			
+			plugin = Plugins.get(pluginStr);
 
 			if (plugin == null) {
 				out.println("ERROR: Plugin does not exist.");
 				out.println();
-
-				pluginStr = null;
 			}
 		}
 
-		return pluginStr;
+		return plugin;
 	}
 
 	protected String getDefaultMachineName() throws UnknownHostException {
@@ -257,11 +280,11 @@ public abstract class AbstractInitCommand extends Command {
 
 	protected boolean askRetry() {
 		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
-		return yesno.toLowerCase().startsWith("y");
+		return yesno.toLowerCase().startsWith("y") || yesno.trim().equals("");
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
-		Map<String, String> newPluginSettings = askPluginSettings(connectionTO.getType(), connectionTO.getSettings());
+		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType()), connectionTO.getSettings());
 		connectionTO.setSettings(newPluginSettings);
 	}
 	

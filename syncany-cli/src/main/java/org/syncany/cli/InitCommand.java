@@ -113,7 +113,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
 		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 				
-		ConfigTO configTO = createConfigTO(null, connectionTO);		
+		ConfigTO configTO = createConfigTO(connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
 		operationOptions.setLocalDir(localDir);
