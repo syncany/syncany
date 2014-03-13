@@ -78,7 +78,7 @@ public abstract class AbstractInitCommand extends Command {
 				plugin = askPlugin();
 			}
 
-			pluginSettings = askPluginSettings(plugin, knownPluginSettings);
+			pluginSettings = askPluginSettings(plugin, knownPluginSettings, false);
 		}
 		else {
 			plugin = initPlugin(options.valueOf(optionPlugin));
@@ -121,11 +121,7 @@ public abstract class AbstractInitCommand extends Command {
 		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
-		if (knownPluginOptionValues == null) {
-			knownPluginOptionValues = new HashMap<String, String>();
-		}
-		
+	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
 		Connection connection = plugin.createConnection();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
@@ -136,7 +132,19 @@ public abstract class AbstractInitCommand extends Command {
 
 		for (PluginOptionSpec optionSpec : pluginOptionSpecs.values()) {
 			String knownOptionValue = knownPluginOptionValues.get(optionSpec.getId());
-			String optionValue = askPluginOption(optionSpec, knownOptionValue);
+			String optionValue = null;
+			
+			if (knownOptionValue == null) {
+				optionValue = askPluginOption(optionSpec, knownOptionValue);
+			}
+			else {
+				if (confirmKnownValues) {
+					optionValue = askPluginOption(optionSpec, knownOptionValue);
+				}
+				else {
+					optionValue = knownOptionValue;
+				}
+			}
 			
 			pluginOptionValues.put(optionSpec.getId(), optionValue);
 		}
@@ -295,7 +303,7 @@ public abstract class AbstractInitCommand extends Command {
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
-		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType()), connectionTO.getSettings());
+		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType()), connectionTO.getSettings(), true);
 		connectionTO.setSettings(newPluginSettings);
 	}
 	
