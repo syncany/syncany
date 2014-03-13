@@ -76,7 +76,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
 
 			if (retryNeeded) {
-				performOperation = askRetry();
+				performOperation = isInteractive && askRetry();
 			
 				if (performOperation) {
 					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
@@ -95,12 +95,13 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoCompression = parser.acceptsAll(asList("G", "no-compression"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("E", "no-encryption"));
-		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
-		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
+		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
+		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
+		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
 		
 		OptionSet options = parser.parse(operationArguments);	
 						
-		ConnectionTO connectionTO = initPluginWithOptions(options, optionPlugin, optionPluginOpts);
+		ConnectionTO connectionTO = createConnectionTOFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
 		
 		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
@@ -219,12 +220,12 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		
 		while (continueLoop) {
 			String commaSeparatedCipherIdStr = console.readLine("Cipher(s): ");			
-			String[] cipherSuiteIdStrs = commaSeparatedCipherIdStr.split(",");
+			String[] cipherSpecIdStrs = commaSeparatedCipherIdStr.split(",");
 			
 			// Choose cipher
 			try {
 				// Add cipher suites
-				for (String cipherSpecIdStr : cipherSuiteIdStrs) {
+				for (String cipherSpecIdStr : cipherSpecIdStrs) {
 					Integer cipherSpecId = Integer.parseInt(cipherSpecIdStr);				
 					CipherSpec cipherSpec = availableCipherSpecs.get(cipherSpecId);
 					

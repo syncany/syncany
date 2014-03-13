@@ -20,6 +20,7 @@ package org.syncany.operations;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -39,8 +40,10 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.TransferManager.StorageTestResult;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
@@ -83,7 +86,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	}		
 	
 	@Override
-	public ConnectOperationResult execute() throws Exception {
+	public ConnectOperationResult execute() throws IOException, StorageException, CipherException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Connect'");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -151,7 +154,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
 
-	private ConfigTO createConfigTO() throws Exception {
+	private ConfigTO createConfigTO() throws StorageException, CipherException {
 		ConfigTO configTO = options.getConfigTO();
 		
 		if (options.getStrategy() == ConnectOptionsStrategy.CONNECTION_TO) {
@@ -165,11 +168,11 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 	}
 
-	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link) throws Exception {
+	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link) throws StorageException, CipherException {
 		Matcher linkMatcher = LINK_PATTERN.matcher(link);
 		
 		if (!linkMatcher.matches()) {
-			throw new Exception("Invalid link provided, must start with syncany:// and match link pattern.");
+			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
 		}
 		
 		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
@@ -202,18 +205,21 @@ public class ConnectOperation extends AbstractInitOperation {
 			plaintext = new String(Base64.decodeBase64(encodedPlaintext));
 		}
 		
-		//System.out.println(plaintext);
-
-		Serializer serializer = new Persister();
-		ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);		
+		try {
+			Serializer serializer = new Persister();
+			ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);		
+			
+			Plugin plugin = Plugins.get(connectionTO.getType());
+			
+			if (plugin == null) {
+				throw new StorageException("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");
+			}
 		
-		Plugin plugin = Plugins.get(connectionTO.getType());
-		
-		if (plugin == null) {
-			throw new Exception("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");
+			configTO.setConnectionTO(connectionTO);
 		}
-		
-		configTO.setConnectionTO(connectionTO);
+		catch (Exception e) {
+			throw new StorageException(e);
+		}
 		
 		return configTO;			
 	}
@@ -243,10 +249,10 @@ public class ConnectOperation extends AbstractInitOperation {
 		}		
 	}
 
-	private String getOrAskPasswordRepoFile() throws Exception {
+	private String getOrAskPasswordRepoFile() {
 		if (options.getPassword() == null) {
 			if (listener == null) {
-				throw new Exception("Repository file is encrypted, but password cannot be queried (no listener).");
+				throw new RuntimeException("Repository file is encrypted, but password cannot be queried (no listener).");
 			}
 			
 			return listener.getPasswordCallback();
@@ -256,19 +262,19 @@ public class ConnectOperation extends AbstractInitOperation {
 		}		
 	}
 
-	protected File downloadFile(TransferManager transferManager, RemoteFile remoteFile) throws Exception {
-		File tmpRepoFile = File.createTempFile("syncanyfile", "tmp");
-		
+	protected File downloadFile(TransferManager transferManager, RemoteFile remoteFile) throws StorageException {		
 		try {
+			File tmpRepoFile = File.createTempFile("syncanyfile", "tmp");
+
 			transferManager.download(remoteFile, tmpRepoFile); 			
 			return tmpRepoFile;			
 		}
 		catch (Exception e) {
-			throw new Exception("Unable to connect to repository.", e);
+			throw new StorageException("Unable to connect to repository.", e);
 		}		
 	}
 	
-	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword, byte[] masterKeySalt) throws Exception {
+	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword, byte[] masterKeySalt) throws CipherException {
 		if (listener != null) {
 			listener.notifyCreateMasterKey();
 		}
@@ -277,29 +283,34 @@ public class ConnectOperation extends AbstractInitOperation {
 		return masterKey;
 	}
 	
-	private String decryptRepoFile(File file, SaltedSecretKey masterKey) throws Exception {
+	private String decryptRepoFile(File file, SaltedSecretKey masterKey) throws CipherException {
 		try {
 			FileInputStream encryptedRepoConfig = new FileInputStream(file);
 			return new String(CipherUtil.decrypt(encryptedRepoConfig, masterKey));			
 		}
 		catch (Exception e) {
-			throw new Exception("Invalid password given, or repo file corrupt.");
+			throw new CipherException("Invalid password given, or repo file corrupt.", e);
 		}		
 	}		
 	
-	private void verifyRepoFile(String repoFileStr) throws Exception {
+	private void verifyRepoFile(String repoFileStr) throws StorageException {
 		try {
 			Serializer serializer = new Persister();
 			serializer.read(RepoTO.class, repoFileStr);
 		}
 		catch (Exception e) {
-			throw new Exception("Repo file corrupt.");
+			throw new StorageException("Repo file corrupt.", e);
 		}	
 	}
 	
-	private MasterTO readMasterFile(File tmpMasterFile) throws Exception {
-		Serializer serializer = new Persister();
-		return serializer.read(MasterTO.class, tmpMasterFile);
+	private MasterTO readMasterFile(File tmpMasterFile) throws StorageException {
+		try {
+			Serializer serializer = new Persister();
+			return serializer.read(MasterTO.class, tmpMasterFile);
+		}
+		catch (Exception e) {
+			throw new StorageException("Master file corrupt.", e);
+		}			
 	}
 
 	public static interface ConnectOperationListener {

@@ -44,6 +44,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
 
 public abstract class AbstractInitCommand extends Command {
 	protected Console console;
+	protected boolean isInteractive;	
 
 	public AbstractInitCommand() {
 		console = System.console();
@@ -60,59 +61,40 @@ public abstract class AbstractInitCommand extends Command {
 		return configTO;
 	}
 
-	protected ConnectionTO initPluginWithOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts)
-			throws Exception {
+	protected ConnectionTO createConnectionTOFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts,
+			OptionSpec<Void> optionNonInteractive) throws Exception {
 		
-		ConnectionTO connectionTO = new ConnectionTO();
-
 		Plugin plugin = null;
-		Map<String, String> pluginSettings = new HashMap<String, String>();
+		Map<String, String> pluginSettings = null;
 
-		if (options.has(optionPlugin)) {
+		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
+		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
+
+		if (!options.has(optionNonInteractive)) {
+			if (options.has(optionPlugin)) {
+				plugin = initPlugin(options.valueOf(optionPlugin));
+			}
+			else {
+				plugin = askPlugin();
+			}
+
+			pluginSettings = askPluginSettings(plugin, knownPluginSettings);
+		}
+		else {
 			plugin = initPlugin(options.valueOf(optionPlugin));
-		}
-		else {
-			plugin = askPlugin();
+			pluginSettings = initPluginSettings(plugin, knownPluginSettings);
 		}
 
-		if (options.has(optionPluginOpts)) {
-			pluginSettings = initPluginSettingsFromOptions(plugin, options.valuesOf(optionPluginOpts));
-		}
-		else {
-			pluginSettings = askPluginSettings(plugin, null);
-		}
-
+		// Create configTO
+		ConnectionTO connectionTO = new ConnectionTO();
+		
 		connectionTO.setType(plugin.getId());
 		connectionTO.setSettings(pluginSettings);
 
 		return connectionTO;
 	}
-
-	@Deprecated // duplicate code!
-	protected Map<String, String> initPluginSettingsFromOptions(Plugin plugin, List<String> pluginSettingsOptList) throws Exception {
-		Map<String, String> pluginOptionValues = new HashMap<String, String>();
-
-		Connection connection = plugin.createConnection();
-		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
-
-		// Fill settings map
-		for (String pluginSettingKeyValue : pluginSettingsOptList) {
-			String[] keyValue = pluginSettingKeyValue.split("=", 2);
-
-			if (keyValue.length != 2) {
-				throw new Exception("Invalid setting: " + pluginSettingKeyValue);
-			}
-
-			pluginOptionValues.put(keyValue[0], keyValue[1]);
-		}
-
-		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
-		connection = null; // Connection only needed to to test for exceptions
-
-		return pluginOptionValues;
-	}
 	
-	protected Map<String, String> getPluginSettingsFromOptions(List<String> pluginSettingsOptList) throws Exception {
+	protected Map<String, String> parsePluginSettingsFromOptions(List<String> pluginSettingsOptList) throws Exception {
 		Map<String, String> pluginOptionValues = new HashMap<String, String>();
 
 		// Fill settings map
@@ -181,45 +163,18 @@ public abstract class AbstractInitCommand extends Command {
 		while (true) {
 			String value = null;
 
+			// Retrieve value
 			if (optionSpec.isSensitive()) {
-				if (knownOptionValue == null || "".equals(knownOptionValue)) {
-					out.printf("- %s (not displayed): ", optionSpec.getDescription());
-				}
-				else {
-					out.printf("- %s (please re-enter, not displayed): ", optionSpec.getDescription());					
-				}
-				
-				value = String.copyValueOf(console.readPassword());
+				value = askPluginOptionSensitive(optionSpec, knownOptionValue);				
 			}
 			else if (!optionSpec.isMandatory()) {
-				if (knownOptionValue == null || "".equals(knownOptionValue)) {
-					out.printf("- %s (optional, default is %s): ", optionSpec.getDescription(), optionSpec.getDefaultValue());
-					value = console.readLine();
-				}
-				else {
-					out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);
-					value = console.readLine();
-					
-					if ("".equals(value)) {
-						value = knownOptionValue;
-					}
-				}				
+				value = askPluginOptionOptional(optionSpec, knownOptionValue);	
 			}
 			else {
-				if (knownOptionValue == null || "".equals(knownOptionValue)) {
-					out.printf("- %s: ", optionSpec.getDescription());
-					value = console.readLine();
-				}
-				else {
-					out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);					
-					value = console.readLine();
-					
-					if ("".equals(value)) {
-						value = knownOptionValue;
-					}
-				}
+				value = askPluginOptionNormal(optionSpec, knownOptionValue);
 			}
 
+			// Validate result
 			OptionValidationResult validationResult = optionSpec.validateInput(value);
 
 			switch (validationResult) {
@@ -240,6 +195,62 @@ public abstract class AbstractInitCommand extends Command {
 				throw new RuntimeException("Invalid return type: " + validationResult);
 			}
 		}
+	}
+
+	private String askPluginOptionNormal(PluginOptionSpec optionSpec, String knownOptionValue) {
+		String value = knownOptionValue;
+		
+		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+			out.printf("- %s: ", optionSpec.getDescription());
+			value = console.readLine();
+		}
+		else {
+			out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);					
+			value = console.readLine();
+			
+			if ("".equals(value)) {
+				value = knownOptionValue;
+			}
+		}
+		
+		return value;
+	}
+
+	private String askPluginOptionOptional(PluginOptionSpec optionSpec, String knownOptionValue) {
+		String value = knownOptionValue;
+		
+		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+			out.printf("- %s (optional, default is %s): ", optionSpec.getDescription(), optionSpec.getDefaultValue());
+			value = console.readLine();
+		}
+		else {
+			out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);
+			value = console.readLine();
+			
+			if ("".equals(value)) {
+				value = knownOptionValue;
+			}
+		}		
+		
+		return value;
+	}
+
+	private String askPluginOptionSensitive(PluginOptionSpec optionSpec, String knownOptionValue) {
+		String value = knownOptionValue;
+
+		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+			out.printf("- %s (not displayed): ", optionSpec.getDescription());
+		}
+		else {
+			out.printf("- %s (***, not displayed): ", optionSpec.getDescription());
+			value = String.copyValueOf(console.readPassword());
+			
+			if ("".equals(value)) {
+				value = knownOptionValue;
+			}
+		}
+		
+		return value;
 	}
 
 	protected Plugin askPlugin() {

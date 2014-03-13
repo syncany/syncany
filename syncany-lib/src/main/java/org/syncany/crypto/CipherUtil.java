@@ -217,22 +217,25 @@ public class CipherUtil {
 		return new SaltedSecretKey(toSecretKey(secretKeyBytes, algorithm), saltBytes);
 	}
 
-	public static SaltedSecretKey createMasterKey(String password) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public static SaltedSecretKey createMasterKey(String password) throws CipherException {
 		byte[] salt = createRandomArray(MASTER_KEY_SALT_SIZE / 8);
 		return createMasterKey(password, salt);
 	}
 
-	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException,
-			NoSuchProviderException {
-
-		logger.log(Level.INFO, "Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] { MASTER_KEY_DERIVATION_FUNCTION,
-				MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE });
-
-		SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);
-		KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE);
-		SecretKey masterKey = factory.generateSecret(pbeKeySpec);
-
-		return new SaltedSecretKey(masterKey, salt);
+	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws CipherException {
+		try {
+			logger.log(Level.INFO, "Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] { MASTER_KEY_DERIVATION_FUNCTION,
+					MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE });
+	
+			SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);
+			KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE);
+			SecretKey masterKey = factory.generateSecret(pbeKeySpec);
+	
+			return new SaltedSecretKey(masterKey, salt);
+		}
+		catch (Exception e) {
+			throw new CipherException(e);
+		}
 	}
 
 	public static boolean isEncrypted(File file) throws IOException {
@@ -246,44 +249,54 @@ public class CipherUtil {
 	}
 
 	public static void encrypt(InputStream plaintextInputStream, OutputStream ciphertextOutputStream, List<CipherSpec> cipherSpecs,
-			SaltedSecretKey masterKey) throws IOException {
+			SaltedSecretKey masterKey) throws CipherException {
 
-		CipherSession cipherSession = new CipherSession(masterKey);
-		OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSpecs, cipherSession);
-
-		int read = -1;
-		byte[] buffer = new byte[4096];
-
-		while (-1 != (read = plaintextInputStream.read(buffer))) {
-			multiCipherOutputStream.write(buffer, 0, read);
+		try {
+			CipherSession cipherSession = new CipherSession(masterKey);
+			OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSpecs, cipherSession);
+	
+			int read = -1;
+			byte[] buffer = new byte[4096];
+	
+			while (-1 != (read = plaintextInputStream.read(buffer))) {
+				multiCipherOutputStream.write(buffer, 0, read);
+			}
+			
+			plaintextInputStream.close();
+			multiCipherOutputStream.close();
 		}
-		
-		plaintextInputStream.close();
-		multiCipherOutputStream.close();
+		catch (IOException e) {
+			throw new CipherException(e);
+		}
 	}
 
-	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException {
+	public static byte[] encrypt(InputStream plaintextInputStream, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws CipherException {
 		ByteArrayOutputStream ciphertextOutputStream = new ByteArrayOutputStream();
 		encrypt(plaintextInputStream, ciphertextOutputStream, cipherSuites, masterKey);
 
 		return ciphertextOutputStream.toByteArray();
 	}
 
-	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws IOException {
-		CipherSession cipherSession = new CipherSession(masterKey);
-		MultiCipherInputStream multiCipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
-		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-
-		int read = -1;
-		byte[] buffer = new byte[4096];
-
-		while (-1 != (read = multiCipherInputStream.read(buffer))) {
-			plaintextOutputStream.write(buffer, 0, read);
+	public static byte[] decrypt(InputStream fromInputStream, SaltedSecretKey masterKey) throws CipherException {
+		try {
+			CipherSession cipherSession = new CipherSession(masterKey);
+			MultiCipherInputStream multiCipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
+			ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
+	
+			int read = -1;
+			byte[] buffer = new byte[4096];
+	
+			while (-1 != (read = multiCipherInputStream.read(buffer))) {
+				plaintextOutputStream.write(buffer, 0, read);
+			}
+			
+			multiCipherInputStream.close();
+			plaintextOutputStream.close();
+	
+			return plaintextOutputStream.toByteArray();
 		}
-		
-		multiCipherInputStream.close();
-		plaintextOutputStream.close();
-
-		return plaintextOutputStream.toByteArray();
+		catch (IOException e) {
+			throw new CipherException(e);
+		}
 	}		
 }

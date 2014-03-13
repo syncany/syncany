@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -38,6 +37,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -162,7 +162,7 @@ public class CipherUtilTest {
 		);		
 	}	
 	
-	private void testEncrypt(byte[] originalData, List<CipherSpec> cipherSpecs) throws IOException {
+	private void testEncrypt(byte[] originalData, List<CipherSpec> cipherSpecs) throws CipherException {
 		SaltedSecretKey masterKey = createDummyMasterKey();
 		
 		byte[] ciphertext = CipherUtil.encrypt(
