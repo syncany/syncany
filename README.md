@@ -1,4 +1,4 @@
-Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=master)](https://travis-ci.org/binwiederhier/syncany) [![Coverage Status](https://coveralls.io/repos/binwiederhier/syncany/badge.png?branch=master)](https://coveralls.io/r/binwiederhier/syncany?branch=master)
+Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=master)](https://travis-ci.org/binwiederhier/syncany) [![Coverage Status](http://api.syncany.org/coverage.php)](http://syncany.org/reports/coverage/)
 =======
 > **Important:** Please be aware that this is still ALPHA code! Do not use it
                  for important files.
