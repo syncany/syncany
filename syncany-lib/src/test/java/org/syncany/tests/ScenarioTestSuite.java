@@ -33,6 +33,7 @@ import org.syncany.tests.scenarios.FileLockedScenarioTest;
 import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.scenarios.FileVanishedScenarioTest;
 import org.syncany.tests.scenarios.FilenameCapitalizationWindowsScenarioTest;
+import org.syncany.tests.scenarios.FirstVersionDirtyScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
@@ -51,7 +52,6 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	AllFilePossibilitiesScenarioTest.class,
 	CallUpWhileStillWritingFileScenarioTest.class,
 	ChangedAttributesScenarioTest.class,
-	RenameFileWithDiffModifiedDateScenarioTest.class,
 	ChangedTypeScenarioTest.class,
 	CreateSimilarFileParallelScenarioTest.class,
 	DirtyDatabaseScenarioTest.class,
@@ -62,10 +62,12 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	FilenameCapitalizationWindowsScenarioTest.class,
 	FileTreeMoveToSubfolderScenarioTest.class,
 	FileVanishedScenarioTest.class,
+	FirstVersionDirtyScenarioTest.class,
 	ManyRenamesScenarioTest.class,
 	ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
 	ManySyncUpsAndOtherClientSyncDownScenarioTest.class,
 	MixedUpDownScenarioTest.class,
+	RenameFileWithDiffModifiedDateScenarioTest.class,
 	RenameToExistingFileScenarioTest.class,
 	RenameNoDownloadMultiChunksScenarioTest.class,
 	RenameDeleteScenarioTest.class,
