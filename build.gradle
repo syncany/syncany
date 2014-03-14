@@ -37,10 +37,9 @@ repositories {
 }
 
 // Coverage (Cobertura) ////////////////////////////////////////////////////////
-// Run as: gradle testGlobal coberturaReport performCoverageCheck coveralls
+// Run as: gradle testGlobal coberturaReport performCoverageCheck
 
 apply plugin: 'cobertura'
-apply plugin: 'coveralls'
 
 buildscript {
 	repositories {
@@ -49,7 +48,6 @@ buildscript {
 
 	dependencies {
 		classpath 'net.saliman:gradle-cobertura-plugin:2.2.2' 
-		classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:0.3.0'
 	}
 }
 
@@ -68,10 +66,6 @@ cobertura {
 		coverageSourceDirs << file("${it.projectDir}/src/main/java")
 		coverageMergeDatafiles << file("${it.buildDir}/cobertura/cobertura.ser")
 	}		
-}
-
-coveralls {
-	coberturaReportPath = 'build/reports/coverage/coverage.xml'
 }
 
 

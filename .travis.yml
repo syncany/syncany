@@ -47,8 +47,8 @@ before_install:
   - iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
 
 script: 
-  # Run JUnit tests, generate report and submit to coverage to coveralls
-  - ./gradlew testGlobal coberturaReport performCoverageCheck coveralls
+  # Run JUnit tests and generate reports
+  - ./gradlew testGlobal coberturaReport performCoverageCheck
 
 after_success:
   # Create distributables and JavaDoc
