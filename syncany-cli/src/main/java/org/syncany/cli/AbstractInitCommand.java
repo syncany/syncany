@@ -297,7 +297,7 @@ public abstract class AbstractInitCommand extends Command {
 		return System.getProperty("user.name");
 	}
 
-	protected boolean askRetry() {
+	protected boolean askRetryConnection() {
 		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
 		return yesno.toLowerCase().startsWith("y") || yesno.trim().equals("");
 	}

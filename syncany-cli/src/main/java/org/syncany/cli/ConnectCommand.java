@@ -35,6 +35,9 @@ import org.syncany.operations.ConnectOperation.ConnectOptionsStrategy;
 import org.syncany.operations.ConnectOperation.ConnectResultCode;
 
 public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
+	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
+	private int retryPasswordCount = 0;
+	
 	public ConnectCommand() {
 		super();
 	}
@@ -55,10 +58,11 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			ConnectOperationResult operationResult = client.connect(operationOptions, this);
 			printResults(operationResult);
 
-			retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK;
+			retryNeeded = operationResult.getResultCode() != ConnectResultCode.OK
+					&& operationResult.getResultCode() != ConnectResultCode.NOK_DECRYPT_ERROR;
 
 			if (retryNeeded) {
-				performOperation = isInteractive && askRetry();
+				performOperation = isInteractive && askRetryConnection();
 
 				if (performOperation) {
 					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
@@ -143,6 +147,14 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			out.println("a repository actually exists at this location.");
 			out.println();
 		}
+		else if (operationResult.getResultCode() == ConnectResultCode.NOK_DECRYPT_ERROR) {
+			out.println();
+			out.println("ERROR: Invalid password or corrupt ciphertext.");		
+			out.println();
+			out.println("The reason for this might be an invalid password, or that the");
+			out.println("link/files have been tampered with.");
+			out.println();
+		}
 		else {
 			out.println();
 			out.println("ERROR: Cannot connect to repository. Unknown error code: " + operationResult);
@@ -150,7 +162,8 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 		}
 	}
 
-	private String askPassword() {
+	@Override
+	public String askPassword() {
 		out.println();
 
 		char[] passwordChars = console.readPassword("Password: ");
@@ -158,13 +171,24 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}
 
 	@Override
-	public String getPasswordCallback() {
-		return askPassword();
-	}
-
-	@Override
 	public void notifyCreateMasterKey() {
 		out.println();
 		out.println("Creating master key from password (this might take a while) ...");
+	}
+
+	@Override
+	public boolean askRetryPassword() {
+		retryPasswordCount++;		
+		
+		if (retryPasswordCount < MAX_RETRY_PASSWORD_COUNT) {
+			int triesLeft = MAX_RETRY_PASSWORD_COUNT-retryPasswordCount;
+			String triesLeftStr = triesLeft != 1 ? triesLeft + " tries left." : "Last chance.";  
+
+			out.println("ERROR: Invalid password or corrupt ciphertext. " + triesLeftStr);
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }

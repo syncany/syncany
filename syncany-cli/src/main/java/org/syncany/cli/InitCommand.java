@@ -76,7 +76,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
 
 			if (retryNeeded) {
-				performOperation = isInteractive && askRetry();
+				performOperation = isInteractive && askRetryConnection();
 			
 				if (performOperation) {
 					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());

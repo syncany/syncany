@@ -29,6 +29,7 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.operations.ConnectOperation;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
 import org.syncany.operations.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.ConnectOperation.ConnectOptionsStrategy;
 import org.syncany.operations.ConnectOperation.ConnectResultCode;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationOptions;
@@ -63,6 +64,7 @@ public class ConnectOperationTest {
 		connectionConfigToB.setMasterKey(null);
 		
 		ConnectOperationOptions connectOperationOptionsB = new ConnectOperationOptions();
+		connectOperationOptionsB.setStrategy(ConnectOptionsStrategy.CONNECTION_TO);
 		connectOperationOptionsB.setConfigTO(connectionConfigToB);
 		connectOperationOptionsB.setPassword(initOperationOptionsA.getPassword());
 		connectOperationOptionsB.setLocalDir(localDirB);
@@ -107,6 +109,7 @@ public class ConnectOperationTest {
 		connectionConfigToB.setMasterKey(null);
 		
 		ConnectOperationOptions connectOperationOptionsB = new ConnectOperationOptions();
+		connectOperationOptionsB.setStrategy(ConnectOptionsStrategy.CONNECTION_TO);
 		connectOperationOptionsB.setConfigTO(connectionConfigToB);
 		connectOperationOptionsB.setPassword(initOperationOptionsA.getPassword());
 		connectOperationOptionsB.setLocalDir(localDirB);
@@ -114,7 +117,7 @@ public class ConnectOperationTest {
 		ConnectOperation connectOperationB = new ConnectOperation(connectOperationOptionsB, null);		
 		ConnectOperationResult connectOperationResultB = connectOperationB.execute();
 		
-		assertEquals(ConnectResultCode.NOK_NO_CONNECTION, connectOperationResultB.getResultCode());				
+		assertEquals(ConnectResultCode.NOK_NO_REPO, connectOperationResultB.getResultCode());				
 		assertFalse(new File(localConnectDirB, Config.DIR_DATABASE).exists());
 		assertFalse(new File(localConnectDirB, Config.DIR_CACHE).exists());
 		assertFalse(new File(localConnectDirB, Config.FILE_CONFIG).exists());

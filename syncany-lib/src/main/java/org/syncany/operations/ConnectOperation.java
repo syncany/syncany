@@ -91,45 +91,55 @@ public class ConnectOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Connect'");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		// Create valid configTO & transfer manager
-		ConfigTO configTO = createConfigTO();		
+		// Decrypt and init configTO
+		ConfigTO configTO = null; 
+		
+		try {
+			configTO = createConfigTO();	
+		}
+		catch (CipherException e) {
+			return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+		}
+
+		// Create valid transfer manager
 		transferManager = createTransferManager(configTO.getConnectionTO());
 		
 		// Test the repo
-		if (!performRepoTest()) {
+		if (!performRepoTest(transferManager)) {
 			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());			
 			return result;
 		}
 
 		logger.log(Level.INFO, "- Connecting to the repo was successful");
-		
-		
+				
 		// Create local .syncany directory		
 		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
-		File tmpMasterFile = null;
 		
-		if (CipherUtil.isEncrypted(tmpRepoFile)) {
-			SaltedSecretKey masterKey = null;
-			
-			if (configTO.getMasterKey() != null) {
-				masterKey = configTO.getMasterKey();
-				tmpMasterFile = File.createTempFile("masterfile", "tmp");
-				writeXmlFile(new MasterTO(masterKey.getSalt()), tmpMasterFile);
+		if (CipherUtil.isEncrypted(tmpRepoFile)) {	
+			if (configTO.getMasterKey() == null) {
+				boolean retryPassword = true;
+				
+				while (retryPassword) {
+					SaltedSecretKey possibleMasterKey = askPasswordAndCreateMasterKey();
+					
+					if (decryptAndVerifyRepoFile(tmpRepoFile, possibleMasterKey)) {
+						configTO.setMasterKey(possibleMasterKey);
+						retryPassword = false;
+					}
+					else {
+						retryPassword = askRetryPassword();
+						
+						if (!retryPassword) {
+							return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+						}
+					}
+				}
 			}
 			else {
-				tmpMasterFile = downloadFile(transferManager, new MasterRemoteFile());
-				MasterTO masterTO = readMasterFile(tmpMasterFile);
-				
-				String masterKeyPassword = getOrAskPasswordRepoFile();
-				byte[] masterKeySalt = masterTO.getSalt();
-				
-				masterKey = createMasterKeyFromPassword(masterKeyPassword, masterKeySalt); // This takes looong!			
-			}						
-			
-			String repoFileStr = decryptRepoFile(tmpRepoFile, masterKey);			
-			verifyRepoFile(repoFileStr);
-			
-			configTO.setMasterKey(masterKey);
+				if (decryptAndVerifyRepoFile(tmpRepoFile, configTO.getMasterKey())) {
+					return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+				}
+			}
 		}
 		else {
 			String repoFileStr = FileUtils.readFileToString(tmpRepoFile);			
@@ -138,21 +148,48 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Success, now do the work!
 		File appDir = createAppDirs(options.getLocalDir());	
-		File configFile = new File(appDir+"/"+Config.FILE_CONFIG);
-		File repoFile = new File(appDir+"/"+Config.FILE_REPO);
-		File masterFile = new File(appDir+"/"+Config.FILE_MASTER);
 		
+		// Write file 'config.xml'
+		File configFile = new File(appDir, Config.FILE_CONFIG);
 		writeXmlFile(configTO, configFile);
+		
+		// Write file 'syncany'
+		File repoFile = new File(appDir, Config.FILE_REPO);
 		FileUtils.copyFile(tmpRepoFile, repoFile);
 		tmpRepoFile.delete();
 		
-		if (tmpMasterFile != null) {
-			FileUtils.copyFile(tmpMasterFile, masterFile);
-			tmpMasterFile.delete();
+		// Write file 'master'
+		if (configTO.getMasterKey() != null) {
+			File masterFile = new File(appDir, Config.FILE_MASTER);
+			writeXmlFile(new MasterTO(configTO.getMasterKey().getSalt()), masterFile);
 		}
 				
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
+
+	private boolean decryptAndVerifyRepoFile(File tmpRepoFile, SaltedSecretKey masterKey) throws StorageException {
+		try {
+			String repoFileStr = decryptRepoFile(tmpRepoFile, masterKey);			
+			verifyRepoFile(repoFileStr);
+			
+			return true;
+		}
+		catch (CipherException e) {
+			return false;
+		}		
+	}
+
+	private SaltedSecretKey askPasswordAndCreateMasterKey() throws CipherException, StorageException {
+		File tmpMasterFile = downloadFile(transferManager, new MasterRemoteFile());
+		MasterTO masterTO = readMasterFile(tmpMasterFile);
+		
+		tmpMasterFile.delete();
+		
+		String masterKeyPassword = getOrAskPassword();
+		byte[] masterKeySalt = masterTO.getSalt();
+		
+		return createMasterKeyFromPassword(masterKeyPassword, masterKeySalt); // This takes looong!
+	}
 
 	private ConfigTO createConfigTO() throws StorageException, CipherException {
 		ConfigTO configTO = options.getConfigTO();
@@ -187,18 +224,32 @@ public class ConnectOperation extends AbstractInitOperation {
 			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
 			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
 
-			String password = getOrAskPasswordRepoFile();
+			boolean retryPassword = true;
 			
-			if (listener != null) {
-				listener.notifyCreateMasterKey();
+			while (retryPassword) {
+				// Ask password
+				String password = getOrAskPassword();
+				
+				// Generate master key
+				fireNotifyCreateMaster();
+				SaltedSecretKey masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
+				configTO.setMasterKey(masterKey);
+				
+				// Decrypt config 
+				try {
+					ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);			
+					plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));
+					
+					retryPassword = false;
+				}
+				catch (CipherException e) {
+					retryPassword = askRetryPassword();
+				}
+			}	
+			
+			if (plaintext == null) {
+				throw new CipherException("Unable to decrypt link.");
 			}
-			
-			SaltedSecretKey masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
-			
-			ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);			
-			plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));			
-			
-			configTO.setMasterKey(masterKey);
 		}
 		else {
 			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
@@ -224,7 +275,22 @@ public class ConnectOperation extends AbstractInitOperation {
 		return configTO;			
 	}
 
-	private boolean performRepoTest() {
+	private boolean askRetryPassword() {
+		if (listener != null) {
+			return listener.askRetryPassword();
+		}
+		else {
+			return false;
+		}
+	}
+
+	private void fireNotifyCreateMaster() {
+		if (listener != null) {
+			listener.notifyCreateMasterKey();
+		}
+	}
+
+	private boolean performRepoTest(TransferManager transferManager) {
 		StorageTestResult repoTestResult = transferManager.test();
 		
 		switch (repoTestResult) {
@@ -249,13 +315,13 @@ public class ConnectOperation extends AbstractInitOperation {
 		}		
 	}
 
-	private String getOrAskPasswordRepoFile() {
+	private String getOrAskPassword() {
 		if (options.getPassword() == null) {
 			if (listener == null) {
 				throw new RuntimeException("Repository file is encrypted, but password cannot be queried (no listener).");
 			}
 			
-			return listener.getPasswordCallback();
+			return listener.askPassword();
 		}
 		else {
 			return options.getPassword();
@@ -314,7 +380,8 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 
 	public static interface ConnectOperationListener {
-		public String getPasswordCallback();
+		public String askPassword();
+		public boolean askRetryPassword();
 		public void notifyCreateMasterKey();
 	}	
 	
@@ -323,7 +390,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 	
 	public static class ConnectOperationOptions implements OperationOptions {
-		private ConnectOptionsStrategy strategy;
+		private ConnectOptionsStrategy strategy = ConnectOptionsStrategy.CONNECTION_TO;
 		private ConfigTO configTO;
 		private String connectLink;
 		private File localDir;
@@ -371,7 +438,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 		 
 	public enum ConnectResultCode {
-		OK, NOK_NO_REPO, NOK_INVALID_REPO, NOK_NO_CONNECTION
+		OK, NOK_NO_REPO, NOK_INVALID_REPO, NOK_NO_CONNECTION, NOK_DECRYPT_ERROR
 	}
 	
     public static class ConnectOperationResult implements OperationResult {

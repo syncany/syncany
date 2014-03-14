@@ -299,7 +299,7 @@ public class CipherUtilTest {
 		fail("TEST FAILED: Ciphertext was altered without exception.");
 	}	
 	
-	@Test(expected = org.bouncycastle.crypto.io.InvalidCipherTextIOException.class)
+	@Test(expected = CipherException.class)
 	public void testIntegrityAesGcmCiphertext() throws Exception {
 		SaltedSecretKey masterKey = createDummyMasterKey();
 		
