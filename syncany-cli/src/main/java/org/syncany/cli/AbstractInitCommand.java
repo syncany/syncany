@@ -248,6 +248,7 @@ public abstract class AbstractInitCommand extends Command {
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
 			out.printf("- %s (not displayed): ", optionSpec.getDescription());
+			value = String.copyValueOf(console.readPassword());
 		}
 		else {
 			out.printf("- %s (***, not displayed): ", optionSpec.getDescription());
