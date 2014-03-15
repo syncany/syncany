@@ -116,6 +116,44 @@ public class InitCommandTest {
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
 	}	
+	
+	@Test
+	public void testCliInitCommandInteractiveWithEncryption() throws Exception {
+		// Setup		
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		setCurrentDirectory(tempDir);
+		
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
+		
+		// Run
+		String[] initArgs = new String[] { 			 
+			 "init",
+			 "--no-compression" 
+		}; 
+
+		List<String> commands = new ArrayList(Arrays.asList(new String[]{"local", clientA.get("repopath")}));
+		List<char[]> passwords = new ArrayList(Arrays.asList(new char[][]{"somelongpassword".toCharArray(),
+				"somelongpassword".toCharArray()
+		}));
+		
+		InitConsole testInitConsole = new TestInitConsole(commands, passwords);
+		
+		InitConsole.setInstance(testInitConsole);
+		
+		new CommandLineClient(initArgs).start();
+		
+		assertTrue(tempDir.exists());
+		assertTrue(new File(tempDir+"/.syncany").exists());
+		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
+		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
+
+		// Tear down
+		setCurrentDirectory(originalWorkingDirectory);
+		
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+		TestFileUtil.deleteDirectory(tempDir);
+	}	
 
 	private static boolean setCurrentDirectory(File newDirectory) {
 		boolean result = false; 
