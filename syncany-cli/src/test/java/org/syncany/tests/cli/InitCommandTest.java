@@ -91,7 +91,7 @@ public class InitCommandTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		setCurrentDirectory(tempDir);
 		
-		//Ensuring no console is set
+		// Ensuring no console is set
 		InitConsole.setInstance(null);
 		
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
@@ -106,9 +106,7 @@ public class InitCommandTest {
 		
 		systemInMock.provideText(StringUtil.join(new String[] {
 			"local", 
-			clientA.get("repopath"),
-			"password123", 
-			"password123"
+			clientA.get("repopath")
 		}, "\n")+"\n");
 		
 		new CommandLineClient(initArgs).start();

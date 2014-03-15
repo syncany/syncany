@@ -33,16 +33,16 @@ import org.syncany.tests.cli.WatchCommandTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+	CliPluginsTest.class,
 	CommandLineInterfaceTest.class,
 	DownCommandTest.class,
+	InitCommandTest.class,
 	LogCommandTest.class,
 	LsRemoteCommandTest.class,
 	StatusCommandTest.class,
 	SyncCommandTest.class,
 	UpCommandTest.class,	
-	WatchCommandTest.class,
-	CliPluginsTest.class,
-	InitCommandTest.class
+	WatchCommandTest.class
 })
 public class CliTestSuite {
 	// This class executes all tests

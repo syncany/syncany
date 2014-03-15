@@ -17,7 +17,6 @@
  */
 package org.syncany.cli;
 
-import java.io.Console;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -334,9 +333,5 @@ public abstract class AbstractInitCommand extends Command {
 
 			out.println();
 		}
-	}
-	
-	public void setConsole(InitConsole initConsole) {
-		console = initConsole;
-	}
+	}	
 } 

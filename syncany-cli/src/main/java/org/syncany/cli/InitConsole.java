@@ -27,7 +27,6 @@ import java.io.PrintWriter;
  * Wrapper class for {@link Console} to enable mocking for tests.
  * 
  * @author Pim Otte
- *
  */
 public class InitConsole {
 	private static InitConsole instance;
@@ -36,15 +35,15 @@ public class InitConsole {
 	private BufferedReader systemIn;
 	private PrintWriter systemOut;
 	
-	protected InitConsole(Console console) {
-		this.console = console;
+	protected InitConsole() {
+		this.console = System.console();
 		this.systemIn = null;
 		this.systemOut = null;
 	}
 	
 	public static InitConsole getInstance() {
 		if (instance == null) {
-			instance = new InitConsole(System.console());
+			instance = new InitConsole();
 		}
 		
 		return instance;
