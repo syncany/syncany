@@ -15,49 +15,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.cli;
+package org.syncany.tests.util;
 
-import java.io.Console;
+import java.util.List;
+
+import org.syncany.cli.InitConsole;
 
 /**
- * Wrapper class for {@link Console} to enable mocking for tests.
+ * Mock InitConsole
  * 
  * @author Pim Otte
  *
  */
-public class InitConsole {
-	private Console console;
-	private static InitConsole instance;
-	
-	protected InitConsole(Console console) {
-		this.console = console;
+public class TestInitConsole extends InitConsole {
+	private List<String> lines;
+	private List<char[]> passwords;
+	public TestInitConsole(List<String> lines, List<char[]> passwords) {
+		super(null);
+		this.lines = lines;
+		this.passwords = passwords;
 	}
 	
-	public static InitConsole getInstance() {
-		if (instance == null) {
-			instance = new InitConsole(System.console());
-		}
-		return instance;
-	}
-	
-	public static void setInstance(InitConsole initConsole) {
-		instance = initConsole;
-	}
-	
+	@Override
 	public String readLine() {
-		return console.readLine();
+		return lines.remove(0);
 	}
 	
+	@Override
 	public String readLine(String fmt, Object... args) {
-		return console.readLine(fmt, args);
+		return lines.remove(0);
 	}
 	
+	@Override
 	public char[] readPassword() {
-		return console.readPassword();
+		return passwords.remove(0);
 	}
 	
+	@Override
 	public char[] readPassword(String fmt, Object... args) {
-		return console.readPassword(fmt, args);
+		return passwords.remove(0);
 	}
-
+	
+	
 }

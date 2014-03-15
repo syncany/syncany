@@ -20,15 +20,19 @@ package org.syncany.tests.cli;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
+import org.syncany.cli.InitConsole;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.tests.util.TestInitConsole;
 
 public class InitCommandTest {	
 	private File originalWorkingDirectory;
@@ -60,6 +64,45 @@ public class InitCommandTest {
 			 "--no-encryption", 
 			 "--no-compression" 
 		}; 
+		
+		new CommandLineClient(initArgs).start();
+		
+		assertTrue(tempDir.exists());
+		assertTrue(new File(tempDir+"/.syncany").exists());
+		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
+		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
+
+		// Tear down
+		setCurrentDirectory(originalWorkingDirectory);
+		
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+		TestFileUtil.deleteDirectory(tempDir);
+	}	
+	
+	@Test
+	public void testCliInitCommandInteractive() throws Exception {
+		// Setup		
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		setCurrentDirectory(tempDir);
+		
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
+		
+		// Run
+		String[] initArgs = new String[] { 			 
+			 "init",
+			 "--plugin", "local", 
+			 "--plugin-option", "path="+clientA.get("repopath"),
+			 "--no-encryption", 
+			 "--no-compression" 
+		}; 
+		
+		List<String> commands = Arrays.asList(new String[]{"local", clientA.get("repopath")});
+		List<char[]> passwords = Arrays.asList(new char[][]{new char[0]});
+		
+		InitConsole testInitConsole = new TestInitConsole(commands, passwords);
+		
+		InitConsole.setInstance(testInitConsole);
 		
 		new CommandLineClient(initArgs).start();
 		
