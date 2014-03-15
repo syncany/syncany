@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.syncany.cli.CommandLineClient;
+import org.syncany.cli.InitConsole;
 import org.syncany.tests.connection.plugins.ftp.EmbeddedTestFtpServer;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
@@ -90,6 +91,9 @@ public class InitCommandTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		setCurrentDirectory(tempDir);
 		
+		//Ensuring no console is set
+		InitConsole.setInstance(null);
+		
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
 		
@@ -127,6 +131,9 @@ public class InitCommandTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		setCurrentDirectory(tempDir);
 		
+		//Ensuring no console is set
+		InitConsole.setInstance(null);
+		
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
 		
@@ -163,6 +170,9 @@ public class InitCommandTest {
 		// Setup		
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		setCurrentDirectory(tempDir);
+		
+		//Ensuring no console is set
+		InitConsole.setInstance(null);
 		
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
