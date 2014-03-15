@@ -43,11 +43,11 @@ import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public abstract class AbstractInitCommand extends Command {
-	protected Console console;
+	protected InitConsole console;
 	protected boolean isInteractive;	
 
 	public AbstractInitCommand() {
-		console = System.console();
+		console = InitConsole.getInstance();
 	}
 
 	protected ConfigTO createConfigTO(ConnectionTO connectionTO) throws Exception {
@@ -335,4 +335,8 @@ public abstract class AbstractInitCommand extends Command {
 			out.println();
 		}
 	}
-}
+	
+	public void setConsole(InitConsole initConsole) {
+		console = initConsole;
+	}
+} 

@@ -359,7 +359,7 @@ public class DatabaseVersionDaoTest {
 		// Test
 		assertNull(maxDirtyVectorClockA);
 		assertNotNull(maxDirtyVectorClockB);
-		assertEquals(1, maxDirtyVectorClockB);
+		assertEquals(1, (long) maxDirtyVectorClockB);
 				
 		// Tear down
 		databaseConnection.close();

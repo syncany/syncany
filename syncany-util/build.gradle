@@ -11,5 +11,5 @@ repositories {
 
 dependencies {
 	compile			"commons-io:commons-io:2.4"	
-	testCompile		"junit:junit:4.3"   	      
+	testCompile		"junit:junit:4.9"   	      
 }
