@@ -12,6 +12,7 @@ dependencies {
 
 	testCompile		"com.github.stefanbirkner:system-rules:1.5.0"            
       	
+    testCompile     project(path: ":syncany-plugins:syncany-plugin-ftp", configuration: "tests")
 	testCompile		project(path: ":syncany-lib", configuration: "tests")
 	testCompile		project(path: ":syncany-util", configuration: "tests")
 	testCompile		"junit:junit:4.9"   	      
