@@ -47,7 +47,7 @@ public abstract class AbstractInitCommand extends Command {
 	protected boolean isInteractive;	
 
 	public AbstractInitCommand() {
-		console = InitConsole.getInstance();
+		console = new InitConsole(System.console());
 	}
 
 	protected ConfigTO createConfigTO(ConnectionTO connectionTO) throws Exception {

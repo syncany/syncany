@@ -17,7 +17,11 @@
  */
 package org.syncany.cli;
 
+import java.io.BufferedReader;
 import java.io.Console;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
 /**
  * Wrapper class for {@link Console} to enable mocking for tests.
@@ -26,17 +30,23 @@ import java.io.Console;
  *
  */
 public class InitConsole {
-	private Console console;
 	private static InitConsole instance;
+
+	private Console console;
+	private BufferedReader systemIn;
+	private PrintWriter systemOut;
 	
 	protected InitConsole(Console console) {
 		this.console = console;
+		this.systemIn = null;
+		this.systemOut = null;
 	}
 	
 	public static InitConsole getInstance() {
 		if (instance == null) {
 			instance = new InitConsole(System.console());
 		}
+		
 		return instance;
 	}
 	
@@ -45,19 +55,61 @@ public class InitConsole {
 	}
 	
 	public String readLine() {
-		return console.readLine();
+		try {
+			if (console == null) {
+				return getSystemInReader().readLine();
+			}
+			else {
+				return console.readLine();
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public String readLine(String fmt, Object... args) {
-		return console.readLine(fmt, args);
+		if (console == null) {
+			getSystemOutWriter().write(String.format(fmt, args));
+			return readLine();
+		}
+		else {
+			return console.readLine(fmt, args);
+		}
 	}
 	
 	public char[] readPassword() {
-		return console.readPassword();
+		if (console == null) {
+			return readLine().toCharArray();
+		}
+		else {
+			return console.readPassword();
+		}
 	}
 	
 	public char[] readPassword(String fmt, Object... args) {
-		return console.readPassword(fmt, args);
+		if (console == null) {
+			getSystemOutWriter().write(String.format(fmt, args));
+			return readLine().toCharArray();
+		}
+		else {
+			return console.readPassword(fmt, args);
+		}
 	}
-
+	
+	private BufferedReader getSystemInReader() {
+		if (systemIn == null) {
+			systemIn = new BufferedReader(new InputStreamReader(System.in));
+		}
+		
+		return systemIn;
+	}
+	
+	private PrintWriter getSystemOutWriter() {
+		if (systemOut == null) {
+			systemOut = new PrintWriter(new OutputStreamWriter(System.out));
+		}
+		
+		return systemOut;
+	}
 }

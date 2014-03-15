@@ -18,25 +18,27 @@
 package org.syncany.tests.cli;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.contrib.java.lang.system.TextFromStandardInputStream.emptyStandardInputStream;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.cli.InitConsole;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.tests.util.TestInitConsole;
+import org.syncany.util.StringUtil;
 
 public class InitCommandTest {	
 	private File originalWorkingDirectory;
+	
+	@Rule
+	public final TextFromStandardInputStream systemInMock = emptyStandardInputStream();
 	
 	@Before
 	public void before() {
@@ -95,13 +97,13 @@ public class InitCommandTest {
 			 "--no-encryption",
 			 "--no-compression" 
 		}; 
-
-		List<String> commands = new ArrayList(Arrays.asList(new String[]{"local", clientA.get("repopath")}));
-		List<char[]> passwords = new ArrayList();
 		
-		InitConsole testInitConsole = new TestInitConsole(commands, passwords);
-		
-		InitConsole.setInstance(testInitConsole);
+		systemInMock.provideText(StringUtil.join(new String[] {
+			"local", 
+			clientA.get("repopath"),
+			"password123", 
+			"password123"
+		}, "\n")+"\n");
 		
 		new CommandLineClient(initArgs).start();
 		
@@ -132,14 +134,12 @@ public class InitCommandTest {
 			 "--no-compression" 
 		}; 
 
-		List<String> commands = new ArrayList(Arrays.asList(new String[]{"local", clientA.get("repopath")}));
-		List<char[]> passwords = new ArrayList(Arrays.asList(new char[][]{"somelongpassword".toCharArray(),
-				"somelongpassword".toCharArray()
-		}));
-		
-		InitConsole testInitConsole = new TestInitConsole(commands, passwords);
-		
-		InitConsole.setInstance(testInitConsole);
+		systemInMock.provideText(StringUtil.join(new String[] {
+				"local", 
+				clientA.get("repopath"),
+				"somesuperlongpassword", 
+				"somesuperlongpassword"
+			}, "\n")+"\n");
 		
 		new CommandLineClient(initArgs).start();
 		

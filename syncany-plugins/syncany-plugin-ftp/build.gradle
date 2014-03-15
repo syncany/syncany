@@ -5,6 +5,6 @@ dependencies {
 
 	testCompile		project(path : ':syncany-lib', configuration: 'tests')      
 	testCompile		project(path: ":syncany-util", configuration: "tests")
-	testCompile		"junit:junit:4.3"
+	testCompile		"junit:junit:4.9"
 	testCompile		"org.apache.ftpserver:ftpserver-core:1.0.6"      
 }
