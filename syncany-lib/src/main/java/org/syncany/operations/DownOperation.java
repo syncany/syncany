@@ -228,8 +228,8 @@ public class DownOperation extends Operation {
 			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());				
 		}
 		
-		localDatabase.removeFileVersions(purgeFileVersions);
-		localDatabase.removeDeletedVersions();  
+		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
+		localDatabase.removeDeletedFileVersions();  
 		localDatabase.removeUnreferencedDatabaseEntities();
 		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());		
 		
