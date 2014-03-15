@@ -110,33 +110,45 @@ public class ConnectOperation extends AbstractInitOperation {
 			return result;
 		}
 
-		logger.log(Level.INFO, "- Connecting to the repo was successful");
+		logger.log(Level.INFO, "- Connecting to the repo was successful; now downloading repo file ...");
 				
 		// Create local .syncany directory		
 		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
 		
 		if (CipherUtil.isEncrypted(tmpRepoFile)) {	
+			logger.log(Level.INFO, "- Repo is ENCRYPTED. Decryption necessary.");
+
 			if (configTO.getMasterKey() == null) {
+				logger.log(Level.INFO, "- No master key present; Asking for password ...");
+
 				boolean retryPassword = true;
 				
 				while (retryPassword) {
 					SaltedSecretKey possibleMasterKey = askPasswordAndCreateMasterKey();
+					logger.log(Level.INFO, "- Master key created. Now verifying by decrypting repo file...");
 					
 					if (decryptAndVerifyRepoFile(tmpRepoFile, possibleMasterKey)) {
+						logger.log(Level.INFO, "- SUCCESS: Repo file decrypted successfully.");
+
 						configTO.setMasterKey(possibleMasterKey);
 						retryPassword = false;
 					}
 					else {
+						logger.log(Level.INFO, "- FAILURE: Repo file decryption failed. Asking for retry.");
 						retryPassword = askRetryPassword();
 						
 						if (!retryPassword) {
+							logger.log(Level.INFO, "- No retry possible/desired. Returning NOK_DECRYPT_ERROR.");
 							return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
 						}
 					}
 				}
 			}
 			else {
-				if (decryptAndVerifyRepoFile(tmpRepoFile, configTO.getMasterKey())) {
+				logger.log(Level.INFO, "- Master key present; Now verifying by decrypting repo file...");
+
+				if (!decryptAndVerifyRepoFile(tmpRepoFile, configTO.getMasterKey())) {
+					logger.log(Level.INFO, "- FAILURE: Repo file decryption failed. Returning NOK_DECRYPT_ERROR.");
 					return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
 				}
 			}
@@ -351,10 +363,18 @@ public class ConnectOperation extends AbstractInitOperation {
 	
 	private String decryptRepoFile(File file, SaltedSecretKey masterKey) throws CipherException {
 		try {
+			logger.log(Level.INFO, "Decrypting repo file ...");
+
 			FileInputStream encryptedRepoConfig = new FileInputStream(file);
-			return new String(CipherUtil.decrypt(encryptedRepoConfig, masterKey));			
+			String repoFileStr = new String(CipherUtil.decrypt(encryptedRepoConfig, masterKey));
+			
+			logger.log(Level.INFO, "Repo file decrypted:");
+			logger.log(Level.INFO, repoFileStr);
+			
+			return repoFileStr;
 		}
 		catch (Exception e) {
+			logger.log(Level.INFO, "Invalid password given, or repo file corrupt.", e);
 			throw new CipherException("Invalid password given, or repo file corrupt.", e);
 		}		
 	}		

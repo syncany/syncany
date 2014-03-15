@@ -108,12 +108,20 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
 		
+		// --no-interaction
+		isInteractive = !options.has(optionNonInteractive);
+
+		// Cipher specs: --no-encryption, --advanced 
 		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 		
+		// Chunkers (not configurable)
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
+
+		// Compression: --no-compression
 		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 				
+		// Create configTO and repoTO
 		ConfigTO configTO = createConfigTO(connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
