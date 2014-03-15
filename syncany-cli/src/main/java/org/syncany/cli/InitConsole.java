@@ -36,7 +36,7 @@ public class InitConsole {
 	private BufferedReader systemIn;
 	private PrintWriter systemOut;
 	
-	protected InitConsole(Console console) {
+	private InitConsole(Console console) {
 		this.console = console;
 		this.systemIn = null;
 		this.systemOut = null;
