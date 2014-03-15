@@ -49,7 +49,7 @@ public class InitCommandTest {
 	@After
 	public void after() {
 		setCurrentDirectory(originalWorkingDirectory);
-		EmbeddedTestFtpServer.stopServer();
+		
 	}
 	
 	@Test
@@ -195,6 +195,7 @@ public class InitCommandTest {
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
+		EmbeddedTestFtpServer.stopServer();
 	}	
 
 	private static boolean setCurrentDirectory(File newDirectory) {
