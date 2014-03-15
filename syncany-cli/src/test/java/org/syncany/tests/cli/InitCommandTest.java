@@ -20,6 +20,7 @@ package org.syncany.tests.cli;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -91,14 +92,12 @@ public class InitCommandTest {
 		// Run
 		String[] initArgs = new String[] { 			 
 			 "init",
-			 "--plugin", "local", 
-			 "--plugin-option", "path="+clientA.get("repopath"),
-			 "--no-encryption", 
+			 "--no-encryption",
 			 "--no-compression" 
 		}; 
-		
-		List<String> commands = Arrays.asList(new String[]{"local", clientA.get("repopath")});
-		List<char[]> passwords = Arrays.asList(new char[][]{new char[0]});
+
+		List<String> commands = new ArrayList(Arrays.asList(new String[]{"local", clientA.get("repopath")}));
+		List<char[]> passwords = new ArrayList();
 		
 		InitConsole testInitConsole = new TestInitConsole(commands, passwords);
 		
