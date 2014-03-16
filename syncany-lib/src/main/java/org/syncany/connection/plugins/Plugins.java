@@ -75,6 +75,10 @@ public class Plugins {
 	 * @return Returns an instance of a plugin, or <tt>null</tt> if no plugin with the given identifier can be found
 	 */
 	public static Plugin get(String pluginId) {
+		if (pluginId == null) {
+			return null;
+		}
+		
 		// If already loaded, get from list
 		if (plugins.containsKey(pluginId)) {
 			return plugins.get(pluginId);

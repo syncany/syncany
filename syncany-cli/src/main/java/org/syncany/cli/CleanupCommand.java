@@ -98,8 +98,8 @@ public class CleanupCommand extends Command {
 					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
 				}
 				
-				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)", 
-					operationResult.getRemovedMultiChunks().size(), totalRemovedMultiChunkSize / 1024 / 1024);
+				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n", 
+					operationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024);
 			}
 
 			if (operationResult.getRemovedOldVersionsCount() > 0) {

@@ -20,6 +20,7 @@ package org.syncany.operations;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -51,98 +53,115 @@ import org.syncany.util.FileUtil;
 public abstract class AbstractInitOperation extends Operation {
 	public AbstractInitOperation(Config config) {
 		super(config);
-	}	
-	
+	}
+
 	protected TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
 		Plugin plugin = Plugins.get(connectionTO.getType());
-		
+
 		Connection connection = plugin.createConnection();
 		connection.init(connectionTO.getSettings());
-		
+
 		return connection.createTransferManager();
 	}
-	
-	protected File createAppDirs(File localDir) throws Exception {
+
+	protected File createAppDirs(File localDir) throws IOException {
 		if (localDir == null) {
-			throw new Exception("Unable to create app dir, local dir is null.");
+			throw new RuntimeException("Unable to create app dir, local dir is null.");
 		}
-		
-		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
-		File logDir = new File(appDir+"/"+Config.DIR_LOG);
-		File cacheDir = new File(appDir+"/"+Config.DIR_CACHE);
-		File databaseDir = new File(appDir+"/"+Config.DIR_DATABASE);
-		
+
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File logDir = new File(appDir, Config.DIR_LOG);
+		File cacheDir = new File(appDir, Config.DIR_CACHE);
+		File databaseDir = new File(appDir, Config.DIR_DATABASE);
+
 		appDir.mkdir();
 		logDir.mkdir();
 		cacheDir.mkdir();
 		databaseDir.mkdir();
-		
+
 		if (FileUtil.isWindows()) {
 			Files.setAttribute(Paths.get(appDir.getAbsolutePath()), "dos:hidden", true);
 		}
-		
+
 		return appDir;
 	}
-	
-	protected void deleteAppDirs(File localDir) throws Exception {
-		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
-		File logDir = new File(appDir+"/"+Config.DIR_LOG);
-		File cacheDir = new File(appDir+"/"+Config.DIR_CACHE);
-		File databaseDir = new File(appDir+"/"+Config.DIR_DATABASE);
+
+	protected void deleteAppDirs(File localDir) throws IOException {
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File logDir = new File(appDir, Config.DIR_LOG);
+		File cacheDir = new File(appDir, Config.DIR_CACHE);
+		File databaseDir = new File(appDir, Config.DIR_DATABASE);
+
 		for (File log : logDir.listFiles()) {
 			log.delete();
 		}
-		logDir.delete();
+
 		for (File cache : cacheDir.listFiles()) {
 			cache.delete();
 		}
-		cacheDir.delete();
+
 		for (File db : databaseDir.listFiles()) {
 			db.delete();
 		}
-		databaseDir.delete();
+
 		for (File file : appDir.listFiles()) {
 			file.delete();
 		}
+
+		logDir.delete();
+		cacheDir.delete();
+		databaseDir.delete();
 		appDir.delete();
-		
 	}
-	
-	protected void writeXmlFile(Object source, File file) throws Exception {
-   		Serializer serializer = new Persister();
-		serializer.write(source, file);	
-	}	
-	
-	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {				
-		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(repoTO, plaintextRepoOutputStream);
+
+	protected void writeXmlFile(Object source, File file) throws IOException {
+		try {
+			Serializer serializer = new Persister();
+			serializer.write(source, file);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+
+	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException,
+			CipherException {
 		
+		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
+
+		try {
+			Serializer serializer = new Persister();
+			serializer.write(repoTO, plaintextRepoOutputStream);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+
 		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
-	}	
-	
+	}
+
 	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		Serializer serializer = new Persister();
 		serializer.write(connectionTO, plaintextOutputStream);
-		
+
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
-		
+
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
 		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
-		
-		return "syncany://storage/1/"+masterKeySaltEncodedStr+"-"+encryptedEncodedStorageXml;				
+
+		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedStorageXml;
 	}
-	
+
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		Serializer serializer = new Persister();
 		serializer.write(connectionTO, plaintextOutputStream);
-		
+
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
 		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
-		
-		return "syncany://storage/1/not-encrypted/"+plaintextEncodedStorageXml;			
+
+		return "syncany://storage/1/not-encrypted/" + plaintextEncodedStorageXml;
 	}
 }

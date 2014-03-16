@@ -33,19 +33,22 @@ Commands:
     Currently loaded plugins: %PLUGINS%
 
     Arguments:
-    -p, --plugin=<plugin>            Specify a plugin to use for storage 
-    -P, --plugin-option=<key=value>  Set plugin settings (multi-option)
+    -P, --plugin=<plugin>            Specify a plugin to use for storage 
+    -o, --plugin-option=<key=value>  Set plugin settings (multi-option)
     -E, --no-encryption              Don't encrypt new repo
     -G, --no-compression             Don't use gzip-compression in new repo
+    -t, --create-target              Create target path (if not existent)
     -a, --advanced                   Asks more questions about encryption
+    -I, --no-interaction             Non-interactive mode    
 
   connect [<args>] [<syncany link>]
     Connect the current folder to an existing Syncany repository. To
     initialize the connection a Syncany link (syncany://..) can be used.
 
     Arguments:
-    -p, --plugin=<plugin>            Specify a plugin to use for storage
-    -P, --plugin-option=<key=value>  Set plugin settings (multi-option)
+    -P, --plugin=<plugin>            Specify a plugin to use for storage
+    -o, --plugin-option=<key=value>  Set plugin settings (multi-option)
+    -I, --no-interaction             Non-interactive mode
 
   up [<args>]
     Detect local changes and upload to repo (commit)

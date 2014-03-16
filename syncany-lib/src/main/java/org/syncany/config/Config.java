@@ -138,7 +138,7 @@ public class Config {
 		//  chunker = Chunker.getInstance(repoTO.getChunker().getType());
 		//  chunker.init(repoTO.getChunker().getSettings());
 		
-		chunker = new FixedChunker(2*1024*1024, "SHA1");
+		chunker = new FixedChunker(512*1024, "SHA1");
 		
 		/*new MimeTypeChunker(
 			new FixedChunker(64*1024, "SHA1"),

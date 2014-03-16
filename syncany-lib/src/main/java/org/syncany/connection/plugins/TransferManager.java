@@ -68,12 +68,20 @@ public interface TransferManager {
 		 * Repository path does not exist, and 
 		 * it cannot be created
 		 */
-		NO_REPO_CANNOT_CREATE
+		NO_REPO_CANNOT_CREATE, 
+		
+		/**
+		 * Repository path exists, but it is empty
+		 */
+		REPO_EXISTS_BUT_INVALID
 	}
 
 	/**
-	 * Establish a connection with the remote storage and initialize the repository
-	 * if necessary (e.g. create folders).
+	 * Establish a connection with the remote storage. 
+	 * 
+	 * <p>This method does not validate the correctness of the repository and 
+	 * it does not create any folders. The former is done by {@link #test()}, the
+	 * latter is done by {@link #init(boolean)}.
 	 *
 	 * @throws StorageException If the connection fails due to no Internet connection,
 	 *         authentication errors, etc.
@@ -166,12 +174,22 @@ public interface TransferManager {
 	 * Tests whether the repository parameters are valid. In particular, the method tests
 	 * whether a repository exists or, if not, whether it can be created.
 	 * 
+	 * <ul>
+	 *  <li>{@link StorageTestResult#NO_CONNECTION}: If the Internet connection is broken, or the
+	 *      socket broke.</li>
+	 *  <li>{@link StorageTestResult#NO_REPO}: No repository exists on the remote location, i.e.
+	 *      not even the folder/path exists.</li>
+	 *  <li>{@link StorageTestResult#NO_REPO_CANNOT_CREATE}: No repository exists and it cannot be
+	 *      created, because write access is missing.</li>
+	 *  <li>{@link StorageTestResult#REPO_EXISTS}: The repository exists and is valid.</li>
+	 *  <li>{@link StorageTestResult#REPO_EXISTS_BUT_INVALID}: The repository path/folder exists, but
+	 *      and is not valid.</li>
+	 * </ul>
+	 * 
 	 * @return Returns the result of testing the repository. 
-	 * @throws StorageException If the connection fails due to no Internet connection,
-	 *         authentication errors, etc
 	 * @see {@link StorageTestResult}
 	 */
-	public StorageTestResult test() throws StorageException;
+	public StorageTestResult test();
 
 	/**
 	 * Tests whether the repository path/folder is <b>writable</b> by the application. This method is
@@ -180,7 +198,7 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise
 	 */
-	public boolean hasWriteAccess() throws StorageException;
+	public boolean repoHasWriteAccess() throws StorageException;
 
 	/**
 	 * Tests whether the repository path/folder is accessible and <b>exists</b>. This method is
@@ -192,11 +210,11 @@ public interface TransferManager {
 	public boolean repoExists() throws StorageException;
 
 	/**
-	 * Tests whether the repository path/folder is accessible and <b>empty</b>. This method is
-	 * called by the {@link #test()} method (only during repository initialization (or initial
-	 * connection).
+	 * Tests whether the repository path/folder is accessible and the repository file
+	 * exists (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
+	 * (only during repository initialization (or initial connection).
 	 * 
-	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
+	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise 
 	 */
-	public boolean repoIsEmpty() throws StorageException;
+	public boolean repoIsValid() throws StorageException;
 }

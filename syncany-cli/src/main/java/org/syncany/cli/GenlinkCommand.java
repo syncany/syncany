@@ -54,6 +54,11 @@ public class GenlinkCommand extends AbstractInitCommand {
 	}
 	
 	private void printResults(GenlinkOperationResult operationResult, GenlinkCommandOptions commandOptions) {
+		if (!commandOptions.isShortOutput()) {
+			out.println();
+			out.println("To share the same repository with others, you can share this link:");
+		}
+		
 		printLink(operationResult, commandOptions.isShortOutput());			
 	}
 	

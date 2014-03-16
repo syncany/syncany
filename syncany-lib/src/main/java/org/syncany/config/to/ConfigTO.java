@@ -90,7 +90,7 @@ public class ConfigTO {
 		return connectionTO;
 	}
 
-	public void setConnection(ConnectionTO connectionTO) {
+	public void setConnectionTO(ConnectionTO connectionTO) {
 		this.connectionTO = connectionTO;
 	}
 	

@@ -115,7 +115,10 @@ public class DatabaseXmlSerializer {
 		}
         
         try {
-			logger.log(Level.INFO, "- Loading database from "+databaseFile+" ...");
+        	if (logger.isLoggable(Level.INFO)) {
+	        	String fullOrHeader = (headersOnly) ? "HEADER" : "FULL";
+				logger.log(Level.INFO, "- Loading database ({0}, {1}) from file {2} ...", new Object[] { fullOrHeader, filterType, databaseFile });
+        	}
 
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();

@@ -179,17 +179,20 @@ public class DownOperation extends Operation {
 
 	private void applyWinnersBranch(DatabaseBranch winnersBranch, List<File> unknownRemoteDatabasesInCache) throws Exception {
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
-		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
+		logger.log(Level.INFO, "Database versions to APPLY locally: " + winnersApplyBranch);
 
 		if (winnersApplyBranch.size() == 0) {
 			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 		}
 		else {
-			logger.log(Level.INFO, "- Loading winners database ...");
+			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");			
 			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache, DatabaseVersionType.DEFAULT);
+
+			logger.log(Level.INFO, "Loading winners database (PURGE) ...");			
 			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabasesInCache, DatabaseVersionType.PURGE);
 
+			logger.log(Level.INFO, "Determine file system actions ...");			
 			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
 			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
 
@@ -235,8 +238,8 @@ public class DownOperation extends Operation {
 			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());				
 		}
 		
-		localDatabase.removeFileVersions(purgeFileVersions);
-		localDatabase.removeDeletedVersions();  
+		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
+		localDatabase.removeDeletedFileVersions();  
 		localDatabase.removeUnreferencedDatabaseEntities();
 		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());		
 		
@@ -321,8 +324,14 @@ public class DownOperation extends Operation {
 		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
 		DatabaseBranch winnersBranch = allStitchedBranches.getBranch(winnersName);
 
-		logger.log(Level.INFO, "- Compared branches: " + allStitchedBranches);
-		logger.log(Level.INFO, "- Winner is " + winnersName + " with branch " + winnersBranch);
+		//logger.log(Level.INFO, "- Compared branches: " + allStitchedBranches);
+		logger.log(Level.INFO, "- Winner is " + winnersName + " with branch: ");
+		
+		if (logger.isLoggable(Level.INFO)) {
+			for (DatabaseVersionHeader databaseVersionHeader : winnersBranch.getAll()) {
+				logger.log(Level.INFO, "  + " + databaseVersionHeader);
+			}
+		}
 
 		return winnersBranch;
 	}

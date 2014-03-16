@@ -17,8 +17,6 @@
  */
 package org.syncany.cli;
 
-import java.io.Console;
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -39,64 +37,65 @@ import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public abstract class AbstractInitCommand extends Command {
-	protected Console console;
+	protected InitConsole console;
+	protected boolean isInteractive;	
 
 	public AbstractInitCommand() {
-		console = System.console();
+		console = InitConsole.getInstance();
 	}
 
-	protected ConfigTO createConfigTO(File localDir, SaltedSecretKey masterKey, ConnectionTO connectionTO) throws Exception {
+	protected ConfigTO createConfigTO(ConnectionTO connectionTO) throws Exception {
 		ConfigTO configTO = new ConfigTO();
 
 		configTO.setDisplayName(getDefaultDisplayName());
 		configTO.setMachineName(getDefaultMachineName());
-		configTO.setMasterKey(masterKey); // can be null
-
-		configTO.setConnection(connectionTO);
+		configTO.setMasterKey(null); 
+		configTO.setConnectionTO(connectionTO); // can be null
 
 		return configTO;
 	}
 
-	protected ConnectionTO initPluginWithOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts)
-			throws Exception {
+	protected ConnectionTO createConnectionTOFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts,
+			OptionSpec<Void> optionNonInteractive) throws Exception {
+		
+		Plugin plugin = null;
+		Map<String, String> pluginSettings = null;
+
+		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
+		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
+
+		if (!options.has(optionNonInteractive)) {
+			if (options.has(optionPlugin)) {
+				plugin = initPlugin(options.valueOf(optionPlugin));
+			}
+			else {
+				plugin = askPlugin();
+			}
+
+			pluginSettings = askPluginSettings(plugin, knownPluginSettings, false);
+		}
+		else {
+			plugin = initPlugin(options.valueOf(optionPlugin));
+			pluginSettings = initPluginSettings(plugin, knownPluginSettings);
+		}
+
+		// Create configTO
 		ConnectionTO connectionTO = new ConnectionTO();
-
-		String pluginStr = null;
-		Map<String, String> pluginSettings = new HashMap<String, String>();
-
-		if (options.has(optionPlugin)) {
-			pluginStr = initPlugin(options.valueOf(optionPlugin));
-		}
-		else {
-			pluginStr = askPlugin();
-		}
-
-		if (options.has(optionPluginOpts)) {
-			pluginSettings = initPluginSettings(pluginStr, options.valuesOf(optionPluginOpts));
-		}
-		else {
-			pluginSettings = askPluginSettings(pluginStr);
-		}
-
-		connectionTO.setType(pluginStr);
+		
+		connectionTO.setType(plugin.getId());
 		connectionTO.setSettings(pluginSettings);
 
 		return connectionTO;
 	}
+	
+	protected Map<String, String> parsePluginSettingsFromOptions(List<String> pluginSettingsOptList) throws Exception {
+		Map<String, String> pluginOptionValues = new HashMap<String, String>();
 
-	protected Map<String, String> initPluginSettings(String pluginStr, List<String> pluginSettingsOptList) throws Exception {
-		Map<String, String> pluginOptionValues = new HashMap<String, String>();		
-		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
-
-		Connection connection = plugin.createConnection();
-		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
-		
 		// Fill settings map
 		for (String pluginSettingKeyValue : pluginSettingsOptList) {
 			String[] keyValue = pluginSettingKeyValue.split("=", 2);
@@ -107,26 +106,21 @@ public abstract class AbstractInitCommand extends Command {
 
 			pluginOptionValues.put(keyValue[0], keyValue[1]);
 		}
-		
-		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
-		connection = null; // Connection only needed to to test for exceptions
 
 		return pluginOptionValues;
 	}
-
-	protected String initPlugin(String pluginStr) throws Exception {
+	
+	protected Plugin initPlugin(String pluginStr) throws Exception {
 		Plugin plugin = Plugins.get(pluginStr);
 
 		if (plugin == null) {
 			throw new Exception("ERROR: Plugin '" + pluginStr + "' does not exist.");
 		}
 
-		return pluginStr;
+		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(String pluginStr) throws StorageException {
-		Plugin plugin = Plugins.get(pluginStr); // Assumes this exists
-		
+	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
 		Connection connection = plugin.createConnection();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
@@ -136,33 +130,58 @@ public abstract class AbstractInitCommand extends Command {
 		out.println("Connection details for " + plugin.getName() + " connection:");
 
 		for (PluginOptionSpec optionSpec : pluginOptionSpecs.values()) {
-			String optionValue = askPluginOption(optionSpec);
+			String knownOptionValue = knownPluginOptionValues.get(optionSpec.getId());
+			String optionValue = null;
+			
+			if (knownOptionValue == null) {
+				optionValue = askPluginOption(optionSpec, knownOptionValue);
+			}
+			else {
+				if (confirmKnownValues) {
+					optionValue = askPluginOption(optionSpec, knownOptionValue);
+				}
+				else {
+					optionValue = knownOptionValue;
+				}
+			}
+			
 			pluginOptionValues.put(optionSpec.getId(), optionValue);
 		}
 
 		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
-		connection = null; // Connection only needed to to test for exceptions
 		
 		return pluginOptionValues;
 	}
+	
+	protected Map<String, String> initPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
+		if (knownPluginOptionValues == null) {
+			knownPluginOptionValues = new HashMap<String, String>();
+		}
+		
+		Connection connection = plugin.createConnection();
+		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();		
 
-	private String askPluginOption(PluginOptionSpec optionSpec) {
+		pluginOptionSpecs.validate(knownPluginOptionValues); // throws error if invalid
+		
+		return knownPluginOptionValues;
+	}
+
+	private String askPluginOption(PluginOptionSpec optionSpec, String knownOptionValue) {
 		while (true) {
 			String value = null;
 
+			// Retrieve value
 			if (optionSpec.isSensitive()) {
-				out.printf("- %s (not displayed): ", optionSpec.getDescription());
-				value = String.copyValueOf(console.readPassword());
+				value = askPluginOptionSensitive(optionSpec, knownOptionValue);				
 			}
 			else if (!optionSpec.isMandatory()) {
-				out.printf("- %s (optional, default is %s): ", optionSpec.getDescription(), optionSpec.getDefaultValue());
-				value = console.readLine();
+				value = askPluginOptionOptional(optionSpec, knownOptionValue);	
 			}
 			else {
-				out.printf("- %s: ", optionSpec.getDescription());
-				value = console.readLine();
+				value = askPluginOptionNormal(optionSpec, knownOptionValue);
 			}
 
+			// Validate result
 			OptionValidationResult validationResult = optionSpec.validateInput(value);
 
 			switch (validationResult) {
@@ -178,15 +197,72 @@ public abstract class AbstractInitCommand extends Command {
 
 			case VALID:
 				return optionSpec.getValue(value);
-				
+
 			default:
-				throw new RuntimeException("Invalid return type: "+validationResult);
+				throw new RuntimeException("Invalid return type: " + validationResult);
 			}
 		}
 	}
 
-	protected String askPlugin() {
-		String pluginStr = null;
+	private String askPluginOptionNormal(PluginOptionSpec optionSpec, String knownOptionValue) {
+		String value = knownOptionValue;
+		
+		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+			out.printf("- %s: ", optionSpec.getDescription());
+			value = console.readLine();
+		}
+		else {
+			out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);					
+			value = console.readLine();
+			
+			if ("".equals(value)) {
+				value = knownOptionValue;
+			}
+		}
+		
+		return value;
+	}
+
+	private String askPluginOptionOptional(PluginOptionSpec optionSpec, String knownOptionValue) {
+		String value = knownOptionValue;
+		
+		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+			out.printf("- %s (optional, default is %s): ", optionSpec.getDescription(), optionSpec.getDefaultValue());
+			value = console.readLine();
+		}
+		else {
+			out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);
+			value = console.readLine();
+			
+			if ("".equals(value)) {
+				value = knownOptionValue;
+			}
+		}		
+		
+		return value;
+	}
+
+	private String askPluginOptionSensitive(PluginOptionSpec optionSpec, String knownOptionValue) {
+		String value = knownOptionValue;
+
+		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+			out.printf("- %s (not displayed): ", optionSpec.getDescription());
+			value = String.copyValueOf(console.readPassword());
+		}
+		else {
+			out.printf("- %s (***, not displayed): ", optionSpec.getDescription());
+			value = String.copyValueOf(console.readPassword());
+			
+			if ("".equals(value)) {
+				value = knownOptionValue;
+			}
+		}
+		
+		return value;
+	}
+
+	protected Plugin askPlugin() {
+		Plugin plugin = null;
 
 		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
 		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
@@ -196,22 +272,20 @@ public abstract class AbstractInitCommand extends Command {
 			}
 		});
 
-		while (pluginStr == null) {
+		while (plugin == null) {
 			out.println("Choose a storage plugin. Available plugins are: " + pluginsList);
 			out.print("Plugin: ");
-			pluginStr = console.readLine();
-
-			Plugin plugin = Plugins.get(pluginStr);
+			String pluginStr = console.readLine();
+			
+			plugin = Plugins.get(pluginStr);
 
 			if (plugin == null) {
 				out.println("ERROR: Plugin does not exist.");
 				out.println();
-
-				pluginStr = null;
 			}
 		}
 
-		return pluginStr;
+		return plugin;
 	}
 
 	protected String getDefaultMachineName() throws UnknownHostException {
@@ -223,14 +297,21 @@ public abstract class AbstractInitCommand extends Command {
 		return System.getProperty("user.name");
 	}
 
+	protected boolean askRetryConnection() {
+		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
+		return yesno.toLowerCase().startsWith("y") || yesno.trim().equals("");
+	}
+
+	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
+		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType()), connectionTO.getSettings(), true);
+		connectionTO.setSettings(newPluginSettings);
+	}
+	
 	protected void printLink(GenlinkOperationResult operationResult, boolean shortOutput) {
 		if (shortOutput) {
 			out.println(operationResult.getShareLink());
 		}
 		else {
-			out.println();
-			out.println("Repository created, and local folder initialized. To share the same repository");
-			out.println("with others, you can share this link:");
 			out.println();
 			out.println("   " + operationResult.getShareLink());
 			out.println();
@@ -252,5 +333,5 @@ public abstract class AbstractInitCommand extends Command {
 
 			out.println();
 		}
-	}
-}
+	}	
+} 

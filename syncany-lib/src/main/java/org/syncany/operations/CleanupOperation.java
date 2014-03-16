@@ -192,8 +192,8 @@ public class CleanupOperation extends Operation {
 		// startLockRenewalThread(); TODO [medium] Implement lock renewal thread
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeFileVersions(mostRecentPurgeFileVersions);
-		localDatabase.removeDeletedVersions();
+		localDatabase.removeSmallerOrEqualFileVersions(mostRecentPurgeFileVersions);
+		localDatabase.removeDeletedFileVersions();
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		List<MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
@@ -364,7 +364,14 @@ public class CleanupOperation extends Operation {
 		logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
 				lastLocalMergeDatabaseFile });
 		
-		transferManager.delete(lastRemoteMergeDatabaseFile);
+		try {
+			// Make sure it's deleted
+			transferManager.delete(lastRemoteMergeDatabaseFile);
+		}
+		catch (StorageException e) {
+			// Don't care!
+		}
+		
 		transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		
 		// Update stats

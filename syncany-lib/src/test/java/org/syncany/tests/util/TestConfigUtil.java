@@ -186,7 +186,7 @@ public class TestConfigUtil {
 		connectionTO.setType("local");
 		connectionTO.setSettings(localConnectionSettings);
 		
-		configTO.setConnection(connectionTO);
+		configTO.setConnectionTO(connectionTO);
 				
 		// Create 
 		Config config = new Config(tempLocalDir, configTO, repoTO);
@@ -228,7 +228,7 @@ public class TestConfigUtil {
 		connectionTO.setType("local");
 		connectionTO.setSettings(localConnectionSettings);
 		
-		configTO.setConnection(connectionTO);
+		configTO.setConnectionTO(connectionTO);
 		
 		InitOperationOptions operationOptions = new InitOperationOptions();
 		

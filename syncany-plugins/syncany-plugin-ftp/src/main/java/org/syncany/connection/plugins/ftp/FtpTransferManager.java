@@ -35,6 +35,7 @@ import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -60,12 +61,13 @@ import org.syncany.connection.plugins.TransferManager;
 public class FtpTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(FtpTransferManager.class.getSimpleName());
 
-	private static final int CONNECT_RETRY_COUNT = 3;
+	private static final int CONNECT_RETRY_COUNT = 2;
 	private static final int TIMEOUT_DEFAULT = 5000;
 	private static final int TIMEOUT_CONNECT = 5000;
 	private static final int TIMEOUT_DATA = 5000;
 
 	private FTPClient ftp;
+	private boolean ftpIsLoggedIn;
 
 	private String repoPath;
 	private String multichunkPath;
@@ -75,9 +77,11 @@ public class FtpTransferManager extends AbstractTransferManager {
 		super(connection);
 
 		this.ftp = new FTPClient();
-		this.repoPath = connection.getPath();
-		this.multichunkPath = connection.getPath() + "/multichunks";
-		this.databasePath = connection.getPath() + "/databases";
+		this.ftpIsLoggedIn = false;
+		
+		this.repoPath = connection.getPath().startsWith("/") ? connection.getPath() : "/" + connection.getPath();
+		this.multichunkPath = repoPath + "/multichunks";
+		this.databasePath = repoPath + "/databases";
 	}
 
 	@Override
@@ -89,7 +93,8 @@ public class FtpTransferManager extends AbstractTransferManager {
 	public void connect() throws StorageException {
 		for (int i = 0; i < CONNECT_RETRY_COUNT; i++) {
 			try {
-				if (ftp.isConnected()) {
+				if (ftp.isConnected() && ftpIsLoggedIn) {
+					logger.log(Level.INFO, "FTP client already connected. Skipping connect().");
 					return;
 				}
 
@@ -102,15 +107,22 @@ public class FtpTransferManager extends AbstractTransferManager {
 				ftp.setDefaultTimeout(TIMEOUT_DEFAULT);
 
 				ftp.connect(getConnection().getHostname(), getConnection().getPort());
-				ftp.login(getConnection().getUsername(), getConnection().getPassword());
+				
+				if (!ftp.login(getConnection().getUsername(), getConnection().getPassword())) {
+					throw new StorageException("Invalid FTP login credentials. Cannot login.");
+				}
+				
 				ftp.enterLocalPassiveMode();
 				ftp.setFileType(FTPClient.BINARY_FILE_TYPE); // Important !!!
 
-				return;
+				ftpIsLoggedIn = true;				
+				return; // no loop!
 			}
 			catch (Exception ex) {
 				if (i == CONNECT_RETRY_COUNT - 1) {
 					logger.log(Level.WARNING, "FTP client connection failed. Retrying failed.", ex);
+					
+					ftpIsLoggedIn = false;
 					throw new StorageException(ex);
 				}
 				else {
@@ -124,6 +136,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 	public void disconnect() {
 		try {
 			ftp.disconnect();
+			ftpIsLoggedIn = false;
 		}
 		catch (Exception ex) {
 			// Nothing
@@ -189,7 +202,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 		connect();
 
 		String remotePath = getRemoteFile(remoteFile);
-		String tempRemotePath = getConnection().getPath() + "/temp-" + remoteFile.getName();
+		String tempRemotePath = repoPath + "/temp-" + remoteFile.getName();
 
 		try {
 			// Upload to temp file
@@ -304,7 +317,7 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean hasWriteAccess() throws StorageException {
+	public boolean repoHasWriteAccess() throws StorageException {
 		try {
 			boolean createSuccessful = ftp.makeDirectory(repoPath);
 			ftp.removeDirectory(repoPath);
@@ -327,12 +340,13 @@ public class FtpTransferManager extends AbstractTransferManager {
 	}
 	
 	@Override
-	public boolean repoIsEmpty() throws StorageException {
+	public boolean repoIsValid() throws StorageException {				
 		try {
-			return repoExists() && ftp.listFiles(repoPath).length == 0;
+			String[] listRepoFile = ftp.listNames(new RepoRemoteFile().getName());
+			return (listRepoFile != null) ? listRepoFile.length == 0 : true;
 		}
-		catch (Exception e) {
-			return false;
-		}
+		catch (IOException e) {
+			throw new StorageException(e);
+		}		
 	}
 }

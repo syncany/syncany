@@ -21,15 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -43,7 +41,7 @@ public class CipherUtilMasterKeyCreationTest {
 	}
 	
 	@Test
-	public void testCreateMasterKeyWithSalt() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public void testCreateMasterKeyWithSalt() throws CipherException {
 		long timeStart = System.currentTimeMillis();
 		
 		SaltedSecretKey masterKeyForPasswordTestAndSalt123 = CipherUtil.createMasterKey("Test", new byte[] { 1, 2, 3 });
@@ -67,7 +65,7 @@ public class CipherUtilMasterKeyCreationTest {
 	}
 	
 	@Test
-	public void testCreateMasterKeyNoSalt() throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public void testCreateMasterKeyNoSalt() throws CipherException {
 		SaltedSecretKey masterKeyForPasswordTestNoSalt1 = CipherUtil.createMasterKey("Test");
 		SaltedSecretKey masterKeyForPasswordTestNoSalt2 = CipherUtil.createMasterKey("Test");
 						

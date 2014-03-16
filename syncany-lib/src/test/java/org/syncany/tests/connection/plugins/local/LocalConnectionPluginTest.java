@@ -83,8 +83,8 @@ public class LocalConnectionPluginTest {
 		assertNotNull("Plugin name should not be null.", pluginInfo.getName());
 	}
 	
-	@Test(expected=StorageException.class)
-	public void testConnectToNonExistantFolder() throws StorageException {
+	@Test
+	public void testConnectToNonExistentFolder() throws StorageException {
 		Plugin pluginInfo = Plugins.get("local");
 		
 		Map<String, String> invalidPluginSettings = new HashMap<String, String>();
@@ -95,8 +95,10 @@ public class LocalConnectionPluginTest {
 		
 		TransferManager transferManager = connection.createTransferManager();
 		
-		// This should cause a Storage exception, because the path does not exist
-		transferManager.connect();		
+		// This should NOT cause a Storage exception, because the root file system exists
+		transferManager.connect();	
+		
+		// If this was reached, it's a success!
 	}
 	
 	@Test(expected=StorageException.class)
