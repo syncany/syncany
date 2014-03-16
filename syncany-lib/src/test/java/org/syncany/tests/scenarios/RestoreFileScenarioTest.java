@@ -17,41 +17,48 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationStrategy;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.StringUtil;
 
-public class RestoreFileScenarioTest {	
+public class RestoreFileScenarioTest {
+	// TODO [medium] Also test restoring old versions of a file; not only deleted files
+	
 	@Test
-	public void testRestoreFile() throws Exception {
+	public void testRestoreDeletedFile() throws Exception {
 		// Scenario: A uploads a file, uploads a new version, then restores the old one
 		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
-		
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
-		
-		
+				
 		// A new/up
-		clientA.createNewFile("A-original");
-		
-		
+		clientA.createNewFile("A-original");		
 		clientA.up();
+		
 		Date restoreMoment = new Date(System.currentTimeMillis());
 		Thread.sleep(50);
 		
-		clientA.deleteFile("A-original");
-		
+		// A "delete"
+		File deletedFile = new File(tempDir, "A-original-DELETED");
+		FileUtils.moveFile(clientA.getLocalFile("A-original"), deletedFile);
+						
 		clientA.up();
 		
+		// A restore
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 		operationOptions.setDatabaseBeforeDate(restoreMoment);
 		operationOptions.setRestoreFilePaths(Arrays.asList("A-original"));
@@ -60,10 +67,14 @@ public class RestoreFileScenarioTest {
 		clientA.restore(operationOptions);
 		
 		assertTrue(clientA.getLocalFile("A-original").exists());
-		
-			
+		assertEquals(
+				StringUtil.toHex(TestFileUtil.createChecksum(deletedFile)),
+				StringUtil.toHex(TestFileUtil.createChecksum(clientA.getLocalFile("A-original"))));
+		assertEquals(deletedFile.lastModified(), clientA.getLocalFile("A-original").lastModified());
+		assertEquals(deletedFile.length(), clientA.getLocalFile("A-original").length());
 		
 		// Tear down
 		clientA.deleteTestData();
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 }

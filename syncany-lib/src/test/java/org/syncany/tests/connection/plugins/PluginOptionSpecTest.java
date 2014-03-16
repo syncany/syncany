@@ -26,49 +26,50 @@ import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 
 /**
  * Tests the PluginOptionSpec class on integrity.
- * @author Pim Otte
  *
+ * @author Pim Otte
  */
 public class PluginOptionSpecTest {
 	
 	@Test(expected=IllegalArgumentException.class) 
 	public void optionalSensitiveTest() {
-		PluginOptionSpec pos = new PluginOptionSpec("id", "desc", ValueType.STRING, false, true, null);
-		
+		new PluginOptionSpec("id", "desc", ValueType.STRING, false, true, null);		
 	}
 	
 	@Test(expected=IllegalArgumentException.class) 
 	public void optionalNoDefaultTest() {
-		PluginOptionSpec pos = new PluginOptionSpec("id", "desc", ValueType.STRING, false, false, null);
-		
+		new PluginOptionSpec("id", "desc", ValueType.STRING, false, false, null);		
 	}
 	
 	@Test
 	public void nonSetMandatoryTest() {
-		PluginOptionSpec pos = new PluginOptionSpec("id", "desc", ValueType.STRING, true, true, null);
-		OptionValidationResult ovr = pos.validateInput(null);
-		assertEquals(ovr,OptionValidationResult.INVALID_NOT_SET);
+		PluginOptionSpec pluginOptionSpec = new PluginOptionSpec("id", "desc", ValueType.STRING, true, true, null);
+		OptionValidationResult validationResult = pluginOptionSpec.validateInput(null);
+		
+		assertEquals(validationResult,OptionValidationResult.INVALID_NOT_SET);
 	}
 	
 	@Test
 	public void invalidIntegerTest() {
-		PluginOptionSpec pos = new PluginOptionSpec("id", "desc", ValueType.INT, true, true, null);
-		OptionValidationResult ovr = pos.validateInput("this is in no way an integer");
-		assertEquals(ovr,OptionValidationResult.INVALID_TYPE);
+		PluginOptionSpec pluginOptionSpec = new PluginOptionSpec("id", "desc", ValueType.INT, true, true, null);
+		OptionValidationResult validationResult = pluginOptionSpec.validateInput("this is in no way an integer");
+		
+		assertEquals(validationResult,OptionValidationResult.INVALID_TYPE);
 	}
 	
 	@Test
 	public void validOptionTest() {
-		PluginOptionSpec pos = new PluginOptionSpec("id", "desc", ValueType.BOOLEAN, true, true, null);
-		OptionValidationResult ovr = pos.validateInput("booleans are fairly flexible");
-		assertEquals(ovr,OptionValidationResult.VALID);
+		PluginOptionSpec pluginOptionSpec = new PluginOptionSpec("id", "desc", ValueType.BOOLEAN, true, true, null);
+		OptionValidationResult validationResult = pluginOptionSpec.validateInput("booleans are fairly flexible");
+		
+		assertEquals(validationResult,OptionValidationResult.VALID);
 	}
 	
 	@Test
 	public void defaultValueTest() {
-		PluginOptionSpec pos = new PluginOptionSpec("id", "desc", ValueType.INT, false, false, "21");
-		String port = pos.getValue("");
+		PluginOptionSpec pluginOptionSpec = new PluginOptionSpec("id", "desc", ValueType.INT, false, false, "21");
+		String port = pluginOptionSpec.getValue("");
+		
 		assertEquals(port, "21");
 	}
-
 }

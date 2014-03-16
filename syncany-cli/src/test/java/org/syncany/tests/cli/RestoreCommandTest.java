@@ -30,37 +30,43 @@ import org.syncany.tests.util.TestFileUtil;
 
 /**
  * Testing the restore command
- * @author Pim Otte
  *
+ * @author Pim Otte
  */
 public class RestoreCommandTest {
+	// TODO [low] Write more restore tests: (1) change file, restore and compare file contents; (2) go back x versions, (3) restore folder 
+	
 	@Test
 	public void testCliSimpleRestore() throws Exception {
+		// Setup
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 
-		
-
+		// Run
 		TestFileUtil.createRandomFile(new File(clientA.get("localdir"),"file1"), 50L);
 		new CommandLineClient(new String[] { 
-				 "--localdir", clientA.get("localdir"),
-				 "up",
-				 "--no-cleanup" 
-			}).start();
+			 "--localdir", clientA.get("localdir"),
+			 "up",
+			 "--no-cleanup" 
+		}).start();
+		
 		Thread.sleep(1000);
+		
 		TestFileUtil.deleteFile(new File(clientA.get("localdir"),"file1"));
 		new CommandLineClient(new String[] { 
-				 "--localdir", clientA.get("localdir"),
-				 "up",
-				 "--no-cleanup" 
-			}).start();
+			 "--localdir", clientA.get("localdir"),
+			 "up",
+			 "--no-cleanup" 
+		}).start();
+				
 		Thread.sleep(1000);
+		
 		new CommandLineClient(new String[] { 
-				 "--localdir", clientA.get("localdir"),
-				 "restore",
-				 "--date=2s",
-				 "file1"
-			}).start();
+			 "--localdir", clientA.get("localdir"),
+			 "restore",
+			 "--date=2s",
+			 "file1"
+		}).start();
 		
 		assertTrue(new File(clientA.get("localdir"),"file1").exists());
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
