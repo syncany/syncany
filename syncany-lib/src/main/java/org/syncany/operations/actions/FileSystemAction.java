@@ -43,7 +43,18 @@ import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
+import org.syncany.util.NormalizedPath;
 
+/**
+ * File system actions perform operations on the local disk -- creating, updating and
+ * deleting files. Given an expected and a new {@link FileVersion} (namely file1 and file2),
+ * the concrete implementation of a file system action performs an action on the file. 
+ * 
+ * <p>Implementations of this class treat file1 and file2 differently, depending on what
+ * action they implement. 
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class FileSystemAction {
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName()); 
 	

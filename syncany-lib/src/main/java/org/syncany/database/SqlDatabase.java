@@ -188,11 +188,11 @@ public class SqlDatabase {
 		fileVersionDao.removeFileVersions(keepVersionsCount);		
 	}
 	
-	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
+	public void removeSmallerOrEqualFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
 		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}
 	
-	public void removeDeletedVersions() throws SQLException {
+	public void removeDeletedFileVersions() throws SQLException {
 		fileVersionDao.removeDeletedVersions();
 	}
 

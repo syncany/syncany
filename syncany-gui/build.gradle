@@ -7,8 +7,8 @@ dependencies {
     
     compile			project(':syncany-plugins:syncany-plugin-ftp')
 	compile			project(':syncany-plugins:syncany-plugin-webdav')
-	compile			project(":syncany-plugins:syncany-plugin-sftp")
-	compile			project(":syncany-plugins:syncany-plugin-rest")
+	//compile			project(":syncany-plugins:syncany-plugin-sftp")
+	//compile			project(":syncany-plugins:syncany-plugin-rest")
 	  
 	runtime			project(':syncany-plugins:syncany-plugin-gui-ftp')
 	runtime			project(':syncany-plugins:syncany-plugin-gui-webdav')

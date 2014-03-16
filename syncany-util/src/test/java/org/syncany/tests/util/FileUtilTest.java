@@ -32,10 +32,10 @@ import java.nio.file.attribute.PosixFilePermissions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.syncany.operations.actions.NormalizedPath;
 import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.FileUtil;
 import org.syncany.util.EnvironmentUtil.OperatingSystem;
+import org.syncany.util.FileUtil;
+import org.syncany.util.NormalizedPath;
 
 public class FileUtilTest {
 	private OperatingSystem originalOperatingSystem;
@@ -224,13 +224,5 @@ public class FileUtilTest {
 		assertEquals("/home/philipp/file:with:colons", NormalizedPath.get(null, "/home/philipp/file:with:colons").toString());
 		assertEquals("/home/philipp/file\\with\\backslashes.txt", NormalizedPath.get(null, "/home/philipp/file\\with\\backslashes.txt").toString());
 		assertEquals("/home/philipp/folder\\with\\backslashes", NormalizedPath.get(null, "/home/philipp/folder\\with\\backslashes/").toString());		
-	}
-	
-	@Test
-	public void testGetUnixParentPath() {
-		assertEquals("/parent", FileUtil.getUnixParentPath("/parent/folder"));
-		assertEquals("/parent", FileUtil.getUnixParentPath("/parent/folder/"));
-		assertEquals("/", FileUtil.getUnixParentPath("/parent"));
-		assertEquals("/", FileUtil.getUnixParentPath("/parent/"));
-	}
+	}	
 }

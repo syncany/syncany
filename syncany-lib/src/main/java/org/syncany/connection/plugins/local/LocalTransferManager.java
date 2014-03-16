@@ -20,6 +20,7 @@ package org.syncany.connection.plugins.local;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,6 +34,7 @@ import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -66,14 +68,14 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public LocalTransferManager(LocalConnection connection) {
 		super(connection);
 
-		this.repoPath = connection.getRepositoryPath();
-		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath() + File.separator + "multichunks");
-		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath() + File.separator + "databases");
+		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
+		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
+		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
 	}
 
 	@Override
 	public void connect() throws StorageException {
-		if (repoPath == null || !repoPath.exists() || !repoPath.canRead() || !repoPath.canWrite() || !repoPath.isDirectory()) {
+		if (repoPath == null) {
 			throw new StorageException("Repository folder '" + repoPath + "' does not exist or is not writable.");
 		}
 	}
@@ -231,7 +233,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean hasWriteAccess() {
+	public boolean repoHasWriteAccess() {		
 		return repoPath.getParentFile().canWrite();
 	}
 
@@ -241,8 +243,16 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repoIsEmpty() throws StorageException {
-		String[] listResult = repoPath.list();		
-		return (listResult != null) ? listResult.length == 0 : true;
+	public boolean repoIsValid() throws StorageException {
+		final RepoRemoteFile repoRemoteFile = new RepoRemoteFile();
+		
+		String[] listRepoFile = repoPath.list(new FilenameFilter() {			
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.equals(repoRemoteFile.getName());
+			}
+		});
+				
+		return (listRepoFile != null) ? listRepoFile.length == 0 : true;
 	}
 }

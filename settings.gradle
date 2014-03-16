@@ -13,6 +13,4 @@ include 'syncany-plugins:syncany-plugin-gui-sftp'
 include 'syncany-plugins:syncany-plugin-gui-webdav'
 
 include 'syncany-plugins:syncany-plugin-ftp'
-include 'syncany-plugins:syncany-plugin-rest'
 include 'syncany-plugins:syncany-plugin-webdav'
-include 'syncany-plugins:syncany-plugin-sftp'

@@ -137,12 +137,18 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 	}
 
 	@Override
-	public String getPasswordCallback() {
+	public void notifyCreateMasterKey() {
+		
+	}
+
+	@Override
+	public String askPassword() {
 		return password;
 	}
 
 	@Override
-	public void notifyCreateMasterKey() {
-		
+	public boolean askRetryPassword() {
+		// TODO throw something
+		return false;
 	}
 }

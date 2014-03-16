@@ -22,6 +22,10 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.ftpserver.FtpServer;
@@ -41,7 +45,8 @@ import org.syncany.tests.util.TestFileUtil;
  *
  */
 public class EmbeddedTestFtpServer {
-	// FTP Server
+	private static final Logger logger = Logger.getLogger(EmbeddedTestFtpServer.class.getSimpleName());
+	
 	public static String HOST = "127.0.0.1";
 	public static String HOST_WRONG = "noHost";
 	
@@ -51,20 +56,41 @@ public class EmbeddedTestFtpServer {
 	public static String USER2 = "otherUser";
 	public static String PASSWORD1 = "password";
 	
+	private static AtomicInteger serverStartCount = new AtomicInteger(0); 
 	private static FtpServer server;
 	private static File rootDir;
+	private static File userFile;
 	
 	public static void stopServer() {
+		if (serverStartCount.addAndGet(-1) > 0) {
+			logger.log(Level.INFO, "Not stopping FTP Server (not necessary; " + serverStartCount.get() + " clients still running) ...");
+			return; 
+		}
+		
+		logger.log(Level.INFO, "Stopping FTP Server ...");
+		
 		server.stop();
 		rootDir.delete();
+		userFile.delete();
 	}
 	
 	public static void startServer() throws Exception {
+		if (serverStartCount.addAndGet(1) > 1) {
+			logger.log(Level.INFO, "Not starting FTP Server (already running) ...");
+			return; // already started!
+		}
+		
+		logger.log(Level.INFO, "Starting FTP Server ...");
+
+		userFile = File.createTempFile("testftpuserfile", "tmp");
+		userFile.deleteOnExit();
+		
 		rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		rootDir.deleteOnExit();
 
+		// Add FTP users
 		PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
-		userManagerFactory.setFile(new File("user.properties"));
+		userManagerFactory.setFile(userFile);
 		userManagerFactory.setPasswordEncryptor(new SaltedPasswordEncryptor());
 		UserManager um = userManagerFactory.createUserManager();
 		
@@ -78,17 +104,24 @@ public class EmbeddedTestFtpServer {
 		
 		um.save(user1);
 
+		// Create server
 		FtpServerFactory serverFactory = new FtpServerFactory();
 		serverFactory.setUserManager(um);
+		
+		// Fix port issue (parallel tests are run in multiple JVMs in Travis)
+		PORT = PORT + new Random().nextInt(10000);
 		ListenerFactory factory = new ListenerFactory();
-		factory.setPort(PORT);
-		serverFactory.addListener("default", factory.createListener());
+		factory.setPort(PORT);		
+		
+		// File system 
 		NativeFileSystemFactory nfs = new NativeFileSystemFactory();
 		nfs.setCaseInsensitive(false);
 		nfs.setCreateHome(true);
+		
+		serverFactory.addListener("default", factory.createListener());
 		serverFactory.setFileSystem(nfs);
+		
 		server = serverFactory.createServer();
-
 		server.start();
 	}
 	

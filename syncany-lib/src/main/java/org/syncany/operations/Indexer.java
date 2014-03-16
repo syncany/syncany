@@ -499,7 +499,7 @@ public class Indexer {
 		@Override
 		public void onMultiChunkOpen(MultiChunk multiChunk) {
 			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
-			multiChunkEntry = new MultiChunkEntry(new MultiChunkId(multiChunk.getId()), multiChunk.getSize());
+			multiChunkEntry = new MultiChunkEntry(new MultiChunkId(multiChunk.getId()), 0); // size unknown so far
 		}
 
 		@Override
@@ -511,6 +511,8 @@ public class Indexer {
 		@Override
 		public void onMultiChunkClose(MultiChunk multiChunk) {
 			logger.log(Level.FINER, "- /MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
+			
+			multiChunkEntry.setSize(multiChunk.getSize());
 			
 			newDatabaseVersion.addMultiChunk(multiChunkEntry);
 			multiChunkEntry = null;

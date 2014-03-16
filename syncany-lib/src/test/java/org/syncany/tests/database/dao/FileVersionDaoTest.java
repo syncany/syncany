@@ -78,11 +78,11 @@ public class FileVersionDaoTest {
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
-		Map<String, FileVersion> fileTreeWithOneDatabaseVersion = fileVersionDao.getFileTreeAtDate(toDate("2014-01-01 18:00:00.000000"));
-		Map<String, FileVersion> fileTreeWithTwoDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-02 18:00:00.000000"));
-		Map<String, FileVersion> fileTreeWithThreeDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-03 18:00:00.000000"));
-		Map<String, FileVersion> fileTreeWithFourDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-04 18:00:00.000000"));
-		Map<String, FileVersion> fileTreeWithFiveDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-05 18:00:00.000000"));
+		Map<String, FileVersion> fileTreeWithOneDatabaseVersion = fileVersionDao.getFileTreeAtDate(toDate("2014-01-01 18:00:00.000+0100"));
+		Map<String, FileVersion> fileTreeWithTwoDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-02 18:00:00.000+0100"));
+		Map<String, FileVersion> fileTreeWithThreeDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-03 18:00:00.000+0100"));
+		Map<String, FileVersion> fileTreeWithFourDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-04 18:00:00.000+0100"));
+		Map<String, FileVersion> fileTreeWithFiveDatabaseVersions = fileVersionDao.getFileTreeAtDate(toDate("2014-01-05 18:00:00.000+0100"));
 		
 		// Tests
 		
@@ -160,28 +160,28 @@ public class FileVersionDaoTest {
 		
 		// - By Path: File 1
 		assertNotNull(file1ByPath);
-		assertEquals(1, file1ByPath.getVersion());
+		assertEquals(1, (long) file1ByPath.getVersion());
 		assertFalse("rwxrw-r--".equals(file1ByPath.getPosixPermissions()));
 		assertNotNull(file1ByPath.getChecksum());
 		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1ByPath.getChecksum().toString());
 		
 		// - By Path: File 2
 		assertNotNull(file2ByPath);
-		assertEquals(1, file2ByPath.getVersion());
+		assertEquals(1, (long) file2ByPath.getVersion());
 		assertNotNull(file2ByPath.getChecksum());
 		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2ByPath.getChecksum().toString());		
-		assertEquals(toDate("2014-01-02 16:26:09.123"), file2ByPath.getLastModified());
-		assertEquals(toDate("2014-01-02 16:26:09.201"), file2ByPath.getUpdated());
+		assertEquals(toDate("2014-01-02 16:26:09.123+0100"), file2ByPath.getLastModified());
+		assertEquals(toDate("2014-01-02 16:26:09.201+0100"), file2ByPath.getUpdated());
 		assertEquals("rw-r--r--", file2ByPath.getPosixPermissions());
 		assertNull(file2ByPath.getDosAttributes());
 		
 		// - By Path: File 3
 		assertNotNull(file3ByPath);
-		assertEquals(1, file3ByPath.getVersion());
+		assertEquals(1, (long) file3ByPath.getVersion());
 		assertNotNull(file3ByPath.getChecksum());
 		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3ByPath.getChecksum().toString());
-		assertEquals(toDate("2014-01-03 16:26:09.666"), file3ByPath.getLastModified());
-		assertEquals(toDate("2014-01-03 16:26:09.341"), file3ByPath.getUpdated());
+		assertEquals(toDate("2014-01-03 16:26:09.666+0100"), file3ByPath.getLastModified());
+		assertEquals(toDate("2014-01-03 16:26:09.341+0100"), file3ByPath.getUpdated());
 		assertEquals("rw-r--r--", file3ByPath.getPosixPermissions());
 		assertNull(file3ByPath.getDosAttributes());		
 		
@@ -217,17 +217,17 @@ public class FileVersionDaoTest {
 		
 		// - By FileHistoryId: File 1 (New! Not version 2!)
 		assertNotNull(file1ById);
-		assertEquals(1, file1ById.getVersion());
+		assertEquals(1, (long) file1ById.getVersion());
 		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1ById.getChecksum().toString());
 		
 		// - By FileHistoryId: File 2
 		assertNotNull(file2ById);
-		assertEquals(1, file2ById.getVersion());
+		assertEquals(1, (long) file2ById.getVersion());
 		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2ById.getChecksum().toString());
 		
 		// - By FileHistoryId: File 3
 		assertNotNull(file3ById);				
-		assertEquals(1, file3ById.getVersion());
+		assertEquals(1, (long) file3ById.getVersion());
 		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3ById.getChecksum().toString());
 		
 		// - By FileHistoryId: File 4 (does not exist)		
@@ -239,6 +239,6 @@ public class FileVersionDaoTest {
 	}
 
 	private Date toDate(String dateString) throws ParseException {
-		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(dateString);
+		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(dateString);
 	}
 }

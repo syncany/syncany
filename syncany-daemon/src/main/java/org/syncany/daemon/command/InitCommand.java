@@ -206,4 +206,10 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	public void disposeCommand() {
 		
 	}
+
+	@Override
+	public String getPasswordCallback() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

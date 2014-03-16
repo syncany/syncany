@@ -17,10 +17,13 @@
  */
 package org.syncany;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.StorageException;
+import org.syncany.crypto.CipherException;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
@@ -75,14 +78,14 @@ public class Client {
 	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
 	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "release";
 	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "version";
-	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "revision";	
+	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "revision";
 	private static final Properties applicationProperties = new Properties();
-	
+
 	protected Config config;
 
 	static {
 		InputStream globalPropertiesInputStream = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_RESOURCE);
-		
+
 		try {
 			applicationProperties.load(globalPropertiesInputStream);
 		}
@@ -90,11 +93,11 @@ public class Client {
 			throw new RuntimeException("Cannot load application properties.", e);
 		}
 	}
-	
+
 	public static Properties getApplicationProperties() {
 		return applicationProperties;
 	}
-	
+
 	public static boolean isApplicationRelease() {
 		return Boolean.parseBoolean(applicationProperties.getProperty(APPLICATION_PROPERTIES_RELEASE_KEY));
 	}
@@ -102,19 +105,19 @@ public class Client {
 	public static String getApplicationVersion() {
 		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
 	}
-	
+
 	public static String getApplicationRevision() {
 		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
 	}
-		
+
 	public Client() {
 		// Fressen
 	}
-	
+
 	public void setConfig(Config config) {
 		this.config = config;
 	}
-	
+
 	public Config getConfig() {
 		return config;
 	}
@@ -122,45 +125,45 @@ public class Client {
 	public UpOperationResult up() throws Exception {
 		return up(new UpOperationOptions());
 	}
-	
+
 	public UpOperationResult up(UpOperationOptions options) throws Exception {
 		return new UpOperation(config, options, null).execute();
 	}
-	
+
 	public DownOperationResult down() throws Exception {
 		return down(new DownOperationOptions());
 	}
-	
+
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
 		return new DownOperation(config, options, null).execute();
 	}
-	
+
 	public SyncOperationResult sync() throws Exception {
 		return sync(new SyncOperationOptions());
 	}
-	
+
 	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
 		return new SyncOperation(config, options, null).execute();
 	}
 
 	public ChangeSet status() throws Exception {
-		return status(new StatusOperationOptions());		
+		return status(new StatusOperationOptions());
 	}
-	
+
 	public ChangeSet status(StatusOperationOptions options) throws Exception {
-		return (new StatusOperation(config, options).execute()).getChangeSet();		
-	}	
+		return (new StatusOperation(config, options).execute()).getChangeSet();
+	}
 
 	public LsRemoteOperationResult lsRemote() throws Exception {
 		return new LsRemoteOperation(config).execute();
 	}
 
 	public RestoreOperationResult restore(RestoreOperationOptions options) throws Exception {
-		return new RestoreOperation(config, options).execute();		
+		return new RestoreOperation(config, options).execute();
 	}
-	
+
 	public LogOperationResult log(LogOperationOptions options) throws Exception {
-		return new LogOperation(config, options).execute();		
+		return new LogOperation(config, options).execute();
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
@@ -172,31 +175,33 @@ public class Client {
 		};
 		new WatchOperation(config, options, wl).execute();		
 	}	
-	
+
 	public GenlinkOperationResult genlink() throws Exception {
 		return new GenlinkOperation(config).execute();
 	}
-	
+
 	public InitOperationResult init(InitOperationOptions options) throws Exception {
-        return init(options, null);              
+		return init(options, null);
 	}
-	
+
 	public InitOperationResult init(InitOperationOptions options, InitOperationListener listener) throws Exception {
-        return new InitOperation(options, listener).execute();                
+		return new InitOperation(options, listener).execute();
 	}
-	
-	public ConnectOperationResult connect(ConnectOperationOptions options) throws Exception {
+
+	public ConnectOperationResult connect(ConnectOperationOptions options) throws IOException, StorageException, CipherException {
 		return connect(options, null);
 	}
-	
-	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws Exception {
-        return new ConnectOperation(options, listener).execute();                
+
+	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws IOException, StorageException,
+			CipherException {
+		
+		return new ConnectOperation(options, listener).execute();
 	}
-	
+
 	public CleanupOperationResult cleanup() throws Exception {
 		return new CleanupOperation(config, new CleanupOperationOptions()).execute();
 	}
-	
+
 	public CleanupOperationResult cleanup(CleanupOperationOptions options) throws Exception {
 		return new CleanupOperation(config, options).execute();
 	}

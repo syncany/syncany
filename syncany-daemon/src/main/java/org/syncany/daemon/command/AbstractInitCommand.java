@@ -42,7 +42,7 @@ public abstract class AbstractInitCommand extends Command {
 		configTO.setMachineName(getDefaultMachineName());
 		configTO.setMasterKey(masterKey); // can be null
 
-		configTO.setConnection(connectionTO);
+		configTO.setConnectionTO(connectionTO);
 		
 		return configTO;
 	}		

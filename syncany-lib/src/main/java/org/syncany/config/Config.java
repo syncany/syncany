@@ -55,7 +55,7 @@ public class Config {
 	public static final String DIR_DATABASE = "db";
 	public static final String DIR_LOG = "logs";
 	public static final String FILE_CONFIG = "config.xml";
-	public static final String FILE_REPO = "repo";
+	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
 		
 	private byte[] repoId;
@@ -138,7 +138,7 @@ public class Config {
 		//  chunker = Chunker.getInstance(repoTO.getChunker().getType());
 		//  chunker.init(repoTO.getChunker().getSettings());
 		
-		chunker = new FixedChunker(2*1024*1024, "SHA1");
+		chunker = new FixedChunker(512*1024, "SHA1");
 		
 		/*new MimeTypeChunker(
 			new FixedChunker(64*1024, "SHA1"),

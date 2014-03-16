@@ -23,6 +23,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.cli.CliPluginsTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
 import org.syncany.tests.cli.DownCommandTest;
+import org.syncany.tests.cli.GenlinkCommandTest;
 import org.syncany.tests.cli.InitCommandTest;
 import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
@@ -33,16 +34,17 @@ import org.syncany.tests.cli.WatchCommandTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+	CliPluginsTest.class,
 	CommandLineInterfaceTest.class,
 	DownCommandTest.class,
+	GenlinkCommandTest.class,
+	InitCommandTest.class,
 	LogCommandTest.class,
 	LsRemoteCommandTest.class,
 	StatusCommandTest.class,
 	SyncCommandTest.class,
 	UpCommandTest.class,	
-	WatchCommandTest.class,
-	CliPluginsTest.class,
-	InitCommandTest.class
+	WatchCommandTest.class
 })
 public class CliTestSuite {
 	// This class executes all tests

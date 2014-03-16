@@ -48,12 +48,13 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.InitOperation.InitOperationListener;
 import org.syncany.operations.InitOperation.InitOperationOptions;
 import org.syncany.operations.InitOperation.InitOperationResult;
+import org.syncany.operations.InitOperation.InitResultCode;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand implements InitOperationListener {
 	public static final int REPO_ID_LENGTH = 32;
-	public static final int PASSWORD_MIN_LENGTH = 8;
+	public static final int PASSWORD_MIN_LENGTH = 10;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 	
 	@Override
@@ -63,10 +64,25 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
-		InitOperationResult operationResult = client.init(operationOptions, this);
+		boolean retryNeeded = true;
+		boolean performOperation = true;
 		
-		printResults(operationResult);
+		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
+
+		while (retryNeeded && performOperation) {
+			InitOperationResult operationResult = client.init(operationOptions, this);			
+			printResults(operationResult);
+			
+			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
+
+			if (retryNeeded) {
+				performOperation = isInteractive && askRetryConnection();
+			
+				if (performOperation) {
+					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
+				}				
+			}
+		} 		
 		
 		return 0;		
 	}
@@ -75,47 +91,90 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
 		OptionParser parser = new OptionParser();
+		OptionSpec<Void> optionCreateTargetPath = parser.acceptsAll(asList("t", "create-target"));
 		OptionSpec<Void> optionAdvanced = parser.acceptsAll(asList("a", "advanced"));
 		OptionSpec<Void> optionNoCompression = parser.acceptsAll(asList("G", "no-compression"));
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("E", "no-encryption"));
-		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("p", "plugin")).withRequiredArg();
-		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("P", "plugin-option")).withRequiredArg();
+		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
+		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
+		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
 		
 		OptionSet options = parser.parse(operationArguments);	
 						
-		ConnectionTO connectionTO = initPluginWithOptions(options, optionPlugin, optionPluginOpts);
+		ConnectionTO connectionTO = createConnectionTOFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
 		
+		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
 		
-		String password = null;
-		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, advancedModeEnabled);
+		// --no-interaction
+		isInteractive = !options.has(optionNonInteractive);
+
+		// Cipher specs: --no-encryption, --advanced 
+		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 		
+		// Chunkers (not configurable)
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
+
+		// Compression: --no-compression
 		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 				
-		if (encryptionEnabled) {			
-			password = askPasswordAndConfirm();
-		}
-			
-		ConfigTO configTO = createConfigTO(localDir, null, connectionTO);		
+		// Create configTO and repoTO
+		ConfigTO configTO = createConfigTO(connectionTO);		
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 		
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setRepoTO(repoTO); 
 		
+		operationOptions.setCreateTargetPath(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
-		operationOptions.setPassword(password);
+		operationOptions.setPassword(null); // set by callback in operation 
 		
 		return operationOptions;
 	}		
 
 	private void printResults(InitOperationResult operationResult) {
-		printLink(operationResult.getGenLinkResult(), false);
+		if (operationResult.getResultCode() == InitResultCode.OK) {
+			out.println();
+			out.println("Repository created, and local folder initialized. To share the same repository");
+			out.println("with others, you can share this link:");
+
+			printLink(operationResult.getGenLinkResult(), false);
+		}
+		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_REPO_CANNOT_CREATE) {
+			out.println();
+			out.println("ERROR: Cannot initialize repository (not writable, or -t not set).");
+			out.println();
+			out.println("Make sure that the repository path is writable by the connection user");
+			out.println("and that the --create-target/-t option is set if you want to create");
+			out.println("the remote repository folder/path.");
+			out.println();
+		}
+		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_CONNECTION) {
+			out.println();
+			out.println("ERROR: Cannot initialize repository (broken connection).");
+			out.println();
+			out.println("Make sure that you have a working Internet connection and that ");
+			out.println("the connection details (esp. the hostname/IP) are correct.");				
+			out.println();
+		}
+		else if (operationResult.getResultCode() == InitResultCode.NOK_REPO_EXISTS) {
+			out.println();
+			out.println("ERROR: Cannot initialize repository (already exists).");
+			out.println();
+			out.println("If you want to connect to an existing repository, please");
+			out.println("use the 'connect' command.");
+			out.println();
+		}
+		else {
+			out.println();
+			out.println("ERROR: Cannot connect to repository. Unknown error code: "+operationResult.getResultCode());
+			out.println();
+		}		
 	}
 
 	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
@@ -133,7 +192,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return transformersTO;
 	}
 
-	private List<CipherSpec> getCipherSuites(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
+	private List<CipherSpec> getCipherSpecs(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
 		List<CipherSpec> cipherSpecs = new ArrayList<CipherSpec>();
 		
 		if (encryptionEnabled) {
@@ -168,13 +227,13 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		boolean unlimitedStrengthNeeded = false;
 		
 		while (continueLoop) {
-			String commaSeparatedCipherIdStr = console.readLine("Cipher Suite: ");			
-			String[] cipherSuiteIdStrs = commaSeparatedCipherIdStr.split(",");
+			String commaSeparatedCipherIdStr = console.readLine("Cipher(s): ");			
+			String[] cipherSpecIdStrs = commaSeparatedCipherIdStr.split(",");
 			
 			// Choose cipher
 			try {
 				// Add cipher suites
-				for (String cipherSpecIdStr : cipherSuiteIdStrs) {
+				for (String cipherSpecIdStr : cipherSpecIdStrs) {
 					Integer cipherSpecId = Integer.parseInt(cipherSpecIdStr);				
 					CipherSpec cipherSpec = availableCipherSpecs.get(cipherSpecId);
 					
@@ -228,13 +287,21 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	protected String askPasswordAndConfirm() {
 		out.println();
 		out.println("The password is used to encrypt data on the remote storage.");
-		out.println("Wisely choose you must!");
+		out.println("Choose wisely!");
 		out.println();
 		
 		String password = null;
 		
 		while (password == null) {
-			char[] passwordChars = console.readPassword("Password: ");
+			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
+			
+			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
+				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
+				out.println();
+				
+				continue;
+			}
+			
 			char[] confirmPasswordChars = console.readPassword("Confirm: ");
 			
 			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
@@ -244,19 +311,12 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 				continue;
 			} 
 			
-			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
-				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
-				out.println();
-				
-				continue;
-			}
-			
 			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
 				out.println();
 				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 				
-				if (!yesno.toLowerCase().startsWith("y")) {
+				if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
 					out.println();
 					continue;
 				}
@@ -336,5 +396,10 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	public void notifyGenerateMasterKey() {
 		out.println();
 		out.println("Generating master key from password (this might take a while) ...");
+	}
+
+	@Override
+	public String getPasswordCallback() {
+		return askPasswordAndConfirm();
 	}
 }
