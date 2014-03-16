@@ -25,6 +25,7 @@ import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.ConfigHelperTest;
+import org.syncany.tests.connection.plugins.PluginOptionSpecTest;
 import org.syncany.tests.connection.plugins.PluginsTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.connection.plugins.local.LocalTransferManagerPluginTest;
@@ -61,6 +62,7 @@ import org.syncany.tests.util.FileUtilTest;
 	
 	// Connection
 	PluginsTest.class,
+	PluginOptionSpecTest.class,
 	LocalConnectionPluginTest.class,
 	LocalTransferManagerPluginTest.class,
 	UploadInterruptedTest.class,
