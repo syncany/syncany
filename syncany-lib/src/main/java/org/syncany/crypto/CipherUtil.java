@@ -129,7 +129,7 @@ public class CipherUtil {
 	 */
 	public static void enableUnlimitedStrength() throws CipherException {
 		if (!unlimitedStrengthEnabled.get()) {
-			logger.log(Level.INFO, "Enabling unlimited strength/crypto ...");
+			logger.log(Level.FINE, "- Enabling unlimited strength/crypto ...");
 
 			try {
 				Field field = Class.forName("javax.crypto.JceSecurity").getDeclaredField("isRestricted");
@@ -195,8 +195,6 @@ public class CipherUtil {
 	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize)
 			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		
-		logger.log(Level.INFO, "Creating secret key using ...");
-
 		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
 		hkdf.init(new HKDFParameters(inputKeyMaterial, inputSalt, KEY_DERIVATION_INFO));
 
@@ -224,7 +222,7 @@ public class CipherUtil {
 
 	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws CipherException {
 		try {
-			logger.log(Level.INFO, "Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] { MASTER_KEY_DERIVATION_FUNCTION,
+			logger.log(Level.FINE, "- Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] { MASTER_KEY_DERIVATION_FUNCTION,
 					MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE });
 	
 			SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);

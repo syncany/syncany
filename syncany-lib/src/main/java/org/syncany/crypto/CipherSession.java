@@ -128,7 +128,7 @@ public class CipherSession {
 		
 		// Remove key if use more than X times 
 		if (secretKeyCacheEntry != null && secretKeyCacheEntry.getUseCount() >= secretKeyWriteReuseCount) {
-			logger.log(Level.INFO, "Removed WRITE secret key from cache, because it was used "+secretKeyCacheEntry.getUseCount()+" times.");				
+			logger.log(Level.FINE, "- Removed WRITE secret key from cache, because it was used "+secretKeyCacheEntry.getUseCount()+" times.");				
 
 			secretKeyWriteCache.remove(cipherSpec);
 			secretKeyCacheEntry = null;
@@ -138,7 +138,7 @@ public class CipherSession {
 		if (secretKeyCacheEntry != null) {					
 			secretKeyCacheEntry.increaseUseCount();
 			
-			logger.log(Level.INFO, "Using CACHED WRITE secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", with salt "+StringUtil.toHex(secretKeyCacheEntry.getSaltedSecretKey().getSalt()));
+			logger.log(Level.FINE, "- Using CACHED WRITE secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", with salt "+StringUtil.toHex(secretKeyCacheEntry.getSaltedSecretKey().getSalt()));
 			return secretKeyCacheEntry.getSaltedSecretKey();
 		}
 		else {			
@@ -147,7 +147,7 @@ public class CipherSession {
 			secretKeyCacheEntry = new SecretKeyCacheEntry(saltedSecretKey);
 			secretKeyWriteCache.put(cipherSpec, secretKeyCacheEntry);
 			
-			logger.log(Level.INFO, "Created NEW WRITE secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", and added to cache, with salt "+StringUtil.toHex(saltedSecretKey.getSalt()));		
+			logger.log(Level.FINE, "- Created NEW WRITE secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", and added to cache, with salt "+StringUtil.toHex(saltedSecretKey.getSalt()));		
 			return saltedSecretKey;
 		}				
 	}	
@@ -173,7 +173,7 @@ public class CipherSession {
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyReadCache.get(cipherSpecWithSalt);
 		
 		if (secretKeyCacheEntry != null) {
-			logger.log(Level.INFO, "Using CACHED READ secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", with salt "+StringUtil.toHex(salt));
+			logger.log(Level.FINE, "- Using CACHED READ secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", with salt "+StringUtil.toHex(salt));
 			return secretKeyCacheEntry.getSaltedSecretKey();
 		}
 		else {
@@ -181,7 +181,7 @@ public class CipherSession {
 				CipherSpecWithSalt firstKey = secretKeyReadCache.keySet().iterator().next();
 				secretKeyReadCache.remove(firstKey);
 				
-				logger.log(Level.INFO, "Removed oldest READ secret key from cache.");				
+				logger.log(Level.FINE, "- Removed oldest READ secret key from cache.");				
 			}
 			
 			SaltedSecretKey saltedSecretKey = createSaltedSecretKey(cipherSpec, salt);
@@ -189,7 +189,7 @@ public class CipherSession {
 			
 			secretKeyReadCache.put(cipherSpecWithSalt, secretKeyCacheEntry);
 									
-			logger.log(Level.INFO, "Created NEW READ secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", and added to cache, with salt "+StringUtil.toHex(salt));
+			logger.log(Level.FINE, "- Created NEW READ secret key "+secretKeyCacheEntry.getSaltedSecretKey().getAlgorithm()+", and added to cache, with salt "+StringUtil.toHex(salt));
 			return saltedSecretKey;
 		}
 	}		

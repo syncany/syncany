@@ -23,6 +23,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.cli.CliPluginsTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
 import org.syncany.tests.cli.DownCommandTest;
+import org.syncany.tests.cli.GenlinkCommandTest;
 import org.syncany.tests.cli.InitCommandTest;
 import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
@@ -36,6 +37,7 @@ import org.syncany.tests.cli.WatchCommandTest;
 	CliPluginsTest.class,
 	CommandLineInterfaceTest.class,
 	DownCommandTest.class,
+	GenlinkCommandTest.class,
 	InitCommandTest.class,
 	LogCommandTest.class,
 	LsRemoteCommandTest.class,
