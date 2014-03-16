@@ -332,8 +332,8 @@ public class UpOperation extends Operation {
 		VectorClock newVectorClock = findNewVectorClock(lastVectorClock);
 
 		// Index
-		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), watchEventListener);
-		Indexer indexer = new Indexer(config, deduper);
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
+		Indexer indexer = new Indexer(config, deduper, watchEventListener);
 
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
 
