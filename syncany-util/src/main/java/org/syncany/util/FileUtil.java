@@ -17,10 +17,8 @@
  */
 package org.syncany.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,10 +33,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * A file utility class
@@ -75,136 +69,6 @@ public class FileUtil {
 		}
 	}
 	
-	public static String getDatabaseBasename(String filename) {
-		String databaseFilename = toDatabasePath(filename);
-		int lastIndexOfSlash = toDatabasePath(databaseFilename).lastIndexOf("/");
-		
-		if (lastIndexOfSlash == -1) {
-			return databaseFilename;
-		}
-		else {
-			return databaseFilename.substring(lastIndexOfSlash+1);
-		}
-	}
-	
-	public static String getDatabaseParentDirectory(String filename) {
-		String databaseFilename = toDatabasePath(filename);
-		int lastIndexOfSlash = toDatabasePath(databaseFilename).lastIndexOf("/");
-		
-		if (lastIndexOfSlash == -1) {
-			return databaseFilename;
-		}
-		else {
-			return databaseFilename.substring(0, lastIndexOfSlash);
-		}
-	}
-	
-	public static String toDatabasePath(String path) {
-		if (EnvironmentUtil.isWindows()) {
-			return path.toString().replaceAll("\\\\", "/");
-		}
-		else {
-			return path;
-		}
-	}
-
-	public static String getAbsoluteParentDirectory(File file) {
-		return file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(File.separator));
-	}
-
-	public static String getAbsoluteParentDirectory(String absFilePath) {
-		return absFilePath.substring(0, absFilePath.lastIndexOf(File.separator));
-	}
-
-	public static String getRelativeParentDirectory(File base, File file) {
-		return getRelativePath(base, new File(getAbsoluteParentDirectory(file)));
-	}
-
-	public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {
-		return getRecursiveFileList(root, false, false);
-	}
-
-	public static List<File> getRecursiveFileList(File root, boolean includeDirectories, boolean followSymlinkDirectories)
-			throws FileNotFoundException {
-		if (!root.isDirectory() || !root.canRead() || !root.exists()) {
-			throw new FileNotFoundException("Invalid directory " + root);
-		}
-
-		List<File> result = getRecursiveFileListNoSort(root, includeDirectories, followSymlinkDirectories);
-		Collections.sort(result);
-
-		return result;
-	}
-
-	private static List<File> getRecursiveFileListNoSort(File root, boolean includeDirectories, boolean followSymlinkDirectories) {
-		List<File> result = new ArrayList<File>();
-		List<File> filesDirs = Arrays.asList(root.listFiles());
-
-		for (File file : filesDirs) {
-			boolean isDirectory = file.isDirectory();
-			boolean isSymlinkDirectory = isDirectory && FileUtil.isSymlink(file);
-			boolean includeFile = !isDirectory || includeDirectories;
-			boolean followDirectory = (isSymlinkDirectory && followSymlinkDirectories) || (isDirectory && !isSymlinkDirectory);
-
-			if (includeFile) {
-				result.add(file);
-			}
-
-			if (followDirectory) {
-				List<File> deeperList = getRecursiveFileListNoSort(file, includeDirectories, followSymlinkDirectories);
-				result.addAll(deeperList);
-			}
-		}
-
-		return result;
-	}
-
-	/**
-	 * Retrieves the extension of a file.
-	 * Example: "html" in the case of "/htdocs/index.html"
-	 *
-	 * @param file
-	 * @return
-	 */
-	public static String getExtension(File file) {
-		return getExtension(file.getName(), false);
-	}
-
-	public static String getExtension(File file, boolean includeDot) {
-		return getExtension(file.getName(), includeDot);
-	}
-
-	public static String getExtension(String filename, boolean includeDot) {
-		int dot = filename.lastIndexOf(".");
-
-		if (dot == -1) {
-			return "";
-		}
-
-		return ((includeDot) ? "." : "") + filename.substring(dot + 1, filename.length());
-	}
-
-	/**
-	 * Retrieves the basename of a file.
-	 * Example: "index" in the case of "/htdocs/index.html"
-	 * 
-	 * @param file
-	 * @return
-	 */
-	public static String getBasename(File file) {
-		return getBasename(file.getName());
-	}
-
-	public static String getBasename(String filename) {
-		int dot = filename.lastIndexOf(".");
-
-		if (dot == -1) {
-			return filename;
-		}
-
-		return filename.substring(0, dot);
-	}
-
 	public static File getCanonicalFile(File file) {
 		try {
 			return file.getCanonicalFile();
@@ -212,10 +76,6 @@ public class FileUtil {
 		catch (IOException ex) {
 			return file;
 		}
-	}
-
-	public static void writeToFile(byte[] bytes, File file) throws IOException {
-		writeToFile(new ByteArrayInputStream(bytes), file);
 	}
 
 	public static void writeToFile(InputStream is, File file) throws IOException {
@@ -230,10 +90,6 @@ public class FileUtil {
 
 		is.close();
 		fos.close();
-	}
-
-	public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
-		appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
 	}
 
 	public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream) throws IOException {
@@ -323,10 +179,6 @@ public class FileUtil {
 		}
 
 		return fileLocked;
-	}
-
-	public static String getName(String fullName) {
-		return new File(fullName).getName();
 	}
 
 	public static boolean symlinksSupported() {
@@ -469,22 +321,4 @@ public class FileUtil {
 			return false;
 		}
 	}
-	
-
-	/**
-	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
-	 * symlinks into account. Returns <tt>true</tt> if a symlink exists even if its target file
-	 * does not exist and can hence not be read.
-	 * 
-	 * @param file A file
-	 * @return Returns <tt>true</tt> if the file can be read (or the symlink exists), <tt>false</tt> otherwise
-	 */
-	public static boolean canRead(File file) {
-		if (isSymlink(file)) {
-			return exists(file);
-		}
-		else {
-			return file.canRead();
-		}
-	}	
 }

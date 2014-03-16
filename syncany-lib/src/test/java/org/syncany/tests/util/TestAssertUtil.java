@@ -104,7 +104,7 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertConflictingFileExists(String originalFile, Map<String, File> actualFiles) {
-		String fileNameWithoutExtention = FileUtil.getBasename(originalFile);
+		String fileNameWithoutExtention = TestFileUtil.getBasename(originalFile);
 		Pattern conflictFilePattern = Pattern.compile(fileNameWithoutExtention + ".*conflicted.*");
 		
 		boolean conflictingFileFound = false;
