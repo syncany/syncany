@@ -141,7 +141,7 @@ public class ConfigHelperTest {
 		
 		// Test
 		assertNotNull(repoConfigTO);
-		assertNotNull(repoConfigTO.getChunker());
+		assertNotNull(repoConfigTO.getChunkerTO());
 		assertNotNull(repoConfigTO.getMultiChunker());
 		assertNotNull(repoConfigTO.getRepoId());
 		
@@ -155,8 +155,8 @@ public class ConfigHelperTest {
 			assertNull(repoConfigTO.getTransformers());
 		}
 		
-		assertEquals("fixed", repoConfigTO.getChunker().getType());
-		assertEquals(1, repoConfigTO.getChunker().getSettings().size());
+		assertEquals("fixed", repoConfigTO.getChunkerTO().getType());
+		assertEquals(1, repoConfigTO.getChunkerTO().getSettings().size());
 		assertEquals("zip", repoConfigTO.getMultiChunker().getType());
 		assertEquals(1, repoConfigTO.getMultiChunker().getSettings().size());
 		assertEquals("010203", StringUtil.toHex(repoConfigTO.getRepoId()));

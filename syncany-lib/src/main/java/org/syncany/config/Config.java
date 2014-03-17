@@ -159,10 +159,19 @@ public class Config {
 		);*/
 	}
 
-	private void initMultiChunker(RepoTO repoTO) {
+	private void initMultiChunker(RepoTO repoTO) throws ConfigException {
 		MultiChunkerTO multiChunkerTO = repoTO.getMultiChunker();
 
+		if (multiChunkerTO == null) {
+			throw new ConfigException("No multichunker in repository config.");			
+		}
+		
 		multiChunker = MultiChunker.getInstance(multiChunkerTO.getType());
+		
+		if (multiChunker == null) {
+			throw new ConfigException("Invalid multichunk type or settings: " + multiChunkerTO.getType());
+		}
+		
 		multiChunker.init(multiChunkerTO.getSettings());
 	}
 
@@ -179,7 +188,7 @@ public class Config {
 				Transformer transformer = Transformer.getInstance(transformerTO.getType());
 				
 				if (transformer == null) {
-					throw new Exception("Cannot find transformer '"+transformerTO.getType()+"'");
+					throw new ConfigException("Cannot find transformer '"+transformerTO.getType()+"'");
 				}
 				
 				if (transformer instanceof CipherTransformer) { // Dirty workaround
