@@ -100,7 +100,7 @@ public class RepoTO {
 		return transformers;
 	}
 
-	public void setTransformers(List<TransformerTO> transformers) {
+	public void setTransformerTOs(List<TransformerTO> transformers) {
 		this.transformers = (transformers != null) ? new ArrayList<TransformerTO>(transformers) : null;
 	}
 

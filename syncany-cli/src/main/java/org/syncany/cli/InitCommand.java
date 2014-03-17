@@ -341,7 +341,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		// Add to repo transfer object
 		repoTO.setChunker(chunkerTO);
 		repoTO.setMultiChunker(multiChunkerTO);
-		repoTO.setTransformers(transformersTO);
+		repoTO.setTransformerTOs(transformersTO);
 		
 		return repoTO;
 	}	

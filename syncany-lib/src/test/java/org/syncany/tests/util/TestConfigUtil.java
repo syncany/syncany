@@ -116,7 +116,7 @@ public class TestConfigUtil {
 
 		// Create TransformerTO
 		List<TransformerTO> transformerTOs = createTransformerTOs();
-		repoTO.setTransformers(transformerTOs);
+		repoTO.setTransformerTOs(transformerTOs);
 		return repoTO;
 	}
 
@@ -157,7 +157,7 @@ public class TestConfigUtil {
 		configTO.setMachineName("dummymachine");
 
 		RepoTO repoTO = new RepoTO();
-		repoTO.setTransformers(null);
+		repoTO.setTransformerTOs(null);
 		repoTO.setChunker(createFixedChunkerTO());
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
