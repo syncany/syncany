@@ -46,6 +46,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
@@ -166,7 +167,7 @@ public class UpOperation extends Operation {
 		localDatabase.persistDatabaseVersion(newDatabaseVersion);
 
 		if (options.cleanupEnabled()) {
-			new CleanupOperation(config).execute(); 
+			new CleanupOperation(config, options.getCleanupOptions()).execute(); 
 		}
 		
 		removeUnreferencedData();		
@@ -369,6 +370,15 @@ public class UpOperation extends Operation {
 		private StatusOperationOptions statusOptions = new StatusOperationOptions();
 		private boolean forceUploadEnabled = false;
 		private boolean cleanupEnabled = true;
+		private CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+
+		public CleanupOperationOptions getCleanupOptions() {
+			return cleanupOptions;
+		}
+
+		public void setCleanupOptions(CleanupOperationOptions cleanupOptions) {
+			this.cleanupOptions = cleanupOptions;
+		}
 
 		public StatusOperationOptions getStatusOptions() {
 			return statusOptions;
