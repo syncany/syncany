@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -491,63 +490,99 @@ public class DownOperation extends Operation {
 		DatabaseXmlSerializer xmlDatabaseSerializer = new DatabaseXmlSerializer(config.getTransformer());
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
-		String clientName = null;
-		VectorClock clientVersionFrom = null;
-		VectorClock clientVersionTo = null;
-
-		// if file exists load from file
-		// if end of range find file to load from
-		// 
-		for (DatabaseVersionHeader databaseVersionHeader : winnersApplyBranch.getAll()) {
-			// First of range for this client
-			if (clientName == null) {
-				clientName = databaseVersionHeader.getClient();
-				clientVersionFrom = databaseVersionHeader.getVectorClock();
-				clientVersionTo = databaseVersionHeader.getVectorClock();
-			}
-
-			// Still in range for this client
-			else if (clientName.equals(databaseVersionHeader.getClient())) {
-				clientVersionTo = databaseVersionHeader.getVectorClock();
-			}
-
-			// End of range
-			else {
-				loadRangeForce(xmlDatabaseSerializer, winnerBranchDatabase, shortFilenameToFileMap, filterType, clientName, clientVersionFrom, clientVersionTo);
-				
-				clientName = databaseVersionHeader.getClient();
-				clientVersionFrom = databaseVersionHeader.getVectorClock();
-				clientVersionTo = databaseVersionHeader.getVectorClock();
-			}
-
-			DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientVersionTo.getClock(clientName));
-			File databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
-			boolean isLoadableDatabaseFile = databaseFileForRange != null;
-			
-			if (isLoadableDatabaseFile) {
-				// Load database
-				logger.log(Level.INFO, "- Loading[i] " + databaseFileForRange + " (from " + clientVersionFrom + ", to " + clientVersionTo + ") ...");
-				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo, filterType);
-
-				// Reset range
-				clientName = null;
-				clientVersionFrom = null;
-				clientVersionTo = null;
-			}			
-		}
+		List<DatabaseVersionHeader> winnersApplyBranchList = winnersApplyBranch.getAll();
 		
+		String rangeClientName = null;
+		VectorClock rangeVersionFrom = null;
+		VectorClock rangeVersionTo = null;
+
+		for (int i=0; i<winnersApplyBranchList.size(); i++) {
+			DatabaseVersionHeader currentDatabaseVersionHeader = winnersApplyBranchList.get(i);
+			DatabaseVersionHeader nextDatabaseVersionHeader = (i+1 < winnersApplyBranchList.size()) ? winnersApplyBranchList.get(i+1) : null;
+			
+			// First of range for this client
+			if (rangeClientName == null) {
+				rangeClientName = currentDatabaseVersionHeader.getClient();
+				rangeVersionFrom = currentDatabaseVersionHeader.getVectorClock();
+				rangeVersionTo = currentDatabaseVersionHeader.getVectorClock();
+			}
+			
+			// Still in range for this client
+			else {
+				rangeVersionTo = currentDatabaseVersionHeader.getVectorClock();
+			}
+			
+			// Now load this stuff from the database file (or not)
+			//   - If the database file exists, load the range and reset it
+			//   - If not, only force a load if this is the range end
+			
+			File databaseVersionFile = getExactDatabaseVersionFile(currentDatabaseVersionHeader, shortFilenameToFileMap);
+						
+			if (databaseVersionFile != null) {
+				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, filterType);				
+				rangeClientName = null;
+			}
+			else {
+				boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
+				boolean nextClientIsDifferent = !lastDatabaseVersionHeader && !currentDatabaseVersionHeader.getClient().equals(nextDatabaseVersionHeader.getClient());
+				boolean rangeEnds = lastDatabaseVersionHeader || nextClientIsDifferent;
+
+				if (rangeEnds) {
+					databaseVersionFile = getNextDatabaseVersionFile(currentDatabaseVersionHeader, shortFilenameToFileMap);
+					
+					xmlDatabaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, filterType);					
+					rangeClientName = null;
+				}
+			}
+		}
+	
 		return winnerBranchDatabase;
 	}
 	
-	private void loadRangeForce(DatabaseXmlSerializer xmlDatabaseSerializer, MemoryDatabase winnerBranchDatabase,
-			Map<String, File> shortFilenameToFileMap, DatabaseVersionType filterType, String clientName, VectorClock clientVersionFrom,
-			VectorClock clientVersionTo) throws StorageException, IOException {
+	/**
+	 * Returns the database file for a given database version header, or <tt>null</tt> 
+	 * if for this database version header no file has been downloaded.
+	 * 
+	 * <p>Unlike {@link #getNextDatabaseVersionFile(DatabaseVersionHeader, Map) getNextDatabaseVersionFile()},
+	 * this method does <b>not</b> try to find a database file by counting up the local version. It returns
+	 * null if the exact version has not been found!
+	 * 
+	 * <p><b>Example:</b> given database version header is A/(A3,B2)/T=..
+	 * <pre>
+	 *   - Does db-A-0003 exist? No, return null.
+	 * </pre>
+	 */
+	private File getExactDatabaseVersionFile(DatabaseVersionHeader currentDatabaseVersionHeader, Map<String, File> shortFilenameToFileMap) throws StorageException {
+		String clientName = currentDatabaseVersionHeader.getClient();
+		long clientFileClock = currentDatabaseVersionHeader.getVectorClock().getClock(clientName);
+		
+		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);				
+		return shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
+	}
 
-		int maxRounds = 100000;
-		long clientFileClock = clientVersionTo.getClock(clientName);
+	/**
+	 * Returns a database file for a given database version header, or throws an error if
+	 * no file has been found.
+	 * 
+	 * <p><b>Note:</b> Unlike {@link #getExactDatabaseVersionFile(DatabaseVersionHeader, Map) getExactDatabaseVersionFile()},
+	 * this method tries to find a database file by counting up the local version, i.e. if the exact version cannot be found,
+	 * it increases the local client version by one until a matching version is found.
+	 * 
+	 * <p><b>Example:</b> given database version header is A/(A3,B2)/T=..
+	 * <pre>
+	 *   - Does db-A-0003 exist? No, continue.
+	 *   - Does db-A-0004 exist? No, continue.
+	 *   - Does db-A-0005 exist. Yes, return db-A-0005.
+	 * </pre>
+	 */
+	private File getNextDatabaseVersionFile(DatabaseVersionHeader currentDatabaseVersionHeader, Map<String, File> shortFilenameToFileMap) throws StorageException {
+		String clientName = currentDatabaseVersionHeader.getClient();
+		long clientFileClock = currentDatabaseVersionHeader.getVectorClock().getClock(clientName);
 		
 		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = null;
 		File databaseFileForRange = null;
+		
+		int maxRounds = 100000; // TODO [medium] This is ugly and potentially dangerous. Can this lead to incorrect results?
 		boolean isLoadableDatabaseFile = false;
 		
 		while (!isLoadableDatabaseFile && maxRounds > 0) {
@@ -561,82 +596,10 @@ public class DownOperation extends Operation {
 		}
 		
 		if (!isLoadableDatabaseFile) {
-			throw new StorageException("Cannot find suitable database remote file to load range " + clientVersionFrom + ", to " + clientVersionTo + ") ...");
+			throw new StorageException("Cannot find suitable database remote file to load range.");
 		}
 		
-		logger.log(Level.INFO, "- Loading[ii] " + databaseFileForRange + " (from " + clientVersionFrom + ", to " + clientVersionTo + ") ...");
-		xmlDatabaseSerializer.load(winnerBranchDatabase, databaseFileForRange, clientVersionFrom, clientVersionTo, filterType);
-	}
-
-	private List<DatabaseLoadRange> findDatabaseLoadRanges(DatabaseBranch winnersApplyBranch, Map<String, File> shortFilenameToFileMap) throws StorageException {
-		ArrayList<DatabaseLoadRange> loadRanges = new ArrayList<DatabaseLoadRange>();		
-		DatabaseLoadRange currentDatabaseLoadRange = null;
-		
-		for (DatabaseVersionHeader databaseVersionHeader : winnersApplyBranch.getAll()) {
-			// First of range for this client
-			if (currentDatabaseLoadRange == null) {
-				currentDatabaseLoadRange = new DatabaseLoadRange(databaseVersionHeader.getClient(), databaseVersionHeader.getVectorClock(), databaseVersionHeader.getVectorClock());
-			}
-			
-			// Different client: end of client range, load it, then start new range
-			else if (!currentDatabaseLoadRange.clientName.equals(databaseVersionHeader.getClient())) {
-				loadRanges.add(currentDatabaseLoadRange);
-				currentDatabaseLoadRange = new DatabaseLoadRange(databaseVersionHeader.getClient(), databaseVersionHeader.getVectorClock(), databaseVersionHeader.getVectorClock());
-			}
-
-			// Still in range for this client
-			else if (currentDatabaseLoadRange.clientName.equals(databaseVersionHeader.getClient())) {
-				currentDatabaseLoadRange.clientVersionTo = databaseVersionHeader.getVectorClock();
-			}
-			
-			// If the database file exists, the range is done here!
-			currentDatabaseLoadRange.loadFromFile = getFileForRange(currentDatabaseLoadRange, shortFilenameToFileMap);
-			
-			if (currentDatabaseLoadRange.loadFromFile != null) {
-				loadRanges.add(currentDatabaseLoadRange);
-				currentDatabaseLoadRange = null;
-			}
-		}
-		
-		// Load last range
-		if (currentDatabaseLoadRange != null) {
-			loadRanges.add(currentDatabaseLoadRange);
-		}
-
-		return loadRanges;
-	}
-
-	private File getFileForRange(DatabaseLoadRange currentDatabaseLoadRange, Map<String, File> shortFilenameToFileMap) throws StorageException {
-		int maxRounds = 100000;
-		long clientFileClock = currentDatabaseLoadRange.clientVersionTo.getClock(currentDatabaseLoadRange.clientName);
-		File databaseFileForRange = null;
-		boolean isLoadableDatabaseFile = false;
-		
-		while (!isLoadableDatabaseFile && maxRounds-- > 0) {
-			DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(currentDatabaseLoadRange.clientName, clientFileClock);
-			
-			databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
-			isLoadableDatabaseFile = databaseFileForRange != null;		
-		}
-		
-		if (!isLoadableDatabaseFile) {
-			throw new StorageException("Cannot find suitable database remote file to load range " + currentDatabaseLoadRange.clientVersionFrom + ", to " + currentDatabaseLoadRange.clientVersionTo + ") ...");
-		}
-				
 		return databaseFileForRange;
-	}
-
-	private class DatabaseLoadRange {
-		public DatabaseLoadRange(String clientName, VectorClock clientVersionFrom, VectorClock clientVersionTo) {
-			this.clientName = clientName;
-			this.clientVersionFrom = clientVersionFrom;
-			this.clientVersionTo = clientVersionTo;
-		}
-		
-		String clientName;
-		VectorClock clientVersionFrom;
-		VectorClock clientVersionTo;
-		File loadFromFile;
 	}
 
 	private DatabaseBranches readUnknownDatabaseVersionHeaders(TreeMap<File, DatabaseRemoteFile> remoteDatabases) throws IOException, StorageException {
