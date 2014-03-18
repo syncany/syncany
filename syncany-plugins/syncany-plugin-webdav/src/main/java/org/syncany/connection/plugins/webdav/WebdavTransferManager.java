@@ -19,6 +19,7 @@ package org.syncany.connection.plugins.webdav;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -116,8 +117,11 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			// Download file
 			logger.log(Level.INFO, " - Downloading " + remoteURL + " to temp file " + localFile + " ...");
 			InputStream webdavFileInputStream = sardine.get(remoteURL);
-
-			FileUtil.writeToFile(webdavFileInputStream, localFile);
+			FileOutputStream localFileOutputStream = new FileOutputStream(localFile);
+			
+			FileUtil.appendToOutputStream(webdavFileInputStream, localFileOutputStream);
+			
+			localFileOutputStream.close();
 			webdavFileInputStream.close();
 		}
 		catch (IOException ex) {

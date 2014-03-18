@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 
-import org.syncany.util.FileUtil;
+import org.syncany.util.EnvironmentUtil;
 
 public class ChangePermissionsOfFolder extends AbstractClientAction {
 	@Override
@@ -31,13 +31,13 @@ public class ChangePermissionsOfFolder extends AbstractClientAction {
 		File file = pickFolder(1922);
 		Path filePath = Paths.get(file.getAbsolutePath());
 				
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(filePath, "dos:hidden", true);
 			Files.setAttribute(filePath, "dos:system", true);
 			Files.setAttribute(filePath, "dos:readonly", true);
 			Files.setAttribute(filePath, "dos:archive", true);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			log(this, "rwxrwxrwx "+file.getAbsolutePath());
 			Files.setPosixFilePermissions(filePath, PosixFilePermissions.fromString("rwxrwxrwx"));
 		}		

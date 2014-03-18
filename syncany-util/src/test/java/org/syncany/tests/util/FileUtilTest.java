@@ -17,6 +17,7 @@
  */
 package org.syncany.tests.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -29,9 +30,58 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 
 import org.junit.Test;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class FileUtilTest {	
+	@Test
+	public void testGetRelativePath() {
+		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
+			assertEquals("some/path", FileUtil.getRelativePath(new File("/home"), new File("/home/some/path")));
+			assertEquals("some/path", FileUtil.getRelativePath(new File("/home/"), new File("/home/some/path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("/home/some"), new File("/home/some/path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("/home/some/"), new File("/home/some/path")));
+		}
+		else {
+			assertEquals("some\\path", FileUtil.getRelativePath(new File("C:\\home"), new File("C:\\home\\some\\path")));
+			assertEquals("some\\path", FileUtil.getRelativePath(new File("C:\\home"), new File("C:\\home\\some\\path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("C:\\home\\some"), new File("C:\\home\\some\\path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("C:\\homesome\\"), new File("C:\\home\\some\\path")));
+		}
+	}
+	
+	@Test
+	public void testFileExistsNormal() throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		TestFileUtil.createRandomFile(new File(tempDir, "file1"), 1234);
+		
+		assertTrue(FileUtil.exists(new File(tempDir, "file1")));
+		assertFalse(FileUtil.exists(new File(tempDir, "file2")));
+		
+		TestFileUtil.deleteDirectory(tempDir);
+	}
+	
+	@Test
+	public void testFileExistsSymlink() throws Exception {
+		if (!EnvironmentUtil.symlinksSupported()) {
+			return;
+		}
+		
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		TestFileUtil.createRandomFile(new File(tempDir, "file1"), 1234);
+
+		Files.createSymbolicLink(new File(tempDir, "link-to-file1").toPath(), new File(tempDir, "file1").toPath());
+		Files.createSymbolicLink(new File(tempDir, "non-existing-target").toPath(), Paths.get("/does/not/exist"));
+
+		assertTrue(FileUtil.exists(new File(tempDir, "link-to-file1")));
+		assertTrue(FileUtil.exists(new File(tempDir, "non-existing-target")));
+		assertFalse(FileUtil.exists(new File(tempDir, "actually-non-existing-file-or-link")));
+		
+		TestFileUtil.deleteDirectory(tempDir);		
+	}
+
 	@Test
 	public void testFileLocked() throws Exception {
 		// Setup
@@ -53,10 +103,10 @@ public class FileUtilTest {
 		fileLock.close();
 		Path bFilePath = Paths.get(lockedFile.getAbsolutePath());
 
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(bFilePath, "dos:readonly", true);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("r--r--r--"));
 		}	
 		

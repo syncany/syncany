@@ -19,7 +19,6 @@ package org.syncany.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +30,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 
 /**
@@ -43,23 +41,23 @@ public class FileUtil {
 	public static String getRelativePath(File base, File file) {
 		return removeTrailingSlash(base.toURI().relativize(file.toURI()).getPath());
 	}
-	
+
 	public static String getRelativeDatabasePath(File base, File file) {
 		String relativeFilePath = getRelativePath(base, file);
-		
+
 		// Note: This is more important than it seems. Unix paths may contain backslashes
-		//       so that 'black\white.jpg' is a perfectly valid file path. Windows file names
-		//       may never contain backslashes, so that '\' can be safely transformed to the
-		//       '/'-separated database path!
-		
-		if (isWindows()) {
+		// so that 'black\white.jpg' is a perfectly valid file path. Windows file names
+		// may never contain backslashes, so that '\' can be safely transformed to the
+		// '/'-separated database path!
+
+		if (EnvironmentUtil.isWindows()) {
 			return relativeFilePath.toString().replaceAll("\\\\", "/");
 		}
 		else {
 			return relativeFilePath;
 		}
 	}
-	
+
 	public static String removeTrailingSlash(String filename) {
 		if (filename.endsWith("/")) {
 			return filename.substring(0, filename.length() - 1);
@@ -68,7 +66,7 @@ public class FileUtil {
 			return filename;
 		}
 	}
-	
+
 	public static File getCanonicalFile(File file) {
 		try {
 			return file.getCanonicalFile();
@@ -78,18 +76,12 @@ public class FileUtil {
 		}
 	}
 
-	public static void writeToFile(InputStream is, File file) throws IOException {
-		FileOutputStream fos = new FileOutputStream(file);
-
-		int read = 0;
-		byte[] bytes = new byte[4096];
-
-		while ((read = is.read(bytes)) != -1) {
-			fos.write(bytes, 0, read);
+	public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream, boolean closeOutputStream) throws IOException {
+		appendToOutputStream(inputStream, outputStream);
+		
+		if (closeOutputStream) {
+			outputStream.close();
 		}
-
-		is.close();
-		fos.close();
 	}
 
 	public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream) throws IOException {
@@ -181,18 +173,6 @@ public class FileUtil {
 		return fileLocked;
 	}
 
-	public static boolean symlinksSupported() {
-		return isUnixLikeOperatingSystem();
-	}
-
-	public static boolean isUnixLikeOperatingSystem() {
-		return File.separatorChar == '/';
-	}
-
-	public static boolean isWindows() {
-		return File.separatorChar == '\\';
-	}
-
 	public static boolean isSymlink(File file) {
 		return Files.isSymbolicLink(Paths.get(file.getAbsolutePath()));
 	}
@@ -213,84 +193,12 @@ public class FileUtil {
 		Files.createSymbolicLink(symlinkPath, targetPath);
 	}
 
-	public static String dosAttrsToString(DosFileAttributes dosAttrs) {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(dosAttrs.isReadOnly() ? "r" : "-");
-		sb.append(dosAttrs.isHidden() ? "h" : "-");
-		sb.append(dosAttrs.isArchive() ? "a" : "-");
-		sb.append(dosAttrs.isSystem() ? "s" : "-");
-
-		return sb.toString();
+	public static String dosAttrsToString(DosFileAttributes dosFileAttributes) {
+		return LimitedDosFileAttributes.toString(dosFileAttributes);
 	}
 
-	public static DosFileAttributes dosAttrsFromString(final String dosAttributes) {
-		return new DosFileAttributes() {
-			@Override
-			public boolean isReadOnly() {
-				return dosAttributes.charAt(0) == 'r';
-			}
-
-			@Override
-			public boolean isHidden() {
-				return dosAttributes.charAt(1) == 'h';
-			}
-
-			@Override
-			public boolean isArchive() {
-				return dosAttributes.charAt(2) == 'a';
-			}
-
-			@Override
-			public boolean isSystem() {
-				return dosAttributes.charAt(3) == 's';
-			}
-
-			@Override
-			public long size() {
-				return 0;
-			}
-
-			@Override
-			public FileTime lastModifiedTime() {
-				return null;
-			}
-
-			@Override
-			public FileTime lastAccessTime() {
-				return null;
-			}
-
-			@Override
-			public boolean isSymbolicLink() {
-				return false;
-			}
-
-			@Override
-			public boolean isRegularFile() {
-				return false;
-			}
-
-			@Override
-			public boolean isOther() {
-				return false;
-			}
-
-			@Override
-			public boolean isDirectory() {
-				return false;
-			}
-
-			@Override
-			public Object fileKey() {
-				return null;
-			}
-
-			@Override
-			public FileTime creationTime() {
-				return null;
-			}
-		};
+	public static LimitedDosFileAttributes dosAttrsFromString(String dosFileAttributes) {
+		return new LimitedDosFileAttributes(dosFileAttributes);
 	}
 
 	/**
@@ -312,7 +220,7 @@ public class FileUtil {
 			return false;
 		}
 	}
-	
+
 	public static boolean isDirectory(File file) {
 		try {
 			return Files.isDirectory(Paths.get(file.getAbsolutePath()), LinkOption.NOFOLLOW_LINKS);

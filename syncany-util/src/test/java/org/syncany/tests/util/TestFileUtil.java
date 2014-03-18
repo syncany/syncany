@@ -333,7 +333,7 @@ public class TestFileUtil {
 	}	
 	
 	public static void writeToFile(byte[] bytes, File file) throws IOException {
-		FileUtil.writeToFile(new ByteArrayInputStream(bytes), file);
+		FileUtil.appendToOutputStream(new ByteArrayInputStream(bytes), new FileOutputStream(file), true);
 	}
 	
 	public static String getBasename(String filename) {

@@ -20,12 +20,13 @@ package org.syncany.tests.scenarios.framework;
 import java.io.File;
 import java.io.FileFilter;
 
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class ChangeSymlinkTarget extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		if (!FileUtil.symlinksSupported()) {
+		if (!EnvironmentUtil.symlinksSupported()) {
 			return; // no symbolic links on Windows
 		}
 		

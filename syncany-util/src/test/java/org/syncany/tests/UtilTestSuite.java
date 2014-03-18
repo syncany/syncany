@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTest;
+import org.syncany.tests.util.LimitedDosFileAttributesTest;
 import org.syncany.tests.util.NormalizedPathTest;
 import org.syncany.tests.util.StringUtilTest;
 
@@ -29,6 +30,7 @@ import org.syncany.tests.util.StringUtilTest;
 @SuiteClasses({	
 	CollectionUtilTest.class,
 	FileUtilTest.class,
+	LimitedDosFileAttributesTest.class,
 	NormalizedPathTest.class,
 	StringUtilTest.class	
 })
