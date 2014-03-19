@@ -154,10 +154,15 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setString(3, databaseVersionHeader.getClient());
 			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
 	
-			preparedStatement.executeUpdate();	
+			int affectedRows = preparedStatement.executeUpdate();
+			
+			if (affectedRows == 0) {
+				throw new SQLException("Cannot add database version header. Affected rows is zero.");
+			}
 			
 			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {				
 				if (resultSet.next()) {
+					System.out.println("dbvid = "+resultSet.getLong(1));
 					return resultSet.getLong(1);
 				}
 				else {
@@ -174,7 +179,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 				preparedStatement.setString(2, vectorClockEntry.getKey());
 				preparedStatement.setLong(3, vectorClockEntry.getValue());
 	
-				preparedStatement.addBatch();				
+				preparedStatement.addBatch();
 			}
 			
 			preparedStatement.executeBatch();
