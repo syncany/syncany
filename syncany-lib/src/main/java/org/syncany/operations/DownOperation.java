@@ -411,7 +411,7 @@ public class DownOperation extends Operation {
 	}
 
 	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
-		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
+		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
 
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
 

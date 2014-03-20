@@ -157,8 +157,8 @@ public class FileSystemActionReconciliator {
 			FileVersion localLastVersion = fileHistoryIdCache.get(winningFileHistory.getFileHistoryId());
 			File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir()+File.separator+localLastVersion.getPath()) : null;
 			
-			logger.log(Level.INFO, "   + Comparing local version: "+localLastVersion);			
-			logger.log(Level.INFO, "     with winning version   : "+winningLastVersion);
+			logger.log(Level.INFO, "  + Comparing local version: "+localLastVersion);			
+			logger.log(Level.INFO, "    with winning version   : "+winningLastVersion);
 			
 			// Sync algorithm ////			
 			
@@ -170,27 +170,27 @@ public class FileSystemActionReconciliator {
 						|| winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_SIZE);
 				
 				if (winningFileToVersionComparison.equals()) {
-					logger.log(Level.INFO, "  + (1) Equals: Nothing to do, winning version equals winning file: "+winningLastVersion+" AND "+winningLastFile);				
+					logger.log(Level.INFO, "     -> (1) Equals: Nothing to do, winning version equals winning file: "+winningLastVersion+" AND "+winningLastFile);				
 				}
 				else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.DELETED)) {					
 					FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, winnersDatabase);
 					fileSystemActions.add(action);
 					
-					logger.log(Level.INFO, "  + (2) Deleted: Local file does NOT exist, but it should, winning version not known: "+winningLastVersion+" AND "+winningLastFile);
-					logger.log(Level.INFO, "    --> "+action);
+					logger.log(Level.INFO, "     -> (2) Deleted: Local file does NOT exist, but it should, winning version not known: "+winningLastVersion+" AND "+winningLastFile);
+					logger.log(Level.INFO, "     -> "+action);
 					
 					changeSet.getNewFiles().add(winningLastVersion.getPath());
 				}
 				else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.NEW)) {
-					logger.log(Level.INFO, "  + (3) New: winning version was deleted, but local exists: "+winningLastVersion+" AND "+winningLastFile);					
+					logger.log(Level.INFO, "     -> (3) New: winning version was deleted, but local exists: "+winningLastVersion+" AND "+winningLastFile);					
 					throw new Exception("What happend here?");
 				}
 				else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_LINK_TARGET)) {					
 					FileSystemAction action = new NewSymlinkFileSystemAction(config, winningLastVersion, winnersDatabase);
 					fileSystemActions.add(action);
 
-					logger.log(Level.INFO, "  + (4) Changed link target: winning file has a different link target: "+winningLastVersion+" AND "+winningLastFile);
-					logger.log(Level.INFO, "    --> "+action);
+					logger.log(Level.INFO, "     -> (4) Changed link target: winning file has a different link target: "+winningLastVersion+" AND "+winningLastFile);
+					logger.log(Level.INFO, "     -> "+action);
 					
 					changeSet.getNewFiles().add(winningLastVersion.getPath());
 				}
@@ -200,21 +200,21 @@ public class FileSystemActionReconciliator {
 					FileSystemAction action = new SetAttributesFileSystemAction(config, winningLastVersion, winnersDatabase);
 					fileSystemActions.add(action);
 
-					logger.log(Level.INFO, "  + (5) Changed file attributes: winning file has different file attributes: "+winningLastVersion+" AND "+winningLastFile);
-					logger.log(Level.INFO, "    --> "+action);
+					logger.log(Level.INFO, "     -> (5) Changed file attributes: winning file has different file attributes: "+winningLastVersion+" AND "+winningLastFile);
+					logger.log(Level.INFO, "     -> "+action);
 					
 					changeSet.getNewFiles().add(winningLastVersion.getPath());
 				}
 				else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_PATH)) {
-					logger.log(Level.INFO, "  + (6) Changed path: winning file has a different path: "+winningLastVersion+" AND "+winningLastFile);					
+					logger.log(Level.INFO, "     -> (6) Changed path: winning file has a different path: "+winningLastVersion+" AND "+winningLastFile);					
 					throw new Exception("What happend here?");
 				}
 				else { // Content changed
 					FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, winnersDatabase);
 					fileSystemActions.add(action);
 
-					logger.log(Level.INFO, "  + (7) Content changed: Winning file differs from winning version: "+winningLastVersion+" AND "+winningLastFile);
-					logger.log(Level.INFO, "    --> "+action);
+					logger.log(Level.INFO, "     -> (7) Content changed: Winning file differs from winning version: "+winningLastVersion+" AND "+winningLastFile);
+					logger.log(Level.INFO, "     -> "+action);
 					
 					changeSet.getNewFiles().add(winningLastVersion.getPath());
 				}					
@@ -231,14 +231,14 @@ public class FileSystemActionReconciliator {
 							|| winningVersionToLocalVersionComparison.getFileChanges().contains(FileChange.CHANGED_SIZE);					
 					
 					if (winningVersionToLocalVersionComparison.equals()) { // Local file = local version = winning version!
-						logger.log(Level.INFO, "  + (8) Equals: Nothing to do, local file equals local version equals winning version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+						logger.log(Level.INFO, "     -> (8) Equals: Nothing to do, local file equals local version equals winning version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
 					}
 					else if (winningVersionToLocalVersionComparison.getFileChanges().contains(FileChange.DELETED)) {
 						FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
 						fileSystemActions.add(action);
 
-						logger.log(Level.INFO, "  + (9) Content changed: Local file does not exist, but it should: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
-						logger.log(Level.INFO, "    --> "+action);
+						logger.log(Level.INFO, "     -> (9) Content changed: Local file does not exist, but it should: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+						logger.log(Level.INFO, "     -> "+action);
 						
 						changeSet.getChangedFiles().add(winningLastVersion.getPath());
 					}
@@ -246,8 +246,8 @@ public class FileSystemActionReconciliator {
 						FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
 						fileSystemActions.add(action);
 						
-						logger.log(Level.INFO, "  + (10) Local file is exists, but should not: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);					
-						logger.log(Level.INFO, "    --> "+action);	
+						logger.log(Level.INFO, "     -> (10) Local file is exists, but should not: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);					
+						logger.log(Level.INFO, "     -> "+action);	
 						
 						changeSet.getDeletedFiles().add(winningLastVersion.getPath());
 					}
@@ -255,8 +255,8 @@ public class FileSystemActionReconciliator {
 						FileSystemAction action = new NewSymlinkFileSystemAction(config, winningLastVersion, winnersDatabase);
 						fileSystemActions.add(action);
 
-						logger.log(Level.INFO, "  + (11) Changed link target: local file has a different link target: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
-						logger.log(Level.INFO, "    --> "+action);
+						logger.log(Level.INFO, "     -> (11) Changed link target: local file has a different link target: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+						logger.log(Level.INFO, "     -> "+action);
 						
 						changeSet.getNewFiles().add(winningLastVersion.getPath());
 					}
@@ -267,8 +267,8 @@ public class FileSystemActionReconciliator {
 						FileSystemAction action = new RenameFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
 						fileSystemActions.add(action);
 
-						logger.log(Level.INFO, "  + (12) Rename / Changed file attributes: Local file has different file attributes: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
-						logger.log(Level.INFO, "    --> "+action);
+						logger.log(Level.INFO, "     -> (12) Rename / Changed file attributes: Local file has different file attributes: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+						logger.log(Level.INFO, "     -> "+action);
 						
 						changeSet.getChangedFiles().add(winningLastVersion.getPath());
 					}
@@ -276,8 +276,8 @@ public class FileSystemActionReconciliator {
 						FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
 						fileSystemActions.add(action);
 
-						logger.log(Level.INFO, "  + (13) Content changed: Local file differs from winning version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
-						logger.log(Level.INFO, "    --> "+action);	
+						logger.log(Level.INFO, "     -> (13) Content changed: Local file differs from winning version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+						logger.log(Level.INFO, "     -> "+action);	
 						
 						changeSet.getChangedFiles().add(winningLastVersion.getPath());
 					}
@@ -287,8 +287,8 @@ public class FileSystemActionReconciliator {
 					FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
 					fileSystemActions.add(action);
 
-					logger.log(Level.INFO, "  + (14) Content changed: Local file differs from last version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
-					logger.log(Level.INFO, "    --> "+action);	
+					logger.log(Level.INFO, "     -> (14) Content changed: Local file differs from last version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+					logger.log(Level.INFO, "     -> "+action);	
 					
 					changeSet.getChangedFiles().add(winningLastVersion.getPath());
 				}
