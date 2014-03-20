@@ -21,16 +21,27 @@ import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
+import org.syncany.operations.CleanupOperation.CleanupOperationResult;
+import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.UpOperation.UpOperationResult;
+import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestDatabaseUtil;
+import org.syncany.tests.util.TestFileUtil;
+import org.syncany.tests.util.TestSqlDatabaseUtil;
 
 public class CleanupMergeDatabaseFilesScenarioTest {
 	@Test
@@ -117,10 +128,13 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		TestClient clientC = new TestClient("C", testConnection);
 		
-		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
-		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
-		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(true);
-		cleanupOptionsOnlyMergeDatabases.setRepackageMultiChunks(false);
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+		
+		CleanupOperationOptions cleanupOptionsMergeAndRemoveDefault = new CleanupOperationOptions();
+		cleanupOptionsMergeAndRemoveDefault.setMergeRemoteFiles(true);
+		cleanupOptionsMergeAndRemoveDefault.setRemoveOldVersions(false);
+		cleanupOptionsMergeAndRemoveDefault.setRepackageMultiChunks(false);
 				
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -129,24 +143,25 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		upOperationOptionsNoCleanup.setStatusOptions(statusOptionsForceChecksum);
 		upOperationOptionsNoCleanup.setForceUploadEnabled(true);		
 		upOperationOptionsNoCleanup.setCleanupEnabled(true);	
-		upOperationOptionsNoCleanup.setCleanupOptions(cleanupOptionsOnlyMergeDatabases);
-
+		upOperationOptionsNoCleanup.setCleanupOptions(cleanupOptionsMergeAndRemoveDefault);		
+		
 		// Run preparations
 		
 		clientA.down();
-		clientA.createNewFile("A-file.jpg");
+		clientA.createNewFolder("Untitled Folder");
 		clientA.up(upOperationOptionsNoCleanup); // 0 (A1)
 
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
+		clientA.createNewFile("131108 Syncany Screencast Conflict Raw.mp4");
 		clientA.up(upOperationOptionsNoCleanup); // 1 (A2)
 		
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
+		clientB.createNewFile("domain-driven-design-tackling-complexity-in-the-heart-of-software.9780321125217.24620.pdf");
 		clientB.up(upOperationOptionsNoCleanup); // 2 (A2,B1)
 
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
+		clientA.moveFile("domain-driven-design-tackling-complexity-in-the-heart-of-software.9780321125217.24620.pdf",
+				"MOVED domain-driven-design-tackling-complexity-in-the-heart-of-software.9780321125217.24620.pdf");
 		clientA.up(upOperationOptionsNoCleanup); // 3 (A3,B1)
 
 		clientA.down();
@@ -160,6 +175,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.createNewFolder("python_ctf_workshop");
 		clientB.createNewFile("python_ctf_workshop/level01.py");		
 		clientB.createNewFile("python_ctf_workshop/level02.py");
+		// ...
 		clientB.up(upOperationOptionsNoCleanup); // 5 (A4,B2)
 
 		clientA.down();
@@ -168,6 +184,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		clientB.down();
 		clientB.createNewFolder("Untitled Folder/workspace/.metadata/.plugins/org.eclipse.core.resources/.history/a8/");		
+		clientB.createNewFolder("Untitled Folder/workspace/.metadata/.plugins/org.eclipse.mylyn.tasks.ui");		
 		clientB.createNewFile("Untitled Folder/workspace/.metadata/.plugins/org.eclipse.core.resources/.history/a8/b0cc654a817b001310f7c9cad6a53f98");
 		// ...
 		clientB.up(upOperationOptionsNoCleanup); // 7 (A5,B3)
@@ -179,43 +196,63 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.moveFile("Syncany Crypto (3).jpg", "Untitled Folder/Syncany Crypto (3).jpg");
 		clientA.moveFile("Wordlists.gz", "Untitled Folder/Wordlists.gz");
 		clientA.moveFile("python_ctf_workshop", "Untitled Folder/python_ctf_workshop");
-		clientA.createNewFolder("Untitled Folder/Untitled Folder2");
 		// ...
 		clientA.up(upOperationOptionsNoCleanup); // 8 (A6,B3)
 
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
+		clientB.moveFile("Untitled Folder", "Untitled Folder2");				
+		Files.setPosixFilePermissions(clientB.getLocalFile("Untitled Folder2/workspace").toPath(), PosixFilePermissions.fromString("rwxrwxrwx"));
+		Files.setPosixFilePermissions(clientB.getLocalFile("Untitled Folder2/python_ctf_workshop").toPath(), PosixFilePermissions.fromString("rwxrwxrwx"));
 		clientB.up(upOperationOptionsNoCleanup); // 9 (A6,B4) <<<< wins the conflict
 		
 		Thread.sleep(100);
 		
-		clientA.down();
-		//clientA.changeFile("A-file.jpg");
+		//clientA.down();
 		clientA.moveFile("Untitled Folder", "philipp");  // <<<<<<<<<<<<<< Moved again in losing DIRTY version
 		clientA.up(upOperationOptionsNoCleanup); // 10 (A7,B3) <<<< loses the conflict (later marked DIRTY by A)
 
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
+		clientB.createNewFolder("Untitled Folder2/workspace/.metadata/.plugins/org.eclipse.core.resources/.projects/syncany-cli");
+		clientB.createNewFile("Untitled Folder2/workspace/.metadata/.plugins/org.eclipse.core.resources/.projects/syncany-cli/.syncinfo.snap");
+		// ... (finishing up move; this should also not happen in a perfect world)
 		clientB.up(upOperationOptionsNoCleanup); // 11 (A6,B5) <<<<<< This is where C should have a conflict
-				
+
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 12
-fail("xx");
+		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
+		TestAssertUtil.assertConflictingFileExists("workspace", clientA.getLocalFiles());		
+		TestAssertUtil.assertConflictingFileExists("python_ctf_workshop", clientA.getLocalFiles());		
+		clientA.up(upOperationOptionsNoCleanup); // 12 (A8,B5)  Fixes DIRTY version
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
+		
+		
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 13
+		//clientA.changeFile("A-file.jpg");
+		UpOperationResult up1 = clientA.up(upOperationOptionsNoCleanup); // 13 (A9,B5)
+		
+		// TODO [medium] Here, file following file is somehow not added or double-added?!
+		//       Untitled Folder2/workspace (A's conflicted copy, 20 Mar 14, 11-07 PM)/.metadata/.plugins/org.eclipse.core.resources/.history/a8/b0cc654a817b001310f7c9cad6a53f98
+		//       ..
+		//
+		//  ^^ The asserts below test this issue
+
+		// assertEquals(false, up1.getStatusResult().getChangeSet().hasChanges());
+		// assertEquals(false, up1.getChangeSet().hasChanges());
 		
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 14
+		for (File fileInDir : clientB.getLocalFile("Untitled Folder2").listFiles()) {
+			TestFileUtil.deleteDirectory(fileInDir);
+		}
+		clientB.up(upOperationOptionsNoCleanup); // 14 (A9,B6)
 
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 15
+		clientA.createNewFolder("Wordlists");
+		clientA.createNewFile("Wordlists/wordlist_dict_german_skullsecurity.org.txt");
+		clientA.createNewFile("Wordlists/wordlist_500-worst-passwords_skullsecurity.org.txt");
+		// ...
+		clientA.up(upOperationOptionsNoCleanup); // 15 (A10,B6)
 
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
+		clientA.createNewFolder("Untitled Folder2");
 		clientA.up(upOperationOptionsNoCleanup); // 16
 
 		clientA.down();
@@ -235,16 +272,15 @@ fail("xx");
 		clientB.up(upOperationOptionsNoCleanup); // 20
 
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 21
+		clientB.cleanup(); // 21 (A12,B10) << PURGE database
 
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 22
+		clientA.up(upOperationOptionsNoCleanup); // 22 (A13,B10)
 
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 23
+		CleanupOperationResult cleanupOperationResult = clientA.cleanup(); // 23 (A14,B10) <<< PURGE database
+		assertEquals(2, cleanupOperationResult.getRemovedOldVersionsCount());
 		
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
@@ -254,17 +290,26 @@ fail("xx");
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsNoCleanup); // 25
 		
+		RestoreOperationOptions restoreOptions = new RestoreOperationOptions();
+		restoreOptions.setRestoreFilePaths(Arrays.asList(new String[] { "philipp/python_ctf_workshop/level01.py" }));
+		clientA.restore(restoreOptions);
+		TestAssertUtil.assertConflictingFileExists("philipp/python_ctf_workshop/level01.py", clientA.getLocalFiles());
+		// ^^ The "conflicted copy" file is actually not the right behavior, but this is what happens right now
+		
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsNoCleanup); // 26
 
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 27
+		clientA.cleanup(); // 27 (A17,B11) <<< PURGE database
 		
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 28		
+		clientA.moveFile("HALLO GREGORRRRRRRRRRRRRRRRRRRR", "renamed folder HALLO GREGORRRRRRRRRRRRRRRRRRRR");
+		clientA.up(upOperationOptionsNoCleanup); // 28 (A18,B11)
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000001").exists());
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000005").exists());
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000012").exists());
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000013").exists());
 		
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
@@ -275,8 +320,7 @@ fail("xx");
 		clientB.up(upOperationOptionsNoCleanup); // 30
 
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 31
+		clientB.cleanup(cleanupOptionsMergeAndRemoveDefault); // 31 (A18,B14) <<<< PURGE database
 
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
@@ -286,9 +330,14 @@ fail("xx");
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsNoCleanup); // 33	
 		
+		CleanupOperationOptions cleanupOptionsRemoveAllButOne = new CleanupOperationOptions();
+		cleanupOptionsRemoveAllButOne.setMergeRemoteFiles(true);
+		cleanupOptionsRemoveAllButOne.setRemoveOldVersions(true);
+		cleanupOptionsRemoveAllButOne.setKeepVersionsCount(1);
+		cleanupOptionsRemoveAllButOne.setRepackageMultiChunks(false);
+		
 		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 34
+		clientB.cleanup(cleanupOptionsRemoveAllButOne); // 34 (A20,B15)
 		
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
