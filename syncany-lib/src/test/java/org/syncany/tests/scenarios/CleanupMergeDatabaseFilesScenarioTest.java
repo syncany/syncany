@@ -17,7 +17,11 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
@@ -28,23 +32,19 @@ import java.util.Arrays;
 import java.util.Date;
 
 import org.junit.Test;
-import org.syncany.config.to.ConfigTO;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationStrategy;
-import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
 
 public class CleanupMergeDatabaseFilesScenarioTest {
 	@Test
@@ -134,19 +134,12 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
 		
-		/*CleanupOperationOptions cleanupOptionsMergeAndRemoveDefault = new CleanupOperationOptions();
-		cleanupOptionsMergeAndRemoveDefault.setMergeRemoteFiles(true);
-		cleanupOptionsMergeAndRemoveDefault.setRemoveOldVersions(false);
-		cleanupOptionsMergeAndRemoveDefault.setRepackageMultiChunks(false);
-				*/
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
 		
 		UpOperationOptions upOperationOptionsForceUpload = new UpOperationOptions();
 		upOperationOptionsForceUpload.setForceUploadEnabled(true);		
 		upOperationOptionsForceUpload.setStatusOptions(statusOptionsForceChecksum);
-		/*upOperationOptionsNoCleanup.setCleanupEnabled(true);	
-		upOperationOptionsNoCleanup.setCleanupOptions(cleanupOptionsMergeAndRemoveDefault);*/		
 		
 		// Run preparations
 		
@@ -226,20 +219,19 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestAssertUtil.assertConflictingFileExists("python_ctf_workshop", clientA.getLocalFiles());		
 		clientA.up(upOperationOptionsForceUpload); // 12 (A8,B5)  Fixes DIRTY version
 		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
-		
-		
+				
 		clientA.down();
-		//clientA.changeFile("A-file.jpg");
-		UpOperationResult up1 = clientA.up(upOperationOptionsForceUpload); // 13 (A9,B5)
+		UpOperationResult upResultA9 = clientA.up(upOperationOptionsForceUpload); // 13 (A9,B5)
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000009").exists());
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000010").exists());
 		
+		// assertEquals(false, upResultA9.getStatusResult().getChangeSet().hasChanges());
+		// assertEquals(false, upResultA9.getChangeSet().hasChanges());
+		
+		//      ^^^^^^^^^^^
 		// TODO [medium] Here, file following file is somehow not added or double-added?!
 		//       Untitled Folder2/workspace (A's conflicted copy, 20 Mar 14, 11-07 PM)/.metadata/.plugins/org.eclipse.core.resources/.history/a8/b0cc654a817b001310f7c9cad6a53f98
 		//       ..
-		//
-		//  ^^ The asserts below test this issue
-
-		// assertEquals(false, up1.getStatusResult().getChangeSet().hasChanges());
-		// assertEquals(false, up1.getChangeSet().hasChanges());
 		
 		clientB.down();
 		for (File fileInDir : clientB.getLocalFile("Untitled Folder2").listFiles()) {
@@ -389,22 +381,38 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000019").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000020").exists());
 		assertEquals(20, cleanupResultA19.getRemovedOldVersionsCount());
-		fail("xx)");
+		
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsForceUpload); // 33			
+		clientA.deleteFile("philipp Promi");
+		clientA.up(upOperationOptionsForceUpload); // 33 (A20,B14)		
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000020").exists());	
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000021").exists());
 		
 		clientB.down();
-		clientB.cleanup(cleanupOptionsRemoveAllButOne); // 34 (A20,B15)
+		clientB.cleanup(cleanupOptionsRemoveAllButOne); // 34 (A20,B15) <<<<<< PURGE database (sy cleanup -k1)
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000015").exists());	
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000016").exists());
 		
 		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsForceUpload); // 35
+		clientA.createNewFile("spring-ws-2.1.3.RELEASE-full.zip");
+		clientA.createNewFile("eclipse-standard-kepler-SR1-linux-gtk-x86_64.tar.gz");
+		clientA.createNewFile("apache-tomcat-7.0.39.tar.gz");
+		clientA.up(upOperationOptionsForceUpload); // 35 (A21,B15)
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000021").exists());	
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000022").exists());
 		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsForceUpload); // 36
-						
+		clientA.down();		
+		clientA.createNewFolder("sphinxbase-0.8/include");
+		clientA.createNewFolder("sphinxbase-0.8/python/build");
+		clientA.createNewFile("sphinxbase-0.8/autom4te.cache");
+		clientA.createNewFile("sphinxbase-0.8/python/build/temp.linux-x86_64-2.7");		
+		// ...
+		clientA.createNewFolder("☎");
+		clientA.createNewFolder("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ ''''``````````");		
+		clientA.up(upOperationOptionsForceUpload); // 36 (A22,B15)
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000022").exists()); 
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000023").exists());
+
 		// Sync them up
 		clientA.down();
 		clientB.down();
@@ -533,95 +541,19 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsNoCleanup); // 17
-/*
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 18
 
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 19
-
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 20
-
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 21
-
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 22
-
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 23
-		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 24
-
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 25
-		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 26
-
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 27
-		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 28		
-		
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 29
-
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 30
-
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 31
-
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 32
-		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 33	
-		
-		clientB.down();
-		clientB.changeFile("A-file.jpg");
-		clientB.up(upOperationOptionsNoCleanup); // 34
-		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 35
-		
-		clientA.down();
-		clientA.changeFile("A-file.jpg");
-		clientA.up(upOperationOptionsNoCleanup); // 36
-						*/
 		// Sync them up
 		clientA.down();
 		clientB.down();
 		
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
 		
+		// TODO [high] This test still fails; see issue #58 for more details
+		
 		// Run
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading 
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientC.getDatabaseFile());
 
-		
-		fail("implement this");
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();

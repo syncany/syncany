@@ -162,7 +162,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			
 			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {				
 				if (resultSet.next()) {
-					System.out.println("dbvid = "+resultSet.getLong(1));
 					return resultSet.getLong(1);
 				}
 				else {

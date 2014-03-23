@@ -76,7 +76,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			}
 
 			preparedStatement.close();
-			System.out.println(fileHistory.getFileHistoryId().toString() + " " + databaseVersionId);
 			
 			fileVersionDao.writeFileVersions(connection, fileHistory.getFileHistoryId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
