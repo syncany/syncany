@@ -31,6 +31,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Date;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
@@ -120,6 +121,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	}	
 	
 	@Test
+	@Ignore
 	public void testIssue58_1() throws Exception {
 		/*
 		 * This is the attempt to reproduce issue #58
@@ -639,8 +641,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading 
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientC.getDatabaseFile());
 
-		
-		fail("xx");
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();
