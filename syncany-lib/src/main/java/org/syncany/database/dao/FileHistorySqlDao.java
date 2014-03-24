@@ -69,9 +69,14 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			preparedStatement.setString(1, fileHistory.getFileHistoryId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
 
-			preparedStatement.executeUpdate();
-			preparedStatement.close();
+			int affectedRows = preparedStatement.executeUpdate();
+			
+			if (affectedRows == 0) {
+				throw new SQLException("Cannot add database version header. Affected rows is zero.");
+			}
 
+			preparedStatement.close();
+			
 			fileVersionDao.writeFileVersions(connection, fileHistory.getFileHistoryId(), databaseVersionId, fileHistory.getFileVersions().values());
 		}
 	}

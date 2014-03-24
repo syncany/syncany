@@ -224,7 +224,7 @@ public class DownOperation extends Operation {
 		
 		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
 			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] { 
-					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion().getVersion() });
+					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion() });
 			
 			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());				
 		}
@@ -411,7 +411,7 @@ public class DownOperation extends Operation {
 	}
 
 	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
-		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
+		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
 
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
 
