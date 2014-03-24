@@ -201,7 +201,7 @@ public class DownOperation extends Operation {
 	private void applyDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase, MemoryDatabase winnersPurgeDatabase) throws SQLException {
 		// Add winners database to local database
 		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
-		logger.log(Level.INFO, "   Adding database versions to SQL database ...");
+		logger.log(Level.INFO, "- Adding database versions to SQL database ...");
 		
 		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 			if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
@@ -217,7 +217,7 @@ public class DownOperation extends Operation {
 	}
 
 	private void persistPurgeDatabaseVesion(MemoryDatabase winnersPurgeDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) throws SQLException {
-		logger.log(Level.INFO, "   + Applying PURGE database version " + currentDatabaseVersionHeader.getVectorClock());
+		logger.log(Level.INFO, "  + Applying PURGE database version " + currentDatabaseVersionHeader.getVectorClock());
 
 		DatabaseVersion purgeDatabaseVersion = winnersPurgeDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
@@ -238,7 +238,7 @@ public class DownOperation extends Operation {
 	}
 
 	private void persistDatabaseVersion(MemoryDatabase winnersDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) {
-		logger.log(Level.INFO, "   + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
+		logger.log(Level.INFO, "  + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
 
 		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());				
 		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
