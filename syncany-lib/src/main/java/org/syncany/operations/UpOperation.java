@@ -248,17 +248,7 @@ public class UpOperation extends Operation {
 
 	private void removeUnreferencedData() {
 		logger.log(Level.INFO, "- Removing DIRTY database versions from database ...");	
-		localDatabase.removeDirtyDatabaseVersions();
-		
-		logger.log(Level.INFO, "- Removing unreferenced entities from database ...");
-		localDatabase.removeUnreferencedDatabaseEntities();
-		
-		try {
-			localDatabase.commit();
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		localDatabase.removeDirtyDatabaseVersions();		
 	}
 
 	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {
