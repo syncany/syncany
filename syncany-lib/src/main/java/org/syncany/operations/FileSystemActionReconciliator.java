@@ -158,8 +158,8 @@ public class FileSystemActionReconciliator {
 			FileVersion localLastVersion = fileHistoryIdCache.get(winningFileHistory.getFileHistoryId());
 			File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir(), localLastVersion.getPath()) : null;
 						
-			logger.log(Level.INFO, " + Comparing local version: "+localLastVersion);	
-			logger.log(Level.INFO, "   with winning version   : "+winningLastVersion);
+			logger.log(Level.INFO, "  + Comparing local version: "+localLastVersion);	
+			logger.log(Level.INFO, "    with winning version   : "+winningLastVersion);
 			
 			// Sync algorithm ////			
 			
