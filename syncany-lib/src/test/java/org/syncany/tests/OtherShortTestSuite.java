@@ -34,6 +34,7 @@ import org.syncany.tests.connection.plugins.unreliable_local.UploadInterruptedTe
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
+import org.syncany.tests.operations.CleanupOperationTest;
 import org.syncany.tests.operations.ConnectOperationTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.operations.IndexerTest;
@@ -78,6 +79,7 @@ import org.syncany.tests.util.FileUtilTest;
 	StatusOperationTest.class,
 	NotificationListenerTest.class,
 	ConnectOperationTest.class,
+	CleanupOperationTest.class,
 	
 	// Config
 	ConfigHelperTest.class,
