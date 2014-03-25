@@ -258,7 +258,7 @@ public class FrameworkCombinationTest {
 				File extractedChunkFile = new File(tempDir+"/chunk-"+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+"-from-multichunk-"+StringUtil.toHex(outputMultiChunk.getId()));
 
 				logger.log(Level.INFO, "  + Writing chunk "+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+" to "+extractedChunkFile+" ...");
-				FileUtil.writeToFile(outputChunkInMultiChunk.getContent(), extractedChunkFile);
+				TestFileUtil.writeToFile(outputChunkInMultiChunk.getContent(), extractedChunkFile);
 
 				extractedChunks.put(new ChunkChecksum(outputChunkInMultiChunk.getChecksum()), extractedChunkFile);
 			}
@@ -284,7 +284,7 @@ public class FrameworkCombinationTest {
 				File extractedChunkFile = extractedChunkIDToChunkFile.get(chunkID);
 
 				logger.log(Level.INFO, "  + Appending "+chunkID+" (file: "+extractedChunkFile+") to "+outputFile+" ...");				
-				FileUtil.appendToOutputStream(extractedChunkFile, outputFileOutputStream);
+				TestFileUtil.appendToOutputStream(extractedChunkFile, outputFileOutputStream);
 			}
 			
 			inputFileToOutputFile.put(inputFile, outputFile);

@@ -15,25 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.scenarios.framework;
+package org.syncany.tests;
 
-import java.io.File;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.util.CollectionUtilTest;
+import org.syncany.tests.util.FileUtilTest;
+import org.syncany.tests.util.LimitedDosFileAttributesTest;
+import org.syncany.tests.util.NormalizedPathTest;
+import org.syncany.tests.util.StringUtilTest;
 
-import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.FileUtil;
-
-public class CreateSymlinkToFolder extends AbstractClientAction {
-	@Override
-	public void execute() throws Exception {
-		if (!EnvironmentUtil.symlinksSupported()) {
-			return; // no symbolic links on Windows
-		}
-		
-		File inFolder = pickFolder(3232);
-		File symlinkFile = new File(inFolder+"/newFile-"+Math.random());
-		
-		log(this, symlinkFile.getAbsolutePath());
-		
-		FileUtil.createSymlink("/etc/init.d", symlinkFile);
-	}		
-}	
+@RunWith(Suite.class)
+@SuiteClasses({	
+	CollectionUtilTest.class,
+	FileUtilTest.class,
+	LimitedDosFileAttributesTest.class,
+	NormalizedPathTest.class,
+	StringUtilTest.class	
+})
+public class UtilTestSuite {
+	// This class executes all tests
+}

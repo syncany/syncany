@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.contrib.java.lang.system.TextFromStandardInputStream.emptyStandardInputStream;
 
 import java.io.File;
@@ -30,7 +30,6 @@ import org.syncany.cli.CommandLineClient;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.util.StringUtil;
 
 public class GenlinkCommandTest {	
 	@Rule

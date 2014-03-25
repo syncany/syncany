@@ -44,6 +44,7 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.CollectionUtil;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class FileVersionComparatorTest {
@@ -60,13 +61,13 @@ public class FileVersionComparatorTest {
 		TestFileUtil.createRandomFile(somefile, 100*1024);		
 		somefile.setLastModified(1382196000);		
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(somefilePath, "dos:archive", false);
 			Files.setAttribute(somefilePath, "dos:hidden", false);
 			Files.setAttribute(somefilePath, "dos:readonly", false);
 			Files.setAttribute(somefilePath, "dos:system", false);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Files.setPosixFilePermissions(somefilePath, PosixFilePermissions.fromString("rw-rw-r-x"));
 		}
 		
@@ -82,7 +83,7 @@ public class FileVersionComparatorTest {
 		assertTrue(fileProperties.exists());
 		assertEquals(FileType.FILE, fileProperties.getType());
 
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			DosFileAttributes dosFileAttributes = FileUtil.dosAttrsFromString(fileProperties.getDosAttributes());
 			
 			assertFalse(dosFileAttributes.isArchive());
@@ -92,7 +93,7 @@ public class FileVersionComparatorTest {
 			
 			assertNull(fileProperties.getPosixPermissions());
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			assertEquals("rw-rw-r-x", fileProperties.getPosixPermissions());
 			assertNull(fileProperties.getDosAttributes());
 		}	
@@ -118,10 +119,10 @@ public class FileVersionComparatorTest {
 		fileVersion.setStatus(FileStatus.CHANGED);
 		fileVersion.setType(FileType.FILE);
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			fileVersion.setDosAttributes("rha-");
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			fileVersion.setPosixPermissions("rw-rw-r-x");
 		}
 		
@@ -137,7 +138,7 @@ public class FileVersionComparatorTest {
 		assertTrue(fileProperties.exists());
 		assertEquals(FileType.FILE, fileProperties.getType());
 
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			DosFileAttributes dosFileAttributes = FileUtil.dosAttrsFromString(fileProperties.getDosAttributes());
 			
 			assertTrue(dosFileAttributes.isArchive());
@@ -147,7 +148,7 @@ public class FileVersionComparatorTest {
 			
 			assertNull(fileProperties.getPosixPermissions());
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			assertEquals("rw-rw-r-x", fileProperties.getPosixPermissions());
 			assertNull(fileProperties.getDosAttributes());
 		}	
@@ -170,13 +171,13 @@ public class FileVersionComparatorTest {
 		TestFileUtil.createRandomFile(somefile, 130*1024);		
 		somefile.setLastModified(1182196000);		
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(somefilePath, "dos:readonly", true);
 			Files.setAttribute(somefilePath, "dos:hidden", false);
 			Files.setAttribute(somefilePath, "dos:archive", true);
 			Files.setAttribute(somefilePath, "dos:system", false);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Files.setPosixFilePermissions(somefilePath, PosixFilePermissions.fromString("r--rwxrw-"));
 		}
 		
@@ -192,10 +193,10 @@ public class FileVersionComparatorTest {
 		fileVersion.setStatus(FileStatus.NEW);
 		fileVersion.setType(FileType.FILE);
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			fileVersion.setDosAttributes("r-a-");
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			fileVersion.setPosixPermissions("r--rwxrw-");
 		}
 		

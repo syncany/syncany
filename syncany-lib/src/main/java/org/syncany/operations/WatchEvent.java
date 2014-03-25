@@ -18,7 +18,7 @@
 package org.syncany.operations;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek
  *
  */
 public class WatchEvent {

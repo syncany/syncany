@@ -67,9 +67,8 @@ public class Deduper {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		
-		int i = 0;
 		for (File file : files) {
-			i++;
+			int i = 0;
 			// Filter ignored files
 			boolean fileAccepted = listener.onFileFilter(file);
 			
@@ -89,6 +88,7 @@ public class Deduper {
 
 					// old chunk
 					if (!listener.onChunk(chunk)) {
+						i++;
 						listener.onFileAddChunk(file, chunk);
 						continue;
 					}

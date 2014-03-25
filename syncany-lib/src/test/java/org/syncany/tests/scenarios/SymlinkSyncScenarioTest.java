@@ -36,12 +36,13 @@ import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class SymlinkSyncScenarioTest {
 	@Test
 	public void testSymlinkOneUpOneDown() throws Exception {
-		if (!FileUtil.symlinksSupported()) {			
+		if (!EnvironmentUtil.symlinksSupported()) {			
 			return; // Skip test for Windows, no symlinks there!
 		}
 		
@@ -96,7 +97,7 @@ public class SymlinkSyncScenarioTest {
 	
 	@Test
 	public void testSymlinkMultipleUpsAndDowns() throws Exception {
-		if (!FileUtil.symlinksSupported()) {			
+		if (!EnvironmentUtil.symlinksSupported()) {			
 			return; // Skip test for Windows, no symlinks there!
 		}
 
@@ -144,7 +145,7 @@ public class SymlinkSyncScenarioTest {
 	
 	@Test
 	public void testSymlinkSyncToNonExistingFolder() throws Exception {
-		if (!FileUtil.symlinksSupported()) {			
+		if (!EnvironmentUtil.symlinksSupported()) {			
 			return; // Skip test for Windows, no symlinks there!
 		}
 

@@ -23,12 +23,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class ChangeTypeSymlinkWithNonExistingTargetToFolder extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		if (!FileUtil.symlinksSupported()) {
+		if (!EnvironmentUtil.symlinksSupported()) {
 			return; // no symbolic links on Windows
 		}
 		

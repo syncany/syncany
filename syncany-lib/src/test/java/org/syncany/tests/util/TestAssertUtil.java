@@ -25,6 +25,8 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -104,7 +106,7 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertConflictingFileExists(String originalFile, Map<String, File> actualFiles) {
-		String fileNameWithoutExtention = FileUtil.getBasename(originalFile);
+		String fileNameWithoutExtention = TestFileUtil.getBasename(originalFile);
 		Pattern conflictFilePattern = Pattern.compile(fileNameWithoutExtention + ".*conflicted.*");
 		
 		boolean conflictingFileFound = false;
@@ -383,5 +385,19 @@ public class TestAssertUtil {
 
 	private static void compareDatabaseVersionFileHistories(Collection<PartialFileHistory> writtenFileHistories, Collection<PartialFileHistory> readFileHistories) {
 		assertTrue("FileHistory objects in written/read database version different.", writtenFileHistories.containsAll(readFileHistories));
-	}		
+	}	
+	
+	public static void assertErrorStackTraceContains(String expectedContains, Exception e) {
+		StringWriter errors = new StringWriter();
+		e.printStackTrace(new PrintWriter(errors));
+		
+		String stackTrace = errors.toString();
+		
+		if (stackTrace.contains(expectedContains)) {
+			return;
+		}
+		
+		e.printStackTrace();
+		fail("Stack trace expected to contain " + expectedContains);
+	}
 }

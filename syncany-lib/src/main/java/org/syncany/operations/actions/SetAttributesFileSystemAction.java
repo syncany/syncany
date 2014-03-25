@@ -43,7 +43,7 @@ public class SetAttributesFileSystemAction extends FileSystemAction {
 
 	@Override
 	public String toString() {
-		return "NewFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
+		return "SetAttributesFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}
 }
 

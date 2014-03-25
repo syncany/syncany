@@ -49,7 +49,7 @@ import org.syncany.tests.scenarios.framework.LockFile;
 import org.syncany.tests.scenarios.framework.UnlockFile;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.util.FileUtil;
+import org.syncany.util.EnvironmentUtil;
 
 public class FileLockedScenarioTest {
 	// TODO [high] Fix issues with readonly files on Windows, and r------ files on Linux
@@ -76,7 +76,7 @@ public class FileLockedScenarioTest {
 	
 	@Test
 	public void testPermissionDeniedNotReadable() throws Exception {
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			return; // Not possible in windows
 		}
 		

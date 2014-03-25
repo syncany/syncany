@@ -52,6 +52,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.WatchEvent.WatchEventType;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -377,10 +378,10 @@ public class Indexer {
 			fileVersion.setUpdated(new Date());
 			
 			// Permissions
-			if (FileUtil.isWindows()) {
+			if (EnvironmentUtil.isWindows()) {
 				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
 			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
+			else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
 			}
 			

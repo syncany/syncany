@@ -42,6 +42,7 @@ import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.util.CollectionUtil;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.NormalizedPath;
 
@@ -92,7 +93,7 @@ public abstract class FileSystemAction {
 	protected void createSymlink(FileVersion reconstructedFileVersion) throws Exception {
 		File reconstructedFileAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
 
-		if (FileUtil.symlinksSupported()) {				
+		if (EnvironmentUtil.symlinksSupported()) {				
 			// Make directory if it does not exist
 			File reconstructedFileParentDir = reconstructedFileAtFinalLocation.getParentFile();
 			
@@ -184,7 +185,7 @@ public abstract class FileSystemAction {
 	}
 	
 	protected void setFileAttributes(FileVersion reconstructedFileVersion, File reconstructedFilesAtFinalLocation) throws IOException {
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			if (reconstructedFileVersion.getDosAttributes() != null) {
 				logger.log(Level.INFO, "     - Setting DOS attributes: "+reconstructedFileVersion.getDosAttributes()+" ...");
 
@@ -202,7 +203,7 @@ public abstract class FileSystemAction {
 				}				
 			}
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			if (reconstructedFileVersion.getPosixPermissions() != null) {
 				logger.log(Level.INFO, "     - Setting POSIX permissions: "+reconstructedFileVersion.getPosixPermissions()+" ...");
 				

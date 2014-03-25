@@ -42,4 +42,8 @@ public class EnvironmentUtil {
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
+	
+	public static boolean symlinksSupported() {
+		return isUnixLikeOperatingSystem();
+	}
 }

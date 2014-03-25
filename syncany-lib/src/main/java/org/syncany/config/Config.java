@@ -159,10 +159,19 @@ public class Config {
 		);*/
 	}
 
-	private void initMultiChunker(RepoTO repoTO) {
+	private void initMultiChunker(RepoTO repoTO) throws ConfigException {
 		MultiChunkerTO multiChunkerTO = repoTO.getMultiChunker();
 
+		if (multiChunkerTO == null) {
+			throw new ConfigException("No multichunker in repository config.");			
+		}
+		
 		multiChunker = MultiChunker.getInstance(multiChunkerTO.getType());
+		
+		if (multiChunker == null) {
+			throw new ConfigException("Invalid multichunk type or settings: " + multiChunkerTO.getType());
+		}
+		
 		multiChunker.init(multiChunkerTO.getSettings());
 	}
 
@@ -179,7 +188,7 @@ public class Config {
 				Transformer transformer = Transformer.getInstance(transformerTO.getType());
 				
 				if (transformer == null) {
-					throw new Exception("Cannot find transformer '"+transformerTO.getType()+"'");
+					throw new ConfigException("Cannot find transformer '"+transformerTO.getType()+"'");
 				}
 				
 				if (transformer instanceof CipherTransformer) { // Dirty workaround
@@ -221,11 +230,6 @@ public class Config {
 	public java.sql.Connection createDatabaseConnection() {
 		return DatabaseConnectionFactory.createConnection(getDatabaseFile());
 	}
-	
-	public void setCacheDir(File file) {
-		cacheDir = file;
-		cache = new Cache(cacheDir);
-	}	
 
 	public File getCacheDir() {
 		return cacheDir;
@@ -233,10 +237,6 @@ public class Config {
 	
 	public File getAppDir() {
 		return appDir;
-	}
-
-	public void setAppDir(File appDir) {
-		this.appDir = appDir;
 	}
 
 	public String getMachineName() {
@@ -270,10 +270,6 @@ public class Config {
     public Chunker getChunker() {
         return chunker;
     }
-
-    public void setChunker(Chunker chunker) {
-        this.chunker = chunker;
-    }
     
 	public Cache getCache() {
 		return cache;
@@ -283,16 +279,8 @@ public class Config {
 		return multiChunker;
 	}
 
-	public void setMultiChunker(MultiChunker multiChunker) {
-		this.multiChunker = multiChunker;
-	}
-
 	public Transformer getTransformer() {
 		return transformer;
-	}
-
-	public void setTransformer(Transformer transformer) {
-		this.transformer = transformer;
 	}
 
 	public void setCache(Cache cache) {
@@ -303,10 +291,6 @@ public class Config {
 		return localDir;
 	}
 
-	public void setLocalDir(File localDir) {
-		this.localDir = localDir;
-	}
-
 	public File getDatabaseDir() {
 		return databaseDir;
 	}	
@@ -315,24 +299,12 @@ public class Config {
 		return masterKey;
 	}
 
-	public void setMasterKey(SaltedSecretKey masterKey) {
-		this.masterKey = masterKey;
-	}
-
 	public File getDatabaseFile() {
 		return new File(databaseDir+File.separator+"local.db");	
 	}	
 
-	public void setDatabaseDir(File databaseDir) {
-		this.databaseDir = databaseDir;
-	}	
-
 	public File getLogDir() {
 		return logDir;
-	}
-	
-	public void setLogDir(File logDir) {
-		this.logDir = logDir;
 	}
 	
 	public static class ConfigException extends Exception {
