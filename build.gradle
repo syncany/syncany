@@ -4,32 +4,54 @@
 
 // Global Helpers //////////////////////////////////////////////////////////////
 
-String getRevision() {
+String execAndGetOutput(String command) {
 	try {
 		def stdout = new ByteArrayOutputStream()
 
 		exec {
 			workingDir rootProject.projectDir
-			commandLine 'git rev-parse --short HEAD'.split()
+			commandLine command.split()
 			standardOutput = stdout
 		}
 
 		return stdout.toString().trim()
 	}
 	catch (Exception e) {
-		return "UNKNOWN"
+		return null
 	}
+}
+
+String getRevision() {
+	String currentCommit = execAndGetOutput("git rev-parse --short HEAD")
+	return (currentCommit != null) ? currentCommit : "UNKNOWN"
+}
+
+boolean hasVersionTag() {
+	String currentTag = execAndGetOutput("git tag --list --contains HEAD")
+	return currentTag != null && currentTag.startsWith("v")
+}
+
+boolean isMasterBranch() {
+	String currentBranch = execAndGetOutput("git rev-parse --abbrev-ref HEAD")
+	return "master".equals(currentBranch)
+}
+
+boolean isApplicationRelease() {
+	return hasVersionTag() && isMasterBranch()
 }
 
 
 // Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
-	applicationRelease = false
-	applicationVersion = "0.1-SNAPSHOT"
+	applicationVersion = "0.1.0-alpha"
+
+	applicationRelease = isApplicationRelease()
 	applicationDate = new Date()
 	applicationRevision = getRevision()
-	applicationVersionFull = "${applicationVersion}-${applicationDate.format('yyMMddHHmm')}-${applicationRevision}"
+	
+	applicationVersionSnapshot = (!applicationRelease) ? "-SNAPSHOT+${applicationDate.format('yyMMddHHmm')}git${applicationRevision}" : ""
+	applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
 }
 
 repositories {
