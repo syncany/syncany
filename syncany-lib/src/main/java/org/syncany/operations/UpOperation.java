@@ -20,6 +20,7 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -246,8 +247,18 @@ public class UpOperation extends Operation {
 	}
 
 	private void removeUnreferencedData() {
-		logger.log(Level.INFO, "- Removing unreferenced dirty data from database ...");	
-		localDatabase.removeDirtyDatabaseVersions();		
+		logger.log(Level.INFO, "- Removing DIRTY database versions from database ...");	
+		localDatabase.removeDirtyDatabaseVersions();
+		
+		logger.log(Level.INFO, "- Removing unreferenced entities from database ...");
+		localDatabase.removeUnreferencedDatabaseEntities();
+		
+		try {
+			localDatabase.commit();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {

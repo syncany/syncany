@@ -45,9 +45,7 @@ import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
 import org.syncany.util.StringUtil;
 
 public class CleanupMergeDatabaseFilesScenarioTest {
@@ -585,16 +583,18 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000011").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000012").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000013").exists());
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionA));
 
+		// ^^^ Old chunk deleted!
+		
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A13,B11) + (A14,B11) [PURGE]
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000013").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000014").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionA));
 		
 		clientB.down();
@@ -603,7 +603,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000012").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000013").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000014").exists());
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionB));
 
 		clientA.down();
@@ -612,7 +612,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000016").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000017").exists());
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionA));
 		
 		clientA.down();
@@ -621,21 +621,19 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000017").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000018").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000019").exists());
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionA));		
 		
 		// Sync them up
 		clientA.down();
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionA));
 		
 		clientB.down();
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
+		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
 				databaseConnectionB));
 		
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());		
-		
-		// TODO [high] This test still fails; see issue #58 for more details
 		
 		// Run
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading 
