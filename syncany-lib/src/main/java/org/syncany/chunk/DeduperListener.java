@@ -19,6 +19,8 @@ package org.syncany.chunk;
 
 import java.io.File;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
+
 /**
  * Listener interface used by the {@link Deduper} to notify the caller of file
  * events, and to retrieve information about chunks and output files. 
@@ -109,7 +111,7 @@ public interface DeduperListener {
 	 * @param firstChunk The first chunk can/might be used to determine a new multichunk identifier
 	 * @return Returns a new unique multichunk identifier
 	 */
-	public byte[] createNewMultiChunkId(Chunk firstChunk);
+	public MultiChunkId createNewMultiChunkId(Chunk firstChunk);
 
 	/**
 	 * Called by {@link Deduper} during the deduplication process before a new {@link MultiChunk} is
@@ -119,7 +121,7 @@ public interface DeduperListener {
 	 * @param multiChunkId Identifier for the new multichunk
 	 * @return Returns the (temporary or final) file to which the multichunk should be written
 	 */
-	public File getMultiChunkFile(byte[] multiChunkId);
+	public File getMultiChunkFile(MultiChunkId multiChunkId);
 
 	/**
 	 * Called by {@link Deduper} during the deduplication process whenever a new {@link Chunk} is written 

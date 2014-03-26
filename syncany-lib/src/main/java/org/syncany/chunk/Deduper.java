@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.syncany.chunk.Chunker.ChunkEnumeration;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 
 /**
  * The Deduper implements the core deduplication algorithm used by Syncany. 
@@ -103,7 +104,7 @@ public class Deduper {
 
 						// - Open new multichunk if non-existent
 						if (multiChunk == null) {
-							byte[] newMultiChunkId = listener.createNewMultiChunkId(chunk);
+							MultiChunkId newMultiChunkId = listener.createNewMultiChunkId(chunk);
 							File multiChunkFile = listener.getMultiChunkFile(newMultiChunkId);
 							
 							multiChunk = multiChunker.createMultiChunk(newMultiChunkId, 

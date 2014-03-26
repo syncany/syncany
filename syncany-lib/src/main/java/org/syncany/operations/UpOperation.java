@@ -20,7 +20,6 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -115,6 +114,7 @@ public class UpOperation extends Operation {
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
 
 			disconnectTransferManager();
+			clearCache();
 
 			return result;
 		}
@@ -129,6 +129,7 @@ public class UpOperation extends Operation {
 				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
 
 				disconnectTransferManager();
+				clearCache();
 
 				return result;
 			}
@@ -174,6 +175,7 @@ public class UpOperation extends Operation {
 		
 		removeUnreferencedData();		
 		disconnectTransferManager();
+		clearCache();
 
 		logger.log(Level.INFO, "Sync up done.");
 
@@ -294,7 +296,7 @@ public class UpOperation extends Operation {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
 			}
 			else {
-				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId().getRaw());
+				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
 
 				logger.log(Level.INFO, "- Uploading multichunk " + multiChunkEntry.getId() + " from " + localMultiChunkFile + " to "
@@ -366,6 +368,10 @@ public class UpOperation extends Operation {
 		catch (StorageException e) {
 			// Don't care!
 		}
+	}
+	
+	private void clearCache() {
+		config.getCache().clear();
 	}
 
 	public static class UpOperationOptions implements OperationOptions {

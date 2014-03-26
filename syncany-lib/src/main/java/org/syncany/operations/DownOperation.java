@@ -139,6 +139,7 @@ public class DownOperation extends Operation {
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 
 			disconnectTransferManager();
+			clearCache();
 
 			return result;
 		}
@@ -163,6 +164,7 @@ public class DownOperation extends Operation {
 		localDatabase.writeKnownRemoteDatabases(unknownRemoteDatabases);
 
 		disconnectTransferManager();
+		clearCache();
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
@@ -416,8 +418,8 @@ public class DownOperation extends Operation {
 		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
 
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId.getRaw());
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId.getRaw());
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
 			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
 
 			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
@@ -661,6 +663,10 @@ public class DownOperation extends Operation {
 		catch (StorageException e) {
 			// Don't care!
 		}
+	}
+	
+	private void clearCache() {
+		config.getCache().clear();
 	}
 
 	public enum DownConflictStrategy {

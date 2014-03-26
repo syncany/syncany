@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.util.StringUtil;
 
 /**
@@ -118,7 +119,7 @@ public abstract class MultiChunker {
 	 * @return Returns a new multichunk object which can only be used for writing 
 	 * @throws IOException
 	 */
-	public abstract MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException;
+	public abstract MultiChunk createMultiChunk(MultiChunkId id, OutputStream os) throws IOException;
 
 	/**
 	 * Open existing multichunk in <b>read mode</b> using an underlying input stream.

@@ -499,19 +499,19 @@ public class Indexer {
 		
 		@Override
 		public void onMultiChunkOpen(MultiChunk multiChunk) {
-			logger.log(Level.FINER, "- +MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
-			multiChunkEntry = new MultiChunkEntry(new MultiChunkId(multiChunk.getId()), 0); // size unknown so far
+			logger.log(Level.FINER, "- +MultiChunk {0}", multiChunk.getId());
+			multiChunkEntry = new MultiChunkEntry(multiChunk.getId(), 0); // size unknown so far
 		}
 
 		@Override
 		public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
-			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), StringUtil.toHex(multiChunk.getId()) });		
+			logger.log(Level.FINER, "- Chunk > MultiChunk: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), multiChunk.getId() });		
 			multiChunkEntry.addChunk(chunkEntry.getChecksum());				
 		}
 		
 		@Override
 		public void onMultiChunkClose(MultiChunk multiChunk) {
-			logger.log(Level.FINER, "- /MultiChunk {0}", StringUtil.toHex(multiChunk.getId()));
+			logger.log(Level.FINER, "- /MultiChunk {0}", multiChunk.getId());
 			
 			multiChunkEntry.setSize(multiChunk.getSize());
 			
@@ -520,16 +520,16 @@ public class Indexer {
 		}
 
 		@Override
-		public File getMultiChunkFile(byte[] multiChunkId) {
+		public File getMultiChunkFile(MultiChunkId multiChunkId) {
 			return config.getCache().getEncryptedMultiChunkFile(multiChunkId);
 		}
 		
 		@Override
-		public byte[] createNewMultiChunkId(Chunk firstChunk) {
+		public MultiChunkId createNewMultiChunkId(Chunk firstChunk) {
 			byte[] newMultiChunkId = new byte[firstChunk.getChecksum().length];
 			secureRandom.nextBytes(newMultiChunkId);
 			
-			return newMultiChunkId;
+			return new MultiChunkId(newMultiChunkId);
 		}
 
 		@Override

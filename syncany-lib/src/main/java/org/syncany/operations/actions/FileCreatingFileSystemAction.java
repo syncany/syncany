@@ -118,7 +118,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 					multiChunkIdForChunk = winningDatabase.getMultiChunkIdForChunk(chunkChecksum);
 				}
 
-				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkIdForChunk.getRaw());
+				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkIdForChunk);
 
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
