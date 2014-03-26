@@ -31,13 +31,13 @@ boolean hasVersionTag() {
 	return currentTag != null && currentTag.startsWith("v")
 }
 
-boolean isMasterBranch() {
+boolean isReleaseBranch() {
 	String currentBranch = execAndGetOutput("git rev-parse --abbrev-ref HEAD")
-	return "master".equals(currentBranch)
+	return "release".equals(currentBranch)
 }
 
 boolean isApplicationRelease() {
-	return hasVersionTag() && isMasterBranch()
+	return hasVersionTag() && isReleaseBranch()
 }
 
 
