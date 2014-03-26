@@ -55,9 +55,6 @@ import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.SyncOperation;
-import org.syncany.operations.SyncOperation.SyncOperationOptions;
-import org.syncany.operations.SyncOperation.SyncOperationResult;
 import org.syncany.operations.UpOperation;
 import org.syncany.operations.UpOperation.UpOperationListener;
 import org.syncany.operations.UpOperation.UpOperationOptions;
@@ -145,14 +142,6 @@ public class Client {
 
 	public DownOperationResult down(DownOperationOptions options, DownOperationListener listener) throws Exception {
 		return new DownOperation(config, options, listener).execute();
-	}
-
-	public SyncOperationResult sync() throws Exception {
-		return sync(new SyncOperationOptions());
-	}
-
-	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
-		return new SyncOperation(config, options, null).execute();
 	}
 
 	public ChangeSet status() throws Exception {

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
@@ -30,6 +31,12 @@ import org.syncany.config.Config;
 import org.syncany.operations.LogOperation;
 import org.syncany.util.FileUtil;
 
+/**
+ * Intentionally undocumented command to help debugging the application. Implements various
+ * helpers for the repository and the local directory.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class DebugCommand extends Command {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
 
@@ -59,6 +66,8 @@ public class DebugCommand extends Command {
 	}
 
 	private void runDebugCommand(List<?> nonOptionArgs) throws Exception {
+		logger.log(Level.INFO, "Running 'decrypt' command with arguments: "+nonOptionArgs);
+		
 		if (nonOptionArgs.size() != 1) {
 			throw new Exception("Invalid syntax for 'debug' command. Argument expected.");
 		}
@@ -76,8 +85,7 @@ public class DebugCommand extends Command {
 		Config config = client.getConfig();
 		InputStream fileInputStream = config.getTransformer().createInputStream(new FileInputStream(decryptFile));
 		
-		FileUtil.appendToOutputStream(fileInputStream, System.out);
-		
+		FileUtil.appendToOutputStream(fileInputStream, System.out);		
 		System.exit(0);
 	}
 	

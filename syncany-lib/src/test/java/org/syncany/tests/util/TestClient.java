@@ -50,6 +50,11 @@ public class TestClient extends Client {
 		return up(upOptions);
 	}
 	
+	public void sync() throws Exception {
+		up();
+		down();
+	}
+	
 	public Thread watchAsThread(final int interval) {
 		return new Thread(new Runnable() {
 			@Override
@@ -144,5 +149,5 @@ public class TestClient extends Client {
 	
 	public TestSqlDatabase loadLocalDatabase() throws IOException {
 		return new TestSqlDatabase(config);
-	}
+	}	
 }
