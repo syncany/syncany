@@ -84,11 +84,16 @@ public class SqlDatabase {
 		connection.commit();
 	}
 
-	public void removeUnreferencedDatabaseEntities() throws SQLException {
-		removeUnreferencedFileHistories();
-		removeUnreferencedFileContents();
-		removeUnreferencedMultiChunks();
-		removeUnreferencedChunks();
+	public void removeUnreferencedDatabaseEntities() {
+		try {
+			removeUnreferencedFileHistories();
+			removeUnreferencedFileContents();
+			removeUnreferencedMultiChunks();
+			removeUnreferencedChunks();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	// Application

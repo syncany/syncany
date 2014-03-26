@@ -102,10 +102,8 @@ public class CleanupOperationTest {
 		assertEquals("5", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='otherfile.txt'", databaseConnectionA)); // 2+3
 		assertEquals("1", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='someotherfile.jpg'", databaseConnectionA));
 				
-		// Normally this should be 5, but because the chunk of "someotherfile.jpg" and "file.jpg" (version 1) 
-		// are in the same multichunk, the chunk of "file1.jpg" (version 1) cannot be deleted
-		// --> So "6" is correct
-		assertEquals("6", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionA));
+		// 5 chunks remain; one was obsolete so we removed it!
+		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionA));
 		
 		// 6 chunks in 5 multichunks
 		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from multichunk", databaseConnectionA));
