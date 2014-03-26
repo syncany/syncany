@@ -21,9 +21,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.daemon.websocket.messages.DaemonMessage;
+import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
-import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.event.EventManager;
@@ -42,7 +42,7 @@ public class DaemonMessagesHandler {
 		switch (message.getAction()) {
 			case "daemon_watch_event":
 				DaemonWatchEvent dwe = JsonHelper.fromStringToObject(messageString, DaemonWatchEvent.class);
-				logger.log(Level.FINE, "event :" + dwe.getEvent());
+				logger.log(Level.FINE, "event :" + dwe.toString());
 				break;
 			
 			case "daemon_init_result":

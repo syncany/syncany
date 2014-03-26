@@ -21,12 +21,13 @@ import java.io.File;
 import java.io.FileFilter;
 
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class ChangeTypeSymlinkWithTargetFileToFolder extends AbstractClientAction {
 	@Override
 	public void execute() throws Exception {
-		if (!FileUtil.symlinksSupported()) {
+		if (!EnvironmentUtil.symlinksSupported()) {
 			return; // no symbolic links on Windows
 		}
 		

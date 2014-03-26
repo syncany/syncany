@@ -219,8 +219,9 @@ public class CleanupOperation extends Operation {
 		unlockRemoteRepository();		
 	}
 
-	private void uploadPurgeFile(File tempPruneFile, DatabaseRemoteFile newPruneRemoteFile) throws StorageException {
-		transferManager.upload(tempPruneFile, newPruneRemoteFile);
+	private void uploadPurgeFile(File tempPurgeFile, DatabaseRemoteFile newPurgeRemoteFile) throws StorageException {
+		logger.log(Level.INFO, "- Uploading PURGE database file " + newPurgeRemoteFile + " ...");
+		transferManager.upload(tempPurgeFile, newPurgeRemoteFile);
 	}
 
 	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions) {

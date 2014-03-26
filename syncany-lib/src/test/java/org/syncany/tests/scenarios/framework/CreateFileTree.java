@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 public class CreateFileTree extends AbstractClientAction {
@@ -83,7 +84,7 @@ public class CreateFileTree extends AbstractClientAction {
 	}
 
 	private void createSymlinkWithTargetFile(File inFolder) throws Exception {
-		if (FileUtil.symlinksSupported()) {
+		if (EnvironmentUtil.symlinksSupported()) {
 			String targetPathStr = inFolder+"/sym-target-"+(fileNum++);
 			File symlinkFile = new File(inFolder+"/symlink-"+(fileNum++));
 			
@@ -93,7 +94,7 @@ public class CreateFileTree extends AbstractClientAction {
 	}
 	
 	private void createSymlinkWithTargetFolder(File inFolder) throws Exception {
-		if (FileUtil.symlinksSupported()) {
+		if (EnvironmentUtil.symlinksSupported()) {
 			String targetPathStr = inFolder+"/sym-target-folder-"+(fileNum++);
 			File symlinkFile = new File(inFolder+"/symlink-"+(fileNum++));
 			
@@ -103,7 +104,7 @@ public class CreateFileTree extends AbstractClientAction {
 	}
 	
 	private void createSymlinkWithNonExistingTarget(File inFolder) throws Exception {		
-		if (FileUtil.symlinksSupported()) {
+		if (EnvironmentUtil.symlinksSupported()) {
 			String targetPathStr = inFolder+"/sym-target-does-NOT-exist-"+(fileNum++);
 			File symlinkFile = new File(inFolder+"/symlink-BROKEN-"+(fileNum++));
 						

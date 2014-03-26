@@ -32,10 +32,9 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.daemon.websocket.DaemonWebSocketServer;
 import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
-import org.syncany.operations.WatchEvent;
-import org.syncany.operations.WatchEventListener;
 import org.syncany.operations.WatchOperation;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.listener.WatchOperationListener;
 
 public class WatchCommand extends Command {
 	public static final Pattern ANNOUNCEMENTS_PATTERN = Pattern.compile("([^:]+):(\\d+)");
@@ -112,13 +111,44 @@ public class WatchCommand extends Command {
 //		}
 
 		// Run!
-		final WatchEventListener wl = new WatchEventListener() {
+		final WatchOperationListener wl = new WatchOperationListener() {
+
 			@Override
-			public void update(WatchEvent event) {
+			public void batchIndexStart(int fileCount) {
 				DaemonWatchEvent dwe = new DaemonWatchEvent();
 				dwe.setAction("daemon_watch_event");
-				dwe.setEvent(event);
+				//dwe.setEvent(event);
 				DaemonWebSocketServer.sendToAll(dwe);
+			}
+
+			@Override
+			public void batchIndexUpdate(String fileName, int fileNumber) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void batchUploadStart(int fileCount) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void batchUploadUpdate(String fileName, int fileNumber) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void batchDownloadStart(int fileCount) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void batchDownloadUpdate(String fileName, int fileNumber) {
+				// TODO Auto-generated method stub
+				
 			}
 		};
 		

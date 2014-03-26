@@ -1,0 +1,87 @@
+/*
+ * Syncany, www.syncany.org
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.syncany.cli;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.logging.Logger;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
+import org.syncany.config.Config;
+import org.syncany.operations.LogOperation;
+import org.syncany.util.FileUtil;
+
+public class DebugCommand extends Command {
+	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
+
+	@Override
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.ANY;
+	}
+
+	@Override
+	public int execute(String[] operationArgs) throws Exception {
+		OptionParser parser = new OptionParser();
+		OptionSet options = parser.parse(operationArgs);	
+
+		// Files
+		List<?> nonOptionArgs = options.nonOptionArguments();
+		
+		if (nonOptionArgs.size() > 0) {
+			String debugCommand = nonOptionArgs.get(0).toString();		
+			List<?> newNonOptionArgs = nonOptionArgs.subList(1, nonOptionArgs.size());
+			
+			if ("decrypt".equals(debugCommand)) {
+				runDebugCommand(newNonOptionArgs);
+			}
+		}
+		
+		throw new Exception("Invalid syntax. No command given or command unknown.");
+	}
+
+	private void runDebugCommand(List<?> nonOptionArgs) throws Exception {
+		if (nonOptionArgs.size() != 1) {
+			throw new Exception("Invalid syntax for 'debug' command. Argument expected.");
+		}
+		
+		if (!isInitializedScope()) {
+			throw new Exception("Command 'debug' can only be run in initialized local dir.");
+		}
+
+		File decryptFile = new File(nonOptionArgs.get(0).toString());
+
+		if (!decryptFile.exists()) {
+			throw new Exception("Given file does not exist: "+decryptFile);			
+		}
+		
+		Config config = client.getConfig();
+		InputStream fileInputStream = config.getTransformer().createInputStream(new FileInputStream(decryptFile));
+		
+		FileUtil.appendToOutputStream(fileInputStream, System.out);
+		
+		System.exit(0);
+	}
+	
+	private boolean isInitializedScope() {
+		return client != null && client.getConfig() != null;
+	}
+}

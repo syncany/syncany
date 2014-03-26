@@ -20,6 +20,7 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -46,11 +47,13 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
+import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
-import org.syncany.operations.WatchEvent.WatchEventType;
+import org.syncany.operations.listener.WatchOperationListener;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -80,20 +83,20 @@ public class UpOperation extends Operation {
 	private UpOperationOptions options;
 	private TransferManager transferManager;
 	private SqlDatabase localDatabase;
-	private WatchEventListener watchEventListener;
+	private WatchOperationListener watchOperationListener;
 	
 	public UpOperation(Config config) {
 		this(config, new UpOperationOptions(), null);
 	}
 	
-	public UpOperation(Config config, WatchEventListener watchEventListener) {
-		this(config, new UpOperationOptions(), watchEventListener);
+	public UpOperation(Config config, WatchOperationListener watchOperationListener) {
+		this(config, new UpOperationOptions(), watchOperationListener);
 	}
 
-	public UpOperation(Config config, UpOperationOptions options, WatchEventListener watchEventListener) {
+	public UpOperation(Config config, UpOperationOptions options, WatchOperationListener watchOperationListener) {
 		super(config);
 
-		this.watchEventListener = watchEventListener;
+		this.watchOperationListener = watchOperationListener;
 		this.options = options;
 		this.transferManager = config.getConnection().createTransferManager();
 		this.localDatabase = new SqlDatabase(config);
@@ -161,7 +164,6 @@ public class UpOperation extends Operation {
 		}		
 
 		// Upload multichunks
-		// produces WatchEventType.UPLOADING events
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		uploadMultiChunks(newDatabaseVersion);
 
@@ -175,7 +177,7 @@ public class UpOperation extends Operation {
 		localDatabase.persistDatabaseVersion(newDatabaseVersion);
 
 		if (options.cleanupEnabled()) {
-			new CleanupOperation(config).execute(); 
+			result.cleanupResult = new CleanupOperation(config, options.getCleanupOptions()).execute(); 
 		}
 		
 		removeUnreferencedData();		
@@ -253,7 +255,7 @@ public class UpOperation extends Operation {
 	}
 
 	private void removeUnreferencedData() {
-		logger.log(Level.INFO, "- Removing unreferenced dirty data from database ...");	
+		logger.log(Level.INFO, "- Removing DIRTY database versions from database ...");	
 		localDatabase.removeDirtyDatabaseVersions();		
 	}
 
@@ -296,6 +298,11 @@ public class UpOperation extends Operation {
 		Collection<MultiChunkEntry> multiChunksEntries = newDatabaseVersion.getMultiChunks();
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
 		int i = 0;
+		
+		if (watchOperationListener != null) {
+			watchOperationListener.batchUploadStart(multiChunksEntries.size());
+		}
+		
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			if (dirtyMultiChunkIds.contains(multiChunkEntry.getId())) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
@@ -308,8 +315,8 @@ public class UpOperation extends Operation {
 						+ remoteMultiChunkFile + " ...");
 				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
 				i++;
-				if (watchEventListener != null) {
-					watchEventListener.update(new WatchEvent(remoteMultiChunkFile.getName(), WatchEventType.UPLOADING, i, multiChunksEntries.size()));
+				if (watchOperationListener != null) {
+					watchOperationListener.batchUploadUpdate(remoteMultiChunkFile.getName(), i);
 				}
 
 				logger.log(Level.INFO, "  + Removing " + multiChunkEntry.getId() + " locally ...");
@@ -332,8 +339,8 @@ public class UpOperation extends Operation {
 		VectorClock newVectorClock = findNewVectorClock(lastVectorClock);
 
 		// Index
-		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), watchEventListener);
-		Indexer indexer = new Indexer(config, deduper);
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
+		Indexer indexer = new Indexer(config, deduper, watchOperationListener);
 
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
 
@@ -383,6 +390,15 @@ public class UpOperation extends Operation {
 		private StatusOperationOptions statusOptions = new StatusOperationOptions();
 		private boolean forceUploadEnabled = false;
 		private boolean cleanupEnabled = true;
+		private CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+
+		public CleanupOperationOptions getCleanupOptions() {
+			return cleanupOptions;
+		}
+
+		public void setCleanupOptions(CleanupOperationOptions cleanupOptions) {
+			this.cleanupOptions = cleanupOptions;
+		}
 
 		public StatusOperationOptions getStatusOptions() {
 			return statusOptions;
@@ -416,7 +432,16 @@ public class UpOperation extends Operation {
 
 		private UpResultCode resultCode;
 		private StatusOperationResult statusResult = new StatusOperationResult();
+		private CleanupOperationResult cleanupResult = null;
 		private ChangeSet uploadChangeSet = new ChangeSet();
+
+		public CleanupOperationResult getCleanupResult() {
+			return cleanupResult;
+		}
+
+		public void setCleanupResult(CleanupOperationResult cleanupResult) {
+			this.cleanupResult = cleanupResult;
+		}
 
 		public UpResultCode getResultCode() {
 			return resultCode;

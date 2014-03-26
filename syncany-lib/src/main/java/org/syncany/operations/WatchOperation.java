@@ -33,6 +33,7 @@ import org.syncany.operations.NotificationListener.NotificationListenerListener;
 import org.syncany.operations.RecursiveWatcher.WatchListener;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.listener.WatchOperationListener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -69,15 +70,15 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
-	private WatchEventListener watchEventListener;
+	private WatchOperationListener watchOperationListener;
 
 	private String notificationChannel;
 	private String notificationInstanceId;
 
-	public WatchOperation(Config config, WatchOperationOptions options, WatchEventListener watchEventListener) {
+	public WatchOperation(Config config, WatchOperationOptions options, WatchOperationListener watchOperationListener) {
 		super(config);
 
-		this.watchEventListener = watchEventListener;
+		this.watchOperationListener = watchOperationListener;
 		this.options = options;
 
 		this.syncRunning = new AtomicBoolean(false);
@@ -158,8 +159,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Running sync ...");
 
 			try {
-				DownOperationResult downResult = new DownOperation(config, watchEventListener).execute();
-				UpOperationResult upOperationResult = new UpOperation(config, watchEventListener).execute();
+				DownOperationResult downResult = new DownOperation(config, watchOperationListener).execute();
+				UpOperationResult upOperationResult = new UpOperation(config, watchOperationListener).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES && upOperationResult.getChangeSet().hasChanges()) {
 					notifyChanges();

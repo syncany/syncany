@@ -53,4 +53,8 @@ public class EnvironmentUtil {
 	public static boolean isLinux() {
 		return osName.startsWith("linux");
 	}
+
+	public static boolean symlinksSupported() {
+		return isUnixLikeOperatingSystem();
+	}
 }

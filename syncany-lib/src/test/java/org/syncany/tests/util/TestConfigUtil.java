@@ -81,7 +81,7 @@ public class TestConfigUtil {
 		return createTestLocalConfig(machineName, createTestLocalConnection());
 	}
 
-	private static MultiChunkerTO createZipMultiChunkerTO() {
+	public static MultiChunkerTO createZipMultiChunkerTO() {
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(ZipMultiChunker.PROPERTY_SIZE, "4096");
 
@@ -92,7 +92,7 @@ public class TestConfigUtil {
 		return multiChunkerTO;
 	}
 
-	private static ChunkerTO createFixedChunkerTO() {
+	public static ChunkerTO createFixedChunkerTO() {
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(Chunker.PROPERTY_SIZE, "32768");
 		
@@ -103,7 +103,7 @@ public class TestConfigUtil {
 		return chunkerTO;
 	}
 	
-	private static RepoTO createRepoTO() {
+	public static RepoTO createRepoTO() {
 		// Create Repo TO
 		RepoTO repoTO = new RepoTO();
 		repoTO.setRepoId(new byte[] { 0x01, 0x02, 0x03 });
@@ -111,7 +111,7 @@ public class TestConfigUtil {
 		// Create ChunkerTO and MultiChunkerTO
 		MultiChunkerTO multiChunkerTO = createZipMultiChunkerTO();
 		ChunkerTO chunkerTO = createFixedChunkerTO();
-		repoTO.setChunker(chunkerTO); // TODO [low] Chunker not configurable right now. Not used.
+		repoTO.setChunkerTO(chunkerTO); // TODO [low] Chunker not configurable right now. Not used.
 		repoTO.setMultiChunker(multiChunkerTO);
 
 		// Create TransformerTO
@@ -120,7 +120,7 @@ public class TestConfigUtil {
 		return repoTO;
 	}
 
-	private static List<TransformerTO> createTransformerTOs() {
+	public static List<TransformerTO> createTransformerTOs() {
 		if (!cryptoEnabled) {
 			return null;
 		}
@@ -158,7 +158,7 @@ public class TestConfigUtil {
 
 		RepoTO repoTO = new RepoTO();
 		repoTO.setTransformers(null);
-		repoTO.setChunker(createFixedChunkerTO());
+		repoTO.setChunkerTO(createFixedChunkerTO());
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
 		return new Config(new File("/dummy"), configTO, repoTO);

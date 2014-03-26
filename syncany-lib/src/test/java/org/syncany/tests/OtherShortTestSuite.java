@@ -25,6 +25,8 @@ import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.ConfigHelperTest;
+import org.syncany.tests.config.ConfigTest;
+import org.syncany.tests.connection.plugins.PluginOptionSpecTest;
 import org.syncany.tests.connection.plugins.PluginsTest;
 import org.syncany.tests.connection.plugins.local.LocalConnectionPluginTest;
 import org.syncany.tests.connection.plugins.local.LocalTransferManagerPluginTest;
@@ -32,6 +34,7 @@ import org.syncany.tests.connection.plugins.unreliable_local.UploadInterruptedTe
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
+import org.syncany.tests.operations.CleanupOperationTest;
 import org.syncany.tests.operations.ConnectOperationTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.operations.IndexerTest;
@@ -61,6 +64,7 @@ import org.syncany.tests.util.FileUtilTest;
 	
 	// Connection
 	PluginsTest.class,
+	PluginOptionSpecTest.class,
 	LocalConnectionPluginTest.class,
 	LocalTransferManagerPluginTest.class,
 	UploadInterruptedTest.class,
@@ -75,9 +79,11 @@ import org.syncany.tests.util.FileUtilTest;
 	StatusOperationTest.class,
 	NotificationListenerTest.class,
 	ConnectOperationTest.class,
+	CleanupOperationTest.class,
 	
 	// Config
-	ConfigHelperTest.class
+	ConfigHelperTest.class,
+	ConfigTest.class
 })
 public class OtherShortTestSuite {
 	// This class executes all tests

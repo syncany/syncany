@@ -80,11 +80,11 @@ public class RepoTO {
 		repoId = (repoIdEncoded != null) ? StringUtil.fromHex(repoIdEncoded) : null;
 	}
 
-	public ChunkerTO getChunker() {
+	public ChunkerTO getChunkerTO() {
 		return chunker;
 	}
 
-	public void setChunker(ChunkerTO chunker) {
+	public void setChunkerTO(ChunkerTO chunker) {
 		this.chunker = chunker;
 	}
 

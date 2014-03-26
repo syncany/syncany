@@ -60,10 +60,9 @@ import org.syncany.operations.SyncOperation.SyncOperationResult;
 import org.syncany.operations.UpOperation;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.WatchEvent;
-import org.syncany.operations.WatchEventListener;
 import org.syncany.operations.WatchOperation;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.listener.WatchOperationAdapter;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -167,13 +166,7 @@ public class Client {
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
-		WatchEventListener wl = new WatchEventListener() {
-			@Override
-			public void update(WatchEvent event) {
-				System.out.println(event.toString());
-			}
-		};
-		new WatchOperation(config, options, wl).execute();		
+		new WatchOperation(config, options, new WatchOperationAdapter()).execute();		
 	}	
 
 	public GenlinkOperationResult genlink() throws Exception {

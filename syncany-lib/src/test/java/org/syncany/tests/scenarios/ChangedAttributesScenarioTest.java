@@ -41,7 +41,7 @@ import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.util.FileUtil;
+import org.syncany.util.EnvironmentUtil;
 
 public class ChangedAttributesScenarioTest {
 	@Test
@@ -60,10 +60,10 @@ public class ChangedAttributesScenarioTest {
 		File bFile = clientB.getLocalFile("file1.jpg");
 		Path bFilePath = Paths.get(bFile.getAbsolutePath());
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(bFilePath, "dos:readonly", true);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("rwxrwxrwx"));
 		}		
 		
@@ -90,11 +90,11 @@ public class ChangedAttributesScenarioTest {
 		File aFile = clientA.getLocalFile("file1.jpg");
 		Path aFilePath = Paths.get(aFile.getAbsolutePath());
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Object readOnlyAttribute = Files.getAttribute(aFilePath, "dos:readonly");
 			assertTrue("Read-only should be true.", (Boolean) readOnlyAttribute);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Set<PosixFilePermission> posixFilePermissions = Files.getPosixFilePermissions(aFilePath);
 			assertEquals("Should be rwxrwxrwx.", "rwxrwxrwx", PosixFilePermissions.toString(posixFilePermissions));
 		}	
@@ -128,11 +128,11 @@ public class ChangedAttributesScenarioTest {
 		File bFile = clientB.getLocalFile("file1.jpg"); // Client B's attributes differ!
 		Path bFilePath = Paths.get(bFile.getAbsolutePath());
 		
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			aReadOnlyAttribute = Files.getAttribute(aFilePath, "dos:readonly");
 			Files.setAttribute(bFilePath, "dos:readonly", true);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			aPosixFilePermissions = Files.getPosixFilePermissions(aFilePath);
 			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("rwxrwxrwx"));
 		}	
@@ -144,11 +144,11 @@ public class ChangedAttributesScenarioTest {
 		assertTrue("File should be downloaded.", downResult.getChangeSet().hasChanges());
 		
 		// Test 2: file1.jpg permissions (again!
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Object bReadOnlyAttribute = Files.getAttribute(aFilePath, "dos:readonly");
 			assertEquals("Read-only should be true.", aReadOnlyAttribute, bReadOnlyAttribute);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Set<PosixFilePermission> bPosixFilePermissions = Files.getPosixFilePermissions(aFilePath);
 			assertEquals("Should be rwxrwxrwx.", PosixFilePermissions.toString(aPosixFilePermissions), PosixFilePermissions.toString(bPosixFilePermissions));
 		}	

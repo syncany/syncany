@@ -29,67 +29,59 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.EnvironmentUtil.OperatingSystem;
 import org.syncany.util.FileUtil;
-import org.syncany.util.NormalizedPath;
 
-public class FileUtilTest {
-	private OperatingSystem originalOperatingSystem;
-	
-	@Before
-	public void storeOperatingSystem() {
-		originalOperatingSystem = EnvironmentUtil.getOperatingSystem();
-	}
-	
-	@After
-	public void resetOperatingSystem() {
-		// Important: Restore the actual operating systems, 
-		//            or other tests might fail.
-		
-		EnvironmentUtil.setOperatingSystem(originalOperatingSystem);
-	}
-	
+public class FileUtilTest {	
 	@Test
-	public void testGetRelativeFilePath() {
-		String expectedResult = "somefile";
-		
-		File[] rootFolders = new File[] {
-			new File("/home/user/Syncany"),
-			new File("/home/user/Syncany/"),
-			new File("/home/user/Syncany//"),
-			new File("/home/user//Syncany"),
-			new File("/home/user//Syncany/"),
-			new File("/home/user//Syncany//")			
-		};
-		
-		File[] files = new File[] {
-			new File("/home/user/Syncany/somefile"),
-			new File("/home/user/Syncany/somefile/"),
-			new File("/home/user/Syncany/somefile//"),
-			new File("/home/user/Syncany//somefile"),
-			new File("/home/user/Syncany//somefile/"),
-			new File("/home/user/Syncany//somefile//")
-		};
-		
-		for (File rootFolder : rootFolders) {
-			for (File file : files) {
-				String actualResult = FileUtil.getRelativePath(rootFolder, file);
-				assertEquals("Expected '"+expectedResult+"' for root folder '"+rootFolder+"' and file '"+file+"'", expectedResult, actualResult);
-			}
+	public void testGetRelativePath() {
+		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
+			assertEquals("some/path", FileUtil.getRelativePath(new File("/home"), new File("/home/some/path")));
+			assertEquals("some/path", FileUtil.getRelativePath(new File("/home/"), new File("/home/some/path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("/home/some"), new File("/home/some/path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("/home/some/"), new File("/home/some/path")));
+		}
+		else {
+			assertEquals("some\\path", FileUtil.getRelativePath(new File("C:\\home"), new File("C:\\home\\some\\path")));
+			assertEquals("some\\path", FileUtil.getRelativePath(new File("C:\\home"), new File("C:\\home\\some\\path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("C:\\home\\some"), new File("C:\\home\\some\\path")));
+			assertEquals("path", FileUtil.getRelativePath(new File("C:\\homesome\\"), new File("C:\\home\\some\\path")));
 		}
 	}
 	
 	@Test
-	public void testGetRelativeFilePathSpecialCases() {
-		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user")));
-		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user/")));
-		assertEquals("", FileUtil.getRelativePath(new File("/home/user/"), new File("/home/user//")));		
+	public void testFileExistsNormal() throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		TestFileUtil.createRandomFile(new File(tempDir, "file1"), 1234);
+		
+		assertTrue(FileUtil.exists(new File(tempDir, "file1")));
+		assertFalse(FileUtil.exists(new File(tempDir, "file2")));
+		
+		TestFileUtil.deleteDirectory(tempDir);
 	}
 	
+	@Test
+	public void testFileExistsSymlink() throws Exception {
+		if (!EnvironmentUtil.symlinksSupported()) {
+			return;
+		}
+		
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		TestFileUtil.createRandomFile(new File(tempDir, "file1"), 1234);
+
+		Files.createSymbolicLink(new File(tempDir, "link-to-file1").toPath(), new File(tempDir, "file1").toPath());
+		Files.createSymbolicLink(new File(tempDir, "non-existing-target").toPath(), Paths.get("/does/not/exist"));
+
+		assertTrue(FileUtil.exists(new File(tempDir, "link-to-file1")));
+		assertTrue(FileUtil.exists(new File(tempDir, "non-existing-target")));
+		assertFalse(FileUtil.exists(new File(tempDir, "actually-non-existing-file-or-link")));
+		
+		TestFileUtil.deleteDirectory(tempDir);		
+	}
+
 	@Test
 	public void testFileLocked() throws Exception {
 		// Setup
@@ -111,10 +103,10 @@ public class FileUtilTest {
 		fileLock.close();
 		Path bFilePath = Paths.get(lockedFile.getAbsolutePath());
 
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(bFilePath, "dos:readonly", true);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("r--r--r--"));
 		}	
 		
@@ -123,106 +115,4 @@ public class FileUtilTest {
 		// Tear down
 		TestFileUtil.deleteDirectory(tempDir);
 	}
-	
-	@Test
-	public void testBackslashPaths() {
-		EnvironmentUtil.setOperatingSystem(OperatingSystem.WINDOWS);
-		String someWindowsFile = "C:\\Users\\Philipp\\März.jpg";
-		
-		assertEquals("C:/Users/Philipp/März.jpg", FileUtil.toDatabasePath(someWindowsFile));
-		assertEquals("C:/Users/Philipp", FileUtil.getDatabaseParentDirectory(someWindowsFile));
-		assertEquals("März.jpg", FileUtil.getDatabaseBasename(someWindowsFile));
-		
-		EnvironmentUtil.setOperatingSystem(OperatingSystem.UNIX_LIKE);
-		String someLinuxFile = "/home/philipp/A \"black\\white\" ☎ telephone.jpg";
-		assertEquals("/home/philipp", FileUtil.getDatabaseParentDirectory(someLinuxFile));
-		assertEquals("A \"black\\white\" ☎ telephone.jpg", FileUtil.getDatabaseBasename(someLinuxFile));		
-	}
-	
-	@Test
-	public void testNameAndParentPathForNormalizedPathsOnWindows() {		
-		testNameAndParentPathForNormalizedPaths(OperatingSystem.WINDOWS);
-	}
-	
-	@Test
-	public void testNameAndParentPathForNormalizedPathsOnUnixLikeSystems() {		
-		testNameAndParentPathForNormalizedPaths(OperatingSystem.UNIX_LIKE);
-	}
-
-	private void testNameAndParentPathForNormalizedPaths(OperatingSystem operatingSystem) {		
-		EnvironmentUtil.setOperatingSystem(operatingSystem);
-		
-		// Test 1: For a file called 'A black\white telephone ☎.jpg' 
-		//         Note: "A black" is NOT a directory, it's part of the filename (invalid on Windows!)		
-		String alreadyNormalizedRelativePathFileStr = "Pictures/A black\\white telephone ☎.jpg";
-		NormalizedPath normalizedPathFile = new NormalizedPath(null, alreadyNormalizedRelativePathFileStr);
-		
-		assertEquals("Pictures/A black\\white telephone ☎.jpg", normalizedPathFile.toString());
-		assertEquals("A black\\white telephone ☎.jpg", normalizedPathFile.getName().toString());
-		assertEquals("Pictures", normalizedPathFile.getParent().toString());
-
-		// Test 2: For directory called 'black\\white telephones ☎' 		
-		String alreadyNormalizedRelativePathDirStr = "Pictures/black\\white telephones ☎";
-		NormalizedPath normalizedPathDir = new NormalizedPath(null, alreadyNormalizedRelativePathDirStr);
-		
-		assertEquals("Pictures/black\\white telephones ☎", normalizedPathDir.toString());
-		assertEquals("black\\white telephones ☎", normalizedPathDir.getName().toString());
-		assertEquals("Pictures", normalizedPathDir.getParent().toString());
-		
-		// Test 3: For directory called 'black\\white telephones ☎' 		
-		String alreadyNormalizedRelativePathFileWithBackslashesDirStr = "Pictures/Black\\White Pictures/Mostly\\Black Pictures/blacky.jpg";
-		NormalizedPath normalizedPathWithBackslashesDir = new NormalizedPath(null, alreadyNormalizedRelativePathFileWithBackslashesDirStr);
-		
-		assertEquals("Pictures/Black\\White Pictures/Mostly\\Black Pictures/blacky.jpg", normalizedPathWithBackslashesDir.toString());
-		assertEquals("blacky.jpg", normalizedPathWithBackslashesDir.getName().toString());
-		assertEquals("Pictures/Black\\White Pictures/Mostly\\Black Pictures", normalizedPathWithBackslashesDir.getParent().toString());		
-	}
-	
-	@Test
-	public void testNameAndParentPathForNormalizedPathsMoreTests() {		
-		// Does not depend on OS
-		
-		assertEquals("Philipp", new NormalizedPath(null, "Philipp").getName().toString());
-		assertEquals("", new NormalizedPath(null, "Philipp").getParent().toString()); 		
-	}
-	
-	@Test
-	public void testNormalizationOnWindows() {		
-		EnvironmentUtil.setOperatingSystem(OperatingSystem.WINDOWS);
-		
-		assertEquals("C:/Philipp", NormalizedPath.get(null, "C:\\Philipp\\").toString());
-		assertEquals("C:/Philipp", NormalizedPath.get(null, "C:\\Philipp").toString());
-		assertEquals("C:/Philipp/image.jpg", NormalizedPath.get(null, "C:\\Philipp\\image.jpg").toString());
-		assertEquals("C:/Philipp/image", NormalizedPath.get(null, "C:\\Philipp\\image").toString());
-		assertEquals("C:/Philipp/file:with:colons.txt", NormalizedPath.get(null, "C:\\Philipp\\file:with:colons.txt").toString()); // Cannot happen on Windows 
-		assertEquals("C:/Philipp/file/with/backslashes.txt", NormalizedPath.get(null, "C:\\Philipp\\file\\with\\backslashes.txt").toString()); 
-		assertEquals("C:/Philipp/folder/with/backslashes", NormalizedPath.get(null, "C:\\Philipp\\folder\\with\\backslashes\\").toString()); 
-	}
-	
-	@Test
-	public void testCreatablizationOnWindows() throws Exception {		
-		EnvironmentUtil.setOperatingSystem(OperatingSystem.WINDOWS);
-		File root = new File("C:\\Philipp");
-		
-		assertEquals("Philipp", new NormalizedPath(root, "Philipp").toCreatable("filename conflict", true).toString());
-		assertEquals("Philipp", new NormalizedPath(root, "Philipp").toCreatable("filename conflict", true).toString());
-		assertEquals("Philipp/image.jpg", new NormalizedPath(root, "Philipp/image.jpg").toCreatable("filename conflict", true).toString());
-		assertEquals("Philipp/image", new NormalizedPath(root, "Philipp/image").toCreatable("filename conflict", true).toString());
-		assertEquals("Philipp/filewithcolons (filename conflict).txt", new NormalizedPath(root, "Philipp/file:with:colons.txt").toCreatable("filename conflict", true).toString()); // Cannot happen on Windows 
-		assertEquals("Philipp/filewithbackslashes (filename conflict).txt", new NormalizedPath(root, "Philipp/file\\with\\backslashes.txt").toCreatable("filename conflict", true).toString()); 
-		assertEquals("Philipp/folderwithbackslashes (filename conflict)", new NormalizedPath(root, "Philipp/folder\\with\\backslashes").toCreatable("filename conflict", true).toString()); 
-	}
-	
-	@Test
-	public void testNormalizationOnUnixLikeSystems() {
-		EnvironmentUtil.setOperatingSystem(OperatingSystem.UNIX_LIKE);
-
-		assertEquals("/home/philipp", NormalizedPath.get(null, "/home/philipp/").toString());
-		assertEquals("/home/philipp", NormalizedPath.get(null, "/home/philipp").toString());
-		assertEquals("/home/philipp/image.jpg", NormalizedPath.get(null, "/home/philipp/image.jpg").toString());
-		assertEquals("/home/philipp/image", NormalizedPath.get(null, "/home/philipp/image").toString());
-		assertEquals("/home/philipp/file:with:colons", NormalizedPath.get(null, "/home/philipp/file:with:colons").toString());
-		assertEquals("/home/philipp/file\\with\\backslashes.txt", NormalizedPath.get(null, "/home/philipp/file\\with\\backslashes.txt").toString());
-		assertEquals("/home/philipp/folder\\with\\backslashes", NormalizedPath.get(null, "/home/philipp/folder\\with\\backslashes/").toString());		
-	}	
 }

@@ -17,6 +17,7 @@
  */
 package org.syncany.tests.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -27,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -281,13 +284,13 @@ public class TestFileUtil {
 		return getLocalFiles(root, new FileFilter() {
 			@Override
 			public boolean accept(File file) {
-				return !FileUtil.isFileLocked(file) && FileUtil.canRead(file);
+				return !FileUtil.isFileLocked(file) && canRead(file);
 			}
 		});
 	}
 
 	public static Map<String, File> getLocalFiles(File root, FileFilter filter) throws FileNotFoundException {
-		List<File> fileList = FileUtil.getRecursiveFileList(root, true, false);
+		List<File> fileList = getRecursiveFileList(root, true, false);
 		Map<String, File> fileMap = new HashMap<String, File>();
 
 		for (File file : fileList) {
@@ -306,5 +309,80 @@ public class TestFileUtil {
 
 		return fileMap;
 	}
+	
+	public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
+		FileUtil.appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
+	}
+	
 
+	/**
+	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
+	 * symlinks into account. Returns <tt>true</tt> if a symlink exists even if its target file
+	 * does not exist and can hence not be read.
+	 * 
+	 * @param file A file
+	 * @return Returns <tt>true</tt> if the file can be read (or the symlink exists), <tt>false</tt> otherwise
+	 */
+	public static boolean canRead(File file) {
+		if (FileUtil.isSymlink(file)) {
+			return FileUtil.exists(file);
+		}
+		else {
+			return file.canRead();
+		}
+	}	
+	
+	public static void writeToFile(byte[] bytes, File file) throws IOException {
+		FileUtil.appendToOutputStream(new ByteArrayInputStream(bytes), new FileOutputStream(file), true);
+	}
+	
+	public static String getBasename(String filename) {
+		int dot = filename.lastIndexOf(".");
+
+		if (dot == -1) {
+			return filename;
+		}
+
+		return filename.substring(0, dot);
+	}
+	
+
+	public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {
+		return getRecursiveFileList(root, false, false);
+	}
+
+	public static List<File> getRecursiveFileList(File root, boolean includeDirectories, boolean followSymlinkDirectories)
+			throws FileNotFoundException {
+		if (!root.isDirectory() || !root.canRead() || !root.exists()) {
+			throw new FileNotFoundException("Invalid directory " + root);
+		}
+
+		List<File> result = getRecursiveFileListNoSort(root, includeDirectories, followSymlinkDirectories);
+		Collections.sort(result);
+
+		return result;
+	}
+
+	private static List<File> getRecursiveFileListNoSort(File root, boolean includeDirectories, boolean followSymlinkDirectories) {
+		List<File> result = new ArrayList<File>();
+		List<File> filesDirs = Arrays.asList(root.listFiles());
+
+		for (File file : filesDirs) {
+			boolean isDirectory = file.isDirectory();
+			boolean isSymlinkDirectory = isDirectory && FileUtil.isSymlink(file);
+			boolean includeFile = !isDirectory || includeDirectories;
+			boolean followDirectory = (isSymlinkDirectory && followSymlinkDirectories) || (isDirectory && !isSymlinkDirectory);
+
+			if (includeFile) {
+				result.add(file);
+			}
+
+			if (followDirectory) {
+				List<File> deeperList = getRecursiveFileListNoSort(file, includeDirectories, followSymlinkDirectories);
+				result.addAll(deeperList);
+			}
+		}
+
+		return result;
+	}
 }

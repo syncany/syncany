@@ -41,7 +41,7 @@ import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.util.FileUtil;
+import org.syncany.util.EnvironmentUtil;
 
 /**
  * The abstract init operation implements common functions of the {@link InitOperation}
@@ -79,7 +79,7 @@ public abstract class AbstractInitOperation extends Operation {
 		cacheDir.mkdir();
 		databaseDir.mkdir();
 
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(Paths.get(appDir.getAbsolutePath()), "dos:hidden", true);
 		}
 

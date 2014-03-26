@@ -44,7 +44,6 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.MultiCipherOutputStream;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class CipherUtilTest {
@@ -91,7 +90,7 @@ public class CipherUtilTest {
 		File tempDirectory = TestFileUtil.createTempDirectoryInSystemTemp();
 		File testFile = new File(tempDirectory+"/somefile");
 		
-		FileUtil.writeToFile(new byte[] { 1,  2, 3 }, testFile);
+		TestFileUtil.writeToFile(new byte[] { 1,  2, 3 }, testFile);
 		assertFalse(CipherUtil.isEncrypted(testFile));
 		
 		TestFileUtil.deleteDirectory(tempDirectory);

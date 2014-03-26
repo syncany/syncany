@@ -177,15 +177,15 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		}		
 	}
 
-	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSuites) {
+	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSpecs) {
 		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
 		
 		if (gzipEnabled) { 
 			transformersTO.add(getGzipTransformerTO());
 		}
 
-		if (cipherSuites.size() > 0) {	
-			TransformerTO cipherTransformerTO = getCipherTransformerTO(cipherSuites);			
+		if (cipherSpecs.size() > 0) {	
+			TransformerTO cipherTransformerTO = getCipherTransformerTO(cipherSpecs);			
 			transformersTO.add(cipherTransformerTO);
 		}
 		
@@ -339,7 +339,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		repoTO.setRepoId(newRepoId);
 				
 		// Add to repo transfer object
-		repoTO.setChunker(chunkerTO);
+		repoTO.setChunkerTO(chunkerTO);
 		repoTO.setMultiChunker(multiChunkerTO);
 		repoTO.setTransformers(transformersTO);
 		

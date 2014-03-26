@@ -156,15 +156,20 @@ public class TestDatabaseUtil {
 	}
 	
 	public static DatabaseVersion createDatabaseVersion(DatabaseVersion basedOnDatabaseVersion) {
-		return createDatabaseVersion(basedOnDatabaseVersion, new Date());
+		if (basedOnDatabaseVersion == null) {
+			return createDatabaseVersion(null, new Date());
+		}
+		else {
+			return createDatabaseVersion(basedOnDatabaseVersion.getHeader(), new Date());
+		}
 	}
 	
-	public static DatabaseVersion createDatabaseVersion(Date date) {
-		return createDatabaseVersion(null, date);
+	public static DatabaseVersion createDatabaseVersion(DatabaseVersionHeader basedOnDatabaseVersionHeader) {
+		return createDatabaseVersion(basedOnDatabaseVersionHeader, new Date());
 	}
 	
-	public static DatabaseVersion createDatabaseVersion(DatabaseVersion basedOnDatabaseVersion, Date date) {
-		VectorClock vectorClock = (basedOnDatabaseVersion != null) ? basedOnDatabaseVersion.getVectorClock().clone() : new VectorClock();
+	public static DatabaseVersion createDatabaseVersion(DatabaseVersionHeader basedOnDatabaseVersionHeader, Date date) {
+		VectorClock vectorClock = (basedOnDatabaseVersionHeader != null) ? basedOnDatabaseVersionHeader.getVectorClock().clone() : new VectorClock();
 		vectorClock.incrementClock("someclient");
 		
 		DatabaseVersion databaseVersion = new DatabaseVersion();

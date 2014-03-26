@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 /**
@@ -219,10 +220,10 @@ public class FileVersionComparator {
 	}
 
 	private void compareAttributes(FileVersionComparison fileComparison) {
-		if (FileUtil.isWindows()) {
+		if (EnvironmentUtil.isWindows()) {
 			compareDosAttributes(fileComparison);
 		}
-		else if (FileUtil.isUnixLikeOperatingSystem()) {
+		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			comparePosixPermissions(fileComparison);
 		}
 	}
@@ -407,13 +408,13 @@ public class FileVersionComparator {
 			// Read operating system dependent file attributes
 			BasicFileAttributes fileAttributes = null;
 
-			if (FileUtil.isWindows()) {
+			if (EnvironmentUtil.isWindows()) {
 				DosFileAttributes dosAttrs = Files.readAttributes(filePath, DosFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
 				fileProperties.dosAttributes = FileUtil.dosAttrsToString(dosAttrs);
 
 				fileAttributes = dosAttrs;
 			}
-			else if (FileUtil.isUnixLikeOperatingSystem()) {
+			else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				PosixFileAttributes posixAttrs = Files.readAttributes(filePath, PosixFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
 				fileProperties.posixPermissions = PosixFilePermissions.toString(posixAttrs.permissions());
 

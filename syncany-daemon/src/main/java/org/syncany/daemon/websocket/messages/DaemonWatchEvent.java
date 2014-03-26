@@ -17,7 +17,6 @@
  */
 package org.syncany.daemon.websocket.messages;
 
-import org.syncany.operations.WatchEvent;
 
 
 /**
@@ -25,18 +24,6 @@ import org.syncany.operations.WatchEvent;
  *
  */
 public class DaemonWatchEvent extends DaemonMessage {
-	private WatchEvent event;
-	
-	/**
-	 * @return the event
-	 */
-	public WatchEvent getEvent() {
-		return event;
-	}
-	/**
-	 * @param event the event to set
-	 */
-	public void setEvent(WatchEvent event) {
-		this.event = event;
-	}
+
+
 }

@@ -24,6 +24,7 @@ import org.syncany.tests.scenarios.AllFilePossibilitiesScenarioTest;
 import org.syncany.tests.scenarios.CallUpWhileStillWritingFileScenarioTest;
 import org.syncany.tests.scenarios.ChangedAttributesScenarioTest;
 import org.syncany.tests.scenarios.ChangedTypeScenarioTest;
+import org.syncany.tests.scenarios.CleanupMergeDatabaseFilesScenarioTest;
 import org.syncany.tests.scenarios.CreateSimilarFileParallelScenarioTest;
 import org.syncany.tests.scenarios.DirtyDatabaseScenarioTest;
 import org.syncany.tests.scenarios.EmptyFileScenarioTest;
@@ -34,11 +35,13 @@ import org.syncany.tests.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.scenarios.FileVanishedScenarioTest;
 import org.syncany.tests.scenarios.FilenameCapitalizationWindowsScenarioTest;
 import org.syncany.tests.scenarios.FirstVersionDirtyScenarioTest;
+import org.syncany.tests.scenarios.FolderPermissionChangeScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
 import org.syncany.tests.scenarios.RenameDeleteScenarioTest;
+import org.syncany.tests.scenarios.RestoreFileScenarioTest;
 import org.syncany.tests.scenarios.RenameFileWithDiffModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.RenameNoDownloadMultiChunksScenarioTest;
 import org.syncany.tests.scenarios.RenameToExistingFileScenarioTest;
@@ -53,6 +56,7 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	CallUpWhileStillWritingFileScenarioTest.class,
 	ChangedAttributesScenarioTest.class,
 	ChangedTypeScenarioTest.class,
+	CleanupMergeDatabaseFilesScenarioTest.class,
 	CreateSimilarFileParallelScenarioTest.class,
 	DirtyDatabaseScenarioTest.class,
 	EmptyFileScenarioTest.class,
@@ -63,6 +67,7 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	FileTreeMoveToSubfolderScenarioTest.class,
 	FileVanishedScenarioTest.class,
 	FirstVersionDirtyScenarioTest.class,
+	FolderPermissionChangeScenarioTest.class,
 	ManyRenamesScenarioTest.class,
 	ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
 	ManySyncUpsAndOtherClientSyncDownScenarioTest.class,
@@ -71,6 +76,7 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	RenameToExistingFileScenarioTest.class,
 	RenameNoDownloadMultiChunksScenarioTest.class,
 	RenameDeleteScenarioTest.class,
+	RestoreFileScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,
 	SymlinkSyncScenarioTest.class,

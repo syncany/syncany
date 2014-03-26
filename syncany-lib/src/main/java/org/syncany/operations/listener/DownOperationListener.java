@@ -15,12 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.listener;
+
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author Vincent Wiencek
  *
  */
-public interface WatchEventListener {
-	public void update(WatchEvent event);
+public interface DownOperationListener {
+	public void batchDownloadStart(int fileCount);
+	public void batchDownloadUpdate(String fileName, int fileNumber);
 }
