@@ -35,6 +35,7 @@ import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 import org.syncany.operations.DownOperation;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
+import org.syncany.operations.GenlinkOperation;
 import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationListener;
@@ -45,7 +46,6 @@ import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.GenlinkOperation;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -54,9 +54,6 @@ import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.SyncOperation;
-import org.syncany.operations.SyncOperation.SyncOperationOptions;
-import org.syncany.operations.SyncOperation.SyncOperationResult;
 import org.syncany.operations.UpOperation;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
@@ -134,14 +131,6 @@ public class Client {
 
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
 		return new DownOperation(config, options).execute();
-	}
-
-	public SyncOperationResult sync() throws Exception {
-		return sync(new SyncOperationOptions());
-	}
-
-	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
-		return new SyncOperation(config, options).execute();
 	}
 
 	public ChangeSet status() throws Exception {
