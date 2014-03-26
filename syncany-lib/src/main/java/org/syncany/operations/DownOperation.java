@@ -53,10 +53,10 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
-import org.syncany.operations.WatchEvent.WatchEventType;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
+import org.syncany.operations.listener.WatchOperationListener;
 import org.syncany.util.FileUtil;
 
 /**
@@ -100,20 +100,20 @@ public class DownOperation extends Operation {
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
-	private WatchEventListener watchEventListener;
+	private WatchOperationListener watchOperationListener;
 	
 	public DownOperation(Config config) {
 		this(config, new DownOperationOptions(), null);
 	}
 	
-	public DownOperation(Config config, WatchEventListener watchEventListener) {
-		this(config, new DownOperationOptions(), watchEventListener);
+	public DownOperation(Config config, WatchOperationListener watchOperationListener) {
+		this(config, new DownOperationOptions(), watchOperationListener);
 	}
 
-	public DownOperation(Config config, DownOperationOptions options, WatchEventListener watchEventListener) {
+	public DownOperation(Config config, DownOperationOptions options, WatchOperationListener watchOperationListener) {
 		super(config);
 
-		this.watchEventListener = watchEventListener;
+		this.watchOperationListener = watchOperationListener;
 		this.options = options;
 		this.result = new DownOperationResult();
 		this.localDatabase = new SqlDatabase(config);
@@ -649,6 +649,8 @@ public class DownOperation extends Operation {
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 		int i = 0;
 
+		watchOperationListener.batchDownloadStart(unknownRemoteDatabases.size());
+		
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
@@ -656,8 +658,8 @@ public class DownOperation extends Operation {
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
 
 			i++;
-			if (watchEventListener != null) {
-				watchEventListener.update(new WatchEvent(remoteFile.getName(), WatchEventType.DOWNLOADING, i, unknownRemoteDatabases.size()));
+			if (watchOperationListener != null) {
+				watchOperationListener.batchDownloadUpdate(remoteFile.getName(), i);
 			}
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 
