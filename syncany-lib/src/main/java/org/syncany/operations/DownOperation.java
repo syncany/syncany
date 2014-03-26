@@ -56,7 +56,6 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.actions.FileSystemAction;
 import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
-import org.syncany.operations.listener.WatchOperationListener;
 import org.syncany.util.FileUtil;
 
 /**
@@ -100,22 +99,23 @@ public class DownOperation extends Operation {
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
-	private WatchOperationListener watchOperationListener;
+	private DownOperationListener listener;
 	
 	public DownOperation(Config config) {
 		this(config, new DownOperationOptions(), null);
 	}
 	
-	public DownOperation(Config config, WatchOperationListener watchOperationListener) {
-		this(config, new DownOperationOptions(), watchOperationListener);
+	public DownOperation(Config config, DownOperationListener listener) {
+		this(config, new DownOperationOptions(), listener);
 	}
 
-	public DownOperation(Config config, DownOperationOptions options, WatchOperationListener watchOperationListener) {
+	public DownOperation(Config config, DownOperationOptions options, DownOperationListener listener) {
 		super(config);
 
-		this.watchOperationListener = watchOperationListener;
 		this.options = options;
 		this.result = new DownOperationResult();
+		this.listener = listener;
+
 		this.localDatabase = new SqlDatabase(config);
 		this.transferManager = config.getConnection().createTransferManager();
 		this.databaseReconciliator = new DatabaseReconciliator();
@@ -649,9 +649,11 @@ public class DownOperation extends Operation {
 		logger.log(Level.INFO, "Downloading unknown databases.");
 
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
-		int i = 0;
+		int downloadFileIndex = 0;
 
-		watchOperationListener.batchDownloadStart(unknownRemoteDatabases.size());
+		if (listener != null) {
+			listener.onDownloadStart(unknownRemoteDatabases.size());
+		}
 		
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
@@ -659,10 +661,11 @@ public class DownOperation extends Operation {
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
 
-			i++;
-			if (watchOperationListener != null) {
-				watchOperationListener.batchDownloadUpdate(remoteFile.getName(), i);
+			downloadFileIndex++;
+			if (listener != null) {
+				listener.onDownloadFile(remoteFile.getName(), downloadFileIndex);
 			}
+			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 
 			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
@@ -685,6 +688,14 @@ public class DownOperation extends Operation {
 		config.getCache().clear();
 	}
 
+	/**
+	 * @author Vincent Wiencek
+	 */
+	public interface DownOperationListener {
+		public void onDownloadStart(int fileCount);
+		public void onDownloadFile(String fileName, int fileNumber);
+	}
+	
 	public enum DownConflictStrategy {
 		AUTO_RENAME, ASK_USER
 	}

@@ -22,7 +22,7 @@ import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.listener.WatchOperationListener;
+import org.syncany.operations.WatchOperation.WatchOperationListener;
 
 /**
  * The sync operation combines the {@link DownOperation} and the {@link UpOperation}

@@ -237,7 +237,8 @@ public class FrameworkCombinationTest {
 			@Override public void onFileEnd(File file, byte[] checksum) { }				
 			@Override public void onMultiChunkOpen(MultiChunk multiChunk) { }
 			@Override public void onMultiChunkClose(MultiChunk multiChunk) { }
-			@Override public void onStart(int size) {}
+			@Override public void onStart(int fileCount) { }
+			@Override public void onFinish() { }
 		});
 		
 		return chunkIndex;

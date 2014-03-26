@@ -33,6 +33,7 @@ import org.syncany.operations.ConnectOperation.ConnectOperationListener;
 import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
 import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 import org.syncany.operations.DownOperation;
+import org.syncany.operations.DownOperation.DownOperationListener;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.GenlinkOperation;
@@ -58,11 +59,12 @@ import org.syncany.operations.SyncOperation;
 import org.syncany.operations.SyncOperation.SyncOperationOptions;
 import org.syncany.operations.SyncOperation.SyncOperationResult;
 import org.syncany.operations.UpOperation;
+import org.syncany.operations.UpOperation.UpOperationListener;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.WatchOperation;
+import org.syncany.operations.WatchOperation.WatchOperationListener;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
-import org.syncany.operations.listener.WatchOperationAdapter;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -126,15 +128,23 @@ public class Client {
 	}
 
 	public UpOperationResult up(UpOperationOptions options) throws Exception {
-		return new UpOperation(config, options, null).execute();
+		return up(options, null);
+	}
+
+	public UpOperationResult up(UpOperationOptions options, UpOperationListener listener) throws Exception {
+		return new UpOperation(config, options, listener).execute();
 	}
 
 	public DownOperationResult down() throws Exception {
-		return down(new DownOperationOptions());
+		return down(new DownOperationOptions(), null);
 	}
 
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
-		return new DownOperation(config, options, null).execute();
+		return down(options, null);
+	}
+
+	public DownOperationResult down(DownOperationOptions options, DownOperationListener listener) throws Exception {
+		return new DownOperation(config, options, listener).execute();
 	}
 
 	public SyncOperationResult sync() throws Exception {
@@ -166,7 +176,11 @@ public class Client {
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
-		new WatchOperation(config, options, new WatchOperationAdapter()).execute();		
+		watch(options, null);	
+	}	
+
+	public void watch(WatchOperationOptions options, WatchOperationListener listener) throws Exception {
+		new WatchOperation(config, options, listener).execute();		
 	}	
 
 	public GenlinkOperationResult genlink() throws Exception {

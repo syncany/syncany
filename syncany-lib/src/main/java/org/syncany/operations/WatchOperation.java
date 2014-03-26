@@ -28,12 +28,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.operations.DownOperation.DownOperationListener;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.NotificationListener.NotificationListenerListener;
 import org.syncany.operations.RecursiveWatcher.WatchListener;
+import org.syncany.operations.UpOperation.UpOperationListener;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
-import org.syncany.operations.listener.WatchOperationListener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -63,6 +64,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());
 
 	private WatchOperationOptions options;
+	private WatchOperationListener listener;
 
 	private AtomicBoolean syncRunning;
 	private AtomicBoolean stopRequired;
@@ -70,16 +72,15 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
-	private WatchOperationListener watchOperationListener;
 
 	private String notificationChannel;
 	private String notificationInstanceId;
 
-	public WatchOperation(Config config, WatchOperationOptions options, WatchOperationListener watchOperationListener) {
+	public WatchOperation(Config config, WatchOperationOptions options, WatchOperationListener listener) {
 		super(config);
 
-		this.watchOperationListener = watchOperationListener;
 		this.options = options;
+		this.listener = listener;
 
 		this.syncRunning = new AtomicBoolean(false);
 		this.stopRequired = new AtomicBoolean(false);
@@ -160,8 +161,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Running sync ...");
 
 			try {
-				DownOperationResult downResult = new DownOperation(config, watchOperationListener).execute();
-				UpOperationResult upOperationResult = new UpOperation(config, watchOperationListener).execute();
+				DownOperationResult downResult = new DownOperation(config, listener).execute();
+				UpOperationResult upOperationResult = new UpOperation(config, listener).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES && upOperationResult.getChangeSet().hasChanges()) {
 					notifyChanges();
@@ -211,6 +212,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	public void stop() {
 		stopRequired.set(true);
+	}
+
+	/**
+	 * @author Vincent Wiencek
+	 */
+	public interface WatchOperationListener extends UpOperationListener, DownOperationListener {
+		// Nothing
 	}
 
 	public static class WatchOperationOptions implements OperationOptions {
