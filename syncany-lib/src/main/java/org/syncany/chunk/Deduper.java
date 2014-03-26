@@ -67,7 +67,12 @@ public class Deduper {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		
+		listener.onStart(files.size());
+		
+		int index = 0;
 		for (File file : files) {
+			index ++;
+			
 			// Filter ignored files
 			boolean fileAccepted = listener.onFileFilter(file);
 			
@@ -76,7 +81,7 @@ public class Deduper {
 			}
 			
 			// Decide whether to index the contents
-			boolean dedupContents = listener.onFileStart(file);
+			boolean dedupContents = listener.onFileStart(file, index);
 
 			if (dedupContents) {
 				// Create chunks from file

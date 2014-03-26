@@ -35,6 +35,7 @@ import org.syncany.operations.ConnectOperation.ConnectOperationResult;
 import org.syncany.operations.DownOperation;
 import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
+import org.syncany.operations.GenlinkOperation;
 import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.operations.InitOperation;
 import org.syncany.operations.InitOperation.InitOperationListener;
@@ -45,7 +46,6 @@ import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.GenlinkOperation;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -62,6 +62,7 @@ import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
 import org.syncany.operations.WatchOperation;
 import org.syncany.operations.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.listener.WatchOperationAdapter;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -125,7 +126,7 @@ public class Client {
 	}
 
 	public UpOperationResult up(UpOperationOptions options) throws Exception {
-		return new UpOperation(config, options).execute();
+		return new UpOperation(config, options, null).execute();
 	}
 
 	public DownOperationResult down() throws Exception {
@@ -133,7 +134,7 @@ public class Client {
 	}
 
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
-		return new DownOperation(config, options).execute();
+		return new DownOperation(config, options, null).execute();
 	}
 
 	public SyncOperationResult sync() throws Exception {
@@ -141,7 +142,7 @@ public class Client {
 	}
 
 	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
-		return new SyncOperation(config, options).execute();
+		return new SyncOperation(config, options, null).execute();
 	}
 
 	public ChangeSet status() throws Exception {
@@ -165,8 +166,8 @@ public class Client {
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
-		new WatchOperation(config, options).execute();
-	}
+		new WatchOperation(config, options, new WatchOperationAdapter()).execute();		
+	}	
 
 	public GenlinkOperationResult genlink() throws Exception {
 		return new GenlinkOperation(config).execute();

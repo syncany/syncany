@@ -22,6 +22,7 @@ import org.syncany.operations.DownOperation.DownOperationOptions;
 import org.syncany.operations.DownOperation.DownOperationResult;
 import org.syncany.operations.UpOperation.UpOperationOptions;
 import org.syncany.operations.UpOperation.UpOperationResult;
+import org.syncany.operations.listener.WatchOperationListener;
 
 /**
  * The sync operation combines the {@link DownOperation} and the {@link UpOperation}
@@ -32,20 +33,27 @@ import org.syncany.operations.UpOperation.UpOperationResult;
  */
 public class SyncOperation extends Operation {
 	private SyncOperationOptions options;
+	private WatchOperationListener watchOperationListener;
 	
 	public SyncOperation(Config config) {
-		this(config, new SyncOperationOptions());
+		this(config, new SyncOperationOptions(), null);
 	}	
 	
-	public SyncOperation(Config config, SyncOperationOptions options) {
-		super(config);		
+	public SyncOperation(Config config, WatchOperationListener watchOperationListener) {
+		this(config, new SyncOperationOptions(), watchOperationListener);
+	}	
+	
+	public SyncOperation(Config config, SyncOperationOptions options, WatchOperationListener watchOperationListener) {
+		super(config);	
+
+		this.watchOperationListener = watchOperationListener;
 		this.options = options;
 	}		
 	
 	@Override
 	public SyncOperationResult execute() throws Exception {
-		DownOperation syncDown = new DownOperation(config, options.getSyncDownOptions());
-		UpOperation syncUp = new UpOperation(config, options.getSyncUpOptions());
+		DownOperation syncDown = new DownOperation(config, options.getSyncDownOptions(), watchOperationListener);
+		UpOperation syncUp = new UpOperation(config, options.getSyncUpOptions(), watchOperationListener);
 		
 		DownOperationResult syncDownResults = syncDown.execute();
 		UpOperationResult syncUpResults = syncUp.execute();
