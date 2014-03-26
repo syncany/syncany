@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.actions;
+package org.syncany.operations.down.actions;
 
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.MemoryDatabase;
 
 public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, MemoryDatabase winningDatabase) {

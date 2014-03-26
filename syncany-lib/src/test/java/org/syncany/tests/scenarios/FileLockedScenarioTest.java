@@ -41,7 +41,7 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.UpOperation.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
 import org.syncany.tests.scenarios.framework.Executable;

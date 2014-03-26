@@ -28,11 +28,11 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
-import org.syncany.operations.ConnectOperation.ConnectOperationListener;
-import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
-import org.syncany.operations.ConnectOperation.ConnectOperationResult;
-import org.syncany.operations.ConnectOperation.ConnectOptionsStrategy;
-import org.syncany.operations.ConnectOperation.ConnectResultCode;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationListener;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationOptions;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.init.ConnectOperation.ConnectOptionsStrategy;
+import org.syncany.operations.init.ConnectOperation.ConnectResultCode;
 
 public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.init;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -26,6 +26,7 @@ import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
+import org.syncany.operations.OperationResult;
 
 /**
  * This operation generates a link which can be shared among users to connect to 

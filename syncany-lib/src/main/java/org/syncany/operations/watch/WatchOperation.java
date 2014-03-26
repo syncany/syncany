@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.watch;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,10 +28,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.operations.NotificationListener.NotificationListenerListener;
-import org.syncany.operations.RecursiveWatcher.WatchListener;
-import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.down.DownOperation;
+import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.operations.watch.NotificationListener.NotificationListenerListener;
+import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -156,6 +161,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Running sync ...");
 
 			try {
+				// TODO [medium] Shouldn't we catch the result codes somehow?
 				new DownOperation(config).execute();
 
 				UpOperationResult upOperationResult = new UpOperation(config).execute();

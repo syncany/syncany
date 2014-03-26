@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.init;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -41,6 +41,7 @@ import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.Operation;
 import org.syncany.util.EnvironmentUtil;
 
 /**

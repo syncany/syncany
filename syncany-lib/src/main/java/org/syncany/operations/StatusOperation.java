@@ -32,10 +32,10 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
-import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.SqlDatabase;
 import org.syncany.util.FileUtil;
 
 /**
