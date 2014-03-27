@@ -38,7 +38,6 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
-import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -51,6 +50,7 @@ import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.SqlDatabase;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -78,11 +78,13 @@ public class Indexer {
 	private Config config;
 	private Deduper deduper;
 	private SqlDatabase localDatabase;
+	private IndexerListener listener;
 	
-	public Indexer(Config config, Deduper deduper) {
+	public Indexer(Config config, Deduper deduper, IndexerListener listener) {
 		this.config = config;
 		this.deduper = deduper;
 		this.localDatabase = new SqlDatabase(config);
+		this.listener = listener;
 	}
 	
 	/**
@@ -109,7 +111,7 @@ public class Indexer {
 		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 		
 		// Find and index new files
-		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache));			
+		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache, listener));			
 		
 		// Find and remove deleted files
 		removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
@@ -198,6 +200,11 @@ public class Indexer {
 		return null;
 	}
 
+	public static interface IndexerListener {
+		public void onIndexStart(int fileCount);
+		public void onIndexFile(String fileName, int fileNumber);
+	}
+	
 	public static class IndexerException extends RuntimeException {
 		private static final long serialVersionUID = 5247751938336036877L;
 
@@ -205,6 +212,7 @@ public class Indexer {
 			super(message);
 		}
 	}
+	
 	private class IndexerDeduperListener implements DeduperListener {
 		private FileVersionComparator fileVersionComparator;
 		private SecureRandom secureRandom;
@@ -219,14 +227,19 @@ public class Indexer {
 		
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
+		
+		private IndexerListener listener;
 
-		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache, Map<String, PartialFileHistory> filePathCache) {
+		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache,
+				Map<String, PartialFileHistory> filePathCache, IndexerListener listener) {
+			
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 			
 			this.fileChecksumCache = fileChecksumCache;
 			this.filePathCache = filePathCache;
+			this.listener = listener;
 		}				
 
 		@Override
@@ -254,8 +267,14 @@ public class Indexer {
 		}
 		
 		@Override
-		public boolean onFileStart(File file) {			
-			return startFileProperties.getType() == FileType.FILE; // Ignore directories and symlinks!
+		public boolean onFileStart(File file, int fileIndex) {
+			boolean processFile = startFileProperties.getType() == FileType.FILE; // Ignore directories and symlinks!
+			
+			if (processFile && listener != null) {
+				listener.onIndexFile(file.getName(), fileIndex);
+			}
+			
+			return processFile;
 		}
 
 		@Override
@@ -535,8 +554,20 @@ public class Indexer {
 		@Override
 		public void onFileAddChunk(File file, Chunk chunk) {			
 			logger.log(Level.FINER, "- Chunk > FileContent: {0} > {1}", new Object[] { StringUtil.toHex(chunk.getChecksum()), file });
-			fileContent.addChunk(new ChunkChecksum(chunk.getChecksum()));				
+			fileContent.addChunk(new ChunkChecksum(chunk.getChecksum()));
 		}		
+		
+		@Override
+		public void onStart(int fileCount) {
+			if (listener != null) {
+				listener.onIndexStart(fileCount);
+			}
+		}
+		
+		@Override
+		public void onFinish() {
+			// Nothing.
+		}
 
 		/**
 		 * Checks if chunk already exists in all database versions

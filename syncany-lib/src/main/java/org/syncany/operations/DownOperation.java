@@ -99,16 +99,23 @@ public class DownOperation extends Operation {
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
-
+	private DownOperationListener listener;
+	
 	public DownOperation(Config config) {
-		this(config, new DownOperationOptions());
+		this(config, new DownOperationOptions(), null);
+	}
+	
+	public DownOperation(Config config, DownOperationListener listener) {
+		this(config, new DownOperationOptions(), listener);
 	}
 
-	public DownOperation(Config config, DownOperationOptions options) {
+	public DownOperation(Config config, DownOperationOptions options, DownOperationListener listener) {
 		super(config);
 
 		this.options = options;
 		this.result = new DownOperationResult();
+		this.listener = listener;
+
 		this.localDatabase = new SqlDatabase(config);
 		this.transferManager = config.getConnection().createTransferManager();
 		this.databaseReconciliator = new DatabaseReconciliator();
@@ -631,7 +638,7 @@ public class DownOperation extends Operation {
 
 		return unknownRemoteBranches;
 	}
-
+	
 	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager) throws Exception {
 		return (new LsRemoteOperation(config, transferManager).execute()).getUnknownRemoteDatabases();
 	}
@@ -640,13 +647,25 @@ public class DownOperation extends Operation {
 			throws StorageException {
 		
 		logger.log(Level.INFO, "Downloading unknown databases.");
-		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 
+		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
+		int downloadFileIndex = 0;
+
+		if (listener != null) {
+			listener.onDownloadStart(unknownRemoteDatabases.size());
+		}
+		
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
+
+			downloadFileIndex++;
+			if (listener != null) {
+				listener.onDownloadFile(remoteFile.getName(), downloadFileIndex);
+			}
+			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 
 			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
@@ -669,6 +688,14 @@ public class DownOperation extends Operation {
 		config.getCache().clear();
 	}
 
+	/**
+	 * @author Vincent Wiencek
+	 */
+	public interface DownOperationListener {
+		public void onDownloadStart(int fileCount);
+		public void onDownloadFile(String fileName, int fileNumber);
+	}
+	
 	public enum DownConflictStrategy {
 		AUTO_RENAME, ASK_USER
 	}
