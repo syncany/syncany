@@ -32,7 +32,7 @@ public class WebdavTransferManagerTest extends AbstractTransferManagerTest {
 	public Map<String, String> createPluginSettings() {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 		
-		pluginSettings.put("url", "https://tlsv12.pixi.me/");
+		pluginSettings.put("url", "http://dav.boonfaya.com/");
 		pluginSettings.put("username", "webdav");
 		pluginSettings.put("password", "webdav");
 		
