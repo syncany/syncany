@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.up;
 
 import java.io.File;
 import java.io.IOException;
@@ -198,12 +198,7 @@ public class Indexer {
 		}
 		
 		return null;
-	}
-
-	public static interface IndexerListener {
-		public void onIndexStart(int fileCount);
-		public void onIndexFile(String fileName, int fileNumber);
-	}
+	}	
 	
 	public static class IndexerException extends RuntimeException {
 		private static final long serialVersionUID = 5247751938336036877L;

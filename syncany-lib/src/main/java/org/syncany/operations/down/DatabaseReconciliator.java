@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.down;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -29,12 +29,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
-import org.syncany.operations.DatabaseBranch.BranchIterator;
+import org.syncany.operations.down.DatabaseBranch.BranchIterator;
 
 /**
  * The database reconciliator implements various parts of the sync down algorithm (see also:

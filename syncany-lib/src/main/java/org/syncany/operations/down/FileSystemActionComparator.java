@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.down;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,10 +25,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.operations.actions.DeleteFileSystemAction;
-import org.syncany.operations.actions.FileSystemAction;
-import org.syncany.operations.actions.NewFileSystemAction;
-import org.syncany.operations.actions.RenameFileSystemAction;
+import org.syncany.operations.down.actions.DeleteFileSystemAction;
+import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.operations.down.actions.NewFileSystemAction;
+import org.syncany.operations.down.actions.RenameFileSystemAction;
 
 /**
  * Sorts file system actions according to their natural order to prevent scenarios 

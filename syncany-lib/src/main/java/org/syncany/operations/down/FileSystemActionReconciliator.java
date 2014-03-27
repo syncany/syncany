@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.down;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,14 +34,14 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.operations.DownOperation.DownOperationResult;
-import org.syncany.operations.actions.ChangeFileSystemAction;
-import org.syncany.operations.actions.DeleteFileSystemAction;
-import org.syncany.operations.actions.FileSystemAction;
-import org.syncany.operations.actions.NewFileSystemAction;
-import org.syncany.operations.actions.NewSymlinkFileSystemAction;
-import org.syncany.operations.actions.RenameFileSystemAction;
-import org.syncany.operations.actions.SetAttributesFileSystemAction;
+import org.syncany.operations.ChangeSet;
+import org.syncany.operations.down.actions.ChangeFileSystemAction;
+import org.syncany.operations.down.actions.DeleteFileSystemAction;
+import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.operations.down.actions.NewFileSystemAction;
+import org.syncany.operations.down.actions.NewSymlinkFileSystemAction;
+import org.syncany.operations.down.actions.RenameFileSystemAction;
+import org.syncany.operations.down.actions.SetAttributesFileSystemAction;
 
 
 /**

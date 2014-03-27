@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.util.StringUtil;
 
 /**
  * The cache class represents the local disk cache. It is used for storing multichunks

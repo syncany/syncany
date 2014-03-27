@@ -15,37 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.actions;
+package org.syncany.operations.down.actions;
 
 import org.syncany.config.Config;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersionComparator.FileChange;
+import org.syncany.database.MemoryDatabase;
 
-public class NewFileSystemAction extends FileCreatingFileSystemAction {
+public class SetAttributesFileSystemAction extends FileSystemAction {
 
-	public NewFileSystemAction(Config config, FileVersion newFileVersion, MemoryDatabase winningDatabase) {
+	public SetAttributesFileSystemAction(Config config, FileVersion newFileVersion, MemoryDatabase winningDatabase) {
 		super(config, winningDatabase, null, newFileVersion);
 	}
 	
 	@Override
 	public void execute() throws Exception {
-		if (fileExists(fileVersion2)) {
-			if (fileAsExpected(fileVersion2)) {
-				// Nothing to do
-			}
-			else {
-				moveToConflictFile(fileVersion2);
-				createFileFolderOrSymlink(fileVersion2);				
-			}
+		if (fileExists(fileVersion2) 
+				&& fileAsExpected(fileVersion2, FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE)) {
+			
+			setFileAttributes(fileVersion2);
+			setLastModified(fileVersion2);
 		}
-		else {
-			createFileFolderOrSymlink(fileVersion2);
-		}		
+		else {		
+			throw new Exception("Inconsistent file system, file not as expected: "+ fileVersion2);
+		}
 	}
 
 	@Override
 	public String toString() {
-		return "NewFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
+		return "SetAttributesFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}
 }
 

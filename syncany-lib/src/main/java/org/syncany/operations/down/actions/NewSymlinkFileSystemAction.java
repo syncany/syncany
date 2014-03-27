@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.actions;
+package org.syncany.operations.down.actions;
 
 import org.syncany.config.Config;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.util.CollectionUtil;
 
 public class NewSymlinkFileSystemAction extends FileSystemAction {

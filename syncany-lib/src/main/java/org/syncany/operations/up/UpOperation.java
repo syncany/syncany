@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.up;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,13 +46,16 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
+import org.syncany.operations.ChangeSet;
+import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.Indexer.IndexerListener;
+import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.Operation;
+import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
-import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.down.DownOperation;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -178,7 +181,8 @@ public class UpOperation extends Operation {
 		localDatabase.persistDatabaseVersion(newDatabaseVersion);
 
 		if (options.cleanupEnabled()) {
-			result.cleanupResult = new CleanupOperation(config, options.getCleanupOptions()).execute(); 
+			CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
+			result.setCleanupResult(cleanupOperationResult); 
 		}
 		
 		removeUnreferencedData();		
@@ -392,95 +396,5 @@ public class UpOperation extends Operation {
 	
 	private void clearCache() {
 		config.getCache().clear();
-	}
-	
-	/**
-	 * @author Vincent Wiencek
-	 */
-	public interface UpOperationListener extends IndexerListener {
-		public void onUploadStart(int fileCount);
-		public void onUploadFile(String fileName, int fileNumber);
-	}
-
-	public static class UpOperationOptions implements OperationOptions {
-		private StatusOperationOptions statusOptions = new StatusOperationOptions();
-		private boolean forceUploadEnabled = false;
-		private boolean cleanupEnabled = true;
-		private CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-
-		public CleanupOperationOptions getCleanupOptions() {
-			return cleanupOptions;
-		}
-
-		public void setCleanupOptions(CleanupOperationOptions cleanupOptions) {
-			this.cleanupOptions = cleanupOptions;
-		}
-
-		public StatusOperationOptions getStatusOptions() {
-			return statusOptions;
-		}
-
-		public void setStatusOptions(StatusOperationOptions statusOptions) {
-			this.statusOptions = statusOptions;
-		}
-
-		public boolean forceUploadEnabled() {
-			return forceUploadEnabled;
-		}
-
-		public void setForceUploadEnabled(boolean forceUploadEnabled) {
-			this.forceUploadEnabled = forceUploadEnabled;
-		}
-
-		public boolean cleanupEnabled() {
-			return cleanupEnabled;
-		}
-
-		public void setCleanupEnabled(boolean cleanupEnabled) {
-			this.cleanupEnabled = cleanupEnabled;
-		}
-	}
-
-	public static class UpOperationResult implements OperationResult {
-		public enum UpResultCode {
-			OK_APPLIED_CHANGES, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
-		};
-
-		private UpResultCode resultCode;
-		private StatusOperationResult statusResult = new StatusOperationResult();
-		private CleanupOperationResult cleanupResult = null;
-		private ChangeSet uploadChangeSet = new ChangeSet();
-
-		public CleanupOperationResult getCleanupResult() {
-			return cleanupResult;
-		}
-
-		public void setCleanupResult(CleanupOperationResult cleanupResult) {
-			this.cleanupResult = cleanupResult;
-		}
-
-		public UpResultCode getResultCode() {
-			return resultCode;
-		}
-
-		public void setResultCode(UpResultCode resultCode) {
-			this.resultCode = resultCode;
-		}
-
-		public void setStatusResult(StatusOperationResult statusResult) {
-			this.statusResult = statusResult;
-		}
-
-		public void setUploadChangeSet(ChangeSet uploadChangeSet) {
-			this.uploadChangeSet = uploadChangeSet;
-		}
-
-		public StatusOperationResult getStatusResult() {
-			return statusResult;
-		}
-
-		public ChangeSet getChangeSet() {
-			return uploadChangeSet;
-		}
 	}
 }
