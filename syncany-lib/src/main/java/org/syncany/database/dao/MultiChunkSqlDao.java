@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -169,6 +168,7 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
 	 */
 	public Map<ChunkChecksum,MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
+		// Gather a unique array of checksum strings (required for query!)
 		Set<ChunkChecksum> chunkChecksumSet = new HashSet<ChunkChecksum>(chunkChecksums);
 		String[] checksums = new String[chunkChecksumSet.size()];
 		int i = 0;
@@ -177,6 +177,7 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 			i++;
 		}
 		
+		// Execute query
 		Map<ChunkChecksum, MultiChunkId> result = new HashMap<ChunkChecksum, MultiChunkId>();
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkIdForChunks.sql")) {
 			preparedStatement.setArray(1, connection.createArrayOf("varchar", checksums));	
