@@ -19,10 +19,17 @@ package org.syncany.tests.connection.plugins.webdav;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
+import org.syncany.config.Logging;
 import org.syncany.tests.connection.plugins.AbstractTransferManagerTest;
 
-public class WebdavTransferManagerTest extends AbstractTransferManagerTest {	
+public class WebdavTransferManagerTest extends AbstractTransferManagerTest {
+	static {
+		Logging.init();
+		Logging.setGlobalLogLevel(Level.FINEST);
+	}
+	
 	@Override
 	public String getPluginId() {
 		return "webdav";
