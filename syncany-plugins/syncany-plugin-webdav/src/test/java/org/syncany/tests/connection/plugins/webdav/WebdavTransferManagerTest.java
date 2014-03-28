@@ -15,19 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests;
+package org.syncany.tests.connection.plugins.webdav;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerRepoTest;
-import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerTest;
+import java.util.HashMap;
+import java.util.Map;
 
-@RunWith(Suite.class)
-@SuiteClasses({
-	FtpTransferManagerTest.class,
-	FtpTransferManagerRepoTest.class
-})
-public class FtpTestSuite {
-	// This class executes all tests
+import org.syncany.tests.connection.plugins.AbstractTransferManagerTest;
+
+public class WebdavTransferManagerTest extends AbstractTransferManagerTest {	
+	@Override
+	public String getPluginId() {
+		return "webdav";
+	}
+	
+	@Override
+	public Map<String, String> createPluginSettings() {
+		Map<String, String> pluginSettings = new HashMap<String, String>();
+		
+		pluginSettings.put("url", "http://dav.boonfaya.com/syncany");
+		pluginSettings.put("username", "webdav");
+		pluginSettings.put("password", "webdav");
+		
+		return pluginSettings;
+	}	
 }

@@ -17,76 +17,44 @@
  */
 package org.syncany.tests.connection.plugins.local;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
-import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.connection.plugins.local.LocalPlugin;
-import org.syncany.connection.plugins.local.LocalTransferManager;
+import org.syncany.tests.connection.plugins.AbstractTransferManagerTest;
 import org.syncany.tests.util.TestFileUtil;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class LocalTransferManagerPluginTest {
-	private File tempLocalSourceDir;
+public class LocalTransferManagerPluginTest extends AbstractTransferManagerTest {
 	private File tempRepoPath;
 	private Map<String, String> localPluginSettings;
-	
-	@Before
+
+	@Override
 	public void setUp() throws Exception {
-		File rootDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		
-		tempLocalSourceDir = new File(rootDir+"/local");
-		tempLocalSourceDir.mkdir();
-		
-		tempRepoPath = new File(rootDir+"/repo");		
+		super.setUp();
+
+		tempRepoPath = TestFileUtil.createTempDirectoryInSystemTemp();
 		tempRepoPath.mkdir();
-				
+
 		localPluginSettings = new HashMap<String, String>();
 		localPluginSettings.put("path", tempRepoPath.getAbsolutePath());
 	}
-	
-	@Test
-	public void testTestFunctionEmptyRepoPermissionOk() throws StorageException{
-		TransferManager tm = loadPluginAndCreateTransferManager();
-		Assert.assertEquals(StorageTestResult.REPO_EXISTS_BUT_INVALID, tm.test());
-	}
-	
-	// TODO [low] More tests for test() / StorageTestResult are missing
-	
-	@After
-	public void tearDown() {
-		TestFileUtil.deleteDirectory(tempLocalSourceDir);
-		TestFileUtil.deleteDirectory(tempRepoPath);
-	}
-	
-	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
-		Plugin pluginInfo = Plugins.get("local");	
-		
-		Connection connection = pluginInfo.createConnection();				
-		connection.init(localPluginSettings);
-		
-		TransferManager transferManager = connection.createTransferManager();
 
-		assertEquals("LocalPluginInfo expected.", LocalPlugin.class, pluginInfo.getClass());
-		assertEquals("LocalConnection expected.", LocalConnection.class, connection.getClass());
-		assertEquals("LocalTransferManager expected.", LocalTransferManager.class, transferManager.getClass());
-		
-		return transferManager;
+	@Override
+	public void tearDown() {
+		TestFileUtil.deleteDirectory(tempRepoPath);
+		super.tearDown();
+	}
+
+	@Override
+	public Map<String, String> createPluginSettings() {
+		return localPluginSettings;
+	}
+
+	@Override
+	public String getPluginId() {
+		return "local";
 	}
 }

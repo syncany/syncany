@@ -20,14 +20,12 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerRepoTest;
-import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerTest;
+import org.syncany.tests.connection.plugins.webdav.WebdavTransferManagerTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	FtpTransferManagerTest.class,
-	FtpTransferManagerRepoTest.class
+	WebdavTransferManagerTest.class
 })
-public class FtpTestSuite {
+public class WebdavTestSuite {
 	// This class executes all tests
 }

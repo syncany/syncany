@@ -162,7 +162,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File repoFile = getRemoteFile(remoteFile);
 
 		if (!repoFile.exists()) {
-			return false;
+			return true;
 		}
 
 		return repoFile.delete();
