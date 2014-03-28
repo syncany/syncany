@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.down;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,9 +53,14 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
-import org.syncany.operations.actions.FileCreatingFileSystemAction;
-import org.syncany.operations.actions.FileSystemAction;
-import org.syncany.operations.actions.FileSystemAction.InconsistentFileSystemException;
+import org.syncany.operations.LsRemoteOperation;
+import org.syncany.operations.Operation;
+import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
+import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
+import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.operations.down.actions.FileSystemAction.InconsistentFileSystemException;
+import org.syncany.operations.up.UpOperation;
 import org.syncany.util.FileUtil;
 
 /**
@@ -99,16 +104,23 @@ public class DownOperation extends Operation {
 	private DatabaseBranch localBranch;
 	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
-
+	private DownOperationListener listener;
+	
 	public DownOperation(Config config) {
-		this(config, new DownOperationOptions());
+		this(config, new DownOperationOptions(), null);
+	}
+	
+	public DownOperation(Config config, DownOperationListener listener) {
+		this(config, new DownOperationOptions(), listener);
 	}
 
-	public DownOperation(Config config, DownOperationOptions options) {
+	public DownOperation(Config config, DownOperationOptions options, DownOperationListener listener) {
 		super(config);
 
 		this.options = options;
 		this.result = new DownOperationResult();
+		this.listener = listener;
+
 		this.localDatabase = new SqlDatabase(config);
 		this.transferManager = config.getConnection().createTransferManager();
 		this.databaseReconciliator = new DatabaseReconciliator();
@@ -424,7 +436,7 @@ public class DownOperation extends Operation {
 
 			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-			result.downloadedMultiChunks.add(multiChunkId);
+			result.getDownloadedMultiChunks().add(multiChunkId);
 
 			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
@@ -631,7 +643,7 @@ public class DownOperation extends Operation {
 
 		return unknownRemoteBranches;
 	}
-
+	
 	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager) throws Exception {
 		return (new LsRemoteOperation(config, transferManager).execute()).getUnknownRemoteDatabases();
 	}
@@ -640,13 +652,25 @@ public class DownOperation extends Operation {
 			throws StorageException {
 		
 		logger.log(Level.INFO, "Downloading unknown databases.");
-		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 
+		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
+		int downloadFileIndex = 0;
+
+		if (listener != null) {
+			listener.onDownloadStart(unknownRemoteDatabases.size());
+		}
+		
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
+
+			downloadFileIndex++;
+			if (listener != null) {
+				listener.onDownloadFile(remoteFile.getName(), downloadFileIndex);
+			}
+			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 
 			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
@@ -667,64 +691,5 @@ public class DownOperation extends Operation {
 	
 	private void clearCache() {
 		config.getCache().clear();
-	}
-
-	public enum DownConflictStrategy {
-		AUTO_RENAME, ASK_USER
-	}
-	
-	public static class DownOperationOptions implements OperationOptions {
-		private DownConflictStrategy conflictStrategy = DownConflictStrategy.AUTO_RENAME;
-
-		public DownConflictStrategy getConflictStrategy() {
-			return conflictStrategy;
-		}
-
-		public void setConflictStrategy(DownConflictStrategy conflictStrategy) {
-			this.conflictStrategy = conflictStrategy;
-		}				
-	}
-
-	public enum DownResultCode {
-		OK_NO_REMOTE_CHANGES, OK_WITH_REMOTE_CHANGES, NOK
-	};
-
-	public static class DownOperationResult implements OperationResult {
-		private DownResultCode resultCode;
-		private ChangeSet changeSet = new ChangeSet();
-		private Set<String> downloadedUnknownDatabases = new HashSet<String>();
-		private Set<MultiChunkId> downloadedMultiChunks = new HashSet<MultiChunkId>();
-
-		public DownResultCode getResultCode() {
-			return resultCode;
-		}
-
-		public void setResultCode(DownResultCode resultCode) {
-			this.resultCode = resultCode;
-		}
-
-		public void setChangeSet(ChangeSet ChangeSet) {
-			this.changeSet = ChangeSet;
-		}
-
-		public ChangeSet getChangeSet() {
-			return changeSet;
-		}
-
-		public Set<String> getDownloadedUnknownDatabases() {
-			return downloadedUnknownDatabases;
-		}
-
-		public void setDownloadedUnknownDatabases(Set<String> downloadedUnknownDatabases) {
-			this.downloadedUnknownDatabases = downloadedUnknownDatabases;
-		}
-
-		public Set<MultiChunkId> getDownloadedMultiChunks() {
-			return downloadedMultiChunks;
-		}
-
-		public void setDownloadedMultiChunks(Set<MultiChunkId> downloadedMultiChunks) {
-			this.downloadedMultiChunks = downloadedMultiChunks;
-		}
 	}
 }

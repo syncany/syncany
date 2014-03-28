@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.actions;
+package org.syncany.operations.down.actions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,12 +35,12 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;

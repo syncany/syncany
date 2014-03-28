@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.init;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -32,9 +32,9 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -46,6 +46,8 @@ import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage

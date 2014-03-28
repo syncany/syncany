@@ -21,9 +21,9 @@ import java.util.Map;
 
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginOptionSpec;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 /**

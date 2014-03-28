@@ -24,9 +24,9 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.UpOperation.UpOperationOptions;
-import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 
 public class UpCommand extends Command {
 	@Override

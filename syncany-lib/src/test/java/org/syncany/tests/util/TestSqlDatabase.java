@@ -24,10 +24,10 @@ import java.sql.SQLException;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.AbstractSqlDao;
 
 /**

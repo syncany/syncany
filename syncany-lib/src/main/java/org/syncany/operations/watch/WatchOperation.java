@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.watch;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,10 +28,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.operations.NotificationListener.NotificationListenerListener;
-import org.syncany.operations.RecursiveWatcher.WatchListener;
-import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.down.DownOperation;
+import org.syncany.operations.down.DownOperationListener;
+import org.syncany.operations.down.DownOperationResult;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
+import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationListener;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.operations.watch.NotificationListener.NotificationListenerListener;
+import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -61,6 +70,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());
 
 	private WatchOperationOptions options;
+	private WatchOperationListener listener;
 
 	private AtomicBoolean syncRunning;
 	private AtomicBoolean stopRequired;
@@ -72,10 +82,11 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private String notificationChannel;
 	private String notificationInstanceId;
 
-	public WatchOperation(Config config, WatchOperationOptions options) {
+	public WatchOperation(Config config, WatchOperationOptions options, WatchOperationListener listener) {
 		super(config);
 
 		this.options = options;
+		this.listener = listener;
 
 		this.syncRunning = new AtomicBoolean(false);
 		this.stopRequired = new AtomicBoolean(false);
@@ -156,9 +167,15 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Running sync ...");
 
 			try {
-				new DownOperation(config).execute();
-
-				UpOperationResult upOperationResult = new UpOperation(config).execute();
+				// Run down
+				DownOperationResult downResult = new DownOperation(config, listener).execute();
+				
+				if (downResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
+					// TODO [low] Do something?
+				}
+				
+				// Run up
+				UpOperationResult upOperationResult = new UpOperation(config, listener).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES && upOperationResult.getChangeSet().hasChanges()) {
 					notifyChanges();
@@ -208,6 +225,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	public void stop() {
 		stopRequired.set(true);
+	}
+
+	/**
+	 * @author Vincent Wiencek
+	 */
+	public interface WatchOperationListener extends UpOperationListener, DownOperationListener {
+		// Nothing
 	}
 
 	public static class WatchOperationOptions implements OperationOptions {

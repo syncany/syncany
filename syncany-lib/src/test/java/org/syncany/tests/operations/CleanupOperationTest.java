@@ -28,7 +28,7 @@ import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 import org.syncany.operations.CleanupOperation.CleanupResultCode;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;

@@ -34,16 +34,16 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileVersion;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranch;
 
 /**
  * The database version data access object (DAO) writes and queries the SQL database for information

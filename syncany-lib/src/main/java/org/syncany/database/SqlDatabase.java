@@ -38,7 +38,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
-import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranch;
 
 /**
  * Represents the single entry point for all SQL database queries.

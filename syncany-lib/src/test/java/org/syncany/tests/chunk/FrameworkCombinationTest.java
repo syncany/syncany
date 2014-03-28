@@ -233,10 +233,12 @@ public class FrameworkCombinationTest {
 			}
 			
 			@Override public boolean onFileFilter(File file) { return true; } 
-			@Override public boolean onFileStart(File file) { return file.isFile() && !FileUtil.isSymlink(file); }
+			@Override public boolean onFileStart(File file, int index) { return file.isFile() && !FileUtil.isSymlink(file); }
 			@Override public void onFileEnd(File file, byte[] checksum) { }				
 			@Override public void onMultiChunkOpen(MultiChunk multiChunk) { }
 			@Override public void onMultiChunkClose(MultiChunk multiChunk) { }
+			@Override public void onStart(int fileCount) { }
+			@Override public void onFinish() { }
 		});
 		
 		return chunkIndex;

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.init;
 
 import java.io.File;
 import java.util.List;
@@ -35,7 +35,9 @@ import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
 
 /**
  * The init operation initializes a new repository at a given remote storage

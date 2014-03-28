@@ -41,8 +41,8 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.operations.actions.FileSystemAction;
-import org.syncany.operations.actions.NewFileSystemAction;
+import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.operations.down.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
 
 /**
