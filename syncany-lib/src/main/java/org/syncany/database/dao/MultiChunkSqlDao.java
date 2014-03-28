@@ -24,8 +24,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.syncany.chunk.MultiChunk;
@@ -166,10 +169,14 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
 	 */
 	public Map<ChunkChecksum,MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
-		String[] checksums = new String[chunkChecksums.size()];
-		for (int i = 0; i < checksums.length; i++) {
-			checksums[i] = chunkChecksums.get(i).toString();
+		Set<ChunkChecksum> chunkChecksumSet = new HashSet<ChunkChecksum>(chunkChecksums);
+		String[] checksums = new String[chunkChecksumSet.size()];
+		int i = 0;
+		for (ChunkChecksum checksum : chunkChecksumSet) {
+			checksums[i] = checksum.toString();
+			i++;
 		}
+		
 		Map<ChunkChecksum, MultiChunkId> result = new HashMap<ChunkChecksum, MultiChunkId>();
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkIdForChunks.sql")) {
 			preparedStatement.setArray(1, connection.createArrayOf("varchar", checksums));	
