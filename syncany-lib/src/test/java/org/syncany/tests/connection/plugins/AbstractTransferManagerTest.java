@@ -17,49 +17,39 @@
  */
 package org.syncany.tests.connection.plugins;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
+import org.syncany.connection.plugins.MasterRemoteFile;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.StringUtil;
 
 public abstract class AbstractTransferManagerTest {
 	private File tempLocalSourceDir;
 	private File localRootDir;
 
-	private String pluginId;
-	private Map<String, String> pluginSettings;	
-	
 	public abstract Map<String, String> createPluginSettings();
-	public abstract String createPluginId();
+	public abstract String getPluginId();
 	
 	@Before
-	public void setUp() throws Exception {
-		localRootDir = TestFileUtil.createTempDirectoryInSystemTemp();
-
+	public void setUp() throws Exception {	
 		tempLocalSourceDir = new File(localRootDir + "/local");
 		tempLocalSourceDir.mkdir();
-
-		pluginId = createPluginId();
-		pluginSettings = createPluginSettings();
 	}
 	
 	@After
@@ -75,6 +65,7 @@ public abstract class AbstractTransferManagerTest {
 
 	@Test
 	public void testLocalPluginInfo() {
+		String pluginId = getPluginId();
 		Plugin plugin = Plugins.get(pluginId);
 		
 		assertNotNull("PluginInfo should not be null.", plugin);
@@ -85,7 +76,7 @@ public abstract class AbstractTransferManagerTest {
 
 	@Test(expected = StorageException.class)
 	public void testConnectWithInvalidSettings() throws StorageException {
-		Plugin plugin = Plugins.get(pluginId);
+		Plugin plugin = Plugins.get(getPluginId());
 
 		Map<String, String> invalidEmptyPluginSettings = new HashMap<String, String>();
 
@@ -100,100 +91,106 @@ public abstract class AbstractTransferManagerTest {
 
 	@Test
 	public void testUploadListDownloadAndDelete() throws Exception {
-		// Generate test files
-		Map<String, File> inputFiles = generateTestInputFile();
-
+		// Setup
+		File tempFromDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		File tempToDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
 		// Create connection, upload, list, download
 		TransferManager transferManager = loadPluginAndCreateTransferManager();
+		
+		transferManager.init(true);		
 		transferManager.connect();
 
-		Map<File, RemoteFile> uploadedFiles = uploadChunkFiles(transferManager, inputFiles.values());
-		Map<String, RemoteFile> remoteFiles = transferManager.list(RemoteFile.class);
-		Map<RemoteFile, File> downloadedLocalFiles = downloadRemoteFiles(transferManager, remoteFiles.values());
+		// Clear up previous test (if test location is reused)
+		cleanTestLocation(transferManager);
 
-		// Compare
-		assertEquals("Number of uploaded files should be the same as the input files.", uploadedFiles.size(), remoteFiles.size());
-		assertEquals("Number of remote files should be the same as the downloaded files.", remoteFiles.size(), downloadedLocalFiles.size());
+		// Run!
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, RepoRemoteFile.class, new RepoRemoteFile[] { 
+			new RepoRemoteFile()
+		});
+		
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] {  
+			new MasterRemoteFile()
+		});
+		
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, DatabaseRemoteFile.class, new DatabaseRemoteFile[] { 
+			new DatabaseRemoteFile("db-A-0001"), 
+			new DatabaseRemoteFile("db-B-0002") 
+		});
 
-		for (Map.Entry<String, File> inputFileEntry : inputFiles.entrySet()) {
-			File inputFile = inputFileEntry.getValue();
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MultiChunkRemoteFile.class, new MultiChunkRemoteFile[] { 
+			new MultiChunkRemoteFile("multichunk-84f7e2b31440aaef9b73de3cadcf4e449aeb55a1"), 
+			new MultiChunkRemoteFile("multichunk-beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), 
+			new MultiChunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") 
+		});
 
-			RemoteFile uploadedFile = uploadedFiles.get(inputFile);
-			File downloadedLocalFile = downloadedLocalFiles.get(uploadedFile);
+		// Clear up previous test (if test location is reused)
+		cleanTestLocation(transferManager);
 
-			assertNotNull("Cannot be null.", uploadedFile);
-			assertNotNull("Cannot be null.", downloadedLocalFile);
-
-			byte[] checksumOriginalFile = TestFileUtil.createChecksum(inputFile);
-			byte[] checksumDownloadedFile = TestFileUtil.createChecksum(downloadedLocalFile);
-
-			assertArrayEquals("Uploaded file differs from original file.", checksumOriginalFile, checksumDownloadedFile);
-		}
-
-		// Delete
-		for (RemoteFile remoteFileToDelete : uploadedFiles.values()) {
-			transferManager.delete(remoteFileToDelete);
-		}
-
-		Map<String, RemoteFile> remoteFiles2 = transferManager.list(RemoteFile.class);
-		Map<RemoteFile, File> downloadedLocalFiles2 = downloadRemoteFiles(transferManager, remoteFiles2.values());
-
-		for (RemoteFile remoteFileToBeDeleted : downloadedLocalFiles2.keySet()) {
-			assertFalse("Could not delete remote file.", downloadedLocalFiles2.containsKey(remoteFileToBeDeleted));
-		}
+		// Clean local location
+		TestFileUtil.deleteDirectory(tempFromDir);
+		TestFileUtil.deleteDirectory(tempToDir);
 	}
 
-	@Test(expected = StorageException.class)
-	public void testDeleteNonExistantFile() throws StorageException {
-		TransferManager transferManager = loadPluginAndCreateTransferManager();
-		transferManager.connect();
-		transferManager.delete(new RemoteFile("non-existant-file"));
-	}
-
-	private Map<String, File> generateTestInputFile() throws IOException {
-		Map<String, File> inputFilesMap = new HashMap<String, File>();
-		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempLocalSourceDir, 50 * 1024, 10);
-
-		for (File file : inputFiles) {
-			inputFilesMap.put(file.getName(), file);
-		}
-
-		return inputFilesMap;
-	}
-
-	private Map<File, RemoteFile> uploadChunkFiles(TransferManager transferManager, Collection<File> inputFiles) throws StorageException {
-		Map<File, RemoteFile> inputFileOutputFile = new HashMap<File, RemoteFile>();
-
-		for (File inputFile : inputFiles) {
-			RemoteFile remoteOutputFile = new RemoteFile(inputFile.getName());
-			transferManager.upload(inputFile, remoteOutputFile);
-
-			inputFileOutputFile.put(inputFile, remoteOutputFile);
-		}
-
-		return inputFileOutputFile;
-	}
-
-	private Map<RemoteFile, File> downloadRemoteFiles(TransferManager transferManager, Collection<RemoteFile> remoteFiles) throws StorageException {
-		Map<RemoteFile, File> downloadedLocalFiles = new HashMap<RemoteFile, File>();
-
+	private <T extends RemoteFile> void uploadDownloadListDelete(TransferManager transferManager, File tempFromDir, File tempToDir, Class<T> remoteFileClass, T[] remoteFiles) throws Exception {
 		for (RemoteFile remoteFile : remoteFiles) {
-			File downloadedLocalFile = new File(tempLocalSourceDir + "/downloaded-" + remoteFile.getName());
+			File originalLocalFile = new File(tempFromDir, remoteFile.getName());
+			File downloadedLocalFile = new File(tempToDir, remoteFile.getName());
+
+			TestFileUtil.createNonRandomFile(originalLocalFile, 5*1024);
+			
+			transferManager.upload(originalLocalFile, remoteFile);
 			transferManager.download(remoteFile, downloadedLocalFile);
+			
+			String checksumOriginalFile = StringUtil.toHex(TestFileUtil.createChecksum(originalLocalFile));
+			String checksumDownloadedFile = StringUtil.toHex(TestFileUtil.createChecksum(downloadedLocalFile));
 
-			downloadedLocalFiles.put(remoteFile, downloadedLocalFile);
-
-			assertTrue("Downloaded file does not exist.", downloadedLocalFile.exists());
+			assertEquals("Uploaded file differs from original file, for file " + originalLocalFile, checksumOriginalFile, checksumDownloadedFile);
 		}
 
-		return downloadedLocalFiles;
+		Map<String, T> listLocalFilesAfterUpload = transferManager.list(remoteFileClass);
+		assertEquals(remoteFiles.length, listLocalFilesAfterUpload.size());
+		
+		for (RemoteFile remoteFile : remoteFiles) {
+			transferManager.delete(remoteFile);
+		}
+		
+		Map<String, T> listLocalFileAfterDelete = transferManager.list(remoteFileClass);
+		assertEquals(0, listLocalFileAfterDelete.size());		
 	}
+	
+	private void cleanTestLocation(TransferManager transferManager) throws StorageException {
+		Map<String, RemoteFile> normalFiles = transferManager.list(RemoteFile.class);
+		Map<String, DatabaseRemoteFile> databaseFiles = transferManager.list(DatabaseRemoteFile.class);
+		Map<String, MultiChunkRemoteFile> multiChunkFiles = transferManager.list(MultiChunkRemoteFile.class);
+		
+		for (RemoteFile remoteFile : normalFiles.values()) {
+			transferManager.delete(remoteFile);
+		}
+		
+		for (RemoteFile remoteFile : databaseFiles.values()) {
+			transferManager.delete(remoteFile);
+		}
+		
+		for (RemoteFile remoteFile : multiChunkFiles.values()) {
+			transferManager.delete(remoteFile);
+		}
+	}
+	
+	@Test
+	public void testDeleteNonExistentFile() throws StorageException {
+		TransferManager transferManager = loadPluginAndCreateTransferManager();
+		transferManager.connect();	
+		
+		boolean deleteSuccess = transferManager.delete(new MultiChunkRemoteFile("multichunk-dddddddddddddddddddddddddddddddddddddddd")); // does not exist
+		assertTrue(deleteSuccess);
+	}	
 
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
-		Plugin pluginInfo = Plugins.get(pluginId);
+		Plugin pluginInfo = Plugins.get(getPluginId());
 
 		Connection connection = pluginInfo.createConnection();
-		connection.init(pluginSettings);
+		connection.init(createPluginSettings());
 
 		return connection.createTransferManager();
 	}
