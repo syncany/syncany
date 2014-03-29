@@ -17,9 +17,12 @@
  */
 package org.syncany.operations.down;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
@@ -31,6 +34,7 @@ public class DownOperationResult implements OperationResult {
 	
 	private DownResultCode resultCode;
 	private ChangeSet changeSet = new ChangeSet();
+	private List<DatabaseVersionHeader> dirtyDatabasesCreated = new ArrayList<DatabaseVersionHeader>();
 	private Set<String> downloadedUnknownDatabases = new HashSet<String>();
 	private Set<MultiChunkId> downloadedMultiChunks = new HashSet<MultiChunkId>();
 
@@ -48,6 +52,14 @@ public class DownOperationResult implements OperationResult {
 
 	public ChangeSet getChangeSet() {
 		return changeSet;
+	}
+
+	public List<DatabaseVersionHeader> getDirtyDatabasesCreated() {
+		return dirtyDatabasesCreated;
+	}
+
+	public void setDirtyDatabasesCreated(List<DatabaseVersionHeader> dirtyDatabasesCreated) {
+		this.dirtyDatabasesCreated = dirtyDatabasesCreated;
 	}
 
 	public Set<String> getDownloadedUnknownDatabases() {
