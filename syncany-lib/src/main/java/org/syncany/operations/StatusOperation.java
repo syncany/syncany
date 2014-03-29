@@ -188,8 +188,10 @@ public class StatusOperation extends Operation {
 				}					
 			}
 			else {
-				changeSet.getNewFiles().add(relativeFilePath);
-				logger.log(Level.FINEST, "- New file: "+relativeFilePath);
+				if (!config.getIgnoredFiles().isFileIgnored(relativeFilePath)) {
+					changeSet.getNewFiles().add(relativeFilePath);
+					logger.log(Level.FINEST, "- New file: "+relativeFilePath);
+				}
 			}			
 			
 			// Check if file is symlink directory
