@@ -36,30 +36,13 @@ public class IgnoredFiles {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	private Set<String> ignorePatterns;
 	private Set<String> ignorePaths;
+	private File ignoreFile;
 	
 	public IgnoredFiles(File ignoreFile) {
 		ignorePatterns = new HashSet<String>();
 		ignorePaths = new HashSet<String>();
-		if (ignoreFile.exists()) {
-			try {
-				Scanner scanner = new Scanner(ignoreFile);
-				while (scanner.hasNextLine()) {
-					String pattern = scanner.nextLine();
-					if (!pattern.isEmpty()) {
-						if (pattern.startsWith("regex:")) {
-							ignorePatterns.add(pattern.substring(6));
-						}
-						else {
-							ignorePaths.add(pattern);
-						}
-					}
-				}
-				scanner.close();
-			}
-			catch (FileNotFoundException e) {
-				logger.log(Level.INFO, "Ignore file not found while it does exits.");
-			}
-		}
+		this.ignoreFile = ignoreFile;
+		loadPatterns();
 	}
 	
 	/**
@@ -81,5 +64,34 @@ public class IgnoredFiles {
 			}
 		}
 		return false;
+	}
+	
+	public void loadPatterns() {
+		if (ignoreFile != null && ignoreFile.exists()) {
+			try {
+				Scanner scanner = new Scanner(ignoreFile);
+				while (scanner.hasNextLine()) {
+					String pattern = scanner.nextLine();
+					if (!pattern.isEmpty()) {
+						if (pattern.startsWith("regex:")) {
+							// Chop off regex: indicator
+							ignorePatterns.add(pattern.substring(6));
+						}
+						else {
+							ignorePaths.add(pattern);
+						}
+					}
+				}
+				scanner.close();
+			}
+			catch (FileNotFoundException e) {
+				logger.log(Level.INFO, "Ignore file not found while it does exits.");
+			}
+		}
+		else {
+			// In case the ignoreFile has been deleted, reset patterns
+			ignorePatterns = new HashSet<String>();
+			ignorePaths = new HashSet<String>();
+		}
 	}
 } 

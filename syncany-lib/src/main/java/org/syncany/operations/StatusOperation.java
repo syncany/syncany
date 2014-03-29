@@ -192,6 +192,9 @@ public class StatusOperation extends Operation {
 					changeSet.getNewFiles().add(relativeFilePath);
 					logger.log(Level.FINEST, "- New file: "+relativeFilePath);
 				}
+				else {
+					logger.log(Level.FINEST, "- Ignoring file; " + relativeFilePath);
+				}
 			}			
 			
 			// Check if file is symlink directory

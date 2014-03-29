@@ -126,18 +126,6 @@ public class Config {
 	
 	private void initIgnoredFile() throws ConfigException {
 		File ignoreFile = new File(localDir+File.separator+FILE_IGNORE);
-		
-		if (!ignoreFile.exists()) {
-			try {
-				ignoreFile.createNewFile();
-				if (EnvironmentUtil.isWindows()) {
-					Files.setAttribute(Paths.get(appDir.getAbsolutePath()), "dos:hidden", true);
-				}
-			}
-			catch (IOException e) {
-				throw new ConfigException("Cannot create .syignorefile.", e);
-			}
-		}
 		ignoredFiles = new IgnoredFiles(ignoreFile);
 	}
 
