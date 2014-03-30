@@ -27,8 +27,10 @@ String getRevision() {
 }
 
 boolean isApplicationRelease() {
-	String currentBranch = execAndGetOutput("git describe --all")
-	return "heads/master".equals(currentBranch)
+	// Note: This must work for detached commits (git checkout -qf <commit>)
+
+	String currentBranches = execAndGetOutput("git log -n 1 --pretty=%d HEAD")
+	return currentBranches.contains("origin/master")
 }
 
 
