@@ -28,7 +28,6 @@ String getRevision() {
 
 boolean isApplicationRelease() {
 	String currentBranch = execAndGetOutput("git describe --all")
-	println(currentBranch)
 	return "heads/master".equals(currentBranch)
 }
 
