@@ -26,18 +26,9 @@ String getRevision() {
 	return (currentCommit != null) ? currentCommit : "UNKNOWN"
 }
 
-boolean hasVersionTag() {
-	String currentTag = execAndGetOutput("git tag --list --contains HEAD")
-	return currentTag != null && currentTag.startsWith("v")
-}
-
-boolean isMasterBranch() {
+boolean isApplicationRelease() {
 	String currentBranch = execAndGetOutput("git rev-parse --abbrev-ref HEAD")
 	return "master".equals(currentBranch)
-}
-
-boolean isApplicationRelease() {
-	return hasVersionTag() && isMasterBranch()
 }
 
 
