@@ -278,8 +278,10 @@ public class DownOperation extends Operation {
 				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
 
 				logger.log(Level.INFO, "    * Deleting remote database file " + remoteFileToPrune + " ...");
-				transferManager.delete(remoteFileToPrune);
-			}
+				transferManager.delete(remoteFileToPrune);		
+				
+				result.getDirtyDatabasesCreated().add(databaseVersionHeader);
+			}						
 		}
 	}
 

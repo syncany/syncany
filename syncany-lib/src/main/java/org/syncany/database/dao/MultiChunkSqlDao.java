@@ -52,12 +52,13 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		super(connection);
 	}
 
-	public void writeMultiChunks(Connection connection, Collection<MultiChunkEntry> multiChunks) throws SQLException {
+	public void writeMultiChunks(Connection connection, long databaseVersionId, Collection<MultiChunkEntry> multiChunks) throws SQLException {
 		for (MultiChunkEntry multiChunk : multiChunks) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/multichunk.insert.all.writeMultiChunks.sql");
 
 			preparedStatement.setString(1, multiChunk.getId().toString());
-			preparedStatement.setLong(2, multiChunk.getSize());
+			preparedStatement.setLong(2, databaseVersionId);
+			preparedStatement.setLong(3, multiChunk.getSize());
 			
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
@@ -133,7 +134,6 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunksWithChunksForDatabaseVersion.sql")) {
 			preparedStatement.setString(1, vectorClock.toString());
-			preparedStatement.setString(2, vectorClock.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createMultiChunkEntries(resultSet);
@@ -143,6 +143,19 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}	
+
+	/**
+	 * no commit
+	 */
+	public void updateDirtyMultiChunksNewDatabaseId(long newDatabaseVersionId) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.update.dirty.updateDirtyMultiChunksNewDatabaseId.sql")) {
+			preparedStatement.setLong(1, newDatabaseVersionId);
+			preparedStatement.executeUpdate();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}		
+	}
 	
 	/**
 	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
