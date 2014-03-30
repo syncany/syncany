@@ -17,7 +17,6 @@
  */
 package org.syncany.tests.chunk;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -45,8 +44,8 @@ import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.chunk.ZipMultiChunker;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.tests.util.TestFileUtil;
-import org.syncany.util.StringUtil;
 
 public class MultiChunkerTest {
 	private static Logger logger = Logger.getLogger(MultiChunkerTest.class.getSimpleName());
@@ -172,19 +171,21 @@ public class MultiChunkerTest {
 
 	private MultiChunk createNewMultiChunk(File tempDir, MultiChunker customMultiChunker, Transformer transformer) {
 		FileOutputStream fos;
-		String multiChunkName = String.valueOf(new Random().nextInt());
+		MultiChunkId multiChunkId = MultiChunkId.secureRandomMultiChunkId();
 
 		MultiChunk customChunk = null;
 		try {
-			fos = new FileOutputStream(tempDir.getAbsolutePath() + "/MultiChunk" + multiChunkName);
-			customChunk = customMultiChunker.createMultiChunk(StringUtil.toBytesUTF8(multiChunkName), 
-					transformer.createOutputStream(fos));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+			fos = new FileOutputStream(tempDir.getAbsolutePath() + "/MultiChunk" + multiChunkId);
+			customChunk = customMultiChunker.createMultiChunk(multiChunkId, transformer.createOutputStream(fos));
+		}
+		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		assertArrayEquals(customChunk.getId(), multiChunkName.getBytes());
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		assertEquals(customChunk.getId(), multiChunkId);
 
 		return customChunk;
 	}

@@ -38,7 +38,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
-import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestCollectionUtil;
 import org.syncany.tests.util.TestConfigUtil;

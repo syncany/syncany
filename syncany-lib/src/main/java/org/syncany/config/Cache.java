@@ -20,7 +20,7 @@ package org.syncany.config;
 import java.io.File;
 import java.io.IOException;
 
-import org.syncany.util.StringUtil;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 
 /**
  * The cache class represents the local disk cache. It is used for storing multichunks
@@ -29,7 +29,6 @@ import org.syncany.util.StringUtil;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-// TODO [low] Add cache cleanup methods
 // TODO [low] Cache: maybe make a more sensible structure, add timestamp?! LRU cache?!
 public class Cache {
 	private static String FILE_FORMAT_MULTICHUNK_ENCRYPTED = "multichunk-%s";
@@ -41,35 +40,46 @@ public class Cache {
     public Cache(File cacheDir) {
     	this.cacheDir = cacheDir;
     }
-
-    /* 
-    
-     TODO [medium] Implement methods like this:    
-
-    public File getEncryptedMultiChunkFile(MultiChunkId multiChunkId) {
-    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, multiChunkId.toString());
-    }
     
     public File getDecryptedMultiChunkFile(MultiChunkId multiChunkId) {
     	return getFileInCache(FILE_FORMAT_MULTICHUNK_DECRYPTED, multiChunkId.toString());
     }    
-    */
-    
-    public File getEncryptedMultiChunkFile(byte[] multiChunkId) {    	
-    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, StringUtil.toHex(multiChunkId));
-    }
-    
-    public File getDecryptedMultiChunkFile(byte[] multiChunkId) {
-    	return getFileInCache(FILE_FORMAT_MULTICHUNK_DECRYPTED, StringUtil.toHex(multiChunkId));
+
+    public File getEncryptedMultiChunkFile(MultiChunkId multiChunkId) {
+    	return getFileInCache(FILE_FORMAT_MULTICHUNK_ENCRYPTED, multiChunkId.toString());
     }    
     
 	public File getDatabaseFile(String name) {
 		return getFileInCache(FILE_FORMAT_DATABASE_FILE_ENCRYPTED, name);		
 	}    
 
+	/**
+	 * Deletes all files in the cache directory. This method should not be run 
+	 * while an operation is executed, but only while no operation is run. 
+	 */
+	public void clear() {
+		File[] cacheFiles = cacheDir.listFiles();
+		
+		if (cacheFiles != null) {
+			for (File cacheFile : cacheFiles) {
+				cacheFile.delete();				
+			}
+		}
+	}
+	
+	/**
+	 * Creates temporary file in the local directory cache, typically located at
+	 * .syncany/cache. If not deleted by the application, the returned file is automatically
+	 * deleted on exit by the JVM.
+	 * 
+	 * @return Temporary file in local directory cache
+	 */
     public File createTempFile(String name) throws Exception {
        try {
-           return File.createTempFile(String.format("temp-%s-", name), ".tmp", cacheDir);
+           File tempFile = File.createTempFile(String.format("temp-%s-", name), ".tmp", cacheDir);
+           tempFile.deleteOnExit();
+           
+           return tempFile;
        }
        catch (IOException e) {
            throw new Exception("Unable to create temporary file in cache.", e);

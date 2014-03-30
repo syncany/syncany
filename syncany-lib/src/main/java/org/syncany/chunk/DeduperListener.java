@@ -19,6 +19,8 @@ package org.syncany.chunk;
 
 import java.io.File;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
+
 /**
  * Listener interface used by the {@link Deduper} to notify the caller of file
  * events, and to retrieve information about chunks and output files. 
@@ -48,9 +50,10 @@ public interface DeduperListener {
 	 * <p>The method is called for every file that was not excluded by {@link #onFileFilter(File) onFileFilter()}.
 	 * 
 	 * @param file File for which the deduplication process is about to be started
+	 * @param fileNumber Index of file being indexed
 	 * @return Returns <tt>true</tt> if the given file shall be deduplicated, <tt>false</tt> otherwise
 	 */
-	public boolean onFileStart(File file);
+	public boolean onFileStart(File file, int fileNumber);
 	
 	/**
 	 * Called by {@link Deduper} during the deduplication process for each chunk that was
@@ -109,7 +112,7 @@ public interface DeduperListener {
 	 * @param firstChunk The first chunk can/might be used to determine a new multichunk identifier
 	 * @return Returns a new unique multichunk identifier
 	 */
-	public byte[] createNewMultiChunkId(Chunk firstChunk);
+	public MultiChunkId createNewMultiChunkId(Chunk firstChunk);
 
 	/**
 	 * Called by {@link Deduper} during the deduplication process before a new {@link MultiChunk} is
@@ -119,7 +122,7 @@ public interface DeduperListener {
 	 * @param multiChunkId Identifier for the new multichunk
 	 * @return Returns the (temporary or final) file to which the multichunk should be written
 	 */
-	public File getMultiChunkFile(byte[] multiChunkId);
+	public File getMultiChunkFile(MultiChunkId multiChunkId);
 
 	/**
 	 * Called by {@link Deduper} during the deduplication process whenever a new {@link Chunk} is written 
@@ -137,5 +140,17 @@ public interface DeduperListener {
 	 *  
 	 * @param multiChunk The multichunk that's being closed 
 	 */
-	public void onMultiChunkClose(MultiChunk multiChunk);		
+	public void onMultiChunkClose(MultiChunk multiChunk);
+
+	/**
+	 * Called by {@link Deduper} before starting the deduplication process.
+	 *  
+	 * @param size the number of files to be processed 
+	 */
+	public void onStart(int size);	
+	
+	/**
+	 * Called by {@link Deduper} after finishing the deduplication process.
+	 */
+	public void onFinish();
 }

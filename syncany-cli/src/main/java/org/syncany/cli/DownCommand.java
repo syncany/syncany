@@ -28,9 +28,9 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.DownOperation.DownConflictStrategy;
-import org.syncany.operations.DownOperation.DownOperationOptions;
-import org.syncany.operations.DownOperation.DownOperationResult;
+import org.syncany.operations.down.DownOperationOptions;
+import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
+import org.syncany.operations.down.DownOperationResult;
 
 public class DownCommand extends Command {
 	@Override

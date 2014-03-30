@@ -28,24 +28,11 @@ import org.syncany.operations.ChangeSet;
 import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.ConnectOperation;
-import org.syncany.operations.ConnectOperation.ConnectOperationListener;
-import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
-import org.syncany.operations.ConnectOperation.ConnectOperationResult;
-import org.syncany.operations.DownOperation;
-import org.syncany.operations.DownOperation.DownOperationOptions;
-import org.syncany.operations.DownOperation.DownOperationResult;
-import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
-import org.syncany.operations.InitOperation;
-import org.syncany.operations.InitOperation.InitOperationListener;
-import org.syncany.operations.InitOperation.InitOperationOptions;
-import org.syncany.operations.InitOperation.InitOperationResult;
 import org.syncany.operations.LogOperation;
 import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.GenlinkOperation;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -54,14 +41,27 @@ import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.SyncOperation;
-import org.syncany.operations.SyncOperation.SyncOperationOptions;
-import org.syncany.operations.SyncOperation.SyncOperationResult;
-import org.syncany.operations.UpOperation;
-import org.syncany.operations.UpOperation.UpOperationOptions;
-import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.WatchOperation;
-import org.syncany.operations.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.down.DownOperation;
+import org.syncany.operations.down.DownOperationListener;
+import org.syncany.operations.down.DownOperationOptions;
+import org.syncany.operations.down.DownOperationResult;
+import org.syncany.operations.init.ConnectOperation;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationListener;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationOptions;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.init.GenlinkOperation;
+import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.init.InitOperation;
+import org.syncany.operations.init.InitOperation.InitOperationListener;
+import org.syncany.operations.init.InitOperation.InitOperationOptions;
+import org.syncany.operations.init.InitOperation.InitOperationResult;
+import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationListener;
+import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.watch.WatchOperation;
+import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -125,23 +125,23 @@ public class Client {
 	}
 
 	public UpOperationResult up(UpOperationOptions options) throws Exception {
-		return new UpOperation(config, options).execute();
+		return up(options, null);
+	}
+
+	public UpOperationResult up(UpOperationOptions options, UpOperationListener listener) throws Exception {
+		return new UpOperation(config, options, listener).execute();
 	}
 
 	public DownOperationResult down() throws Exception {
-		return down(new DownOperationOptions());
+		return down(new DownOperationOptions(), null);
 	}
 
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
-		return new DownOperation(config, options).execute();
+		return down(options, null);
 	}
 
-	public SyncOperationResult sync() throws Exception {
-		return sync(new SyncOperationOptions());
-	}
-
-	public SyncOperationResult sync(SyncOperationOptions options) throws Exception {
-		return new SyncOperation(config, options).execute();
+	public DownOperationResult down(DownOperationOptions options, DownOperationListener listener) throws Exception {
+		return new DownOperation(config, options, listener).execute();
 	}
 
 	public ChangeSet status() throws Exception {
@@ -165,8 +165,12 @@ public class Client {
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
-		new WatchOperation(config, options).execute();
-	}
+		watch(options, null);	
+	}	
+
+	public void watch(WatchOperationOptions options, WatchOperationListener listener) throws Exception {
+		new WatchOperation(config, options, listener).execute();		
+	}	
 
 	public GenlinkOperationResult genlink() throws Exception {
 		return new GenlinkOperation(config).execute();

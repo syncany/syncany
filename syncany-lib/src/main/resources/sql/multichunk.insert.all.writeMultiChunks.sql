@@ -1,1 +1,1 @@
-insert into multichunk (id, size) values (?, ?)
+insert into multichunk (id, databaseversion_id, size) values (?, ?, ?)

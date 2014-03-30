@@ -28,6 +28,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.util.StringUtil;
 
 /**
@@ -49,7 +50,7 @@ public class ZipMultiChunk extends MultiChunk {
 		this.zipFile = new ZipFile(file);
 	}    
     
-    public ZipMultiChunk(byte[] id, int minSize, OutputStream os) throws IOException {
+    public ZipMultiChunk(MultiChunkId id, int minSize, OutputStream os) throws IOException {
         super(id, minSize);        
         
         this.zipOut = new ZipOutputStream(os);

@@ -27,8 +27,8 @@ import org.syncany.config.Config;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.UpOperation;
-import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -104,7 +104,7 @@ public class StatusOperationTest {
 		
 		// Perform 'up' and immediately change test file
 		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
-		new UpOperation(config, syncUpOptions).execute();		
+		new UpOperation(config, syncUpOptions, null).execute();		
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison

@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
+
 /**
  *
  * @author pheckel
@@ -53,7 +55,7 @@ public class ZipMultiChunker extends MultiChunker {
 	}
 
 	@Override
-	public MultiChunk createMultiChunk(byte[] id, OutputStream os) throws IOException {
+	public MultiChunk createMultiChunk(MultiChunkId id, OutputStream os) throws IOException {
 		return new ZipMultiChunk(id, minMultiChunkSize, os);
 	}
 

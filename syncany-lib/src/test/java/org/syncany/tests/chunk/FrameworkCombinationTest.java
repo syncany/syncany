@@ -189,8 +189,8 @@ public class FrameworkCombinationTest {
 		deduper.deduplicate(inputFiles, new DeduperListener() {			
 			@Override
 			public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
-				logger.log(Level.INFO, "    - Adding chunk "+StringUtil.toHex(chunk.getChecksum())+" to multichunk "+StringUtil.toHex(multiChunk.getId())+" ...");
-				chunkIndex.chunkIDToMultiChunkID.put(new ChunkChecksum(chunk.getChecksum()), new MultiChunkId(multiChunk.getId()));				
+				logger.log(Level.INFO, "    - Adding chunk "+StringUtil.toHex(chunk.getChecksum())+" to multichunk "+multiChunk.getId()+" ...");
+				chunkIndex.chunkIDToMultiChunkID.put(new ChunkChecksum(chunk.getChecksum()), multiChunk.getId());				
 			}								
 			
 			@Override
@@ -219,24 +219,26 @@ public class FrameworkCombinationTest {
 			}
 			
 			@Override
-			public File getMultiChunkFile(byte[] multiChunkId) {
-				File outputMultiChunk = new File(tempDir+"/multichunk-"+StringUtil.toHex(multiChunkId));
+			public File getMultiChunkFile(MultiChunkId multiChunkId) {
+				File outputMultiChunk = new File(tempDir+"/multichunk-"+multiChunkId);
 				chunkIndex.outputMultiChunkFiles.add(outputMultiChunk);
 				
 				return outputMultiChunk;
 			}
 
 			@Override
-			public byte[] createNewMultiChunkId(Chunk firstChunk) {
+			public MultiChunkId createNewMultiChunkId(Chunk firstChunk) {
 				// Note: In the real implementation, this should be random
-				return firstChunk.getChecksum();
+				return new MultiChunkId(firstChunk.getChecksum());
 			}
 			
 			@Override public boolean onFileFilter(File file) { return true; } 
-			@Override public boolean onFileStart(File file) { return file.isFile() && !FileUtil.isSymlink(file); }
+			@Override public boolean onFileStart(File file, int index) { return file.isFile() && !FileUtil.isSymlink(file); }
 			@Override public void onFileEnd(File file, byte[] checksum) { }				
 			@Override public void onMultiChunkOpen(MultiChunk multiChunk) { }
 			@Override public void onMultiChunkClose(MultiChunk multiChunk) { }
+			@Override public void onStart(int fileCount) { }
+			@Override public void onFinish() { }
 		});
 		
 		return chunkIndex;
@@ -255,7 +257,7 @@ public class FrameworkCombinationTest {
 			Chunk outputChunkInMultiChunk = null;
 			
 			while (null != (outputChunkInMultiChunk = outputMultiChunk.read())) {
-				File extractedChunkFile = new File(tempDir+"/chunk-"+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+"-from-multichunk-"+StringUtil.toHex(outputMultiChunk.getId()));
+				File extractedChunkFile = new File(tempDir+"/chunk-"+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+"-from-multichunk-"+outputMultiChunk.getId());
 
 				logger.log(Level.INFO, "  + Writing chunk "+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+" to "+extractedChunkFile+" ...");
 				TestFileUtil.writeToFile(outputChunkInMultiChunk.getContent(), extractedChunkFile);

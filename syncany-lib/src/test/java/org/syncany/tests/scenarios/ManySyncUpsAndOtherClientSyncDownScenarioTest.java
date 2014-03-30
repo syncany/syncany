@@ -17,8 +17,8 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;

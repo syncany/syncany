@@ -37,7 +37,7 @@ import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 

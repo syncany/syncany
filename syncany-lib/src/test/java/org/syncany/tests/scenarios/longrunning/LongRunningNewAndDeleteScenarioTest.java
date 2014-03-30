@@ -18,8 +18,8 @@
 package org.syncany.tests.scenarios.longrunning;
 
 import static org.junit.Assert.fail;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

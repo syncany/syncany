@@ -204,7 +204,7 @@ public class TestAssertUtil {
 			new String[] { "filehistory", "DATABASEVERSION_ID" },
 			new String[] { "fileversion", "DATABASEVERSION_ID" },
 				// skipped known_databases
-			new String[] { "multichunk" },
+			new String[] { "multichunk", "DATABASEVERSION_ID" },
 			new String[] { "multichunk_chunk" }
 		};
 		

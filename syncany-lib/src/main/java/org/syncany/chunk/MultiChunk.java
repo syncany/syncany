@@ -19,7 +19,8 @@ package org.syncany.chunk;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 
 /**
  * A multichunk represents the container format that stores one to many {@link Chunk}s.
@@ -42,7 +43,7 @@ import java.util.Arrays;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class MultiChunk {
-    protected byte[] id;
+    protected MultiChunkId id;
     protected long size;
     protected int minSize; // in KB
     
@@ -55,7 +56,7 @@ public abstract class MultiChunk {
      * @param id Unique multichunk identifier (can be randomly chosen)
      * @param minSize Minimum multichunk size, used to determine if chunks can still be added
      */
-    public MultiChunk(byte[] id, int minSize) {
+    public MultiChunk(MultiChunkId id, int minSize) {
         this.id = id;
         this.minSize = minSize;
         this.size = 0;
@@ -141,26 +142,43 @@ public abstract class MultiChunk {
         return size;
     }
 
-    public byte[] getId() {
+    public MultiChunkId getId() {
         return id;
     }
 
-    public void setId(byte[] id) {
+    public void setId(MultiChunkId id) {
         this.id = id;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final MultiChunk other = (MultiChunk) obj;
-        if (!Arrays.equals(this.id, other.id)) {
-            return false;
-        }
-        return true;
-    }    
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + minSize;
+		result = prime * result + (int) (size ^ (size >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MultiChunk other = (MultiChunk) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		}
+		else if (!id.equals(other.id))
+			return false;
+		if (minSize != other.minSize)
+			return false;
+		if (size != other.size)
+			return false;
+		return true;
+	}
 }
