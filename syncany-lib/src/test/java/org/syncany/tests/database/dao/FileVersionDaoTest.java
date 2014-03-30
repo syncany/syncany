@@ -170,8 +170,8 @@ public class FileVersionDaoTest {
 		assertEquals(1, (long) file2ByPath.getVersion());
 		assertNotNull(file2ByPath.getChecksum());
 		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2ByPath.getChecksum().toString());		
-		assertEquals(toDate("2014-01-02 16:26:09.123+0100"), file2ByPath.getLastModified());
-		assertEquals(toDate("2014-01-02 16:26:09.201+0100"), file2ByPath.getUpdated());
+		assertEquals(toDate("2014-01-02 16:26:09.000+0100"), file2ByPath.getLastModified());
+		assertEquals(toDate("2014-01-02 16:26:09.000+0100"), file2ByPath.getUpdated());
 		assertEquals("rw-r--r--", file2ByPath.getPosixPermissions());
 		assertNull(file2ByPath.getDosAttributes());
 		
@@ -180,8 +180,8 @@ public class FileVersionDaoTest {
 		assertEquals(1, (long) file3ByPath.getVersion());
 		assertNotNull(file3ByPath.getChecksum());
 		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3ByPath.getChecksum().toString());
-		assertEquals(toDate("2014-01-03 16:26:09.666+0100"), file3ByPath.getLastModified());
-		assertEquals(toDate("2014-01-03 16:26:09.341+0100"), file3ByPath.getUpdated());
+		assertEquals(toDate("2014-01-03 16:26:09.000+0100"), file3ByPath.getLastModified());
+		assertEquals(toDate("2014-01-03 16:26:09.000+0100"), file3ByPath.getUpdated());
 		assertEquals("rw-r--r--", file3ByPath.getPosixPermissions());
 		assertNull(file3ByPath.getDosAttributes());		
 		
