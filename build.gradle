@@ -28,6 +28,7 @@ String getRevision() {
 
 boolean isApplicationRelease() {
 	String currentBranch = execAndGetOutput("git rev-parse --abbrev-ref HEAD")
+	println(currentBranch)
 	return "master".equals(currentBranch)
 }
 
