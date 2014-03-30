@@ -128,8 +128,8 @@ public class SqlDatabase {
 		return databaseVersionDao.getLocalDatabaseBranch();
 	}
 
-	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
-		databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
+		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
 	}
 	
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
@@ -140,8 +140,8 @@ public class SqlDatabase {
 		databaseVersionDao.markDatabaseVersionDirty(vectorClock);
 	}
 
-	public void removeDirtyDatabaseVersions() {
-		databaseVersionDao.removeDirtyDatabaseVersions();
+	public void removeDirtyDatabaseVersions(long newDatabaseVersionId) {
+		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId);
 	}
 
 	public Long getMaxDirtyVectorClock(String machineName) {

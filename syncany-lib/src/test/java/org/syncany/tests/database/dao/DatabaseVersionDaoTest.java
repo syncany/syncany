@@ -425,8 +425,8 @@ public class DatabaseVersionDaoTest {
 
 		// TODO [high] Test file version and history
 		
-		// b. Remove
-		databaseVersionDao.removeDirtyDatabaseVersions();
+		// b. Remove		
+		databaseVersionDao.removeDirtyDatabaseVersions(-100000); // TODO fix
 		
 		// c. Test after		
 		

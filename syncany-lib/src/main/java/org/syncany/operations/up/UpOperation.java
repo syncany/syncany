@@ -174,25 +174,25 @@ public class UpOperation extends Operation {
 		// Create delta database
 		writeAndUploadDeltaDatabase(newDatabaseVersion);
 
-		// Save local database
-		logger.log(Level.INFO, "Adding newest database version " + newDatabaseVersion.getHeader() + " to local database ...");
-		
+		// Save local database		
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
-		localDatabase.persistDatabaseVersion(newDatabaseVersion);
+		long newDatabaseVersionId = localDatabase.persistDatabaseVersion(newDatabaseVersion);
 
+		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");	
+		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);		
+		
 		if (options.cleanupEnabled()) {
 			CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
 			result.setCleanupResult(cleanupOperationResult); 
 		}
-		
-		removeUnreferencedData();		
+					
 		disconnectTransferManager();
 		clearCache();
 
 		logger.log(Level.INFO, "Sync up done.");
 
 		// Result
-		addNewDatabaseChangesToResultChanges(newDatabaseVersion,result.getChangeSet());
+		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
 		
 		return result;
@@ -258,11 +258,6 @@ public class UpOperation extends Operation {
 				}			
 			}
 		}
-	}
-
-	private void removeUnreferencedData() {
-		logger.log(Level.INFO, "- Removing DIRTY database versions from database ...");	
-		localDatabase.removeDirtyDatabaseVersions();		
 	}
 
 	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {

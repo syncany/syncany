@@ -85,11 +85,17 @@ public class DoSameActionAtTwoClientsTest {
 		assertEquals(1, downResultB.getDirtyDatabasesCreated().size());
 		assertEquals(false, downResultB.getChangeSet().hasChanges()); // TODO [low] Shouldn't this be 'true'?
 		
+		// For peaking (does NOT affect the test)
+		FileUtils.copyDirectory(clientB.getLocalFile(".syncany/db"), clientB.getLocalFile(".syncany/db_WITH_DIRTY_B1"));
+		
 		Files.setPosixFilePermissions(clientB.getLocalFile("sphinxbase-0.8").toPath(), PosixFilePermissions.fromString("rwxrwxrwx"));
-		UpOperationResult upResultB2 = clientB.up();
+		UpOperationResult upResultB2 = clientB.up(); // (B2)
 		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultB2.getResultCode());
 		assertEquals(1, upResultB2.getChangeSet().getChangedFiles().size());
 		
+		// For peaking (does NOT affect the test)
+		FileUtils.copyDirectory(clientB.getLocalFile(".syncany/db"), clientB.getLocalFile(".syncany/db_DELETED_B1_WITH_B2"));
+
 		clientA.down();
 		
 		// Tear down
