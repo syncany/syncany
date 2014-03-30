@@ -50,7 +50,7 @@ project.ext {
 	applicationDate = new Date()
 	applicationRevision = getRevision()
 	
-	applicationVersionSnapshot = (!applicationRelease) ? "-SNAPSHOT+git${applicationDate.format('yyMMddHHmm')}-${applicationRevision}" : ""
+	applicationVersionSnapshot = (!applicationRelease) ? "-SNAPSHOT+${applicationDate.format('yyMMddHHmm')}git${applicationRevision}" : ""
 	applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
 }
 
