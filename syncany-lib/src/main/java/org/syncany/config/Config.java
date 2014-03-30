@@ -18,6 +18,9 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import org.syncany.chunk.Chunker;
@@ -36,6 +39,7 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
+import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -57,6 +61,7 @@ public class Config {
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
+	public static final String FILE_IGNORE = ".syignore";
 		
 	private byte[] repoId;
 	private String machineName;
@@ -74,6 +79,7 @@ public class Config {
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
+    private IgnoredFiles ignoredFiles;
       
     static {    	    	
     	Logging.init();
@@ -88,8 +94,9 @@ public class Config {
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
 		initCache();
+		initIgnoredFile();
 		initRepo(repoTO);
-    	initConnection(configTO);    
+    	initConnection(configTO);  	
 	}		
 	
 	private void initNames(ConfigTO configTO) throws ConfigException {
@@ -116,6 +123,11 @@ public class Config {
 	private void initCache() {
 		cache = new Cache(cacheDir);
 	}	
+	
+	private void initIgnoredFile() throws ConfigException {
+		File ignoreFile = new File(localDir+File.separator+FILE_IGNORE);
+		ignoredFiles = new IgnoredFiles(ignoreFile);
+	}
 
 	private void initRepo(RepoTO repoTO) throws ConfigException {
 		try {
@@ -273,6 +285,10 @@ public class Config {
     
 	public Cache getCache() {
 		return cache;
+	}
+	
+	public IgnoredFiles getIgnoredFiles() {
+		return ignoredFiles;
 	}
 
 	public MultiChunker getMultiChunker() {
