@@ -194,6 +194,7 @@ public class StatusOperation extends Operation {
 				}
 				else {
 					logger.log(Level.FINEST, "- Ignoring file; " + relativeFilePath);
+					return FileVisitResult.SKIP_SUBTREE;
 				}
 			}			
 			

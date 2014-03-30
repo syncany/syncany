@@ -110,4 +110,38 @@ public class IgnoredFileScenarioTest {
 		clientB.deleteTestData();
 		TestFileUtil.deleteDirectory(tempDir);
 	}
+	
+	@Test
+	public void testIgnoredDirectory() throws Exception {
+		// Scenario: A ignores files with a regular expression, creates it then ups, B should not have the file
+
+		// Setup 
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		//Create ignore file and reload it
+		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
+		TestFileUtil.createFileWithContent(syncanyIgnore, "builds");
+		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		
+		// A new/up
+		clientA.createNewFolder("builds");
+		clientA.createNewFile("builds/test.txt");
+		clientA.up();
+		
+		clientB.down();
+
+		// The ignored file should not exist at B
+		assertTrue(clientA.getLocalFile("builds/test.txt").exists());
+		assertFalse(clientB.getLocalFile("builds/test.txt").exists());
+		
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		TestFileUtil.deleteDirectory(tempDir);
+	}
 }
