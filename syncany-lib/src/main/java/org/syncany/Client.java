@@ -36,6 +36,9 @@ import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.PluginOperation;
+import org.syncany.operations.PluginOperation.PluginOperationOptions;
+import org.syncany.operations.PluginOperation.PluginOperationResult;
 import org.syncany.operations.RestoreOperation;
 import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
@@ -200,5 +203,9 @@ public class Client {
 
 	public CleanupOperationResult cleanup(CleanupOperationOptions options) throws Exception {
 		return new CleanupOperation(config, options).execute();
+	}
+
+	public PluginOperationResult plugin(PluginOperationOptions options) throws Exception {
+		return new PluginOperation(config, options).execute();
 	}
 }
