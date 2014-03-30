@@ -29,9 +29,10 @@ cp $REPODIR/syncany-cli/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
 cp $REPODIR/syncany-cli/build/linux-package/*.deb $TEMPDISTDIR
 cp $REPODIR/syncany-cli/build/innosetup/*.exe $TEMPDISTDIR
 
-ls $TEMPDISTDIR
+sha256sum * 2>/dev/null > $TEMPDISTDIR/CHECKSUMS
+cat $TEMPDISTDIR/CHECKSUMS
 
-if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
+if [ $(ls $TEMPDISTDIR | wc -l) != "5" ]; then
 	echo "ERROR: Wrong files in $TEMPDISTDIR: "
 	ls $TEMPDISTDIR
 	
