@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -228,6 +229,15 @@ public class TestFileUtil {
 
 	public static void createNonRandomFile(File fileToCreate, long sizeInBytes) throws IOException {
 		createFile(fileToCreate, sizeInBytes, nonRandomGen);
+	}
+	
+	public static void createFileWithContent(File fileToCreate,String content) throws IOException {
+		if (fileToCreate != null && fileToCreate.exists()) {
+			throw new IOException("File already exists");
+		}
+		PrintWriter writer = new PrintWriter(fileToCreate);
+		writer.print(content);
+		writer.close();
 	}
 
 	public static void createRandomFile(File fileToCreate, long sizeInBytes) throws IOException {
