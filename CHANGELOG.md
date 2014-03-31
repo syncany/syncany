@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Release 0.1.1-alpha (Date: tbd.)
+
+- Ignoring files using .syignore file
+
+
 ### Release 0.1.0-alpha (Date: 30 March 2014)
 
 - First developer/alpha release (NOT FOR PRODUCTION USE!)

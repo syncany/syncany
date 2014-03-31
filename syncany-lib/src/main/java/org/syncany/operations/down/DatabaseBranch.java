@@ -19,7 +19,6 @@ package org.syncany.operations.down;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.syncany.database.DatabaseVersion;
@@ -92,12 +91,12 @@ public class DatabaseBranch {
 		return branch.get(branch.size()-1);
 	}	
 	
-	public BranchIterator iteratorLast() {
-        return new BranchIterator(branch.size()-1);
+	public DatabaseBranchIterator iteratorLast() {
+        return new DatabaseBranchIterator(branch, branch.size()-1);
     }
 	
-	public BranchIterator iteratorFirst() {
-        return new BranchIterator(0);
+	public DatabaseBranchIterator iteratorFirst() {
+        return new DatabaseBranchIterator(branch, 0);
     }	
 	
 	@Override
@@ -129,36 +128,5 @@ public class DatabaseBranch {
 		else if (!branch.equals(other.branch))
 			return false;
 		return true;
-	}
-
-	public class BranchIterator implements Iterator<DatabaseVersionHeader> {		
-        private int current;
-        
-        public BranchIterator(int current) {
-        	this.current = current;
-        }
-        
-		@Override
-		public boolean hasNext() {
-			return current < branch.size();
-		}
-		
-		public boolean hasPrevious() {
-			return current >= 0;
-		}
-
-		@Override
-		public DatabaseVersionHeader next() {
-			return branch.get(current++);
-		}
-		
-		public DatabaseVersionHeader previous() {
-			return branch.get(current--);
-		}
-
-		@Override
-		public void remove() {
-			throw new RuntimeException("Operation not supported, BranchIterator.remove()");			
-		}	
 	}
 }

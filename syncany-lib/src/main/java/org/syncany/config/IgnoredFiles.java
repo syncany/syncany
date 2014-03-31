@@ -30,7 +30,6 @@ import java.util.logging.Logger;
  * that should be ignored.
  * 
  * @author Pim Otte 
- *
  */
 public class IgnoredFiles {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
@@ -57,12 +56,13 @@ public class IgnoredFiles {
 			}
 		} 
 		
-		//Check all regular expressions
+		// Check all regular expressions
 		for (String pattern : ignorePatterns) {
 			if (filePath.matches(pattern)) {
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
@@ -70,22 +70,24 @@ public class IgnoredFiles {
 		if (ignoreFile != null && ignoreFile.exists()) {
 			try {
 				Scanner scanner = new Scanner(ignoreFile);
+				
 				while (scanner.hasNextLine()) {
-					String pattern = scanner.nextLine();
-					if (!pattern.isEmpty()) {
-						if (pattern.startsWith("regex:")) {
+					String ignorePattern = scanner.nextLine();
+					
+					if (!ignorePattern.isEmpty()) {
+						if (ignorePattern.startsWith("regex:")) {
 							// Chop off regex: indicator
-							ignorePatterns.add(pattern.substring(6));
+							ignorePatterns.add(ignorePattern.substring(6));
 						}
 						else {
-							ignorePaths.add(pattern);
+							ignorePaths.add(ignorePattern);
 						}
 					}
 				}
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
-				logger.log(Level.INFO, "Ignore file not found while it does exits.");
+				logger.log(Level.INFO, "Ignore file not found (existed before).");
 			}
 		}
 		else {
