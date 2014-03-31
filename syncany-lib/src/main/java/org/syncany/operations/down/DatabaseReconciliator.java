@@ -168,11 +168,11 @@ public class DatabaseReconciliator {
 	private boolean isGreaterOrEqualDatabaseVersionHeaderInAllDatabaseBranches(DatabaseVersionHeader localDatabaseVersionHeader, DatabaseBranches remoteDatabaseVersionHeaders) {
 		VectorClock localVectorClock = localDatabaseVersionHeader.getVectorClock();
 		Set<String> remoteClients = remoteDatabaseVersionHeaders.getClients();
-		Map<String, Boolean> foundInClient = initializeFoundInClientMatrix(remoteClients);
 
 		for (String currentRemoteClient : remoteClients) {
 			DatabaseBranch remoteBranch = remoteDatabaseVersionHeaders.getBranch(currentRemoteClient);
-
+			boolean foundInCurrentClient = false;
+			
 			for (DatabaseVersionHeader remoteDatabaseVersionHeader : remoteBranch.getAll()) {
 				VectorClock remoteVectorClock = remoteDatabaseVersionHeader.getVectorClock();
 				VectorClockComparison remoteVsLocalVectorClockComparison = VectorClock.compare(remoteVectorClock, localVectorClock);
@@ -180,35 +180,18 @@ public class DatabaseReconciliator {
 				if (remoteVsLocalVectorClockComparison == VectorClockComparison.GREATER
 						|| remoteVsLocalVectorClockComparison == VectorClockComparison.EQUAL) {
 					
-					foundInClient.put(currentRemoteClient, true);
+					foundInCurrentClient = true;
 					break;
 				}
 			}
 
-			if (foundInClient.get(currentRemoteClient) == false) { 
+			if (!foundInCurrentClient) { 
 				return false;
 			}
 		}
 
-		return isFoundInClientMatrixFullyTrue(foundInClient);
-	}	
-
-	private Map<String, Boolean> initializeFoundInClientMatrix(Set<String> clients) {
-		Map<String, Boolean> foundInClientMatrix = new HashMap<String, Boolean>();
-		for (String client : clients) {
-			foundInClientMatrix.put(client, false);
-		}
-		return foundInClientMatrix;
-	}
-
-	public boolean isFoundInClientMatrixFullyTrue(Map<String, Boolean> foundInClientMatrix) {
-		for (Boolean isFound : foundInClientMatrix.values()) {
-			if (isFound == false) {
-				return false;
-			}
-		}
 		return true;
-	}
+	}	
 
 	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader, DatabaseBranches allDatabaseVersionHeaders) {
 		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
