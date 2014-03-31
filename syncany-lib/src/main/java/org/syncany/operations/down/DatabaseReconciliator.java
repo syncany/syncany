@@ -119,7 +119,7 @@ public class DatabaseReconciliator {
 	 * 
 	 * <p>This implementation checks whether each database version in the local branch
 	 * is also contained in all of the given remoteBranches. For each database version
-	 * header, {@link #isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual(VectorClock, DatabaseBranches) isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual()}
+	 * header, {@link #isGreaterOrEqualDatabaseVersionHeaderInAllDatabaseBranches(VectorClock, DatabaseBranches) isGreaterOrEqualDatabaseVersionHeaderInAllDatabaseBranches()}
 	 * is called. If the method returns true, the next database version header in the local
 	 * branch is queried. If not, the last common database version header is the previous
 	 * one.
@@ -134,9 +134,8 @@ public class DatabaseReconciliator {
 		
 		for (DatabaseBranchIterator localBranchIterator = localBranch.iteratorLast(); localBranchIterator.hasPrevious(); ) {
 			DatabaseVersionHeader currentLocalDatabaseVersionHeader = localBranchIterator.previous();
-			VectorClock currentVectorClock = currentLocalDatabaseVersionHeader.getVectorClock();
 
-			if (isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual(currentVectorClock, remoteBranches)) {
+			if (isGreaterOrEqualDatabaseVersionHeaderInAllDatabaseBranches(currentLocalDatabaseVersionHeader, remoteBranches)) {
 				lastCommonDatabaseVersionHeader = currentLocalDatabaseVersionHeader;
 				break;
 			}
@@ -145,28 +144,53 @@ public class DatabaseReconciliator {
 		return lastCommonDatabaseVersionHeader;
 	}	
 	
-	private boolean isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual(VectorClock currentVectorClock, DatabaseBranches remoteDatabaseVersionHeaders) {
+	/**
+	 * Checks if for all remote database branches, there exists at least one database version that is greater 
+	 * or equal to the given database version. Returns <tt>true</tt> if there is, <tt>false</tt> otherwise.
+	 * In other words: This method returns <tt>true</tt> if all the remote clients' database histories
+	 * are based on the given database version. 
+	 * 
+	 * <p>If all remote branches are complete (first database version to last database version), checking for equality
+	 * would be enough -- meaning that checking if the given database version is contained in all remote branches would be enough.
+	 * However, due to the fact that we might have incomplete remote branches (e.g. only version (A5)-(A10) instead of (A1)-(A10)), 
+	 * checking for greater and equal database versions is necessary.
+	 * 
+	 * <p>This method is used by 
+	 * {@link #findLastCommonDatabaseVersionHeader(DatabaseBranch, DatabaseBranches) findLastCommonDatabaseVersionHeader()}
+	 * to determine the last common database version between the local client and the given
+	 * remote clients.
+	 * 
+	 * @param localDatabaseVersionHeader Local database version to check against the remote branches
+	 * @param remoteDatabaseVersionHeaders List of database version of the remote clients 
+	 * @return Returns <tt>true</tt> if the given vector clock is contained in all remote branches, <tt>false</tt> otherwise
+	 */
+	// TODO [medium] Do we still have to check for ">="? Isn't "=" enough? We should have full database branches here, because we stitch them before.
+	private boolean isGreaterOrEqualDatabaseVersionHeaderInAllDatabaseBranches(DatabaseVersionHeader localDatabaseVersionHeader, DatabaseBranches remoteDatabaseVersionHeaders) {
+		VectorClock localVectorClock = localDatabaseVersionHeader.getVectorClock();
 		Set<String> remoteClients = remoteDatabaseVersionHeaders.getClients();
-		Map<String, Boolean> foundInClientMatrix = initializeFoundInClientMatrix(remoteClients);
+		Map<String, Boolean> foundInClient = initializeFoundInClientMatrix(remoteClients);
 
 		for (String currentRemoteClient : remoteClients) {
 			DatabaseBranch remoteBranch = remoteDatabaseVersionHeaders.getBranch(currentRemoteClient);
 
 			for (DatabaseVersionHeader remoteDatabaseVersionHeader : remoteBranch.getAll()) {
 				VectorClock remoteVectorClock = remoteDatabaseVersionHeader.getVectorClock();
-				VectorClockComparison result = VectorClock.compare(remoteVectorClock, currentVectorClock);
-				if (result == VectorClockComparison.GREATER || result == VectorClockComparison.EQUAL) {
-					foundInClientMatrix.put(currentRemoteClient, true);
+				VectorClockComparison remoteVsLocalVectorClockComparison = VectorClock.compare(remoteVectorClock, localVectorClock);
+				
+				if (remoteVsLocalVectorClockComparison == VectorClockComparison.GREATER
+						|| remoteVsLocalVectorClockComparison == VectorClockComparison.EQUAL) {
+					
+					foundInClient.put(currentRemoteClient, true);
 					break;
 				}
 			}
 
-			if (foundInClientMatrix.get(currentRemoteClient) == false) { 
+			if (foundInClient.get(currentRemoteClient) == false) { 
 				return false;
 			}
 		}
 
-		return isFoundInClientMatrixFullyTrue(foundInClientMatrix);
+		return isFoundInClientMatrixFullyTrue(foundInClient);
 	}	
 
 	private Map<String, Boolean> initializeFoundInClientMatrix(Set<String> clients) {
