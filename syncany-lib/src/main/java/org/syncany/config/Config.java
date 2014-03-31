@@ -18,9 +18,6 @@
 package org.syncany.config;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import org.syncany.chunk.Chunker;
@@ -39,7 +36,6 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
-import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -125,7 +121,7 @@ public class Config {
 	}	
 	
 	private void initIgnoredFile() throws ConfigException {
-		File ignoreFile = new File(localDir+File.separator+FILE_IGNORE);
+		File ignoreFile = new File(localDir, FILE_IGNORE);
 		ignoredFiles = new IgnoredFiles(ignoreFile);
 	}
 
