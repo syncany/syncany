@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -304,41 +303,9 @@ public class DownOperation extends Operation {
 	 */
 	private DatabaseBranch determineWinnerBranch(DatabaseBranches unknownRemoteBranches) throws Exception {
 		logger.log(Level.INFO, "Detect updates and conflicts ...");
-		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
-
-		logger.log(Level.INFO, "- Stitching branches ...");
-		DatabaseBranches allStitchedBranches = databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
-
-		DatabaseVersionHeader lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);
-		TreeMap<String, DatabaseVersionHeader> firstConflictingHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(
-				lastCommonHeader, allStitchedBranches);
-		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingHeaders = databaseReconciliator
-				.findWinningFirstConflictingDatabaseVersionHeaders(firstConflictingHeaders);
-		Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader = databaseReconciliator
-				.findWinnersWinnersLastDatabaseVersionHeader(winningFirstConflictingHeaders, allStitchedBranches);
-
-		if (logger.isLoggable(Level.FINEST)) {
-			logger.log(Level.FINEST, "- Database reconciliation results:");
-			logger.log(Level.FINEST, "  + localBranch: " + localBranch);
-			logger.log(Level.FINEST, "  + unknownRemoteBranches: " + unknownRemoteBranches);
-			// logger.log(Level.FINEST, "  + allStitchedBranches: "+allStitchedBranches);
-			logger.log(Level.FINEST, "  + lastCommonHeader: " + lastCommonHeader);
-			logger.log(Level.FINEST, "  + firstConflictingHeaders: " + firstConflictingHeaders);
-			logger.log(Level.FINEST, "  + winningFirstConflictingHeaders: " + winningFirstConflictingHeaders);
-			logger.log(Level.FINEST, "  + winnersWinnersLastDatabaseVersionHeader: " + winnersWinnersLastDatabaseVersionHeader);
-		}
-
-		String winnersName = winnersWinnersLastDatabaseVersionHeader.getKey();
-		DatabaseBranch winnersBranch = allStitchedBranches.getBranch(winnersName);
-
-		//logger.log(Level.INFO, "- Compared branches: " + allStitchedBranches);
-		logger.log(Level.INFO, "- Winner is " + winnersName + " with branch: ");
 		
-		if (logger.isLoggable(Level.INFO)) {
-			for (DatabaseVersionHeader databaseVersionHeader : winnersBranch.getAll()) {
-				logger.log(Level.INFO, "  + " + databaseVersionHeader);
-			}
-		}
+		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
+		DatabaseBranch winnersBranch = databaseReconciliator.findWinnerBranch(config.getMachineName(), localBranch, unknownRemoteBranches);
 
 		return winnersBranch;
 	}
