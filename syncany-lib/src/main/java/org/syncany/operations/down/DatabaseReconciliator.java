@@ -239,12 +239,30 @@ public class DatabaseReconciliator {
 		return true;
 	}
 
+	/**
+	 * Finds the first conflicting database version per client. The first conflicting database version
+	 * is the version after the last common database version (basically: last common + 1).
+	 * 
+	 * <p>The first conflicting database version per client is needed to decide the winner of the first
+	 * conflict. This is later done based on the timestamp.
+	 * 
+	 * <p>The algorithm traverses each client's branch forward and compares the current database version
+	 * header to the given last common header. If they match, the next database version header is
+	 * assumed to be the first conflicting database version header -- even if it does not actually 
+	 * conflict.
+	 * 
+	 * @param lastCommonHeader Last common database version header (as previously determined)
+	 * @param allDatabaseBranches All database branches (remote and local), completely stitched
+	 * @return Returns a per-client map (key) of the first conflicting database version header (value) 
+	 */
+	// TODO [medium] We have full branches (through stitching), can't we just walk forwards (like winner's winner comparison)?
 	public TreeMap<String, DatabaseVersionHeader> findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader lastCommonHeader,
-			DatabaseBranches allDatabaseVersionHeaders) {
+			DatabaseBranches allDatabaseBranches) {
+
 		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 
-		nextClient: for (String remoteMachineName : allDatabaseVersionHeaders.getClients()) {
-			DatabaseBranch branch = allDatabaseVersionHeaders.getBranch(remoteMachineName);
+		nextClient: for (String remoteMachineName : allDatabaseBranches.getClients()) {
+			DatabaseBranch branch = allDatabaseBranches.getBranch(remoteMachineName);
 
 			for (Iterator<DatabaseVersionHeader> i = branch.iteratorFirst(); i.hasNext();) {
 				DatabaseVersionHeader thisDatabaseVersionHeader = i.next();
