@@ -34,7 +34,6 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
-import org.syncany.operations.down.DatabaseBranch.BranchIterator;
 
 /**
  * The database reconciliator implements various parts of the sync down algorithm (see also:
@@ -113,14 +112,31 @@ import org.syncany.operations.down.DatabaseBranch.BranchIterator;
 public class DatabaseReconciliator {
 	//private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
 	
+	/**
+	 * Finds the last common database version between a set of database branches
+	 * of different clients. The purpose of finding the last common database version is
+	 * to find the first conflicting database version (= last common + 1).
+	 * 
+	 * <p>This implementation checks whether each database version in the local branch
+	 * is also contained in all of the given remoteBranches. For each database version
+	 * header, {@link #isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual(VectorClock, DatabaseBranches) isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual()}
+	 * is called. If the method returns true, the next database version header in the local
+	 * branch is queried. If not, the last common database version header is the previous
+	 * one.
+	 * 
+	 * @param localBranch Local branch (list database version headers) of this client
+	 * @param remoteBranches All remote branches of the other clients
+	 * @return Returns the last common database version header, or <tt>null</tt> if there is none
+	 */
+	// TODO [medium] This is very inefficient; Runtime O(n^3)!
 	public DatabaseVersionHeader findLastCommonDatabaseVersionHeader(DatabaseBranch localBranch, DatabaseBranches remoteBranches) {
 		DatabaseVersionHeader lastCommonDatabaseVersionHeader = null;
 		
-		for (BranchIterator localBranchIterator = localBranch.iteratorLast(); localBranchIterator.hasPrevious(); ) {
+		for (DatabaseBranchIterator localBranchIterator = localBranch.iteratorLast(); localBranchIterator.hasPrevious(); ) {
 			DatabaseVersionHeader currentLocalDatabaseVersionHeader = localBranchIterator.previous();
 			VectorClock currentVectorClock = currentLocalDatabaseVersionHeader.getVectorClock();
 
-			if (isKeyInAllRemoteDatabasesGreaterOrEqual(currentVectorClock, remoteBranches)) {
+			if (isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual(currentVectorClock, remoteBranches)) {
 				lastCommonDatabaseVersionHeader = currentLocalDatabaseVersionHeader;
 				break;
 			}
@@ -129,7 +145,7 @@ public class DatabaseReconciliator {
 		return lastCommonDatabaseVersionHeader;
 	}	
 	
-	private boolean isKeyInAllRemoteDatabasesGreaterOrEqual(VectorClock currentVectorClock, DatabaseBranches remoteDatabaseVersionHeaders) {
+	private boolean isDatabaseVersionHeaderInAllDatabaseBranchesGreaterOrEqual(VectorClock currentVectorClock, DatabaseBranches remoteDatabaseVersionHeaders) {
 		Set<String> remoteClients = remoteDatabaseVersionHeaders.getClients();
 		Map<String, Boolean> foundInClientMatrix = initializeFoundInClientMatrix(remoteClients);
 
@@ -464,7 +480,6 @@ public class DatabaseReconciliator {
 	}
 	
     private class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
-
         @Override
         public int compare(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
             VectorClockComparison vectorClockComparison = VectorClock.compare(o1.getVectorClock(), o2.getVectorClock());
@@ -522,5 +537,4 @@ public class DatabaseReconciliator {
 		
 		return winnersApplyBranch;
 	}
-
 }
