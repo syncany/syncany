@@ -1,0 +1,5 @@
+#!/bin/sh
+for name in /usr/share/java/syncany/*.jar ; do
+  CP=$CP:$name
+done
+"$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$@"
