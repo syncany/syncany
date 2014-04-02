@@ -212,6 +212,7 @@ public class DatabaseReconciliator {
 	// TODO [medium] Do we still have to check for ">="? Isn't "=" enough? We should have full database branches here, because we stitch them before.
 	private boolean isGreaterOrEqualDatabaseVersionHeaderInAllDatabaseBranches(DatabaseVersionHeader localDatabaseVersionHeader,
 			DatabaseBranches remoteDatabaseVersionHeaders) {
+		
 		VectorClock localVectorClock = localDatabaseVersionHeader.getVectorClock();
 		Set<String> remoteClients = remoteDatabaseVersionHeaders.getClients();
 
@@ -290,12 +291,29 @@ public class DatabaseReconciliator {
 		return firstConflictingDatabaseVersionHeaders;
 	}
 
+	/**
+	 * Determines the first winning conflicting database version header per client, i.e. the database version headers
+	 * that "win" the potential conflicts.
+	 * 
+	 * <p>After the first conflicting database versions have been found using 
+	 * {@link #findFirstConflictingDatabaseVersionHeader(DatabaseVersionHeader, DatabaseBranches) findFirstConflictingDatabaseVersionHeader()},
+	 * the winner among these database version headers must be found in order to determine the absolute winning branch.
+	 * It is not uncommon that there are multiple winning first conflicting headers (e.g. two clients in sync; one
+	 * client with later conflict).
+	 * 
+	 * <p>To determine the winner(s), all first conflicting headers are compared, and the earliest one (timestamp comparison) is
+	 * picked as the winner (1). Then, the actual entries (client name to databsase version header) are selected (2). 
+	 * 
+	 * @param firstConflictingDatabaseVersionHeaders Per-client map of first conflicting database version headers
+	 * @return Returns a map of per-client winning frist conflicting database version headers. Key is client name, value 
+	 *         is first conflicting database version header.
+	 */
 	public TreeMap<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(
 			TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders) {
+		
 		DatabaseVersionHeader winningFirstConflictingDatabaseVersionHeader = null;
 
-		// Compare all first conflicting ones and take the one with the EARLIEST
-		// timestamp
+		// (1) Compare all first conflicting ones and take the one with the EARLIEST timestamp
 		for (DatabaseVersionHeader databaseVersionHeader : firstConflictingDatabaseVersionHeaders.values()) {
 			if (winningFirstConflictingDatabaseVersionHeader == null) {
 				winningFirstConflictingDatabaseVersionHeader = databaseVersionHeader;
@@ -305,7 +323,7 @@ public class DatabaseReconciliator {
 			}
 		}
 
-		// Find all first conflicting entries with the SAME timestamp as the
+		// (2) Find all first conflicting entries with the SAME timestamp as the
 		// EARLIEST one (= multiple winning entries possible)
 		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 
@@ -313,36 +331,6 @@ public class DatabaseReconciliator {
 			if (winningFirstConflictingDatabaseVersionHeader.equals(entry.getValue())) {
 				winningFirstConflictingDatabaseVersionHeaders.put(entry.getKey(), entry.getValue());
 			}
-		}
-
-		// If any, find entries that are GREATER than the winners (= successors)
-		// TODO [low] Implementation not understandable and ugly
-		List<String> removeWinners = new ArrayList<String>();
-		TreeMap<String, DatabaseVersionHeader> addWinners = new TreeMap<String, DatabaseVersionHeader>();
-
-		for (Map.Entry<String, DatabaseVersionHeader> winningEntry : winningFirstConflictingDatabaseVersionHeaders.entrySet()) {
-			for (Map.Entry<String, DatabaseVersionHeader> aFirstConflictingEntry : firstConflictingDatabaseVersionHeaders.entrySet()) {
-				DatabaseVersionHeader winningDatabaseVersionHeader = winningEntry.getValue();
-				DatabaseVersionHeader aFirstConflictingDatabaseVersionHeader = aFirstConflictingEntry.getValue();
-
-				if (!winningDatabaseVersionHeader.equals(aFirstConflictingDatabaseVersionHeader)) {
-					VectorClockComparison aFirstConflictingDatabaseVersionHeaderIs = VectorClock.compare(
-							aFirstConflictingDatabaseVersionHeader.getVectorClock(), winningDatabaseVersionHeader.getVectorClock());
-
-					// We found a greater one. Remove the original winner, and
-					// add this entry!
-					if (aFirstConflictingDatabaseVersionHeaderIs == VectorClockComparison.GREATER) {
-						addWinners.put(aFirstConflictingEntry.getKey(), aFirstConflictingEntry.getValue());
-						removeWinners.add(winningEntry.getKey());
-					}
-				}
-			}
-		}
-
-		winningFirstConflictingDatabaseVersionHeaders.putAll(addWinners);
-
-		for (String removeWinnerKey : removeWinners) {
-			winningFirstConflictingDatabaseVersionHeaders.remove(removeWinnerKey);
 		}
 
 		return winningFirstConflictingDatabaseVersionHeaders;
