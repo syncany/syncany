@@ -302,10 +302,10 @@ public class DatabaseReconciliator {
 	 * client with later conflict).
 	 * 
 	 * <p>To determine the winner(s), all first conflicting headers are compared, and the earliest one (timestamp comparison) is
-	 * picked as the winner (1). Then, the actual entries (client name to databsase version header) are selected (2). 
+	 * picked as the winner (1). Then, the actual entries (client name to database version header) are selected (2). 
 	 * 
 	 * @param firstConflictingDatabaseVersionHeaders Per-client map of first conflicting database version headers
-	 * @return Returns a map of per-client winning frist conflicting database version headers. Key is client name, value 
+	 * @return Returns a map of per-client winning first conflicting database version headers. Key is client name, value 
 	 *         is first conflicting database version header.
 	 */
 	public TreeMap<String, DatabaseVersionHeader> findWinningFirstConflictingDatabaseVersionHeaders(
