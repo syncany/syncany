@@ -158,6 +158,11 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setString(3, databaseVersionHeader.getClient());
 			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
 	
+			// TODO [high] The vector clock serialize pattern (<client><clock>,<client><clock>,..) is ambiguous if the <client> contains numbers!
+			//             In productive code, this serialized value is never re-created to a VectorClock object.
+			//             However, in tests this is done in TestDatabaseUtil; and it is VERY DANGEROUS to leave it like
+			//             this. Maybe introduce an unambiguous pattern: (<client>=<clock>,<client>=<clock>,..)			
+			
 			int affectedRows = preparedStatement.executeUpdate();
 			
 			if (affectedRows == 0) {
