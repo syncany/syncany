@@ -7,7 +7,7 @@ Syncany is an open-source cloud storage and filesharing application. It allows
 users to backup and share certain folders of their workstations using any kind
 of storage, e.g. FTP, Amazon S3 or Google Storage.
 
-While the basic idea is similar to Dropbox and JungleDisk, Syncany is
+While the basic idea is similar to Dropbox, Syncany is
 open-source and additionally provides data encryption and more flexibility in
 terms of storage type and provider:
 
@@ -21,8 +21,10 @@ terms of storage type and provider:
 
 - [Download and install Syncany](#download-and-install-syncany)
 - [Sample usage: Try Syncany](#sample-usage-try-syncany)
-- [Build and test Syncany](#build-and-test-syncany)
+- [Build and development instructions](#build-and-development-instructions)
+- [Buy us a coffee](#buy-us-a-coffee)
 - [Licensing, website and contact](#licensing-website-and-contact)
+
 
 Download and install Syncany
 ----------------------------
@@ -35,6 +37,7 @@ Syncany 0.1.0-alpha, 30 March 2014, [[tar.gz]](http://syncany.org/dist/syncany-0
 
 Quick [install and usage instructions](https://github.com/binwiederhier/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
 If you like it a bit more detailed, [there's lots more you can explore](https://github.com/binwiederhier/syncany/wiki).
+
 
 Sample usage: Try Syncany
 -------------------------
