@@ -77,6 +77,14 @@ Check out the wiki page for instructions about [how to build Syncany](https://gi
 the [issue tracker](https://github.com/binwiederhier/syncany/issues?state=open), in particular at the 
 [issues marked help:needed](https://github.com/binwiederhier/syncany/issues?labels=status%3Ahelp-needed).
 
+
+Buy us a coffee
+---------------
+If you like what you see and you want to support us, you can buy us a coffee or a beer. There are maaanny ways to do so. Any contribution is much appreciated!
+
+- Give a pal some bucks [with PayPal](http://www.syncany.org/donate.html)
+- Break some hashes for us with Bitcoins: **1626wjrw3uWk9adyjCfYwafw4sQWujyjn8**
+- Be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany)
  
 Licensing, website and contact
 ------------------------------
@@ -87,10 +95,3 @@ Syncany is licensed under the GPLv2 open source license. It is mainly developed 
 - [Mailing list](https://launchpad.net/~syncany-team), still on Launchpad (**active!**)
 - [IRC channel #syncany on Freenode](http://webchat.freenode.net/?channels=syncany) (my nick is *binwiederhier*)
 - [@syncany on Twitter](http://twitter.com/#!/syncany), somewhat quiet there, though ...
-
-Buy us a coffee
----------------
-If you like what you see and you want to support us, you can buy us a coffee or a beer. There are maaanny ways to do so. Any contribution is much appreciated!
-
-- Give some bucks [with PayPal](http://www.syncany.org/donate.html)
-- Break some hashes for us and <a href="bitcoin:1626wjrw3uWk9adyjCfYwafw4sQWujyjn8?amount=0.1&message=Syncany">give some Bitcoins</a>
