@@ -264,6 +264,10 @@ public class CommandLineClient extends Client {
 	private void printHelpTextAndExit(String helpTextResource) throws IOException {
 		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(helpTextResource);
 		
+		if (helpTextInputStream == null) {
+			showErrorAndExit("No detailed help text available for this command.");
+		}
+		
 		for (String line : IOUtils.readLines(helpTextInputStream)) {
 			line = replaceVariables(line);			
 			out.println(line.replaceAll("\\s$", ""));			
