@@ -7,13 +7,9 @@ dependencies {
     
     compile			project(':syncany-plugins:syncany-plugin-ftp')
 	compile			project(':syncany-plugins:syncany-plugin-webdav')
-	//compile			project(":syncany-plugins:syncany-plugin-sftp")
-	//compile			project(":syncany-plugins:syncany-plugin-rest")
 	  
 	runtime			project(':syncany-plugins:syncany-plugin-gui-ftp')
 	runtime			project(':syncany-plugins:syncany-plugin-gui-webdav')
-	runtime			project(':syncany-plugins:syncany-plugin-gui-sftp')
-	runtime			project(':syncany-plugins:syncany-plugin-gui-rest')  
 	
 	compile			"commons-beanutils:commons-beanutils:1.9.0"
 	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
