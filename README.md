@@ -22,7 +22,6 @@ terms of storage type and provider:
 - [Download and install daily snapshots](#download-and-install-daily-snapshots)
 - [Sample usage](#sample-usage)
 - [Build and test Syncany](#build-and-test-syncany)
-- [How can I help?](#how-can-i-help)
 - [Licensing, website and contact](#licensing-website-and-contact)
 
 
