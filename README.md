@@ -20,7 +20,7 @@ terms of storage type and provider:
 **Directly jump to ...**
 
 - [Download and install Syncany](#download-and-install-syncany)
-- [Sample usage](#sample-usage)
+- [Sample usage: Try Syncany](#sample-usage-try-syncany)
 - [Build and test Syncany](#build-and-test-syncany)
 - [Licensing, website and contact](#licensing-website-and-contact)
 
@@ -36,8 +36,8 @@ Syncany 0.1.0-alpha, 30 March 2014, [[tar.gz]](http://syncany.org/dist/syncany-0
 Quick [install and usage instructions](https://github.com/binwiederhier/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
 If you like it a bit more detailed, [there's lots more you can explore](https://github.com/binwiederhier/syncany/wiki).
 
-Sample usage
-------------
+Sample usage: Try Syncany
+-------------------------
 
 Usage is pretty similar to a version control system. If you have used Git or
 SVN, it should feel a lot alike.
@@ -99,11 +99,9 @@ You can now use the 'syncany' command to sync your files.
 For a detailed demo, please refer to a [screencast](https://github.com/binwiederhier/syncany/wiki/Documentation).
 
 
-Build and test Syncany
-----------------------
-Check out the wiki page for instructions about [how to build Syncany](https://github.com/binwiederhier/syncany/wiki/Building), [documentation and screencasts](https://github.com/binwiederhier/syncany/wiki/Documentation) and [other things](https://github.com/binwiederhier/syncany/wiki). If you're a developer, be sure to look at
-the [issue tracker](https://github.com/binwiederhier/syncany/issues?state=open), in particular at the 
-[issues marked help:needed](https://github.com/binwiederhier/syncany/issues?labels=status%3Ahelp-needed).
+Build and development instructions
+----------------------------------
+Excited? Want to help? Or just build it yourself? For information about building, development, documentation, screencasts, diagrams and contributions, please check out **[the Syncany wiki page](https://github.com/binwiederhier/syncany/wiki)**. It'll hopefully give you all the information you need!
 
 
 Buy us a coffee
@@ -119,6 +117,7 @@ Licensing, website and contact
 Syncany is licensed under the GPLv2 open source license. It is mainly developed by [Philipp C. Heckel](http://blog.philippheckel.com/). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany website](http://www.syncany.org/), still with screenshots of the old interface
+- [Syncany wiki page](https://github.com/binwiederhier/syncany/wiki), **most important resource, and always updated**
 - [Mailing list](https://launchpad.net/~syncany-team), still on Launchpad (**active!**)
 - [IRC channel #syncany on Freenode](http://webchat.freenode.net/?channels=syncany) (my nick is *binwiederhier*)
 - [@syncany on Twitter](http://twitter.com/#!/syncany), somewhat quiet there, though ...
