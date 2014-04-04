@@ -47,6 +47,8 @@ public class CleanupCommand extends Command {
 		CleanupOperationOptions operationOptions = new CleanupOperationOptions();
 
 		OptionParser parser = new OptionParser();
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
