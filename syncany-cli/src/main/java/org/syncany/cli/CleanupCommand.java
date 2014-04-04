@@ -73,6 +73,13 @@ public class CleanupCommand extends Command {
 		// Parse 'status' options
 		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));	
 		
+		// Does this configuration make sense
+		boolean nothingToDo = !operationOptions.isMergeRemoteFiles() && operationOptions.isRemoveOldVersions();
+		
+		if (nothingToDo) {
+			throw new Exception("Invalid parameter configuration: -M and -V cannot be set together. Nothing to do.");
+		}
+		
 		return operationOptions;
 	}
 	
