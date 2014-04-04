@@ -84,7 +84,7 @@ $ sy up
 $ sy down
 ```
 
-**3. Connect other clients**
+**3. Connect other clients**   
 To connect new clients to an existing repository, use the `sy connect` command.
 This will set up your local folder to sync with the chosen remote repository.
 

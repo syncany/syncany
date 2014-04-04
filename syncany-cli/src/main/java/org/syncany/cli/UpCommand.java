@@ -23,6 +23,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
@@ -60,12 +61,22 @@ public class UpCommand extends Command {
 		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
 
 		// --no-cleanup
-		operationOptions.setCleanupEnabled(!options.has(optionNoCleanup));
+		boolean cleanupEnabled = !options.has(optionNoCleanup);
+		operationOptions.setCleanupEnabled(cleanupEnabled);
+		
+		if (cleanupEnabled) {
+			operationOptions.setCleanupOptions(parseCleanupOptions(operationArgs));
+		}
 
 		// --force
 		operationOptions.setForceUploadEnabled(options.has(optionForceUpload));
 
 		return operationOptions;
+	}
+
+	private CleanupOperationOptions parseCleanupOptions(String[] operationArgs) throws Exception {
+		CleanupCommand cleanupCommand = new CleanupCommand();
+		return cleanupCommand.parseOptions(operationArgs);
 	}
 
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {

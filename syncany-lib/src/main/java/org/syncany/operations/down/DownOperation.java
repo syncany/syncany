@@ -132,7 +132,7 @@ public class DownOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		// Check strategies
-		if (options.getConflictStrategy() != DownConflictStrategy.AUTO_RENAME) {
+		if (options.getConflictStrategy() != DownConflictStrategy.RENAME) {
 			logger.log(Level.INFO, "Conflict strategy "+options.getConflictStrategy()+" not yet implemented.");
 			result.setResultCode(DownResultCode.NOK);
 			
