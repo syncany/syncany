@@ -25,6 +25,7 @@ import joptsimple.OptionSpec;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 
 public class CleanupCommand extends Command {
 	@Override
@@ -69,7 +70,15 @@ public class CleanupCommand extends Command {
 			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));			
 		}
 		
+		// Parse 'status' options
+		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));	
+		
 		return operationOptions;
+	}
+	
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
+		StatusCommand statusCommand = new StatusCommand();
+		return statusCommand.parseOptions(operationArgs);
 	}
 
 	private void printResults(CleanupOperationResult operationResult) {	

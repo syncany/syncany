@@ -1,0 +1,37 @@
+%RESOURCE:/help/copyright.skel%
+  
+SYNOPSIS
+  sy cleanup [-M | --no-database-merge] [-V | --no-version-remove]
+             [-k | --keep-versions=<count>]
+             [options of 'status' command]
+            
+DESCRIPTION 
+  This command performs different operations to cleanup the local database as 
+  well as the remote store. It removes old versions from the local database,
+  deletes unused multichunks (if possible) and merges a client's own remote
+  database files (if necessary).
+    
+  Merge remote databases: Unless -M is specified, the remote databases of the
+  local client are merged together if there are more than 15 remote databases.
+  The purpose of this is to avoid endless amounts of small database files on
+  the remote storage and a quicker download process for new clients.
+  
+  Remove old file versions: Unless -V is specified, XXXXXXXXXXXXXXXXX  
+  
+  XXXXXXXXXXXXXXX not finished XXXXXXXXXXXXXXXXXXXXXxx
+  
+  This command uses the 'status' and 'ls-remote' commands and is only executed
+  if there are neither local nor remote changes.
+  
+  This command is used by the 'up' command with its defaul options.
+
+  
+OPTIONS
+  -M, --no-database-merge          
+    Don't merge databases (default: yes)
+    
+  -V, --no-version-remove          
+    Don't remove old versions (default: yes)
+        
+  -k, --keep-versions=<count>      
+    Number of versions to keep (if not -V)
