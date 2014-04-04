@@ -1,9 +1,32 @@
-Syncany, %VERSION%, copyright (c) 2011-2014 Philipp C. Heckel
-Usage: sy [-l|--localdir=<path>] [--log=<path>]
-          [--loglevel=OFF|SEVERE|..] [--print]
-          [-d|--debug] [-h|--help] <command> [<args>]
+%RESOURCE:/help/copyright.skel%
 
-Global options:
+SYNOPSIS
+  sy [-l|--localdir=<path>] [--log=<path>]
+     [--loglevel=OFF|SEVERE|..] [--print]
+     [-d|--debug] [-h|--help] <command> [<args>]
+  
+DESCRIPTION
+  Syncany is an open-source cloud storage and filesharing application. It
+  allows users to backup and share certain folders of their workstations
+  using any kind of storage.
+  
+  Command overview:
+    init       Initialize the current folder as a Syncany folder.
+    connect    Connect the current folder to an existing Syncany repository.
+    status     Detect local changes and print to STDOUT.
+    up         Detect local changes and upload to repository.
+    ls-remote  Detect remote changes and print to STDOUT.
+    down       Detect remote changes and apply locally.
+    watch      Automatically synchronizes the local folder with the repo.
+    cleanup    Remove old versions from the local database and the repo. 
+    restore    Restore the given file paths from the remote repository. 
+    genlink    Create a syncany://-link from an existing local folder. 
+    log        Print parts of the local database to STDOUT. 
+
+  Short command descriptions and options can be found below. Detailed 
+  explanations can be queried with `sy <command> --help`. 
+
+GLOBAL OPTIONS
   -l, --localdir=<path>
       Use <path> instead of the current directory as local sync folder. 
       Syncany searches for a '.syncany' folder in the given and all parent
@@ -27,7 +50,7 @@ Global options:
   --print
       Print the log to the console (in addition to the log file).
 
-Commands:
+COMMANDS
   init [<args>]
     Initialize the current folder as a Syncany folder (interactive).
     Currently loaded plugins: %PLUGINS%
@@ -51,7 +74,7 @@ Commands:
     -I, --no-interaction             Non-interactive mode
 
   up [<args>]
-    Detect local changes and upload to repo (commit)
+    Detect local changes and upload to repository.
 
     Arguments:
     -c, --no-cleanup                 Do not merge own databases in repo
@@ -73,8 +96,9 @@ Commands:
     Detect remote changes and print to STDOUT.
 
   watch [<args>]
-    Performs the sync-command in a loop. In future releases, this command 
-    will watch the file system.
+    Automatically synchronizes the local folder with the repository. The
+    command performs the up and down command in an interval, watches the
+    file system for changes and subscribes to the Syncany pub/sub server. 
 
     Arguments:
     -i, --interval=<sec>             Sync every <sec> seconds (default is 120)
