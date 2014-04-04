@@ -28,9 +28,7 @@ terms of storage type and provider:
 
 Download and install Syncany
 ----------------------------
-You can download the current binary packages and installers from the [releases page](https://github.com/binwiederhier/syncany/releases), or from the Syncany 
-[download site](http://syncany.org/dist/).   
-**Please be aware that this is still ALPHA code! Do not use it for important files.**
+You can download the current binary packages and installers from the [releases page](https://github.com/binwiederhier/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
 Syncany 0.1.0-alpha, 30 March 2014, [[tar.gz]](http://syncany.org/dist/syncany-0.1.0-alpha.tar.gz) [[zip]](http://syncany.org/dist/syncany-0.1.0-alpha.zip) [[deb]](http://syncany.org/dist/syncany_0.1.0-alpha_all.deb) [[exe]](http://syncany.org/dist/syncany-0.1.0-alpha.exe)
