@@ -36,7 +36,24 @@ WizardSmallImageFile=..\\..\\innosetup\\setup-top.bmp
 InfoBeforeFile=..\\..\\innosetup\\setup-info-before.rtf
 InfoAfterFile=..\\..\\innosetup\\setup-info-after.rtf
 
+ChangesEnvironment=yes
+
 [Files]
 Source: "*"; DestDir: "{app}"
 Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany"
 Source: "lib\\*"; DestDir: "{app}\\lib"
+
+[Tasks]
+Name: modifypath; Description: Adds syncany's application directory to environmental path;
+
+[Code]
+const 
+    ModPathName = 'modifypath'; 
+    ModPathType = 'user'; 
+
+function ModPathDir(): TArrayOfString; 
+begin 
+    setArrayLength(Result, 1) 
+    Result[0] := ExpandConstant('{app}\\bin'); 
+end; 
+#include "modpath.iss"
