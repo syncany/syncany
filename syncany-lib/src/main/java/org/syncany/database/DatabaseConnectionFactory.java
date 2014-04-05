@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -34,8 +35,14 @@ import java.util.logging.Logger;
 import org.syncany.util.SqlRunner;
 
 /**
- * @author pheckel
- *
+ * This class is a helper class that provides the connection to the embedded 
+ * HSQLDB database. It is mainly used by the data access objects.
+ * 
+ * <p>The class provides methods to create {@link Connection} objects, retrieve
+ * SQL statements from the resources, and create the initial tables when the 
+ * application is first started.   
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
@@ -55,6 +62,14 @@ public class DatabaseConnectionFactory {
 		}
 	}
 
+	/**
+	 * Creates a database connection using the given database file. If the database exists and the
+	 * application tables are present, a valid connection is returned. If not, the database is created
+	 * and the application tables are created.
+	 * 
+	 * @param databaseFile File at which to create/load the database
+	 * @return Returns a valid database connection 
+	 */
 	public static Connection createConnection(File databaseFile) {
 		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFile.toString());
 		
@@ -63,6 +78,36 @@ public class DatabaseConnectionFactory {
 		}
 		
 		return createConnection(connectionString);
+	}
+	
+	/**
+	 * Retrieves a SQL statement template from a resource using the given resource identifier. From
+	 * this template, a {@link PreparedStatement} can be created.
+	 * 
+	 * <p>The statement is either loaded from the resource (if it is first encountered),
+	 * or loaded from the cache if it has been seen before.
+	 * 
+	 * @param resourceIdentifier Path to the resource, e.g. "/sql/create.all.sql"
+	 * @return Returns the SQL statement read from the resource
+	 */
+	public synchronized static String getStatement(String resourceIdentifier) {
+		String preparedStatement = DATABASE_STATEMENTS.get(resourceIdentifier);
+		
+		if (preparedStatement != null) {
+			return preparedStatement;
+		}
+		else {
+			InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(resourceIdentifier);
+			
+			if (statementInputStream == null) {
+				throw new RuntimeException("Unable to load SQL statement '"+resourceIdentifier+"'.");
+			}
+			
+			preparedStatement = readDatabaseStatement(statementInputStream);			
+			DATABASE_STATEMENTS.put(resourceIdentifier, preparedStatement);			
+			
+			return preparedStatement;
+		}		
 	}
 	
 	private static Connection createConnection(String connectionString) {
@@ -110,30 +155,7 @@ public class DatabaseConnectionFactory {
 		connection.setAutoCommit(false);
 	}
 	
-	public synchronized static String getStatement(String resourceIdentifier) {
-		String preparedStatement = DATABASE_STATEMENTS.get(resourceIdentifier);
-		
-		if (preparedStatement != null) {
-			return preparedStatement;
-		}
-		else {
-			InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(resourceIdentifier);
-			
-			if (statementInputStream == null) {
-				throw new RuntimeException("Unable to load SQL statement '"+resourceIdentifier+"'.");
-			}
-			
-			preparedStatement = readDatabaseStatement(statementInputStream);			
-			DATABASE_STATEMENTS.put(resourceIdentifier, preparedStatement);
-			
-			/*if (logger.isLoggable(Level.FINE)) {
-				logger.log(Level.FINE, "Database query \"{0}\" loaded (first time): {1}", new String[] { resourceIdentifier, preparedStatement });
-			}*/
-			
-			return preparedStatement;
-		}		
-	}
-	
+	// TODO [low] Shouldn't the SqlRunner be used here? If so, the SqlRunner also needs refactoring.
 	private static String readDatabaseStatement(InputStream inputStream) {
 		try {
 			StringBuilder preparedStatementStr = new StringBuilder();
