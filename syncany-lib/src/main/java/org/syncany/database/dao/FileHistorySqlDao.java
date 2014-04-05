@@ -176,28 +176,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		return null;
 	}
 
-	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
-			preparedStatement.setString(1, relativePath);
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				if (resultSet.next()) {
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-	
-					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-					fileHistory.addFileVersion(lastFileVersion);
-	
-					return fileHistory;
-				}
-			}
-
-			return null;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();

@@ -150,24 +150,10 @@ public class SqlDatabase {
 
 	// File History
 
-	@Deprecated
-	public List<PartialFileHistory> getFileHistoriesForDatabaseVersion(VectorClock databaseVersionVectorClock) {
-		// TODO [medium] This is not used anywhere, remove it!
-		return fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionVectorClock);
-	}
-
 	@Deprecated	
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
 		// TODO [medium] Note: This returns the full database. Don't use this!
 		return fileHistoryDao.getFileHistoriesWithFileVersions();
-	}
-
-	public PartialFileHistory getFileHistoryWithLastVersion(FileHistoryId fileHistoryId) {
-		return fileHistoryDao.getFileHistoryWithLastVersion(fileHistoryId);
-	}
-
-	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
-		return fileHistoryDao.getFileHistoryWithLastVersion(relativePath);
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
@@ -186,11 +172,6 @@ public class SqlDatabase {
 
 	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
-	}
-	
-	@Deprecated
-	public void removeFileVersions(int keepVersionsCount) throws SQLException {
-		fileVersionDao.removeFileVersions(keepVersionsCount);		
 	}
 	
 	public void removeSmallerOrEqualFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
