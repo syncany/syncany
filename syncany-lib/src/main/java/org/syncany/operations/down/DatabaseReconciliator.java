@@ -336,10 +336,39 @@ public class DatabaseReconciliator {
 		return winningFirstConflictingDatabaseVersionHeaders;
 	}
 
+	/**
+	 * Algorithm to find the ultimate winner's last database version header (client name and header).
+	 * The ultimate winner's branch is used to determine the local file system actions.
+	 * 
+	 * <p>Basic algorithm: Iterate over all machines' branches forward, find conflicts and
+	 * decide who wins.
+	 * 
+	 * <ol>
+	 *  <li>The algorithm first determines per-client start positions in a branch. The start position is the 
+	 *      position at which the first conflicting database version was found (given as input parameter).</li>
+	 *  <li>It then takes all conflicting branches
+	 *  
+	 *  - compare the headers found at the found positions, determine a winner
+	 *  - if more than one winner remains, determine next conflict positions and do again
+	 * </ol> 
+	 * 
+	 * 
+	 * 
+	 * XXXXXXXXXXXXXXXXXXXXXXX
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * @param winningFirstConflictingDatabaseVersionHeaders
+	 * @param allDatabaseVersionHeaders
+	 * @return
+	 */
 	public Map.Entry<String, DatabaseVersionHeader> findWinnersLastDatabaseVersionHeader(
 			TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders, DatabaseBranches allDatabaseVersionHeaders)
 			throws Exception {
 
+		// If there is only one conflicting database version header, return it (no need for a complex algorithm)
 		if (winningFirstConflictingDatabaseVersionHeaders.size() == 1) {
 			String winningMachineName = winningFirstConflictingDatabaseVersionHeaders.firstKey();
 			DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.getBranch(winningMachineName).getLast();
@@ -351,22 +380,9 @@ public class DatabaseReconciliator {
 		// Iterate over all machines' branches forward, find conflicts and
 		// decide who wins
 
-		// 1. Find winners winners positions in branch
-		Map<String, Integer> machineBranchPositionIterator = new HashMap<String, Integer>();
-
-		for (String machineName : winningFirstConflictingDatabaseVersionHeaders.keySet()) {
-			DatabaseVersionHeader machineWinnersWinner = winningFirstConflictingDatabaseVersionHeaders.get(machineName);
-			DatabaseBranch machineBranch = allDatabaseVersionHeaders.getBranch(machineName);
-
-			for (int i = 0; i < machineBranch.size(); i++) {
-				DatabaseVersionHeader machineDatabaseVersionHeader = machineBranch.get(i);
-
-				if (machineWinnersWinner.equals(machineDatabaseVersionHeader)) {
-					machineBranchPositionIterator.put(machineName, i);
-					break;
-				}
-			}
-		}
+		// 1. Find position of first conflicting header in branch (per client)
+		Map<String, Integer> machineNextConflictPosition = findWinningFirstConflictDatabaseVersionHeaderPerClientPosition(
+				winningFirstConflictingDatabaseVersionHeaders, allDatabaseVersionHeaders);
 
 		// 2. Compare all, go forward if all are identical
 		int machineInRaceCount = winningFirstConflictingDatabaseVersionHeaders.size();
@@ -375,7 +391,7 @@ public class DatabaseReconciliator {
 			String currentComparisonMachineName = null;
 			DatabaseVersionHeader currentComparisonDatabaseVersionHeader = null;
 
-			for (Map.Entry<String, Integer> machineBranchPosition : machineBranchPositionIterator.entrySet()) {
+			for (Map.Entry<String, Integer> machineBranchPosition : machineNextConflictPosition.entrySet()) {
 				String machineName = machineBranchPosition.getKey();
 				DatabaseBranch machineDatabaseVersionHeaders = allDatabaseVersionHeaders.getBranch(machineName);
 				Integer machinePosition = machineBranchPosition.getValue();
@@ -387,15 +403,14 @@ public class DatabaseReconciliator {
 				if (machinePosition >= machineDatabaseVersionHeaders.size()) {
 					// Eliminate machine in current loop
 					// TODO [low] Eliminate machine in current loop, is this correct?
-					machineBranchPositionIterator.put(machineName, null);
+					machineNextConflictPosition.put(machineName, null);
 					machineInRaceCount--;
 
 					continue;
 				}
 
 				DatabaseVersionHeader currentMachineDatabaseVersionHeader = machineDatabaseVersionHeaders.get(machinePosition);
-				;
-
+				
 				if (currentComparisonDatabaseVersionHeader == null) {
 					currentComparisonMachineName = machineName;
 					currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
@@ -405,39 +420,19 @@ public class DatabaseReconciliator {
 							currentMachineDatabaseVersionHeader.getVectorClock());
 
 					if (comparison != VectorClockComparison.EQUAL) {
-						// a. Decide which machine will be eliminated (by timestamp, then name)
-						Boolean eliminateComparisonMachine = null;
-
-						if (currentComparisonDatabaseVersionHeader.getDate().before(currentMachineDatabaseVersionHeader.getDate())) {
-							// Comparison machine timestamp before current machine timestamp
-							eliminateComparisonMachine = false;
-						}
-						else if (currentMachineDatabaseVersionHeader.getDate().before(currentComparisonDatabaseVersionHeader.getDate())) {
-							// Current machine timestamp before comparison machine timestamp
-							eliminateComparisonMachine = true;
-						}
-						else {
-							// Conflicting database version header timestamps are equal
-							// Now the alphabet decides: A wins before B!
-
-							if (currentComparisonMachineName.compareTo(machineName) < 0) {
-								eliminateComparisonMachine = false;
-							}
-							else {
-								eliminateComparisonMachine = true;
-							}
-						}
+						Boolean eliminateComparisonMachine = determineEliminateMachine(machineName, currentMachineDatabaseVersionHeader,
+								currentComparisonMachineName, currentComparisonDatabaseVersionHeader);
 
 						// b. Actually eliminate a machine (comparison machine, or current machine)
 						if (eliminateComparisonMachine) {
-							machineBranchPositionIterator.put(currentComparisonMachineName, null);
+							machineNextConflictPosition.put(currentComparisonMachineName, null);
 							machineInRaceCount--;
 
 							currentComparisonMachineName = machineName;
 							currentComparisonDatabaseVersionHeader = currentMachineDatabaseVersionHeader;
 						}
 						else {
-							machineBranchPositionIterator.put(machineName, null);
+							machineNextConflictPosition.put(machineName, null);
 							machineInRaceCount--;
 						}
 					}
@@ -445,18 +440,18 @@ public class DatabaseReconciliator {
 			}
 
 			if (machineInRaceCount > 1) {
-				for (String machineName : machineBranchPositionIterator.keySet()) {
-					Integer machineCurrentKey = machineBranchPositionIterator.get(machineName);
+				for (String machineName : machineNextConflictPosition.keySet()) {
+					Integer machineCurrentKey = machineNextConflictPosition.get(machineName);
 
 					if (machineCurrentKey != null) {
-						machineBranchPositionIterator.put(machineName, machineCurrentKey + 1);
+						machineNextConflictPosition.put(machineName, machineCurrentKey + 1);
 					}
 				}
 			}
 		}
 
-		for (String machineName : machineBranchPositionIterator.keySet()) {
-			Integer machineCurrentKey = machineBranchPositionIterator.get(machineName);
+		for (String machineName : machineNextConflictPosition.keySet()) {
+			Integer machineCurrentKey = machineNextConflictPosition.get(machineName);
 
 			if (machineCurrentKey != null) {
 				DatabaseVersionHeader winnersWinnersLastDatabaseVersionHeader = allDatabaseVersionHeaders.getBranch(machineName).getLast();
@@ -465,6 +460,78 @@ public class DatabaseReconciliator {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Determines whether or not a machine will be eliminated in the winner
+	 * determination process. This algorithm is part of the {@link #findWinnersLastDatabaseVersionHeader(TreeMap, DatabaseBranches)} 
+	 * algorithm.
+	 * 
+	 * <p>
+	 * 
+	 * XXXXXXXXXXXXXXXXXXXXXXx
+	 */
+	private Boolean determineEliminateMachine(String machineName, DatabaseVersionHeader currentMachineDatabaseVersionHeader,
+			String currentComparisonMachineName, DatabaseVersionHeader currentComparisonDatabaseVersionHeader) {
+		
+		// a. Decide which machine will be eliminated (by timestamp, then name)
+		Boolean eliminateComparisonMachine = null;
+
+		if (currentComparisonDatabaseVersionHeader.getDate().before(currentMachineDatabaseVersionHeader.getDate())) {
+			// Comparison machine timestamp before current machine timestamp
+			eliminateComparisonMachine = false;
+		}
+		else if (currentMachineDatabaseVersionHeader.getDate().before(currentComparisonDatabaseVersionHeader.getDate())) {
+			// Current machine timestamp before comparison machine timestamp
+			eliminateComparisonMachine = true;
+		}
+		else {
+			// Conflicting database version header timestamps are equal
+			// Now the alphabet decides: A wins before B!
+
+			if (currentComparisonMachineName.compareTo(machineName) < 0) {
+				eliminateComparisonMachine = false;
+			}
+			else {
+				eliminateComparisonMachine = true;
+			}
+		}
+		
+		return eliminateComparisonMachine;
+	}
+
+	/**
+	 * Determines the position in client's branches at which the first conflicting database
+	 * version header was found. This position is needed for the winner determination algorithm,
+	 * which walks forwards through the branches.
+	 * 
+	 * <p>The algorithm walks forwards through each client branch and looks for the first
+	 * conflicting header (as given in the parameter).
+	 * 
+	 * @param winningFirstConflictingDatabaseVersionHeaders First conflicting headers per client
+	 * @param allDatabaseVersionHeaders All fully stitched branches of all clients (including local)
+	 * @return Returns a per-client map of the array positions of the first conflicting headers per client
+	 */
+	private Map<String, Integer> findWinningFirstConflictDatabaseVersionHeaderPerClientPosition(
+			TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders, DatabaseBranches allDatabaseVersionHeaders) {
+		
+		Map<String, Integer> machineBranchPositionIterator = new HashMap<String, Integer>();
+
+		for (String machineName : winningFirstConflictingDatabaseVersionHeaders.keySet()) {
+			DatabaseVersionHeader machineFirstConflictingDatabaseVersionHeader = winningFirstConflictingDatabaseVersionHeaders.get(machineName);
+			DatabaseBranch machineBranch = allDatabaseVersionHeaders.getBranch(machineName);
+
+			for (int i = 0; i < machineBranch.size(); i++) {
+				DatabaseVersionHeader machineDatabaseVersionHeader = machineBranch.get(i);
+
+				if (machineFirstConflictingDatabaseVersionHeader.equals(machineDatabaseVersionHeader)) {
+					machineBranchPositionIterator.put(machineName, i);
+					break;
+				}
+			}
+		}
+
+		return machineBranchPositionIterator;
 	}
 
 	public DatabaseBranches stitchBranches(DatabaseBranches unstitchedUnknownBranches, String localClientName, DatabaseBranch localBranch) {
