@@ -30,13 +30,15 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.cli.InitConsole;
+import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.tests.connection.plugins.ftp.EmbeddedTestFtpServer;
+import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
-public class InitCommandTest {	
+public class InitAndConnectCommandTest {	
 	private File originalWorkingDirectory;
 	
 	@Rule
@@ -124,7 +126,85 @@ public class InitCommandTest {
 	}	
 	
 	@Test
-	public void testCliInitCommandInteractiveWithEncryption() throws Exception {
+	public void testCliInitAndConnectCommandInteractiveWithEncryption() throws Exception {
+		// Setup		
+		
+		// Ensuring no console is set
+		InitConsole.setInstance(null);
+		
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
+		Map<String, String> clientB = TestCliUtil.createLocalTestEnv("B", connectionSettings);
+		
+		// Run
+				
+		// 1. Init
+		File localDirA = TestFileUtil.createTempDirectoryInSystemTemp();
+		setCurrentDirectory(localDirA);
+		
+		String[] initArgs = new String[] { 			 
+			 "init",
+			 "--no-compression" 
+		}; 
+
+		systemInMock.provideText(StringUtil.join(new String[] {
+			"local", 
+			clientA.get("repopath"),
+			"somesuperlongpassword", 
+			"somesuperlongpassword"
+		}, "\n")+"\n");
+		
+		new CommandLineClient(initArgs).start();
+		
+		assertTrue(localDirA.exists());
+		assertTrue(new File(localDirA+"/.syncany").exists());
+		assertTrue(new File(localDirA+"/.syncany/syncany").exists());
+		assertTrue(new File(localDirA+"/.syncany/master").exists());
+		assertTrue(new File(localDirA+"/.syncany/config.xml").exists());
+		
+		TestAssertUtil.assertFileEquals(new File(localDirA + "/.syncany/syncany"), new File(connectionSettings.get("path") + "/syncany"),
+				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
+		TestAssertUtil.assertFileEquals(new File(localDirA + "/.syncany/master"), new File(connectionSettings.get("path") + "/master"),
+				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
+
+		// 2. Connect
+		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp();
+		setCurrentDirectory(localDirB);
+		
+		String[] connectArgs = new String[] { 			 
+			 "connect"
+		}; 
+
+		systemInMock.provideText(StringUtil.join(new String[] {
+			"local", 
+			clientB.get("repopath"),
+			"somesuperlongpassword"
+		}, "\n")+"\n");
+		
+		new CommandLineClient(connectArgs).start();
+		
+		assertTrue(localDirB.exists());
+		assertTrue(new File(localDirB+"/.syncany").exists());
+		assertTrue(new File(localDirB+"/.syncany/syncany").exists());
+		assertTrue(new File(localDirB+"/.syncany/master").exists());
+		assertTrue(new File(localDirB+"/.syncany/config.xml").exists());
+		
+		TestAssertUtil.assertFileEquals(new File(localDirB + "/.syncany/syncany"), new File(connectionSettings.get("path") + "/syncany"),
+				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
+		TestAssertUtil.assertFileEquals(new File(localDirB + "/.syncany/master"), new File(connectionSettings.get("path") + "/master"),
+				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
+
+		// Tear down
+		setCurrentDirectory(originalWorkingDirectory);
+		
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+		TestCliUtil.deleteTestLocalConfigAndData(clientB);
+		TestFileUtil.deleteDirectory(localDirA);
+		TestFileUtil.deleteDirectory(localDirB);
+	}	
+	
+	@Test
+	public void testCliInitCommandInteractiveWithEncryptionAndCompression() throws Exception {
 		// Setup		
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		setCurrentDirectory(tempDir);
@@ -137,23 +217,28 @@ public class InitCommandTest {
 		
 		// Run
 		String[] initArgs = new String[] { 			 
-			 "init",
-			 "--no-compression" 
+			 "init"
 		}; 
 
 		systemInMock.provideText(StringUtil.join(new String[] {
-				"local", 
-				clientA.get("repopath"),
-				"somesuperlongpassword", 
-				"somesuperlongpassword"
-			}, "\n")+"\n");
+			"local", 
+			clientA.get("repopath"),
+			"somesuperlongpassword", 
+			"somesuperlongpassword"
+		}, "\n")+"\n");
 		
 		new CommandLineClient(initArgs).start();
 		
 		assertTrue(tempDir.exists());
 		assertTrue(new File(tempDir+"/.syncany").exists());
 		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
+		assertTrue(new File(tempDir+"/.syncany/master").exists());
 		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
+		
+		TestAssertUtil.assertFileEquals(new File(tempDir + "/.syncany/syncany"), new File(connectionSettings.get("path") + "/syncany"),
+				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
+		TestAssertUtil.assertFileEquals(new File(tempDir + "/.syncany/master"), new File(connectionSettings.get("path") + "/master"),
+				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
 
 		// Tear down
 		setCurrentDirectory(originalWorkingDirectory);

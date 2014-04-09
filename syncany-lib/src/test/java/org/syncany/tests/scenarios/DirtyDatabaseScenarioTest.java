@@ -95,7 +95,7 @@ public class DirtyDatabaseScenarioTest {
 		assertEquals(1, fileHistoryFile1B.getFileVersions().size());
 		assertEquals("A-file1.jpg", fileHistoryFile1B.getLastVersion().getPath());
 				
-		assertFileEquals("Files should be identical", clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
+		assertFileEquals(clientA.getLocalFile("A-file1.jpg"), clientB.getLocalFile("A-file1.jpg"));
 		assertConflictingFileExists("A-file1.jpg", clientB.getLocalFilesExcludeLockedAndNoRead());		
 		
 		// Run (part 2)

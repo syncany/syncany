@@ -24,7 +24,7 @@ import org.syncany.tests.cli.CliPluginsTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
 import org.syncany.tests.cli.DownCommandTest;
 import org.syncany.tests.cli.GenlinkCommandTest;
-import org.syncany.tests.cli.InitCommandTest;
+import org.syncany.tests.cli.InitAndConnectCommandTest;
 import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
 import org.syncany.tests.cli.RestoreCommandTest;
@@ -38,7 +38,7 @@ import org.syncany.tests.cli.WatchCommandTest;
 	CommandLineInterfaceTest.class,
 	DownCommandTest.class,
 	GenlinkCommandTest.class,
-	InitCommandTest.class,
+	InitAndConnectCommandTest.class,
 	LogCommandTest.class,
 	LsRemoteCommandTest.class,
 	RestoreCommandTest.class,
