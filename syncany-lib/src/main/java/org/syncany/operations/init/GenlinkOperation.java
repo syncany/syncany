@@ -26,7 +26,6 @@ import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
-import org.syncany.operations.OperationResult;
 
 /**
  * This operation generates a link which can be shared among users to connect to 
@@ -74,22 +73,4 @@ public class GenlinkOperation extends AbstractInitOperation {
 		
 		return new GenlinkOperationResult(shareLink, shareLinkEncrypted);
     }          
-
-    public class GenlinkOperationResult implements OperationResult {
-        private String shareLink;
-    	private boolean shareLinkEncrypted;
-        
-		public GenlinkOperationResult(String shareLink, boolean shareLinkEncrypted) {
-			this.shareLink = shareLink;
-			this.shareLinkEncrypted = shareLinkEncrypted;
-		}
-
-		public String getShareLink() {
-			return shareLink;
-		}
-
-		public boolean isShareLinkEncrypted() {
-			return shareLinkEncrypted;
-		}   				
-    }
 }
