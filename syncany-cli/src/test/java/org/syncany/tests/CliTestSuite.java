@@ -22,9 +22,10 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.cli.CliPluginsTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
+import org.syncany.tests.cli.ConnectCommandWithEncryptionTest;
 import org.syncany.tests.cli.DownCommandTest;
 import org.syncany.tests.cli.GenlinkCommandTest;
-import org.syncany.tests.cli.InitAndConnectCommandTest;
+import org.syncany.tests.cli.InitAndConnectCommandNoEncryptionTest;
 import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
 import org.syncany.tests.cli.RestoreCommandTest;
@@ -36,9 +37,10 @@ import org.syncany.tests.cli.WatchCommandTest;
 @SuiteClasses({
 	CliPluginsTest.class,
 	CommandLineInterfaceTest.class,
+	ConnectCommandWithEncryptionTest.class,
 	DownCommandTest.class,
 	GenlinkCommandTest.class,
-	InitAndConnectCommandTest.class,
+	InitAndConnectCommandNoEncryptionTest.class,
 	LogCommandTest.class,
 	LsRemoteCommandTest.class,
 	RestoreCommandTest.class,
