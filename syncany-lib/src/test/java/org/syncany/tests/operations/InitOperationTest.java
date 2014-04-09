@@ -26,8 +26,8 @@ import java.io.File;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperation.InitOperationOptions;
-import org.syncany.operations.init.InitOperation.InitOperationResult;
+import org.syncany.operations.init.InitOperationOptions;
+import org.syncany.operations.init.InitOperationResult;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 

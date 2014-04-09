@@ -24,7 +24,6 @@ import java.util.Properties;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
-import org.syncany.operations.ChangeSet;
 import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
@@ -41,20 +40,21 @@ import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.down.DownOperationListener;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.init.ConnectOperation;
-import org.syncany.operations.init.ConnectOperation.ConnectOperationListener;
-import org.syncany.operations.init.ConnectOperation.ConnectOperationOptions;
-import org.syncany.operations.init.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.init.ConnectOperationListener;
+import org.syncany.operations.init.ConnectOperationOptions;
+import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.GenlinkOperation;
-import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperation.InitOperationListener;
-import org.syncany.operations.init.InitOperation.InitOperationOptions;
-import org.syncany.operations.init.InitOperation.InitOperationResult;
+import org.syncany.operations.init.InitOperationListener;
+import org.syncany.operations.init.InitOperationOptions;
+import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
@@ -144,12 +144,12 @@ public class Client {
 		return new DownOperation(config, options, listener).execute();
 	}
 
-	public ChangeSet status() throws Exception {
+	public StatusOperationResult status() throws Exception {
 		return status(new StatusOperationOptions());
 	}
 
-	public ChangeSet status(StatusOperationOptions options) throws Exception {
-		return (new StatusOperation(config, options).execute()).getChangeSet();
+	public StatusOperationResult status(StatusOperationOptions options) throws Exception {
+		return new StatusOperation(config, options).execute();
 	}
 
 	public LsRemoteOperationResult lsRemote() throws Exception {

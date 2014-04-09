@@ -42,6 +42,7 @@ import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
@@ -174,7 +175,10 @@ public class DirtyDatabaseScenarioTest {
 		assertEquals("(A1,B2)\n(A1,B3)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion where status='DIRTY' order by id", databaseConnectionB));
 		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion where status<>'DIRTY' order by id", databaseConnectionB));
 		
-		ChangeSet changeSetBAfterDirty = clientB.status();
+		StatusOperationResult statusResultBAfterDirty = clientB.status();
+		assertNotNull(statusResultBAfterDirty);
+		
+		ChangeSet changeSetBAfterDirty = statusResultBAfterDirty.getChangeSet();		
 		assertEquals(2, changeSetBAfterDirty.getNewFiles().size());
 		TestAssertUtil.assertConflictingFileExists("A-file1.jpg", clientB.getLocalFiles());
 		
