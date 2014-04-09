@@ -1,6 +1,5 @@
 bin
 build
-sandbox/results
 .gradle
 .settings
 .classpath
