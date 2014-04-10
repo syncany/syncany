@@ -19,7 +19,9 @@ package org.syncany.connection.plugins.ftp;
 
 import java.util.Map;
 
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
@@ -34,6 +36,9 @@ import org.syncany.connection.plugins.TransferManager;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FtpConnection implements Connection {
+	private Config config;
+	private PluginListener listener;
+	
     private String hostname;
     private String username;
     private String password;
@@ -86,8 +91,12 @@ public class FtpConnection implements Connection {
     }
 
 	@Override
-	public void init(Map<String, String> optionValues) throws StorageException {
+	public void init(Config config, Map<String, String> optionValues, PluginListener pluginListener) throws StorageException {
 		getOptionSpecs().validate(optionValues);
+		
+		this.config = config;
+		this.listener = pluginListener;
+		
 		this.hostname = optionValues.get("hostname");
 		this.username = optionValues.get("username");
 		this.password = optionValues.get("password");
@@ -111,4 +120,9 @@ public class FtpConnection implements Connection {
         return FtpConnection.class.getSimpleName()
         + "[hostname=" + hostname + ":" + port + ", username=" + username + ", path=" + path + "]";
     }
+
+	@Override
+	public Config getConfig() {
+		return config;
+	}
 }

@@ -191,4 +191,9 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			return false;
 		}
 	}
+
+	@Override
+	public boolean onPluginUserQuery(String subject, String message) {
+		return askPluginUserQuery(subject, message);
+	}
 }

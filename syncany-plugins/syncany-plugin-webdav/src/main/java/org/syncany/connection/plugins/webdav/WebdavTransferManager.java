@@ -92,8 +92,10 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 				for (X509Certificate cert : chain) {
 					System.out.println(cert);
-					cert.checkValidity();					
+					cert.checkValidity();	
 
+					// TODO [high] We should check this against a trust store and only ask if it is not contained 
+					
 					boolean userTrustsCertificate = pluginListener.onPluginUserQuery("Unknown SSL/TLS certificate. Do you want to trust it?", cert.toString());
 					
 					if (!userTrustsCertificate) {

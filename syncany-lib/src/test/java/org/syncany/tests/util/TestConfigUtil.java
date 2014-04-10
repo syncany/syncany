@@ -161,7 +161,7 @@ public class TestConfigUtil {
 		repoTO.setChunkerTO(createFixedChunkerTO());
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
-		return new Config(new File("/dummy"), configTO, repoTO);
+		return new Config(new File("/dummy"), null, configTO, repoTO);
 	}
 
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
@@ -189,7 +189,7 @@ public class TestConfigUtil {
 		configTO.setConnectionTO(connectionTO);
 				
 		// Create 
-		Config config = new Config(tempLocalDir, configTO, repoTO);
+		Config config = new Config(tempLocalDir, null, configTO, repoTO);
 
 		config.setConnection(connection);
 		config.getAppDir().mkdirs();
@@ -252,7 +252,7 @@ public class TestConfigUtil {
 		Map<String, String> pluginSettings = new HashMap<String, String>();
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 
-		conn.init(pluginSettings);
+		conn.init(null, pluginSettings, null);
 		conn.createTransferManager().init(true);
 
 		return conn;

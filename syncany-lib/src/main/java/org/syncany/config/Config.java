@@ -32,6 +32,7 @@ import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
@@ -76,12 +77,13 @@ public class Config {
     private MultiChunker multiChunker;
     private Transformer transformer;
     private IgnoredFiles ignoredFiles;
+    private PluginListener pluginListener;
       
     static {    	    	
     	Logging.init();
     }
     
-	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
+	public Config(File aLocalDir, PluginListener pluginListener, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
 		if (aLocalDir == null || configTO == null || repoTO == null) {
 			throw new ConfigException("Arguments aLocalDir, configTO and repoTO cannot be null.");
 		}
@@ -93,8 +95,13 @@ public class Config {
 		initIgnoredFile();
 		initRepo(repoTO);
     	initConnection(configTO);  	
+    	initListener(pluginListener);    	
 	}		
 	
+	private void initListener(PluginListener pluginListener) {
+		this.pluginListener = pluginListener;
+	}
+
 	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
 			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
@@ -227,7 +234,7 @@ public class Config {
 	    	
 	    	try {
 		    	connection = plugin.createConnection();
-		    	connection.init(this, configTO.getConnectionTO().getSettings());
+		    	connection.init(this, configTO.getConnectionTO().getSettings(), pluginListener);
 	    	}
 	    	catch (StorageException e) {
 	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);

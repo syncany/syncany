@@ -49,6 +49,7 @@ import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
@@ -60,7 +61,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
  *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CommandLineClient extends Client {
+public class CommandLineClient extends Client implements PluginListener {
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
 	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
 	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "/help/usage.skel";
@@ -107,7 +108,6 @@ public class CommandLineClient extends Client {
 			
 			// Evaluate options
 			// WARNING: Do not re-order unless you know what you are doing!
-			//initHelpOption(options, optionHelp, options.nonOptionArguments());
 			initConfigOption(options, optionLocalDir);
 			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
 	
@@ -197,7 +197,7 @@ public class CommandLineClient extends Client {
 		}					
 		
 		// Load config
-		config = ConfigHelper.loadConfig(localDir);
+		config = ConfigHelper.loadConfig(localDir, this);
 	}					
 	
 	private int runCommand(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws Exception {
@@ -345,6 +345,21 @@ public class CommandLineClient extends Client {
 		System.exit(0);
 		
 		return 0;
+	}
+
+	@Override
+	public boolean onPluginUserQuery(String subject, String message) {
+		out.println(subject);
+		out.println(message);
+		
+		String yesno = InitConsole.getInstance().readLine("Confirm (y/n)? ");
+		
+		if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
 }

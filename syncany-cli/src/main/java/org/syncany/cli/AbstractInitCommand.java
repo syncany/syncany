@@ -334,4 +334,18 @@ public abstract class AbstractInitCommand extends Command {
 			out.println();
 		}
 	}	
+	
+	public boolean askPluginUserQuery(String subject, String message) {
+		out.println(subject);
+		out.println(message);
+		
+		String yesno = console.readLine("Confirm (y/n)? ");
+		
+		if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
 } 

@@ -402,4 +402,9 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	public String getPasswordCallback() {
 		return askPasswordAndConfirm();
 	}
+
+	@Override
+	public boolean onPluginUserQuery(String subject, String message) {
+		return askPluginUserQuery(subject, message);
+	}
 }

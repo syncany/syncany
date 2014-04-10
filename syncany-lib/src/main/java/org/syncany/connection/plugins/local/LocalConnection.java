@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
@@ -38,6 +39,8 @@ import org.syncany.connection.plugins.TransferManager;
  */
 public class LocalConnection implements Connection {
 	private Config config;
+	private PluginListener listener;
+	
 	private File repositoryPath;
 
 	@Override
@@ -54,10 +57,11 @@ public class LocalConnection implements Connection {
 	}
 
 	@Override
-	public void init(Config config, Map<String, String> optionValues) throws StorageException {
+	public void init(Config config, Map<String, String> optionValues, PluginListener listener) throws StorageException {
 		getOptionSpecs().validate(optionValues);
 
 		this.config = config;
+		this.listener = listener;
 		this.repositoryPath = new File(optionValues.get("path"));
 	}
 
