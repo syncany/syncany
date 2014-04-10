@@ -124,7 +124,7 @@ public class InitOperation extends AbstractInitOperation {
 			uploadRepoFile(repoFile, transferManager);
 		}
 		catch (StorageException|IOException e) {
-			cleanLocalRepository();
+			cleanLocalRepository(e);
 		}
 		
 		
@@ -173,11 +173,11 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created
-			cleanLocalRepository();
+			cleanLocalRepository(e);
  		}
 	}
 	
-	private void cleanLocalRepository() throws Exception {
+	private void cleanLocalRepository(Exception e) throws Exception {
 		
 		try {
 			deleteAppDirs(options.getLocalDir());
@@ -187,7 +187,7 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		
 		// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
-		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.");
+		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
