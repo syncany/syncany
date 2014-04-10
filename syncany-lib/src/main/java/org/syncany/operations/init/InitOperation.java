@@ -18,6 +18,7 @@
 package org.syncany.operations.init;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -115,12 +116,17 @@ public class InitOperation extends AbstractInitOperation {
 		
 		// Make remote changes
 		initRemoteRepository();		
-		
-		if (options.isEncryptionEnabled()) {
-			uploadMasterFile(masterFile, transferManager);
+		try {
+			if (options.isEncryptionEnabled()) {
+				uploadMasterFile(masterFile, transferManager);
+			}
+			
+			uploadRepoFile(repoFile, transferManager);
+		}
+		catch (StorageException|IOException e) {
+			cleanLocalRepository();
 		}
 		
-		uploadRepoFile(repoFile, transferManager);
 		
 		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
@@ -167,16 +173,21 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created
-			try {
-				deleteAppDirs(options.getLocalDir());
-			}
-			catch (Exception e1) {
-				throw new Exception("StorageException for remote. Cleanup failed. There may be local directories left");
-			}
-			
-			// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
-			throw new Exception("StorageException for remote. Cleaned local repository.");
+			cleanLocalRepository();
  		}
+	}
+	
+	private void cleanLocalRepository() throws Exception {
+		
+		try {
+			deleteAppDirs(options.getLocalDir());
+		}
+		catch (Exception e1) {
+			throw new StorageException("Couldn't upload to remote repo. Cleanup failed. There may be local directories left");
+		}
+		
+		// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
+		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.");
 	}
 
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {

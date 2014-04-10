@@ -242,6 +242,13 @@ public class TestConfigUtil {
 		
 		return operationOptions;
 	}
+	
+	public static InitOperationOptions createTestUnreliableInitOperationOptions(String machineName, String patterns) throws Exception {
+		InitOperationOptions initOperationOptions = createTestInitOperationOptions(machineName);
+		initOperationOptions.getConfigTO().getConnectionTO().setType("unreliable_local");
+		initOperationOptions.getConfigTO().getConnectionTO().getSettings().put("patterns", patterns);
+		return initOperationOptions;
+	}
 
 	public static Connection createTestLocalConnection() throws Exception {
 		Plugin plugin = Plugins.get("local");
@@ -259,6 +266,14 @@ public class TestConfigUtil {
 	}
 
 	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
+		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(failingOperationPatterns);
+
+		unreliableLocalConnection.createTransferManager().init(true);
+
+		return unreliableLocalConnection;
+	}
+	
+	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(List<String> failingOperationPatterns) throws Exception {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
 
@@ -266,9 +281,6 @@ public class TestConfigUtil {
 
 		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
 		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);
-
-		unreliableLocalConnection.createTransferManager().init(true);
-
 		return unreliableLocalConnection;
 	}
 
