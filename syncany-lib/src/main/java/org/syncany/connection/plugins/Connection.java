@@ -19,6 +19,8 @@ package org.syncany.connection.plugins;
 
 import java.util.Map;
 
+import org.syncany.config.Config;
+
 /**
  * A connection represents the configuration settings of a storage/connection
  * plugin. It is created through the concrete implementation of a {@link Plugin}.
@@ -33,7 +35,8 @@ import java.util.Map;
  */
 public interface Connection {
     public TransferManager createTransferManager();
-    public PluginOptionSpecs getOptionSpecs();        
-    public void init(Map<String, String> optionValues) throws StorageException;    
+    public PluginOptionSpecs getOptionSpecs();    
+    public void init(Config config, Map<String, String> optionValues, PluginListener pluginListener) throws StorageException;
+    public Config getConfig();
 }
 

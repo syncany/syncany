@@ -23,6 +23,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.KeyStore;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +33,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.util.FileUtil;
@@ -48,15 +53,20 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	private static final int HTTP_NOT_FOUND = 404;
 	private static final Logger logger = Logger.getLogger(WebdavTransferManager.class.getSimpleName());
 
+	private PluginListener pluginListener;
+	
 	private Sardine sardine;
+	private SSLSocketFactory sslSocketFactory;
 
 	private String repoPath;
 	private String multichunkPath;
 	private String databasePath;
 
-	public WebdavTransferManager(WebdavConnection connection) {
+	public WebdavTransferManager(WebdavConnection connection, PluginListener pluginListener) {
 		super(connection);
 
+		this.pluginListener = pluginListener;
+		
 		this.repoPath = connection.getUrl().replaceAll("/$", "") + "/";
 		this.multichunkPath = repoPath + "multichunks/";
 		this.databasePath = repoPath + "databases/";
@@ -67,22 +77,60 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		return (WebdavConnection) super.getConnection();
 	}
 
+	private SSLSocketFactory initSsl() throws Exception {
+		/*
+		String keyStoreFilename = "/tmp/mystore"; 
+		File keystoreFile = new File(keyStoreFilename); 
+		FileInputStream fis = new FileInputStream(keystoreFile); 
+		TrustStore
+		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); 
+		keyStore.load(fis, null);*/
+		
+
+		TrustStrategy trustStrategy = new TrustStrategy() {
+			@Override
+			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+				for (X509Certificate cert : chain) {
+					System.out.println(cert);
+					cert.checkValidity();					
+
+					boolean userTrustsCertificate = pluginListener.onPluginUserQuery("Unknown SSL/TLS certificate. Do you want to trust it?", cert.toString());
+					
+					if (!userTrustsCertificate) {
+						return false;
+					}
+				}
+
+				// TODO [high] Issue #14/#50: WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
+				return true;							
+			}
+		};
+
+		return new SSLSocketFactory(trustStrategy);
+	}
+
+
 	@Override
 	public void connect() throws StorageException {
 		if (sardine == null) {
 			logger.log(Level.INFO, "WebDAV: Connect called. Creating Sardine ...");
 			
 			if (getConnection().isSecure()) {
-				final SSLSocketFactory sslSocketFactory = getConnection().getSslSocketFactory();
-
-				sardine = new SardineImpl() {
-					@Override
-					protected SSLSocketFactory createDefaultSecureSocketFactory() {
-						return sslSocketFactory;
-					}
-				};
-
-				sardine.setCredentials(getConnection().getUsername(), getConnection().getPassword());
+				try {									
+					final SSLSocketFactory sslSocketFactory = initSsl();
+	
+					sardine = new SardineImpl() {
+						@Override
+						protected SSLSocketFactory createDefaultSecureSocketFactory() {
+							return sslSocketFactory;
+						}
+					};
+	
+					sardine.setCredentials(getConnection().getUsername(), getConnection().getPassword());
+				}
+				catch (Exception e) {
+					throw new StorageException(e);
+				}
 			}
 			else {
 				sardine = SardineFactory.begin(getConnection().getUsername(), getConnection().getPassword());

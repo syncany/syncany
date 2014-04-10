@@ -17,13 +17,11 @@
  */
 package org.syncany.connection.plugins.webdav;
 
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Map;
 
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
@@ -31,60 +29,30 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 public class WebdavConnection implements Connection {
+	private Config config;
+	private PluginListener pluginListener;
+	
 	private String url;
 	private String username;
 	private String password;
-
 	private boolean secure;
-	private SSLSocketFactory sslSocketFactory;
 
 	@Override
 	public TransferManager createTransferManager() {
-		return new WebdavTransferManager(this);
+		return new WebdavTransferManager(this, pluginListener);
 	}
 
 	@Override
-	public void init(Map<String, String> optionValues) throws StorageException {
+	public void init(Config config, Map<String, String> optionValues, PluginListener pluginListener) throws StorageException {
 		getOptionSpecs().validate(optionValues);
+		
+		this.config = config;
+		this.pluginListener = pluginListener;
+		
 		this.url = optionValues.get("url");
 		this.username = optionValues.get("username");
 		this.password = optionValues.get("password");
-
-		// SSL
-		if (url.toLowerCase().startsWith("https")) {
-			try {
-				initSsl();
-			}
-			catch (Exception e) {
-				throw new StorageException(e);
-			}
-		}
-	}
-
-	private void initSsl() throws Exception {
-		this.secure = true;
-
-		/*
-		 * String keyStoreFilename = "/tmp/mystore"; 
-		 * File keystoreFile = new File(keyStoreFilename); 
-		 * FileInputStream fis = new
-		 * FileInputStream(keystoreFile); 
-		 * KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); // JKS keyStore.load(fis, null);
-		 */
-
-		TrustStrategy trustStrategy = new TrustStrategy() {
-			@Override
-			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				for (X509Certificate cert : chain) {
-					System.out.println(cert);
-				}
-
-				// TODO [high] Issue #14/#50: WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
-				return true;							
-			}
-		};
-
-		this.sslSocketFactory = new SSLSocketFactory(trustStrategy);
+		this.secure = url.toLowerCase().startsWith("https");
 	}
 
 	@Override
@@ -132,8 +100,8 @@ public class WebdavConnection implements Connection {
 	public boolean isSecure() {
 		return secure;
 	}
-
-	public SSLSocketFactory getSslSocketFactory() {
-		return sslSocketFactory;
+	
+	public Config getConfig() {
+		return config;
 	}
 }

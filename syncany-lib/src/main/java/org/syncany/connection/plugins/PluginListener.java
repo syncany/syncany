@@ -15,10 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.init;
+package org.syncany.connection.plugins;
 
-public interface ConnectOperationListener extends AbstractInitOperationListener {
-	public String askPassword();
-	public boolean askRetryPassword();
-	public void notifyCreateMasterKey();
-}		
+public interface PluginListener {
+	public boolean onPluginUserQuery(String subject, String message);
+}
