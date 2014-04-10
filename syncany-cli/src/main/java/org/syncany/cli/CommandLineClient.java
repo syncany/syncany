@@ -228,6 +228,7 @@ public class CommandLineClient extends Client implements PluginListener {
 		
 		// Init command
 		command.setClient(this);
+		command.setListener(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
 		

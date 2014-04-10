@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -41,6 +43,7 @@ import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 
 import com.github.sardine.DavResource;
 import com.github.sardine.Sardine;
@@ -49,15 +52,17 @@ import com.github.sardine.impl.SardineException;
 import com.github.sardine.impl.SardineImpl;
 
 public class WebdavTransferManager extends AbstractTransferManager {
-	private static final String APPLICATION_CONTENT_TYPE = "application/x-syncany";
-	private static final int HTTP_NOT_FOUND = 404;
 	private static final Logger logger = Logger.getLogger(WebdavTransferManager.class.getSimpleName());
 
-	private PluginListener pluginListener;
-	
-	private Sardine sardine;
-	private SSLSocketFactory sslSocketFactory;
+	private static final String APPLICATION_CONTENT_TYPE = "application/x-syncany";
+	private static final int HTTP_NOT_FOUND = 404;
 
+	private static KeyStore trustStore;
+	private static boolean hasNewCertificates;
+
+	private Sardine sardine;	
+	private PluginListener pluginListener;	
+	
 	private String repoPath;
 	private String multichunkPath;
 	private String databasePath;
@@ -65,11 +70,14 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	public WebdavTransferManager(WebdavConnection connection, PluginListener pluginListener) {
 		super(connection);
 
-		this.pluginListener = pluginListener;
-		
+		this.sardine = null;
+		this.pluginListener = pluginListener;		
+
 		this.repoPath = connection.getUrl().replaceAll("/$", "") + "/";
 		this.multichunkPath = repoPath + "multichunks/";
 		this.databasePath = repoPath + "databases/";
+		
+		loadTrustStore();
 	}
 
 	@Override
@@ -77,47 +85,140 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		return (WebdavConnection) super.getConnection();
 	}
 
-	private SSLSocketFactory initSsl() throws Exception {
-		/*
-		String keyStoreFilename = "/tmp/mystore"; 
-		File keystoreFile = new File(keyStoreFilename); 
-		FileInputStream fis = new FileInputStream(keystoreFile); 
-		TrustStore
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType()); 
-		keyStore.load(fis, null);*/
-		
+	private void loadTrustStore() {
+		if (trustStore == null) {
+			try {
+				logger.log(Level.INFO, "WebDAV: Loading trust store");
+				
+				trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+				
+				if (getConnection().getConfig() != null) { // Can be null if uninitialized!
+					File appDir = getConnection().getConfig().getAppDir();
+					File userdataDir = new File(appDir, "userdata");
+					File certStoreFile = new File(userdataDir, "truststore.jks"); 
+										
+					if (certStoreFile.exists()) {
+						FileInputStream trustStoreInputStream = new FileInputStream(certStoreFile); 		 		
+						trustStore.load(trustStoreInputStream, null);
+						
+						trustStoreInputStream.close();
+					}	
+					else {
+						trustStore.load(null, null); // Initialize empty store						
+					}
+				}
+				else {
+					trustStore.load(null, null); // Initialize empty store
+				}
+			}
+			catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			logger.log(Level.INFO, "WebDAV: Trust store already loaded.");			
+		}
+	}
+	
+	private void storeTrustStore() {
+		if (trustStore != null) {
+			if (!hasNewCertificates) {
+				logger.log(Level.INFO, "WebDAV: No new certificates. Nothing to store.");
+			}
+			else {
+				logger.log(Level.INFO, "WebDAV: New certificates. Storing trust store on disk.");
 
+				try {
+					if (getConnection().getConfig() != null) { 											
+						File appDir = getConnection().getConfig().getAppDir();
+						File userdataDir = new File(appDir, "userdata");
+						File certStoreFile = new File(userdataDir, "truststore.jks"); 
+												
+						if (!userdataDir.mkdirs()) {
+							throw new RuntimeException("WebDAV: Cannot store trust store. Cannot create "+userdataDir);
+						}
+						
+						FileOutputStream trustStoreOutputStream = new FileOutputStream(certStoreFile);
+						trustStore.store(trustStoreOutputStream, null);
+						
+						trustStoreOutputStream.close();
+						
+						hasNewCertificates = false;
+					}
+					else {
+						logger.log(Level.INFO, "WebDAV: Cannot store trust store; config not initialized.");
+					}
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+	}
+
+	private SSLSocketFactory initSsl() throws Exception {
 		TrustStrategy trustStrategy = new TrustStrategy() {
 			@Override
 			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				for (X509Certificate cert : chain) {
-					System.out.println(cert);
-					cert.checkValidity();	
-
-					// TODO [high] We should check this against a trust store and only ask if it is not contained 
-					
-					boolean userTrustsCertificate = pluginListener.onPluginUserQuery("Unknown SSL/TLS certificate. Do you want to trust it?", cert.toString());
-					
-					if (!userTrustsCertificate) {
-						return false;
+				logger.log(Level.INFO, "WebDAV: isTrusted("+chain.toString()+", "+authType+")");
+				
+				try {
+					for (X509Certificate cert : chain) {
+						logger.log(Level.FINE, "WebDAV: Checking certificate validity: "+cert);
+						
+						cert.checkValidity();	
+						
+						logger.log(Level.FINE, "WebDAV: Checking is VALID.");
+						
+						String certAlias = StringUtil.toHex(cert.getSignature());						
+						Certificate trustStoreCertificate = trustStore.getCertificate(certAlias);
+						
+						// Certificate found
+						if (trustStoreCertificate != null) {
+							logger.log(Level.FINE, "WebDAV: Certificate found in trust store.");
+							
+							if (!trustStoreCertificate.equals(cert)) {
+								logger.log(Level.SEVERE, "WebDAV: Received certificate and trusted certificate in trust store do not match.");
+								return false;
+							}						
+						}
+						
+						// Certificate is new
+						else {
+							boolean userTrustsCertificate = pluginListener.onPluginUserQuery("Unknown SSL/TLS certificate. Do you want to trust it?", formatCertificate(cert));
+							
+							if (!userTrustsCertificate) {
+								logger.log(Level.INFO, "WebDAV: User does not trust certificate. ABORTING.");
+								return false;
+							}
+							
+							logger.log(Level.INFO, "WebDAV: User trusts certificate. Adding to trust store.");
+							trustStore.setCertificateEntry(certAlias, cert);
+							hasNewCertificates = true;
+						}					
 					}
+	
+					return true;
 				}
-
-				// TODO [high] Issue #14/#50: WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
-				return true;							
-			}
+				catch (KeyStoreException e) {
+					throw new CertificateException(e);
+				}
+			}				
 		};
 
 		return new SSLSocketFactory(trustStrategy);
 	}
-
+	
+	private String formatCertificate(X509Certificate cert) {
+		return cert.toString();
+	}
 
 	@Override
 	public void connect() throws StorageException {
 		if (sardine == null) {
-			logger.log(Level.INFO, "WebDAV: Connect called. Creating Sardine ...");
-			
 			if (getConnection().isSecure()) {
+				logger.log(Level.INFO, "WebDAV: Connect called. Creating Sardine (SSL!) ...");
+
 				try {									
 					final SSLSocketFactory sslSocketFactory = initSsl();
 	
@@ -135,6 +236,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 				}
 			}
 			else {
+				logger.log(Level.INFO, "WebDAV: Connect called. Creating Sardine (non-SSL) ...");
 				sardine = SardineFactory.begin(getConnection().getUsername(), getConnection().getPassword());
 			}
 		}
@@ -142,6 +244,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public void disconnect() {
+		storeTrustStore();
 		sardine = null;
 	}
 

@@ -19,6 +19,8 @@ package org.syncany.connection.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -27,6 +29,7 @@ import java.io.IOException;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
+	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 	private Connection connection;
 
 	public AbstractTransferManager(Connection connection) {
@@ -44,29 +47,41 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 	@Override
 	public StorageTestResult test() {
+		logger.log(Level.INFO, "Performing plugin repo test ...");
 		StorageTestResult result = null;
 		
 		try {
+			logger.log(Level.INFO, "- Running connect() ...");
 			connect();
 	
+			logger.log(Level.INFO, "- Running repoExists() ...");
 			if (repoExists()) {
+				logger.log(Level.INFO, "- Repo exists, running repoIsValid() ...");
+
 				if (repoIsValid()) {
-					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
+					logger.log(Level.INFO, "- Repo is valid: REPO_EXISTS.");
+					result = StorageTestResult.REPO_EXISTS;
 				}
 				else {
-					result = StorageTestResult.REPO_EXISTS;
+					logger.log(Level.INFO, "- Repo is NOT valid: REPO_EXISTS_BUT_INVALID.");
+					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
 				}
 			}
 			else {
+				logger.log(Level.INFO, "- Repo does NOT exist, running repoHasWriteAccess() ...");
+
 				if (repoHasWriteAccess()) {
+					logger.log(Level.INFO, "- Has write access: NO_REPO.");
 					result = StorageTestResult.NO_REPO;
 				}
 				else {
+					logger.log(Level.INFO, "- No write access: NO_REPO_CANNOT_CREATE.");
 					result = StorageTestResult.NO_REPO_CANNOT_CREATE;
 				}
 			}	
 		}
 		catch (StorageException e) {
+			logger.log(Level.INFO, "- Exception when testing repo: NO_CONNECTION.", e);
 			result = StorageTestResult.NO_CONNECTION;
 		}
 		finally {

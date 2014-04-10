@@ -194,6 +194,10 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 
 	@Override
 	public boolean onPluginUserQuery(String subject, String message) {
-		return askPluginUserQuery(subject, message);
+		if (listener == null) {
+			throw new RuntimeException("No listener registered. User interaction required, but not possible.");
+		}
+		
+		return listener.onPluginUserQuery(subject, message);
 	}
 }
