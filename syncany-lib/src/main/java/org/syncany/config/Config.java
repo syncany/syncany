@@ -94,8 +94,8 @@ public class Config {
 		initCache();
 		initIgnoredFile();
 		initRepo(repoTO);
-    	initConnection(configTO);  	
     	initListener(pluginListener);    	
+    	initConnection(configTO);  	
 	}		
 	
 	private void initListener(PluginListener pluginListener) {

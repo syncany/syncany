@@ -70,6 +70,8 @@ public class LsRemoteOperation extends Operation {
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
 		
+		transferManager.disconnect();
+
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 

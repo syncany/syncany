@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -87,28 +86,30 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	private void loadTrustStore() {
 		if (trustStore == null) {
-			try {
-				logger.log(Level.INFO, "WebDAV: Loading trust store");
-				
+			try {				
 				trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
 				
-				if (getConnection().getConfig() != null) { // Can be null if uninitialized!
+				if (getConnection().getConfig() != null) { // Can be null if uninitialized!					
 					File appDir = getConnection().getConfig().getAppDir();
 					File userdataDir = new File(appDir, "userdata");
 					File certStoreFile = new File(userdataDir, "truststore.jks"); 
 										
 					if (certStoreFile.exists()) {
+						logger.log(Level.INFO, "WebDAV: Loading trust store from " + certStoreFile + " ...");
+
 						FileInputStream trustStoreInputStream = new FileInputStream(certStoreFile); 		 		
-						trustStore.load(trustStoreInputStream, null);
+						trustStore.load(trustStoreInputStream, new char[0]);
 						
 						trustStoreInputStream.close();
 					}	
 					else {
-						trustStore.load(null, null); // Initialize empty store						
+						logger.log(Level.INFO, "WebDAV: Loading trust store (empty, no trust store in config) ...");
+						trustStore.load(null, new char[0]); // Initialize empty store						
 					}
 				}
 				else {
-					trustStore.load(null, null); // Initialize empty store
+					logger.log(Level.INFO, "WebDAV: Loading trust store (empty, no config) ...");
+					trustStore.load(null, new char[0]); // Initialize empty store
 				}
 			}
 			catch (Exception e) {
@@ -133,13 +134,15 @@ public class WebdavTransferManager extends AbstractTransferManager {
 						File appDir = getConnection().getConfig().getAppDir();
 						File userdataDir = new File(appDir, "userdata");
 						File certStoreFile = new File(userdataDir, "truststore.jks"); 
-												
-						if (!userdataDir.mkdirs()) {
-							throw new RuntimeException("WebDAV: Cannot store trust store. Cannot create "+userdataDir);
+							
+						if (!userdataDir.exists()) {
+							if (!userdataDir.mkdirs()) {
+								throw new RuntimeException("WebDAV: Cannot store trust store. Cannot create "+userdataDir);
+							}
 						}
 						
 						FileOutputStream trustStoreOutputStream = new FileOutputStream(certStoreFile);
-						trustStore.store(trustStoreOutputStream, null);
+						trustStore.store(trustStoreOutputStream, new char[0]);
 						
 						trustStoreOutputStream.close();
 						
@@ -159,57 +162,103 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	private SSLSocketFactory initSsl() throws Exception {
 		TrustStrategy trustStrategy = new TrustStrategy() {
 			@Override
-			public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				logger.log(Level.INFO, "WebDAV: isTrusted("+chain.toString()+", "+authType+")");
-				
+			public boolean isTrusted(X509Certificate[] certificateChain, String authType) throws CertificateException {
+				logger.log(Level.INFO, "WebDAV: isTrusted("+certificateChain.toString()+", "+authType+")");
+								
 				try {
-					for (X509Certificate cert : chain) {
-						logger.log(Level.FINE, "WebDAV: Checking certificate validity: "+cert);
-						
-						cert.checkValidity();	
-						
-						logger.log(Level.FINE, "WebDAV: Checking is VALID.");
-						
-						String certAlias = StringUtil.toHex(cert.getSignature());						
-						Certificate trustStoreCertificate = trustStore.getCertificate(certAlias);
-						
-						// Certificate found
-						if (trustStoreCertificate != null) {
-							logger.log(Level.FINE, "WebDAV: Certificate found in trust store.");
+					// First check if already in trust store, if so; okay!
+					X509Certificate serverCertificate = certificateChain[0];
+					
+					if (inTrustStore(serverCertificate)) {
+						logger.log(Level.FINE, "WebDAV: Certificate is in trust store. DONE!");
+
+						serverCertificate.checkValidity();
+						return true;
+					}
+
+					// If not in trust store, check if any of the certificates in the chain is
+					if (certificateChain.length > 1) {
+						for (int i=1; i<certificateChain.length; i++) {
+							X509Certificate issuerCertificate = certificateChain[i];
+
+							logger.log(Level.FINE, "WebDAV: Checking certificate validity: "+issuerCertificate);							
+							issuerCertificate.checkValidity();	
 							
-							if (!trustStoreCertificate.equals(cert)) {
-								logger.log(Level.SEVERE, "WebDAV: Received certificate and trusted certificate in trust store do not match.");
-								return false;
-							}						
-						}
-						
-						// Certificate is new
-						else {
-							boolean userTrustsCertificate = pluginListener.onPluginUserQuery("Unknown SSL/TLS certificate. Do you want to trust it?", formatCertificate(cert));
+							logger.log(Level.FINE, "WebDAV: Checking is VALID.");
 							
-							if (!userTrustsCertificate) {
-								logger.log(Level.INFO, "WebDAV: User does not trust certificate. ABORTING.");
-								return false;
+							// Certificate found; we trust this, okay!
+							if (inTrustStore(issuerCertificate)) {
+								logger.log(Level.FINE, "WebDAV: Certificate found in trust store.");
+								return true;
 							}
 							
-							logger.log(Level.INFO, "WebDAV: User trusts certificate. Adding to trust store.");
-							trustStore.setCertificateEntry(certAlias, cert);
-							hasNewCertificates = true;
-						}					
+							// Certificate is new; continue ...
+							else {
+								logger.log(Level.FINE, "WebDAV: Certificate NOT found in trust store.");
+							}
+						}
 					}
+						
+					// We we reach this code, none of the CAs are known in the trust store
+					// So we ask the user if he/she wants to add the server certificate to the trust store  
+							
+					boolean userTrustsCertificate = pluginListener.onPluginUserQuery("Unknown SSL/TLS certificate. Do you want to trust it?", formatCertificate(serverCertificate));
+					
+					if (!userTrustsCertificate) {
+						logger.log(Level.INFO, "WebDAV: User does not trust certificate. ABORTING.");
+						return false;
+					}
+					
+					logger.log(Level.INFO, "WebDAV: User trusts certificate. Adding to trust store.");
+					addToTrustStore(serverCertificate);
 	
 					return true;
 				}
 				catch (KeyStoreException e) {
 					throw new CertificateException(e);
 				}
-			}				
+			}		
+			
+			private boolean inTrustStore(X509Certificate certificate) throws KeyStoreException {
+				String certAlias = getCertificateAlias(certificate);		
+				return trustStore.containsAlias(certAlias);
+			}
+			
+			private void addToTrustStore(X509Certificate certificate) throws KeyStoreException {
+				String certAlias = getCertificateAlias(certificate);
+				trustStore.setCertificateEntry(certAlias, certificate);
+				hasNewCertificates = true;				
+			}
+			
+			private String getCertificateAlias(X509Certificate certificate) {
+				return StringUtil.toHex(certificate.getSignature());
+			}
 		};
 
 		return new SSLSocketFactory(trustStrategy);
 	}
 	
 	private String formatCertificate(X509Certificate cert) {
+		
+		/*
+		 
+		 TODO [medium] Pretty print certificate.
+		 
+		 SHOULD BE:
+		 
+			Owner: EMAILADDRESS=philipp.heckel@gmail.com, CN=webdav.lan, O=Philipp Heckel, L=Darmstadt, ST=Hessen, C=DE
+			Issuer: EMAILADDRESS=philipp.heckel@gmail.com, CN=*, O=Philipp Heckel, L=Darmstadt, ST=Hessen, C=DE
+			Serial number: 1
+			Valid from: Thu Apr 10 16:31:46 CEST 2014 until: Sat Apr 09 16:31:46 CEST 2016
+			Certificate fingerprints:
+				 MD5:  2A:66:72:AD:E1:D6:40:05:2E:1C:78:D2:3B:49:C5:94
+				 SHA1: 49:DC:1D:62:78:A3:C1:F0:D4:AA:4D:72:4A:60:80:68:BD:FF:6A:1C
+				 SHA256: 04:42:4E:BD:18:F0:DE:24:29:13:87:26:77:63:56:7B:AA:60:32:79:6B:C0:49:02:94:17:AB:00:DB:B9:A1:C3
+				 Signature algorithm name: SHA1withRSA
+				 Version: 1
+ 
+		 */
+		
 		return cert.toString();
 	}
 
