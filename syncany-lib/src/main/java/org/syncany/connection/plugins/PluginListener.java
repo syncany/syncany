@@ -18,5 +18,5 @@
 package org.syncany.connection.plugins;
 
 public interface PluginListener {
-	public boolean onPluginUserQuery(String subject, String message);
+	public boolean onUserConfirm(String subject, String message, String question);
 }

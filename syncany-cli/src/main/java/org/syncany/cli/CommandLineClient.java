@@ -349,11 +349,14 @@ public class CommandLineClient extends Client implements PluginListener {
 	}
 
 	@Override
-	public boolean onPluginUserQuery(String subject, String message) {
+	public boolean onUserConfirm(String subject, String message, String question) {
+		out.println();
 		out.println(subject);
+		out.println("------------------------------");
 		out.println(message);
+		out.println();
 		
-		String yesno = InitConsole.getInstance().readLine("Confirm (y/n)? ");
+		String yesno = InitConsole.getInstance().readLine(question + " (y/n)? ");
 		
 		if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
 			return false;
@@ -361,6 +364,5 @@ public class CommandLineClient extends Client implements PluginListener {
 		else {
 			return true;
 		}
-	}
-	
+	}	
 }
