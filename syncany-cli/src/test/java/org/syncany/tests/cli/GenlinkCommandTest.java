@@ -34,6 +34,7 @@ import org.syncany.tests.util.TestFileUtil;
 public class GenlinkCommandTest {	
 	@Rule
 	public final TextFromStandardInputStream systemInMock = emptyStandardInputStream();
+	// TODO [low] TextFromStandardInputStream is not thread-safe. This leads to failures from time to time.
 
 	@Test
 	public void testGenlinkCommandShortNotEncrypted() throws Exception {
