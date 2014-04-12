@@ -17,16 +17,21 @@
  */
 package org.syncany.cli;
 
+import static java.util.Arrays.asList;
+
 import java.util.List;
 import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.syncany.operations.LogOperation;
-import org.syncany.operations.PluginOperation.PluginAction;
-import org.syncany.operations.PluginOperation.PluginOperationOptions;
-import org.syncany.operations.PluginOperation.PluginOperationResult;
+import org.syncany.operations.plugin.PluginInfo;
+import org.syncany.operations.plugin.PluginOperationOptions;
+import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
+import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
+import org.syncany.operations.plugin.PluginOperationResult;
 
 public class PluginCommand extends Command {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
@@ -47,20 +52,29 @@ public class PluginCommand extends Command {
 	}	
 
 	private void printResults(PluginOperationResult operationResult) throws Exception {
-		throw new Exception("Not yet implemented.");
+		out.println("Id       Name            Version        Status");
+		out.println("----------------------------------------------------");
+		
+		for (PluginInfo pluginInfo : operationResult.getPluginList()) {
+			String statusStr = "inst/.."; // TODO [medium] fill this
+			out.printf("%-7s  %-15s %-14s %s\n", pluginInfo.getPluginId(), pluginInfo.getPluginName(), pluginInfo.getPluginVersion(), statusStr);
+		}
 	}
 
 	private PluginOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		PluginOperationOptions operationOptions = new PluginOperationOptions();
 
-		OptionParser parser = new OptionParser();
+		OptionParser parser = new OptionParser();	
+		OptionSpec<Void> optionLocal = parser.acceptsAll(asList("L", "local-only"));
+		OptionSpec<Void> optionRemote = parser.acceptsAll(asList("R", "remote-only"));
+		
 		OptionSet options = parser.parse(operationArgs);
 
 		// Files
 		List<?> nonOptionArgs = options.nonOptionArguments();
 		
 		if (nonOptionArgs.size() == 0) {
-			throw new Exception("Invalid syntax, please specify an action (list, rlist, get, activate, deactivate).");
+			throw new Exception("Invalid syntax, please specify an action (list, install, activate, deactivate).");
 		}
 		
 		// <action>
@@ -70,7 +84,7 @@ public class PluginCommand extends Command {
 		operationOptions.setAction(action);
 		
 		// Additional options per-action
-		if (action == PluginAction.GET || action == PluginAction.ACTIVATE || action == PluginAction.DEACTIVATE) {
+		if (action == PluginAction.INSTALL || action == PluginAction.ACTIVATE || action == PluginAction.DEACTIVATE) {
 			if (nonOptionArgs.size() != 2) {
 				throw new Exception("Invalid syntax, please specify a plugin ID.");
 			}
@@ -78,9 +92,22 @@ public class PluginCommand extends Command {
 			String pluginId = nonOptionArgs.get(1).toString();
 			operationOptions.setPluginId(pluginId);
 		}
-		else {
+		else {			
 			if (nonOptionArgs.size() != 1) {
 				throw new Exception("Invalid syntax, no other options expected.");
+			}			
+		}
+		
+		// --local, --remote
+		if (action == PluginAction.LIST) {
+			if (options.has(optionLocal)) {
+				operationOptions.setListMode(PluginListMode.LOCAL);	
+			}
+			else if (options.has(optionRemote)) {
+				operationOptions.setListMode(PluginListMode.REMOTE);
+			}
+			else {
+				operationOptions.setListMode(PluginListMode.ALL);
 			}			
 		}
 
@@ -89,7 +116,7 @@ public class PluginCommand extends Command {
 
 	private PluginAction parsePluginAction(String actionStr) throws Exception {
 		try {
-			return PluginAction.valueOf(actionStr);
+			return PluginAction.valueOf(actionStr.toUpperCase());
 		}
 		catch (Exception e) {
 			throw new Exception("Invalid syntax, unknown action '" + actionStr + "'");

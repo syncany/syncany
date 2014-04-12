@@ -148,7 +148,7 @@ COMMANDS
     -V, --no-version-remove          Don't remove old versions (default: yes)    
     -k, --keep-versions=<count>      Number of versions to keep (if not -V)
     
-  plugin (list|install|activate|deactivate) [<args>]
+  plugin (list | install | activate | deactivate) [<args>]
      Lists and manages available plugins. The following actions are 
      available:
      
@@ -158,10 +158,10 @@ COMMANDS
        
        Arguments: 
        -a, --all                     List all available plugins (default)
-       -r, --remote                  List remotely available plugins
-       -l, --local                   List locally available plugins
+       -R, --remote-only             List remotely available plugins
+       -L, --local-only              List locally available plugins
 
-     install (<URL>|<file>|<plugin-id>)
+     install (<URL> | <file> | <plugin-id>)
        Installs a plugin from an arbitrary URL, local file or from the 
        available plugins on api.syncany.org (with a plugin identifier)
 
