@@ -67,14 +67,17 @@ public class ChangedAttributesScenarioTest {
 			Files.setPosixFilePermissions(bFilePath, PosixFilePermissions.fromString("rwxrwxrwx"));
 		}		
 		
-		ChangeSet changes = clientB.status();
+		StatusOperationResult statusResult = clientB.status();
+		assertNotNull(statusResult);
+		
+		ChangeSet changes = statusResult.getChangeSet();
 		
 		assertTrue("Status-Operation should return changes.", changes.hasChanges());
 		UpOperationResult upResult = clientB.up();
-		StatusOperationResult statusResult = upResult.getStatusResult();
+		StatusOperationResult statusResultFromUp = upResult.getStatusResult();
 		
 		// Test 1: Check result sets for inconsistencies
-		assertTrue("Status should return changes.", statusResult.getChangeSet().hasChanges());
+		assertTrue("Status should return changes.", statusResultFromUp.getChangeSet().hasChanges());
 		assertTrue("File should be uploaded.", upResult.getChangeSet().hasChanges());
 		
 		// Test 2: Check database for inconsistencies

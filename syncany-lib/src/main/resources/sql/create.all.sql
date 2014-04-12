@@ -159,7 +159,7 @@ create view filecontent_full as
 		fcc.num		
 	from fileversion_full fvf
 	join filecontent fc on fc.checksum=fvf.filecontent_checksum
-	join filecontent_chunk fcc on fc.checksum=fcc.chunk_checksum;
+	join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum;
 	
 create view multichunk_full as
 	select 		
