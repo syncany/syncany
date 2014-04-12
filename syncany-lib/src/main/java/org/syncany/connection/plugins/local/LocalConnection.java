@@ -38,10 +38,10 @@ import org.syncany.connection.plugins.TransferManager;
  * @author Philipp C. Heckel
  */
 public class LocalConnection implements Connection {
-	private Config config;
-	private PluginListener listener;
+	protected Config config;
+	protected PluginListener listener;
 	
-	private File repositoryPath;
+	protected File repositoryPath;
 
 	@Override
 	public TransferManager createTransferManager() {

@@ -17,11 +17,15 @@
  */
 package org.syncany.connection.plugins.unreliable_local;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.syncany.config.Config;
+import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
 
@@ -72,4 +76,12 @@ public class UnreliableLocalConnection extends LocalConnection {
 	public void increaseTotalOperationCounter() {
 		totalOperationCounter++;
 	}		
+	
+	@Override
+	public void init(Config config, Map<String, String> optionValues, PluginListener listener) {
+		// Skip validation, because we actually don't use an OptionSpec here
+		
+		repositoryPath = new File(optionValues.get("path"));
+		failingOperationPatterns = new ArrayList<String>(Arrays.asList(optionValues.get("patterns").split(",")));
+	}
 }
