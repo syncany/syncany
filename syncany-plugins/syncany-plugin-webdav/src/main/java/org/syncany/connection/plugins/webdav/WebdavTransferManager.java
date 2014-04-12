@@ -42,6 +42,7 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -264,7 +265,6 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repoHasWriteAccess() throws StorageException {
-		// TODO not tested
 		try {
 			sardine.createDirectory(repoPath);
 			sardine.delete(repoPath);
@@ -298,7 +298,6 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repoIsValid() throws StorageException {
-		// TODO not tested
 		try {
 			return sardine.list(repoPath).size() == 0;
 		}
@@ -307,7 +306,6 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		}
 	}
 	
-
 	private void loadTrustStore() {
 		if (trustStore == null) {
 			try {				
@@ -315,8 +313,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 				
 				if (getConnection().getConfig() != null) { // Can be null if uninitialized!					
 					File appDir = getConnection().getConfig().getAppDir();
-					File userdataDir = new File(appDir, "userdata");
-					File certStoreFile = new File(userdataDir, "truststore.jks"); 
+					File certStoreFile = new File(appDir, "truststore.jks"); 
 										
 					if (certStoreFile.exists()) {
 						logger.log(Level.INFO, "WebDAV: Loading trust store from " + certStoreFile + " ...");
@@ -356,14 +353,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 				try {
 					if (getConnection().getConfig() != null) { 											
 						File appDir = getConnection().getConfig().getAppDir();
-						File userdataDir = new File(appDir, "userdata");
-						File certStoreFile = new File(userdataDir, "truststore.jks"); 
-							
-						if (!userdataDir.exists()) {
-							if (!userdataDir.mkdirs()) {
-								throw new RuntimeException("WebDAV: Cannot store trust store. Cannot create "+userdataDir);
-							}
-						}
+						File certStoreFile = new File(appDir, "truststore.jks"); 							
 						
 						FileOutputStream trustStoreOutputStream = new FileOutputStream(certStoreFile);
 						trustStore.store(trustStoreOutputStream, new char[0]);
@@ -393,39 +383,42 @@ public class WebdavTransferManager extends AbstractTransferManager {
 					// First check if already in trust store, if so; okay!
 					X509Certificate serverCertificate = certificateChain[0];
 					
-					if (inTrustStore(serverCertificate)) {
-						logger.log(Level.FINE, "WebDAV: Certificate is in trust store. DONE!");
+					for (int i = 0; i < certificateChain.length; i++) {
+						X509Certificate certificate = certificateChain[i];
 
-						serverCertificate.checkValidity();
-						return true;
-					}
-
-					// If not in trust store, check if any of the certificates in the chain is
-					if (certificateChain.length > 1) {
-						for (int i=1; i<certificateChain.length; i++) {
-							X509Certificate issuerCertificate = certificateChain[i];
-
-							logger.log(Level.FINE, "WebDAV: Checking certificate validity: "+issuerCertificate);							
-							issuerCertificate.checkValidity();	
-							
-							logger.log(Level.FINE, "WebDAV: Checking is VALID.");
-							
-							// Certificate found; we trust this, okay!
-							if (inTrustStore(issuerCertificate)) {
-								logger.log(Level.FINE, "WebDAV: Certificate found in trust store.");
-								return true;
-							}
-							
-							// Certificate is new; continue ...
-							else {
-								logger.log(Level.FINE, "WebDAV: Certificate NOT found in trust store.");
-							}
+						logger.log(Level.FINE, "WebDAV: Checking certificate validity: " + certificate.getSubjectDN().toString());
+						logger.log(Level.FINEST, "WebDAV:              Full certificate: " + certificate);
+						
+						// Check validity
+						try {
+							certificate.checkValidity();	
+						}
+						catch (CertificateException e) {
+							logger.log(Level.FINE, "WebDAV: Certificate is NOT valid.", e);
+							return false;
+						}
+						
+						logger.log(Level.FINE, "WebDAV: Checking is VALID.");
+						
+						// Certificate found; we trust this, okay!
+						if (inTrustStore(certificate)) {
+							logger.log(Level.FINE, "WebDAV: Certificate found in trust store.");
+							return true;
+						}
+						
+						// Certificate is new; continue ...
+						else {
+							logger.log(Level.FINE, "WebDAV: Certificate NOT found in trust store.");
 						}
 					}
 						
 					// We we reach this code, none of the CAs are known in the trust store
 					// So we ask the user if he/she wants to add the server certificate to the trust store  
 
+					if (pluginListener == null) {
+						throw new RuntimeException("pluginListener cannot be null!");
+					}
+					
 					boolean userTrustsCertificate = pluginListener.onUserConfirm("Unknown SSL/TLS certificate", formatCertificate(serverCertificate), "Do you want to trust this certificate?");
 					
 					if (!userTrustsCertificate) {
@@ -438,8 +431,9 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	
 					return true;
 				}
-				catch (KeyStoreException e) {
-					throw new CertificateException(e);
+				catch (Exception e) {
+					logger.log(Level.SEVERE, "WebDAV: Key store exception.", e);
+					return false;
 				}
 			}		
 			
@@ -464,6 +458,8 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	
 	private String formatCertificate(X509Certificate cert) {
 		try {			
+			CipherUtil.enableUnlimitedStrength();
+			
 			String checksumMd5 = formatChecksum(createChecksum(cert.getEncoded(), "MD5"));
 			String checksumSha1 = formatChecksum(createChecksum(cert.getEncoded(), "SHA1"));
 			String checksumSha256 = formatChecksum(createChecksum(cert.getEncoded(), "SHA256"));
