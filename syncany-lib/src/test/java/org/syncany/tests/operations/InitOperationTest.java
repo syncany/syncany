@@ -18,16 +18,23 @@
 package org.syncany.tests.operations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperation.InitOperationOptions;
-import org.syncany.operations.init.InitOperation.InitOperationResult;
+import org.syncany.operations.init.InitOperationOptions;
+import org.syncany.operations.init.InitOperationResult;
+import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -38,6 +45,7 @@ import org.syncany.tests.util.TestFileUtil;
  * @author Pim Otte
  */
 public class InitOperationTest {
+	private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName()); 
 	
 	@Test
 	public void testInitOperation() throws Exception {	
@@ -65,6 +73,29 @@ public class InitOperationTest {
 		String link = res.getGenLinkResult().getShareLink();
 		assertNotNull(link);
 		
+		TestFileUtil.deleteDirectory(repoDir);
+		TestFileUtil.deleteDirectory(operationOptions.getLocalDir());
+	}
+	
+	@Test
+	public void testFaultyInitOperation() throws Exception {
+		// Create an unreliable connection
+		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", "rel=1.*op=upload");
+		InitOperation op = new InitOperation(operationOptions, null);
+		
+		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
+		File localDir = new File(operationOptions.getLocalDir(),".syncany");
+		
+		try {
+			InitOperationResult res = op.execute();
+		}
+		catch (StorageException e) {
+			logger.log(Level.INFO, "This operation failed because of the unreliable connection.");
+		}
+		// The local directory should not exist, since the uploading of the repo file fails
+		// so the local directories should be removed
+		assertFalse(localDir.exists());
+		// Tear down
 		TestFileUtil.deleteDirectory(repoDir);
 		TestFileUtil.deleteDirectory(operationOptions.getLocalDir());
 	}

@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.util.FileUtil;
 import org.syncany.util.SqlRunner;
 
 /**
@@ -71,7 +72,8 @@ public class DatabaseConnectionFactory {
 	 * @return Returns a valid database connection 
 	 */
 	public static Connection createConnection(File databaseFile) {
-		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFile.toString());
+		String databaseFilePath = FileUtil.getDatabasePath(databaseFile.toString());
+		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFilePath);
 		
 		if (logger.isLoggable(Level.FINEST)) {
 			connectionString += ";hsqldb.sqllog=3";

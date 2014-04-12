@@ -36,7 +36,7 @@ import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
-public class InitCommandTest {	
+public class InitAndConnectCommandNoEncryptionTest {	
 	private File originalWorkingDirectory;
 	
 	@Rule
@@ -49,15 +49,14 @@ public class InitCommandTest {
 	
 	@After
 	public void after() {
-		setCurrentDirectory(originalWorkingDirectory);
-		
+		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);		
 	}
 	
 	@Test
 	public void testCliInitCommandUninitializedLocalDir() throws Exception {
 		// Setup		
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		setCurrentDirectory(tempDir);
+		TestCliUtil.setCurrentDirectory(tempDir);
 		
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
@@ -79,7 +78,7 @@ public class InitCommandTest {
 		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
 
 		// Tear down
-		setCurrentDirectory(originalWorkingDirectory);
+		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
@@ -89,7 +88,7 @@ public class InitCommandTest {
 	public void testCliInitCommandInteractive() throws Exception {
 		// Setup		
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		setCurrentDirectory(tempDir);
+		TestCliUtil.setCurrentDirectory(tempDir);
 		
 		// Ensuring no console is set
 		InitConsole.setInstance(null);
@@ -117,46 +116,7 @@ public class InitCommandTest {
 		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
 
 		// Tear down
-		setCurrentDirectory(originalWorkingDirectory);
-		
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);
-		TestFileUtil.deleteDirectory(tempDir);
-	}	
-	
-	@Test
-	public void testCliInitCommandInteractiveWithEncryption() throws Exception {
-		// Setup		
-		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		setCurrentDirectory(tempDir);
-		
-		//Ensuring no console is set
-		InitConsole.setInstance(null);
-		
-		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
-		
-		// Run
-		String[] initArgs = new String[] { 			 
-			 "init",
-			 "--no-compression" 
-		}; 
-
-		systemInMock.provideText(StringUtil.join(new String[] {
-				"local", 
-				clientA.get("repopath"),
-				"somesuperlongpassword", 
-				"somesuperlongpassword"
-			}, "\n")+"\n");
-		
-		new CommandLineClient(initArgs).start();
-		
-		assertTrue(tempDir.exists());
-		assertTrue(new File(tempDir+"/.syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
-
-		// Tear down
-		setCurrentDirectory(originalWorkingDirectory);
+		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
@@ -167,7 +127,7 @@ public class InitCommandTest {
 		EmbeddedTestFtpServer.startServer();
 		// Setup		
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		setCurrentDirectory(tempDir);
+		TestCliUtil.setCurrentDirectory(tempDir);
 		
 		//Ensuring no console is set
 		InitConsole.setInstance(null);
@@ -199,21 +159,10 @@ public class InitCommandTest {
 		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
 
 		// Tear down
-		setCurrentDirectory(originalWorkingDirectory);
+		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
 		EmbeddedTestFtpServer.stopServer();
 	}	
-
-	private static boolean setCurrentDirectory(File newDirectory) {
-		boolean result = false; 
-		File directory = newDirectory.getAbsoluteFile();
-		
-		if (directory.exists() || directory.mkdirs()) {
-			result = (System.setProperty("user.dir", directory.getAbsolutePath()) != null);
-		}
-
-		return result;
-	}
 }

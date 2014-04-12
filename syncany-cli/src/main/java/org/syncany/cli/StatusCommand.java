@@ -22,8 +22,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.ChangeSet;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.StatusOperation.StatusOperationResult;
 
 public class StatusCommand extends Command {
 	@Override
@@ -34,9 +34,9 @@ public class StatusCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = parseOptions(operationArgs);
-		ChangeSet changeSet = client.status(operationOptions);
+		StatusOperationResult operationResult = client.status(operationOptions);
 		
-		printResults(changeSet);
+		printResults(operationResult);
 		
 		return 0;
 	}
@@ -57,17 +57,17 @@ public class StatusCommand extends Command {
 		return operationOptions;
 	}	
 
-	public void printResults(ChangeSet changeSet) {
-		if (changeSet.hasChanges()) {
-			for (String newFile : changeSet.getNewFiles()) {
+	public void printResults(StatusOperationResult operationResult) {
+		if (operationResult.getChangeSet().hasChanges()) {
+			for (String newFile : operationResult.getChangeSet().getNewFiles()) {
 				out.println("? "+newFile);
 			}
 
-			for (String changedFile : changeSet.getChangedFiles()) {
+			for (String changedFile : operationResult.getChangeSet().getChangedFiles()) {
 				out.println("M "+changedFile);
 			}
 			
-			for (String deletedFile : changeSet.getDeletedFiles()) {
+			for (String deletedFile : operationResult.getChangeSet().getDeletedFiles()) {
 				out.println("D "+deletedFile);
 			}						
 		}

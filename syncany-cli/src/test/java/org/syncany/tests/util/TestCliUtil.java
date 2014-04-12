@@ -90,17 +90,15 @@ public class TestCliUtil {
 	}	
 	
 	public static String[] runAndCaptureOutput(CommandLineClient cli) throws Exception {
-		ByteArrayOutputStream cliOut = new ByteArrayOutputStream();
+		ByteArrayOutputStream bufferedCliOut = new ByteArrayOutputStream();
 		
-		cli.setOut(cliOut);
+		cli.setOut(new SplitOutputStream(bufferedCliOut, System.out));
 		cli.start();
 		
 		logger.log(Level.INFO, "CLI output: ");
-		logger.log(Level.INFO, toString(cliOut));
+		logger.log(Level.INFO, toString(bufferedCliOut));
 		
-		System.out.println(toString(cliOut));
-		
-		return toStringArray(cliOut);
+		return toStringArray(bufferedCliOut);
 	}
 	
 	private static void fixMachineName(Map<String, String> client) throws Exception {
@@ -128,5 +126,16 @@ public class TestCliUtil {
 	
 	public static String[] toStringArray(ByteArrayOutputStream bos) {		
 		return toString(bos).split("[\\r\\n]+|[\\n\\r]+|[\\n]+");
+	}
+	
+	public static boolean setCurrentDirectory(File newDirectory) {
+		boolean result = false; 
+		File directory = newDirectory.getAbsoluteFile();
+		
+		if (directory.exists() || directory.mkdirs()) {
+			result = (System.setProperty("user.dir", directory.getAbsolutePath()) != null);
+		}
+
+		return result;
 	}
 }
