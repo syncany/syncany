@@ -84,7 +84,7 @@ public class PluginCommand extends Command {
 		operationOptions.setAction(action);
 		
 		// Additional options per-action
-		if (action == PluginAction.INSTALL || action == PluginAction.ACTIVATE || action == PluginAction.DEACTIVATE) {
+		if (action == PluginAction.INSTALL || action == PluginAction.UNINSTALL) {
 			if (nonOptionArgs.size() != 2) {
 				throw new Exception("Invalid syntax, please specify a plugin ID.");
 			}
@@ -98,7 +98,7 @@ public class PluginCommand extends Command {
 			}			
 		}
 		
-		// --local, --remote
+		// --local-only, --remote-only
 		if (action == PluginAction.LIST) {
 			if (options.has(optionLocal)) {
 				operationOptions.setListMode(PluginListMode.LOCAL);	

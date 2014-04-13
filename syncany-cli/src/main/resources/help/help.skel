@@ -145,16 +145,16 @@ COMMANDS
     
     Arguments:
     -M, --no-database-merge          Don't merge databases (default: yes)
-    -V, --no-version-remove          Don't remove old versions (default: yes)    
+    -V, --no-version-remove          Don't remove old versions (default: yes)
     -k, --keep-versions=<count>      Number of versions to keep (if not -V)
     
-  plugin (list | install | activate | deactivate) [<args>]
+  plugin (list | install | uninstall) [<args>]
      Lists and manages available plugins. The following actions are 
      available:
      
      list [<args>]
-       Lists local plugins (active/inactive) and/or remotely available
-       plugins on api.syncany.org
+       Lists locally installed plugins and/or remotely available plugins 
+       on api.syncany.org
        
        Arguments: 
        -a, --all                     List all available plugins (default)
@@ -165,9 +165,7 @@ COMMANDS
        Installs a plugin from an arbitrary URL, local file or from the 
        available plugins on api.syncany.org (with a plugin identifier)
 
-     activate <plugin-id>
-       Activates the plugin with the given plugin identifier
-
-     deactivate <plugin-id>
-       Deactivates the plugin with the given plugin identifier 
-        
+     uninstall <plugin-id>
+       Uninstalls a plugin entirely (removes the JAR file). This action can
+       only be used for plugins that were installed by the user, and not for
+       system-wide plugins.
