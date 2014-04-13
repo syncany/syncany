@@ -34,16 +34,16 @@ import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileVersion;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranch;
 
 /**
  * The database version data access object (DAO) writes and queries the SQL database for information
@@ -100,14 +100,16 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
+	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
 		try {
 			// Insert & commit database version
-			writeDatabaseVersion(connection, databaseVersion);
+			long databaseVersionId = writeDatabaseVersion(connection, databaseVersion);
 			
 			// Commit & clear local caches
 			connection.commit();			
 			clearCaches();	
+			
+			return databaseVersionId;
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "SQL Error: ", e);
@@ -135,14 +137,16 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		return databaseVersionId;
 	}
 	
-	private void writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
+	private long writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
 		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader());
 		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
 		
 		chunkDao.writeChunks(connection, databaseVersion.getChunks());
-		multiChunkDao.writeMultiChunks(connection, databaseVersion.getMultiChunks());
+		multiChunkDao.writeMultiChunks(connection, databaseVersionId, databaseVersion.getMultiChunks());
 		fileContentDao.writeFileContents(connection, databaseVersion.getFileContents());
 		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
+		
+		return databaseVersionId;
 	}	
 	
 	private long writeDatabaseVersionHeaderInternal(Connection connection, DatabaseVersionHeader databaseVersionHeader) throws SQLException {
@@ -188,8 +192,9 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	/**
 	 * Removes dirty {@link DatabaseVersion}s, {@link FileVersion}s, {@link PartialFileHistory}s and {@link FileContent}s
 	 * from the database, but leaves stale/unreferenced chunks/multichunks untouched (must be cleaned up at a later stage).
+	 * @param newDatabaseVersionId 
 	 */
-	public void removeDirtyDatabaseVersions() {
+	public void removeDirtyDatabaseVersions(long newDatabaseVersionId) {
 		try {
 			// IMPORTANT: The order is important, because of 
 			//            the database foreign key consistencies!
@@ -200,7 +205,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 			// Now, remove all unreferenced file contents
 			fileContentDao.removeUnreferencedFileContents();
-						
+			
+			// Change foreign key of multichunks
+			multiChunkDao.updateDirtyMultiChunksNewDatabaseId(newDatabaseVersionId);
+			
 			// And the database versions
 			removeDirtyVectorClocks();
 			removeDirtyDatabaseVersionsInt(); 

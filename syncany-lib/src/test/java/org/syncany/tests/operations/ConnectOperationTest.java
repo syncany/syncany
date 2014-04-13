@@ -17,7 +17,10 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Random;
@@ -26,14 +29,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.operations.ConnectOperation;
-import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
-import org.syncany.operations.ConnectOperation.ConnectOperationResult;
-import org.syncany.operations.ConnectOperation.ConnectOptionsStrategy;
-import org.syncany.operations.ConnectOperation.ConnectResultCode;
-import org.syncany.operations.InitOperation;
-import org.syncany.operations.InitOperation.InitOperationOptions;
-import org.syncany.operations.InitOperation.InitOperationResult;
+import org.syncany.operations.init.ConnectOperation;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationOptions;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.init.ConnectOperation.ConnectOptionsStrategy;
+import org.syncany.operations.init.ConnectOperation.ConnectResultCode;
+import org.syncany.operations.init.InitOperation;
+import org.syncany.operations.init.InitOperation.InitOperationOptions;
+import org.syncany.operations.init.InitOperation.InitOperationResult;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 

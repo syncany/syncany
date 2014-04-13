@@ -26,18 +26,11 @@ String getRevision() {
 	return (currentCommit != null) ? currentCommit : "UNKNOWN"
 }
 
-boolean hasVersionTag() {
-	String currentTag = execAndGetOutput("git tag --list --contains HEAD")
-	return currentTag != null && currentTag.startsWith("v")
-}
-
-boolean isReleaseBranch() {
-	String currentBranch = execAndGetOutput("git rev-parse --abbrev-ref HEAD")
-	return "release".equals(currentBranch)
-}
-
 boolean isApplicationRelease() {
-	return hasVersionTag() && isReleaseBranch()
+	// Note: This must work for detached commits (git checkout -qf <commit>)
+
+	String currentBranches = execAndGetOutput("git log -n 1 --pretty=%d HEAD")
+	return currentBranches.contains("origin/master")
 }
 
 

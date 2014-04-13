@@ -17,16 +17,19 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
-import static org.syncany.tests.util.TestAssertUtil.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlResultEquals;
 
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.operations.DownOperation.DownOperationResult;
-import org.syncany.operations.DownOperation.DownResultCode;
-import org.syncany.operations.UpOperation.UpOperationOptions;
-import org.syncany.operations.UpOperation.UpOperationResult;
-import org.syncany.operations.UpOperation.UpOperationResult.UpResultCode;
+import org.syncany.operations.down.DownOperationResult;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
+import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

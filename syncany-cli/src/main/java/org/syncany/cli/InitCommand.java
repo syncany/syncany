@@ -45,10 +45,10 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
-import org.syncany.operations.InitOperation.InitOperationListener;
-import org.syncany.operations.InitOperation.InitOperationOptions;
-import org.syncany.operations.InitOperation.InitOperationResult;
-import org.syncany.operations.InitOperation.InitResultCode;
+import org.syncany.operations.init.InitOperation.InitOperationListener;
+import org.syncany.operations.init.InitOperation.InitOperationOptions;
+import org.syncany.operations.init.InitOperation.InitOperationResult;
+import org.syncany.operations.init.InitOperation.InitResultCode;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 

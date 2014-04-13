@@ -29,7 +29,6 @@ import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
 import org.syncany.tests.cli.RestoreCommandTest;
 import org.syncany.tests.cli.StatusCommandTest;
-import org.syncany.tests.cli.SyncCommandTest;
 import org.syncany.tests.cli.UpCommandTest;
 import org.syncany.tests.cli.WatchCommandTest;
 
@@ -44,7 +43,6 @@ import org.syncany.tests.cli.WatchCommandTest;
 	LsRemoteCommandTest.class,
 	RestoreCommandTest.class,
 	StatusCommandTest.class,
-	SyncCommandTest.class,
 	UpCommandTest.class,	
 	WatchCommandTest.class
 })
