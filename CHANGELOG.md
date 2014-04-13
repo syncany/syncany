@@ -5,7 +5,7 @@ Change Log
 
 - Features:
   + Ignoring files using .syignore file #66/#77
-  + Arch Linux package support #80
+  + Arch Linux package support; release version #80 and git version #99
   + Additional command-specific --help texts
 - Windows-specific: 
   + Add Syncany binaries to PATH environment variable during setup #84/#91
