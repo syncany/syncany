@@ -123,6 +123,13 @@ subprojects {
 		}
 	}
 	
+	processResources {	
+		filter{ String line -> line.replaceAll('%RELEASE%', "${applicationRelease}") }        	            
+		filter{ String line -> line.replaceAll('%VERSION%', "${applicationVersion}") }        	            
+		filter{ String line -> line.replaceAll('%REVISION%', "${applicationRevision}") }
+		filter{ String line -> line.replaceAll('%COMPILEDATE%', "${applicationDate}") }          	            
+	}		
+	
 	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
 		description = "Test long running scenarios"
 		ignoreFailures = true
