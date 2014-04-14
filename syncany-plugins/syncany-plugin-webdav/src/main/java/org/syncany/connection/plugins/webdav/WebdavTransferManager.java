@@ -40,10 +40,12 @@ import org.syncany.util.FileUtil;
 import com.github.sardine.DavResource;
 import com.github.sardine.Sardine;
 import com.github.sardine.SardineFactory;
+import com.github.sardine.impl.SardineException;
 import com.github.sardine.impl.SardineImpl;
 
 public class WebdavTransferManager extends AbstractTransferManager {
 	private static final String APPLICATION_CONTENT_TYPE = "application/x-syncany";
+	private static final int HTTP_NOT_FOUND = 404;
 	private static final Logger logger = Logger.getLogger(WebdavTransferManager.class.getSimpleName());
 
 	private Sardine sardine;
@@ -55,9 +57,9 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	public WebdavTransferManager(WebdavConnection connection) {
 		super(connection);
 
-		this.repoPath = connection.getUrl().replaceAll("/$", "");
-		this.multichunkPath = connection.getUrl() + "/multichunks";
-		this.databasePath = connection.getUrl() + "/databases";				
+		this.repoPath = connection.getUrl().replaceAll("/$", "") + "/";
+		this.multichunkPath = repoPath + "multichunks/";
+		this.databasePath = repoPath + "databases/";
 	}
 
 	@Override
@@ -68,22 +70,24 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	@Override
 	public void connect() throws StorageException {
 		if (sardine == null) {
+			logger.log(Level.INFO, "WebDAV: Connect called. Creating Sardine ...");
+			
 			if (getConnection().isSecure()) {
 				final SSLSocketFactory sslSocketFactory = getConnection().getSslSocketFactory();
-				
+
 				sardine = new SardineImpl() {
-			        @Override
-			        protected SSLSocketFactory createDefaultSecureSocketFactory() {
-			        	return sslSocketFactory;
-			        }                       
+					@Override
+					protected SSLSocketFactory createDefaultSecureSocketFactory() {
+						return sslSocketFactory;
+					}
 				};
-				
+
 				sardine.setCredentials(getConnection().getUsername(), getConnection().getPassword());
 			}
 			else {
 				sardine = SardineFactory.begin(getConnection().getUsername(), getConnection().getPassword());
 			}
-		}		
+		}
 	}
 
 	@Override
@@ -97,10 +101,12 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 		try {
 			if (!repoExists() && createIfRequired) {
+				logger.log(Level.INFO, "WebDAV: Init called; creating repo directories ... ");
+				
 				sardine.createDirectory(repoPath);
+				sardine.createDirectory(multichunkPath);
+				sardine.createDirectory(databasePath);
 			}
-			sardine.createDirectory(multichunkPath);
-			sardine.createDirectory(databasePath);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Cannot initialize WebDAV folder.", e);
@@ -114,13 +120,13 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		String remoteURL = getRemoteFileUrl(remoteFile);
 
 		try {
-			// Download file
-			logger.log(Level.INFO, " - Downloading " + remoteURL + " to temp file " + localFile + " ...");
+			logger.log(Level.INFO, "WebDAV: Downloading " + remoteURL + " to temp file " + localFile + " ...");
+			
 			InputStream webdavFileInputStream = sardine.get(remoteURL);
 			FileOutputStream localFileOutputStream = new FileOutputStream(localFile);
-			
+
 			FileUtil.appendToOutputStream(webdavFileInputStream, localFileOutputStream);
-			
+
 			localFileOutputStream.close();
 			webdavFileInputStream.close();
 		}
@@ -136,7 +142,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		String remoteURL = getRemoteFileUrl(remoteFile);
 
 		try {
-			logger.log(Level.INFO, " - Uploading local file " + localFile + " to " + remoteURL + " ...");
+			logger.log(Level.INFO, "WebDAV: Uploading local file " + localFile + " to " + remoteURL + " ...");
 			InputStream localFileInputStream = new FileInputStream(localFile);
 
 			sardine.put(remoteURL, localFileInputStream, APPLICATION_CONTENT_TYPE);
@@ -154,27 +160,29 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 		try {
 			// List folder
-			String remoteFileUrl = getRemoteFilePath(remoteFileClass);
-			List<DavResource> resources = sardine.list(remoteFileUrl);
+			String remoteFileUrl = getRemoteFilePath(remoteFileClass);			
+			logger.log(Level.INFO, "WebDAV: Listing objects in " + remoteFileUrl + " ...");
 			
+			List<DavResource> resources = sardine.list(remoteFileUrl);
+
 			// Create RemoteFile objects
 			String rootPath = repoPath.substring(0, repoPath.length() - new URI(repoPath).getRawPath().length());
 			Map<String, T> remoteFiles = new HashMap<String, T>();
-			
+
 			for (DavResource res : resources) {
 				// WebDAV returns the parent resource itself; ignore it
-				String fullResourceUrl = rootPath+res.getPath().replaceAll("/$", "");
+				String fullResourceUrl = rootPath + res.getPath().replaceAll("/$", "") + "/";				
 				boolean isParentResource = remoteFileUrl.equals(fullResourceUrl.toString());
-				
-				if (!isParentResource) {				
+
+				if (!isParentResource) {
 					try {
 						T remoteFile = RemoteFile.createRemoteFile(res.getName(), remoteFileClass);
 						remoteFiles.put(res.getName(), remoteFile);
-						
-						logger.log(Level.FINE, "- Matching WebDAV resource: "+res);
+
+						logger.log(Level.FINE, "WebDAV: Matching WebDAV resource: " + res);
 					}
 					catch (Exception e) {
-						logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for object " + res.getName()
+						logger.log(Level.FINEST, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for object " + res.getName()
 								+ "; maybe invalid file name pattern. Ignoring file.");
 					}
 				}
@@ -183,7 +191,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 			return remoteFiles;
 		}
 		catch (Exception ex) {
-			logger.log(Level.SEVERE, "Unable to list WebDAV directory.", ex);
+			logger.log(Level.SEVERE, "WebDAV: Unable to list WebDAV directory.", ex);
 			throw new StorageException(ex);
 		}
 	}
@@ -194,8 +202,18 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		String remoteURL = getRemoteFileUrl(remoteFile);
 
 		try {
+			logger.log(Level.FINE, "WebDAV: Deleting " + remoteURL);
 			sardine.delete(remoteURL);
+			
 			return true;
+		}
+		catch (SardineException e) {
+			if (e.getStatusCode() == HTTP_NOT_FOUND) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 		catch (IOException ex) {
 			logger.log(Level.SEVERE, "Error while deleting file from WebDAV: " + remoteURL, ex);
@@ -204,7 +222,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	}
 
 	private String getRemoteFileUrl(RemoteFile remoteFile) {
-		return getRemoteFilePath(remoteFile.getClass()) + "/" + remoteFile.getName();
+		return getRemoteFilePath(remoteFile.getClass()) + remoteFile.getName();
 	}
 
 	private String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
@@ -221,7 +239,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repoHasWriteAccess() throws StorageException {
-		//TODO not tested
+		// TODO not tested
 		try {
 			sardine.createDirectory(repoPath);
 			sardine.delete(repoPath);
@@ -232,11 +250,21 @@ public class WebdavTransferManager extends AbstractTransferManager {
 		}
 	}
 
+	/**
+	 * Checks if the repo exists at the repo URL.
+	 * 
+	 * <p><b>Note:</b> This uses list() instead of exists() because Sardine implements
+	 * the exists() method with a HTTP HEAD only. Some WebDAV servers respond with "Forbidden" 
+	 * if for directories.
+	 */
 	@Override
 	public boolean repoExists() throws StorageException {
-		//TODO not tested
 		try {
-			return sardine.exists(repoPath);
+			sardine.list(repoPath);
+			return true;
+		}
+		catch (SardineException e) {
+			return false;
 		}
 		catch (IOException e) {
 			throw new StorageException(e);
@@ -245,7 +273,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 
 	@Override
 	public boolean repoIsValid() throws StorageException {
-		//TODO not tested
+		// TODO not tested
 		try {
 			return sardine.list(repoPath).size() == 0;
 		}

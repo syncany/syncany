@@ -62,11 +62,6 @@ Commands:
   down
     Detect remote changes and apply locally (update)
 
-  sync [<args>]
-    Synchronizes the local folder with the remote repository by calling the
-    down command and the up command. All arguments of the up, down, status,
-    ls-remote commands can be used.
-
   status [<args>]
     Detect local changes and print to STDOUT.
 

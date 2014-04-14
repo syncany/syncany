@@ -33,16 +33,16 @@ import javax.xml.stream.XMLStreamWriter;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.database.ChunkEntry;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
-import org.syncany.database.FileVersion.FileType;
 
 /**
  * This class uses an {@link XMLStreamWriter} to output the given {@link DatabaseVersion}s

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
-import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;

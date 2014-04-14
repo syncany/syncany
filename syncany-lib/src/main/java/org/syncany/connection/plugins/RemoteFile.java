@@ -31,7 +31,7 @@ package org.syncany.connection.plugins;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class RemoteFile {
+public abstract class RemoteFile {
 	private String name;
 
 	/**

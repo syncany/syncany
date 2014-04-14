@@ -32,10 +32,10 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.operations.ConnectOperation;
-import org.syncany.operations.ConnectOperation.ConnectOperationListener;
-import org.syncany.operations.ConnectOperation.ConnectOperationOptions;
-import org.syncany.operations.ConnectOperation.ConnectOperationResult;
+import org.syncany.operations.init.ConnectOperation;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationListener;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationOptions;
+import org.syncany.operations.init.ConnectOperation.ConnectOperationResult;
 
 public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
 	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");

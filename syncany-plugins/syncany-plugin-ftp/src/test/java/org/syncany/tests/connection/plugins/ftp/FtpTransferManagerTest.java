@@ -17,27 +17,20 @@
  */
 package org.syncany.tests.connection.plugins.ftp;
 
-import junit.framework.Assert;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
-import org.syncany.connection.plugins.ftp.FtpConnection;
+import org.syncany.tests.connection.plugins.AbstractTransferManagerTest;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class FtpTransferManagerTest {
+public class FtpTransferManagerTest extends AbstractTransferManagerTest {
 	@BeforeClass
 	public static void beforeTestSetup() throws Exception {
 		EmbeddedTestFtpServer.startServer();
-		
-		EmbeddedTestFtpServer.mkdir("newRepo", EmbeddedTestFtpServer.USER1);
-		EmbeddedTestFtpServer.mkdir("nonEmptyRepo", EmbeddedTestFtpServer.USER1);
-		EmbeddedTestFtpServer.mkdir("nonEmptyRepo/folder", EmbeddedTestFtpServer.USER1);
-		EmbeddedTestFtpServer.mkdir("canNotCreate", EmbeddedTestFtpServer.USER2);
 	}
 	
 	@AfterClass
@@ -45,35 +38,21 @@ public class FtpTransferManagerTest {
 		EmbeddedTestFtpServer.stopServer();
 	}
 	
-	@Test
-	public void testFtpTransferManager() throws StorageException {
-		Assert.assertEquals(StorageTestResult.REPO_EXISTS_BUT_INVALID, test("/newRepo"));
-		Assert.assertEquals(StorageTestResult.NO_REPO, test("/randomRepo"));
-		Assert.assertEquals(StorageTestResult.REPO_EXISTS_BUT_INVALID, test("/nonEmptyRepo"));
-		Assert.assertEquals(StorageTestResult.NO_REPO_CANNOT_CREATE, test("/canNotCreate/inside"));
-	}
+	@Override
+	public Map<String, String> createPluginSettings() {
+		Map<String, String> pluginSettings = new HashMap<String, String>();
 		
-	public StorageTestResult test(String path) throws StorageException{
-		FtpConnection cnx = workingConnection();
-		cnx.setPath(path);
-		return cnx.createTransferManager().test();
+		pluginSettings.put("hostname", EmbeddedTestFtpServer.HOST);
+		pluginSettings.put("username", EmbeddedTestFtpServer.USER1);
+		pluginSettings.put("password", EmbeddedTestFtpServer.PASSWORD1);
+		pluginSettings.put("port", "" + EmbeddedTestFtpServer.PORT);
+		pluginSettings.put("path", "/");
+
+		return pluginSettings;
 	}
-	
-	public FtpConnection workingConnection(){
-		FtpConnection connection = new FtpConnection();
-		connection.setHostname(EmbeddedTestFtpServer.HOST);
-		connection.setPort(EmbeddedTestFtpServer.PORT);
-		connection.setUsername(EmbeddedTestFtpServer.USER1);
-		connection.setPassword(EmbeddedTestFtpServer.PASSWORD1);
-		return connection;
-	}
-	
-	public FtpConnection invalidConnection(){
-		FtpConnection connection = new FtpConnection();
-		connection.setHostname(EmbeddedTestFtpServer.HOST_WRONG);
-		connection.setPort(EmbeddedTestFtpServer.PORT);
-		connection.setUsername(EmbeddedTestFtpServer.USER1);
-		connection.setPassword(EmbeddedTestFtpServer.PASSWORD1);
-		return connection;
+
+	@Override
+	public String getPluginId() {
+		return "ftp";
 	}
 }

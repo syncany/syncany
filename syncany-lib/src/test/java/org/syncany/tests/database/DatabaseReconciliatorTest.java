@@ -24,9 +24,9 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.operations.DatabaseBranch;
-import org.syncany.operations.DatabaseBranches;
-import org.syncany.operations.DatabaseReconciliator;
+import org.syncany.operations.down.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranches;
+import org.syncany.operations.down.DatabaseReconciliator;
 import org.syncany.tests.util.TestDatabaseUtil;
 
 public class DatabaseReconciliatorTest {	

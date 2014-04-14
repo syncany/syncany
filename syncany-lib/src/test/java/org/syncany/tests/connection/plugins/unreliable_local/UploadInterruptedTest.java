@@ -57,7 +57,8 @@ public class UploadInterruptedTest {
 			clientA.createNewFile("A-original-"+i, 50*1024);
 			try {
 				Thread.sleep(100);
-				clientA.sync();
+				clientA.up();
+				clientA.down();
 			}
 			catch (StorageException e) {
 				logger.log(Level.INFO, e.getMessage());

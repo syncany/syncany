@@ -24,8 +24,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.syncany.chunk.MultiChunk;
@@ -50,12 +52,13 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		super(connection);
 	}
 
-	public void writeMultiChunks(Connection connection, Collection<MultiChunkEntry> multiChunks) throws SQLException {
+	public void writeMultiChunks(Connection connection, long databaseVersionId, Collection<MultiChunkEntry> multiChunks) throws SQLException {
 		for (MultiChunkEntry multiChunk : multiChunks) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/multichunk.insert.all.writeMultiChunks.sql");
 
 			preparedStatement.setString(1, multiChunk.getId().toString());
-			preparedStatement.setLong(2, multiChunk.getSize());
+			preparedStatement.setLong(2, databaseVersionId);
+			preparedStatement.setLong(3, multiChunk.getSize());
 			
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
@@ -131,7 +134,6 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunksWithChunksForDatabaseVersion.sql")) {
 			preparedStatement.setString(1, vectorClock.toString());
-			preparedStatement.setString(2, vectorClock.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createMultiChunkEntries(resultSet);
@@ -141,6 +143,19 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}	
+
+	/**
+	 * no commit
+	 */
+	public void updateDirtyMultiChunksNewDatabaseId(long newDatabaseVersionId) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.update.dirty.updateDirtyMultiChunksNewDatabaseId.sql")) {
+			preparedStatement.setLong(1, newDatabaseVersionId);
+			preparedStatement.executeUpdate();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}		
+	}
 	
 	/**
 	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
@@ -166,10 +181,16 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	 * Note: This method selects also {@link DatabaseVersionStatus#DIRTY DIRTY}.
 	 */
 	public Map<ChunkChecksum,MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
-		String[] checksums = new String[chunkChecksums.size()];
-		for (int i = 0; i < checksums.length; i++) {
-			checksums[i] = chunkChecksums.get(i).toString();
+		// Gather a unique array of checksum strings (required for query!)
+		Set<ChunkChecksum> chunkChecksumSet = new HashSet<ChunkChecksum>(chunkChecksums);
+		String[] checksums = new String[chunkChecksumSet.size()];
+		int i = 0;
+		for (ChunkChecksum checksum : chunkChecksumSet) {
+			checksums[i] = checksum.toString();
+			i++;
 		}
+		
+		// Execute query
 		Map<ChunkChecksum, MultiChunkId> result = new HashMap<ChunkChecksum, MultiChunkId>();
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunkIdForChunks.sql")) {
 			preparedStatement.setArray(1, connection.createArrayOf("varchar", checksums));	

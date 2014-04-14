@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +69,48 @@ public class MultiChunkDaoTest {
 		
 		assertNull(multiChunkIdNonExistent);
 		
+		// Tear down
+		databaseConnection.close();
+		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
+	
+	@Test
+	public void testGetMultiChunkIds() throws Exception {
+		// Setup
+		Config testConfig = TestConfigUtil.createTestLocalConfig();
+		Connection databaseConnection = testConfig.createDatabaseConnection();
+
+		// Run
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+
+		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
+		List<ChunkChecksum> checksums = new ArrayList<ChunkChecksum>();
+		checksums.add(ChunkChecksum.parseChunkChecksum("eba69a8e359ce3258520138a50ed9860127ab6e0"));
+		checksums.add(ChunkChecksum.parseChunkChecksum("0fecbac8ac8a5f8b7aa12b2741a4ef5db88c5dea"));
+		checksums.add(ChunkChecksum.parseChunkChecksum("38a18897e94a901b833e750e8604d9616a02ca84"));
+		checksums.add(ChunkChecksum.parseChunkChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"));
+		
+		//Ensure that uniqueness is not required
+		checksums.add(ChunkChecksum.parseChunkChecksum("38a18897e94a901b833e750e8604d9616a02ca84"));
+		
+		Map<ChunkChecksum,MultiChunkId> multiChunkIds = multiChunkDao.getMultiChunkIdsByChecksums(checksums);		
+
+		// Test
+		assertNotNull(multiChunkIds.get(checksums.get(0)));
+		assertEquals("0d79eed3fd8ac866b5872ea3f3f079c46dd15ac9", multiChunkIds.get(checksums.get(0)).toString());
+		
+		assertNotNull(multiChunkIds.get(checksums.get(1)));
+		assertEquals("51aaca5c1280b1cf95cff8a3266a6bb44b482ad4", multiChunkIds.get(checksums.get(1)).toString());
+		
+		assertNotNull(multiChunkIds.get(checksums.get(2)));
+		assertEquals("51aaca5c1280b1cf95cff8a3266a6bb44b482ad4", multiChunkIds.get(checksums.get(2)).toString());
+		assertEquals(multiChunkIds.get(checksums.get(1)), multiChunkIds.get(checksums.get(2)));
+		
+		assertNull(multiChunkIds.get(checksums.get(3)));
+		
+		Map<ChunkChecksum,MultiChunkId> multiChunkIdsEmpty = multiChunkDao.getMultiChunkIdsByChecksums(new ArrayList<ChunkChecksum>());
+		assertTrue(multiChunkIdsEmpty.isEmpty());
+
 		// Tear down
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);

@@ -46,7 +46,7 @@ import org.syncany.connection.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.operations.InitOperation.InitOperationOptions;
+import org.syncany.operations.init.InitOperation.InitOperationOptions;
 
 import com.google.common.collect.Lists;
 

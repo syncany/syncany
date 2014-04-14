@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.database.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.util.Date;
@@ -48,7 +46,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
-import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranch;
 import org.syncany.tests.util.TestCollectionUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
@@ -425,15 +423,25 @@ public class DatabaseVersionDaoTest {
 
 		// TODO [high] Test file version and history
 		
-		// b. Remove
-		databaseVersionDao.removeDirtyDatabaseVersions();
+		// b. Add new database version with DIRTY multichunk; remove DIRTY version		
+		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		newDatabaseVersion.setVectorClock(TestDatabaseUtil.createVectorClock("A5,B2"));
 		
+		long newDatabaseVersionId = databaseVersionDao.persistDatabaseVersion(newDatabaseVersion);		
+		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId); 
+				
 		// c. Test after		
 		
 		// Database version
 		List<DatabaseVersion> dirtyDatabaseVersionsAfter = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());		
 		assertNotNull(dirtyDatabaseVersionsAfter);
 		assertEquals(0, dirtyDatabaseVersionsAfter.size());
+		
+		// Multichunk from dirty version "moved" to new version
+		Map<MultiChunkId, MultiChunkEntry> multiChunksA5B2 = multiChunkDao.getMultiChunks(TestDatabaseUtil.createVectorClock("A5,B2"));		
+		assertNotNull(multiChunksA5B2);
+		assertEquals(1, multiChunksA5B2.size());
+		assertNotNull(multiChunksA5B2.get(MultiChunkId.parseMultiChunkId("1234567890987654321123456789098765433222")));
 		
 		// File version/history/content ARE removed
 		assertNull(fileContentDao.getFileContent(FileChecksum.parseFileChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), true));

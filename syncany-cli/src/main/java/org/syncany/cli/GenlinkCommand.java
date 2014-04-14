@@ -22,7 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
 	@Override

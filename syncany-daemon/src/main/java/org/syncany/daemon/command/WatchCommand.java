@@ -32,9 +32,9 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.daemon.websocket.DaemonWebSocketServer;
 import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
-import org.syncany.operations.WatchOperation;
-import org.syncany.operations.WatchOperation.WatchOperationOptions;
-import org.syncany.operations.listener.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperation;
+import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
 
 public class WatchCommand extends Command {
 	public static final Pattern ANNOUNCEMENTS_PATTERN = Pattern.compile("([^:]+):(\\d+)");
@@ -114,7 +114,19 @@ public class WatchCommand extends Command {
 		final WatchOperationListener wl = new WatchOperationListener() {
 
 			@Override
-			public void batchIndexStart(int fileCount) {
+			public void onUploadStart(int fileCount) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onUploadFile(String fileName, int fileNumber) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onIndexStart(int fileCount) {
 				DaemonWatchEvent dwe = new DaemonWatchEvent();
 				dwe.setAction("daemon_watch_event");
 				//dwe.setEvent(event);
@@ -122,31 +134,19 @@ public class WatchCommand extends Command {
 			}
 
 			@Override
-			public void batchIndexUpdate(String fileName, int fileNumber) {
+			public void onIndexFile(String fileName, int fileNumber) {
 				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
-			public void batchUploadStart(int fileCount) {
+			public void onDownloadStart(int fileCount) {
 				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
-			public void batchUploadUpdate(String fileName, int fileNumber) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void batchDownloadStart(int fileCount) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void batchDownloadUpdate(String fileName, int fileNumber) {
+			public void onDownloadFile(String fileName, int fileNumber) {
 				// TODO Auto-generated method stub
 				
 			}

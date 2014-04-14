@@ -22,7 +22,7 @@ import org.syncany.daemon.websocket.messages.DaemonInitMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
-import org.syncany.operations.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
 import org.syncany.util.JsonHelper;
 
 

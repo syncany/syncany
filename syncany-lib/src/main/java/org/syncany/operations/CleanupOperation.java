@@ -302,17 +302,6 @@ public class CleanupOperation extends Operation {
 		transferManager.delete(lockFile);
 	}
 
-	/*
-	 * private void repackageMultiChunks() { List<Map<MultiChunkEntry, ChunkEntry>> partiallyUnusedMultiChunks =
-	 * findPartiallyUnusedMultiChunks(options.getKeepVersionsCount(), options.getRepackageUnusedThreshold()); Map<MultiChunkEntry, File>
-	 * newRepackagedMultiChunks = repackagePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-	 * 
-	 * // Remote changes uploadRepackagedMultiChunks(repackagedMultiChunks); remoteDeletePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-	 * 
-	 * // Local changes removeLocalPartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-	 * insertLocalNewRepackagedMultiChunks(newRepackagedMultiChunks); }
-	 */
-
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		// Retrieve and sort machine's database versions
 		TreeMap<String, DatabaseRemoteFile> ownDatabaseFilesMap = retrieveOwnRemoteDatabaseFiles();

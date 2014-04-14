@@ -38,7 +38,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
-import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranch;
 
 /**
  * Represents the single entry point for all SQL database queries.
@@ -128,8 +128,8 @@ public class SqlDatabase {
 		return databaseVersionDao.getLocalDatabaseBranch();
 	}
 
-	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
-		databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
+		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
 	}
 	
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
@@ -140,8 +140,8 @@ public class SqlDatabase {
 		databaseVersionDao.markDatabaseVersionDirty(vectorClock);
 	}
 
-	public void removeDirtyDatabaseVersions() {
-		databaseVersionDao.removeDirtyDatabaseVersions();
+	public void removeDirtyDatabaseVersions(long newDatabaseVersionId) {
+		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId);
 	}
 
 	public Long getMaxDirtyVectorClock(String machineName) {

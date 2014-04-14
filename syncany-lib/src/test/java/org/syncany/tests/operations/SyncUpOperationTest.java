@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,14 +31,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileVersion;
+import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
-import org.syncany.operations.UpOperation;
+import org.syncany.operations.up.UpOperation;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.CollectionUtil;

@@ -66,8 +66,10 @@ CREATE CACHED TABLE fileversion (
 
 CREATE CACHED TABLE multichunk (
   id varchar(40) NOT NULL,
+  databaseversion_id int NOT NULL,
   size bigint NOT NULL,  
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE CACHED TABLE multichunk_chunk (
