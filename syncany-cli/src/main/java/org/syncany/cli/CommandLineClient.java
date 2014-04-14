@@ -34,6 +34,8 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -59,10 +61,14 @@ import org.syncany.util.StringUtil.StringJoinListener;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CommandLineClient extends Client {
-	private static final String HELP_TEXT_SKEL_RESOURCE = "/help.skel";
-	private static final String HELP_TEXT_VAR_VERSION= "%VERSION%";
-	private static final String HELP_TEXT_VAR_PLUGINS = "%PLUGINS%";
-	private static final String HELP_TEXT_VAR_LOGFORMATS = "%LOGFORMATS%";
+	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
+	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
+	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "/help/usage.skel";
+	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "/help/cmd/help.%CMD%.skel";
+	private static final String HELP_VAR_CMD= "%CMD%";
+	private static final String HELP_VAR_VERSION= "%VERSION%";
+	private static final String HELP_VAR_PLUGINS = "%PLUGINS%";
+	private static final String HELP_VAR_LOGFORMATS = "%LOGFORMATS%";
 	
 	private String[] args;	
 	private File localDir;
@@ -101,23 +107,17 @@ public class CommandLineClient extends Client {
 			
 			// Evaluate options
 			// WARNING: Do not re-order unless you know what you are doing!
-			initHelpOption(options, optionHelp, options.nonOptionArguments());
+			//initHelpOption(options, optionHelp, options.nonOptionArguments());
 			initConfigOption(options, optionLocalDir);
 			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
 	
 			// Run!
-			return runCommand(options, options.nonOptionArguments());
+			return runCommand(options, optionHelp, options.nonOptionArguments());
 		}
 		catch (OptionException e) {
 			return showErrorAndExit(e.getMessage());
 		}
 	}	
-
-	private void initHelpOption(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws IOException {
-		if (options.has(optionHelp) || nonOptions.size() == 0) {
-			showUsageAndExit();
-		}
-	}
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);		
@@ -200,22 +200,33 @@ public class CommandLineClient extends Client {
 		config = ConfigHelper.loadConfig(localDir);
 	}					
 	
-	private int runCommand(OptionSet options, List<?> nonOptions) throws Exception {
+	private int runCommand(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws Exception {
 		if (nonOptions.size() == 0) {
-			showUsageAndExit();
+			if (options.has(optionHelp)) {
+				showHelpAndExit();
+			}
+			else {
+				showUsageAndExit();
+			}
 		}
 		
 		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String operationName = (String) nonOptionsCopy.remove(0); 
-		String[] operationArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
+		String commandName = (String) nonOptionsCopy.remove(0); 
+		String[] commandArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
 		
 		// Find command
-		Command command = CommandFactory.getInstance(operationName);
+		Command command = CommandFactory.getInstance(commandName);
 
-		if (command == null) {
-			showErrorAndExit("Given command is unknown: "+operationName);			
+		if (command == null) {			
+			showErrorAndExit("Given command is unknown: "+commandName);			
 		}
 		
+		// Potentially show help
+		if (options.has(optionHelp)) {
+			showCommandHelpAndExit(commandName);
+		}
+		
+		// Init command
 		command.setClient(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
@@ -233,12 +244,84 @@ public class CommandLineClient extends Client {
 		}
 		
 		// Run!
-		int exitCode = command.execute(operationArgs);		
+		int exitCode = command.execute(commandArgs);		
 		return exitCode;	
 	}
 	
 	private void showUsageAndExit() throws IOException {
-		// Application Version
+		printHelpTextAndExit(HELP_TEXT_USAGE_SKEL_RESOURCE);
+	}
+
+	private void showHelpAndExit() throws IOException {
+		printHelpTextAndExit(HELP_TEXT_HELP_SKEL_RESOURCE);
+	}
+	
+	private void showCommandHelpAndExit(String commandName) throws IOException {
+		String helpTextResource = HELP_TEXT_CMD_SKEL_RESOURCE.replace(HELP_VAR_CMD, commandName);
+		printHelpTextAndExit(helpTextResource);		
+	}
+
+	private void printHelpTextAndExit(String helpTextResource) throws IOException {
+		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(helpTextResource);
+		
+		if (helpTextInputStream == null) {
+			showErrorAndExit("No detailed help text available for this command.");
+		}
+		
+		for (String line : IOUtils.readLines(helpTextInputStream)) {
+			line = replaceVariables(line);			
+			out.println(line.replaceAll("\\s$", ""));			
+		}
+		
+		out.close();		
+		System.exit(0);
+	}
+
+	private String replaceVariables(String line) throws IOException {
+		if (line.contains(HELP_VAR_VERSION)) {
+			line = line.replace(HELP_VAR_VERSION, getVersionStr());
+		}
+		
+		if (line.contains(HELP_VAR_PLUGINS)) {
+			line = line.replace(HELP_VAR_PLUGINS, getPluginsStr());	
+		}
+		
+		if (line.contains(HELP_VAR_LOGFORMATS)) {
+			line = line.replace(HELP_VAR_LOGFORMATS, getLogFormatsStr());	
+		}
+		
+		Matcher includeResourceMatcher = HELP_TEXT_RESOURCE_PATTERN.matcher(line);
+		
+		if (includeResourceMatcher.find()) {
+			String includeResource = includeResourceMatcher.group(1);
+			InputStream includeResourceInputStream = CommandLineClient.class.getResourceAsStream(includeResource);
+			String includeResourceStr = IOUtils.toString(includeResourceInputStream);
+
+			line = includeResourceMatcher.replaceAll(includeResourceStr);
+			line = replaceVariables(line);
+		}
+		
+		return line;
+	}
+
+	private String getLogFormatsStr() {
+		return StringUtil.join(LogCommand.getSupportedFormats(), ", ");
+	}
+
+	private String getPluginsStr() {
+		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
+		
+		String pluginsStr = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
+			@Override
+			public String getString(Plugin plugin) {
+				return plugin.getId();
+			}			
+		});	
+		
+		return pluginsStr;
+	}
+
+	private String getVersionStr() {
 		String versionStr = Client.getApplicationVersion();
 		
 		if (!Client.isApplicationRelease()) {
@@ -249,38 +332,13 @@ public class CommandLineClient extends Client {
 				versionStr += ", no rev.";
 			}
 		}
-				
-		// Plugins
-		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
 		
-		String pluginsStr = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
-			@Override
-			public String getString(Plugin plugin) {
-				return plugin.getId();
-			}			
-		});		
-		
-		// Log formats
-		String logCommandFormatsStr = StringUtil.join(LogCommand.getSupportedFormats(), ", ");
-		
-		// Print help text		
-		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(HELP_TEXT_SKEL_RESOURCE);
-		
-		for (String line : IOUtils.readLines(helpTextInputStream)) {
-			line = line.replace(HELP_TEXT_VAR_VERSION, versionStr);
-			line = line.replace(HELP_TEXT_VAR_PLUGINS, pluginsStr);
-			line = line.replace(HELP_TEXT_VAR_LOGFORMATS, logCommandFormatsStr);
-			
-			out.println(line.replaceAll("\\s$", ""));			
-		}
-		
-		out.close();		
-		System.exit(0);
+		return versionStr;
 	}
 
 	private int showErrorAndExit(String errorMessage) {
-		out.println("Syncany: "+errorMessage);
-		out.println("         Refer to help page using '--help'.");
+		out.println("Error: "+errorMessage);
+		out.println("       Refer to help page using '--help'.");
 		out.println();
 		
 		out.close();	

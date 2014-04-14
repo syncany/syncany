@@ -46,8 +46,8 @@ import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.OperationResult;
+import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
+import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -400,86 +400,4 @@ public class ConnectOperation extends AbstractInitOperation {
 			throw new StorageException("Master file corrupt.", e);
 		}			
 	}
-
-	public static interface ConnectOperationListener {
-		public String askPassword();
-		public boolean askRetryPassword();
-		public void notifyCreateMasterKey();
-	}	
-	
-	public enum ConnectOptionsStrategy {
-		CONNECTION_LINK, CONNECTION_TO
-	}
-	
-	public static class ConnectOperationOptions implements OperationOptions {
-		private ConnectOptionsStrategy strategy = ConnectOptionsStrategy.CONNECTION_TO;
-		private ConfigTO configTO;
-		private String connectLink;
-		private File localDir;
-		private String password;
-		
-		public ConnectOptionsStrategy getStrategy() {
-			return strategy;
-		}
-
-		public void setStrategy(ConnectOptionsStrategy strategy) {
-			this.strategy = strategy;
-		}
-
-		public String getConnectLink() {
-			return connectLink;
-		}
-
-		public void setConnectLink(String connectionLink) {
-			this.connectLink = connectionLink;
-		}
-
-		public File getLocalDir() {
-			return localDir;
-		}
-
-		public void setLocalDir(File localDir) {
-			this.localDir = localDir;
-		}
-
-		public ConfigTO getConfigTO() {
-			return configTO;
-		}
-
-		public void setConfigTO(ConfigTO configTO) {
-			this.configTO = configTO;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-		public void setPassword(String password) {
-			this.password = password;
-		}
-	}
-		 
-	public enum ConnectResultCode {
-		OK, NOK_NO_REPO, NOK_INVALID_REPO, NOK_NO_CONNECTION, NOK_DECRYPT_ERROR
-	}
-	
-    public static class ConnectOperationResult implements OperationResult {
-        private ConnectResultCode resultCode = ConnectResultCode.OK;
-
-        public ConnectOperationResult() {
-			// Nothing here
-		}
-        
-        public ConnectOperationResult(ConnectResultCode resultCode) {
-			this.resultCode = resultCode;
-		}
-
-		public ConnectResultCode getResultCode() {
-			return resultCode;
-		}
-
-		public void setResultCode(ConnectResultCode resultCode) {
-			this.resultCode = resultCode;
-		}                
-    }
 }

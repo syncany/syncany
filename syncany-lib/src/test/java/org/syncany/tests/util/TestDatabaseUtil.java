@@ -40,7 +40,7 @@ import org.syncany.operations.down.DatabaseBranch;
 public class TestDatabaseUtil {
 	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)");
 	private static Pattern vectorClockElementPattern = Pattern.compile("([^\\d]+)(\\d+)");
-	
+
 	public static DatabaseVersionHeader createFromString(String databaseVersionHeaderString) throws Exception {
 		Matcher databaseVersionHeaderMatcher = databaseVersionHeaderPattern.matcher(databaseVersionHeaderString);
 		

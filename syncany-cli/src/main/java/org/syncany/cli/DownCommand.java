@@ -60,7 +60,8 @@ public class DownCommand extends Command {
 
 		// --conflict-strategy=<strategy>
 		if (options.has(optionConflictStrategy)) {
-			operationOptions.setConflictStrategy(DownConflictStrategy.valueOf(options.valueOf(optionConflictStrategy)));
+			String conflictStrategyStr = options.valueOf(optionConflictStrategy).toUpperCase();
+			operationOptions.setConflictStrategy(DownConflictStrategy.valueOf(conflictStrategyStr));
 		}
 
 		return operationOptions;

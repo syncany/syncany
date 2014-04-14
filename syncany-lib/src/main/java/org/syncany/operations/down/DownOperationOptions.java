@@ -21,10 +21,10 @@ import org.syncany.operations.OperationOptions;
 
 public class DownOperationOptions implements OperationOptions {
 	public enum DownConflictStrategy {
-		AUTO_RENAME, ASK_USER
+		RENAME, ASK
 	}
 	
-	private DownConflictStrategy conflictStrategy = DownConflictStrategy.AUTO_RENAME;
+	private DownConflictStrategy conflictStrategy = DownConflictStrategy.RENAME;
 
 	public DownConflictStrategy getConflictStrategy() {
 		return conflictStrategy;

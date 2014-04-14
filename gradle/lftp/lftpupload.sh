@@ -63,9 +63,13 @@ echo ""
 echo "Uploading files to Syncany FTP ..."
 echo "------------------------------------"
 
+FTPOK=/tmp/syncany.ftpok
+touch $FTPOK
+
 lftp -c "open ftp://$SYNCANY_FTP_HOST
 user $SYNCANY_FTP_USER $SYNCANY_FTP_PASS
 mirror --reverse --exclude javadoc/ --exclude reports/ --delete --parallel=3 --verbose $TEMPDIR /
+put $FTPOK -o /syncany.ftpok
 bye
 "
 

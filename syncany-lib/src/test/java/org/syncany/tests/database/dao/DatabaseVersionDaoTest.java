@@ -156,7 +156,7 @@ public class DatabaseVersionDaoTest {
 		// Test
 		assertNotNull(lastDatabaseVersionHeader);
 		assertEquals("(A8,B3)", lastDatabaseVersionHeader.getVectorClock().toString());
-		assertEquals("A/(A8,B3)/T=1389977288627", lastDatabaseVersionHeader.toString());		
+		assertEquals("A/(A8,B3)/T=1389977288000", lastDatabaseVersionHeader.toString());		
 		
 		// Tear down
 		databaseConnection.close();
@@ -187,7 +187,7 @@ public class DatabaseVersionDaoTest {
 		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
 		
 		newDatabaseVersionHeader.setClient("C");
-		newDatabaseVersionHeader.setDate(new Date(1489977288627L));
+		newDatabaseVersionHeader.setDate(new Date(1489977288000L));
 		newDatabaseVersionHeader.setVectorClock(TestDatabaseUtil.createVectorClock("A5,C1"));
 		
 		newDatabaseVersion.setHeader(newDatabaseVersionHeader);
@@ -231,10 +231,10 @@ public class DatabaseVersionDaoTest {
 		
 		// Test
 		assertNotNull(lastDatabaseVersionHeaderBefore);
-		assertEquals("A/(A5)/T=1388935689349", lastDatabaseVersionHeaderBefore.toString());
+		assertEquals("A/(A5)/T=1388935689000", lastDatabaseVersionHeaderBefore.toString());
 		
 		assertNotNull(lastDatabaseVersionHeaderAfter);
-		assertEquals("C/(A5,C1)/T=1489977288627", lastDatabaseVersionHeaderAfter.toString());
+		assertEquals("C/(A5,C1)/T=1489977288000", lastDatabaseVersionHeaderAfter.toString());
 		assertEquals(newDatabaseVersionHeader.getVectorClock(), lastDatabaseVersionHeaderAfter.getVectorClock());
 		
 		assertEquals(newChunkEntry, chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f")));
@@ -278,17 +278,17 @@ public class DatabaseVersionDaoTest {
 		 
 		assertEquals(TestDatabaseUtil.createBranch(
 			new String[] {
-				"A/(A1)/T=1389977166221",
-				"A/(A2)/T=1389977199506",
-				"A/(A3)/T=1389977203721",
-				"A/(A4)/T=1389977207863",
-				"A/(A5)/T=1389977214059",
-				"A/(A6)/T=1389977222341",
-				"B/(A6,B1)/T=1389977233549",
-				"A/(A7,B1)/T=1389977234818",
-				"B/(A7,B2)/T=1389977258145",
-				"B/(A7,B3)/T=1389977264593",
-				"A/(A8,B3)/T=1389977288627",
+				"A/(A1)/T=1389977166000",
+				"A/(A2)/T=1389977199000",
+				"A/(A3)/T=1389977203000",
+				"A/(A4)/T=1389977207000",
+				"A/(A5)/T=1389977214000",
+				"A/(A6)/T=1389977222000",
+				"B/(A6,B1)/T=1389977233000",
+				"A/(A7,B1)/T=1389977234000",
+				"B/(A7,B2)/T=1389977258000",
+				"B/(A7,B3)/T=1389977264000",
+				"A/(A8,B3)/T=1389977288000",
 			}
 		), localDatabaseBranch);		
 				
@@ -322,11 +322,11 @@ public class DatabaseVersionDaoTest {
 		 
 		assertEquals(TestDatabaseUtil.createBranch(
 			new String[] {
-				"A/(A1)/T=1388589969004",
-				"A/(A2)/T=1388676369208",
-				"A/(A3)/T=1388762769349", // Note: Does NOT contain B1 (because: DIRTY!)
-				"A/(A4)/T=1388849289349",
-				"A/(A5)/T=1388935689349"
+				"A/(A1)/T=1388589969000",
+				"A/(A2)/T=1388676369000",
+				"A/(A3)/T=1388762769000", // Note: Does NOT contain B1 (because: DIRTY!)
+				"A/(A4)/T=1388849289000",
+				"A/(A5)/T=1388935689000"
 			}
 		), localDatabaseBranch);		
 				

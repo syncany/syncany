@@ -44,18 +44,21 @@ public class FileUtil {
 
 	public static String getRelativeDatabasePath(File base, File file) {
 		String relativeFilePath = getRelativePath(base, file);
-
+		return getDatabasePath(relativeFilePath);
+	}
+	
+	public static String getDatabasePath(String filePath) {
 		// Note: This is more important than it seems. Unix paths may contain backslashes
 		// so that 'black\white.jpg' is a perfectly valid file path. Windows file names
 		// may never contain backslashes, so that '\' can be safely transformed to the
 		// '/'-separated database path!
 
 		if (EnvironmentUtil.isWindows()) {
-			return relativeFilePath.toString().replaceAll("\\\\", "/");
+			return filePath.toString().replaceAll("\\\\", "/");
 		}
 		else {
-			return relativeFilePath;
-		}
+			return filePath;
+		}	
 	}
 
 	public static String removeTrailingSlash(String filename) {
