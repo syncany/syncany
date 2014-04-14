@@ -1,10 +1,26 @@
 Change Log
 ==========
 
-### Release 0.1.1-alpha (Date: tbd.)
+### Release 0.1.2-alpha (Date: tbd.)
 
-- Ignoring files using .syignore file
+- Not released yet.
 
+### Release 0.1.1-alpha (Date: 14 Apr 2014)
+
+- Features:
+  + Ignoring files using .syignore file #66/#77
+  + Arch Linux package support; release version #80 and git version #99
+  + Additional command-specific --help texts
+- Windows-specific: 
+  + Add Syncany binaries to PATH environment variable during setup #84/#91
+  + Fixed HSQLDB-path issue #98
+- Bugfixes
+  + Timezone fix in tests #78/#90
+  + Reference issue "Cannot determine file content for checksum" #92/#94
+  + Atomic 'init' command (rollback on failure) #95/#96
+- Other things
+  + Tests for 'connect' command  
+  + Tests for .syignore
 
 ### Release 0.1.0-alpha (Date: 30 March 2014)
 
