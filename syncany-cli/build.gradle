@@ -29,13 +29,14 @@ mainClassName = "org.syncany.Syncany"
 
 startScripts {
 	defaultJvmOpts = [ "-Xmx1024m", "-Dfile.encoding=utf-8" ]
+	classpath = files('$APP_HOME/lib/*')
 	
 	doLast {
-		def wFile = file getWindowsScript()
-		def uFile = file getUnixScript()
-		
-		wFile.text = wFile.text.replace('set CLASSPATH=', 'set CLASSPATH=%APP_HOME%\\lib\\*;')
-		uFile.text = uFile.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=$APP_HOME/lib/*:$APP_HOME')
+		def winFile = file getWindowsScript()
+		def unixFile = file getUnixScript()
+
+		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", '$1;%AppData%\\\\syncany\\\\plugins\\\\*')
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", '$1:~/.config/syncany/plugins/*')
 	}
 }
 
