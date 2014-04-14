@@ -1,7 +1,11 @@
 Change Log
 ==========
 
-### Release 0.1.1-alpha (Date: tbd.)
+### Release 0.1.2-alpha (Date: tbd.)
+
+- Not released yet.
+
+### Release 0.1.1-alpha (Date: 14 Apr 2014)
 
 - Features:
   + Ignoring files using .syignore file #66/#77
