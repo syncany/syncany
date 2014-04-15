@@ -51,8 +51,6 @@ import org.syncany.cli.CommandLineClient;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Syncany {
-	// TODO [feature request] Add ignore operation and .ignore file
-
 	public static void main(String[] args) throws Exception {
 		new CommandLineClient(args).start();
 	}		

@@ -60,6 +60,8 @@ public class DatabaseBranches {
 		branches.put(machineName, branch);		
 	}	
 
+	@Deprecated
+	// TODO [low] Remove this, only used in test
 	public void remove(String machineName) {
 		branches.remove(machineName);
 	}	

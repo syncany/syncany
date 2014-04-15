@@ -79,7 +79,7 @@ public class WebdavConnection implements Connection {
 					System.out.println(cert);
 				}
 
-				// TODO [high] WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
+				// TODO [high] Issue #14/#50: WebDAV SSL: This should query the CLI/GUI (and store the cert. locally); right now, MITMs are easily possible
 				return true;							
 			}
 		};

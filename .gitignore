@@ -1,6 +1,5 @@
 bin
 build
-sandbox/results
 .gradle
 .settings
 .classpath
@@ -20,3 +19,6 @@ syncany-plugins/syncany-plugin-gui-rest/.gitignore
 syncany-plugins/syncany-plugin-gui-webdav/.gitignore
 syncany-plugins/syncany-plugin-webdav/.gitignore
 *.bak
+gradle/arch/syncany/pkg
+gradle/arch/syncany/src
+gradle/arch/syncany/syncany*.tar*

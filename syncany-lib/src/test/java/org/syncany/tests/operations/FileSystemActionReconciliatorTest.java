@@ -30,13 +30,13 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.SqlDatabase;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.FileSystemActionReconciliator;
 import org.syncany.operations.down.actions.FileSystemAction;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
+import org.syncany.tests.util.TestSqlDatabase;
 
 public class FileSystemActionReconciliatorTest {
 	@Test
@@ -54,7 +54,7 @@ public class FileSystemActionReconciliatorTest {
 		clientA.deleteFile("new folder/some subfolder"); // Delete this!
 		
 		// - Create new version (delete folder)
-		SqlDatabase sqlDatabaseA = new SqlDatabase(testConfigA);
+		TestSqlDatabase sqlDatabaseA = new TestSqlDatabase(testConfigA);
 		PartialFileHistory folderFileHistoryWithLastVersion = sqlDatabaseA.getFileHistoryWithLastVersion("new folder/some subfolder");
 
 		FileVersion deletedFolderVersion = folderFileHistoryWithLastVersion.getLastVersion().clone();

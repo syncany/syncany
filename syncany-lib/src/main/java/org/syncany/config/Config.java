@@ -57,6 +57,7 @@ public class Config {
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
+	public static final String FILE_IGNORE = ".syignore";
 		
 	private byte[] repoId;
 	private String machineName;
@@ -74,6 +75,7 @@ public class Config {
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
+    private IgnoredFiles ignoredFiles;
       
     static {    	    	
     	Logging.init();
@@ -88,8 +90,9 @@ public class Config {
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
 		initCache();
+		initIgnoredFile();
 		initRepo(repoTO);
-    	initConnection(configTO);    
+    	initConnection(configTO);  	
 	}		
 	
 	private void initNames(ConfigTO configTO) throws ConfigException {
@@ -116,6 +119,11 @@ public class Config {
 	private void initCache() {
 		cache = new Cache(cacheDir);
 	}	
+	
+	private void initIgnoredFile() throws ConfigException {
+		File ignoreFile = new File(localDir, FILE_IGNORE);
+		ignoredFiles = new IgnoredFiles(ignoreFile);
+	}
 
 	private void initRepo(RepoTO repoTO) throws ConfigException {
 		try {
@@ -273,6 +281,10 @@ public class Config {
     
 	public Cache getCache() {
 		return cache;
+	}
+	
+	public IgnoredFiles getIgnoredFiles() {
+		return ignoredFiles;
 	}
 
 	public MultiChunker getMultiChunker() {
