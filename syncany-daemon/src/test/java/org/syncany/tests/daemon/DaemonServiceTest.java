@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,42 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.command;
+package org.syncany.tests.daemon;
 
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+import org.syncany.daemon.ServiceManager;
 
 /**
+ * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class Command {
-	private CommandStatus status;
-	private String id;
+public class DaemonServiceTest {
 	
-	public Command(){
-		this.id = UUID.randomUUID().toString();
+	@Test
+	public void testStartService() throws Exception {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("lockPort", 3338);
+
+		try {
+			ServiceManager.startService("org.syncany.daemon.Daemon",params);
+		}
+		catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
-	
-	/**
-	 * @return the status
-	 */
-	public CommandStatus getStatus() {
-		return status;
-	}
-	
-	/**
-	 * @param status the status to set
-	 */
-	public void setStatus(CommandStatus status) {
-		this.status = status;
-	}
-		
-	public abstract void disposeCommand();
 }

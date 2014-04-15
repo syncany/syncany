@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,42 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.command;
-
-import java.util.UUID;
+package org.syncany.daemon.exception;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class Command {
-	private CommandStatus status;
-	private String id;
-	
-	public Command(){
-		this.id = UUID.randomUUID().toString();
-	}
-	
+public class ServiceAlreadyStartedException extends Exception {
+	private static final long serialVersionUID = -4655279609105005191L;
+
 	/**
-	 * @return the id
+	 * @param string
 	 */
-	public String getId() {
-		return id;
+	public ServiceAlreadyStartedException(String message) {
+		super(message);
 	}
-	
-	/**
-	 * @return the status
-	 */
-	public CommandStatus getStatus() {
-		return status;
-	}
-	
-	/**
-	 * @param status the status to set
-	 */
-	public void setStatus(CommandStatus status) {
-		this.status = status;
-	}
-		
-	public abstract void disposeCommand();
 }

@@ -30,89 +30,89 @@ public class DaemonCommandHandler {
 	private static Logger logger = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
 		
 	private static String handleWatch(DaemonWatchMessage message) {
-		Map<String, Command> commands = Daemon.getInstance().getCommands();
-		String localDir = message.getLocalFolder();
-		int interval = message.getInterval();
-		boolean watcher = message.isAutomaticWatcher();
-		
-		logger.log(Level.INFO, String.format("Watching folder %s", localDir));
-		
-		for (String key : commands.keySet()){
-			Command c = commands.get(key);
-			if (c instanceof WatchCommand){
-				WatchCommand _wc = (WatchCommand)c;
-				if (_wc.getLocalFolder().equals(localDir)) return null;
-			}
-		}
-
-		WatchCommand wc = new WatchCommand(localDir, interval, watcher);
-		commands.put(wc.getId(), wc);
-		wc.execute();
+//		Map<String, Command> commands = Daemon.getInstance().getCommands();
+//		String localDir = message.getLocalFolder();
+//		int interval = message.getInterval();
+//		boolean watcher = message.isAutomaticWatcher();
+//		
+//		logger.log(Level.INFO, String.format("Watching folder %s", localDir));
+//		
+//		for (String key : commands.keySet()){
+//			Command c = commands.get(key);
+//			if (c instanceof WatchCommand){
+//				WatchCommand _wc = (WatchCommand)c;
+//				if (_wc.getLocalFolder().equals(localDir)) return null;
+//			}
+//		}
+//
+//		WatchCommand wc = new WatchCommand(localDir, interval, watcher);
+//		commands.put(wc.getId(), wc);
+//		wc.execute();
 		return null;
 	}
 	
 	private static String handlePauseWatch(DaemonMessage message) {
-		Map<String, Command> commands = Daemon.getInstance().getCommands();
-		String localDir = message.getLocalFolder();
-		
-		logger.log(Level.INFO, String.format("Pause watching folder %s", localDir));
-		
-		for (String key : commands.keySet()){
-			Command c = commands.get(key);
-			if (c instanceof WatchCommand){
-				WatchCommand _wc = (WatchCommand)c;
-				if (_wc.getLocalFolder().equals(localDir)){
-					_wc.pause();
-				}
-			}
-		}
-		updateWatchedFolders(message);
+//		Map<String, Command> commands = Daemon.getInstance().getCommands();
+//		String localDir = message.getLocalFolder();
+//		
+//		logger.log(Level.INFO, String.format("Pause watching folder %s", localDir));
+//		
+//		for (String key : commands.keySet()){
+//			Command c = commands.get(key);
+//			if (c instanceof WatchCommand){
+//				WatchCommand _wc = (WatchCommand)c;
+//				if (_wc.getLocalFolder().equals(localDir)){
+//					_wc.pause();
+//				}
+//			}
+//		}
+//		updateWatchedFolders(message);
 		return null;
 	}
 	
 	private static String handleStopWatch(DaemonMessage message) {
-		Map<String, Command> commands = Daemon.getInstance().getCommands();
-		String localDir = message.getLocalFolder();
-		
-		logger.log(Level.INFO, String.format("Stop watching folder %s", localDir));
-		
-		for (String key : commands.keySet()){
-			Command c = commands.get(key);
-			if (c instanceof WatchCommand){
-				WatchCommand _wc = (WatchCommand)c;
-				if (_wc.getLocalFolder().equals(localDir)){
-					_wc.stop();
-				}
-			}
-		}
-		updateWatchedFolders(message);
+//		Map<String, Command> commands = Daemon.getInstance().getCommands();
+//		String localDir = message.getLocalFolder();
+//		
+//		logger.log(Level.INFO, String.format("Stop watching folder %s", localDir));
+//		
+//		for (String key : commands.keySet()){
+//			Command c = commands.get(key);
+//			if (c instanceof WatchCommand){
+//				WatchCommand _wc = (WatchCommand)c;
+//				if (_wc.getLocalFolder().equals(localDir)){
+//					_wc.stop();
+//				}
+//			}
+//		}
+//		updateWatchedFolders(message);
 		return null;
 	}
 	
 	private static String handleResumeWatch(DaemonMessage message) {
-		Map<String, Command> commands = Daemon.getInstance().getCommands();
-		String localDir = message.getLocalFolder();
-		
-		logger.log(Level.INFO, String.format("Resume watching folder %s", localDir));
-		
-		for (String key : commands.keySet()){
-			Command c = commands.get(key);
-			if (c instanceof WatchCommand){
-				WatchCommand _wc = (WatchCommand)c;
-				if (_wc.getLocalFolder().equals(localDir)){
-					_wc.resume();
-				}
-			}
-		}
-		updateWatchedFolders(message);
+//		Map<String, Command> commands = Daemon.getInstance().getCommands();
+//		String localDir = message.getLocalFolder();
+//		
+//		logger.log(Level.INFO, String.format("Resume watching folder %s", localDir));
+//		
+//		for (String key : commands.keySet()){
+//			Command c = commands.get(key);
+//			if (c instanceof WatchCommand){
+//				WatchCommand _wc = (WatchCommand)c;
+//				if (_wc.getLocalFolder().equals(localDir)){
+//					_wc.resume();
+//				}
+//			}
+//		}
+//		updateWatchedFolders(message);
 		return null;
 	}
 
 	private static String handleQuit(DaemonMessage message) {
-		if (Daemon.getInstance() != null) {
-			Daemon.getInstance().shutdown();
-		}
-		
+//		if (Daemon.getInstance() != null) {
+//			Daemon.getInstance().stop();
+//		}
+//		
 		return null;
 	}
 
@@ -225,29 +225,29 @@ public class DaemonCommandHandler {
 	}
 
 	public static void updateWatchedFolders(DaemonMessage parent) {
-		Map<String, Command> commands = Daemon.getInstance().getCommands();
-		
-		Map<String, Map<String, String>> folders = new HashMap<>();
-		DaemonWatchResultMessage ret = new DaemonWatchResultMessage(parent);
-		
-		if (commands.size() > 0){
-			for (String key : commands.keySet()){
-				Command com = commands.get(key);
-				if (com instanceof WatchCommand){
-					Map<String, String> element = new HashMap<>();
-					WatchCommand wc = (WatchCommand)com;
-					element.put("key", key);
-					element.put("folder", wc.getLocalFolder());
-					element.put("status", wc.getStatus().toString());
-					folders.put(key, element);
-				}
-			}
-		}
-		
-		ret.setAction("update_watched_folders");
-		ret.setOriginalAction(parent.getAction());
-		ret.setFoldersUpdate(folders);
-		DaemonWebSocketServer.sendToAll(ret);
+//		Map<String, Command> commands = Daemon.getInstance().getCommands();
+//		
+//		Map<String, Map<String, String>> folders = new HashMap<>();
+//		DaemonWatchResultMessage ret = new DaemonWatchResultMessage(parent);
+//		
+//		if (commands.size() > 0){
+//			for (String key : commands.keySet()){
+//				Command com = commands.get(key);
+//				if (com instanceof WatchCommand){
+//					Map<String, String> element = new HashMap<>();
+//					WatchCommand wc = (WatchCommand)com;
+//					element.put("key", key);
+//					element.put("folder", wc.getLocalFolder());
+//					element.put("status", wc.getStatus().toString());
+//					folders.put(key, element);
+//				}
+//			}
+//		}
+//		
+//		ret.setAction("update_watched_folders");
+//		ret.setOriginalAction(parent.getAction());
+//		ret.setFoldersUpdate(folders);
+//		DaemonWebSocketServer.sendToAll(ret);
 	}
 
 	public static void handle(String s) {

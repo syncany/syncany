@@ -15,20 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.exception;
+package org.syncany.daemon;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonAlreadyStartedException extends Exception {
-	private static final long serialVersionUID = -4655279609105005191L;
-
-	/**
-	 * @param string
-	 */
-	public DaemonAlreadyStartedException(String message) {
-		super(message);
+public class ServiceManager {
+	private static final Map<String, Service> services = new HashMap<String, Service>();
+	
+	public static Service startService(String identifier, String serviceClassName, Map<String, Object> params) throws Exception {
+		if (services.containsKey(identifier))
+			throw new Exception("service already exists");
+	
+		Service service = (Service)Class.forName(serviceClassName).newInstance();
+		service.start(params);
+		services.put(identifier, service);
+		return service;
 	}
-
 }

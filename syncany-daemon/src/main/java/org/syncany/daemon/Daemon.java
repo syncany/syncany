@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import org.syncany.config.Logging;
 import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.CommandStatus;
 import org.syncany.daemon.command.WatchCommand;
 import org.syncany.daemon.config.DaemonConfigurationTO;
 import org.syncany.daemon.config.DeamonConfiguration;
-import org.syncany.daemon.exception.DaemonAlreadyStartedException;
+import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 import org.syncany.daemon.util.SocketLock;
 import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
@@ -22,48 +21,21 @@ import org.syncany.daemon.websocket.messages.DaemonMessage;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
-public class Daemon {
+public class Daemon implements Service {
 	private static final Logger log = Logger.getLogger(Daemon.class.getSimpleName());
 
-	private static final SocketLock daemonSocketLock = new SocketLock();
-	private static EventBus eventBus = new EventBus("syncany-daemon");
+	private final AtomicBoolean quit = new AtomicBoolean(false);
+	private final AtomicBoolean quittingInProgress = new AtomicBoolean(false);
 
-	private static final AtomicBoolean quit = new AtomicBoolean(false);
-	private static boolean quittingInProgress = false;
-	private static Daemon instance = null;
+	private int lockPort;
+	private SocketLock daemonSocketLock;
+	private EventBus eventBus;
+
 	private boolean startedWithGui = false;
 	private DeamonConfiguration daemonConfiguration;
 
 	private Map<String, Command> commands = new HashMap<>();
-
-	static {
-		Logging.init();
-	}
-
-	public static void main(String[] args) {
-		try {
-			Daemon.getInstance().start(false);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot launch daemon.", e);
-		}
-	}
 	
-	public static EventBus getEventBus() {
-		return eventBus;
-	}
-
-	public Daemon() {
-		try {
-			DaemonConfigurationTO acto = loadDaemonConfiguration();
-			daemonConfiguration = DeamonConfiguration.from(acto);
-		}
-		catch (Exception e) {
-			log.severe("Unable to load application configuration File : " + e);
-			return;
-		}
-	}
-
 	/**
 	 * @return the commands
 	 */
@@ -82,50 +54,6 @@ public class Daemon {
 			Command t = getCommands().get(key);
 			t.disposeCommand();
 		}
-	}
-
-	public void shutdown() {
-		if (quittingInProgress || !startedWithGui) {
-			return;
-		}
-
-		log.fine("Shutdown DaemonServer");
-
-		quittingInProgress = true;
-		quit.set(true);
-
-		killWatchingThreads();
-
-		DaemonWebSocketServer.stop();
-
-		daemonSocketLock.free();
-		instance = null;
-
-		quittingInProgress = false;
-	}
-
-	public void start(boolean startedWithGui) throws DaemonAlreadyStartedException {
-		this.startedWithGui = startedWithGui;
-
-		// 0- determine if gui is already launched
-		try {
-			daemonSocketLock.lock();
-		}
-		catch (Exception e) {
-			log.info("Daemon already launched");
-			throw new DaemonAlreadyStartedException("Daemon Server socket lock failed");
-		}
-
-		// 2- Starting websocket server
-		DaemonWebSocketServer.start();
-	}
-
-	public static Daemon getInstance() {
-		if (instance == null) {
-			instance = new Daemon();
-			getEventBus().register(instance);
-		}
-		return instance;
 	}
 
 	@Subscribe
@@ -150,7 +78,7 @@ public class Daemon {
 		DaemonWebSocketServer.sendToAll("update");
 	}
 
-	private static DaemonConfigurationTO loadDaemonConfiguration() throws Exception {
+	private DaemonConfigurationTO loadDaemonConfiguration() throws Exception {
 		File appConfigDir = new File(System.getProperty("user.home") + File.separator + ".syncany");
 		File daemonConfigFile = new File(appConfigDir, "syncany-daemon-config.xml");
 
@@ -166,7 +94,66 @@ public class Daemon {
 		return DaemonConfigurationTO.load(daemonConfigFile);
 	}
 	
-	public DeamonConfiguration getDaemonConfiguration() {
-		return daemonConfiguration;
+	// Service interface
+	@Override
+	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
+		if (parameters.containsKey("startedWithGui")) {
+			startedWithGui = (Boolean)parameters.get("startedWithGui");
+		}
+		else {
+			startedWithGui = false;
+		}
+		
+		if (parameters.containsKey("lockPort")) {
+			lockPort = (Integer)parameters.get("lockPort");
+		}
+		else {
+			lockPort = 3338;
+		}
+		
+		this.daemonSocketLock = new SocketLock(lockPort);
+		this.eventBus = new EventBus("syncany-daemon-"+lockPort);
+		eventBus.register(this);
+		
+		try {
+			DaemonConfigurationTO acto = loadDaemonConfiguration();
+			daemonConfiguration = DeamonConfiguration.from(acto);
+		}
+		catch (Exception e) {
+			log.severe("Unable to load application configuration File : " + e);
+			return;
+		}
+
+		// 0- determine if gui is already launched
+		try {
+			daemonSocketLock.lock();
+		}
+		catch (Exception e) {
+			log.info("Daemon already launched");
+			throw new ServiceAlreadyStartedException("Daemon Server socket lock failed");
+		}
+
+		// 2- Starting websocket server
+		DaemonWebSocketServer.start();
+	}
+	
+	@Override
+	public void stop() {
+		if (quittingInProgress.get() || !startedWithGui) {
+			return;
+		}
+
+		log.fine("Shutdown DaemonServer");
+
+		quittingInProgress.set(true);
+		quit.set(true);
+
+		killWatchingThreads();
+
+		DaemonWebSocketServer.stop();
+	
+		daemonSocketLock.free();
+
+		quittingInProgress.set(false);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,42 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.command;
+package org.syncany.daemon;
 
-import java.util.UUID;
+import java.util.Map;
+
+import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class Command {
-	private CommandStatus status;
-	private String id;
-	
-	public Command(){
-		this.id = UUID.randomUUID().toString();
-	}
-	
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
-	
-	/**
-	 * @return the status
-	 */
-	public CommandStatus getStatus() {
-		return status;
-	}
-	
-	/**
-	 * @param status the status to set
-	 */
-	public void setStatus(CommandStatus status) {
-		this.status = status;
-	}
-		
-	public abstract void disposeCommand();
+public interface Service {
+	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException;
+	public void stop();
 }

@@ -9,17 +9,13 @@ import org.syncany.daemon.DaemonCommandHandler;
 
 /**
  * 
- * @author vwiencek
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class SocketLock {
 	private static final Logger log = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
     private int port;
     private Socket socket;
-
-    public SocketLock() {
-        this(35666); // create an interlock using a socket
-    }
 
     public SocketLock(int port) {// use lowest private port
         this.port = port;
