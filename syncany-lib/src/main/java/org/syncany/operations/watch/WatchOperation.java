@@ -130,7 +130,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				Thread.sleep(options.getInterval());
 			}
 		}
-
 		return new WatchOperationResult();
 	}
 
@@ -214,16 +213,16 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			notificationListener.announce(notificationChannel, notificationInstanceId);
 		}
 	}
-
-	public void pause() {
+	
+	public void pause(){
 		pauseRequired.set(true);
 	}
-
-	public void resume() {
+	
+	public void resume(){
 		pauseRequired.set(false);
 	}
 
-	public void stop() {
+	public void stop(){
 		stopRequired.set(true);
 	}
 
