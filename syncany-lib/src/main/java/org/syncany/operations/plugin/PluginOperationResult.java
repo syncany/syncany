@@ -22,7 +22,15 @@ import java.util.List;
 import org.syncany.operations.OperationResult;
 
 public class PluginOperationResult implements OperationResult {
+	public enum PluginResultCode {
+		OK, NOK
+	}
+	
+	private PluginResultCode resultCode;
 	private List<ExtendedPluginInfo> pluginList;
+	private String sourcePluginPath;
+	private String targetPluginPath;
+	private PluginInfo affectedPluginInfo;
 
 	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
@@ -30,5 +38,37 @@ public class PluginOperationResult implements OperationResult {
 
 	public void setPluginList(List<ExtendedPluginInfo> pluginList) {
 		this.pluginList = pluginList;
+	}
+
+	public PluginResultCode getResultCode() {
+		return resultCode;
+	}
+
+	public void setResultCode(PluginResultCode resultCode) {
+		this.resultCode = resultCode;
+	}
+
+	public PluginInfo getAffectedPluginInfo() {
+		return affectedPluginInfo;
+	}
+
+	public void setAffectedPluginInfo(PluginInfo affectedPluginInfo) {
+		this.affectedPluginInfo = affectedPluginInfo;
+	}
+
+	public String getSourcePluginPath() {
+		return sourcePluginPath;
+	}
+
+	public void setSourcePluginPath(String affectedPluginPath) {
+		this.sourcePluginPath = affectedPluginPath;
+	}
+
+	public String getTargetPluginPath() {
+		return targetPluginPath;
+	}
+
+	public void setTargetPluginPath(String targetPluginPath) {
+		this.targetPluginPath = targetPluginPath;
 	}
 }

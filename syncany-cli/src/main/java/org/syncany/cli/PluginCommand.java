@@ -33,10 +33,11 @@ import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
+import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 
 public class PluginCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
-
+	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.ANY;
@@ -47,26 +48,10 @@ public class PluginCommand extends Command {
 		PluginOperationOptions operationOptions = parseOptions(operationArgs);
 		PluginOperationResult operationResult = client.plugin(operationOptions);
 
-		printResults(operationResult);
+		printResults(operationOptions, operationResult);
 
 		return 0;
 	}	
-
-	private void printResults(PluginOperationResult operationResult) throws Exception {
-		out.println("Id       Name            Local Version  Remote Version  Inst.  Upgr.");
-		out.println("---------------------------------------------------------------------------------");
-		
-		for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
-			PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
-
-			String localVersionStr = shortenStr(14, (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "");
-			String remoteVersionStr = shortenStr(14, (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "");
-			String installedStr = extPluginInfo.isInstalled() ? "yes" : "";
-			String upgradeAvailableStr = extPluginInfo.isUpgradeAvailable() ? "yes" : "";			
-			
-			out.printf("%-7s  %-15s %-14s %-14s  %-5s  %-5s\n", pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, remoteVersionStr, installedStr, upgradeAvailableStr);
-		}
-	}
 
 	private String shortenStr(int len, String s) {
 		if (s.length() > len) {
@@ -90,7 +75,7 @@ public class PluginCommand extends Command {
 		List<?> nonOptionArgs = options.nonOptionArguments();
 		
 		if (nonOptionArgs.size() == 0) {
-			throw new Exception("Invalid syntax, please specify an action (list, install, activate, deactivate).");
+			throw new Exception("Invalid syntax, please specify an action (list, install, remove).");
 		}
 		
 		// <action>
@@ -100,22 +85,17 @@ public class PluginCommand extends Command {
 		operationOptions.setAction(action);
 		
 		// Additional options per-action
-		if (action == PluginAction.INSTALL || action == PluginAction.UNINSTALL) {
+		if (action == PluginAction.INSTALL || action == PluginAction.REMOVE) {
 			if (nonOptionArgs.size() != 2) {
 				throw new Exception("Invalid syntax, please specify a plugin ID.");
 			}
 			
 			String pluginId = nonOptionArgs.get(1).toString();
 			operationOptions.setPluginId(pluginId);
-		}
-		else {			
-			if (nonOptionArgs.size() != 1) {
-				throw new Exception("Invalid syntax, no other options expected.");
-			}			
-		}
+		}		
 		
 		// --local-only, --remote-only
-		if (action == PluginAction.LIST) {
+		else if (action == PluginAction.LIST) {
 			if (options.has(optionLocal)) {
 				operationOptions.setListMode(PluginListMode.LOCAL);	
 			}
@@ -137,5 +117,85 @@ public class PluginCommand extends Command {
 		catch (Exception e) {
 			throw new Exception("Invalid syntax, unknown action '" + actionStr + "'");
 		}
+	}
+	
+
+	private void printResults(PluginOperationOptions operationOptions, PluginOperationResult operationResult) throws Exception {
+		switch (operationOptions.getAction()) {
+		case LIST:
+			printResultList(operationResult);
+			return;
+
+		case INSTALL:
+			printResultInstall(operationResult);
+			return;
+			
+		case REMOVE:
+			printResultRemove(operationResult);
+			return;
+
+		default:
+			throw new Exception("Unknown action: " + operationOptions.getAction());
+		}
+	}
+
+	private void printResultList(PluginOperationResult operationResult) {
+		if (operationResult.getResultCode() == PluginResultCode.OK) {
+			out.println("Id       Name            Local Version  Remote Version  Inst.  Upgr.");
+			out.println("---------------------------------------------------------------------------------");
+			
+			for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
+				PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
+	
+				String localVersionStr = shortenStr(14, (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "");
+				String remoteVersionStr = shortenStr(14, (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "");
+				String installedStr = extPluginInfo.isInstalled() ? "yes" : "";
+				String upgradeAvailableStr = extPluginInfo.isUpgradeAvailable() ? "yes" : "";			
+				
+				out.printf("%-7s  %-15s %-14s %-14s  %-5s  %-5s\n", pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, remoteVersionStr, installedStr, upgradeAvailableStr);
+			}
+		}
+		else {
+			out.printf("Listing plugins failed. No connection? Try -d to get more details.\n");
+			out.println();
+		}
+	}
+	
+	private void printResultInstall(PluginOperationResult operationResult) {
+		if (operationResult.getResultCode() == PluginResultCode.OK) {
+			out.printf("Plugin successfully installed from %s\n", operationResult.getSourcePluginPath());
+			out.printf("Install location: %s\n", operationResult.getTargetPluginPath());
+			out.println();
+				
+			printPluginDetails(operationResult.getAffectedPluginInfo());
+		}
+		else {
+			out.println("Plugin installation failed. Try -d to get more details.");
+			out.println();
+		}
+	}
+
+	private void printResultRemove(PluginOperationResult operationResult) {
+		if (operationResult.getResultCode() == PluginResultCode.OK) {
+			out.printf("Plugin successfully removed.\n");
+			out.printf("Original local was %s\n", operationResult.getSourcePluginPath());
+			out.println();
+		}
+		else {
+			out.println("Plugin removal failed.");
+			out.println();
+			
+			out.println("Note: Plugins shipped with the application");
+			out.println("      cannot be removed.");
+			out.println();
+		}
+	}
+	
+	private void printPluginDetails(PluginInfo pluginInfo) {
+		out.println("Plugin details:");
+		out.println("- ID: "+pluginInfo.getPluginId());
+		out.println("- Name: "+pluginInfo.getPluginName());
+		out.println("- Version: "+pluginInfo.getPluginVersion());
+		out.println();	
 	}
 }

@@ -126,6 +126,7 @@ subprojects {
 	processResources {	
 		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
 		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
+		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
 		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
 		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
 	}		

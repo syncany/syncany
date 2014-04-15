@@ -148,7 +148,7 @@ COMMANDS
     -V, --no-version-remove          Don't remove old versions (default: yes)
     -k, --keep-versions=<count>      Number of versions to keep (if not -V)
     
-  plugin (list | install | uninstall) [<args>]
+  plugin (list | install | remove) [<args>]
      Lists and manages available plugins. The following actions are 
      available:
      
@@ -165,7 +165,7 @@ COMMANDS
        Installs a plugin from an arbitrary URL, local file or from the 
        available plugins on api.syncany.org (with a plugin identifier)
 
-     uninstall <plugin-id>
+     remove <plugin-id>
        Uninstalls a plugin entirely (removes the JAR file). This action can
        only be used for plugins that were installed by the user, and not for
        system-wide plugins.

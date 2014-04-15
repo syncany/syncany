@@ -44,23 +44,7 @@ public abstract class Plugin {
 
 	public Plugin(String pluginId) {
 		this.pluginId = pluginId;
-		this.pluginProperties = getPluginProperties(pluginId);
-	}
-
-	public Properties getPluginProperties(String pluginId) {
-		String pluginInfoResource = "/" + Plugin.class.getPackage().getName().replace('.', '/') + "/" + pluginId + "/plugin.properties";
-
-		InputStream pluginPropertiesInputStream = Plugin.class.getResourceAsStream(pluginInfoResource);
-
-		try {
-			Properties pluginProperties = new Properties();
-			pluginProperties.load(pluginPropertiesInputStream);
-
-			return pluginProperties;
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot load application properties.", e);
-		}
+		this.pluginProperties = loadPluginProperties(pluginId);
 	}
 
 	/**
@@ -92,4 +76,25 @@ public abstract class Plugin {
 	 * Creates a plugin-specific {@link Connection}
 	 */
 	public abstract Connection createConnection();
+	
+
+	/**
+	 * Loads the plugin properties (ID, name, version)
+	 * from the resource
+	 */
+	private Properties loadPluginProperties(String pluginId) {
+		String pluginInfoResource = "/" + Plugin.class.getPackage().getName().replace('.', '/') + "/" + pluginId + "/plugin.properties";
+
+		InputStream pluginPropertiesInputStream = Plugin.class.getResourceAsStream(pluginInfoResource);
+
+		try {
+			Properties pluginProperties = new Properties();
+			pluginProperties.load(pluginPropertiesInputStream);
+
+			return pluginProperties;
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot load application properties.", e);
+		}
+	}	
 }

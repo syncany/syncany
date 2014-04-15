@@ -21,7 +21,7 @@ import org.syncany.operations.OperationOptions;
 
 public class PluginOperationOptions implements OperationOptions {
 	public enum PluginAction {
-		LIST, INSTALL, UNINSTALL
+		LIST, INSTALL, REMOVE
 	}
 
 	public enum PluginListMode {
