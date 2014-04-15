@@ -124,10 +124,10 @@ subprojects {
 	}
 	
 	processResources {	
-		filter{ String line -> line.replaceAll('%RELEASE%', "${applicationRelease}") }        	            
-		filter{ String line -> line.replaceAll('%VERSION%', "${applicationVersion}") }        	            
-		filter{ String line -> line.replaceAll('%REVISION%', "${applicationRevision}") }
-		filter{ String line -> line.replaceAll('%COMPILEDATE%', "${applicationDate}") }          	            
+		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
+		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
+		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
+		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
 	}		
 	
 	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {

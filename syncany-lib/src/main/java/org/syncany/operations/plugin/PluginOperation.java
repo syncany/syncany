@@ -40,7 +40,6 @@ import org.syncany.operations.Operation;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
-import org.syncany.util.StringUtil;
 
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
@@ -253,7 +252,7 @@ public class PluginOperation extends Operation {
 						
 			pluginInfo.setPluginId(plugin.getId());
 			pluginInfo.setPluginName(plugin.getName());
-			pluginInfo.setPluginVersion(StringUtil.join(plugin.getVersion(), "."));
+			pluginInfo.setPluginVersion(plugin.getVersion());
 			
 			localPluginInfos.add(pluginInfo);
 		}

@@ -77,9 +77,9 @@ import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
  */
 public class Client {
 	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
-	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "release";
-	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "version";
-	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "revision";
+	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
+	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
+	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
 	private static final Properties applicationProperties = new Properties();
 
 	protected Config config;
