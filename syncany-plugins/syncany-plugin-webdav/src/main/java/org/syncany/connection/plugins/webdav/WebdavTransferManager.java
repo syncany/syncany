@@ -275,7 +275,7 @@ public class WebdavTransferManager extends AbstractTransferManager {
 	public boolean repoIsValid() throws StorageException {
 		// TODO not tested
 		try {
-			return sardine.list(repoPath).size() == 0;
+			return sardine.list(repoPath).size() != 0;
 		}
 		catch (IOException e) {
 			throw new StorageException(e);
