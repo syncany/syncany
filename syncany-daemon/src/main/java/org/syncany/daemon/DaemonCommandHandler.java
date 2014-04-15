@@ -14,15 +14,15 @@ import org.syncany.daemon.command.ConnectCommand;
 import org.syncany.daemon.command.InitCommand;
 import org.syncany.daemon.command.WatchCommand;
 import org.syncany.daemon.websocket.DaemonWebSocketServer;
-import org.syncany.daemon.websocket.messages.DaemonMessage;
-import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
-import org.syncany.daemon.websocket.messages.DaemonResultMessage;
 import org.syncany.daemon.websocket.messages.DaemonConnectMessage;
 import org.syncany.daemon.websocket.messages.DaemonInitMessage;
+import org.syncany.daemon.websocket.messages.DaemonMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
+import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
+import org.syncany.daemon.websocket.messages.DaemonResultMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
-import org.syncany.operations.init.GenlinkOperation.GenlinkOperationResult;
+import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.util.JsonHelper;
 
 

@@ -37,9 +37,9 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperation.InitOperationListener;
-import org.syncany.operations.init.InitOperation.InitOperationOptions;
-import org.syncany.operations.init.InitOperation.InitOperationResult;
+import org.syncany.operations.init.InitOperationListener;
+import org.syncany.operations.init.InitOperationOptions;
+import org.syncany.operations.init.InitOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -87,7 +87,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		ConnectionTO connectionTO = initPluginWithOptions(pluginName, pluginArgs);
 		
 		List<CipherSpec> cipherSpecs = getCipherSuites(encryptionEnabled, cipherSpec);
-		
+				
 		ChunkerTO chunkerTO = getDefaultChunkerTO();
 		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
 		List<TransformerTO> transformersTO = getTransformersTO(gzipEnabled, cipherSpecs);
