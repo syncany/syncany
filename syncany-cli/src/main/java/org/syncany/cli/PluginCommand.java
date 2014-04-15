@@ -27,6 +27,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.LogOperation;
+import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
@@ -52,12 +53,27 @@ public class PluginCommand extends Command {
 	}	
 
 	private void printResults(PluginOperationResult operationResult) throws Exception {
-		out.println("Id       Name            Version        Status");
-		out.println("----------------------------------------------------");
+		out.println("Id       Name            Local Version  Remote Version  Inst.  Upgr.");
+		out.println("---------------------------------------------------------------------------------");
 		
-		for (PluginInfo pluginInfo : operationResult.getPluginList()) {
-			String statusStr = "inst/.."; // TODO [medium] fill this
-			out.printf("%-7s  %-15s %-14s %s\n", pluginInfo.getPluginId(), pluginInfo.getPluginName(), pluginInfo.getPluginVersion(), statusStr);
+		for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
+			PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
+
+			String localVersionStr = shortenStr(14, (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "");
+			String remoteVersionStr = shortenStr(14, (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "");
+			String installedStr = extPluginInfo.isInstalled() ? "yes" : "";
+			String upgradeAvailableStr = extPluginInfo.isUpgradeAvailable() ? "yes" : "";			
+			
+			out.printf("%-7s  %-15s %-14s %-14s  %-5s  %-5s\n", pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, remoteVersionStr, installedStr, upgradeAvailableStr);
+		}
+	}
+
+	private String shortenStr(int len, String s) {
+		if (s.length() > len) {
+			return s.substring(0, len-2) + "..";
+		}
+		else {
+			return s;
 		}
 	}
 

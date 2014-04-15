@@ -26,6 +26,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,11 +68,46 @@ public class PluginOperation extends Operation {
 			return executeInstall();
 			
 		case UNINSTALL:
-			throw new Exception("Action not yet implemented: " + options.getAction());
+			return executeUninstall();
 
 		default:
 			throw new Exception("Unknown action: " + options.getAction());
 		}
+	}
+
+	private PluginOperationResult executeUninstall() throws Exception {
+		String pluginId = options.getPluginId();
+		Plugin plugin = Plugins.get(pluginId);
+		
+		if (plugin == null) {
+			throw new Exception("Plugin not installed.");
+		}
+		
+		Class<? extends Plugin> pluginClass = plugin.getClass();
+		URL pluginClassLocation = pluginClass.getResource('/' + pluginClass.getName().replace('.', '/') + ".class");
+		String pluginClassLocationStr = pluginClassLocation.toString();
+		
+		File globalUserPluginDir = getGlobalUserPluginDir();
+		String globalUserDirJarPrefix = "jar:file:" + globalUserPluginDir.getAbsolutePath();
+		
+		boolean canBeUninstalled = pluginClassLocationStr.startsWith(globalUserDirJarPrefix);
+		
+		if (canBeUninstalled) {
+			logger.log(Level.INFO, "Plugin can be uninstalled; class location at " + pluginClassLocation);
+			
+			int indexStartAfterSchema = "jar:file:".length();
+			int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
+			File pluginJarFile = new File(pluginClassLocationStr.substring(indexStartAfterSchema, indexEndAtExclamationPoint));
+			
+			logger.log(Level.INFO, "Uninstalling plugin from file " + pluginJarFile);			
+			pluginJarFile.delete();			
+		}
+		else {
+			logger.log(Level.INFO, "Plugin can NOT be uninstalled because class location at " + pluginClassLocation);
+		}
+		
+		
+		return null;
 	}
 
 	private PluginOperationResult executeInstall() throws Exception {
@@ -167,17 +204,43 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeList() throws Exception {
-		List<PluginInfo> pluginInfos = new ArrayList<PluginInfo>();
+		Map<String, ExtendedPluginInfo> pluginInfos = new TreeMap<String, ExtendedPluginInfo>();
 		
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.LOCAL) {
-			pluginInfos.addAll(getLocalList());
+			for (PluginInfo localPluginInfo : getLocalList()) {
+				ExtendedPluginInfo extendedPluginInfo = new ExtendedPluginInfo();
+
+				extendedPluginInfo.setLocalPluginInfo(localPluginInfo);
+				extendedPluginInfo.setInstalled(true);
+				
+				pluginInfos.put(localPluginInfo.getPluginId(), extendedPluginInfo);
+			}
 		}
 		
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.REMOTE) {
-			pluginInfos.addAll(getRemotePluginInfoList());
+			for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
+				ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
+				
+				if (extendedPluginInfo == null) { // Locally not installed 
+					extendedPluginInfo = new ExtendedPluginInfo();
+					
+					extendedPluginInfo.setInstalled(false);
+					extendedPluginInfo.setRemoteAvailable(true);
+					extendedPluginInfo.setUpgradeAvailable(true);												
+				}
+				else { // Locally also installed					
+					boolean remoteAndLocalVersionEqual = remotePluginInfo.getPluginVersion().equals(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
+
+					extendedPluginInfo.setRemoteAvailable(true);	
+					extendedPluginInfo.setUpgradeAvailable(!remoteAndLocalVersionEqual);
+				}
+				
+				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
+				pluginInfos.put(remotePluginInfo.getPluginId(), extendedPluginInfo);
+			}
 		}
 		
-		result.setPluginList(pluginInfos); // TODO This should include plugins in .syncany/plugins
+		result.setPluginList(new ArrayList<ExtendedPluginInfo>(pluginInfos.values()));
 
 		return result;
 	}

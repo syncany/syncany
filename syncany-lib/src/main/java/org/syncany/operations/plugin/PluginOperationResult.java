@@ -22,13 +22,13 @@ import java.util.List;
 import org.syncany.operations.OperationResult;
 
 public class PluginOperationResult implements OperationResult {
-	private List<PluginInfo> pluginList;
+	private List<ExtendedPluginInfo> pluginList;
 
-	public List<PluginInfo> getPluginList() {
+	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
 	}
 
-	public void setPluginList(List<PluginInfo> pluginList) {
+	public void setPluginList(List<ExtendedPluginInfo> pluginList) {
 		this.pluginList = pluginList;
 	}
 }
