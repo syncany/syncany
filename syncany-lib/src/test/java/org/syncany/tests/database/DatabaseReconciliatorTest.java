@@ -24,9 +24,9 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.operations.DatabaseBranch;
-import org.syncany.operations.DatabaseBranches;
-import org.syncany.operations.DatabaseReconciliator;
+import org.syncany.operations.down.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranches;
+import org.syncany.operations.down.DatabaseReconciliator;
 import org.syncany.tests.util.TestDatabaseUtil;
 
 public class DatabaseReconciliatorTest {	
@@ -788,7 +788,7 @@ public class DatabaseReconciliatorTest {
 		actualTestResult.lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, stitchedRemoteBranches);
 		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, stitchedRemoteBranches);
 		actualTestResult.winningFirstConflictingDatabaseVersionHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(actualTestResult.firstConflictingDatabaseVersionHeaders);
-		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, stitchedRemoteBranches);
+		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, stitchedRemoteBranches);
 		
 		System.out.println("Actual lastCommonDatabaseVersionHeader = " +actualTestResult.lastCommonHeader);
 		System.out.println("Expect lastCommonDatabaseVersionHeader = " +expectedTestResult.lastCommonHeader);

@@ -35,6 +35,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -101,7 +102,7 @@ public class TestAssertUtil {
 			File expectedFile = expectedFileEntry.getValue();
 			File actualFile = actualFiles.remove(expectedFileEntry.getKey());
 			
-			assertFileEquals(message+": File not equal", expectedFile, actualFile);
+			assertFileEquals(expectedFile, actualFile);
 		}		
 	}
 	
@@ -124,26 +125,26 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertFileEquals(File expectedFile, File actualFile) throws ArrayComparisonFailure, Exception {
-		assertFileEquals("Files are not equal", expectedFile, actualFile);
+		assertFileEquals(expectedFile, actualFile, new FileChange[] { FileChange.CHANGED_PATH });
 	}
 	
-	public static void assertFileEquals(String message, File expectedFile, File actualFile) throws ArrayComparisonFailure, Exception {
+	public static void assertFileEquals(File expectedFile, File actualFile, FileChange... allowedChanges) throws ArrayComparisonFailure, Exception {		
 		if (expectedFile == null && actualFile == null) {
 			return;
 		}
 		
-		assertNotNull(message+": Actual file is "+actualFile+", expected file is null.", expectedFile);
-		assertNotNull(message+": Expected file is "+expectedFile+", actual file is null.", actualFile);
+		assertNotNull("Files are not equal: Actual file is "+actualFile+", expected file is null.", expectedFile);
+		assertNotNull("Files are not equal: Expected file is "+expectedFile+", actual file is null.", actualFile);
 		
 		Path root = Paths.get(actualFile.getAbsolutePath()).getRoot();
 		FileVersionComparator fileVersionComparator = new FileVersionComparator(root.toFile(), "SHA1");
 		
 		if (!FileUtil.exists(expectedFile)) {
-			fail(message+": Expected file "+expectedFile+" does not exist.");
+			fail("Files are not equal: Expected file "+expectedFile+" does not exist.");
 		}
 		
 		if (!FileUtil.exists(actualFile)) {
-			fail(message+": Actual file "+actualFile+" does not exist.");
+			fail("Files are not equal: Actual file "+actualFile+" does not exist.");
 		}
 
 		if (FileUtil.isSymlink(actualFile) && FileUtil.isSymlink(expectedFile)) {
@@ -151,7 +152,7 @@ public class TestAssertUtil {
 		}
 		
 		if (actualFile.isDirectory() != expectedFile.isDirectory()) {
-			fail(message+" Comparing a directory with a file (actual is dir = "+actualFile.isDirectory()+", expected is dir = "+expectedFile.isDirectory()+")");
+			fail("Files are not equal: Comparing a directory with a file (actual is dir = "+actualFile.isDirectory()+", expected is dir = "+expectedFile.isDirectory()+")");
 		}
 		
 		if (actualFile.isDirectory() && expectedFile.isDirectory()) {
@@ -159,21 +160,24 @@ public class TestAssertUtil {
 		}
 		
 		if (actualFile.length() != expectedFile.length()) {
-			fail(message+": Actual file size ("+actualFile+" = "+actualFile.length()+") does not match expected file size ("+expectedFile+" = "+expectedFile.length()+")");
+			fail("Files are not equal: Actual file size ("+actualFile+" = "+actualFile.length()+") does not match expected file size ("+expectedFile+" = "+expectedFile.length()+")");
 		}
 		
 		byte[] expectedFileChecksum = TestFileUtil.createChecksum(expectedFile);
 		byte[] actualFileChecksum = TestFileUtil.createChecksum(actualFile);
 		
-		assertArrayEquals(message+": Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);
+		assertArrayEquals("Files are not equal: Actual file checksum ("+StringUtil.toHex(actualFileChecksum)+") and expected file checksum ("+StringUtil.toHex(expectedFileChecksum)+") do not match.", expectedFileChecksum, actualFileChecksum);
 		
 		FileProperties actualFileProperties = fileVersionComparator.captureFileProperties(actualFile, null, true);
 		FileProperties expectedFileProperties = fileVersionComparator.captureFileProperties(expectedFile, null, true);
 		
 		FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedFileProperties, actualFileProperties, true);
 		
-		if (!CollectionUtil.containsOnly(fileVersionComparison.getFileChanges(), FileChange.CHANGED_PATH)) {
-			fail(message+": Actual file differs from expected file: "+fileVersionComparison.getFileChanges());
+		List<FileChange> allowedChangesList = new ArrayList<FileChange>(Arrays.asList(allowedChanges));
+		allowedChangesList.add(FileChange.CHANGED_PATH);
+		
+		if (!CollectionUtil.containsOnly(fileVersionComparison.getFileChanges(), allowedChangesList)) {
+			fail("Files are not equal: Actual file differs from expected file: "+fileVersionComparison.getFileChanges());
 		}		
 	}
 	
@@ -204,7 +208,7 @@ public class TestAssertUtil {
 			new String[] { "filehistory", "DATABASEVERSION_ID" },
 			new String[] { "fileversion", "DATABASEVERSION_ID" },
 				// skipped known_databases
-			new String[] { "multichunk" },
+			new String[] { "multichunk", "DATABASEVERSION_ID" },
 			new String[] { "multichunk_chunk" }
 		};
 		

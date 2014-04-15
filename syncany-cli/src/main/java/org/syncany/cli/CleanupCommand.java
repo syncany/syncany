@@ -25,6 +25,7 @@ import joptsimple.OptionSpec;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
 import org.syncany.operations.CleanupOperation.CleanupOperationResult;
+import org.syncany.operations.StatusOperation.StatusOperationOptions;
 
 public class CleanupCommand extends Command {
 	@Override
@@ -46,6 +47,8 @@ public class CleanupCommand extends Command {
 		CleanupOperationOptions operationOptions = new CleanupOperationOptions();
 
 		OptionParser parser = new OptionParser();
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
@@ -69,7 +72,22 @@ public class CleanupCommand extends Command {
 			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));			
 		}
 		
+		// Parse 'status' options
+		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));	
+		
+		// Does this configuration make sense
+		boolean nothingToDo = !operationOptions.isMergeRemoteFiles() && operationOptions.isRemoveOldVersions();
+		
+		if (nothingToDo) {
+			throw new Exception("Invalid parameter configuration: -M and -V cannot be set together. Nothing to do.");
+		}
+		
 		return operationOptions;
+	}
+	
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
+		StatusCommand statusCommand = new StatusCommand();
+		return statusCommand.parseOptions(operationArgs);
 	}
 
 	private void printResults(CleanupOperationResult operationResult) {	

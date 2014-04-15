@@ -1,0 +1,150 @@
+%RESOURCE:/help/copyright.skel%
+
+SYNOPSIS
+  sy [-l|--localdir=<path>] [--log=<path>]
+     [--loglevel=OFF|SEVERE|..] [--print]
+     [-d|--debug] [-h|--help] <command> [<args>]
+  
+DESCRIPTION
+  Syncany is an open-source cloud storage and filesharing application. It
+  allows users to backup and share certain folders of their workstations
+  using any kind of storage.
+  
+  Command overview:
+    init       Initialize the current folder as a Syncany folder.
+    connect    Connect the current folder to an existing Syncany repository.
+    status     Detect local changes and print to STDOUT.
+    up         Detect local changes and upload to repository.
+    ls-remote  Detect remote changes and print to STDOUT.
+    down       Detect remote changes and apply locally.
+    watch      Automatically synchronizes the local folder with the repo.
+    cleanup    Remove old versions from the local database and the repo. 
+    restore    Restore the given file paths from the remote repository. 
+    genlink    Create a syncany://-link from an existing local folder. 
+    log        Print parts of the local database to STDOUT. 
+
+  Short command descriptions and options can be found below. Detailed 
+  explanations can be queried with `sy <command> --help`. 
+
+GLOBAL OPTIONS
+  -l, --localdir=<path>
+      Use <path> instead of the current directory as local sync folder. 
+      Syncany searches for a '.syncany' folder in the given and all parent
+      directories.
+
+  -d, --debug
+      Sets the log level to ALL, and print the log to the console.
+      Alias to: --loglevel=ALL --print
+
+  -h, --help
+      Print this help screen
+
+  --log=<path>
+      Log output to the file given by <path>. If - is given, the
+      output will be logged to STDOUT (default).
+
+  --loglevel=<level>
+      Change log level to <level>. Level can be either of the
+      following: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL
+
+  --print
+      Print the log to the console (in addition to the log file).
+
+COMMANDS
+  init [<args>]
+    Initialize the current folder as a Syncany folder (interactive).
+    Currently loaded plugins: %PLUGINS%
+
+    Arguments:
+    -P, --plugin=<plugin>            Specify a plugin to use for storage 
+    -o, --plugin-option=<key=value>  Set plugin settings (multi-option)
+    -E, --no-encryption              Don't encrypt new repo
+    -G, --no-compression             Don't use gzip-compression in new repo
+    -t, --create-target              Create target path (if not existent)
+    -a, --advanced                   Asks more questions about encryption
+    -I, --no-interaction             Non-interactive mode    
+
+  connect [<args>] [<syncany link>]
+    Connect the current folder to an existing Syncany repository. To
+    initialize the connection a Syncany link (syncany://..) can be used.
+
+    Arguments:
+    -P, --plugin=<plugin>            Specify a plugin to use for storage
+    -o, --plugin-option=<key=value>  Set plugin settings (multi-option)
+    -I, --no-interaction             Non-interactive mode
+
+  up [<args>]
+    Detect local changes and upload to repository.
+
+    Arguments:
+    -c, --no-cleanup                 Do not merge own databases in repo
+
+    In addition to these arguments, all arguments of the 'status' command
+    can be used.
+
+  down
+    Detect remote changes and apply locally (update)
+
+  status [<args>]
+    Detect local changes and print to STDOUT.
+
+    Arguments:
+    -f, --force-checksum             Force checksum comparison, if not
+                                     enabled mod. date/size is used
+
+  ls-remote
+    Detect remote changes and print to STDOUT.
+
+  watch [<args>]
+    Automatically synchronizes the local folder with the repository. The
+    command performs the up and down command in an interval, watches the
+    file system for changes and subscribes to the Syncany pub/sub server. 
+
+    Arguments:
+    -i, --interval=<sec>             Sync every <sec> seconds (default is 120)
+    -s, --delay=<sec>                Watcher: Wait for <sec> seconds for file
+                                     system watcher to settle before starting 
+                                     to sync (default: 3)
+    -W, --no-watcher                 No file system watch (rely on interval)
+    -a, --announce=<host>:<port>     Hostname and port to fanout pub/sub 
+                                     server (default: notify.syncany.org:8080)
+    -N, --no-announcements           Don't connect to fanout pub/sub server;
+                                     disables instant sync
+
+    In addition to these arguments, all arguments of the up, down, status, 
+    ls-remote commands can be used.
+		
+  restore [<args>] <paths>
+    Restore the given file paths from the remote repository.
+    This command is EXPERIMENTAL!
+      
+    Arguments:
+    -D, --date=<unit(smhDMWY)>       Restore versions prior a relative date
+    -D, --date=<dd-mm-yy>            Restore versions prior an absolute date
+    -v, --version=<[-]version>       Restore <version> or go back <version>s
+
+  log [<args>] [<paths>]
+    Print to STDOUT information stored in the local database about the given
+    file paths or all paths known by the database if no path is given. The
+    output format is unstable and might change in future releases.
+
+    Arguments:
+    -f, --format=<format>            Specifies format to use for printing log.
+                                     Recognized formats: %LOGFORMATS%
+                                     
+  genlink [<args>]
+    Create a Syncany link (syncany://..) from an existing local folder. This
+    link can then be sent to someone else to connect to the repository.
+    
+    Arguments:
+    -s, --short                      Don't display help text 
+                                   
+  cleanup [<args>]
+    Remove old versions from the local database and the remote repository. 
+    This command frees up remote storage space.
+    
+    Arguments:
+    -M, --no-database-merge          Don't merge databases (default: yes)
+    -V, --no-version-remove          Don't remove old versions (default: yes)    
+    -k, --keep-versions=<count>      Number of versions to keep (if not -V)
+    

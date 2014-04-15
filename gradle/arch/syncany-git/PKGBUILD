@@ -1,0 +1,31 @@
+# Maintainer: Armin Fisslthaler <armin@fisslthaler.net>
+pkgname=syncany-git
+pkgver=0.1.1.alpha.gce6bd65
+pkgrel=1
+pkgdesc="An open-source cloud storage and filesharing application (a Dropbox work-alike with more flexibility in terms of storage type and provider)"
+arch=(any)
+url=http://www.syncany.org/
+license=(GPL2)
+depends=('java-runtime>=7')
+makedepends=(git)
+source=("${pkgname}"::'git+http://github.com/binwiederhier/syncany')
+md5sums=('SKIP')
+
+pkgver(){
+    cd "$srcdir/$pkgname"
+    echo $(grep 'applicationVersion =' build.gradle | cut -d'"' -f2 | sed 's/-/./g').g$(git rev-parse --short HEAD)
+}
+
+build(){
+    cd "$srcdir/$pkgname"
+    ./gradlew installApp
+}
+
+package(){
+    install -Dm755 "$srcdir/$pkgname/gradle/arch/syncany/syncany" "${pkgdir}/usr/bin/syncany"
+
+    cd "$srcdir/$pkgname/syncany-cli/build/install/syncany/lib"
+    for jar in *; do
+        install -Dm644 "$jar" "${pkgdir}/usr/share/java/syncany/$jar"
+    done
+}

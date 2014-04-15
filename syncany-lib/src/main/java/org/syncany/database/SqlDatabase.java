@@ -38,7 +38,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
-import org.syncany.operations.DatabaseBranch;
+import org.syncany.operations.down.DatabaseBranch;
 
 /**
  * Represents the single entry point for all SQL database queries.
@@ -128,8 +128,8 @@ public class SqlDatabase {
 		return databaseVersionDao.getLocalDatabaseBranch();
 	}
 
-	public void persistDatabaseVersion(DatabaseVersion databaseVersion) {
-		databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
+		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
 	}
 	
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
@@ -140,8 +140,8 @@ public class SqlDatabase {
 		databaseVersionDao.markDatabaseVersionDirty(vectorClock);
 	}
 
-	public void removeDirtyDatabaseVersions() {
-		databaseVersionDao.removeDirtyDatabaseVersions();
+	public void removeDirtyDatabaseVersions(long newDatabaseVersionId) {
+		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId);
 	}
 
 	public Long getMaxDirtyVectorClock(String machineName) {
@@ -150,24 +150,10 @@ public class SqlDatabase {
 
 	// File History
 
-	@Deprecated
-	public List<PartialFileHistory> getFileHistoriesForDatabaseVersion(VectorClock databaseVersionVectorClock) {
-		// TODO [medium] This is not used anywhere, remove it!
-		return fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionVectorClock);
-	}
-
 	@Deprecated	
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
 		// TODO [medium] Note: This returns the full database. Don't use this!
 		return fileHistoryDao.getFileHistoriesWithFileVersions();
-	}
-
-	public PartialFileHistory getFileHistoryWithLastVersion(FileHistoryId fileHistoryId) {
-		return fileHistoryDao.getFileHistoryWithLastVersion(fileHistoryId);
-	}
-
-	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
-		return fileHistoryDao.getFileHistoryWithLastVersion(relativePath);
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
@@ -186,11 +172,6 @@ public class SqlDatabase {
 
 	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
-	}
-	
-	@Deprecated
-	public void removeFileVersions(int keepVersionsCount) throws SQLException {
-		fileVersionDao.removeFileVersions(keepVersionsCount);		
 	}
 	
 	public void removeSmallerOrEqualFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {

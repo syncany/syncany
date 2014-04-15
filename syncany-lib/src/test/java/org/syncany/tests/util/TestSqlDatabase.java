@@ -24,10 +24,10 @@ import java.sql.SQLException;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.AbstractSqlDao;
 
 /**
@@ -44,6 +44,10 @@ public class TestSqlDatabase extends SqlDatabase {
 	
 	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
 		return testDao.getFileHistoryWithFileVersions(relativePath);
+	}
+	
+	public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
+		return testDao.getFileHistoryWithLastVersion(relativePath);
 	}
 
 	public class TestSqlDao extends AbstractSqlDao {		
@@ -73,6 +77,29 @@ public class TestSqlDatabase extends SqlDatabase {
 				}
 	
 				return fileHistory;
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
+			try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
+				preparedStatement.setString(1, relativePath);
+
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next()) {
+						FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+						FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
+		
+						PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
+						fileHistory.addFileVersion(lastFileVersion);
+		
+						return fileHistory;
+					}
+				}
+
+				return null;
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(e);

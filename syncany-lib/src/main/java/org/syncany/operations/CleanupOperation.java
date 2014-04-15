@@ -170,7 +170,7 @@ public class CleanupOperation extends Operation {
 	 * 5. Stop lock renewal thread and unlock repo
 	 * 
 	 * Important issues:
-	 *  - TODO [high] All remote operations MUST be performed atomically. How to achieve this? 
+	 *  - TODO [high] Issue #64: All remote operations MUST be performed atomically. How to achieve this? 
 	 *    How to react if one operation works and the other one fails?
 	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
 	 *  
@@ -302,17 +302,6 @@ public class CleanupOperation extends Operation {
 		transferManager.delete(lockFile);
 	}
 
-	/*
-	 * private void repackageMultiChunks() { List<Map<MultiChunkEntry, ChunkEntry>> partiallyUnusedMultiChunks =
-	 * findPartiallyUnusedMultiChunks(options.getKeepVersionsCount(), options.getRepackageUnusedThreshold()); Map<MultiChunkEntry, File>
-	 * newRepackagedMultiChunks = repackagePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-	 * 
-	 * // Remote changes uploadRepackagedMultiChunks(repackagedMultiChunks); remoteDeletePartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-	 * 
-	 * // Local changes removeLocalPartiallyUnusedMultiChunks(partiallyUnusedMultiChunks);
-	 * insertLocalNewRepackagedMultiChunks(newRepackagedMultiChunks); }
-	 */
-
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		// Retrieve and sort machine's database versions
 		TreeMap<String, DatabaseRemoteFile> ownDatabaseFilesMap = retrieveOwnRemoteDatabaseFiles();
@@ -359,7 +348,7 @@ public class CleanupOperation extends Operation {
 			transferManager.delete(toDeleteRemoteFile);
 		}
 
-		// TODO [high] TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might happen often if
+		// TODO [high] Issue #64: TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might happen often if
 		// new file is bigger!
 
 		logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,

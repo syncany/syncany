@@ -20,13 +20,13 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.connection.plugins.ftp.FtpConnectionPluginTest;
+import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerRepoTest;
 import org.syncany.tests.connection.plugins.ftp.FtpTransferManagerTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	FtpConnectionPluginTest.class,
-	FtpTransferManagerTest.class
+	FtpTransferManagerTest.class,
+	FtpTransferManagerRepoTest.class
 })
 public class FtpTestSuite {
 	// This class executes all tests

@@ -27,8 +27,8 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
-import org.syncany.operations.NotificationListener;
-import org.syncany.operations.NotificationListener.NotificationListenerListener;
+import org.syncany.operations.watch.NotificationListener;
+import org.syncany.operations.watch.NotificationListener.NotificationListenerListener;
 
 public class NotificationListenerTest {
 	private static final Logger logger = Logger.getLogger(NotificationListenerTest.class.getName());

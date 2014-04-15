@@ -66,8 +66,10 @@ CREATE CACHED TABLE fileversion (
 
 CREATE CACHED TABLE multichunk (
   id varchar(40) NOT NULL,
+  databaseversion_id int NOT NULL,
   size bigint NOT NULL,  
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE CACHED TABLE multichunk_chunk (
@@ -157,7 +159,7 @@ create view filecontent_full as
 		fcc.num		
 	from fileversion_full fvf
 	join filecontent fc on fc.checksum=fvf.filecontent_checksum
-	join filecontent_chunk fcc on fc.checksum=fcc.chunk_checksum;
+	join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum;
 	
 create view multichunk_full as
 	select 		

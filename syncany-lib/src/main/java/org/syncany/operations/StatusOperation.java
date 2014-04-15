@@ -32,10 +32,10 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
-import org.syncany.database.SqlDatabase;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
+import org.syncany.database.SqlDatabase;
 import org.syncany.util.FileUtil;
 
 /**
@@ -188,8 +188,14 @@ public class StatusOperation extends Operation {
 				}					
 			}
 			else {
-				changeSet.getNewFiles().add(relativeFilePath);
-				logger.log(Level.FINEST, "- New file: "+relativeFilePath);
+				if (!config.getIgnoredFiles().isFileIgnored(relativeFilePath)) {
+					changeSet.getNewFiles().add(relativeFilePath);
+					logger.log(Level.FINEST, "- New file: "+relativeFilePath);
+				}
+				else {
+					logger.log(Level.FINEST, "- Ignoring file; " + relativeFilePath);
+					return FileVisitResult.SKIP_SUBTREE;
+				}
 			}			
 			
 			// Check if file is symlink directory

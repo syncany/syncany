@@ -26,11 +26,11 @@ import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.operations.FileSystemActionComparator;
-import org.syncany.operations.actions.DeleteFileSystemAction;
-import org.syncany.operations.actions.FileSystemAction;
-import org.syncany.operations.actions.NewFileSystemAction;
-import org.syncany.operations.actions.RenameFileSystemAction;
+import org.syncany.operations.down.FileSystemActionComparator;
+import org.syncany.operations.down.actions.DeleteFileSystemAction;
+import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.operations.down.actions.NewFileSystemAction;
+import org.syncany.operations.down.actions.RenameFileSystemAction;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class FileSystemActionComparatorTest {

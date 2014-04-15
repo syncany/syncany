@@ -1,0 +1,73 @@
+%RESOURCE:/help/copyright.skel%
+  
+SYNOPSIS
+  sy watch [-i | --interval=<sec>] [-s | --delay=<sec>] [-W | --no-watcher]
+           [-a | --announce=<host>:<port>] [-N | --no-announcements]
+           [options of the commands 'status', 'ls-remote', 'up', 'down']
+  
+DESCRIPTION 
+  Automatically synchronizes the local folder with the repository. The
+  command performs the up and down command in an interval, watches the
+  file system for changes and subscribes to the Syncany pub/sub server. 
+  
+  In the default configuration (no options), the command subscribes to the
+  Syncany pub/sub server and registers local file system watches in the 
+  locally synced folder (and all of its subfolders). When local events are
+  registered, the command waits a few seconds (waiting for settlement) and 
+  then triggers the 'up' command. After the upload has finished, a message
+  is published to the pub/sub server, telling other clients of this repo
+  that there is new data. Clients subscribed to the repository's channel 
+  will receive this notification and immediately perform a 'down' command.
+  This mechanism allows instant synchronization among clients even if a dumb
+  storage server (such as FTP) is used.
+  
+  In case file system events or pub/sub notifications are missed, the 
+  periodic synchronization using the 'down' and 'up' command is implemented
+  as a fallback.
+  
+  Note: The messages exchanged through the pub/sub server do not include any
+  confidential data. They only include the repository identifier (randomly 
+  generated in the 'init' phase), and a client identifier (randomly generated
+  on every restart).   
+  
+OPTIONS    
+  -s, --delay=<sec>                
+    Waits for <sec> seconds for file system watcher to settle before starting
+    to index newly added files. If many file system actions are executed (e.g.
+    copying a large folder), waiting a few seconds ensures that actions
+    belonging together are uploaded in a single new database version. 
+    Default value is 3 seconds.
+    
+  -W, --no-watcher                 
+    Disables folder watcher entirely. Local changes in the synced folder (and 
+    its subfolders) will not be registered right away. Instead, local changes 
+    will only be detected by the periodic synchronization loop. Unless other 
+    clients have also set this option, changes by other clients will still be 
+    detected through the pub/sub server. If -W is set, the -i/--interval 
+    option becomes more relevant as local synchronization entirely relies on
+    the interval.
+    
+  -a, --announce=<host>:<port>     
+    Defines the hostname and the port of the pub/sub server. The pub/sub 
+    server is used to notify other clients if the local client uploaded new
+    data, and to get notified if other clients did so. Default is the central 
+    Syncany pub/sub server at notify.syncany.org:8080. The SparkleShare 
+    pub/sub server can be used interchangeably. To set up your own server,
+    install a fanout instance from https://github.com/travisghansen/fanout/.
+    
+  -N, --no-announcements           
+    Disables the pub/sub server entirely. Syncany will not connect to the 
+    server and changes that are published to the pub/sub server are not 
+    detected. Instead, remote changes will only be detected by the periodic
+    synchronization loop. If -N is set, the -i/--interval option becomes more
+    relevant as remote synchronization entirely relies on the interval.
+
+  -i, --interval=<sec>             
+    Sets the synchronization interval of the periodic 'down'/'up' loop to be
+    run every <sec> seconds. The sync loop is a fallback only and is not 
+    relevant if the pub/sub server and the file system watching is enabled. 
+    Default value is 120 seconds.
+
+  In addition to these options, all arguments of the commands 'status', 
+  'ls-remote', 'up' and 'down' can be used.
+ 

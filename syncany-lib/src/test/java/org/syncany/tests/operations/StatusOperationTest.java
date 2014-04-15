@@ -27,8 +27,8 @@ import org.syncany.config.Config;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.UpOperation;
-import org.syncany.operations.UpOperation.UpOperationOptions;
+import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 

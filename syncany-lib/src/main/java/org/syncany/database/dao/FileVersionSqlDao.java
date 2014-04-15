@@ -101,13 +101,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public void removeFileVersions(int keepVersionCount) throws SQLException {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeFileVersions.sql")) {
-			preparedStatement.setInt(1, keepVersionCount);		
-			preparedStatement.executeUpdate();
-		}						
-	}	
-
 	/**
 	 * Removes all file versions with versions <b>lower or equal</b> than the given file version.
 	 * 

@@ -30,10 +30,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * From: http://allstarnix.blogspot.de/2013/03/how-to-execute-sql-script-file-using.html
- * TODO [low] Needs polishing/stripping of useless stuff.
- *
+ * Helper class to execute SQL scripts on a given connection. The script honors SQL comments and 
+ * separately executes commands one after another.
+ * 
+ * @see Originally taken from <a href="http://allstarnix.blogspot.de/2013/03/how-to-execute-sql-script-file-using.html">allstarnix.blogspot.de</a>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+// TODO [low] Needs polishing/stripping of useless stuff.
 public class SqlRunner {
 	private static final Logger logger = Logger.getLogger(SqlRunner.class.getSimpleName());
 

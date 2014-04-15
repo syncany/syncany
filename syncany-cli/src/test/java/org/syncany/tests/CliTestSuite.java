@@ -22,14 +22,14 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.cli.CliPluginsTest;
 import org.syncany.tests.cli.CommandLineInterfaceTest;
+import org.syncany.tests.cli.ConnectCommandWithEncryptionTest;
 import org.syncany.tests.cli.DownCommandTest;
 import org.syncany.tests.cli.GenlinkCommandTest;
-import org.syncany.tests.cli.InitCommandTest;
+import org.syncany.tests.cli.InitAndConnectCommandNoEncryptionTest;
 import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
 import org.syncany.tests.cli.RestoreCommandTest;
 import org.syncany.tests.cli.StatusCommandTest;
-import org.syncany.tests.cli.SyncCommandTest;
 import org.syncany.tests.cli.UpCommandTest;
 import org.syncany.tests.cli.WatchCommandTest;
 
@@ -37,14 +37,14 @@ import org.syncany.tests.cli.WatchCommandTest;
 @SuiteClasses({
 	CliPluginsTest.class,
 	CommandLineInterfaceTest.class,
+	ConnectCommandWithEncryptionTest.class,
 	DownCommandTest.class,
 	GenlinkCommandTest.class,
-	InitCommandTest.class,
+	InitAndConnectCommandNoEncryptionTest.class,
 	LogCommandTest.class,
 	LsRemoteCommandTest.class,
 	RestoreCommandTest.class,
 	StatusCommandTest.class,
-	SyncCommandTest.class,
 	UpCommandTest.class,	
 	WatchCommandTest.class
 })
