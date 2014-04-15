@@ -1,0 +1,7 @@
+dependencies {
+	compile			project(':syncany-plugins:syncany-plugin-gui')
+	compile			project(':syncany-util')
+	
+	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
+	compile			"com.github.lookfirst:sardine:5.0.1"
+}
