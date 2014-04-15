@@ -20,6 +20,8 @@ package org.syncany.tests.daemon;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 import org.syncany.daemon.ServiceManager;
 
@@ -30,16 +32,75 @@ import org.syncany.daemon.ServiceManager;
  */
 public class DaemonServiceTest {
 	
+	@SuppressWarnings("serial")
 	@Test
 	public void testStartService() throws Exception {
-		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("lockPort", 3338);
+		Map<String, Object> params1 = new HashMap<String, Object>(){{put("lockPort", 3338);}};
+		Map<String, Object> params2 = new HashMap<String, Object>(){{put("lockPort", 3339);}};
+		Map<String, Object> params3 = new HashMap<String, Object>(){{put("lockPort", 3340);}};
+		Map<String, Object> params4 = new HashMap<String, Object>(){{put("lockPort", 3341);}};
+		Map<String, Object> params5 = new HashMap<String, Object>(){{put("lockPort", 3342);}};
 
 		try {
-			ServiceManager.startService("org.syncany.daemon.Daemon",params);
+			ServiceManager.startService("daemon1", "org.syncany.daemon.Daemon", params1);
+			ServiceManager.startService("daemon2", "org.syncany.daemon.Daemon", params2);
+			ServiceManager.startService("daemon3", "org.syncany.daemon.Daemon", params3);
+			ServiceManager.startService("daemon4", "org.syncany.daemon.Daemon", params4);
+			ServiceManager.startService("daemon5", "org.syncany.daemon.Daemon", params5);
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon1"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon1_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon2"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon2_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon3"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon3_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon4"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon4_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon5"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon5_websocket"));
+			
+			ServiceManager.stopService("daemon1");
+
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon1"));
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon1_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon2"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon2_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon3"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon3_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon4"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon4_websocket"));
+			
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon5"));
+			Assert.assertEquals(true, ServiceManager.isServiceRunning("daemon5_websocket"));
+			
+			ServiceManager.stopService("daemon2");
+			ServiceManager.stopService("daemon3");
+			ServiceManager.stopService("daemon4");
+			ServiceManager.stopService("daemon5");
+			
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon1"));
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon1_websocket"));
+			
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon2"));
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon2_websocket"));
+			
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon3"));
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon3_websocket"));
+			
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon4"));
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon4_websocket"));
+			
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon5"));
+			Assert.assertEquals(false, ServiceManager.isServiceRunning("daemon5_websocket"));
 		}
 		catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

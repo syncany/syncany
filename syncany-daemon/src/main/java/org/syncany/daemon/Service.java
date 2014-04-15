@@ -28,4 +28,8 @@ import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 public interface Service {
 	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException;
 	public void stop();
+	public boolean isRunning();
+	
+	public void setIdentifier(String id);
+	public String getIdentifier();
 }

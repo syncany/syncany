@@ -29,6 +29,7 @@ public class DaemonMessage {
 	private String clientId;
 	private String clientType;
 	private String localFolder;
+	private String daemonIdentifier;
 	
 	public DaemonMessage() {
 		this.timeStamp = System.nanoTime();
@@ -41,6 +42,7 @@ public class DaemonMessage {
 		this.clientType = parent.getClientType();
 		this.localFolder = parent.getLocalFolder();
 		this.commandId = parent.getCommandId();
+		this.daemonIdentifier = parent.getDaemonIdentifier();
 	}
 	
 	public String getCommandId() {
@@ -83,5 +85,12 @@ public class DaemonMessage {
 	}
 	public void setLocalFolder(String localFolder) {
 		this.localFolder = localFolder;
+	}
+	
+	public void setDaemonIdentifier(String daemonIdentifier) {
+		this.daemonIdentifier = daemonIdentifier;
+	}
+	public String getDaemonIdentifier() {
+		return daemonIdentifier;
 	}
 }

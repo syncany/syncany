@@ -20,23 +20,29 @@ package org.syncany.daemon.websocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.syncany.daemon.DaemonCommandHandler;
+import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 import org.syncany.util.JsonHelper;
 
-public class DaemonWebSocketServer {
+public class DaemonWebSocketServer extends AbstractService {
 	private static final Logger log = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
-	
 	private static int DEFAULT_PORT = 8887;
-	private static DaemonWebSocketServer instance;
+	
+	private final AtomicBoolean running = new AtomicBoolean(false);
 	
 	private WebSocketServer delegate;
+	private DaemonCommandHandler dch;
 	
 	public DaemonWebSocketServer() {
+		dch = new DaemonCommandHandler(this);
+		
 		delegate = new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
 			public void onOpen(WebSocket conn, ClientHandshake handshake) {
@@ -47,7 +53,7 @@ public class DaemonWebSocketServer {
 			@Override
 			public void onMessage(WebSocket conn, String message) {
 				log.fine("Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
-				DaemonCommandHandler.handle(message);
+				dch.handle(message);
 			}
 			
 			@Override
@@ -70,8 +76,8 @@ public class DaemonWebSocketServer {
 	 * @throws InterruptedException
 	 *             When socket related I/O errors occur.
 	 */
-	public static void sendToAll(String text) {
-		Collection<WebSocket> con = getInstance().delegate.connections();
+	public void sendToAll(String text) {
+		Collection<WebSocket> con = delegate.connections();
 		synchronized (con) {
 			for (WebSocket c : con) {
 				sendTo(c, text);
@@ -79,35 +85,37 @@ public class DaemonWebSocketServer {
 		}
 	}
 	
-	public static void sendToAll(Object message) {
+	public void sendToAll(Object message) {
 		String text = JsonHelper.fromObjectToString(message);
 		sendToAll(text);
 	}
 	
-	private static void sendTo(WebSocket ws, String text) {
+	private void sendTo(WebSocket ws, String text) {
 		ws.send(text);
 	}
 
-	public static void stop() {
+	@Override
+	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
+		delegate.start();
+		running.set(true);
+	}
+
+	@Override
+	public void stop() {
 		try {
-			getInstance().delegate.stop();
+			delegate.stop();
+			running.set(false);
 		}
-		catch (IOException | InterruptedException e) {
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void start() {
-		getInstance().delegate.start();
-	}
-	
-	/**
-	 * @return the instance
-	 */
-	public static DaemonWebSocketServer getInstance() {
-		if (instance == null){
-			instance = new DaemonWebSocketServer();
-		}
-		return instance;
+	@Override
+	public boolean isRunning() {
+		return running.get();
 	}
 }

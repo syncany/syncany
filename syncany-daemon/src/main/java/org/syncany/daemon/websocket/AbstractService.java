@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.config;
+package org.syncany.daemon.websocket;
+
+import org.syncany.daemon.Service;
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author vincent
  *
  */
-public class DeamonConfiguration {
+public abstract class AbstractService implements Service {
+	private String identifier;
 	
-	public static DeamonConfiguration from(DaemonConfigurationTO acto) {
-		DeamonConfiguration ac = new DeamonConfiguration();
-		return ac;
+	@Override
+	public void setIdentifier(String id) {
+		this.identifier = id;
 	}
-	
+
+	@Override
+	public String getIdentifier() {
+		return identifier;
+	}
 }

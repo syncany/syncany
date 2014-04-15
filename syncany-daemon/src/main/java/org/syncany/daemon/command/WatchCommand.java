@@ -44,14 +44,16 @@ public class WatchCommand extends Command {
 	private String localFolder;
 	private Integer interval;
 	private boolean watcher;
+	private WatchOperationListener watchOperationListener;
 	
 	private AtomicBoolean started = new AtomicBoolean(false);
 	private WatchOperation watchOperation;
 	
-	public WatchCommand(String localFolder, Integer interval, boolean watcher){
+	public WatchCommand(String localFolder, Integer interval, boolean watcher, WatchOperationListener watchOperationListener){
 		this.localFolder = localFolder;
 		this.interval = interval;
 		this.watcher = watcher;
+		this.watchOperationListener = watchOperationListener; 
 	}
 	
 	/**
@@ -111,52 +113,12 @@ public class WatchCommand extends Command {
 //		}
 
 		// Run!
-		final WatchOperationListener wl = new WatchOperationListener() {
-
-			@Override
-			public void onUploadStart(int fileCount) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onUploadFile(String fileName, int fileNumber) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onIndexStart(int fileCount) {
-				DaemonWatchEvent dwe = new DaemonWatchEvent();
-				dwe.setAction("daemon_watch_event");
-				//dwe.setEvent(event);
-				DaemonWebSocketServer.sendToAll(dwe);
-			}
-
-			@Override
-			public void onIndexFile(String fileName, int fileNumber) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onDownloadStart(int fileCount) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onDownloadFile(String fileName, int fileNumber) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
 		
 		new Thread(new Runnable() {
 			public void run() {
 				try {
 					Config config = initConfigOption(localFolder);
-					watchOperation = new WatchOperation(config, operationOptions, wl);
+					watchOperation = new WatchOperation(config, operationOptions, watchOperationListener);
 					setStatus(CommandStatus.SYNCING);
 					started.set(true);
 					watchOperation.execute();

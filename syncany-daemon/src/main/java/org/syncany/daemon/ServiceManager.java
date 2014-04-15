@@ -27,13 +27,35 @@ import java.util.Map;
 public class ServiceManager {
 	private static final Map<String, Service> services = new HashMap<String, Service>();
 	
-	public static Service startService(String identifier, String serviceClassName, Map<String, Object> params) throws Exception {
+	public static void startService(String identifier, String serviceClassName, Map<String, Object> params) throws Exception {
 		if (services.containsKey(identifier))
 			throw new Exception("service already exists");
 	
 		Service service = (Service)Class.forName(serviceClassName).newInstance();
+		service.setIdentifier(identifier);
 		service.start(params);
 		services.put(identifier, service);
-		return service;
+	}
+	
+	public static void stopService(String identifier){
+		Service service = services.get(identifier);
+		
+		if (service != null){
+			service.stop();
+		}
+	}
+
+	public static boolean isServiceRunning(String identifier) {
+		Service service = services.get(identifier);
+		
+		if (service != null){
+			return service.isRunning();
+		}
+		return false;
+	}
+
+	public static <T> T getService(String identifier, Class<T> clazz) {
+		Service service = services.get(identifier);
+		return clazz.cast(service);
 	}
 }
