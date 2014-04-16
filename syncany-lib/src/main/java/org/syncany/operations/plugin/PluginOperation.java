@@ -208,12 +208,22 @@ public class PluginOperation extends Operation {
 		}
 	}
 
-	private PluginInfo readPluginInfoFromJar(File pluginJarFile) throws IOException {
+	private PluginInfo readPluginInfoFromJar(File pluginJarFile) throws Exception {
 		try (JarInputStream jarStream = new JarInputStream(new FileInputStream(pluginJarFile))) {
 			Manifest jarManifest = jarStream.getManifest();
 
+			if (jarManifest == null) {
+				throw new Exception("Given file is not a valid Syncany plugin file (not a JAR file, or no manifest).");
+			}
+			
+			String pluginId = jarManifest.getMainAttributes().getValue("Plugin-Id");
+			
+			if (pluginId == null) {
+				throw new Exception("Given file is not a valid Syncany plugin file (no plugin ID in manifest).");
+			}
+			
 			PluginInfo pluginInfo = new PluginInfo();
-			pluginInfo.setPluginId(jarManifest.getMainAttributes().getValue("Plugin-Id"));
+			pluginInfo.setPluginId(pluginId);
 			pluginInfo.setPluginName(jarManifest.getMainAttributes().getValue("Plugin-Name"));
 			pluginInfo.setPluginVersion(jarManifest.getMainAttributes().getValue("Plugin-Version"));
 			pluginInfo.setPluginDate(jarManifest.getMainAttributes().getValue("Plugin-Date"));
@@ -221,7 +231,7 @@ public class PluginOperation extends Operation {
 			pluginInfo.setPluginRelease(Boolean.parseBoolean(jarManifest.getMainAttributes().getValue("Plugin-Release")));
 
 			return pluginInfo;
-		}
+		}		
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
