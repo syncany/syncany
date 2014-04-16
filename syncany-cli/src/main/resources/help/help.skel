@@ -152,18 +152,24 @@ COMMANDS
      Lists and manages available plugins. The following actions are 
      available:
      
-     list [<args>]
+     list [<args>] [<plugin-id>]
        Lists locally installed plugins and/or remotely available plugins 
-       on api.syncany.org
+       on api.syncany.org. If <plugin-id> is given, the result list will
+       be shortened to the selected plugin.
        
        Arguments: 
-       -a, --all                     List all available plugins (default)
        -R, --remote-only             List remotely available plugins
        -L, --local-only              List locally available plugins
+       -s, --snapshots               List daily snapshots, not releases
 
-     install (<URL> | <file> | <plugin-id>)
+     install [<args>] (<URL> | <file> | <plugin-id>) 
        Installs a plugin from an arbitrary URL, local file or from the 
        available plugins on api.syncany.org (with a plugin identifier)
+       
+       Arguments: 
+       -s, --snapshot                Installs the daily snapshot instead of
+                                     the release version. Only if <plugin-id>
+                                     is given. Not for <URL> or <file>.
 
      remove <plugin-id>
        Uninstalls a plugin entirely (removes the JAR file). This action can
