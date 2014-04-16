@@ -34,6 +34,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,6 +62,8 @@ import org.syncany.util.StringUtil.StringJoinListener;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CommandLineClient extends Client {
+	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
+	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
 	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
 	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "/help/usage.skel";
@@ -244,8 +247,16 @@ public class CommandLineClient extends Client {
 		}
 		
 		// Run!
-		int exitCode = command.execute(commandArgs);		
-		return exitCode;	
+		try {
+			int exitCode = command.execute(commandArgs);
+			return exitCode;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Command "+ commandName+" FAILED. ", e);
+			showErrorAndExit(e.getMessage());
+		}	
+		
+		return -1; // Never reached!
 	}
 	
 	private void showUsageAndExit() throws IOException {
