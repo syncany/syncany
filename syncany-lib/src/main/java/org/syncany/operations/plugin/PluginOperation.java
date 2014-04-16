@@ -144,7 +144,7 @@ public class PluginOperation extends Operation {
 		if (pluginInfo == null) {
 			throw new Exception("Plugin with ID '" + pluginId + "' not found");
 		}
-		
+
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();
 		String actualChecksum = calculateChecksum(tempPluginJarFile);
@@ -271,7 +271,7 @@ public class PluginOperation extends Operation {
 
 		remoteJarFileInputStream.close();
 		tempPluginFileOutputStream.close();
-		
+
 		if (!tempPluginFile.exists() || tempPluginFile.length() == 0) {
 			throw new Exception("Downloading plugin file failed, URL was " + pluginJarUrl);
 		}
@@ -287,7 +287,7 @@ public class PluginOperation extends Operation {
 				if (options.getPluginId() != null && !localPluginInfo.getPluginId().equals(options.getPluginId())) {
 					continue;
 				}
-				
+
 				ExtendedPluginInfo extendedPluginInfo = new ExtendedPluginInfo();
 
 				extendedPluginInfo.setLocalPluginInfo(localPluginInfo);
