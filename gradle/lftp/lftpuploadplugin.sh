@@ -18,10 +18,9 @@ fi
 
 # Reset tempdir
 PLUGINID=$(basename $(ls -d build/resources/main/org/syncany/connection/plugins/*))
-TEMPDISTDIR="$TEMPDISTDIR/$PLUGINID"
 
 rm -rf "$TEMPDIR"
-mkdir $TEMPDIR
+mkdir -p $TEMPDIR
 mkdir -p $TEMPDISTDIR
 
 # Gather deb/tar-gz/zip
