@@ -19,14 +19,13 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.LogOperation;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;
@@ -34,12 +33,11 @@ import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
+import org.syncany.util.StringUtil;
 
 public class PluginCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
-	
 	@Override
-	public CommandScope getRequiredCommandScope() {	
+	public CommandScope getRequiredCommandScope() {
 		return CommandScope.ANY;
 	}
 
@@ -51,60 +49,62 @@ public class PluginCommand extends Command {
 		printResults(operationOptions, operationResult);
 
 		return 0;
-	}	
-
-	private String shortenStr(int len, String s) {
-		if (s.length() > len) {
-			return s.substring(0, len-2) + "..";
-		}
-		else {
-			return s;
-		}
 	}
 
 	private PluginOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		PluginOperationOptions operationOptions = new PluginOperationOptions();
 
-		OptionParser parser = new OptionParser();	
+		OptionParser parser = new OptionParser();
 		OptionSpec<Void> optionLocal = parser.acceptsAll(asList("L", "local-only"));
 		OptionSpec<Void> optionRemote = parser.acceptsAll(asList("R", "remote-only"));
-		
+		OptionSpec<Void> optionSnapshots = parser.acceptsAll(asList("s", "snapshot", "snapshots"));
+
 		OptionSet options = parser.parse(operationArgs);
 
 		// Files
 		List<?> nonOptionArgs = options.nonOptionArguments();
-		
+
 		if (nonOptionArgs.size() == 0) {
 			throw new Exception("Invalid syntax, please specify an action (list, install, remove).");
 		}
-		
+
 		// <action>
 		String actionStr = nonOptionArgs.get(0).toString();
 		PluginAction action = parsePluginAction(actionStr);
-		
+
 		operationOptions.setAction(action);
-		
-		// Additional options per-action
+
+		// --snapshots
+		operationOptions.setSnapshots(options.has(optionSnapshots));
+
+		// install|remove <plugin-id>
 		if (action == PluginAction.INSTALL || action == PluginAction.REMOVE) {
 			if (nonOptionArgs.size() != 2) {
 				throw new Exception("Invalid syntax, please specify a plugin ID.");
 			}
-			
+
+			// <plugin-id>
 			String pluginId = nonOptionArgs.get(1).toString();
 			operationOptions.setPluginId(pluginId);
-		}		
-		
+		}
+
 		// --local-only, --remote-only
 		else if (action == PluginAction.LIST) {
 			if (options.has(optionLocal)) {
-				operationOptions.setListMode(PluginListMode.LOCAL);	
+				operationOptions.setListMode(PluginListMode.LOCAL);
 			}
 			else if (options.has(optionRemote)) {
 				operationOptions.setListMode(PluginListMode.REMOTE);
 			}
 			else {
 				operationOptions.setListMode(PluginListMode.ALL);
-			}			
+			}
+
+			// <plugin-id> (optional in 'list')
+			if (nonOptionArgs.size() == 2) {
+				String pluginId = nonOptionArgs.get(1).toString();
+				operationOptions.setPluginId(pluginId);
+			}
 		}
 
 		return operationOptions;
@@ -118,7 +118,6 @@ public class PluginCommand extends Command {
 			throw new Exception("Invalid syntax, unknown action '" + actionStr + "'");
 		}
 	}
-	
 
 	private void printResults(PluginOperationOptions operationOptions, PluginOperationResult operationResult) throws Exception {
 		switch (operationOptions.getAction()) {
@@ -129,7 +128,7 @@ public class PluginCommand extends Command {
 		case INSTALL:
 			printResultInstall(operationResult);
 			return;
-			
+
 		case REMOVE:
 			printResultRemove(operationResult);
 			return;
@@ -141,32 +140,35 @@ public class PluginCommand extends Command {
 
 	private void printResultList(PluginOperationResult operationResult) {
 		if (operationResult.getResultCode() == PluginResultCode.OK) {
-			out.println("Id       Name            Local Version  Remote Version  Inst.  Upgr.");
-			out.println("---------------------------------------------------------------------------------");
-			
+			List<String[]> tableValues = new ArrayList<String[]>();
+			tableValues.add(new String[] { "Id", "Name", "Local Version", "Remote Version", "Inst.", "Upgr." });
+
 			for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
 				PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
-	
-				String localVersionStr = shortenStr(14, (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "");
-				String remoteVersionStr = shortenStr(14, (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "");
+
+				String localVersionStr = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "";
+				String remoteVersionStr = (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "";
 				String installedStr = extPluginInfo.isInstalled() ? "yes" : "";
-				String upgradeAvailableStr = extPluginInfo.isUpgradeAvailable() ? "yes" : "";			
-				
-				out.printf("%-7s  %-15s %-14s %-14s  %-5s  %-5s\n", pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, remoteVersionStr, installedStr, upgradeAvailableStr);
+				String upgradeAvailableStr = extPluginInfo.isUpgradeAvailable() ? "yes" : "";
+
+				tableValues.add(new String[] { pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, remoteVersionStr, installedStr,
+						upgradeAvailableStr });
 			}
+
+			printTable(tableValues, "No plugins found.");
 		}
 		else {
 			out.printf("Listing plugins failed. No connection? Try -d to get more details.\n");
 			out.println();
 		}
 	}
-	
+
 	private void printResultInstall(PluginOperationResult operationResult) {
 		if (operationResult.getResultCode() == PluginResultCode.OK) {
 			out.printf("Plugin successfully installed from %s\n", operationResult.getSourcePluginPath());
 			out.printf("Install location: %s\n", operationResult.getTargetPluginPath());
 			out.println();
-				
+
 			printPluginDetails(operationResult.getAffectedPluginInfo());
 		}
 		else {
@@ -184,18 +186,75 @@ public class PluginCommand extends Command {
 		else {
 			out.println("Plugin removal failed.");
 			out.println();
-			
+
 			out.println("Note: Plugins shipped with the application");
 			out.println("      cannot be removed.");
 			out.println();
 		}
 	}
-	
+
 	private void printPluginDetails(PluginInfo pluginInfo) {
 		out.println("Plugin details:");
-		out.println("- ID: "+pluginInfo.getPluginId());
-		out.println("- Name: "+pluginInfo.getPluginName());
-		out.println("- Version: "+pluginInfo.getPluginVersion());
-		out.println();	
+		out.println("- ID: " + pluginInfo.getPluginId());
+		out.println("- Name: " + pluginInfo.getPluginName());
+		out.println("- Version: " + pluginInfo.getPluginVersion());
+		out.println();
+	}
+
+	private void printTable(List<String[]> tableValues, String noRowsMessage) {
+		if (tableValues.size() > 0) {
+			Integer[] tableColumnWidths = calculateColumnWidths(tableValues);
+			String tableRowFormat = "%-" + StringUtil.join(tableColumnWidths, "s | %-") + "s\n";
+
+			printTableHeader(tableValues.get(0), tableRowFormat, tableColumnWidths);
+
+			if (tableValues.size() > 1) {
+				printTableBody(tableValues, tableRowFormat, tableColumnWidths);
+			}
+			else {
+				out.println(noRowsMessage);
+			}
+		}
+	}
+
+	private void printTableBody(List<String[]> tableValues, String tableRowFormat, Integer[] tableColumnWidths) {
+		for (int i = 1; i < tableValues.size(); i++) {
+			out.printf(tableRowFormat, (Object[]) tableValues.get(i));
+		}
+	}
+
+	private void printTableHeader(String[] tableHeader, String tableRowFormat, Integer[] tableColumnWidths) {
+		out.printf(tableRowFormat, (Object[]) tableHeader);
+
+		for (int i = 0; i < tableColumnWidths.length; i++) {
+			if (i > 0) {
+				out.print("-");
+			}
+
+			for (int j = 0; j < tableColumnWidths[i]; j++) {
+				out.print("-");
+			}
+
+			if (i < tableColumnWidths.length - 1) {
+				out.print("-");
+				out.print("+");
+			}
+		}
+
+		out.println();
+	}
+
+	private Integer[] calculateColumnWidths(List<String[]> tableValues) {
+		Integer[] tableColumnWidths = new Integer[tableValues.get(0).length];
+
+		for (String[] tableRow : tableValues) {
+			for (int i = 0; i < tableRow.length; i++) {
+				if (tableColumnWidths[i] == null || (tableRow[i] != null && tableColumnWidths[i] < tableRow[i].length())) {
+					tableColumnWidths[i] = tableRow[i].length();
+				}
+			}
+		}
+
+		return tableColumnWidths;
 	}
 }

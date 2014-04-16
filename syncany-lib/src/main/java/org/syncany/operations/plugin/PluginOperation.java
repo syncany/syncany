@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -51,8 +52,7 @@ import org.syncany.util.StringUtil;
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
-	private static final String PLUGIN_LIST_URL_ALL = "https://api.syncany.org/v1/plugins/list.php";
-	private static final String PLUGIN_LIST_URL_SINGLE = "https://api.syncany.org/v1/plugins/list.php?plugin=%s";
+	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v1/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s";
 
 	private PluginOperationOptions options;
 	private PluginOperationResult result;
@@ -105,10 +105,10 @@ public class PluginOperation extends Operation {
 
 		if (canBeUninstalled) {
 			PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
-			
+
 			logger.log(Level.INFO, "Uninstalling plugin from file " + pluginJarFile);
 			pluginJarFile.delete();
-			
+
 			result.setSourcePluginPath(pluginJarFile.getAbsolutePath());
 			result.setAffectedPluginInfo(pluginInfo);
 			result.setResultCode(PluginResultCode.OK);
@@ -117,7 +117,7 @@ public class PluginOperation extends Operation {
 			logger.log(Level.INFO, "Plugin can NOT be uninstalled because class location not in " + globalUserPluginDir);
 			result.setResultCode(PluginResultCode.NOK);
 		}
-		
+
 		return result;
 	}
 
@@ -137,33 +137,30 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeInstallFromApiHost(String pluginId) throws Exception {
-		try {
-			PluginInfo pluginInfo = getRemotePluginInfo(pluginId);
+		checkPluginNotInstalled(pluginId);
 
-			if (pluginInfo == null) {
-				throw new Exception("Plugin with ID '" + pluginId + "' not found");
-			}
+		PluginInfo pluginInfo = getRemotePluginInfo(pluginId);
 
-			File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
-			String expectedChecksum = pluginInfo.getSha256sum();
-			String actualChecksum = calculateChecksum(tempPluginJarFile);
-
-			if (!expectedChecksum.equals(actualChecksum)) {
-				throw new Exception("Checksum mismatch. Expected: " + expectedChecksum + ", but was: " + actualChecksum);
-			}
-
-			File targetPluginJarFile = installPlugin(tempPluginJarFile, pluginInfo);
-
-			result.setSourcePluginPath(pluginInfo.getDownloadUrl());
-			result.setTargetPluginPath(targetPluginJarFile.getAbsolutePath());
-			result.setAffectedPluginInfo(pluginInfo);
-			result.setResultCode(PluginResultCode.OK);
-
-			return result;
+		if (pluginInfo == null) {
+			throw new Exception("Plugin with ID '" + pluginId + "' not found");
 		}
-		catch (Exception e) {
-			throw new Exception(e);
+		
+		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
+		String expectedChecksum = pluginInfo.getSha256sum();
+		String actualChecksum = calculateChecksum(tempPluginJarFile);
+
+		if (expectedChecksum == null || !expectedChecksum.equals(actualChecksum)) {
+			throw new Exception("Checksum mismatch. Expected: " + expectedChecksum + ", but was: " + actualChecksum);
 		}
+
+		File targetPluginJarFile = installPlugin(tempPluginJarFile, pluginInfo);
+
+		result.setSourcePluginPath(pluginInfo.getDownloadUrl());
+		result.setTargetPluginPath(targetPluginJarFile.getAbsolutePath());
+		result.setAffectedPluginInfo(pluginInfo);
+		result.setResultCode(PluginResultCode.OK);
+
+		return result;
 	}
 
 	private String calculateChecksum(File tempPluginJarFile) throws Exception {
@@ -173,9 +170,11 @@ public class PluginOperation extends Operation {
 		return StringUtil.toHex(actualChecksum);
 	}
 
-	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws IOException {
+	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws Exception {
 		PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
 		File targetPluginJarFile = installPlugin(pluginJarFile, pluginInfo);
+
+		checkPluginNotInstalled(pluginInfo.getPluginId());
 
 		result.setSourcePluginPath(pluginJarFile.getPath());
 		result.setTargetPluginPath(targetPluginJarFile.getPath());
@@ -184,19 +183,29 @@ public class PluginOperation extends Operation {
 
 		return result;
 	}
-	
+
 	private PluginOperationResult executeInstallFromUrl(String downloadJarUrl) throws Exception {
 		File tempPluginJarFile = downloadPluginJar(downloadJarUrl);
 		PluginInfo pluginInfo = readPluginInfoFromJar(tempPluginJarFile);
-		
+
+		checkPluginNotInstalled(pluginInfo.getPluginId());
+
 		File targetPluginJarFile = installPlugin(tempPluginJarFile, pluginInfo);
-		
+
 		result.setSourcePluginPath(downloadJarUrl);
 		result.setTargetPluginPath(targetPluginJarFile.getPath());
 		result.setAffectedPluginInfo(pluginInfo);
 		result.setResultCode(PluginResultCode.OK);
-		
+
 		return result;
+	}
+
+	private void checkPluginNotInstalled(String pluginId) throws Exception {
+		Plugin locallyInstalledPlugin = Plugins.get(pluginId);
+
+		if (locallyInstalledPlugin != null) {
+			throw new Exception("Plugin '" + pluginId + "' already installed. Use 'sy plugin remove " + pluginId + "' to uninstall it first.");
+		}
 	}
 
 	private PluginInfo readPluginInfoFromJar(File pluginJarFile) throws IOException {
@@ -207,7 +216,9 @@ public class PluginOperation extends Operation {
 			pluginInfo.setPluginId(jarManifest.getMainAttributes().getValue("Plugin-Id"));
 			pluginInfo.setPluginName(jarManifest.getMainAttributes().getValue("Plugin-Name"));
 			pluginInfo.setPluginVersion(jarManifest.getMainAttributes().getValue("Plugin-Version"));
-			pluginInfo.setAppMinVersion(jarManifest.getMainAttributes().getValue("Plugin-App-Min-Version"));
+			pluginInfo.setPluginDate(jarManifest.getMainAttributes().getValue("Plugin-Date"));
+			pluginInfo.setPluginAppMinVersion(jarManifest.getMainAttributes().getValue("Plugin-App-Min-Version"));
+			pluginInfo.setPluginRelease(Boolean.parseBoolean(jarManifest.getMainAttributes().getValue("Plugin-Release")));
 
 			return pluginInfo;
 		}
@@ -220,7 +231,7 @@ public class PluginOperation extends Operation {
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
 				pluginInfo.getPluginVersion()));
 		FileUtils.copyFile(pluginJarFile, targetPluginJarFile);
-		
+
 		return targetPluginJarFile;
 	}
 
@@ -242,31 +253,30 @@ public class PluginOperation extends Operation {
 	 * local location.  
 	 */
 	private File downloadPluginJar(String pluginJarUrl) throws Exception {
-		try {
-			URL pluginJarFile = new URL(pluginJarUrl);
-			logger.log(Level.INFO, "Querying " + pluginJarFile + " ...");
+		URL pluginJarFile = new URL(pluginJarUrl);
+		logger.log(Level.INFO, "Querying " + pluginJarFile + " ...");
 
-			URLConnection urlConnection = pluginJarFile.openConnection();
-			urlConnection.setConnectTimeout(2000);
-			urlConnection.setReadTimeout(2000);
+		URLConnection urlConnection = pluginJarFile.openConnection();
+		urlConnection.setConnectTimeout(2000);
+		urlConnection.setReadTimeout(2000);
 
-			File tempPluginFile = File.createTempFile("syncany-plugin", "tmp");
-			tempPluginFile.deleteOnExit();
+		File tempPluginFile = File.createTempFile("syncany-plugin", "tmp");
+		tempPluginFile.deleteOnExit();
 
-			logger.log(Level.INFO, "Downloading to " + tempPluginFile + " ...");
-			FileOutputStream tempPluginFileOutputStream = new FileOutputStream(tempPluginFile);
-			InputStream remoteJarFileInputStream = urlConnection.getInputStream();
+		logger.log(Level.INFO, "Downloading to " + tempPluginFile + " ...");
+		FileOutputStream tempPluginFileOutputStream = new FileOutputStream(tempPluginFile);
+		InputStream remoteJarFileInputStream = urlConnection.getInputStream();
 
-			FileUtil.appendToOutputStream(remoteJarFileInputStream, tempPluginFileOutputStream);
+		FileUtil.appendToOutputStream(remoteJarFileInputStream, tempPluginFileOutputStream);
 
-			remoteJarFileInputStream.close();
-			tempPluginFileOutputStream.close();
-
-			return tempPluginFile;
+		remoteJarFileInputStream.close();
+		tempPluginFileOutputStream.close();
+		
+		if (!tempPluginFile.exists() || tempPluginFile.length() == 0) {
+			throw new Exception("Downloading plugin file failed, URL was " + pluginJarUrl);
 		}
-		catch (Exception e) {
-			throw new Exception(e);
-		}
+
+		return tempPluginFile;
 	}
 
 	private PluginOperationResult executeList() throws Exception {
@@ -274,6 +284,10 @@ public class PluginOperation extends Operation {
 
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.LOCAL) {
 			for (PluginInfo localPluginInfo : getLocalList()) {
+				if (options.getPluginId() != null && !localPluginInfo.getPluginId().equals(options.getPluginId())) {
+					continue;
+				}
+				
 				ExtendedPluginInfo extendedPluginInfo = new ExtendedPluginInfo();
 
 				extendedPluginInfo.setLocalPluginInfo(localPluginInfo);
@@ -285,6 +299,10 @@ public class PluginOperation extends Operation {
 
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.REMOTE) {
 			for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
+				if (options.getPluginId() != null && !remotePluginInfo.getPluginId().equals(options.getPluginId())) {
+					continue;
+				}
+
 				ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
 
 				if (extendedPluginInfo == null) { // Locally not installed
@@ -309,7 +327,7 @@ public class PluginOperation extends Operation {
 
 		result.setPluginList(new ArrayList<ExtendedPluginInfo>(pluginInfos.values()));
 		result.setResultCode(PluginResultCode.OK);
-		
+
 		return result;
 	}
 
@@ -349,29 +367,28 @@ public class PluginOperation extends Operation {
 	}
 
 	private String getRemoteListStr(String pluginId) throws Exception {
-		try {
-			URL pluginListUrl = (pluginId != null) ? new URL(String.format(PLUGIN_LIST_URL_SINGLE, pluginId)) : new URL(PLUGIN_LIST_URL_ALL);
-			logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
+		String appVersion = Client.getApplicationVersion();
+		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
+		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
 
-			URLConnection urlConnection = pluginListUrl.openConnection();
-			urlConnection.setConnectTimeout(2000);
-			urlConnection.setReadTimeout(2000);
-			BufferedReader breader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr));
+		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
 
-			StringBuilder stringBuilder = new StringBuilder();
+		URLConnection urlConnection = pluginListUrl.openConnection();
+		urlConnection.setConnectTimeout(2000);
+		urlConnection.setReadTimeout(2000);
+		BufferedReader breader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 
-			String line;
-			while ((line = breader.readLine()) != null) {
-				stringBuilder.append(line);
-			}
+		StringBuilder stringBuilder = new StringBuilder();
 
-			String responseStr = stringBuilder.toString();
-			logger.log(Level.INFO, "Response from api.syncany.org: " + responseStr);
-
-			return responseStr;
+		String line;
+		while ((line = breader.readLine()) != null) {
+			stringBuilder.append(line);
 		}
-		catch (Exception e) {
-			throw new Exception(e);
-		}
+
+		String responseStr = stringBuilder.toString();
+		logger.log(Level.INFO, "Response from api.syncany.org: " + responseStr);
+
+		return responseStr;
 	}
 }

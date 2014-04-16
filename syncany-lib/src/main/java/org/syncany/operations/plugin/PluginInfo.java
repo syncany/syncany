@@ -25,19 +25,25 @@ public class PluginInfo {
 	@Element(name="pluginId", required=true)
 	private String pluginId;
 	
-	@Element(name="pluginName", required=true)
+	@Element(name="pluginName", required=false)
 	private String pluginName;
 
-	@Element(name="pluginVersion", required=true)
+	@Element(name="pluginVersion", required=false)
 	private String pluginVersion;
+	
+	@Element(name="pluginDate", required=false)
+	private String pluginDate;
+	
+	@Element(name="pluginAppMinVersion", required=false)
+	private String pluginAppMinVersion;
+	
+	@Element(name="pluginRelease", required=false)
+	private boolean pluginRelease;
 
-	@Element(name="appMinVersion", required=true)
-	private String appMinVersion;
-
-	@Element(name="sha256sum", required=true)
+	@Element(name="sha256sum", required=false)
 	private String sha256sum;
 
-	@Element(name="downloadUrl", required=true)
+	@Element(name="downloadUrl", required=false)
 	private String downloadUrl;
 	
 	public PluginInfo() {
@@ -68,12 +74,28 @@ public class PluginInfo {
 		this.pluginVersion = pluginVersion;
 	}
 
-	public String getAppMinVersion() {
-		return appMinVersion;
+	public String getPluginDate() {
+		return pluginDate;
 	}
 
-	public void setAppMinVersion(String appMinVersion) {
-		this.appMinVersion = appMinVersion;
+	public void setPluginDate(String pluginDate) {
+		this.pluginDate = pluginDate;
+	}
+
+	public String getPluginAppMinVersion() {
+		return pluginAppMinVersion;
+	}
+
+	public void setPluginAppMinVersion(String pluginAppMinVersion) {
+		this.pluginAppMinVersion = pluginAppMinVersion;
+	}
+
+	public boolean isPluginRelease() {
+		return pluginRelease;
+	}
+
+	public void setPluginRelease(boolean pluginRelease) {
+		this.pluginRelease = pluginRelease;
 	}
 
 	public String getSha256sum() {
