@@ -17,6 +17,9 @@
  */
 package org.syncany.connection.plugins;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
  * A plugin can be used to store Syncany's repository files on any remote location. 
  * Implementations of the <tt>Plugin</tt> class identify a storage/connection plugin.
@@ -33,6 +36,17 @@ package org.syncany.connection.plugins;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Plugin {
+	private static final String PLUGIN_PROPERTIES_NAME_KEY = "pluginName";
+	private static final String PLUGIN_PROPERTIES_VERSION_KEY = "pluginVersion";
+
+	private String pluginId;
+	private Properties pluginProperties;
+
+	public Plugin(String pluginId) {
+		this.pluginId = pluginId;
+		this.pluginProperties = loadPluginProperties(pluginId);
+	}
+
 	/**
 	 * Returns a unique plugin identifier.
 	 * 
@@ -40,20 +54,47 @@ public abstract class Plugin {
 	 * which the plugin classes reside. all plugin classes must reside in a package 
 	 * 'org.syncany.connection.plugins.<i>plugin-id</i>'. 
 	 */
-    public abstract String getId();
-    
-    /**
-     * Returns a short name of the plugin
-     */
-    public abstract String getName();
-    
-    /**
-     * Returns the version of the plugin
-     */
-    public abstract Integer[] getVersion();
-    
-    /**
-     * Creates a plugin-specific {@link Connection}
-     */
-    public abstract Connection createConnection();    
+	public String getId() {
+		return pluginId;
+	}
+
+	/**
+	 * Returns a short name of the plugin
+	 */
+	public String getName() {
+		return pluginProperties.getProperty(PLUGIN_PROPERTIES_NAME_KEY);
+	}
+
+	/**
+	 * Returns the version of the plugin
+	 */
+	public String getVersion() {
+		return pluginProperties.getProperty(PLUGIN_PROPERTIES_VERSION_KEY);
+	}
+
+	/**
+	 * Creates a plugin-specific {@link Connection}
+	 */
+	public abstract Connection createConnection();
+	
+
+	/**
+	 * Loads the plugin properties (ID, name, version)
+	 * from the resource
+	 */
+	private Properties loadPluginProperties(String pluginId) {
+		String pluginInfoResource = "/" + Plugin.class.getPackage().getName().replace('.', '/') + "/" + pluginId + "/plugin.properties";
+
+		InputStream pluginPropertiesInputStream = Plugin.class.getResourceAsStream(pluginInfoResource);
+
+		try {
+			Properties pluginProperties = new Properties();
+			pluginProperties.load(pluginPropertiesInputStream);
+
+			return pluginProperties;
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot load application properties.", e);
+		}
+	}	
 }

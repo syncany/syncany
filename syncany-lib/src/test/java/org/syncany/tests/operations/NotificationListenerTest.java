@@ -67,7 +67,7 @@ public class NotificationListenerTest {
 		notificationListener1.subscribe(randomChannelName);
 		notificationListener2.subscribe(randomChannelName);
 				
-		Thread.sleep(1000); // Let them settle
+		Thread.sleep(1500); // Let them settle
 		
 		notificationListener1.announce(randomChannelName, "Message from 1");
 		notificationListener2.announce(randomChannelName, "Message from 2");

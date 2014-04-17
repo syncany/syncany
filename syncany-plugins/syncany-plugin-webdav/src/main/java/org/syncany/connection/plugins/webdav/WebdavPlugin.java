@@ -21,22 +21,9 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 
 public class WebdavPlugin extends Plugin {
-    public static final String ID = "webdav";
-    
-    @Override
-    public String getId() {
-        return ID;
+    public WebdavPlugin() {
+    	super("webdav");
     }    
-    
-	@Override
-	public String getName() {
-		return "WebDAV";
-	}
-
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
-    }
 
     @Override
     public Connection createConnection() {

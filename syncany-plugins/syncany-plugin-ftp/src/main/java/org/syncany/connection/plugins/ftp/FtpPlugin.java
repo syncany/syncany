@@ -30,23 +30,10 @@ import org.syncany.connection.plugins.Plugin;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FtpPlugin extends Plugin {
-    public static final String ID = "ftp";
-    
-    @Override
-    public String getId() {
-        return ID;
-    }    
-    
-	@Override
-	public String getName() {
-		return "FTP";
-	}
-
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
+    public FtpPlugin() {
+    	super("ftp");
     }
-
+    
     @Override
     public Connection createConnection() {
         return new FtpConnection();
