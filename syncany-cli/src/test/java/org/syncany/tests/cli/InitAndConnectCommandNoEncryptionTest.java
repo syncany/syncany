@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.cli.InitConsole;
-import org.syncany.tests.connection.plugins.ftp.EmbeddedTestFtpServer;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -120,49 +119,5 @@ public class InitAndConnectCommandNoEncryptionTest {
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
-	}	
-	
-	@Test
-	public void testCliInitCommandInteractiveFTP() throws Exception {
-		EmbeddedTestFtpServer.startServer();
-		// Setup		
-		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		TestCliUtil.setCurrentDirectory(tempDir);
-		
-		//Ensuring no console is set
-		InitConsole.setInstance(null);
-		
-		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
-		
-		// Run
-		String[] initArgs = new String[] { 			 
-			 "init",
-			 "--no-encryption",
-			 "--no-compression" 
-		}; 
-		
-		systemInMock.provideText(StringUtil.join(new String[] {
-			"ftp", 
-			EmbeddedTestFtpServer.HOST,
-			EmbeddedTestFtpServer.USER1, 
-			EmbeddedTestFtpServer.PASSWORD1,
-			"/",
-			Integer.toString(EmbeddedTestFtpServer.PORT)
-		}, "\n")+"\n");
-		
-		new CommandLineClient(initArgs).start();
-		
-		assertTrue(tempDir.exists());
-		assertTrue(new File(tempDir+"/.syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
-
-		// Tear down
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-		
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);
-		TestFileUtil.deleteDirectory(tempDir);
-		EmbeddedTestFtpServer.stopServer();
 	}	
 }
