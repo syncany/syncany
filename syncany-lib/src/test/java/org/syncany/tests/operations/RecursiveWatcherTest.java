@@ -65,7 +65,7 @@ public class RecursiveWatcherTest {
 		TestFileUtil.createRandomFileInDirectory(tempDir, 10);
 		assertFalse(eventOccurred.get());
 
-		Thread.sleep(350);
+		Thread.sleep(550);
 		assertTrue(eventOccurred.get());
 
 		// Stop watcher (close watches)

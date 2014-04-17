@@ -33,12 +33,11 @@ import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.LogOperation;
 import org.syncany.operations.LogOperation.LogOperationOptions;
 import org.syncany.operations.LogOperation.LogOperationResult;
 
 public class LogCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(LogCommand.class.getSimpleName());
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
 
 	@Override
