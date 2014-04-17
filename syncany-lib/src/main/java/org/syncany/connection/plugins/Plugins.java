@@ -122,8 +122,8 @@ public class Plugins {
 		try {
 			loadPlugin(Class.forName(className));		
 		}
-		catch (Exception ex) {
-			logger.log(Level.WARNING, "Could not load plugin : " + className);
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Could not load plugin (1): " + className, e);
 		}
 	}
 	
@@ -132,8 +132,8 @@ public class Plugins {
 			Plugin plugin = (Plugin) pluginClass.newInstance();			
 			plugins.put(plugin.getId(), plugin);
 		}
-		catch (Exception ex) {
-			logger.log(Level.WARNING, "Could not load plugin : " + pluginClass.getName());
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
 		}
 	}
 }

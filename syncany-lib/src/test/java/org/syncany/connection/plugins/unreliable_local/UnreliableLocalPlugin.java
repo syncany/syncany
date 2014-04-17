@@ -21,6 +21,10 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalPlugin;
 
 /**
+ * The unreliable local plugin can be used for test purposes to
+ * test connection issues with the backend storage. Each operation of the
+ * plugin (e.g upload, download, ...) can be failed on purpose through
+ * regular expressions on the operation signature. 
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */

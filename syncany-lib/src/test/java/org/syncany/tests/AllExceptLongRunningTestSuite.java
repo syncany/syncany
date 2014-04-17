@@ -25,6 +25,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({	
 	ScenarioTestSuite.class,
 	DatabaseTestSuite.class,
+	OperationTestSuite.class,
 	OtherShortTestSuite.class
 })
 public class AllExceptLongRunningTestSuite {

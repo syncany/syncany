@@ -43,12 +43,36 @@ import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
+import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
-import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
+/**
+ * The plugin operation installs, removes and lists storage {@link Plugin}s.
+ * 
+ * <p>The plugin implements these three functionalities as different 
+ * {@link PluginAction}:
+ * 
+ * <ul>
+ *   <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
+ *       as specified by {@link Client#getUserPluginDir()}. A plugin can be installed 
+ *       from a local JAR file, a URL (the operation downloads a JAR file), or the 
+ *       API host (the operation find the plugin using the 'list' action and downloads
+ *       the JAR file).</li>
+ *   <li><tt>REMOVE</tt>: Removal means deleting a JAR file from the user plugin
+ *       directoryThis action. This action simply finds the responsible plugin JAR
+ *       file and deletes it. Only JAR files inside the user plugin direcory can be
+ *       deleted.</li>
+ *   <li><tt>LIST</tt>: Listing refers to a local and a remote list. The locally installed
+ *       plugins can be queried by {@link Plugins#list()}. These plugins' JAR files must be
+ *       in the application's class path. Remotely available plugins are queried through the
+ *       API.</li>
+ * </ul> 
+ *   
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
@@ -94,7 +118,7 @@ public class PluginOperation extends Operation {
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
 
-		File globalUserPluginDir = getGlobalUserPluginDir();
+		File globalUserPluginDir = Client.getUserPluginDir();
 
 		int indexStartAfterSchema = "jar:file:".length();
 		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
@@ -235,7 +259,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
-		File globalUserPluginDir = getGlobalUserPluginDir();
+		File globalUserPluginDir = Client.getUserPluginDir();
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
@@ -243,19 +267,6 @@ public class PluginOperation extends Operation {
 		FileUtils.copyFile(pluginJarFile, targetPluginJarFile);
 
 		return targetPluginJarFile;
-	}
-
-	private File getGlobalUserAppDir() {
-		if (EnvironmentUtil.isWindows()) {
-			return new File(System.getProperty("user.home") + "/Syncany");
-		}
-		else {
-			return new File(System.getProperty("user.home") + "/.config/syncany");
-		}
-	}
-
-	private File getGlobalUserPluginDir() {
-		return new File(getGlobalUserAppDir(), "plugins");
 	}
 
 	/**
