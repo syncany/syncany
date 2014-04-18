@@ -137,28 +137,37 @@ public class InitOperation extends AbstractInitOperation {
 	private boolean performRepoTest() {
 		StorageTestResult repoTestResult = transferManager.test();
 		
+		logger.log(Level.INFO, "Storage test result ist " + repoTestResult);
+		
 		switch (repoTestResult) {
 		case NO_CONNECTION:
-			result = new InitOperationResult(InitResultCode.NOK_NO_CONNECTION);
+			logger.log(Level.INFO, "--> " + InitResultCode.NOK_NO_CONNECTION);
+			result = new InitOperationResult(InitResultCode.NOK_NO_CONNECTION);			
 			return false;
 						
 		case REPO_EXISTS:
+			logger.log(Level.INFO, "--> " + InitResultCode.NOK_REPO_EXISTS);
 			result = new InitOperationResult(InitResultCode.NOK_REPO_EXISTS);
 			return false;
-			
+
 		case REPO_EXISTS_BUT_INVALID:
+			logger.log(Level.INFO, "--> OK?!?!??!");
+			// TODO [high] This is obviously a bug, see #104 !! 
 			return true;
 
 		case NO_REPO_CANNOT_CREATE:
+			logger.log(Level.INFO, "--> " + InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
 			result = new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
 			return false;
 
 		case NO_REPO:
 			if (!options.isCreateTargetPath()) {
+				logger.log(Level.INFO, "--> " + InitResultCode.NOK_NO_REPO_CANNOT_CREATE + " (because -f not set!)");
 				result = new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
 				return false;
 			}
 			else {
+				logger.log(Level.INFO, "--> OKAY, we can proceed.");
 				return true;
 			}
 			 
