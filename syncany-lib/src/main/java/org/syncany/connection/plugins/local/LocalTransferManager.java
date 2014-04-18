@@ -154,6 +154,21 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to copy file " + localFile + " to local repository " + repoFile, ex);
 		}
 	}
+	
+	@Override
+	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException {
+		connect();
+
+		File source = getRemoteFile(sourceFile);
+		File target = getRemoteFile(targetFile);
+
+		try {
+			FileUtils.moveFile(source, target);
+		}
+		catch (IOException ex) {
+			throw new StorageException("Unable to move file " + source + " to destination " + target, ex);
+		}
+	}
 
 	@Override
 	public boolean delete(RemoteFile remoteFile) throws StorageException {
