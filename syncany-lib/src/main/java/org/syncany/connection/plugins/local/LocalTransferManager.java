@@ -253,6 +253,11 @@ public class LocalTransferManager extends AbstractTransferManager {
 			}
 		});
 				
-		return (listRepoFile != null) ? listRepoFile.length == 0 : true;
+		if (listRepoFile != null) {
+			return listRepoFile.length == 1; // If exactly one file!
+		}
+		else {
+			return false;
+		}
 	}
 }

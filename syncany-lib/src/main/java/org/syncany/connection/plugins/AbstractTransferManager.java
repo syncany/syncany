@@ -51,10 +51,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 	
 			if (repoExists()) {
 				if (repoIsValid()) {
-					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
+					result = StorageTestResult.REPO_EXISTS;
 				}
 				else {
-					result = StorageTestResult.REPO_EXISTS;
+					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
 				}
 			}
 			else {
