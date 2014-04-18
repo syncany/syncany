@@ -18,17 +18,13 @@
 package org.syncany.connection.plugins;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.syncany.database.DatabaseVersion;
-import org.syncany.database.dao.DatabaseXmlWriter.IndentXmlStreamWriter;
+import org.syncany.database.dao.DatabaseXmlWriter;
 
 /**
  * This class represents a transaction in a remote system. It will keep track of
@@ -38,6 +34,8 @@ import org.syncany.database.dao.DatabaseXmlWriter.IndentXmlStreamWriter;
  *
  */
 public class RemoteTransaction {
+	private static final Logger logger = Logger.getLogger(RemoteTransaction.class.getSimpleName());
+	
 	private TransferManager transferManager;
 	private Map<File, RemoteFile> temporaryLocations;
 	private Map<RemoteFile, RemoteFile> finalLocations;
@@ -47,14 +45,17 @@ public class RemoteTransaction {
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
 	}
+	
 	/**
 	 * Adds a file to this transaction. Generates a temporary file to store it.
 	 */
 	public void add(File localFile, RemoteFile remoteFile) throws StorageException {
+		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
 		RemoteFile temporaryFile = new TempRemoteFile(localFile);
 		temporaryLocations.put(localFile, temporaryFile);
 		finalLocations.put(temporaryFile, remoteFile);
 	}
+	
 	/**
 	 * Moves all files to the temporary remote location. If
 	 * no errors occur, all files are moved to their final location.
@@ -75,22 +76,16 @@ public class RemoteTransaction {
 		transferManager.delete(remoteTransactionFile);
 	}
 	
-
-	
-	private File writeLocalTransactionFile() {
-		File localTransactionFile = new File("TBD");
-		// TODO: Write all filenames to file.
-		// Is the cache the right place?
-		return localTransactionFile;
-	}
-	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = transferManager.hashCode();
-		for (File localFile : temporaryLocations.keySet()) {
-			result = prime * result + localFile.hashCode();
+	private File writeLocalTransactionFile() throws StorageException {
+		File localTransactionFile;
+		try {
+			localTransactionFile = File.createTempFile("transaction", "");
+			localTransactionFile.createNewFile();
 		}
-		return result;
+		catch (IOException e) {
+			throw new StorageException("Could not create temporary file for transaction", e);
+		}
+		
+		return localTransactionFile;
 	}
 }
