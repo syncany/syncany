@@ -61,7 +61,7 @@ public class RemoteTransaction {
 	 */
 	public void commit() throws StorageException {
 		File localTransactionFile = writeLocalTransactionFile();
-		RemoteFile remoteTransactionFile = null; //TODO: make remote file
+		RemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
 		for (File localFile : temporaryLocations.keySet()) {
@@ -79,7 +79,18 @@ public class RemoteTransaction {
 	
 	private File writeLocalTransactionFile() {
 		File localTransactionFile = new File("TBD");
-		// TODO: Write all filenames to file
+		// TODO: Write all filenames to file.
+		// Is the cache the right place?
 		return localTransactionFile;
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = transferManager.hashCode();
+		for (File localFile : temporaryLocations.keySet()) {
+			result = prime * result + localFile.hashCode();
+		}
+		return result;
 	}
 }

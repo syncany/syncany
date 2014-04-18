@@ -21,36 +21,40 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.util.StringUtil;
+
 /**
- * The temp file represents a temporary file on the remote storage. 
+ * The transaction file represents a manifest of a transaction on the remote storage. 
  * 
  * <p><b>Name pattern:</b> The name pattern of a temp file is
- * <b>temp-&lt;filehexhashcode&gt;</b>.
+ * <b>transaction-&lt;filehexhashcode&gt;</b>. Initializing an 
  * 
  * @author Pim Otte
  */
-public class TempRemoteFile extends RemoteFile {
-	private static final Pattern NAME_PATTERN = Pattern.compile("temp-([a-f0-9]+)");
-	private static final String NAME_FORMAT = "temp-%s";
+public class TransactionRemoteFile extends RemoteFile {
+	private static final Pattern NAME_PATTERN = Pattern.compile("transaction-([a-f0-9]+)");
+	private static final String NAME_FORMAT = "transaction-%s";
+
 
 	/**
-	 * Initializes a new temp file, given a name. 
+	 * Initializes a new transaction file, given a name. 
 	 * 
-	 * @param name temp file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 * @param name transaction file name; <b>must</b> always match the {@link #NAME_PATTERN} 
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public TempRemoteFile(String name) throws StorageException {
+	public TransactionRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 	
 	/**
-	 * Initializes a new temp file, given the local file which will be moved there. 
+	 * Initializes a new transaction file, given the transaction itself.
 	 * 
-	 * @param localFile the local file that will be moved to this temporary location.
+	 * @param remoteTransaction the remoteTransaction for which a file is needed
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public TempRemoteFile(File localFile) throws StorageException {
-		super(String.format(NAME_FORMAT, Integer.toHexString(localFile.hashCode())));
+	public TransactionRemoteFile(RemoteTransaction remoteTransaction) throws StorageException {
+		super(String.format(NAME_FORMAT, Integer.toHexString(remoteTransaction.hashCode())));
 	}
 
 	@Override
