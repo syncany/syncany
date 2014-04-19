@@ -19,6 +19,8 @@ package org.syncany.connection.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -27,6 +29,7 @@ import java.io.IOException;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
+	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
 	private Connection connection;
 
 	public AbstractTransferManager(Connection connection) {
@@ -44,6 +47,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 	@Override
 	public StorageTestResult test() {
+		logger.log(Level.INFO, "Performing storage test TM.test() ...");							
 		StorageTestResult result = null;
 		
 		try {
@@ -51,23 +55,28 @@ public abstract class AbstractTransferManager implements TransferManager {
 	
 			if (repoExists()) {
 				if (repoIsValid()) {
-					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
+					result = StorageTestResult.REPO_EXISTS;
+					logger.log(Level.INFO, "-> Target exists and is valid. Returning " + result);							
 				}
 				else {
-					result = StorageTestResult.REPO_EXISTS;
+					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
+					logger.log(Level.INFO, "-> Target exists, but is invalid. Returning " + result);							
 				}
 			}
 			else {
 				if (repoHasWriteAccess()) {
 					result = StorageTestResult.NO_REPO;
+					logger.log(Level.INFO, "-> Target does NOT exist, but is writable. Returning " + result);							
 				}
 				else {
 					result = StorageTestResult.NO_REPO_CANNOT_CREATE;
+					logger.log(Level.INFO, "-> Target does NOT exist and can NOT be created. Returning " + result);
 				}
 			}	
 		}
 		catch (StorageException e) {
 			result = StorageTestResult.NO_CONNECTION;
+			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}
 		finally {
 			try {
