@@ -33,6 +33,7 @@ import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.PluginOptionSpec;
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
@@ -334,4 +335,19 @@ public abstract class AbstractInitCommand extends Command {
 			out.println();
 		}
 	}	
+	
+	protected void printTestResult(StorageTestResult testResult) {
+		out.println("Details:");
+		out.println("- Target connect success: " + testResult.isTargetCanConnect());
+		out.println("- Target exists:          " + testResult.isTargetExists());
+		out.println("- Target creatable:       " + testResult.isTargetCanCreate());
+		out.println("- Target writable:        " + testResult.isTargetCanWrite());
+		out.println("- Repo file exists:       " + testResult.isRepoFileExists());
+		out.println();		
+		
+		if (testResult.getException() != null) {
+			out.println("Error message (see log file for details):");
+			out.println("  " + testResult.getException().getMessage());
+		}
+	}
 } 

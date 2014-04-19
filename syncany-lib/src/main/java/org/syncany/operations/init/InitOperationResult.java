@@ -17,18 +17,21 @@
  */
 package org.syncany.operations.init;
 
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.operations.OperationResult;
 
 public class InitOperationResult implements OperationResult {
 	public enum InitResultCode {
-		OK, NOK_REPO_EXISTS, NOK_NO_REPO_CANNOT_CREATE, NOK_NO_CONNECTION
+		OK, NOK_TEST_FAILED
 	}
 
 	private InitResultCode resultCode = InitResultCode.OK;
+	private StorageTestResult testResult = null;
 	private GenlinkOperationResult genLinkResult = null;
 
-	public InitOperationResult(InitResultCode resultCode) {
+	public InitOperationResult(InitResultCode resultCode, StorageTestResult testResult) {
 		this.resultCode = resultCode;
+		this.testResult = testResult;
 	}
 
 	public InitOperationResult(InitResultCode resultCode, GenlinkOperationResult genLinkResult) {
@@ -42,5 +45,9 @@ public class InitOperationResult implements OperationResult {
 
 	public GenlinkOperationResult getGenLinkResult() {
 		return genLinkResult;
+	}
+
+	public StorageTestResult getTestResult() {
+		return testResult;
 	}
 }
