@@ -42,6 +42,7 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -71,7 +72,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 		while (retryNeeded && performOperation) {
 			InitOperationResult operationResult = client.init(operationOptions, this);			
-			printResults(operationResult);
+			printResults(operationOptions, operationResult);
 			
 			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
 
@@ -129,7 +130,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setRepoTO(repoTO); 
 		
-		operationOptions.setCreateTargetPath(createTargetPath);
+		operationOptions.setCreateTarget(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(null); // set by callback in operation 
@@ -137,7 +138,7 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return operationOptions;
 	}		
 
-	private void printResults(InitOperationResult operationResult) {
+	private void printResults(InitOperationOptions operationOptions, InitOperationResult operationResult) {
 		if (operationResult.getResultCode() == InitResultCode.OK) {
 			out.println();
 			out.println("Repository created, and local folder initialized. To share the same repository");
@@ -145,30 +146,41 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 
 			printLink(operationResult.getGenLinkResult(), false);
 		}
-		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_REPO_CANNOT_CREATE) {
-			out.println();
-			out.println("ERROR: Cannot initialize repository (not writable, or -t not set).");
-			out.println();
-			out.println("Make sure that the repository path is writable by the connection user");
-			out.println("and that the --create-target/-t option is set if you want to create");
-			out.println("the remote repository folder/path.");
-			out.println();
-		}
-		else if (operationResult.getResultCode() == InitResultCode.NOK_NO_CONNECTION) {
-			out.println();
-			out.println("ERROR: Cannot initialize repository (broken connection).");
-			out.println();
-			out.println("Make sure that you have a working Internet connection and that ");
-			out.println("the connection details (esp. the hostname/IP) are correct.");				
-			out.println();
-		}
-		else if (operationResult.getResultCode() == InitResultCode.NOK_REPO_EXISTS) {
-			out.println();
-			out.println("ERROR: Cannot initialize repository (already exists).");
-			out.println();
-			out.println("If you want to connect to an existing repository, please");
-			out.println("use the 'connect' command.");
-			out.println();
+		else if (operationResult.getResultCode() == InitResultCode.NOK_TEST_FAILED) {
+			StorageTestResult testResult = operationResult.getTestResult();
+			out.println();			
+			
+			if (testResult.isRepoFileExists()) {
+				out.println("ERROR: Repository cannot be initialized, because it already exists ('syncany' file");
+				out.println("       exists). Are you sure that you want to create a new repo?  Use 'sy connect'");
+				out.println("       to connect to an existing repository.");
+			}
+			else if (!testResult.isTargetCanConnect()) {
+				out.println("ERROR: Repository cannot be initialized, because the connection to the storage backend failed.");
+				out.println("       Possible reasons for this could be connectivity issues (are you connect to the Internet?),");
+				out.println("       or invalid user credentials (are username/password valid?).");
+			}
+			else if (!testResult.isTargetExists()) {
+				if (!operationOptions.isCreateTarget()) {					
+					out.println("ERROR: Repository cannot be initialized, because the target does not exist and");
+					out.println("       the --create-target/-t option has not been enabled. Either create the target");
+					out.println("       manually or retry with the --create-target/-t option.");
+				}
+				else {
+					out.println("ERROR: Repository cannot be initialized, because the target does not exist and");
+					out.println("       it cannot be created. Please check your permissions or create the target manually.");
+				}
+			}
+			else if (!testResult.isTargetCanWrite()) {								
+				out.println("ERROR: Repository cannot be initialized, because the target is not writable. This is probably");
+				out.println("       a permission issue (does the user have write permissions to the target?).");
+			}
+			else {
+				out.println("ERROR: Repository cannot be initialized.");
+			}
+			
+			out.println();					
+			printTestResult(testResult);
 		}
 		else {
 			out.println();

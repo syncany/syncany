@@ -26,7 +26,7 @@ import org.syncany.crypto.CipherSpec;
 import org.syncany.operations.OperationOptions;
 
 public class InitOperationOptions implements OperationOptions {
-	private boolean createTargetPath;
+	private boolean createTarget;
 	private File localDir;
 	private ConfigTO configTO;
 	private RepoTO repoTO;
@@ -34,12 +34,12 @@ public class InitOperationOptions implements OperationOptions {
 	private List<CipherSpec> cipherSpecs;
 	private String password;
 
-	public boolean isCreateTargetPath() {
-		return createTargetPath;
+	public boolean isCreateTarget() {
+		return createTarget;
 	}
 
-	public void setCreateTargetPath(boolean createTargetPath) {
-		this.createTargetPath = createTargetPath;
+	public void setCreateTarget(boolean createTarget) {
+		this.createTarget = createTarget;
 	}
 
 	public File getLocalDir() {

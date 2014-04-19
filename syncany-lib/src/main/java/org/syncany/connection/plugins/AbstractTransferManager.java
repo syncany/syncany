@@ -46,36 +46,27 @@ public abstract class AbstractTransferManager implements TransferManager {
 	}
 
 	@Override
-	public StorageTestResult test() {
+	public StorageTestResult test(boolean testCreateTarget) {
 		logger.log(Level.INFO, "Performing storage test TM.test() ...");							
-		StorageTestResult result = null;
+		StorageTestResult result = new StorageTestResult();
 		
 		try {
 			connect();
 	
-			if (repoExists()) {
-				if (repoIsValid()) {
-					result = StorageTestResult.REPO_EXISTS;
-					logger.log(Level.INFO, "-> Target exists and is valid. Returning " + result);							
-				}
-				else {
-					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
-					logger.log(Level.INFO, "-> Target exists, but is invalid. Returning " + result);							
-				}
+			result.setTargetExists(testTargetExists());
+			result.setTargetCanWrite(testTargetCanWrite());
+			result.setRepoFileExists(testRepoFileExists());
+
+			if (!result.isTargetExists() && testCreateTarget) {
+				result.setTargetCanCreate(testTargetCanCreate());
 			}
-			else {
-				if (repoHasWriteAccess()) {
-					result = StorageTestResult.NO_REPO;
-					logger.log(Level.INFO, "-> Target does NOT exist, but is writable. Returning " + result);							
-				}
-				else {
-					result = StorageTestResult.NO_REPO_CANNOT_CREATE;
-					logger.log(Level.INFO, "-> Target does NOT exist and can NOT be created. Returning " + result);
-				}
-			}	
+			
+			result.setTargetCanConnect(true);
 		}
 		catch (StorageException e) {
-			result = StorageTestResult.NO_CONNECTION;
+			result.setTargetCanConnect(false);
+			result.setException(e);
+			
 			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}
 		finally {
