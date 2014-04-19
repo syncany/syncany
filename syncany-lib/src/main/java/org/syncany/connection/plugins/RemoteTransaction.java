@@ -18,13 +18,21 @@
 package org.syncany.connection.plugins;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.database.dao.DatabaseXmlWriter;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.syncany.chunk.Transformer;
+
+import sun.security.krb5.Config;
 
 /**
  * This class represents a transaction in a remote system. It will keep track of
@@ -39,8 +47,8 @@ public class RemoteTransaction {
 	private TransferManager transferManager;
 	private Map<File, RemoteFile> temporaryLocations;
 	private Map<RemoteFile, RemoteFile> finalLocations;
-	
-	public RemoteTransaction(TransferManager transferManager) {
+	private Transformer transformer;
+	public RemoteTransaction(TransferManager transferManager, Transformer transformer) {
 		this.transferManager = transferManager;
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
@@ -78,13 +86,34 @@ public class RemoteTransaction {
 	
 	private File writeLocalTransactionFile() throws StorageException {
 		File localTransactionFile;
+		PrintWriter out;
 		try {
 			localTransactionFile = File.createTempFile("transaction", "");
-			localTransactionFile.createNewFile();
+			
+			
+			
+			if (transformer == null) {
+				out = new PrintWriter(new OutputStreamWriter(
+						new FileOutputStream(localTransactionFile), "UTF-8"));
+			}
+			else {
+				out = new PrintWriter(new OutputStreamWriter(
+						transformer.createOutputStream(new FileOutputStream(localTransactionFile)), "UTF-8"));
+			}
 		}
 		catch (IOException e) {
 			throw new StorageException("Could not create temporary file for transaction", e);
 		}
+		
+		try {
+			Serializer serializer = new Persister();
+			serializer.write(new TransactionTO(finalLocations), out);
+		}
+		catch (Exception e) {
+			throw new StorageException("Could not serialize transaction manifest", e);
+		}
+		
+		logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
 		
 		return localTransactionFile;
 	}

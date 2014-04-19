@@ -27,8 +27,8 @@ import org.syncany.util.StringUtil;
 /**
  * The transaction file represents a manifest of a transaction on the remote storage. 
  * 
- * <p><b>Name pattern:</b> The name pattern of a temp file is
- * <b>transaction-&lt;filehexhashcode&gt;</b>. Initializing an 
+ * <p><b>Name pattern:</b> The name pattern of a transaction file is
+ * <b>transaction-&lt;filehexhashcode&gt;</b>.
  * 
  * @author Pim Otte
  */
