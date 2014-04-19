@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -203,7 +204,16 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to read local respository " + repoPath);
 		}
 
-		Set<RemoteFile> filesToIgnore = getFilesInTransactions();
+		Set<RemoteFile> filesToIgnore;
+		if (remoteFileClass.equals(TransactionRemoteFile.class)) {
+			// If we are listing transaction files, we don't want to ignore any
+			filesToIgnore = new HashSet<RemoteFile>();
+		}
+		else {
+			filesToIgnore = getFilesInTransactions();
+			
+		}
+		
 		// Create RemoteFile objects
 		Map<String, T> remoteFiles = new HashMap<String, T>();
 
