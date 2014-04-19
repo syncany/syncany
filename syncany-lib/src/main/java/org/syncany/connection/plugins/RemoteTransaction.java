@@ -47,8 +47,8 @@ public class RemoteTransaction {
 	private TransferManager transferManager;
 	private Map<File, RemoteFile> temporaryLocations;
 	private Map<RemoteFile, RemoteFile> finalLocations;
-	private Transformer transformer;
-	public RemoteTransaction(TransferManager transferManager, Transformer transformer) {
+	
+	public RemoteTransaction(TransferManager transferManager) {
 		this.transferManager = transferManager;
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
@@ -88,18 +88,11 @@ public class RemoteTransaction {
 		File localTransactionFile;
 		PrintWriter out;
 		try {
-			localTransactionFile = File.createTempFile("transaction", "");
-			
-			
-			
-			if (transformer == null) {
-				out = new PrintWriter(new OutputStreamWriter(
+			// TODO: Should this be in the cache?
+			localTransactionFile = File.createTempFile("transaction-", "");			
+			out = new PrintWriter(new OutputStreamWriter(
 						new FileOutputStream(localTransactionFile), "UTF-8"));
-			}
-			else {
-				out = new PrintWriter(new OutputStreamWriter(
-						transformer.createOutputStream(new FileOutputStream(localTransactionFile)), "UTF-8"));
-			}
+
 		}
 		catch (IOException e) {
 			throw new StorageException("Could not create temporary file for transaction", e);

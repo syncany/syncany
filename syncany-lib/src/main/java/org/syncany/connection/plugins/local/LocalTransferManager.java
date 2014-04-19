@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +36,8 @@ import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TempRemoteFile;
+import org.syncany.connection.plugins.TransactionRemoteFile;
 import org.syncany.connection.plugins.TransferManager;
 
 /**
@@ -63,6 +66,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	private File repoPath;
 	private File multichunksPath;
 	private File databasePath;
+	private File transactionPath;
 
 	public LocalTransferManager(LocalConnection connection) {
 		super(connection);
@@ -70,6 +74,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
 		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
 		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
+		this.transactionPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transaction");
 	}
 
 	@Override
@@ -100,6 +105,10 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 		if (!databasePath.mkdir()) {
 			throw new StorageException("Cannot create database directory: " + databasePath);
+		}
+		
+		if (!transactionPath.mkdir()) {
+			throw new StorageException("Cannot create transaction directory: " + transactionPath);
 		}
 	}
 
@@ -194,13 +203,16 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to read local respository " + repoPath);
 		}
 
+		Set<RemoteFile> filesToIgnore = getFilesInTransactions();
 		// Create RemoteFile objects
 		Map<String, T> remoteFiles = new HashMap<String, T>();
 
 		for (File file : files) {
 			try {
 				T remoteFile = RemoteFile.createRemoteFile(file.getName(), remoteFileClass);
-				remoteFiles.put(file.getName(), remoteFile);
+				if (!filesToIgnore.contains(remoteFile)) {
+					remoteFiles.put(file.getName(), remoteFile);
+				}
 			}
 			catch (Exception e) {
 				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file
@@ -221,6 +233,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 		else if (remoteFile.equals(DatabaseRemoteFile.class)) {
 			return databasePath;
+		}
+		else if (remoteFile.equals(TempRemoteFile.class) || remoteFile.equals(TransactionRemoteFile.class)) {
+			return transactionPath;
 		}
 		else {
 			return repoPath;

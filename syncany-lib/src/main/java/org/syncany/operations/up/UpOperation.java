@@ -169,7 +169,7 @@ public class UpOperation extends Operation {
 			return result;
 		}		
 		
-		remoteTransaction = new RemoteTransaction(transferManager, config.getTransformer());
+		remoteTransaction = new RemoteTransaction(transferManager);
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
