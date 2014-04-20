@@ -39,11 +39,9 @@ import org.syncany.config.Config;
 public abstract class AbstractTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
 	private Connection connection;
-	protected Config config;
 	
 	public AbstractTransferManager(Connection connection) {
 		this.connection = connection;
-		this.config = connection.getConfig();
 	}
 
 	public Connection getConnection() {

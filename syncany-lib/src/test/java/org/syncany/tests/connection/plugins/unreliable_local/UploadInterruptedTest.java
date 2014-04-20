@@ -43,9 +43,9 @@ public class UploadInterruptedTest {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 				// 1st upload (= multichunk) fails	
-				"rel=1 .+upload.+multichunk",    
+				"rel=2 .+move",    
 				// Make fourth upload fail
-				"rel=4 .+upload" 
+				"rel=6 .+upload" 
 					
 			}
 		));

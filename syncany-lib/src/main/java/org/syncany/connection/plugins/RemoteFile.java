@@ -17,6 +17,8 @@
  */
 package org.syncany.connection.plugins;
 
+import org.reflections.Reflections;
+
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
  * identify a file and allow {@link TransferManager}s to upload/download local files.
@@ -91,6 +93,20 @@ public abstract class RemoteFile {
 		catch (Exception e) {
 			throw new StorageException(e);
 		}
+	}
+	
+	public static <T extends RemoteFile> T createRemoteFile(String name) throws StorageException {
+		// TODO [medium] prevent this hack by using naming conventions somehow
+		Reflections reflections = new Reflections("org.syncany");
+		for (Class remoteFileClass : reflections.getSubTypesOf(RemoteFile.class)) {
+			try {
+				return (T) createRemoteFile(name, remoteFileClass);
+			}
+			catch (StorageException e) {
+				// Invalid type, skip.
+			}
+		}
+		throw new StorageException("Attempted to make a remote file which does not follow any naming pattern.");
 	}
 
 	@Override

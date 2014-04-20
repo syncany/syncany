@@ -74,7 +74,7 @@ public class TransactionTO {
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
 		for (String tempFile : finalLocationNames.keySet()) {
 			try {
-				finalLocations.put(new TempRemoteFile(tempFile), new TempRemoteFile(finalLocationNames.get(tempFile)));
+				finalLocations.put(new TempRemoteFile(tempFile), RemoteFile.createRemoteFile(finalLocationNames.get(tempFile)));
 			}
 			catch (StorageException e) {
 				logger.log(Level.INFO, "Invalid remote temporary filename: " + tempFile + " or " + finalLocationNames.get(tempFile));

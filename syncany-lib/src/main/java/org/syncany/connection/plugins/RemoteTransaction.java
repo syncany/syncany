@@ -85,13 +85,14 @@ public class RemoteTransaction {
 		
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
+		logger.log(Level.INFO, "Succesfully committed transaction.");
 	}
 	
 	private File writeLocalTransactionFile() throws StorageException {
 		File localTransactionFile;
 		PrintWriter out;
 		try {
-			localTransactionFile = File.createTempFile("transaction-", "", connection.getConfig().getCacheDir());
+			localTransactionFile = File.createTempFile("transaction-", "", config.getCacheDir());
 				
 			out = new PrintWriter(new OutputStreamWriter(
 						new FileOutputStream(localTransactionFile), "UTF-8"));
