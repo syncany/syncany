@@ -165,7 +165,7 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise
 	 */
-	public boolean testTargetCanWrite() throws StorageException;
+	public boolean testTargetCanWrite();
 
 	/**
 	 * Tests whether the repository path/folder is accessible and <b>exists</b>. This method is
@@ -174,9 +174,9 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
 	 */
-	public boolean testTargetExists() throws StorageException;
+	public boolean testTargetExists();
 	
-	public boolean testTargetCanCreate() throws StorageException;
+	public boolean testTargetCanCreate();
 
 	/**
 	 * Tests whether the repository path/folder is accessible and the repository file
@@ -185,5 +185,5 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise 
 	 */
-	public boolean testRepoFileExists() throws StorageException;
+	public boolean testRepoFileExists();
 }
