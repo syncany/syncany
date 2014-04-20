@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Transformer;
+import org.syncany.config.Config;
 
-import sun.security.krb5.Config;
 
 /**
  * This class represents a transaction in a remote system. It will keep track of
@@ -45,10 +45,11 @@ public class RemoteTransaction {
 	private static final Logger logger = Logger.getLogger(RemoteTransaction.class.getSimpleName());
 	
 	private TransferManager transferManager;
+	private Config config;
 	private Map<File, RemoteFile> temporaryLocations;
 	private Map<RemoteFile, RemoteFile> finalLocations;
 	
-	public RemoteTransaction(TransferManager transferManager) {
+	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.transferManager = transferManager;
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
@@ -100,7 +101,7 @@ public class RemoteTransaction {
 		
 		try {
 			Serializer serializer = new Persister();
-			serializer.write(new TransactionTO(finalLocations), out);
+			serializer.write(new TransactionTO(config.getMachineName(),finalLocations), out);
 		}
 		catch (Exception e) {
 			throw new StorageException("Could not serialize transaction manifest", e);

@@ -35,7 +35,7 @@ import org.syncany.connection.plugins.TransferManager;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection implements Connection {
+public class LocalConnection extends Connection {
 	protected File repositoryPath;
 
 	@Override

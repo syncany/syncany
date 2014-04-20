@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.config.Config;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -38,9 +39,12 @@ import org.simpleframework.xml.core.Persister;
 public abstract class AbstractTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
 	private Connection connection;
-
-	public AbstractTransferManager(Connection connection) {
+	protected Config config;
+	
+	public AbstractTransferManager(Config config, Connection connection) {
+		
 		this.connection = connection;
+		this.config = connection.getConfig();
 	}
 
 	public Connection getConnection() {
@@ -98,6 +102,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
 			Map<RemoteFile, RemoteFile> finalLocations = null;
+			String machineName = null;
 			try {
 				//TODO : In cache?
 				File transactionFile = File.createTempFile("temp-", "");
@@ -109,15 +114,30 @@ public abstract class AbstractTransferManager implements TransferManager {
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
 				// Extract final locations
 				finalLocations = transactionTO.getFinalLocations();
+				machineName = transactionTO.getMachineName();
 			}
 			catch (Exception e) {
 				throw new StorageException("Failed to read transactionFile", e);
 			}
-			if (finalLocations != null) {
+			boolean cleaned = false;
+			if (connection.getConfig().getMachineName().equals(machineName)) {
+				cleaned = cleanup(transaction, finalLocations);
+			}
+			if (finalLocations != null && !cleaned) {
 				filesInTransaction.addAll(finalLocations.values());
 			}
 		}
 		
 		return filesInTransaction;
+	}
+	/**
+	 * This method removes all files related to an unfinished transaction.
+	 */
+	protected boolean cleanup(TransactionRemoteFile transaction, Map<RemoteFile, RemoteFile> finalLocations) throws StorageException {
+		for (RemoteFile temporaryLocation : finalLocations.keySet()) {
+			delete(temporaryLocation);
+			delete(finalLocations.get(temporaryLocation));
+		}
+		return delete(transaction);
 	}
 }

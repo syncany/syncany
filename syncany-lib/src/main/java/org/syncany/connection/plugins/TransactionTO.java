@@ -22,15 +22,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TempRemoteFile;
-import org.syncany.operations.init.InitOperation;
 
 /**
  * The Transaction transfer object exists to serialize a transaction,
@@ -48,8 +45,10 @@ import org.syncany.operations.init.InitOperation;
 public class TransactionTO {
 	private static final Logger logger = Logger.getLogger(TransactionTO.class.getSimpleName()); 
 	
+	@Element(name="MachineName") 
+	private String machineName;
 	@ElementMap(entry="File", key="TempLocation", value="FinalLocation", attribute=false)
-	Map<String, String> finalLocationNames;
+	private Map<String, String> finalLocationNames;
 	
 	Map<RemoteFile, RemoteFile> finalLocations;
 	
@@ -57,8 +56,9 @@ public class TransactionTO {
 		
 	}
 	
-	public TransactionTO(Map<RemoteFile, RemoteFile> finalLocations) {
+	public TransactionTO(String machineName, Map<RemoteFile, RemoteFile> finalLocations) {
 		this.finalLocations = finalLocations;
+		this.machineName = machineName;
 	}
 	
 	@Persist
@@ -84,5 +84,9 @@ public class TransactionTO {
 	
 	public Map<RemoteFile, RemoteFile> getFinalLocations() {
 		return finalLocations;
+	}
+	
+	public String getMachineName() {
+		return machineName;
 	}
 }
