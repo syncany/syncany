@@ -42,5 +42,9 @@ public abstract class Connection {
     public Config getConfig() {
     	return config;
     }
+    
+    public void setConfig(Config config) {
+    	this.config = config;
+    }
 }
 

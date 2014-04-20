@@ -51,6 +51,7 @@ public class UploadInterruptedTest {
 		));
 		
 		TestClient clientA = new TestClient("A", testConnection);
+		testConnection.setConfig(clientA.getConfig());
 		
 		int i = 0;
 		while (i++ < 5) {
