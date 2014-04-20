@@ -114,6 +114,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 				transactionFile.delete();
 			}
 			catch (Exception e) {
+				e.printStackTrace();
 				throw new StorageException("Failed to read transactionFile", e);
 			}
 			boolean cleaned = false;

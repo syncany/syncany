@@ -34,10 +34,10 @@ import org.syncany.config.Config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Connection {
-	private Config config;
+	protected Config config;
     public abstract TransferManager createTransferManager();
     public abstract PluginOptionSpecs getOptionSpecs();        
-    public abstract void init(Map<String, String> optionValues) throws StorageException;    
+    public abstract void init(Config config, Map<String, String> optionValues) throws StorageException;    
     
     public Config getConfig() {
     	return config;

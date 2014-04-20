@@ -81,7 +81,7 @@ public abstract class AbstractTransferManagerTest {
 		Map<String, String> invalidEmptyPluginSettings = new HashMap<String, String>();
 
 		Connection connection = plugin.createConnection();
-		connection.init(invalidEmptyPluginSettings);
+		connection.init(null, invalidEmptyPluginSettings);
 
 		TransferManager transferManager = connection.createTransferManager();
 
@@ -190,7 +190,7 @@ public abstract class AbstractTransferManagerTest {
 		Plugin pluginInfo = Plugins.get(getPluginId());
 
 		Connection connection = pluginInfo.createConnection();
-		connection.init(createPluginSettings());
+		connection.init(null, createPluginSettings());
 
 		return connection.createTransferManager();
 	}
