@@ -53,6 +53,7 @@ public class RemoteTransaction {
 		this.transferManager = transferManager;
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
+		this.config = config;
 	}
 	
 	/**
@@ -83,14 +84,15 @@ public class RemoteTransaction {
 		}
 		
 		transferManager.delete(remoteTransactionFile);
+		localTransactionFile.delete();
 	}
 	
 	private File writeLocalTransactionFile() throws StorageException {
 		File localTransactionFile;
 		PrintWriter out;
 		try {
-			// TODO: Should this be in the cache?
-			localTransactionFile = File.createTempFile("transaction-", "");			
+			localTransactionFile = File.createTempFile("transaction-", "", connection.getConfig().getCacheDir());
+				
 			out = new PrintWriter(new OutputStreamWriter(
 						new FileOutputStream(localTransactionFile), "UTF-8"));
 

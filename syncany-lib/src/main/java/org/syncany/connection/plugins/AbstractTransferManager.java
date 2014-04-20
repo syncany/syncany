@@ -41,8 +41,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 	private Connection connection;
 	protected Config config;
 	
-	public AbstractTransferManager(Config config, Connection connection) {
-		
+	public AbstractTransferManager(Connection connection) {
 		this.connection = connection;
 		this.config = connection.getConfig();
 	}
@@ -104,8 +103,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 			Map<RemoteFile, RemoteFile> finalLocations = null;
 			String machineName = null;
 			try {
-				//TODO : In cache?
-				File transactionFile = File.createTempFile("temp-", "");
+				File transactionFile = File.createTempFile("transaction-", "", connection.getConfig().getCacheDir());
 				// Download transaction file
 				download(transaction, transactionFile);
 				String transactionFileStr = FileUtils.readFileToString(transactionFile);
@@ -115,6 +113,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 				// Extract final locations
 				finalLocations = transactionTO.getFinalLocations();
 				machineName = transactionTO.getMachineName();
+				transactionFile.delete();
 			}
 			catch (Exception e) {
 				throw new StorageException("Failed to read transactionFile", e);
