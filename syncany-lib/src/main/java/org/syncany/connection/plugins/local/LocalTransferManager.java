@@ -253,7 +253,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean testTargetExists() throws StorageException {
+	public boolean testTargetExists() {
 		if (repoPath.exists()) {
 			logger.log(Level.INFO, "testTargetExists: Target exists.");
 			return true;
@@ -265,21 +265,27 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean testRepoFileExists() throws StorageException {
-		File repoFile = getRemoteFile(new RepoRemoteFile());
-		
-		if (repoFile.exists()) {
-			logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");
-			return true;
+	public boolean testRepoFileExists() {
+		try {
+			File repoFile = getRemoteFile(new RepoRemoteFile());
+			
+			if (repoFile.exists()) {
+				logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");
+				return true;
+			}
+			else {
+				logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist.");
+				return false;
+			}
 		}
-		else {
-			logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist.");
-			return false;
+		catch (Exception e) {
+			logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist. Exception occurred.", e);
+			return false;			
 		}
 	}
 
 	@Override
-	public boolean testTargetCanCreate() throws StorageException {
+	public boolean testTargetCanCreate() {
 		if (repoPath.getParentFile().canWrite()) {
 			logger.log(Level.INFO, "testTargetCanCreate: Can create target.");
 			return true;
