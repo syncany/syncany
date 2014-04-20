@@ -80,7 +80,13 @@ public class IgnoredFiles {
 							ignorePatterns.add(ignorePattern.substring(6));
 						}
 						else {
-							ignorePaths.add(ignorePattern);
+							if( ignorePattern.contains("*") ) {
+								// wildcards handling, converting them to regexps
+								ignorePatterns.add( wildcardsToRegexp(ignorePattern) );
+							}
+							else {
+								ignorePaths.add(ignorePattern);
+							}
 						}
 					}
 				}
@@ -95,5 +101,37 @@ public class IgnoredFiles {
 			ignorePatterns = new HashSet<String>();
 			ignorePaths = new HashSet<String>();
 		}
+	}
+        
+	static private String wildcardsToRegexp(String in) {
+		StringBuffer out = new StringBuffer( "^" );
+		for (int i = 0; i < in.length(); ++i) {
+			char c = in.charAt(i);
+			
+			switch (c) {
+				case '*':
+					out.append(".*");
+					break;
+				case '?':
+					out.append(".");
+					break;
+				case '.':
+				case '$':
+				case '^':
+				case '{': case '}':
+				case '[': case ']':
+				case '(': case ')':
+				case '|':
+				case '+':
+				case '\\':
+					out.append("\\");
+					out.append(c);
+					break;
+				default:
+					out.append(c);
+			}
+		}
+		out.append( '$' );
+		return out.toString();
 	}
 } 
