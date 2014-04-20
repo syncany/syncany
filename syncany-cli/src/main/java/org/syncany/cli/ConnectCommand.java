@@ -28,6 +28,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.operations.init.ConnectOperationListener;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
@@ -123,30 +124,34 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			out.println("You can now use the 'syncany' command to sync your files.");
 			out.println();
 		}
-		else if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_REPO) {
+		else if (operationResult.getResultCode() == ConnectResultCode.NOK_TEST_FAILED) {
+			StorageTestResult testResult = operationResult.getTestResult();
+			out.println();			
+
+			if (!testResult.isTargetCanConnect()) {
+				out.println("ERROR: Cannot connect to the repository, because the connection to the storage backend failed.");
+				out.println("       Possible reasons for this could be connectivity issues (are you connect to the Internet?),");
+				out.println("       or invalid user credentials (are username/password valid?).");
+			}
+			else if (!testResult.isTargetExists()) {
+				out.println("ERROR: Cannot connect to the repository, because the target does not exist.");
+				out.println("       Please check if it really exists and if you can read from it / write to it.");
+			}
+			else if (!testResult.isTargetCanWrite()) {								
+				out.println("ERROR: Cannot connect to the repository, because the target is not writable. This is probably");
+				out.println("       a permission issue (does the user have write permissions to the target?).");
+			}
+			else if (!testResult.isRepoFileExists()) {
+				out.println("ERROR: Cannot connect to the repository, because no repo file was found ('syncany' file).");
+				out.println("       Are you sure that this is a valid Syncany repository? Use 'sy init' to create a new one.");
+			}
+			else {
+				out.println("ERROR: Cannot connect to the repository.");
+			}
+			
 			out.println();
-			out.println("ERROR: No repository was found at the given location.");
-			out.println();
-			out.println("Make sure that the connection details are correct and that");
-			out.println("a repository actually exists at this location.");
-			out.println();
-		}
-		else if (operationResult.getResultCode() == ConnectResultCode.NOK_NO_CONNECTION) {
-			out.println();
-			out.println("ERROR: Cannot connect to repository (broken connection).");
-			out.println();
-			out.println("Make sure that you have a working Internet connection and that ");
-			out.println("the connection details (esp. the hostname/IP) are correct.");
-			out.println();
-		}
-		else if (operationResult.getResultCode() == ConnectResultCode.NOK_INVALID_REPO) {
-			out.println();
-			out.println("ERROR: Invalid repository found at location.");
-			out.println();
-			out.println("Make sure that the connection details are correct and that");
-			out.println("a repository actually exists at this location.");
-			out.println();
-		}
+			printTestResult(testResult);			
+		}		
 		else if (operationResult.getResultCode() == ConnectResultCode.NOK_DECRYPT_ERROR) {
 			out.println();
 			out.println("ERROR: Invalid password or corrupt ciphertext.");		

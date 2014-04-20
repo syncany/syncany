@@ -43,7 +43,7 @@ project.ext {
 	applicationDate = new Date()
 	applicationRevision = getRevision()
 	
-	applicationVersionSnapshot = (!applicationRelease) ? "-SNAPSHOT+${applicationDate.format('yyMMddHHmm')}git${applicationRevision}" : ""
+	applicationVersionSnapshot = (!applicationRelease) ? "+SNAPSHOT.${applicationDate.format('yyMMddHHmm')}.git${applicationRevision}" : ""
 	applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
 }
 
@@ -122,6 +122,14 @@ subprojects {
 			resources { srcDir 'src/test/resources'}
 		}
 	}
+	
+	processResources {	
+		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
+		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
+		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
+		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
+		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
+	}		
 	
 	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
 		description = "Test long running scenarios"

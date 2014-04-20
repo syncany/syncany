@@ -21,25 +21,16 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalPlugin;
 
 /**
+ * The unreliable local plugin can be used for test purposes to
+ * test connection issues with the backend storage. Each operation of the
+ * plugin (e.g upload, download, ...) can be failed on purpose through
+ * regular expressions on the operation signature. 
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class UnreliableLocalPlugin extends LocalPlugin {
-    public static final String ID = "unreliable_local";
-    
-    @Override
-    public String getId() {
-        return ID;
-    }    
-    
-    @Override
-    public String getName() {
-        return "Unreliable Local (Test only!)";
-    }
-
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
+    public UnreliableLocalPlugin() {
+    	super("unreliable_local");
     }
 
     @Override

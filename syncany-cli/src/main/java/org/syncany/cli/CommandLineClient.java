@@ -62,7 +62,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
  *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CommandLineClient extends Client {
+public class CommandLineClient extends Client implements PluginListener {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");

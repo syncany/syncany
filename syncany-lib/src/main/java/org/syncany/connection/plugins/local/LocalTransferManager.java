@@ -20,7 +20,6 @@ package org.syncany.connection.plugins.local;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -89,7 +88,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public void init(boolean createIfRequired) throws StorageException {
 		connect();
 
-		if (!repoExists() && createIfRequired) {
+		if (!testTargetExists() && createIfRequired) {
 			if (!repoPath.mkdir()) {
 				throw new StorageException("Cannot create repository directory: " + repoPath);
 			}
@@ -233,26 +232,61 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	@Override
-	public boolean repoHasWriteAccess() {		
-		return repoPath.getParentFile().canWrite();
-	}
+	public boolean testTargetCanWrite() {
+		try {
+			if (repoPath.isDirectory()) {
+				File tempFile = File.createTempFile("syncany-write-test", "tmp", repoPath);
+				tempFile.delete();
 
-	@Override
-	public boolean repoExists() throws StorageException {
-		return repoPath.exists();
-	}
-
-	@Override
-	public boolean repoIsValid() throws StorageException {
-		final RepoRemoteFile repoRemoteFile = new RepoRemoteFile();
-		
-		String[] listRepoFile = repoPath.list(new FilenameFilter() {			
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.equals(repoRemoteFile.getName());
+				logger.log(Level.INFO, "testTargetCanWrite: Can write, test file created/deleted successfully.");
+				return true;
 			}
-		});
-				
-		return (listRepoFile != null) ? listRepoFile.length == 0 : true;
+			else {
+				logger.log(Level.INFO, "testTargetCanWrite: Can NOT write, target does not exist.");
+				return false;
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.INFO, "testTargetCanWrite: Can NOT write to target.", e);
+			return false;
+		}
+	}
+
+	@Override
+	public boolean testTargetExists() throws StorageException {
+		if (repoPath.exists()) {
+			logger.log(Level.INFO, "testTargetExists: Target exists.");
+			return true;
+		}
+		else {
+			logger.log(Level.INFO, "testTargetExists: Target does NOT exist.");
+			return false;
+		}
+	}
+
+	@Override
+	public boolean testRepoFileExists() throws StorageException {
+		File repoFile = getRemoteFile(new RepoRemoteFile());
+		
+		if (repoFile.exists()) {
+			logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");
+			return true;
+		}
+		else {
+			logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist.");
+			return false;
+		}
+	}
+
+	@Override
+	public boolean testTargetCanCreate() throws StorageException {
+		if (repoPath.getParentFile().canWrite()) {
+			logger.log(Level.INFO, "testTargetCanCreate: Can create target.");
+			return true;
+		}
+		else {
+			logger.log(Level.INFO, "testTargetCanCreate: Can NOT create target.");
+			return false;
+		}
 	}
 }

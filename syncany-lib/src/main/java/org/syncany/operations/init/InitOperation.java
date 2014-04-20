@@ -30,8 +30,8 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
@@ -135,41 +135,29 @@ public class InitOperation extends AbstractInitOperation {
     }          
     
 	private boolean performRepoTest() {
-		StorageTestResult repoTestResult = transferManager.test();
+		boolean testCreateTarget = options.isCreateTarget();
+		StorageTestResult testResult = transferManager.test(testCreateTarget);
 		
-		switch (repoTestResult) {
-		case NO_CONNECTION:
-			result = new InitOperationResult(InitResultCode.NOK_NO_CONNECTION);
-			return false;
-						
-		case REPO_EXISTS:
-			result = new InitOperationResult(InitResultCode.NOK_REPO_EXISTS);
-			return false;
-			
-		case REPO_EXISTS_BUT_INVALID:
+		logger.log(Level.INFO, "Storage test result ist " + testResult);
+		
+		if (testResult.isTargetExists() && testResult.isTargetCanWrite() && !testResult.isRepoFileExists()) {
+			logger.log(Level.INFO, "--> OKAY: Target exists and is writable, but repo doesn't exist. We're good to go!");
 			return true;
-
-		case NO_REPO_CANNOT_CREATE:
-			result = new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
+		}
+		else if (testCreateTarget && !testResult.isTargetExists() && testResult.isTargetCanCreate()) {
+			logger.log(Level.INFO, "--> OKAY: Target does not exist, but can be created. We're good to go!");
+			return true;
+		}
+		else {
+			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
+			result = new InitOperationResult(InitResultCode.NOK_TEST_FAILED, testResult);			
 			return false;
-
-		case NO_REPO:
-			if (!options.isCreateTargetPath()) {
-				result = new InitOperationResult(InitResultCode.NOK_NO_REPO_CANNOT_CREATE);
-				return false;
-			}
-			else {
-				return true;
-			}
-			 
-		default:
-			throw new RuntimeException("Test result "+repoTestResult+" should have been handled before.");
-		}		
+		}
 	}
 
 	private void initRemoteRepository() throws Exception {
 		try {
-			transferManager.init(options.isCreateTargetPath());
+			transferManager.init(options.isCreateTarget());
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created

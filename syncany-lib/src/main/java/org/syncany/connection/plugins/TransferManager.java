@@ -42,39 +42,6 @@ import java.util.Map;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public interface TransferManager {
-	/**
-	 * Represents the result of the {@link TransferManager#test() test()} method,
-	 * indicating the status of the repository path/folder.
-	 */
-	public enum StorageTestResult {
-		/**
-		 * Repository cannot be tested, because the 
-		 * connection failed.
-		 */
-		NO_CONNECTION,
-		
-		/**
-		 * Repository path exists and it is not empty
-		 */
-		REPO_EXISTS,
-
-		/**
-		 * Repository path exists and is not empty,
-		 * or repository path does not exist, but is writable
-		 */
-		NO_REPO,
-
-		/**
-		 * Repository path does not exist, and 
-		 * it cannot be created
-		 */
-		NO_REPO_CANNOT_CREATE, 
-		
-		/**
-		 * Repository path exists, but it is empty
-		 */
-		REPO_EXISTS_BUT_INVALID
-	}
 
 	/**
 	 * Establish a connection with the remote storage. 
@@ -189,7 +156,7 @@ public interface TransferManager {
 	 * @return Returns the result of testing the repository. 
 	 * @see {@link StorageTestResult}
 	 */
-	public StorageTestResult test();
+	public StorageTestResult test(boolean testCreateTarget);
 
 	/**
 	 * Tests whether the repository path/folder is <b>writable</b> by the application. This method is
@@ -198,7 +165,7 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise
 	 */
-	public boolean repoHasWriteAccess() throws StorageException;
+	public boolean testTargetCanWrite() throws StorageException;
 
 	/**
 	 * Tests whether the repository path/folder is accessible and <b>exists</b>. This method is
@@ -207,7 +174,9 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
 	 */
-	public boolean repoExists() throws StorageException;
+	public boolean testTargetExists() throws StorageException;
+	
+	public boolean testTargetCanCreate() throws StorageException;
 
 	/**
 	 * Tests whether the repository path/folder is accessible and the repository file
@@ -216,5 +185,5 @@ public interface TransferManager {
 	 * 
 	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise 
 	 */
-	public boolean repoIsValid() throws StorageException;
+	public boolean testRepoFileExists() throws StorageException;
 }

@@ -34,22 +34,13 @@ import org.syncany.connection.plugins.Plugin;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalPlugin extends Plugin {
-    public static final String ID = "local";
-    
-    @Override
-    public String getId() {
-        return ID;
-    }    
-    
-    @Override
-    public String getName() {
-        return "Local";
-    }
-
-    @Override
-    public Integer[] getVersion() {
-        return new Integer[] { 0, 1 };
-    }
+	public LocalPlugin() {
+		super("local");
+	}
+	
+	protected LocalPlugin(String pluginId) {
+		super(pluginId);
+	}
 
     @Override
     public Connection createConnection() {

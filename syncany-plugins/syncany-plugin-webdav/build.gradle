@@ -1,9 +1,0 @@
-dependencies {
-	compile		project(':syncany-lib')
-	compile		"com.github.lookfirst:sardine:5.0.1"          
-	compile		"org.slf4j:slf4j-simple:1.7.6" // Required for Sardine
-            
-	testCompile		project(path: ':syncany-lib', configuration: 'tests')      
-	testCompile		project(path: ':syncany-util', configuration: 'tests')
-	testCompile		"junit:junit:4.9"	
-}
