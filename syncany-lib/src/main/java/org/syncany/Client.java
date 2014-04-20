@@ -214,7 +214,7 @@ public class Client {
 	
 	private static void initUserAppDirs() {
 		if (EnvironmentUtil.isWindows()) {
-			userAppDir = new File(System.getProperty("user.home") + "\\Syncany");
+			userAppDir = new File(System.getenv("APPDATA") + "\\Syncany");
 		}
 		else {
 			userAppDir = new File(System.getProperty("user.home") + "/.config/syncany");
