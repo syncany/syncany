@@ -41,8 +41,8 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -305,28 +305,19 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 
 	private boolean performRepoTest(TransferManager transferManager) {
-		StorageTestResult repoTestResult = transferManager.test();
+		StorageTestResult testResult = transferManager.test(false);
 		
-		switch (repoTestResult) {
-		case NO_CONNECTION:
-			result = new ConnectOperationResult(ConnectResultCode.NOK_NO_CONNECTION);
-			return false;
-						
-		case REPO_EXISTS:
+		logger.log(Level.INFO, "Storage test result ist " + testResult);
+		
+		if (testResult.isRepoFileExists()) {
+			logger.log(Level.INFO, "--> OKAY: Repo file exists. We're good to go!");
 			return true;
-			
-		case REPO_EXISTS_BUT_INVALID:
-			result = new ConnectOperationResult(ConnectResultCode.NOK_INVALID_REPO);
+		}
+		else {
+			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
+			result = new ConnectOperationResult(ConnectResultCode.NOK_TEST_FAILED, testResult);			
 			return false;
-
-		case NO_REPO:
-		case NO_REPO_CANNOT_CREATE:
-			result = new ConnectOperationResult(ConnectResultCode.NOK_NO_REPO);
-			return false;
-			 
-		default:
-			throw new RuntimeException("Test result "+repoTestResult+" should have been handled before.");
-		}		
+		}
 	}
 
 	private String getOrAskPassword() {

@@ -120,7 +120,7 @@ public class ConnectOperationTest {
 		ConnectOperation connectOperationB = new ConnectOperation(connectOperationOptionsB, null);		
 		ConnectOperationResult connectOperationResultB = connectOperationB.execute();
 		
-		assertEquals(ConnectResultCode.NOK_NO_REPO, connectOperationResultB.getResultCode());				
+		assertEquals(ConnectResultCode.NOK_TEST_FAILED, connectOperationResultB.getResultCode());				
 		assertFalse(new File(localConnectDirB, Config.DIR_DATABASE).exists());
 		assertFalse(new File(localConnectDirB, Config.DIR_CACHE).exists());
 		assertFalse(new File(localConnectDirB, Config.FILE_CONFIG).exists());

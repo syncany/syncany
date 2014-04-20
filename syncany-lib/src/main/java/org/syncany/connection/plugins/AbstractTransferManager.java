@@ -19,6 +19,8 @@ package org.syncany.connection.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -27,6 +29,7 @@ import java.io.IOException;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
+	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
 	private Connection connection;
 
 	public AbstractTransferManager(Connection connection) {
@@ -43,31 +46,28 @@ public abstract class AbstractTransferManager implements TransferManager {
 	}
 
 	@Override
-	public StorageTestResult test() {
-		StorageTestResult result = null;
+	public StorageTestResult test(boolean testCreateTarget) {
+		logger.log(Level.INFO, "Performing storage test TM.test() ...");							
+		StorageTestResult result = new StorageTestResult();
 		
 		try {
 			connect();
 	
-			if (repoExists()) {
-				if (repoIsValid()) {
-					result = StorageTestResult.REPO_EXISTS_BUT_INVALID;
-				}
-				else {
-					result = StorageTestResult.REPO_EXISTS;
-				}
+			result.setTargetExists(testTargetExists());
+			result.setTargetCanWrite(testTargetCanWrite());
+			result.setRepoFileExists(testRepoFileExists());
+
+			if (!result.isTargetExists() && testCreateTarget) {
+				result.setTargetCanCreate(testTargetCanCreate());
 			}
-			else {
-				if (repoHasWriteAccess()) {
-					result = StorageTestResult.NO_REPO;
-				}
-				else {
-					result = StorageTestResult.NO_REPO_CANNOT_CREATE;
-				}
-			}	
+			
+			result.setTargetCanConnect(true);
 		}
 		catch (StorageException e) {
-			result = StorageTestResult.NO_CONNECTION;
+			result.setTargetCanConnect(false);
+			result.setException(e);
+			
+			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}
 		finally {
 			try {
