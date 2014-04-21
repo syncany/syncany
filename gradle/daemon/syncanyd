@@ -1,32 +1,39 @@
 #!/bin/sh
  
-# Quick start-stop-daemon example, derived from Debian /etc/init.d/ssh
 set -e
  
 # Must be a valid filename
-NAME=syncany
-PIDFILE=/var/run/$NAME.pid
-#This is the command to be run, give the full pathname
+NAME=syncanyd
+APPDIR=~/.config/syncany
+CONTROLFILE=$APPDIR/control
+
 DAEMON=$(dirname $0)/syncany
 DAEMON_OPTS="daemon"
  
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+mkdir -p $APPDIR
  
 case "$1" in
 start)
-echo -n "Starting daemon: "$NAME
-start-stop-daemon --start --quiet --pidfile $PIDFILE --background --exec $DAEMON -- $DAEMON_OPTS
-echo "."
-;;
+	echo -n "Starting daemon: "$NAME
+	start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
+	echo "."
+	;;
 stop)
-echo -n "Stopping daemon: "$NAME
-echo "stop" >> /tmp/commands
-echo "."
-;;
+	echo -n "Stopping daemon: "$NAME
+	
+	if [ ! -e $CONTROLFILE ]; then
+		echo " not running"
+	else
+		echo "stop" >> $CONTROLFILE
+		echo "."
+	fi
+	;;
  
 *)
-echo "Usage: "$1" {start|stop}"
-exit 1
+	echo "Usage: "$1" {start|stop}"
+	exit 1
 esac
  
 exit 0

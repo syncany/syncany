@@ -18,12 +18,13 @@
 package org.syncany.daemon;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
-import org.syncany.daemon.exception.ServiceAlreadyStartedException;
+import org.syncany.Client;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -32,29 +33,34 @@ import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 public class Launcher implements TailerListener {
 	private Tailer tailer;
 	
-	public static void main(String[] args) throws ServiceAlreadyStartedException, InterruptedException {		
+	public static void main(String[] args) throws Exception {		
 		new Launcher().start();		
 	}
 	
-	public void start() throws InterruptedException {
+	public void start() throws Exception {
 		startDaemon();
 		startTailer();	
 	}
 	
-	private void startDaemon() {
+	private void startDaemon() throws Exception {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("lockPort", 3338);
 
-		try {
-			ServiceManager.startService("daemon1", "org.syncany.daemon.Daemon",params);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}		
+		ServiceManager.startService("daemon1", "org.syncany.daemon.Daemon",params);
 	}
 
-	private void startTailer() {
-		tailer = new Tailer(new File("/tmp/commands"), this, 1000, true);		
+	private void startTailer() throws IOException {
+		File userAppDir = Client.getUserAppDir();
+		userAppDir.mkdirs();
+		
+		File controlFile = new File(Client.getUserAppDir(), "control");
+		controlFile.deleteOnExit();
+		
+		if (!controlFile.exists()) {
+			controlFile.createNewFile();
+		}
+		
+		tailer = new Tailer(controlFile, this, 1000, true);		
 		tailer.run(); // This blocks! 
 	}
 
