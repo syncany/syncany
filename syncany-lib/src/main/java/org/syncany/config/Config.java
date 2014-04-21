@@ -34,7 +34,6 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.util.FileUtil;
@@ -77,29 +76,30 @@ public class Config {
     private MultiChunker multiChunker;
     private Transformer transformer;
     private IgnoredFiles ignoredFiles;
-    private UserInteractionListener userInteractionListener;
+    private ApplicationContext applicationContext;
       
     static {    	    	
     	Logging.init();
     }
     
-	public Config(File aLocalDir, UserInteractionListener pluginListener, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
+	public Config(File aLocalDir, ApplicationContext applicationContext, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
 		if (aLocalDir == null || configTO == null || repoTO == null) {
 			throw new ConfigException("Arguments aLocalDir, configTO and repoTO cannot be null.");
 		}
 		
+    	initApplicationContext(applicationContext);    	
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
 		initCache();
 		initIgnoredFile();
 		initRepo(repoTO);
-    	initListener(pluginListener);    	
     	initConnection(configTO);  	
 	}		
 	
-	private void initListener(UserInteractionListener userInteractionListener) {
-		this.userInteractionListener = userInteractionListener;
+	private void initApplicationContext(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+		this.applicationContext.setConfig(this);
 	}
 
 	private void initNames(ConfigTO configTO) throws ConfigException {
@@ -233,8 +233,8 @@ public class Config {
 	    	}
 	    	
 	    	try {
-		    	connection = plugin.createConnection();
-		    	connection.init(this, configTO.getConnectionTO().getSettings());
+		    	connection = plugin.createConnection(applicationContext);
+		    	connection.init(configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {
 	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);
@@ -324,10 +324,6 @@ public class Config {
 
 	public File getLogDir() {
 		return logDir;
-	}
-	
-	public UserInteractionListener getUserInteractionListener() {
-		return userInteractionListener;
 	}
 	
 	public static class ConfigException extends Exception {

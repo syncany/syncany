@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
@@ -61,8 +62,8 @@ public class InitOperation extends AbstractInitOperation {
     private InitOperationListener listener;
     private TransferManager transferManager;
     
-    public InitOperation(InitOperationOptions options, InitOperationListener listener) {
-        super(null);
+	public InitOperation(ApplicationContext applicationContext, InitOperationOptions options, InitOperationListener listener) {
+		super(applicationContext);
         
         this.options = options;
         this.result = null;
@@ -179,7 +180,7 @@ public class InitOperation extends AbstractInitOperation {
 	}
 
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
-		return new GenlinkOperation(options.getConfigTO()).execute();
+		return new GenlinkOperation(applicationContext, options.getConfigTO()).execute();
 	}
 
 	private String getOrAskPassword() throws Exception {

@@ -19,7 +19,7 @@ package org.syncany.connection.plugins;
 
 import java.util.Map;
 
-import org.syncany.config.Config;
+import org.syncany.config.ApplicationContext;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -33,10 +33,23 @@ import org.syncany.config.Config;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public interface Connection { // TODO [medium] This should be an abstract class
-    public TransferManager createTransferManager();
-    public PluginOptionSpecs getOptionSpecs();    
-    public void init(Config config, Map<String, String> optionValues) throws StorageException;
-    public Config getConfig(); // TODO [medium] This is odd
+public abstract class Connection {
+	protected ApplicationContext applicationContext;
+	
+	public Connection(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
+	
+    public ApplicationContext getApplicationContext() {
+		return applicationContext;
+	}
+
+	public void setApplicationContext(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
+
+	public abstract TransferManager createTransferManager();
+    public abstract PluginOptionSpecs getOptionSpecs();    
+    public abstract void init(Map<String, String> optionValues) throws StorageException;    
 }
 

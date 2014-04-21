@@ -29,6 +29,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
@@ -52,15 +53,18 @@ import org.syncany.util.EnvironmentUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractInitOperation extends Operation {
-	public AbstractInitOperation(Config config) {
-		super(config);
+	protected ApplicationContext applicationContext;
+	
+	public AbstractInitOperation(ApplicationContext applicationContext) {
+		super(applicationContext.getConfig());
+		this.applicationContext = applicationContext;
 	}
 
 	protected TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
 		Plugin plugin = Plugins.get(connectionTO.getType());
 
-		Connection connection = plugin.createConnection();
-		connection.init(config, connectionTO.getSettings());
+		Connection connection = plugin.createConnection(applicationContext);
+		connection.init(connectionTO.getSettings());
 
 		return connection.createTransferManager();
 	}

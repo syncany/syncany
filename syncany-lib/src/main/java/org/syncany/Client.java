@@ -170,7 +170,7 @@ public class Client {
 	}	
 
 	public GenlinkOperationResult genlink() throws Exception {
-		return new GenlinkOperation(config).execute();
+		return new GenlinkOperation(applicationContext).execute();
 	}
 
 	public InitOperationResult init(InitOperationOptions options) throws Exception {
@@ -178,7 +178,7 @@ public class Client {
 	}
 
 	public InitOperationResult init(InitOperationOptions options, InitOperationListener listener) throws Exception {
-		return new InitOperation(options, listener).execute();
+		return new InitOperation(applicationContext, options, listener).execute();
 	}
 
 	public ConnectOperationResult connect(ConnectOperationOptions options) throws IOException, StorageException, CipherException {
@@ -188,7 +188,7 @@ public class Client {
 	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws IOException, StorageException,
 			CipherException {
 		
-		return new ConnectOperation(options, listener).execute();
+		return new ConnectOperation(applicationContext, options, listener).execute();
 	}
 
 	public CleanupOperationResult cleanup() throws Exception {

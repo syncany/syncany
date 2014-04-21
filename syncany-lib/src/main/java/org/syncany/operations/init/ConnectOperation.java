@@ -30,6 +30,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
@@ -79,8 +80,8 @@ public class ConnectOperation extends AbstractInitOperation {
 	private ConnectOperationListener listener;
     private TransferManager transferManager;
 	
-	public ConnectOperation(ConnectOperationOptions options, ConnectOperationListener listener) {
-		super(null);
+	public ConnectOperation(ApplicationContext applicationContext, ConnectOperationOptions options, ConnectOperationListener listener) {
+		super(applicationContext);
 		
 		this.options = options;
 		this.result = null;

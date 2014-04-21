@@ -17,6 +17,7 @@
  */
 package org.syncany.connection.plugins.local;
 
+import org.syncany.config.ApplicationContext;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 
@@ -43,7 +44,7 @@ public class LocalPlugin extends Plugin {
 	}
 
     @Override
-    public Connection createConnection() {
-        return new LocalConnection();
+    public Connection createConnection(ApplicationContext applicationContext) {
+        return new LocalConnection(applicationContext);
     }
 }

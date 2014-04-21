@@ -20,6 +20,8 @@ package org.syncany.connection.plugins;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.syncany.config.ApplicationContext;
+
 /**
  * A plugin can be used to store Syncany's repository files on any remote location. 
  * Implementations of the <tt>Plugin</tt> class identify a storage/connection plugin.
@@ -75,8 +77,7 @@ public abstract class Plugin {
 	/**
 	 * Creates a plugin-specific {@link Connection}
 	 */
-	public abstract Connection createConnection();
-	
+	public abstract Connection createConnection(ApplicationContext applicationContext);	
 
 	/**
 	 * Loads the plugin properties (ID, name, version)

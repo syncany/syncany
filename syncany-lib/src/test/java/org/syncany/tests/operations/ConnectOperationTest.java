@@ -27,6 +27,7 @@ import java.util.Random;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.operations.init.ConnectOperation;
@@ -51,7 +52,7 @@ public class ConnectOperationTest {
 	public void testConnectOperationSuccess() throws Exception {	
 		// A.init()
 		InitOperationOptions initOperationOptionsA = TestConfigUtil.createTestInitOperationOptions("A");		
-		InitOperation initOperationA = new InitOperation(initOperationOptionsA, null);
+		InitOperation initOperationA = new InitOperation(new ApplicationContext(), initOperationOptionsA, null);
 		
 		InitOperationResult initOperationResultA = initOperationA.execute();
 
@@ -72,7 +73,7 @@ public class ConnectOperationTest {
 		connectOperationOptionsB.setPassword(initOperationOptionsA.getPassword());
 		connectOperationOptionsB.setLocalDir(localDirB);
 		
-		ConnectOperation connectOperationB = new ConnectOperation(connectOperationOptionsB, null);		
+		ConnectOperation connectOperationB = new ConnectOperation(new ApplicationContext(), connectOperationOptionsB, null);		
 		ConnectOperationResult connectOperationResultB = connectOperationB.execute();
 		
 		assertEquals(ConnectResultCode.OK, connectOperationResultB.getResultCode());				
@@ -95,7 +96,7 @@ public class ConnectOperationTest {
 	public void testConnectOperationFailureNoConnection() throws Exception {	
 		// A.init()
 		InitOperationOptions initOperationOptionsA = TestConfigUtil.createTestInitOperationOptions("A");		
-		InitOperation initOperationA = new InitOperation(initOperationOptionsA, null);
+		InitOperation initOperationA = new InitOperation(new ApplicationContext(), initOperationOptionsA, null);
 		
 		InitOperationResult initOperationResultA = initOperationA.execute();
 
@@ -117,7 +118,7 @@ public class ConnectOperationTest {
 		connectOperationOptionsB.setPassword(initOperationOptionsA.getPassword());
 		connectOperationOptionsB.setLocalDir(localDirB);
 		
-		ConnectOperation connectOperationB = new ConnectOperation(connectOperationOptionsB, null);		
+		ConnectOperation connectOperationB = new ConnectOperation(new ApplicationContext(), connectOperationOptionsB, null);		
 		ConnectOperationResult connectOperationResultB = connectOperationB.execute();
 		
 		assertEquals(ConnectResultCode.NOK_TEST_FAILED, connectOperationResultB.getResultCode());				

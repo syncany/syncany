@@ -20,7 +20,7 @@ package org.syncany.connection.plugins.local;
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.config.Config;
+import org.syncany.config.ApplicationContext;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
@@ -36,10 +36,13 @@ import org.syncany.connection.plugins.TransferManager;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection implements Connection {
-	protected Config config;
+public class LocalConnection extends Connection {
 	protected File repositoryPath;
 
+	public LocalConnection(ApplicationContext applicationContext) {
+		super(applicationContext);
+	}
+	
 	@Override
 	public TransferManager createTransferManager() {
 		return new LocalTransferManager(this);
@@ -54,10 +57,8 @@ public class LocalConnection implements Connection {
 	}
 
 	@Override
-	public void init(Config config, Map<String, String> optionValues) throws StorageException {
+	public void init(Map<String, String> optionValues) throws StorageException {
 		getOptionSpecs().validate(optionValues);
-
-		this.config = config;
 		this.repositoryPath = new File(optionValues.get("path"));
 	}
 
@@ -66,9 +67,5 @@ public class LocalConnection implements Connection {
 		return new PluginOptionSpecs(
 			new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null)
 		);
-	}
-	
-	public Config getConfig() {
-		return config;
 	}
 }

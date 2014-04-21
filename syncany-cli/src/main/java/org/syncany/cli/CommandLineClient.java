@@ -206,7 +206,7 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		}					
 		
 		// Load config
-		config = ConfigHelper.loadConfig(localDir, this);
+		config = ConfigHelper.loadConfig(localDir, applicationContext);
 	}					
 	
 	private int runCommand(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws Exception {

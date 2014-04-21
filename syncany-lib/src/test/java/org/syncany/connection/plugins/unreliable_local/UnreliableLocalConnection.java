@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.syncany.config.Config;
+import org.syncany.config.ApplicationContext;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
 
@@ -37,7 +37,9 @@ public class UnreliableLocalConnection extends LocalConnection {
 	private Map<String, Integer> typeOperationCounters;
 	private List<String> failingOperationPatterns;	
 
-	public UnreliableLocalConnection() {
+	public UnreliableLocalConnection(ApplicationContext applicationContext) {
+		super(applicationContext);
+		
         this.totalOperationCounter = 0;
         this.typeOperationCounters = new HashMap<String, Integer>();
         this.failingOperationPatterns = new ArrayList<String>();
@@ -77,7 +79,7 @@ public class UnreliableLocalConnection extends LocalConnection {
 	}		
 	
 	@Override
-	public void init(Config config, Map<String, String> optionValues) {
+	public void init(Map<String, String> optionValues) {
 		// Skip validation, because we actually don't use an OptionSpec here
 		
 		repositoryPath = new File(optionValues.get("path"));

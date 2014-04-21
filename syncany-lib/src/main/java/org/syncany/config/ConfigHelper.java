@@ -27,7 +27,6 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
@@ -40,7 +39,7 @@ import org.syncany.crypto.SaltedSecretKey;
 public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	
-	public static Config loadConfig(File localDir, UserInteractionListener userInteractionListener) throws ConfigException {
+	public static Config loadConfig(File localDir, ApplicationContext applicationContext) throws ConfigException {
 		if (localDir == null) {
 			throw new ConfigException("Argument localDir cannot be null.");
 		}
@@ -53,7 +52,7 @@ public class ConfigHelper {
 			ConfigTO configTO = ConfigHelper.loadConfigTO(localDir);
 			RepoTO repoTO = ConfigHelper.loadRepoTO(localDir, configTO);
 			
-			return new Config(localDir, userInteractionListener, configTO, repoTO);
+			return new Config(localDir, applicationContext, configTO, repoTO);
 		}		
 		else {
 			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
