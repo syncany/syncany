@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
@@ -87,11 +88,25 @@ public class Client {
 	private static File userAppDir;
 	private static File userPluginsDir;
 
+	protected ApplicationContext applicationContext;
 	protected Config config;
 
 	static {
 		initApplicationProperties();
 		initUserAppDirs();	
+	}
+	
+	public Client() {
+		this.applicationContext = new ApplicationContext();
+		this.config = null;
+	}
+	
+	public ApplicationContext getApplicationContext() {
+		return applicationContext;
+	}
+
+	public void setApplicationContext(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
 	}
 
 	public void setConfig(Config config) {

@@ -104,7 +104,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 
 		// Create valid transfer manager
-		transferManager = createTransferManager(configTO.getConnectionTO(), listener);
+		transferManager = createTransferManager(configTO.getConnectionTO());
 		
 		// Test the repo
 		if (!performRepoTest(transferManager)) {

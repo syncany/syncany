@@ -15,11 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.init;
+package org.syncany.config;
 
 import org.syncany.connection.plugins.UserInteractionListener;
 
-public interface InitOperationListener extends UserInteractionListener {
-	public String getPasswordCallback();
-	public void notifyGenerateMasterKey();
+public class ApplicationContext {
+	private Config config;
+	private UserInteractionListener userInteractionListener;
+	
+	public Config getConfig() {
+		return config;
+	}
+	
+	public void setConfig(Config config) {
+		this.config = config;
+	}
+	
+	public UserInteractionListener getUserInteractionListener() {
+		return userInteractionListener;
+	}
+	
+	public void setUserInteractionListener(UserInteractionListener userInteractionListener) {
+		this.userInteractionListener = userInteractionListener;
+	}	
 }

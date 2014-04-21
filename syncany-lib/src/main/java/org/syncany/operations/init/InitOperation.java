@@ -75,7 +75,7 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");                      
 
-		transferManager = createTransferManager(options.getConfigTO().getConnectionTO(), listener);
+		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
 		
 		// Test the repo
 		if (!performRepoTest()) {

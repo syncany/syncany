@@ -32,9 +32,9 @@ import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.util.FileUtil;
@@ -77,13 +77,13 @@ public class Config {
     private MultiChunker multiChunker;
     private Transformer transformer;
     private IgnoredFiles ignoredFiles;
-    private PluginListener pluginListener;
+    private UserInteractionListener userInteractionListener;
       
     static {    	    	
     	Logging.init();
     }
     
-	public Config(File aLocalDir, PluginListener pluginListener, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
+	public Config(File aLocalDir, UserInteractionListener pluginListener, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
 		if (aLocalDir == null || configTO == null || repoTO == null) {
 			throw new ConfigException("Arguments aLocalDir, configTO and repoTO cannot be null.");
 		}
@@ -98,8 +98,8 @@ public class Config {
     	initConnection(configTO);  	
 	}		
 	
-	private void initListener(PluginListener pluginListener) {
-		this.pluginListener = pluginListener;
+	private void initListener(UserInteractionListener userInteractionListener) {
+		this.userInteractionListener = userInteractionListener;
 	}
 
 	private void initNames(ConfigTO configTO) throws ConfigException {
@@ -234,7 +234,7 @@ public class Config {
 	    	
 	    	try {
 		    	connection = plugin.createConnection();
-		    	connection.init(this, configTO.getConnectionTO().getSettings(), pluginListener);
+		    	connection.init(this, configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {
 	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);
@@ -324,6 +324,10 @@ public class Config {
 
 	public File getLogDir() {
 		return logDir;
+	}
+	
+	public UserInteractionListener getUserInteractionListener() {
+		return userInteractionListener;
 	}
 	
 	public static class ConfigException extends Exception {

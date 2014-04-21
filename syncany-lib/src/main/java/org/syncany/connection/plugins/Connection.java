@@ -33,10 +33,10 @@ import org.syncany.config.Config;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public interface Connection {
+public interface Connection { // TODO [medium] This should be an abstract class
     public TransferManager createTransferManager();
     public PluginOptionSpecs getOptionSpecs();    
-    public void init(Config config, Map<String, String> optionValues, PluginListener pluginListener) throws StorageException;
-    public Config getConfig();
+    public void init(Config config, Map<String, String> optionValues) throws StorageException;
+    public Config getConfig(); // TODO [medium] This is odd
 }
 

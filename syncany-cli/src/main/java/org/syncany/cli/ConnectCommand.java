@@ -29,6 +29,7 @@ import joptsimple.OptionSpec;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.StorageTestResult;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.operations.init.ConnectOperationListener;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
@@ -199,10 +200,12 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 
 	@Override
 	public boolean onUserConfirm(String subject, String message, String question) {
-		if (listener == null) {
+		UserInteractionListener userInteractionListener = client.getApplicationContext().getUserInteractionListener();
+		
+		if (userInteractionListener == null) {
 			throw new RuntimeException("No listener registered. User interaction required, but not possible.");
 		}
 		
-		return listener.onUserConfirm(subject, message, question);
+		return userInteractionListener.onUserConfirm(subject, message, question);
 	}
 }

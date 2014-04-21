@@ -34,7 +34,6 @@ import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
@@ -57,11 +56,11 @@ public abstract class AbstractInitOperation extends Operation {
 		super(config);
 	}
 
-	protected TransferManager createTransferManager(ConnectionTO connectionTO, PluginListener pluginListener) throws StorageException {
+	protected TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
 		Plugin plugin = Plugins.get(connectionTO.getType());
 
 		Connection connection = plugin.createConnection();
-		connection.init(config, connectionTO.getSettings(), pluginListener);
+		connection.init(config, connectionTO.getSettings());
 
 		return connection.createTransferManager();
 	}

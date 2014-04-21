@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.PrintStream;
 
 import org.syncany.Client;
-import org.syncany.connection.plugins.PluginListener;
 
 /**
  * Commands are the central part of Syncany's command line client. Each implementation 
@@ -46,7 +45,6 @@ import org.syncany.connection.plugins.PluginListener;
 public abstract class Command {
 	protected Client client;
 	protected File localDir;
-	protected PluginListener listener;
 	protected PrintStream out;
 
 	/**
@@ -87,13 +85,5 @@ public abstract class Command {
 
 	public void setOut(PrintStream out) {
 		this.out = out;
-	}
-
-	public PluginListener getListener() {
-		return listener;
-	}
-
-	public void setListener(PluginListener listener) {
-		this.listener = listener;
 	}
 }

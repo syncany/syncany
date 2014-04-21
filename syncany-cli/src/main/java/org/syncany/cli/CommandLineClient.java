@@ -50,8 +50,8 @@ import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginListener;
 import org.syncany.connection.plugins.Plugins;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -62,7 +62,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
  *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CommandLineClient extends Client implements PluginListener {
+public class CommandLineClient extends Client implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
@@ -87,8 +87,14 @@ public class CommandLineClient extends Client implements PluginListener {
 	public CommandLineClient(String[] args) {
 		this.args = args;		
 		this.out = System.out;
+		
+		initApplicationContext();	
 	}
 	
+	private void initApplicationContext() {
+		applicationContext.setUserInteractionListener(this);
+	}
+
 	public void setOut(OutputStream out) {
 		this.out = new PrintStream(out);
 	}
@@ -231,7 +237,6 @@ public class CommandLineClient extends Client implements PluginListener {
 		
 		// Init command
 		command.setClient(this);
-		command.setListener(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
 		
