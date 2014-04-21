@@ -12,8 +12,8 @@ import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 import org.syncany.daemon.util.SocketLock;
 import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
-import org.syncany.daemon.websocket.AbstractService;
-import org.syncany.daemon.websocket.DaemonWebSocketServer;
+import org.syncany.operations.daemon.AbstractService;
+import org.syncany.operations.daemon.websocket.DaemonWebSocketServer;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -74,6 +74,19 @@ public class Daemon extends AbstractService {
 	// Service interface
 	@Override
 	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
+		initLock(parameters);		
+
+		// 2- Starting websocket server
+		try {
+			ServiceManager.startService(getIdentifier() + "_websocket", "org.syncany.daemon.websocket.DaemonWebSocketServer", null);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		running.set(true);
+	}
+	
+	private void initLock(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
 		if (parameters.containsKey("lockPort")) {
 			lockPort = (Integer)parameters.get("lockPort");
 		}
@@ -91,17 +104,8 @@ public class Daemon extends AbstractService {
 			log.info("Daemon already launched");
 			throw new ServiceAlreadyStartedException("Daemon Server socket lock failed");
 		}
-
-		// 2- Starting websocket server
-		try {
-			ServiceManager.startService(getIdentifier() + "_websocket", "org.syncany.daemon.websocket.DaemonWebSocketServer", null);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		running.set(true);
 	}
-	
+
 	@Override
 	public void stop() {
 		if (quittingInProgress.get()) {

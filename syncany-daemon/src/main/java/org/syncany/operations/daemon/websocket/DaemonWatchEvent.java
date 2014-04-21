@@ -15,12 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon;
+package org.syncany.operations.daemon.websocket;
+
+
 
 /**
- * @author vwiencek
+ * @author vincent
  *
  */
-public class DaemonEvent {
+public class DaemonWatchEvent extends DaemonRequest {
+
 
 }

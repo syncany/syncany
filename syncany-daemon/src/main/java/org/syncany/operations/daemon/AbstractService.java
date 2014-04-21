@@ -15,25 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package org.syncany.operations.daemon;
 
+import org.syncany.daemon.Service;
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author vincent
  *
  */
-public class DaemonConnectMessage extends DaemonAbstractInitMessage {
-	public DaemonConnectMessage(DaemonMessage parent) {
-		super(parent);
-		setAction("connect");
+public abstract class AbstractService implements Service {
+	private String identifier;
+	
+	@Override
+	public void setIdentifier(String id) {
+		this.identifier = id;
 	}
 
-	private String url;
-	
-	public String getUrl() {
-		return url;
-	}
-	public void setUrl(String url) {
-		this.url = url;
+	@Override
+	public String getIdentifier() {
+		return identifier;
 	}
 }

@@ -15,27 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package org.syncany.cli;
 
-import java.util.Map;
+import org.syncany.operations.daemon.DaemonOperation;
 
-
-
-/**
- * @author Vincent Wiencek <vwiencek@gmail.com>
- *
- */
-public class DaemonWatchResultMessage extends DaemonResultMessage {
-	private Map<String, Map<String, String>> foldersUpdate;
-	
-	public DaemonWatchResultMessage(DaemonMessage parent) {
-		super(parent);
+public class DaemonCommand extends Command {
+	@Override
+	public CommandScope getRequiredCommandScope() {	
+		return CommandScope.ANY;
 	}
 
-	public Map<String, Map<String, String>> getFoldersUpdate() {
-		return foldersUpdate;
-	}
-	public void setFoldersUpdate(Map<String, Map<String, String>> foldersUpdate) {
-		this.foldersUpdate = foldersUpdate;
+	@Override
+	public int execute(String[] operationArgs) throws Exception {
+		new DaemonOperation(client.getConfig()).execute();		
+		return 0;
 	}
 }

@@ -15,34 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package org.syncany.operations.daemon.websocket;
+
 
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonWatchMessage extends DaemonMessage {
+public class DaemonResponse extends DaemonRequest {
 
-	public DaemonWatchMessage(DaemonMessage parent) {
+	public DaemonResponse(DaemonRequest parent) {
 		super(parent);
-		setAction("watch");
 	}
 	
-	private int interval;
-	boolean automaticWatcher;
+	private String originalAction;
+	private boolean success;
 	
-	public int getInterval() {
-		return interval;
+	public boolean isSuccess() {
+		return success;
 	}
-	public void setInterval(int interval) {
-		this.interval = interval;
+	public void setSuccess(boolean success) {
+		this.success = success;
 	}
 	
-	public boolean isAutomaticWatcher() {
-		return automaticWatcher;
+	public String getOriginalAction() {
+		return originalAction;
 	}
-	public void setAutomaticWatcher(boolean automaticWatcher) {
-		this.automaticWatcher = automaticWatcher;
+	public void setOriginalAction(String originalAction) {
+		this.originalAction = originalAction;
 	}
 }

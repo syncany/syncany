@@ -15,15 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
-
-
+package org.syncany.operations.daemon;
 
 /**
- * @author vincent
+ * @author pheckel
  *
  */
-public class DaemonWatchEvent extends DaemonMessage {
-
-
+public interface ShutdownListener {
+	public void onDaemonShutdown();
 }
