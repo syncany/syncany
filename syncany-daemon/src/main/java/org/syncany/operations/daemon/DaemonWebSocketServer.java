@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.websocket;
+package org.syncany.operations.daemon;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -29,7 +29,6 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.syncany.daemon.DaemonRequestHandler;
 import org.syncany.daemon.exception.ServiceAlreadyStartedException;
-import org.syncany.operations.daemon.AbstractService;
 import org.syncany.util.JsonHelper;
 
 public class DaemonWebSocketServer extends AbstractService {

@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.daemon.websocket;
 
-
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
@@ -30,11 +29,11 @@ public class DaemonRequest {
 	private String clientType;
 	private String localFolder;
 	private String daemonIdentifier;
-	
+
 	public DaemonRequest() {
 		this.timeStamp = System.nanoTime();
 	}
-	
+
 	public DaemonRequest(DaemonRequest parent) {
 		this.timeStamp = parent.getTimeStamp();
 		this.action = parent.getAction();
@@ -44,10 +43,11 @@ public class DaemonRequest {
 		this.commandId = parent.getCommandId();
 		this.daemonIdentifier = parent.getDaemonIdentifier();
 	}
-	
+
 	public String getCommandId() {
 		return commandId;
 	}
+
 	public void setCommandId(String commandId) {
 		this.commandId = commandId;
 	}
@@ -55,6 +55,7 @@ public class DaemonRequest {
 	public long getTimeStamp() {
 		return timeStamp;
 	}
+
 	public void setTimeStamp(long timeStamp) {
 		this.timeStamp = timeStamp;
 	}
@@ -62,34 +63,39 @@ public class DaemonRequest {
 	public String getAction() {
 		return action;
 	}
+
 	public void setAction(String action) {
 		this.action = action;
 	}
-	
+
 	public String getClientId() {
 		return clientId;
 	}
+
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
 	}
-	
+
 	public String getClientType() {
 		return clientType;
 	}
+
 	public void setClientType(String clientType) {
 		this.clientType = clientType;
 	}
-	
+
 	public String getLocalFolder() {
 		return localFolder;
 	}
+
 	public void setLocalFolder(String localFolder) {
 		this.localFolder = localFolder;
 	}
-	
+
 	public void setDaemonIdentifier(String daemonIdentifier) {
 		this.daemonIdentifier = daemonIdentifier;
 	}
+
 	public String getDaemonIdentifier() {
 		return daemonIdentifier;
 	}

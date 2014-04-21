@@ -26,7 +26,7 @@ stop)
 	if [ ! -e $CONTROLFILE ]; then
 		echo " not running"
 	else
-		echo "stop" >> $CONTROLFILE
+		echo "shutdown" >> $CONTROLFILE
 		echo "."
 	fi
 	;;

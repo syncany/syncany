@@ -18,18 +18,23 @@
 package org.syncany.operations.daemon;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.websocket.DaemonWebSocketServer;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DaemonOperation extends Operation implements ShutdownListener {	
+	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
+
 	private DaemonWebSocketServer webSocketServer;
+	private DaemonWatchServer watchServer;
 	private DaemonControlServer controlServer;
 
 	public DaemonOperation(Config config) {
@@ -38,24 +43,44 @@ public class DaemonOperation extends Operation implements ShutdownListener {
 
 	@Override
 	public OperationResult execute() throws Exception {		
+		logger.log(Level.INFO, "Starting daemon operation ...");
+		
 		startWebSocketServer();
+		startWatchServer();
 		startDaemonControlLoop();	
 		
 		return null;
 	}
-	
+
 	private void startWebSocketServer() throws ServiceAlreadyStartedException {
+		logger.log(Level.INFO, "Starting websocket server ...");
+
 		webSocketServer = new DaemonWebSocketServer();
 		webSocketServer.start(null);
 	}
 
+	private void startWatchServer() {
+		logger.log(Level.INFO, "Starting websocket server ...");
+
+		watchServer = new DaemonWatchServer();
+		watchServer.start();
+	}
+
 	private void startDaemonControlLoop() throws IOException {
+		logger.log(Level.INFO, "Starting daemon control server ...");
+
 		controlServer = new DaemonControlServer(this);
 		controlServer.enterLoop(); // This blocks! 
 	}
 
 	@Override
 	public void onDaemonShutdown() {
-		webSocketServer.stop();		
+		logger.log(Level.INFO, "SHUTDOWN requested.");
+		
+		logger.log(Level.INFO, "Stopping websocket server ...");
+		webSocketServer.stop();
+
+		logger.log(Level.INFO, "Stopping watch server ...");
+		watchServer.stop();
 	}
 }

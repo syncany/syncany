@@ -19,16 +19,20 @@ package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 import org.syncany.Client;
 
 /**
- * @author pheckel
- *
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DaemonControlServer implements TailerListener {	
+	private static final Logger logger = Logger.getLogger(DaemonControlServer.class.getSimpleName());
+	private static final String COMMAND_SHUTDOWN = "shutdown";
+	
 	private File controlFile;
 	private Tailer controlFileTailer;
 	private ShutdownListener shutdownListener;
@@ -48,40 +52,48 @@ public class DaemonControlServer implements TailerListener {
 		}
 		
 		controlFile.deleteOnExit();		
+
+		logger.log(Level.INFO, "Monitoring control file for commands at " + controlFile + " ...");
+		logger.log(Level.INFO, "   (Note: This is a blocking operation. The 'main' thread is now blocked until '" + COMMAND_SHUTDOWN + "' is received.)");
+		
 		controlFileTailer.run(); 
 	}	
 
 	@Override
-	public void init(Tailer tailer) {
-		// Nothing
-	}
-
-	@Override
 	public void fileNotFound() {
-		System.out.println("file not found");
+		logger.log(Level.SEVERE, "Control file not found. FATAL. EXITING.");
+		throw new RuntimeException("Control file not found. FATAL. EXITING.");
 	}
-
+	
 	@Override
-	public void fileRotated() {
-		System.out.println("file rotated");
-	}
+	public void handle(String command) {
+		switch (command) {
+		case COMMAND_SHUTDOWN:
+			logger.log(Level.INFO, "Control file: Received shutdown command. Shutting down.");
 
-	@Override
-	public void handle(String line) {
-		System.out.println(line);
-		
-		switch (line) {
-		case "stop":
-			System.out.println("Stopping");
 			shutdownListener.onDaemonShutdown();
 			controlFileTailer.stop();
 			break;
+			
+		default:
+			logger.log(Level.WARNING, "Control file: Ignoring unknown command: " + command);
 		}
 	}
 
 	@Override
 	public void handle(Exception e) {
-		throw new RuntimeException(e);
+		logger.log(Level.SEVERE, "Control file tailer exception received. FATAL. EXITING.", e);
+		throw new RuntimeException("Control file tailer exception received. FATAL. EXITING.", e);
+	}
+	
+	@Override
+	public void init(Tailer tailer) {
+		// Don't care
+	}
+	
+	@Override
+	public void fileRotated() {
+		// Don't care
 	}
 
 }

@@ -13,7 +13,7 @@ import org.syncany.daemon.util.SocketLock;
 import org.syncany.daemon.util.WatchEvent;
 import org.syncany.daemon.util.WatchEventAction;
 import org.syncany.operations.daemon.AbstractService;
-import org.syncany.operations.daemon.websocket.DaemonWebSocketServer;
+import org.syncany.operations.daemon.DaemonWebSocketServer;
 
 import com.google.common.eventbus.Subscribe;
 

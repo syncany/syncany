@@ -6,10 +6,10 @@ import java.util.logging.Logger;
 
 import org.syncany.daemon.command.Command;
 import org.syncany.daemon.command.WatchCommand;
+import org.syncany.operations.daemon.DaemonWebSocketServer;
 import org.syncany.operations.daemon.websocket.DaemonRequest;
 import org.syncany.operations.daemon.websocket.DaemonResponse;
 import org.syncany.operations.daemon.websocket.DaemonWatchEvent;
-import org.syncany.operations.daemon.websocket.DaemonWebSocketServer;
 import org.syncany.operations.daemon.websocket.WatchDaemonRequest;
 import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
 import org.syncany.util.JsonHelper;
@@ -83,30 +83,26 @@ public class DaemonRequestHandler {
 		return null;
 	}
 	
+	public void handle(String requestStr) {
+		try {
+			DaemonRequest request = JsonHelper.fromStringToObject(requestStr, DaemonRequest.class);		
+			
+			switch (request.getAction()){
+				case "watch":
+					handleWatch(JsonHelper.fromStringToObject(requestStr, WatchDaemonRequest.class));
+					break;				
+					
+				case "pause_watch":				
+				case "stop_watch":
+				case "resume_watch":
+				default:
+					logger.log(Level.WARNING, "Unknown action received; returning message: "+request.toString());
+					break;
+			}
 	
-	private static DaemonResponse buildReturnObject(DaemonRequest message) {
-		DaemonResponse ret = new DaemonResponse(message);
-		ret.setTimeStamp(System.nanoTime());
-		ret.setAction("daemon_command_result");
-		ret.setOriginalAction(message.getAction());
-		ret.setCommandId(message.getCommandId());
-		return ret;
-	}
-
-	public void handle(String s) {
-		DaemonRequest message = JsonHelper.fromStringToObject(s, DaemonRequest.class);
-				
-		switch (message.getAction()){
-			case "watch":
-				handleWatch(JsonHelper.fromStringToObject(s, WatchDaemonRequest.class));
-				break;				
-				
-			case "pause_watch":				
-			case "stop_watch":
-			case "resume_watch":
-			default:
-				logger.log(Level.WARNING, "Unknown action received; returning message: "+message.toString());
-				break;
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid request received: " + requestStr);
 		}
 	}
 }
