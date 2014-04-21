@@ -158,12 +158,13 @@ public class IgnoredFileScenarioTest {
 		
 		//Create ignore file and reload it
 		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
-		TestFileUtil.createFileWithContent(syncanyIgnore, "*.bak");
+		TestFileUtil.createFileWithContent(syncanyIgnore, "*.bak\nignoredarchive.r??");
 		clientA.getConfig().getIgnoredFiles().loadPatterns();
 		
 		// A new/up
 		clientA.createNewFile("ignoredfile.bak");	
-		clientA.createNewFile("nonignoredfile.bar");	
+		clientA.createNewFile("nonignoredfile.bar");
+		clientA.createNewFile("ignoredarchive.r01");		
 		clientA.up();
 		
 		clientB.down();
@@ -173,6 +174,8 @@ public class IgnoredFileScenarioTest {
 		assertFalse(clientB.getLocalFile("ignoredfile.bak").exists());
 		assertTrue(clientA.getLocalFile("nonignoredfile.bar").exists());
 		assertTrue(clientB.getLocalFile("nonignoredfile.bar").exists());
+		assertTrue(clientA.getLocalFile("ignoredarchive.r01").exists());
+		assertFalse(clientB.getLocalFile("ignoredarchive.r01").exists());
 		
 		// Tear down
 		clientA.deleteTestData();

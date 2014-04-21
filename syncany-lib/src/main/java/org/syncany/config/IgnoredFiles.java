@@ -80,7 +80,7 @@ public class IgnoredFiles {
 							ignorePatterns.add(ignorePattern.substring(6));
 						}
 						else {
-							if (ignorePattern.contains("*")) {
+							if (ignorePattern.contains("*") || ignorePattern.contains("?")) {
 								// wildcards handling, converting them to regexps
 								ignorePatterns.add(wildcardsToRegexp(ignorePattern));
 							}
@@ -124,7 +124,7 @@ public class IgnoredFiles {
 					out.append(c);
 			}
 		}
-		out.append( '$' );
+		out.append('$');
 		return out.toString();
 	}
 } 
