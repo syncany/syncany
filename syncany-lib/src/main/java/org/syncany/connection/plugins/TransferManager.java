@@ -139,51 +139,75 @@ public interface TransferManager {
 
 	/**
 	 * Tests whether the repository parameters are valid. In particular, the method tests
-	 * whether a repository exists or, if not, whether it can be created.
+	 * whether a target (folder, bucket, etc.) exists or, if not, whether it can be created.
+	 * It furthermore tests whether a repository at the target already exists by checking if the
+	 * {@link RepoRemoteFile} exists.
+	 * 
+	 * <p>The relevant result is determined by the following methods:
 	 * 
 	 * <ul>
-	 *  <li>{@link StorageTestResult#NO_CONNECTION}: If the Internet connection is broken, or the
-	 *      socket broke.</li>
-	 *  <li>{@link StorageTestResult#NO_REPO}: No repository exists on the remote location, i.e.
-	 *      not even the folder/path exists.</li>
-	 *  <li>{@link StorageTestResult#NO_REPO_CANNOT_CREATE}: No repository exists and it cannot be
-	 *      created, because write access is missing.</li>
-	 *  <li>{@link StorageTestResult#REPO_EXISTS}: The repository exists and is valid.</li>
-	 *  <li>{@link StorageTestResult#REPO_EXISTS_BUT_INVALID}: The repository path/folder exists, but
-	 *      and is not valid.</li>
+	 *  <li>{@link #testTargetExists()}: Tests whether the target exists.</li>
+	 *  <li>{@link #testTargetCanWrite()}: Tests whether the target is writable.</li>
+	 *  <li>{@link #testTargetCanCreate()}: Tests whether the target can be created if it does not 
+	 *      exist already. This is only called if <tt>testCreateTarget</tt> is set.</li>
+	 *  <li>{@link #testRepoFileExists()}: Tests whether the repo file exists.</li>
 	 * </ul>
 	 * 
 	 * @return Returns the result of testing the repository. 
+	 * @param testCreateTarget If <tt>true</tt>, the test will test if the target can be created in case
+	 *        it does not exist. If <tt>false</tt>, this test will be skipped.
 	 * @see {@link StorageTestResult}
 	 */
 	public StorageTestResult test(boolean testCreateTarget);
 
 	/**
-	 * Tests whether the repository path/folder is <b>writable</b> by the application. This method is
-	 * called by the {@link #test()} method (only during repository initialization (or initial
-	 * connection).
+	 * Tests whether the target path/folder <b>exists</b>. This might be done by listing the parent path/folder
+	 * or by retrieving metadata about the target. The method returns <tt>true</tt> if the target exists,
+	 * <tt>false</tt> otherwise.
 	 * 
-	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise
-	 */
-	public boolean testTargetCanWrite() throws StorageException;
-
-	/**
-	 * Tests whether the repository path/folder is accessible and <b>exists</b>. This method is
-	 * called by the {@link #test()} method (only during repository initialization (or initial
-	 * connection).
+	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 
+	 * or initial connection).
 	 * 
-	 * @return Returns <tt>true</tt> if the repository can be written to, <tt>false</tt> otherwise 
+	 * @return Returns <tt>true</tt> if the target exists, <tt>false</tt> otherwise 
 	 */
-	public boolean testTargetExists() throws StorageException;
+	public boolean testTargetExists();
 	
-	public boolean testTargetCanCreate() throws StorageException;
+	/**
+	 * Tests whether the target path/folder is <b>writable</b> by the application. This method may either
+	 * check the write permissions of the target or actually write a test file to check write access. If the
+	 * target does not exist, <tt>false</tt> is returned. If the target exists and is writable, <tt>true</tt>
+	 * is returned.
+	 * 
+	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 
+	 * or initial connection).
+	 * 
+	 * @return Returns <tt>true</tt> if the target can be written to, <tt>false</tt> otherwise
+	 */
+	public boolean testTargetCanWrite();
 
 	/**
-	 * Tests whether the repository path/folder is accessible and the repository file
-	 * exists (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
+	 * Tests whether the target path/folder <b>can be created</b> (if it <b>does not exist already</b>). This method 
+	 * may either check the permissions of the parent path/folder or actually create and delete the target to 
+	 * determine create permissions. 
+	 * 
+	 * <p>If the target already exists, the method returns <tt>true</tt>. If it does not, but it can be created 
+	 * (according to tests of this method), it also returns <tt>true</tt>. In all other cases, <tt>false</tt> is returned.
+	 * 
+	 * <p>This method is called by the {@link #test(boolean)} method, <b>but only if</b> the <tt>testCreateTarget</tt> flag
+	 * is set to <tt>true</tt>!
+	 * 
+	 * @return Returns <tt>true</tt> if the target can be created or already exists, <tt>false</tt> otherwise 
+	 */
+	public boolean testTargetCanCreate();
+
+	/**
+	 * Tests whether the <b>repository file exists</b> (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
 	 * (only during repository initialization (or initial connection).
+	 * 
+	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 
+	 * or initial connection).
 	 * 
 	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise 
 	 */
-	public boolean testRepoFileExists() throws StorageException;
+	public boolean testRepoFileExists();
 }
