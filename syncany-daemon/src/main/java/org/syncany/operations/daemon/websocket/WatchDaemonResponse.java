@@ -15,24 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket;
+package org.syncany.operations.daemon.websocket;
 
-import org.syncany.daemon.Service;
+import java.util.Map;
+
+
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public abstract class AbstractService implements Service {
-	private String identifier;
+public class WatchDaemonResponse extends DaemonResponse {
+	private Map<String, Map<String, String>> foldersUpdate;
 	
-	@Override
-	public void setIdentifier(String id) {
-		this.identifier = id;
+	public WatchDaemonResponse(DaemonRequest parent) {
+		super(parent);
 	}
 
-	@Override
-	public String getIdentifier() {
-		return identifier;
+	public Map<String, Map<String, String>> getFoldersUpdate() {
+		return foldersUpdate;
+	}
+	public void setFoldersUpdate(Map<String, Map<String, String>> foldersUpdate) {
+		this.foldersUpdate = foldersUpdate;
 	}
 }

@@ -17,14 +17,9 @@
  */
 package org.syncany.cli;
 
-import java.util.logging.Logger;
-
-import org.syncany.daemon.Launcher;
-import org.syncany.operations.LogOperation;
+import org.syncany.operations.daemon.DaemonOperation;
 
 public class DaemonCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
-
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.ANY;
@@ -32,7 +27,7 @@ public class DaemonCommand extends Command {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		new Launcher().start();		
+		new DaemonOperation(client.getConfig()).execute();		
 		return 0;
 	}
 }

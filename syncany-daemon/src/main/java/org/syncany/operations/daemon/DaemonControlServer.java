@@ -15,59 +15,45 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon;
+package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 import org.syncany.Client;
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author pheckel
  *
  */
-public class Launcher implements TailerListener {
-	private Tailer tailer;
-	
-	public static void main(String[] args) throws Exception {		
-		new Launcher().start();		
-	}
-	
-	public void start() throws Exception {
-		startDaemon();
-		startTailer();	
-	}
-	
-	private void startDaemon() throws Exception {
-		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("lockPort", 3338);
+public class DaemonControlServer implements TailerListener {	
+	private File controlFile;
+	private Tailer controlFileTailer;
+	private ShutdownListener shutdownListener;
 
-		ServiceManager.startService("daemon1", "org.syncany.daemon.Daemon",params);
+	public DaemonControlServer(ShutdownListener shutdownListener) {
+		this.controlFile = new File(Client.getUserAppDir(), "control");
+		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
+		this.shutdownListener = shutdownListener;
 	}
 
-	private void startTailer() throws IOException {
+	public void enterLoop() throws IOException {
 		File userAppDir = Client.getUserAppDir();
 		userAppDir.mkdirs();
-		
-		File controlFile = new File(Client.getUserAppDir(), "control");
-		controlFile.deleteOnExit();
-		
+				
 		if (!controlFile.exists()) {
 			controlFile.createNewFile();
 		}
 		
-		tailer = new Tailer(controlFile, this, 1000, true);		
-		tailer.run(); // This blocks! 
-	}
+		controlFile.deleteOnExit();		
+		controlFileTailer.run(); 
+	}	
 
 	@Override
 	public void init(Tailer tailer) {
-		// TODO Auto-generated method stub
-		
+		// Nothing
 	}
 
 	@Override
@@ -87,14 +73,15 @@ public class Launcher implements TailerListener {
 		switch (line) {
 		case "stop":
 			System.out.println("Stopping");
-			ServiceManager.stopService("daemon1");
-			tailer.stop();
+			shutdownListener.onDaemonShutdown();
+			controlFileTailer.stop();
 			break;
 		}
 	}
 
 	@Override
-	public void handle(Exception ex) {
-		ex.printStackTrace();
+	public void handle(Exception e) {
+		throw new RuntimeException(e);
 	}
+
 }

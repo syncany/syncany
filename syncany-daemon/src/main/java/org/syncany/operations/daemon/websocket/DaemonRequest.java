@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package org.syncany.operations.daemon.websocket;
 
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonMessage {
+public class DaemonRequest {
 	private long timeStamp;
 	private String commandId;
 	private String action;
@@ -31,11 +31,11 @@ public class DaemonMessage {
 	private String localFolder;
 	private String daemonIdentifier;
 	
-	public DaemonMessage() {
+	public DaemonRequest() {
 		this.timeStamp = System.nanoTime();
 	}
 	
-	public DaemonMessage(DaemonMessage parent) {
+	public DaemonRequest(DaemonRequest parent) {
 		this.timeStamp = parent.getTimeStamp();
 		this.action = parent.getAction();
 		this.clientId = parent.getClientId();

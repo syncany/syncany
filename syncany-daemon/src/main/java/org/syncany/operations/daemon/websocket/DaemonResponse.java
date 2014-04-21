@@ -15,15 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package org.syncany.operations.daemon.websocket;
 
 
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonWatchEvent extends DaemonMessage {
+public class DaemonResponse extends DaemonRequest {
 
-
+	public DaemonResponse(DaemonRequest parent) {
+		super(parent);
+	}
+	
+	private String originalAction;
+	private boolean success;
+	
+	public boolean isSuccess() {
+		return success;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	
+	public String getOriginalAction() {
+		return originalAction;
+	}
+	public void setOriginalAction(String originalAction) {
+		this.originalAction = originalAction;
+	}
 }

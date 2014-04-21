@@ -15,34 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
-
-
+package org.syncany.operations.daemon;
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author pheckel
  *
  */
-public class DaemonResultConnectMessage extends DaemonResultMessage {
-	private String shareLink;
-	private boolean isShareLinkEncrypted;
-	
-	public DaemonResultConnectMessage(DaemonMessage parent) {
-		super(parent);
-		setAction("daemon_connect_result");
-	}
-	
-	public String getShareLink() {
-		return shareLink;
-	}
-	public void setShareLink(String shareLink) {
-		this.shareLink = shareLink;
-	}
-
-	public boolean isShareLinkEncrypted() {
-		return isShareLinkEncrypted;
-	}
-	public void setShareLinkEncrypted(boolean isShareLinkEncrypted) {
-		this.isShareLinkEncrypted = isShareLinkEncrypted;
-	}
+public interface ShutdownListener {
+	public void onDaemonShutdown();
 }

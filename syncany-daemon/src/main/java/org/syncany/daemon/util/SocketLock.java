@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.daemon.DaemonCommandHandler;
+import org.syncany.daemon.DaemonRequestHandler;
 
 /**
  * 
@@ -13,7 +13,7 @@ import org.syncany.daemon.DaemonCommandHandler;
  *
  */
 public class SocketLock {
-	private static final Logger log = Logger.getLogger(DaemonCommandHandler.class.getSimpleName());
+	private static final Logger log = Logger.getLogger(DaemonRequestHandler.class.getSimpleName());
     private int port;
     private Socket socket;
 
