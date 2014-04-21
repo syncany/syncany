@@ -82,7 +82,7 @@ public class IgnoredFiles {
 						else {
 							if (ignorePattern.contains("*") || ignorePattern.contains("?")) {
 								// wildcards handling, converting them to regexps
-								ignorePatterns.add(wildcardsToRegexp(ignorePattern));
+								ignorePatterns.add(convertWildcardsToRegexp(ignorePattern));
 							}
 							else {
 								ignorePaths.add(ignorePattern);
@@ -103,10 +103,12 @@ public class IgnoredFiles {
 		}
 	}
         
-	static private String wildcardsToRegexp(String in) {
-		StringBuffer out = new StringBuffer("^");
+	private static String convertWildcardsToRegexp(String in) {
+		StringBuilder out = new StringBuilder("^");
+		
 		for (int i = 0; i < in.length(); ++i) {
 			char c = in.charAt(i);
+			
 			switch (c) {
 				case '*':
 					out.append(".*");
@@ -124,7 +126,9 @@ public class IgnoredFiles {
 					out.append(c);
 			}
 		}
+		
 		out.append('$');
+		
 		return out.toString();
 	}
 } 
