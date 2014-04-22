@@ -162,7 +162,7 @@ public class TestConfigUtil {
 		repoTO.setChunkerTO(createFixedChunkerTO());
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
-		return new Config(new File("/dummy"), null, configTO, repoTO);
+		return new Config(new File("/dummy"), new ApplicationContext(), configTO, repoTO);
 	}
 
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
@@ -190,7 +190,7 @@ public class TestConfigUtil {
 		configTO.setConnectionTO(connectionTO);
 				
 		// Create 
-		Config config = new Config(tempLocalDir, null, configTO, repoTO);
+		Config config = new Config(tempLocalDir, new ApplicationContext(), configTO, repoTO);
 
 		config.setConnection(connection);
 		config.getAppDir().mkdirs();
@@ -261,21 +261,22 @@ public class TestConfigUtil {
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 
 		conn.init(pluginSettings);
-		conn.createTransferManager().init(true);
+		
+		plugin.createTransferManager(conn).init(true);
 
 		return conn;
 	}
 
 	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
-		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(failingOperationPatterns);
+		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
+		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin, failingOperationPatterns);
 
-		unreliableLocalConnection.createTransferManager().init(true);
+		unreliableLocalPlugin.createTransferManager(unreliableLocalConnection).init(true);
 
 		return unreliableLocalConnection;
 	}
 	
-	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(List<String> failingOperationPatterns) throws Exception {
-		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
+	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin, List<String> failingOperationPatterns) throws Exception {		
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection(new ApplicationContext());
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));

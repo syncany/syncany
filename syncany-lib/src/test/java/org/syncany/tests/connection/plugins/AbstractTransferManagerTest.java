@@ -84,7 +84,7 @@ public abstract class AbstractTransferManagerTest {
 		Connection connection = plugin.createConnection(new ApplicationContext());
 		connection.init(invalidEmptyPluginSettings);
 
-		TransferManager transferManager = connection.createTransferManager();
+		TransferManager transferManager = plugin.createTransferManager(connection);
 
 		// This should cause a Storage exception, because the path does not exist
 		transferManager.connect();
@@ -193,6 +193,6 @@ public abstract class AbstractTransferManagerTest {
 		Connection connection = pluginInfo.createConnection(new ApplicationContext());
 		connection.init(createPluginSettings());
 
-		return connection.createTransferManager();
+		return pluginInfo.createTransferManager(connection);
 	}
 }

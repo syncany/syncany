@@ -29,6 +29,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
@@ -55,7 +56,7 @@ public class ConfigTest {
 		repoTO.setTransformers(null); // <<< valid		
 		
 		// Run!
-		Config config = new Config(localDir, null, configTO, repoTO);
+		Config config = new Config(localDir, new ApplicationContext(), configTO, repoTO);
 		
 		// Test
 		assertEquals("/some/folder/.syncany", config.getAppDir().getAbsolutePath());
@@ -82,7 +83,7 @@ public class ConfigTest {
 		ConfigTO configTO = new ConfigTO();
 		RepoTO repoTO = new RepoTO();
 		
-		new Config(localDir, null, configTO, repoTO);			
+		new Config(localDir, new ApplicationContext(), configTO, repoTO);			
 	}
 	
 	@Test(expected = ConfigException.class)
@@ -91,7 +92,7 @@ public class ConfigTest {
 		ConfigTO configTO = null;
 		RepoTO repoTO = new RepoTO();
 		
-		new Config(localDir, null, configTO, repoTO);			
+		new Config(localDir, new ApplicationContext(), configTO, repoTO);			
 	}
 	
 	@Test(expected = ConfigException.class)
@@ -100,7 +101,7 @@ public class ConfigTest {
 		ConfigTO configTO = new ConfigTO();
 		RepoTO repoTO = null;
 		
-		new Config(localDir, null, configTO, repoTO);			
+		new Config(localDir, new ApplicationContext(), configTO, repoTO);			
 	}
 	
 	@Test
@@ -113,7 +114,7 @@ public class ConfigTest {
 		
 		// Run!
 		try {
-			new Config(localDir, null, configTO, repoTO);
+			new Config(localDir, new ApplicationContext(), configTO, repoTO);
 			fail("Machine name should not have been accepted.");
 		}
 		catch (ConfigException e) {	
@@ -131,7 +132,7 @@ public class ConfigTest {
 			
 		// Run!
 		try {
-			new Config(localDir, null, configTO, repoTO);
+			new Config(localDir, new ApplicationContext(), configTO, repoTO);
 			fail("Machine name should not have been accepted.");
 		}
 		catch (ConfigException e) {	
@@ -156,7 +157,7 @@ public class ConfigTest {
 				
 		// Run!
 		try {
-			new Config(localDir, null, configTO, repoTO);
+			new Config(localDir, new ApplicationContext(), configTO, repoTO);
 			fail("Config should not been have initialized.");
 		}
 		catch (ConfigException e) {	
@@ -183,7 +184,7 @@ public class ConfigTest {
 
 		// Run!
 		try {
-			new Config(localDir, null, configTO, repoTO);
+			new Config(localDir, new ApplicationContext(), configTO, repoTO);
 			fail("Config should not been have initialized.");
 		}
 		catch (ConfigException e) {	
@@ -216,7 +217,7 @@ public class ConfigTest {
 		
 		// Run!
 		try {
-			new Config(localDir, null, configTO, repoTO);
+			new Config(localDir, new ApplicationContext(), configTO, repoTO);
 			fail("Transformer should NOT have been found.");
 		}
 		catch (ConfigException e) {	
@@ -254,7 +255,7 @@ public class ConfigTest {
 		repoTO.setTransformers(transformers); // <<< valid
 		
 		// Run!
-		Config config = new Config(localDir, null, configTO, repoTO);
+		Config config = new Config(localDir, new ApplicationContext(), configTO, repoTO);
 		
 		// Test
 		assertNotNull(config.getChunker());
@@ -294,7 +295,7 @@ public class ConfigTest {
 		
 		// Run!
 		try {
-			new Config(localDir, null, configTO, repoTO);
+			new Config(localDir, new ApplicationContext(), configTO, repoTO);
 			fail("Transformer should NOT have been able to initialize.");
 		}
 		catch (ConfigException e) {	

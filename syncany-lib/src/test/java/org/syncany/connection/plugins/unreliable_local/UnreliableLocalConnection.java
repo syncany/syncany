@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.syncany.config.ApplicationContext;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
 
 /**
@@ -44,11 +43,6 @@ public class UnreliableLocalConnection extends LocalConnection {
         this.typeOperationCounters = new HashMap<String, Integer>();
         this.failingOperationPatterns = new ArrayList<String>();
 	}
-
-    @Override
-    public TransferManager createTransferManager() {
-        return new UnreliableLocalTransferManager(this);
-    }
 
 	public List<String> getFailingOperationPatterns() {
 		return failingOperationPatterns;
