@@ -74,10 +74,20 @@ public abstract class Plugin {
 		return pluginProperties.getProperty(PLUGIN_PROPERTIES_VERSION_KEY);
 	}
 
+	public void setup() {
+		// Nothing
+	}
+	
+	public void shutdown() {
+		// Nothing
+	}
+	
 	/**
 	 * Creates a plugin-specific {@link Connection}
 	 */
-	public abstract Connection createConnection(ApplicationContext applicationContext);	
+	public abstract Connection createConnection(ApplicationContext applicationContext);
+	
+	public abstract TransferManager createTransferManager(Connection connection);
 
 	/**
 	 * Loads the plugin properties (ID, name, version)

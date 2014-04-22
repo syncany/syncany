@@ -48,7 +48,6 @@ public abstract class Connection {
 		this.applicationContext = applicationContext;
 	}
 
-	public abstract TransferManager createTransferManager();
     public abstract PluginOptionSpecs getOptionSpecs();    
     public abstract void init(Map<String, String> optionValues) throws StorageException;    
 }

@@ -121,7 +121,7 @@ public class DownOperation extends Operation {
 		this.listener = listener;
 
 		this.localDatabase = new SqlDatabase(config);
-		this.transferManager = config.getConnection().createTransferManager();
+		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
 		this.databaseReconciliator = new DatabaseReconciliator();
 	}
 

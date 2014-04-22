@@ -35,7 +35,6 @@ import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherException;
@@ -60,13 +59,11 @@ public abstract class AbstractInitOperation extends Operation {
 		this.applicationContext = applicationContext;
 	}
 
-	protected TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
-		Plugin plugin = Plugins.get(connectionTO.getType());
-
+	protected TransferManager createTransferManager(Plugin plugin, ConnectionTO connectionTO) throws StorageException {
 		Connection connection = plugin.createConnection(applicationContext);
 		connection.init(connectionTO.getSettings());
 
-		return connection.createTransferManager();
+		return plugin.createTransferManager(connection);
 	}
 
 	protected File createAppDirs(File localDir) throws IOException {

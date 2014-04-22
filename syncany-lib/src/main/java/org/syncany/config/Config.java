@@ -71,6 +71,7 @@ public class Config {
 	private SaltedSecretKey masterKey;
 
 	private Cache cache;	
+	private Plugin plugin;
 	private Connection connection;
     private Chunker chunker;
     private MultiChunker multiChunker;
@@ -226,7 +227,7 @@ public class Config {
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
 		if (configTO.getConnectionTO() != null) {
-			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());
+			plugin = Plugins.get(configTO.getConnectionTO().getType());
 	    	
 	    	if (plugin == null) {
 	    		throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
@@ -269,7 +270,11 @@ public class Config {
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
-
+		
+	public Plugin getPlugin() {
+		return plugin;
+	}
+	
 	public Connection getConnection() {
         return connection;
     }

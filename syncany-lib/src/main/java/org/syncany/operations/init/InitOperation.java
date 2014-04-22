@@ -25,10 +25,13 @@ import java.util.logging.Logger;
 
 import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
+import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.MasterRemoteFile;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.StorageTestResult;
@@ -60,6 +63,8 @@ public class InitOperation extends AbstractInitOperation {
     private InitOperationOptions options;
     private InitOperationResult result;
     private InitOperationListener listener;
+    
+    private Plugin plugin;
     private TransferManager transferManager;
     
 	public InitOperation(ApplicationContext applicationContext, InitOperationOptions options, InitOperationListener listener) {
@@ -76,7 +81,11 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");                      
 
-		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
+		// Init plugin and transfer manager
+		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
+		plugin.setup();
+		
+		transferManager = createTransferManager(plugin, options.getConfigTO().getConnectionTO());
 		
 		// Test the repo
 		if (!performRepoTest()) {
@@ -112,11 +121,16 @@ public class InitOperation extends AbstractInitOperation {
 		}	
 		
 		writeXmlFile(options.getConfigTO(), configFile);
-
-		logger.log(Level.INFO, "Uploading local repository");
+		
+		// Loading config (needed in some plugins!)
+		logger.log(Level.INFO, "Loading config to application context ...");
+		applicationContext.setConfig(ConfigHelper.loadConfig(options.getLocalDir(), applicationContext)); 
 		
 		// Make remote changes
+		logger.log(Level.INFO, "Uploading local repository");
+		
 		initRemoteRepository();		
+		
 		try {
 			if (options.isEncryptionEnabled()) {
 				uploadMasterFile(masterFile, transferManager);
@@ -126,8 +140,11 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		catch (StorageException|IOException e) {
 			cleanLocalRepository(e);
-		}
+		}		
 		
+		// Shutdown plugin 
+		transferManager.disconnect();
+		plugin.shutdown();
 		
 		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());

@@ -20,7 +20,6 @@ package org.syncany.operations.init;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -32,6 +31,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
+import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
@@ -78,6 +78,8 @@ public class ConnectOperation extends AbstractInitOperation {
 	private ConnectOperationOptions options;
 	private ConnectOperationResult result;
 	private ConnectOperationListener listener;
+	
+	private Plugin plugin;
     private TransferManager transferManager;
 	
 	public ConnectOperation(ApplicationContext applicationContext, ConnectOperationOptions options, ConnectOperationListener listener) {
@@ -89,7 +91,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	}		
 	
 	@Override
-	public ConnectOperationResult execute() throws IOException, StorageException, CipherException {
+	public ConnectOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Connect'");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -104,8 +106,11 @@ public class ConnectOperation extends AbstractInitOperation {
 			return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
 		}
 
-		// Create valid transfer manager
-		transferManager = createTransferManager(configTO.getConnectionTO());
+		// Init plugin and transfer manager
+		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
+		plugin.setup();
+		
+		transferManager = createTransferManager(plugin, options.getConfigTO().getConnectionTO());
 		
 		// Test the repo
 		if (!performRepoTest(transferManager)) {
@@ -178,6 +183,14 @@ public class ConnectOperation extends AbstractInitOperation {
 			File masterFile = new File(appDir, Config.FILE_MASTER);
 			writeXmlFile(new MasterTO(configTO.getMasterKey().getSalt()), masterFile);
 		}
+		
+		// Loading config (needed in some plugins!)
+		logger.log(Level.INFO, "Loading config to application context ...");
+		applicationContext.setConfig(ConfigHelper.loadConfig(options.getLocalDir(), applicationContext)); 
+		
+		// Shutdown plugin
+		transferManager.disconnect();
+		plugin.shutdown();
 				
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		

@@ -20,6 +20,7 @@ package org.syncany.connection.plugins.local;
 import org.syncany.config.ApplicationContext;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.TransferManager;
 
 /**
  * Identifies the local storage {@link Plugin} for Syncany.
@@ -47,4 +48,9 @@ public class LocalPlugin extends Plugin {
     public Connection createConnection(ApplicationContext applicationContext) {
         return new LocalConnection(applicationContext);
     }
+    
+	@Override
+	public TransferManager createTransferManager(Connection connection) {
+		return new LocalTransferManager((LocalConnection) connection);
+	}
 }

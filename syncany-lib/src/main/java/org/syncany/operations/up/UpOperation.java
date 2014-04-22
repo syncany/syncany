@@ -100,7 +100,7 @@ public class UpOperation extends Operation {
 
 		this.listener = listener;
 		this.options = options;
-		this.transferManager = config.getConnection().createTransferManager();
+		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
 		this.localDatabase = new SqlDatabase(config);
 	}
 
