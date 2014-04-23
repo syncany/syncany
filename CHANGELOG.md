@@ -3,10 +3,25 @@ Change Log
 
 ### Release 0.1.2-alpha (Date: tbd.)
 
-- Not released yet.
+- Developer/alpha release (**NOT FOR PRODUCTION USE!**)
+- Features:
+  + Extracted non-core plugins, allow easy plugin installation through
+    `sy plugin (list|install|remove)` #26/#104
+    - Shipped plugins now only 'local'
+    - Installable plugins:
+      [FTP](https://github.com/syncany/syncany-plugin-ftp),
+      [SFTP](https://github.com/syncany/syncany-plugin-sftp) (no host checking),
+      [WebDAV](https://github.com/syncany/syncany-plugin-webdav) (HTTP only),
+      [Amazon S3](https://github.com/syncany/syncany-plugin-s3)
+  + Added wildcards to .syignore (e.g. *.bak, *.r??) #108
+  + Added Arch Linux 'syncany-git' package #99
+- Bugfixes
+  + Fix semantic in TransferManager `test()` (incl. all plugins) #103/#102
 
+  
 ### Release 0.1.1-alpha (Date: 14 Apr 2014)
 
+- Developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Features:
   + Ignoring files using .syignore file #66/#77
   + Arch Linux package support; release version #80 and git version #99
@@ -14,17 +29,17 @@ Change Log
 - Windows-specific: 
   + Add Syncany binaries to PATH environment variable during setup #84/#91
   + Fixed HSQLDB-path issue #98
-- Bugfixes
+- Bugfixes:
   + Timezone fix in tests #78/#90
   + Reference issue "Cannot determine file content for checksum" #92/#94
   + Atomic 'init' command (rollback on failure) #95/#96
-- Other things
+- Other things:
   + Tests for 'connect' command  
   + Tests for .syignore
 
 ### Release 0.1.0-alpha (Date: 30 March 2014)
 
-- First developer/alpha release (NOT FOR PRODUCTION USE!)
+- First developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Command line interface (CLI) with commands
   + init: initialize local folder and remote repository
   + connect: connect to an existing remote repository

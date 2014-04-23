@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -123,7 +122,8 @@ public class CommandLineClient extends Client implements UserInteractionListener
 			// Run!
 			return runCommand(options, optionHelp, options.nonOptionArguments());
 		}
-		catch (OptionException e) {
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Exception while initializing or running command.", e);
 			return showErrorAndExit(e.getMessage());
 		}
 	}	
@@ -227,12 +227,12 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		Command command = CommandFactory.getInstance(commandName);
 
 		if (command == null) {			
-			showErrorAndExit("Given command is unknown: "+commandName);			
+			return showErrorAndExit("Given command is unknown: "+commandName);			
 		}
 		
 		// Potentially show help
 		if (options.has(optionHelp)) {
-			showCommandHelpAndExit(commandName);
+			return showCommandHelpAndExit(commandName);
 		}
 		
 		// Init command
@@ -243,12 +243,12 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		// Pre-init operations
 		if (command.getRequiredCommandScope() == INITIALIZED_LOCALDIR) { 
 			if (config == null) {
-				showErrorAndExit("No repository found in path. Use 'init' command to create one.");			
+				return showErrorAndExit("No repository found in path, or configured plugin not installed. Use 'sy init' to create one.");			
 			}			
 		}
 		else if (command.getRequiredCommandScope() == UNINITIALIZED_LOCALDIR) {
 			if (config != null) {
-				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
+				return showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
 			}
 		}
 		
@@ -259,10 +259,8 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Command "+ commandName+" FAILED. ", e);
-			showErrorAndExit(e.getMessage());
+			return showErrorAndExit(e.getMessage());
 		}	
-		
-		return -1; // Never reached!
 	}
 	
 	private void showUsageAndExit() throws IOException {
@@ -273,12 +271,12 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		printHelpTextAndExit(HELP_TEXT_HELP_SKEL_RESOURCE);
 	}
 	
-	private void showCommandHelpAndExit(String commandName) throws IOException {
+	private int showCommandHelpAndExit(String commandName) throws IOException {
 		String helpTextResource = HELP_TEXT_CMD_SKEL_RESOURCE.replace(HELP_VAR_CMD, commandName);
-		printHelpTextAndExit(helpTextResource);		
+		return printHelpTextAndExit(helpTextResource);		
 	}
 
-	private void printHelpTextAndExit(String helpTextResource) throws IOException {
+	private int printHelpTextAndExit(String helpTextResource) throws IOException {
 		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(helpTextResource);
 		
 		if (helpTextInputStream == null) {
@@ -292,6 +290,8 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		
 		out.close();		
 		System.exit(0);
+		
+		return -1; // Never reached
 	}
 
 	private String replaceVariables(String line) throws IOException {
@@ -361,7 +361,7 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		out.close();	
 		System.exit(0);
 		
-		return 0;
+		return -1; // Never reached
 	}
 
 	@Override
