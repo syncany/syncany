@@ -17,6 +17,11 @@ Change Log
   + Added Arch Linux 'syncany-git' package #99
 - Bugfixes
   + Fix semantic in TransferManager `test()` (incl. all plugins) #103/#102
+  + WebDAV plugin fix to create "multichunks"/"databases" folder #110
+  + Fix "Plugin not supported" stack trace #111
+  + Windows build script fix for "Could not normalize path" #107
+  + Fix database file name leak of username and hostname #114
+  + Check plugin compatibility before installing (check appMinVersion) #104
 
   
 ### Release 0.1.1-alpha (Date: 14 Apr 2014)
