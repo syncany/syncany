@@ -13,8 +13,9 @@ Change Log
       [SFTP](https://github.com/syncany/syncany-plugin-sftp) (no host checking),
       [WebDAV](https://github.com/syncany/syncany-plugin-webdav) (HTTP only),
       [Amazon S3](https://github.com/syncany/syncany-plugin-s3)
-  + Added wildcards to .syignore (e.g. *.bak, *.r??) #108
+  + Ignore files using wildcards in .syignore (e.g. *.bak, *.r??) #108
   + Added Arch Linux 'syncany-git' package #99
+  + Allow speicifying HTTP(S)/WebDAV proxy and other global system properties #109
 - Bugfixes
   + Fix semantic in TransferManager `test()` (incl. all plugins) #103/#102
   + WebDAV plugin fix to create "multichunks"/"databases" folder #110
