@@ -17,12 +17,10 @@
  */
 package org.syncany;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 import org.syncany.config.Config;
+import org.syncany.config.GlobalConfig;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.CleanupOperation;
@@ -66,7 +64,6 @@ import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
-import org.syncany.util.EnvironmentUtil;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -78,20 +75,10 @@ import org.syncany.util.EnvironmentUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
-	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
-	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
-	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
-	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
-	
-	private static Properties applicationProperties;	
-	private static File userAppDir;
-	private static File userPluginsDir;
-
 	protected Config config;
 
 	static {
-		initApplicationProperties();
-		initUserAppDirs();	
+		GlobalConfig.init();
 	}
 
 	public void setConfig(Config config) {
@@ -188,50 +175,4 @@ public class Client {
 		return new PluginOperation(config, options).execute();
 	}
 	
-	public static Properties getApplicationProperties() {
-		return applicationProperties;
-	}	
-
-	public static boolean isApplicationRelease() {
-		return Boolean.parseBoolean(applicationProperties.getProperty(APPLICATION_PROPERTIES_RELEASE_KEY));
-	}
-
-	public static String getApplicationVersion() {
-		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
-	}
-
-	public static String getApplicationRevision() {
-		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
-	}
-
-	public static File getUserAppDir() { 
-		return userAppDir;
-	}
-
-	public static File getUserPluginDir() {
-		return userPluginsDir;
-	}
-	
-	private static void initUserAppDirs() {
-		if (EnvironmentUtil.isWindows()) {
-			userAppDir = new File(System.getenv("APPDATA") + "\\Syncany");
-		}
-		else {
-			userAppDir = new File(System.getProperty("user.home") + "/.config/syncany");
-		}
-		
-		userPluginsDir = new File(userAppDir, "plugins");
-	}
-
-	private static void initApplicationProperties() {
-		InputStream globalPropertiesInputStream = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_RESOURCE);
-
-		try {
-			applicationProperties = new Properties();
-			applicationProperties.load(globalPropertiesInputStream);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot load application properties.", e);
-		}
-	}
 }

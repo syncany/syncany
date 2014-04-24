@@ -39,6 +39,7 @@ import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
+import org.syncany.config.GlobalConfig;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
@@ -120,7 +121,7 @@ public class PluginOperation extends Operation {
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
 
-		File globalUserPluginDir = Client.getUserPluginDir();
+		File globalUserPluginDir = GlobalConfig.getUserPluginDir();
 
 		int indexStartAfterSchema = "jar:file:".length();
 		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
@@ -194,16 +195,16 @@ public class PluginOperation extends Operation {
 	}
 
 	private void checkPluginCompatibility(PluginInfo pluginInfo) throws Exception {
-		Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
+		Version applicationVersion = Version.valueOf(GlobalConfig.getApplicationVersion());
 		Version pluginAppMinVersion = Version.valueOf(pluginInfo.getPluginAppMinVersion());
 		
 		logger.log(Level.INFO, "Checking plugin compatibility:");
-		logger.log(Level.INFO, "- Application version:             " + Client.getApplicationVersion() + "(" + applicationVersion + ")");
+		logger.log(Level.INFO, "- Application version:             " + GlobalConfig.getApplicationVersion() + "(" + applicationVersion + ")");
 		logger.log(Level.INFO, "- Plugin min. application version: " + pluginInfo.getPluginAppMinVersion() + "(" + pluginAppMinVersion + ")");
 		
 		if (!applicationVersion.greaterThanOrEqualTo(pluginAppMinVersion)) {
 			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
-					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
+					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + GlobalConfig.getApplicationVersion());
 		}
 	}
 
@@ -284,7 +285,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
-		File globalUserPluginDir = Client.getUserPluginDir();
+		File globalUserPluginDir = GlobalConfig.getUserPluginDir();
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
@@ -415,7 +416,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private String getRemoteListStr(String pluginId) throws Exception {
-		String appVersion = Client.getApplicationVersion();
+		String appVersion = GlobalConfig.getApplicationVersion();
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
 
