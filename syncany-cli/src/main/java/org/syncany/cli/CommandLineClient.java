@@ -46,7 +46,6 @@ import org.apache.commons.io.IOUtils;
 import org.syncany.Client;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigHelper;
-import org.syncany.config.GlobalConfig;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Plugin;
@@ -333,11 +332,11 @@ public class CommandLineClient extends Client {
 	}
 
 	private String getVersionStr() {
-		String versionStr = GlobalConfig.getApplicationVersion();
+		String versionStr = Client.getApplicationVersion();
 		
-		if (!GlobalConfig.isApplicationRelease()) {
-			if (GlobalConfig.getApplicationRevision() != null && !"".equals(GlobalConfig.getApplicationRevision())) {
-				versionStr += ", rev. "+GlobalConfig.getApplicationRevision();
+		if (!Client.isApplicationRelease()) {
+			if (Client.getApplicationRevision() != null && !"".equals(Client.getApplicationRevision())) {
+				versionStr += ", rev. "+Client.getApplicationRevision();
 			}
 			else {
 				versionStr += ", no rev.";

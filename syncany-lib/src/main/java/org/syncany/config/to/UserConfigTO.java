@@ -19,6 +19,7 @@ package org.syncany.config.to;
 
 import java.io.File;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Namespace;
@@ -26,22 +27,35 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config.ConfigException;
 
-@Root(name="globalConfig")
-@Namespace(reference="http://syncany.org/globalconfig/1")
-public class GlobalConfigTO {
+@Root(name="userConfig")
+@Namespace(reference="http://syncany.org/userconfig/1")
+public class UserConfigTO {
 	@ElementMap(name="systemProperties", entry="property", key="name", required=false, attribute=true)
-	protected Map<String, String> systemProperties;
+	private TreeMap<String, String> systemProperties;
 	
-	public static GlobalConfigTO load(File file) throws ConfigException {
-		try {
-			return new Persister().read(GlobalConfigTO.class, file);
-		}
-		catch (Exception ex) {
-			throw new ConfigException("User config file cannot be read or is invalid: " + file, ex);
-		}
+	public UserConfigTO() {
+		this.systemProperties = new TreeMap<String, String>();
 	}
-
+	
 	public Map<String, String> getSystemProperties() {
 		return systemProperties;
+	}
+	
+	public static UserConfigTO load(File file) throws ConfigException {
+		try {
+			return new Persister().read(UserConfigTO.class, file);
+		}
+		catch (Exception e) {
+			throw new ConfigException("User config file cannot be read or is invalid: " + file, e);
+		}
+	}
+	
+	public static void save(UserConfigTO userConfigTO, File file) throws ConfigException {
+		try {
+			new Persister().write(userConfigTO, file);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot write user config to file " + file, e);
+		}
 	}
 }

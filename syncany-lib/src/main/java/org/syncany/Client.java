@@ -18,9 +18,11 @@
 package org.syncany;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import org.syncany.config.Config;
-import org.syncany.config.GlobalConfig;
+import org.syncany.config.UserConfig;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.CleanupOperation;
@@ -75,10 +77,18 @@ import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
+	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
+	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
+	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
+	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
+	
+	private static Properties applicationProperties;
+	
 	protected Config config;
 
 	static {
-		GlobalConfig.init();
+		initUserConfig();
+		initApplicationProperties();
 	}
 
 	public void setConfig(Config config) {
@@ -175,4 +185,35 @@ public class Client {
 		return new PluginOperation(config, options).execute();
 	}
 	
+	public static Properties getApplicationProperties() {
+		return applicationProperties;
+	}	
+
+	public static boolean isApplicationRelease() {
+		return Boolean.parseBoolean(applicationProperties.getProperty(APPLICATION_PROPERTIES_RELEASE_KEY));
+	}
+
+	public static String getApplicationVersion() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
+	}
+
+	public static String getApplicationRevision() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
+	}
+	
+	private static void initUserConfig() {
+		UserConfig.init();
+	}
+
+	private static void initApplicationProperties() {
+		InputStream globalPropertiesInputStream = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_RESOURCE);
+
+		try {
+			applicationProperties = new Properties();
+			applicationProperties.load(globalPropertiesInputStream);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot load application properties.", e);
+		}
+	}	
 }
