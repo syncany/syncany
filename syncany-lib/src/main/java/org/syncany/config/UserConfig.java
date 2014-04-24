@@ -68,34 +68,42 @@ public class UserConfig {
 	}
 
 	private static void initUserConfig() {
-		File globalConfigFile = new File(userAppDir, USER_CONFIG_FILE);
+		File userConfigFile = new File(userAppDir, USER_CONFIG_FILE);
 		
-		if (globalConfigFile.exists()) {
-			try {
-				UserConfigTO userConfigTO = UserConfigTO.load(globalConfigFile);
-				
-				for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
-					System.setProperty(systemProperty.getKey(), systemProperty.getValue());
-				}
-			}
-			catch (ConfigException e) {
-				System.err.println("ERROR: " + e.getMessage());
-				System.err.println("       Ignoring user config file!");
-				System.err.println();
-			}
+		if (userConfigFile.exists()) {
+			loadAndInitUserConfigFile(userConfigFile);			
 		}
 		else {
-			UserConfigTO userConfigTO = new UserConfigTO();
+			writeExampleUserConfigFile(userConfigFile);
+		}
+	}
+
+	private static void loadAndInitUserConfigFile(File userConfigFile) {
+		try {
+			UserConfigTO userConfigTO = UserConfigTO.load(userConfigFile);
 			
-			userConfigTO.getSystemProperties().put("example.property", "This is a demo property. You can delete it.");
-			userConfigTO.getSystemProperties().put("syncany.rocks", "Yes, it does!");
-			
-			try {
-				UserConfigTO.save(userConfigTO, globalConfigFile);
+			for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
+				System.setProperty(systemProperty.getKey(), systemProperty.getValue());
 			}
-			catch (Exception e) {
-				// Don't care!
-			}
+		}
+		catch (ConfigException e) {
+			System.err.println("ERROR: " + e.getMessage());
+			System.err.println("       Ignoring user config file!");
+			System.err.println();
+		}
+	}	
+
+	private static void writeExampleUserConfigFile(File userConfigFile) {
+		UserConfigTO userConfigTO = new UserConfigTO();
+		
+		userConfigTO.getSystemProperties().put("example.property", "This is a demo property. You can delete it.");
+		userConfigTO.getSystemProperties().put("syncany.rocks", "Yes, it does!");
+		
+		try {
+			UserConfigTO.save(userConfigTO, userConfigFile);
+		}
+		catch (Exception e) {
+			// Don't care!
 		}
 	}
 }
