@@ -22,7 +22,7 @@ Change Log
   + Windows build script fix for "Could not normalize path" #107
   + Fix database file name leak of username and hostname #114
   + Check plugin compatibility before installing (check appMinVersion) #104
-
+  + Don't ignore local/remote notifications if sync already running #88
   
 ### Release 0.1.1-alpha (Date: 14 Apr 2014)
 
