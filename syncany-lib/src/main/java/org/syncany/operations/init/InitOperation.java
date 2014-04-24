@@ -23,12 +23,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -67,8 +67,8 @@ public class InitOperation extends AbstractInitOperation {
     private Plugin plugin;
     private TransferManager transferManager;
     
-	public InitOperation(ApplicationContext applicationContext, InitOperationOptions options, InitOperationListener listener) {
-		super(applicationContext);
+	public InitOperation(InitOperationOptions options, InitOperationListener listener) {
+		super(null);
         
         this.options = options;
         this.result = null;
@@ -85,7 +85,12 @@ public class InitOperation extends AbstractInitOperation {
 		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
 		plugin.setup();
 		
-		transferManager = createTransferManager(plugin, options.getConfigTO().getConnectionTO());
+		Connection connection = plugin.createConnection(null);
+		
+		connection.init(options.getConfigTO().getConnectionTO().getSettings());
+		connection.setUserInteractionListener(listener);
+		
+		transferManager = plugin.createTransferManager(connection);
 		
 		// Test the repo
 		if (!performRepoTest()) {
@@ -123,8 +128,8 @@ public class InitOperation extends AbstractInitOperation {
 		writeXmlFile(options.getConfigTO(), configFile);
 		
 		// Loading config (needed in some plugins!)
-		logger.log(Level.INFO, "Loading config to application context ...");
-		applicationContext.setConfig(ConfigHelper.loadConfig(options.getLocalDir(), applicationContext)); 
+		logger.log(Level.INFO, "Loading config to application context ...");		
+		connection.setConfig(ConfigHelper.loadConfig(options.getLocalDir()));
 		
 		// Make remote changes
 		logger.log(Level.INFO, "Uploading local repository");
@@ -197,7 +202,7 @@ public class InitOperation extends AbstractInitOperation {
 	}
 
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
-		return new GenlinkOperation(applicationContext, options.getConfigTO()).execute();
+		return new GenlinkOperation(options.getConfigTO()).execute();
 	}
 
 	private String getOrAskPassword() throws Exception {

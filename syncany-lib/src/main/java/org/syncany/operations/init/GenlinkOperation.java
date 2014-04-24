@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.ApplicationContext;
+import org.syncany.config.Config;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherSpec;
@@ -38,12 +38,12 @@ public class GenlinkOperation extends AbstractInitOperation {
     private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());            
     private ConfigTO configTO;
     
-    public GenlinkOperation(ApplicationContext applicationContext) {
-        super(applicationContext);
+    public GenlinkOperation(Config config) {
+        super(config);
     }
     
-    public GenlinkOperation(ApplicationContext applicationContext, ConfigTO configTO) {
-        this(applicationContext);
+    public GenlinkOperation(ConfigTO configTO) {
+        super(null);
         this.configTO = configTO;
     }        
             

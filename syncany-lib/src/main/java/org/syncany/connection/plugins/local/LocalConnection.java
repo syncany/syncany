@@ -20,7 +20,7 @@ package org.syncany.connection.plugins.local;
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.config.ApplicationContext;
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
@@ -38,8 +38,8 @@ import org.syncany.connection.plugins.StorageException;
 public class LocalConnection extends Connection {
 	protected File repositoryPath;
 
-	public LocalConnection(ApplicationContext applicationContext) {
-		super(applicationContext);
+	public LocalConnection(Config config) {
+		super(config);
 	}
 
 	public File getRepositoryPath() {

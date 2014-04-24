@@ -19,7 +19,7 @@ package org.syncany.connection.plugins;
 
 import java.util.Map;
 
-import org.syncany.config.ApplicationContext;
+import org.syncany.config.Config;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -34,21 +34,30 @@ import org.syncany.config.ApplicationContext;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Connection {
-	protected ApplicationContext applicationContext;
+	protected Config config;
+	protected UserInteractionListener userInteractionListener;
 	
-	public Connection(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
+	public Connection(Config config) {
+		this.config = config;
 	}
 	
-    public ApplicationContext getApplicationContext() {
-		return applicationContext;
+    public Config getConfig() {
+		return config;
 	}
 
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
+	public void setConfig(Config config) {
+		this.config = config;
 	}
 
-    public abstract PluginOptionSpecs getOptionSpecs();    
+	public UserInteractionListener getUserInteractionListener() {
+		return userInteractionListener;
+	}
+
+	public void setUserInteractionListener(UserInteractionListener userInteractionListener) {
+		this.userInteractionListener = userInteractionListener;
+	}
+
+	public abstract PluginOptionSpecs getOptionSpecs();    
     public abstract void init(Map<String, String> optionValues) throws StorageException;    
 }
 

@@ -43,7 +43,6 @@ import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.connection.plugins.StorageTestResult;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -414,16 +413,5 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 	@Override
 	public String getPasswordCallback() {
 		return askPasswordAndConfirm();
-	}
-	
-	@Override
-	public boolean onUserConfirm(String subject, String message, String question) {
-		UserInteractionListener userInteractionListener = client.getApplicationContext().getUserInteractionListener();
-		
-		if (userInteractionListener == null) {
-			throw new RuntimeException("No listener registered. User interaction required, but not possible.");
-		}
-		
-		return userInteractionListener.onUserConfirm(subject, message, question);
 	}
 }

@@ -77,18 +77,16 @@ public class Config {
     private MultiChunker multiChunker;
     private Transformer transformer;
     private IgnoredFiles ignoredFiles;
-    private ApplicationContext applicationContext;
       
     static {    	    	
     	Logging.init();
     }
     
-	public Config(File aLocalDir, ApplicationContext applicationContext, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
+	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
 		if (aLocalDir == null || configTO == null || repoTO == null) {
 			throw new ConfigException("Arguments aLocalDir, configTO and repoTO cannot be null.");
 		}
 		
-    	initApplicationContext(applicationContext);    	
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
@@ -97,11 +95,6 @@ public class Config {
 		initRepo(repoTO);
     	initConnection(configTO);  	
 	}		
-	
-	private void initApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-		this.applicationContext.setConfig(this);
-	}
 
 	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
@@ -234,7 +227,7 @@ public class Config {
 	    	}
 	    	
 	    	try {
-		    	connection = plugin.createConnection(applicationContext);
+		    	connection = plugin.createConnection(this);
 		    	connection.init(configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {

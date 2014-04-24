@@ -29,14 +29,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
@@ -52,20 +47,10 @@ import org.syncany.util.EnvironmentUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractInitOperation extends Operation {
-	protected ApplicationContext applicationContext;
+	public AbstractInitOperation(Config config) {
+		super(null);
+	}
 	
-	public AbstractInitOperation(ApplicationContext applicationContext) {
-		super(applicationContext.getConfig());
-		this.applicationContext = applicationContext;
-	}
-
-	protected TransferManager createTransferManager(Plugin plugin, ConnectionTO connectionTO) throws StorageException {
-		Connection connection = plugin.createConnection(applicationContext);
-		connection.init(connectionTO.getSettings());
-
-		return plugin.createTransferManager(connection);
-	}
-
 	protected File createAppDirs(File localDir) throws IOException {
 		if (localDir == null) {
 			throw new RuntimeException("Unable to create app dir, local dir is null.");

@@ -41,7 +41,7 @@ import org.syncany.crypto.SaltedSecretKey;
 public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	
-	public static Config loadConfig(File localDir, ApplicationContext applicationContext) throws ConfigException {
+	public static Config loadConfig(File localDir) throws ConfigException {
 		if (localDir == null) {
 			throw new ConfigException("Argument localDir cannot be null.");
 		}
@@ -63,7 +63,7 @@ public class ConfigHelper {
 			}
 			else {
 				logger.log(Level.INFO, "Initializing Config instance ...");
-				return new Config(localDir, applicationContext, configTO, repoTO);
+				return new Config(localDir, configTO, repoTO);
 			}
 		}		
 		else {

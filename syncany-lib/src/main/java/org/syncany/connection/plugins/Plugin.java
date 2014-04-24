@@ -20,7 +20,7 @@ package org.syncany.connection.plugins;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.syncany.config.ApplicationContext;
+import org.syncany.config.Config;
 
 /**
  * A plugin can be used to store Syncany's repository files on any remote location. 
@@ -85,7 +85,7 @@ public abstract class Plugin {
 	/**
 	 * Creates a plugin-specific {@link Connection}
 	 */
-	public abstract Connection createConnection(ApplicationContext applicationContext);
+	public abstract Connection createConnection(Config config);
 	
 	public abstract TransferManager createTransferManager(Connection connection);
 

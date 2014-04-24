@@ -61,7 +61,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
  *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CommandLineClient extends Client implements UserInteractionListener {
+public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
@@ -86,12 +86,6 @@ public class CommandLineClient extends Client implements UserInteractionListener
 	public CommandLineClient(String[] args) {
 		this.args = args;		
 		this.out = System.out;
-		
-		initApplicationContext();	
-	}
-	
-	private void initApplicationContext() {
-		applicationContext.setUserInteractionListener(this);
 	}
 
 	public void setOut(OutputStream out) {
@@ -206,7 +200,7 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		}					
 		
 		// Load config
-		config = ConfigHelper.loadConfig(localDir, applicationContext);
+		config = ConfigHelper.loadConfig(localDir);
 	}					
 	
 	private int runCommand(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws Exception {
@@ -363,22 +357,4 @@ public class CommandLineClient extends Client implements UserInteractionListener
 		
 		return -1; // Never reached
 	}
-
-	@Override
-	public boolean onUserConfirm(String subject, String message, String question) {
-		out.println();
-		out.println(subject);
-		out.println("------------------------------");
-		out.println(message);
-		out.println();
-		
-		String yesno = InitConsole.getInstance().readLine(question + " (y/n)? ");
-		
-		if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	}	
 }

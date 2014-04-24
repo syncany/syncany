@@ -29,13 +29,13 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.MasterRemoteFile;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
@@ -82,8 +82,8 @@ public class ConnectOperation extends AbstractInitOperation {
 	private Plugin plugin;
     private TransferManager transferManager;
 	
-	public ConnectOperation(ApplicationContext applicationContext, ConnectOperationOptions options, ConnectOperationListener listener) {
-		super(applicationContext);
+	public ConnectOperation(ConnectOperationOptions options, ConnectOperationListener listener) {
+		super(null);
 		
 		this.options = options;
 		this.result = null;
@@ -110,7 +110,12 @@ public class ConnectOperation extends AbstractInitOperation {
 		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
 		plugin.setup();
 		
-		transferManager = createTransferManager(plugin, options.getConfigTO().getConnectionTO());
+		Connection connection = plugin.createConnection(null);
+		
+		connection.init(options.getConfigTO().getConnectionTO().getSettings());
+		connection.setUserInteractionListener(listener);
+
+		transferManager = plugin.createTransferManager(connection);
 		
 		// Test the repo
 		if (!performRepoTest(transferManager)) {
@@ -186,7 +191,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		
 		// Loading config (needed in some plugins!)
 		logger.log(Level.INFO, "Loading config to application context ...");
-		applicationContext.setConfig(ConfigHelper.loadConfig(options.getLocalDir(), applicationContext)); 
+		connection.setConfig(ConfigHelper.loadConfig(options.getLocalDir())); 
 		
 		// Shutdown plugin
 		transferManager.disconnect();
