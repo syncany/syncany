@@ -73,8 +73,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private WatchOperationListener listener;
 
 	private AtomicBoolean syncRunning;
-	private AtomicBoolean stopRequired;
-	private AtomicBoolean pauseRequired;
+	private AtomicBoolean syncRequested;
+	private AtomicBoolean stopRequested;
+	private AtomicBoolean pauseRequested;
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
@@ -89,8 +90,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.listener = listener;
 
 		this.syncRunning = new AtomicBoolean(false);
-		this.stopRequired = new AtomicBoolean(false);
-		this.pauseRequired = new AtomicBoolean(false);
+		this.syncRequested = new AtomicBoolean(false);
+		this.stopRequested = new AtomicBoolean(false);
+		this.pauseRequested = new AtomicBoolean(false);
 
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
@@ -109,8 +111,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			startRecursiveWatcher();
 		}
 
-		while (!stopRequired.get()) {
-			while (pauseRequired.get()) {
+		while (!stopRequested.get()) {
+			while (pauseRequested.get()) {
 				try {
 					Thread.sleep(1000);
 				}
@@ -122,8 +124,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			try {
 				runSync();
 
-				logger.log(Level.INFO, "Sync done, waiting {0} seconds ...", options.getInterval() / 1000);
-				Thread.sleep(options.getInterval());
+				if (!syncRequested.get()) {
+					logger.log(Level.INFO, "Sync done, waiting {0} seconds ...", options.getInterval() / 1000);
+					Thread.sleep(options.getInterval());
+				}
 			}
 			catch (Exception e) {
 				logger.log(Level.INFO, String.format("Sync FAILED, waiting %d seconds ...", options.getInterval() / 1000), e);
@@ -163,8 +167,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private void runSync() throws Exception {
 		if (!syncRunning.get()) {
 			syncRunning.set(true);
+			syncRequested.set(false);
 
-			logger.log(Level.INFO, "Running sync ...");
+			logger.log(Level.INFO, "RUNNING SYNC ...");
 
 			try {
 				// Run down
@@ -182,8 +187,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				}
 			}
 			finally {
+				logger.log(Level.INFO, "SYNC DONE.");
 				syncRunning.set(false);
 			}
+		}
+		else {
+			logger.log(Level.INFO, "Sync already running, setting 'sync requested' flag ...");
+			syncRequested.set(true);
 		}
 	}
 
@@ -216,15 +226,15 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 
 	public void pause() {
-		pauseRequired.set(true);
+		pauseRequested.set(true);
 	}
 
 	public void resume() {
-		pauseRequired.set(false);
+		pauseRequested.set(false);
 	}
 
 	public void stop() {
-		stopRequired.set(true);
+		stopRequested.set(true);
 	}
 
 	/**
