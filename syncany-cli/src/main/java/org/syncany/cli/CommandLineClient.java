@@ -26,9 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -63,6 +61,10 @@ import org.syncany.util.StringUtil.StringJoinListener;
  */
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
+	
+	private static final String LOG_FILE_PATTERN = "syncany.log";
+	private static final int LOG_FILE_COUNT = 4;
+	private static final int LOG_FILE_LIMIT = 25000000; // 25 MB
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
 	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
@@ -165,11 +167,11 @@ public class CommandLineClient extends Client {
 			}			
 		}
 		else if (config != null && config.getLogDir().exists()) {
-			logFilePattern = config.getLogDir()+File.separator+new SimpleDateFormat("yyMMdd").format(new Date())+".log";
+			logFilePattern = config.getLogDir() + File.separator + LOG_FILE_PATTERN;
 		}
 		
 		if (logFilePattern != null) {	
-			Handler fileLogHandler = new FileHandler(logFilePattern, true);			
+			Handler fileLogHandler = new FileHandler(logFilePattern, LOG_FILE_LIMIT, LOG_FILE_COUNT, true);			
 			fileLogHandler.setFormatter(new LogFormatter());
 	
 			Logging.addGlobalHandler(fileLogHandler);
