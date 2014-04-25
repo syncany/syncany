@@ -30,7 +30,6 @@ import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.ZipMultiChunker;
-import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
@@ -162,7 +161,7 @@ public class TestConfigUtil {
 		repoTO.setChunkerTO(createFixedChunkerTO());
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
-		return new Config(new File("/dummy"), new ApplicationContext(), configTO, repoTO);
+		return new Config(new File("/dummy"), configTO, repoTO);
 	}
 
 	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
@@ -190,7 +189,7 @@ public class TestConfigUtil {
 		configTO.setConnectionTO(connectionTO);
 				
 		// Create 
-		Config config = new Config(tempLocalDir, new ApplicationContext(), configTO, repoTO);
+		Config config = new Config(tempLocalDir, configTO, repoTO);
 
 		config.setConnection(connection);
 		config.getAppDir().mkdirs();
@@ -253,7 +252,7 @@ public class TestConfigUtil {
 
 	public static Connection createTestLocalConnection() throws Exception {
 		Plugin plugin = Plugins.get("local");
-		Connection conn = plugin.createConnection(new ApplicationContext());
+		Connection conn = plugin.createConnection(createDummyConfig());
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", conn));
 
@@ -277,7 +276,7 @@ public class TestConfigUtil {
 	}
 	
 	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin, List<String> failingOperationPatterns) throws Exception {		
-		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection(new ApplicationContext());
+		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection(createDummyConfig());
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 

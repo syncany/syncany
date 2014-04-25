@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
@@ -88,7 +87,7 @@ public class ConfigHelperTest {
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
 		
 		// Run
-		Config loadedConfig = ConfigHelper.loadConfig(testConfig.getLocalDir(), new ApplicationContext());
+		Config loadedConfig = ConfigHelper.loadConfig(testConfig.getLocalDir());
 		
 		// Test
 		assertNotNull(loadedConfig);

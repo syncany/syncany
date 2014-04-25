@@ -27,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.config.ApplicationContext;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.operations.init.InitOperation;
@@ -48,7 +47,7 @@ public class InitOperationTest {
 	@Test
 	public void testInitOperation() throws Exception {	
 		InitOperationOptions operationOptions = TestConfigUtil.createTestInitOperationOptions("A");
-		InitOperation op = new InitOperation(new ApplicationContext(), operationOptions, null);
+		InitOperation op = new InitOperation( operationOptions, null);
 		InitOperationResult res = op.execute();
 		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
 		File localDir = new File(operationOptions.getLocalDir(), ".syncany");
@@ -79,17 +78,18 @@ public class InitOperationTest {
 	public void testFaultyInitOperation() throws Exception {
 		// Create an unreliable connection
 		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", "rel=1.*op=upload");
-		InitOperation op = new InitOperation(new ApplicationContext(), operationOptions, null);
+		InitOperation op = new InitOperation(operationOptions, null);
 		
 		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
 		File localDir = new File(operationOptions.getLocalDir(),".syncany");
 		
 		try {
-			InitOperationResult res = op.execute();
+			op.execute();
 		}
 		catch (StorageException e) {
 			logger.log(Level.INFO, "This operation failed because of the unreliable connection.");
 		}
+		
 		// The local directory should not exist, since the uploading of the repo file fails
 		// so the local directories should be removed
 		assertFalse(localDir.exists());

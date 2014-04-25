@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.connection.plugins;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.HashMap;
@@ -26,7 +28,6 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.syncany.config.ApplicationContext;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MasterRemoteFile;
@@ -81,7 +82,7 @@ public abstract class AbstractTransferManagerTest {
 
 		Map<String, String> invalidEmptyPluginSettings = new HashMap<String, String>();
 
-		Connection connection = plugin.createConnection(new ApplicationContext());
+		Connection connection = plugin.createConnection(null);
 		connection.init(invalidEmptyPluginSettings);
 
 		TransferManager transferManager = plugin.createTransferManager(connection);
@@ -190,7 +191,7 @@ public abstract class AbstractTransferManagerTest {
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
 		Plugin pluginInfo = Plugins.get(getPluginId());
 
-		Connection connection = pluginInfo.createConnection(new ApplicationContext());
+		Connection connection = pluginInfo.createConnection(null);
 		connection.init(createPluginSettings());
 
 		return pluginInfo.createTransferManager(connection);
