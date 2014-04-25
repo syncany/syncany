@@ -115,7 +115,7 @@ Break some hashes for us and [donate some Bitcoins](https://blockchain.info/addr
 Licensing, website and contact
 ------------------------------
 
-Syncany is licensed under the GPLv2 open source license. It is mainly developed by [Philipp C. Heckel](http://blog.philippheckel.com/). We are always looking for people to join or help out. Feel free to contact us:
+Syncany is licensed under the GPLv2 open source license. It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/) and [many others](https://github.com/binwiederhier/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany website](https://www.syncany.org/), still with screenshots of the old interface
 - [Syncany wiki page](https://github.com/binwiederhier/syncany/wiki), **most important resource, and always updated**
