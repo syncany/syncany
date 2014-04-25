@@ -25,6 +25,7 @@ Change Log
   + Check plugin compatibility before installing (check appMinVersion) #104
   + Don't ignore local/remote notifications if sync already running #88
   + Uninstall plugins on Windows (JAR locked) #113/#117
+  + Rotate logs to max. 4x25 MB #116
   
 ### Release 0.1.1-alpha (Date: 14 Apr 2014)
 
