@@ -39,6 +39,7 @@ import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
+import org.syncany.config.UserConfig;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
@@ -48,6 +49,8 @@ import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
+
+import com.github.zafarkhaja.semver.Version;
 
 /**
  * The plugin operation installs, removes and lists storage {@link Plugin}s.
@@ -118,7 +121,7 @@ public class PluginOperation extends Operation {
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
 
-		File globalUserPluginDir = Client.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginDir();
 
 		int indexStartAfterSchema = "jar:file:".length();
 		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
@@ -169,6 +172,8 @@ public class PluginOperation extends Operation {
 			throw new Exception("Plugin with ID '" + pluginId + "' not found");
 		}
 
+		checkPluginCompatibility(pluginInfo);
+		
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();
 		String actualChecksum = calculateChecksum(tempPluginJarFile);
@@ -176,6 +181,8 @@ public class PluginOperation extends Operation {
 		if (expectedChecksum == null || !expectedChecksum.equals(actualChecksum)) {
 			throw new Exception("Checksum mismatch. Expected: " + expectedChecksum + ", but was: " + actualChecksum);
 		}
+		
+		logger.log(Level.INFO, "Plugin JAR checksum verified: " + actualChecksum);
 
 		File targetPluginJarFile = installPlugin(tempPluginJarFile, pluginInfo);
 
@@ -187,6 +194,20 @@ public class PluginOperation extends Operation {
 		return result;
 	}
 
+	private void checkPluginCompatibility(PluginInfo pluginInfo) throws Exception {
+		Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
+		Version pluginAppMinVersion = Version.valueOf(pluginInfo.getPluginAppMinVersion());
+		
+		logger.log(Level.INFO, "Checking plugin compatibility:");
+		logger.log(Level.INFO, "- Application version:             " + Client.getApplicationVersion() + "(" + applicationVersion + ")");
+		logger.log(Level.INFO, "- Plugin min. application version: " + pluginInfo.getPluginAppMinVersion() + "(" + pluginAppMinVersion + ")");
+		
+		if (!applicationVersion.greaterThanOrEqualTo(pluginAppMinVersion)) {
+			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
+					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
+		}
+	}
+
 	private String calculateChecksum(File tempPluginJarFile) throws Exception {
 		CipherUtil.enableUnlimitedStrength();
 
@@ -196,9 +217,11 @@ public class PluginOperation extends Operation {
 
 	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws Exception {
 		PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
-		File targetPluginJarFile = installPlugin(pluginJarFile, pluginInfo);
 
 		checkPluginNotInstalled(pluginInfo.getPluginId());
+		checkPluginCompatibility(pluginInfo);
+
+		File targetPluginJarFile = installPlugin(pluginJarFile, pluginInfo);
 
 		result.setSourcePluginPath(pluginJarFile.getPath());
 		result.setTargetPluginPath(targetPluginJarFile.getPath());
@@ -213,6 +236,7 @@ public class PluginOperation extends Operation {
 		PluginInfo pluginInfo = readPluginInfoFromJar(tempPluginJarFile);
 
 		checkPluginNotInstalled(pluginInfo.getPluginId());
+		checkPluginCompatibility(pluginInfo);
 
 		File targetPluginJarFile = installPlugin(tempPluginJarFile, pluginInfo);
 
@@ -230,6 +254,8 @@ public class PluginOperation extends Operation {
 		if (locallyInstalledPlugin != null) {
 			throw new Exception("Plugin '" + pluginId + "' already installed. Use 'sy plugin remove " + pluginId + "' to uninstall it first.");
 		}
+
+		logger.log(Level.INFO, "Plugin '" + pluginId + "' not installed. Okay!");
 	}
 
 	private PluginInfo readPluginInfoFromJar(File pluginJarFile) throws Exception {
@@ -259,11 +285,13 @@ public class PluginOperation extends Operation {
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
-		File globalUserPluginDir = Client.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginDir();
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
 				pluginInfo.getPluginVersion()));
+
+		logger.log(Level.INFO, "Installing plugin from " + pluginJarFile + " to " + targetPluginJarFile + " ...");
 		FileUtils.copyFile(pluginJarFile, targetPluginJarFile);
 
 		return targetPluginJarFile;

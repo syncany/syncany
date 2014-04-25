@@ -144,4 +144,42 @@ public class IgnoredFileScenarioTest {
 		clientB.deleteTestData();
 		TestFileUtil.deleteDirectory(tempDir);
 	}
+	
+	@Test
+	public void testIgnoredFileWildcard() throws Exception {
+		// Scenario: A ignores files using wildcards, creates it then ups, B should not have the file
+
+		// Setup 
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		//Create ignore file and reload it
+		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
+		TestFileUtil.createFileWithContent(syncanyIgnore, "*.bak\nignoredarchive.r??");
+		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		
+		// A new/up
+		clientA.createNewFile("ignoredfile.bak");	
+		clientA.createNewFile("nonignoredfile.bar");
+		clientA.createNewFile("ignoredarchive.r01");		
+		clientA.up();
+		
+		clientB.down();
+
+		// The ignored file should not exist at B
+		assertTrue(clientA.getLocalFile("ignoredfile.bak").exists());
+		assertFalse(clientB.getLocalFile("ignoredfile.bak").exists());
+		assertTrue(clientA.getLocalFile("nonignoredfile.bar").exists());
+		assertTrue(clientB.getLocalFile("nonignoredfile.bar").exists());
+		assertTrue(clientA.getLocalFile("ignoredarchive.r01").exists());
+		assertFalse(clientB.getLocalFile("ignoredarchive.r01").exists());
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		TestFileUtil.deleteDirectory(tempDir);
+	}
 }

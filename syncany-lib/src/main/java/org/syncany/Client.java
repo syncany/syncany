@@ -17,12 +17,12 @@
  */
 package org.syncany;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.syncany.config.Config;
+import org.syncany.config.UserConfig;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.CleanupOperation;
@@ -66,7 +66,6 @@ import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
-import org.syncany.util.EnvironmentUtil;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -83,15 +82,13 @@ public class Client {
 	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
 	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
 	
-	private static Properties applicationProperties;	
-	private static File userAppDir;
-	private static File userPluginsDir;
-
+	private static Properties applicationProperties;
+	
 	protected Config config;
 
 	static {
+		initUserConfig();
 		initApplicationProperties();
-		initUserAppDirs();	
 	}
 
 	public void setConfig(Config config) {
@@ -203,24 +200,9 @@ public class Client {
 	public static String getApplicationRevision() {
 		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
 	}
-
-	public static File getUserAppDir() { 
-		return userAppDir;
-	}
-
-	public static File getUserPluginDir() {
-		return userPluginsDir;
-	}
 	
-	private static void initUserAppDirs() {
-		if (EnvironmentUtil.isWindows()) {
-			userAppDir = new File(System.getProperty("user.home") + "\\Syncany");
-		}
-		else {
-			userAppDir = new File(System.getProperty("user.home") + "/.config/syncany");
-		}
-		
-		userPluginsDir = new File(userAppDir, "plugins");
+	private static void initUserConfig() {
+		UserConfig.init();
 	}
 
 	private static void initApplicationProperties() {
@@ -233,5 +215,5 @@ public class Client {
 		catch (Exception e) {
 			throw new RuntimeException("Cannot load application properties.", e);
 		}
-	}
+	}	
 }
