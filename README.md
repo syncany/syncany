@@ -49,7 +49,6 @@ First choose the storage backend you'd like to use by doing `sy plugin list` and
 $ sy plugin install ftp
 ```
 
-
 **2. Initialize a local directory**
 
 ```
