@@ -32,6 +32,14 @@ startScripts {
 
 		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\syncany\\\\plugins\\\\*')
 		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/*')
+		
+		// delayed plugin jar files deletion implementation
+		String endl = System.getProperty("line.separator");
+		winFile.text += "SET PURGELIST=%AppData%\\Syncany\\purgelist" + endl;
+		winFile.text += "if exist %PURGELIST% (" + endl;
+		winFile.text += "  @for /f %%b in (%PURGELIST%) do del /q \"%%b\" 2>NUL" + endl;
+		winFile.text += "  del /q %PURGELIST% 2>NUL" + endl;
+		winFile.text += ")" + endl;
 	}
 }
 

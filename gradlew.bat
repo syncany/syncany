@@ -87,10 +87,4 @@ exit /b 1
 :mainEnd
 if "%OS%"=="Windows_NT" endlocal
 
-SET PURGELIST=%AppData%\Syncany\purgelist
-if exist %PURGELIST% (
-  @for /f %%b in (%PURGELIST%) do del /q "%%b" 2>NUL
-  del /q %PURGELIST% 2>NUL
-)
-
 :omega
