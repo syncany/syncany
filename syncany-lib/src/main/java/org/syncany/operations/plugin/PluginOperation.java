@@ -39,6 +39,7 @@ import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
+import org.syncany.config.UserConfig;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
@@ -120,7 +121,7 @@ public class PluginOperation extends Operation {
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
 
-		File globalUserPluginDir = Client.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginDir();
 
 		int indexStartAfterSchema = "jar:file:".length();
 		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
@@ -284,7 +285,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
-		File globalUserPluginDir = Client.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginDir();
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
