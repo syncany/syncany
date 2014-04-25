@@ -83,9 +83,8 @@ import com.github.zafarkhaja.semver.Version;
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
-	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v1/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s";
-	
-	private static final String PURGELIST_FILENAME = "purgelist";
+	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v1/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s";	
+	private static final String PURGEFILE_FILENAME = "purgefile";
 
 	private PluginOperationOptions options;
 	private PluginOperationResult result;
@@ -142,14 +141,15 @@ public class PluginOperation extends Operation {
 			logger.log(Level.INFO, "Uninstalling plugin from file " + pluginJarFile);
 			pluginJarFile.delete();
 
+			// JAR files are locked on Windows, adding JAR filename to a list for delayed deletion (by batch file)
 			if (EnvironmentUtil.isWindows()) {
-				// jar files are locked on Windows, adding jar filename to a list for delayed deletion
-				File purgelistPath = new File(UserConfig.getUserAppDir(), PURGELIST_FILENAME);
-				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgelistPath, true)))) {
+				File purgefilePath = new File(UserConfig.getUserAppDir(), PURGEFILE_FILENAME);
+				
+				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgefilePath, true)))) {
 					out.println(pluginJarFile.getAbsolutePath());
 				}
 				catch (IOException e) {
-					logger.log(Level.SEVERE, "Unable to append to purgelist: " + e.getMessage(), e);
+					logger.log(Level.SEVERE, "Unable to append to purgefile " + purgefilePath, e);
 				}
 			}
 
