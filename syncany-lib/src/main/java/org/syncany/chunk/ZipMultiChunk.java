@@ -111,9 +111,14 @@ public class ZipMultiChunk extends MultiChunk {
         if (zipOut != null) {
             zipOut.close();
         }
-        else {
+
+        if (zipIn != null) {
             zipIn.close();
         }
-    }    
+
+        if (zipFile != null) {
+            zipFile.close();
+        }
+    }
 }
 
