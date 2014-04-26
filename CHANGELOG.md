@@ -26,6 +26,7 @@ Change Log
   + Don't ignore local/remote notifications if sync already running #88
   + Uninstall plugins on Windows (JAR locked) #113/#117
   + Rotate logs to max. 4x25 MB #116
+  + Fix multichunk resource close issue #118/#120
   
 ### Release 0.1.1-alpha (Date: 14 Apr 2014)
 
