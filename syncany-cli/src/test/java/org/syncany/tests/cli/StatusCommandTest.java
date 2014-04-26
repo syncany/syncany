@@ -76,7 +76,7 @@ public class StatusCommandTest {
 		}));
 		
 		// Test		
-		assertTrue("Log file should exist.", tempLogFile.exists());
+		assertTrue("Log file should exist.", new File(tempLogFile.getAbsolutePath() + ".0").exists());
 		assertEquals(2, cliOut.length);
 		assertEquals("? somefolder1", cliOut[0]);
 		assertEquals("? somefolder2", cliOut[1]);
