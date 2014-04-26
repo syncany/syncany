@@ -35,6 +35,7 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
+import org.syncany.connection.plugins.RemoteTransaction;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersion;
@@ -81,6 +82,7 @@ public class CleanupOperation extends Operation {
 	private CleanupOperationResult result;
 
 	private TransferManager transferManager;
+	private RemoteTransaction remoteTransaction;
 	private SqlDatabase localDatabase;
 
 	private DatabaseRemoteFile lockFile;
@@ -113,6 +115,8 @@ public class CleanupOperation extends Operation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 		
+		remoteTransaction = new RemoteTransaction(config, transferManager);
+		
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
 		}
@@ -125,6 +129,8 @@ public class CleanupOperation extends Operation {
 			// To be done at a later time
 			// repackageMultiChunks();
 		}
+		
+		remoteTransaction.commit();
 
 		return updateResultCode(result);
 	}
@@ -221,7 +227,7 @@ public class CleanupOperation extends Operation {
 
 	private void uploadPurgeFile(File tempPurgeFile, DatabaseRemoteFile newPurgeRemoteFile) throws StorageException {
 		logger.log(Level.INFO, "- Uploading PURGE database file " + newPurgeRemoteFile + " ...");
-		transferManager.upload(tempPurgeFile, newPurgeRemoteFile);
+		remoteTransaction.add(tempPurgeFile, newPurgeRemoteFile);
 	}
 
 	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions) {
@@ -271,7 +277,7 @@ public class CleanupOperation extends Operation {
 		
 		for (MultiChunkEntry multiChunkEntry : unusedMultiChunks) {
 			logger.log(Level.FINE, "  + Deleting remote multichunk " + multiChunkEntry + " ...");
-			transferManager.delete(new MultiChunkRemoteFile(multiChunkEntry.getId()));
+			remoteTransaction.delete(new MultiChunkRemoteFile(multiChunkEntry.getId()));
 		}
 	}
 
@@ -292,6 +298,7 @@ public class CleanupOperation extends Operation {
 		lockFile = new DatabaseRemoteFile(LOCK_CLIENT_NAME, System.currentTimeMillis());
 
 		logger.log(Level.INFO, "- Setting repository write lock: uploading {0} ...", lockFile);
+		// This is not done in the transaction, because it should be done immediately
 		transferManager.upload(tempLockFile, lockFile);
 
 		tempLockFile.delete();
@@ -299,7 +306,7 @@ public class CleanupOperation extends Operation {
 
 	private void unlockRemoteRepository() throws StorageException {
 		logger.log(Level.INFO, "- Removing repository lock: deleting {0} ...", lockFile);
-		transferManager.delete(lockFile);
+		remoteTransaction.delete(lockFile);
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
@@ -345,7 +352,7 @@ public class CleanupOperation extends Operation {
 		// And delete others
 		for (RemoteFile toDeleteRemoteFile : toDeleteDatabaseFiles) {
 			logger.log(Level.INFO, "   + Deleting remote file " + toDeleteRemoteFile + " ...");
-			transferManager.delete(toDeleteRemoteFile);
+			remoteTransaction.delete(toDeleteRemoteFile);
 		}
 
 		// TODO [high] Issue #64: TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might happen often if
@@ -356,13 +363,13 @@ public class CleanupOperation extends Operation {
 		
 		try {
 			// Make sure it's deleted
-			transferManager.delete(lastRemoteMergeDatabaseFile);
+			remoteTransaction.delete(lastRemoteMergeDatabaseFile);
 		}
 		catch (StorageException e) {
 			// Don't care!
 		}
 		
-		transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+		remoteTransaction.add(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		
 		// Update stats
 		result.setMergedDatabaseFilesCount(toDeleteDatabaseFiles.size());
