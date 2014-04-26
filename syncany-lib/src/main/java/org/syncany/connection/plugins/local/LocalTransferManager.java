@@ -120,7 +120,13 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File repoFile = getRemoteFile(remoteFile);
 
 		if (!repoFile.exists()) {
-			throw new StorageException("No such file in local repository: " + repoFile);
+			File deletedFile = getRemoteFile(getDeletedFile(remoteFile));
+			if (deletedFile == null || !deletedFile.exists()) {
+				throw new StorageException("No such file in local repository: " + repoFile);
+			}
+			else {
+				repoFile = deletedFile;
+			}
 		}
 
 		try {

@@ -49,15 +49,19 @@ public class TransactionTO {
 	private String machineName;
 	@ElementMap(entry="File", key="TempLocation", value="FinalLocation", attribute=false)
 	private Map<String, String> finalLocationNames;
+	@ElementMap(entry="File", key="DeletedLocation", value="TempLocation", attribute=false)
+	private Map<String, String> deletedLocationNames;
 	
 	Map<RemoteFile, RemoteFile> finalLocations;
+	Map<RemoteFile, RemoteFile> deletedLocations;
 	
 	public TransactionTO() {
 		
 	}
 	
-	public TransactionTO(String machineName, Map<RemoteFile, RemoteFile> finalLocations) {
+	public TransactionTO(String machineName, Map<RemoteFile, RemoteFile> finalLocations, Map<RemoteFile, RemoteFile> deletedLocations) {
 		this.finalLocations = finalLocations;
+		this.deletedLocations = deletedLocations;
 		this.machineName = machineName;
 	}
 	
@@ -65,6 +69,11 @@ public class TransactionTO {
 	public void prepare() {
 		finalLocationNames = new HashMap<String, String>();
 		for (RemoteFile tempFile : finalLocations.keySet()) {
+			finalLocationNames.put(tempFile.getName(), finalLocations.get(tempFile).getName());
+		}
+		
+		deletedLocationNames = new HashMap<String, String>();
+		for (RemoteFile tempFile : deletedLocations.keySet()) {
 			finalLocationNames.put(tempFile.getName(), finalLocations.get(tempFile).getName());
 		}
 	}
@@ -80,10 +89,24 @@ public class TransactionTO {
 				logger.log(Level.INFO, "Invalid remote temporary filename: " + tempFile + " or " + finalLocationNames.get(tempFile));
 			}
 		}
+		
+		deletedLocations = new HashMap<RemoteFile, RemoteFile>();
+		for (String tempFile : deletedLocationNames.keySet()) {
+			try {
+				deletedLocations.put(new TempRemoteFile(tempFile), RemoteFile.createRemoteFile(deletedLocationNames.get(tempFile)));
+			}
+			catch (StorageException e) {
+				logger.log(Level.INFO, "Invalid remote temporary filename: " + tempFile + " or " + finalLocationNames.get(tempFile));
+			}
+		}
 	}
 	
 	public Map<RemoteFile, RemoteFile> getFinalLocations() {
 		return finalLocations;
+	}
+	
+	public Map<RemoteFile, RemoteFile> getDeletedLocations() {
+		return deletedLocations;
 	}
 	
 	public String getMachineName() {

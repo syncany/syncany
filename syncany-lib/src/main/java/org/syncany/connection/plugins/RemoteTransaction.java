@@ -48,6 +48,7 @@ public class RemoteTransaction {
 	private Config config;
 	private Map<File, RemoteFile> temporaryLocations;
 	private Map<RemoteFile, RemoteFile> finalLocations;
+	private Map<RemoteFile, RemoteFile> deletedLocations;
 	
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.transferManager = transferManager;
@@ -67,6 +68,18 @@ public class RemoteTransaction {
 	}
 	
 	/**
+	 * Adds a file deletion to this transaction. This file will first be moved to 
+	 * a temporary file.
+	 * 
+	 * @throws StorageException if the file pattern of the temporary file is not okay
+	 */
+	public void delete(RemoteFile remoteFile) throws StorageException {
+		logger.log(Level.INFO, "Deleting file in transaction: " + remoteFile);
+		RemoteFile temporaryFile = new TempRemoteFile(remoteFile);
+		deletedLocations.put(remoteFile, temporaryFile);
+	}
+	
+	/**
 	 * Moves all files to the temporary remote location. If
 	 * no errors occur, all files are moved to their final location.
 	 */
@@ -83,8 +96,17 @@ public class RemoteTransaction {
 			transferManager.move(temporaryFile, finalLocations.get(temporaryFile));
 		}
 		
+		for (RemoteFile deletableFile : deletedLocations.keySet()) {
+			transferManager.move(deletableFile, deletedLocations.get(deletableFile));
+		}
+		
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
+		logger.log(Level.INFO, "Transaction completed, deleting final files");
+		
+		for (RemoteFile finalDeletableFile : deletedLocations.values()) {
+			transferManager.delete(finalDeletableFile);
+		}
 		logger.log(Level.INFO, "Succesfully committed transaction.");
 	}
 	
@@ -104,7 +126,7 @@ public class RemoteTransaction {
 		
 		try {
 			Serializer serializer = new Persister();
-			serializer.write(new TransactionTO(config.getMachineName(),finalLocations), out);
+			serializer.write(new TransactionTO(config.getMachineName(),finalLocations, deletedLocations), out);
 		}
 		catch (Exception e) {
 			throw new StorageException("Could not serialize transaction manifest", e);

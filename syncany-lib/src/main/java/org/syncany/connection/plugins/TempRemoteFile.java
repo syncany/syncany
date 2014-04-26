@@ -52,6 +52,16 @@ public class TempRemoteFile extends RemoteFile {
 	public TempRemoteFile(File localFile) throws StorageException {
 		super(String.format(NAME_FORMAT, Integer.toHexString(localFile.hashCode())));
 	}
+	
+	/**
+	 * Initializes a new temp file, given a remote file that should be deleted
+	 * 
+	 * @param remoteFile the file that is to be deleted
+	 * @throws StorageException If the name is not match the name pattern
+	 */
+	public TempRemoteFile(RemoteFile remoteFile) throws StorageException {
+		super(String.format(NAME_FORMAT, Integer.toHexString(remoteFile.hashCode())));
+	}
 
 	@Override
 	protected String validateName(String name) throws StorageException {
