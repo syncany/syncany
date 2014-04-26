@@ -74,7 +74,7 @@ public class TransactionTO {
 		
 		deletedLocationNames = new HashMap<String, String>();
 		for (RemoteFile tempFile : deletedLocations.keySet()) {
-			finalLocationNames.put(tempFile.getName(), finalLocations.get(tempFile).getName());
+			deletedLocationNames.put(tempFile.getName(), deletedLocations.get(tempFile).getName());
 		}
 	}
 	

@@ -55,6 +55,7 @@ public class RemoteTransaction {
 		this.transferManager = transferManager;
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
+		deletedLocations = new HashMap<RemoteFile, RemoteFile>();
 		this.config = config;
 	}
 	
