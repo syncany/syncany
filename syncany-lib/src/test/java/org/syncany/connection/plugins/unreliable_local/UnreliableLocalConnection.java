@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.syncany.config.Config;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
@@ -77,10 +78,11 @@ public class UnreliableLocalConnection extends LocalConnection {
 	}		
 	
 	@Override
-	public void init(Map<String, String> optionValues) throws StorageException {
+	public void init(Config config, Map<String, String> optionValues) throws StorageException {
 		//Skip validation, because we actually don't use an OptionSpec here
 		//getOptionSpecs().validate(optionValues);
 		repositoryPath = new File(optionValues.get("path"));
 		failingOperationPatterns = new ArrayList<String>(Arrays.asList(optionValues.get("patterns").split(",")));
+		this.config = config;
 	}
 }

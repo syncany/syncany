@@ -19,8 +19,16 @@ package org.syncany.connection.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.io.FileUtils;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.syncany.config.Config;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -31,7 +39,7 @@ import java.util.logging.Logger;
 public abstract class AbstractTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
 	private Connection connection;
-
+	
 	public AbstractTransferManager(Connection connection) {
 		this.connection = connection;
 	}
@@ -87,5 +95,55 @@ public abstract class AbstractTransferManager implements TransferManager {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Returns a Set of all files that are not temporary, but are listed in a 
+	 * transaction file. These belong to an unfinished transaction and should be
+	 * ignored.
+	 */
+	protected Set<RemoteFile> getFilesInTransactions() throws StorageException {
+		Set<RemoteFile> filesInTransaction = new HashSet<RemoteFile>();
+		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
+		for (TransactionRemoteFile transaction : transactionFiles.values()) {
+			Map<RemoteFile, RemoteFile> finalLocations = null;
+			String machineName = null;
+			try {
+				File transactionFile = File.createTempFile("transaction-", "", connection.getConfig().getCacheDir());
+				// Download transaction file
+				download(transaction, transactionFile);
+				String transactionFileStr = FileUtils.readFileToString(transactionFile);
+				// Deserialize it
+				Serializer serializer = new Persister();
+				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
+				// Extract final locations
+				finalLocations = transactionTO.getFinalLocations();
+				machineName = transactionTO.getMachineName();
+				transactionFile.delete();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				throw new StorageException("Failed to read transactionFile", e);
+			}
+			boolean cleaned = false;
+			if (connection.getConfig().getMachineName().equals(machineName)) {
+				cleaned = cleanup(transaction, finalLocations);
+			}
+			if (finalLocations != null && !cleaned) {
+				filesInTransaction.addAll(finalLocations.values());
+			}
+		}
+		
+		return filesInTransaction;
+	}
+	/**
+	 * This method removes all files related to an unfinished transaction.
+	 */
+	protected boolean cleanup(TransactionRemoteFile transaction, Map<RemoteFile, RemoteFile> finalLocations) throws StorageException {
+		for (RemoteFile temporaryLocation : finalLocations.keySet()) {
+			delete(temporaryLocation);
+			delete(finalLocations.get(temporaryLocation));
+		}
+		return delete(transaction);
 	}
 }

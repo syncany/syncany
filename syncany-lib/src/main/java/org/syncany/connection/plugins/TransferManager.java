@@ -112,6 +112,16 @@ public interface TransferManager {
 	public void upload(File localFile, RemoteFile remoteFile) throws StorageException;
 
 	/**
+	 * Moves an existing file in the online storage.
+	 * 
+	 * @param source Existing remote file that is to be moved.
+	 * @param target Destination for the remote file.
+	 * @throws StorageException If the connection fails due to no Internet connection,
+	 *         authentication errors, etc.
+	 */
+	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException;
+	
+	/**
 	 * Deletes an existing file from the remote storage permanently.
 	 *
 	 * <p>In case the remote file does not exist, it returns immediately without

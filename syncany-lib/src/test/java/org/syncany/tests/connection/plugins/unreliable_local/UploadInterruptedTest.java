@@ -17,6 +17,7 @@
  */
 package org.syncany.tests.connection.plugins.unreliable_local;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -26,7 +27,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
+import org.syncany.connection.plugins.DatabaseRemoteFile;
+import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -42,15 +46,16 @@ public class UploadInterruptedTest {
 			Arrays.asList(new String[] { 
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-				// 1st upload (= multichunk) fails	
-				"rel=1 .+upload.+multichunk",    
-				// Make fourth upload fail
-				"rel=4 .+upload" 
+				// 2nd move fails
+				"rel=2 .+move",    
+				// 6th upload fails
+				"rel=6 .+upload" 
 					
 			}
 		));
 		
 		TestClient clientA = new TestClient("A", testConnection);
+		testConnection.setConfig(clientA.getConfig());
 		
 		int i = 0;
 		while (i++ < 5) {
@@ -58,7 +63,6 @@ public class UploadInterruptedTest {
 			try {
 				Thread.sleep(100);
 				clientA.up();
-				clientA.down();
 			}
 			catch (StorageException e) {
 				logger.log(Level.INFO, e.getMessage());
@@ -73,5 +77,47 @@ public class UploadInterruptedTest {
 		
 		// Tear down
 		clientA.deleteTestData();
-	}				
+	}	
+	
+	@Test
+	public void testTransaction() throws Exception {
+		// Setup
+		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
+		// List of failing operations (regex)
+		// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+		// 2nd move fails
+		"rel=2 .+move", 
+		}));
+
+		TestClient clientA = new TestClient("A", testConnection);
+		testConnection.setConfig(clientA.getConfig());
+		clientA.createNewFile("A-original-0", 50 * 1024);
+		try {
+			clientA.up();
+		}
+		catch (StorageException e) {
+			logger.log(Level.INFO, e.getMessage());
+		}
+		
+		File transactionDir = new File(testConnection.getRepositoryPath()+"/transaction/");
+		
+		// There should be two files in the transaction dir (the manifest and the temporary database): 
+		assertEquals(2, transactionDir.list().length);
+		
+		TransferManager transferManager = testConnection.createTransferManager();
+		
+		// While the multichunk was moved, it should not be returned in a list.
+		assertEquals(0, transferManager.list(MultiChunkRemoteFile.class).size());
+		
+		// Now the repository should also be clean, so there should not be files in transaction:
+		assertEquals(0, transactionDir.list().length);
+		
+		clientA.up();
+		
+		// The transaction succeeds, so we have a database and multichunk
+		assertEquals(1, transferManager.list(MultiChunkRemoteFile.class).size());
+		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
+		
+		
+	}
 }

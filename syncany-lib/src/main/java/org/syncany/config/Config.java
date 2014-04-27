@@ -227,7 +227,7 @@ public class Config {
 	    	
 	    	try {
 		    	connection = plugin.createConnection();
-		    	connection.init(configTO.getConnectionTO().getSettings());
+		    	connection.init(this, configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {
 	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);

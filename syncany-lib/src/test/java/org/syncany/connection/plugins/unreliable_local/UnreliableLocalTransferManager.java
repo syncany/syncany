@@ -133,6 +133,19 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
     		throw new StorageException("Operation failed: "+operationDescription);
     	}
     }
+    
+    @Override
+    public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException {
+    	String operationType = "move";
+    	String operationDescription = "move("+sourceFile.getName()+","+targetFile.getName()+")";
+
+    	if (isNextOperationSuccessful(operationType, operationDescription)) {
+    		super.move(sourceFile, targetFile);
+    	}
+    	else {
+    		throw new StorageException("Operation failed: "+operationDescription);
+    	}
+    }
 
     @Override
     public boolean delete(RemoteFile remoteFile) throws StorageException {

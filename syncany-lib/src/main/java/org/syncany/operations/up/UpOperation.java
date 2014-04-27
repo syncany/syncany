@@ -32,6 +32,7 @@ import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
+import org.syncany.connection.plugins.RemoteTransaction;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry;
@@ -84,6 +85,7 @@ public class UpOperation extends Operation {
 
 	private UpOperationOptions options;
 	private TransferManager transferManager;
+	private RemoteTransaction remoteTransaction;
 	private SqlDatabase localDatabase;
 	private UpOperationListener listener;
 	
@@ -166,14 +168,18 @@ public class UpOperation extends Operation {
 
 			return result;
 		}		
-
+		
+		remoteTransaction = new RemoteTransaction(config, transferManager);
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
 
 		// Create delta database
 		writeAndUploadDeltaDatabase(newDatabaseVersion);
-
+		
+		remoteTransaction.commit();
+		deleteMultiChunks(newDatabaseVersion.getMultiChunks());
+		
 		// Save local database		
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
 		long newDatabaseVersionId = localDatabase.persistDatabaseVersion(newDatabaseVersion);
@@ -316,21 +322,28 @@ public class UpOperation extends Operation {
 				logger.log(Level.INFO, "- Uploading multichunk {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
 						remoteMultiChunkFile });
 				
-				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
+				remoteTransaction.add(localMultiChunkFile, remoteMultiChunkFile);
 				
 				if (listener != null) {
 					listener.onUploadFile(remoteMultiChunkFile.getName(), multiChunkIndex);
 				}
 
 				logger.log(Level.INFO, "  + Removing " + multiChunkEntry.getId() + " locally ...");
-				localMultiChunkFile.delete();
+				
 			}
 		}
+	}
+	
+	private void deleteMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) {
+		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
+			File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
+			localMultiChunkFile.delete();
+		}	
 	}
 
 	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
-		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
+		remoteTransaction.add(localDatabaseFile, remoteDatabaseFile);
 	}
 
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
