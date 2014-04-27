@@ -6,16 +6,12 @@ import java.io.File;
 dependencies {
 	compile			project(":syncany-lib")
 	compile			project(":syncany-util")
-	compile			project(":syncany-plugins:syncany-plugin-ftp")
-	compile			project(":syncany-plugins:syncany-plugin-webdav")    	
 	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
 
 	testCompile		"com.github.stefanbirkner:system-rules:1.5.0"            
       	
 	testCompile		project(path: ":syncany-lib", configuration: "tests")
 	testCompile		project(path: ":syncany-util", configuration: "tests")
-	testCompile		project(path: ":syncany-plugins:syncany-plugin-ftp", configuration: "tests")
-	testCompile		"org.apache.ftpserver:ftpserver-core:1.0.6"      
 	testCompile		"junit:junit:4.9"   	      
 }
 
@@ -31,11 +27,21 @@ startScripts {
 	defaultJvmOpts = [ "-Xmx1024m", "-Dfile.encoding=utf-8" ]
 	
 	doLast {
-		def wFile = file getWindowsScript()
-		def uFile = file getUnixScript()
+		def winFile = file getWindowsScript()
+		def unixFile = file getUnixScript()
+
+		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\*')
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/*')
 		
-		wFile.text = wFile.text.replace('set CLASSPATH=', 'set CLASSPATH=%APP_HOME%\\lib\\*;')
-		uFile.text = uFile.text.replace('CLASSPATH=$APP_HOME', 'CLASSPATH=$APP_HOME/lib/*:$APP_HOME')
+		// Post Java process commands: Delayed plugin JAR file deletion (Windows only)
+		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs\r\n"
+		winPurgeFileDeletionCommands += "SET PURGEFILE=%AppData%\\\\Syncany\\\\purgefile\r\n";
+		winPurgeFileDeletionCommands += "if exist %PURGEFILE% (\r\n";
+		winPurgeFileDeletionCommands += "  @for /f %%b in (%PURGEFILE%) do del /q \"%%b\" 2>NUL\r\n";
+		winPurgeFileDeletionCommands += "  del /q %PURGEFILE% 2>NUL\r\n";
+		winPurgeFileDeletionCommands += ")\r\n\r\n";
+		
+		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
 	}
 }
 

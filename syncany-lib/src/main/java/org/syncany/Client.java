@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.syncany.config.Config;
+import org.syncany.config.UserConfig;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.CleanupOperation;
@@ -55,6 +56,9 @@ import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationListener;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
+import org.syncany.operations.plugin.PluginOperation;
+import org.syncany.operations.plugin.PluginOperationOptions;
+import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
@@ -74,42 +78,17 @@ import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
  */
 public class Client {
 	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
-	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "release";
-	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "version";
-	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "revision";
-	private static final Properties applicationProperties = new Properties();
-
+	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
+	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
+	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
+	
+	private static Properties applicationProperties;
+	
 	protected Config config;
 
 	static {
-		InputStream globalPropertiesInputStream = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_RESOURCE);
-
-		try {
-			applicationProperties.load(globalPropertiesInputStream);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot load application properties.", e);
-		}
-	}
-
-	public static Properties getApplicationProperties() {
-		return applicationProperties;
-	}
-
-	public static boolean isApplicationRelease() {
-		return Boolean.parseBoolean(applicationProperties.getProperty(APPLICATION_PROPERTIES_RELEASE_KEY));
-	}
-
-	public static String getApplicationVersion() {
-		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
-	}
-
-	public static String getApplicationRevision() {
-		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
-	}
-
-	public Client() {
-		// Fressen
+		initUserConfig();
+		initApplicationProperties();
 	}
 
 	public void setConfig(Config config) {
@@ -201,4 +180,40 @@ public class Client {
 	public CleanupOperationResult cleanup(CleanupOperationOptions options) throws Exception {
 		return new CleanupOperation(config, options).execute();
 	}
+
+	public PluginOperationResult plugin(PluginOperationOptions options) throws Exception {
+		return new PluginOperation(config, options).execute();
+	}
+	
+	public static Properties getApplicationProperties() {
+		return applicationProperties;
+	}	
+
+	public static boolean isApplicationRelease() {
+		return Boolean.parseBoolean(applicationProperties.getProperty(APPLICATION_PROPERTIES_RELEASE_KEY));
+	}
+
+	public static String getApplicationVersion() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
+	}
+
+	public static String getApplicationRevision() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
+	}
+	
+	private static void initUserConfig() {
+		UserConfig.init();
+	}
+
+	private static void initApplicationProperties() {
+		InputStream globalPropertiesInputStream = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_RESOURCE);
+
+		try {
+			applicationProperties = new Properties();
+			applicationProperties.load(globalPropertiesInputStream);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot load application properties.", e);
+		}
+	}	
 }

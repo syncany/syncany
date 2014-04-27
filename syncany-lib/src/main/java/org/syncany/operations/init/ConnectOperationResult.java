@@ -17,21 +17,24 @@
  */
 package org.syncany.operations.init;
 
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.operations.OperationResult;
 
 public class ConnectOperationResult implements OperationResult {
 	public enum ConnectResultCode {
-		OK, NOK_NO_REPO, NOK_INVALID_REPO, NOK_NO_CONNECTION, NOK_DECRYPT_ERROR
+		OK, NOK_DECRYPT_ERROR, NOK_TEST_FAILED
 	}
 
     private ConnectResultCode resultCode = ConnectResultCode.OK;
+    private StorageTestResult testResult = null;
 
-    public ConnectOperationResult() {
-		// Nothing here
-	}
-    
     public ConnectOperationResult(ConnectResultCode resultCode) {
 		this.resultCode = resultCode;
+	}
+    
+    public ConnectOperationResult(ConnectResultCode resultCode, StorageTestResult testResult) {
+		this.resultCode = resultCode;
+		this.testResult = testResult;
 	}
 
 	public ConnectResultCode getResultCode() {
@@ -40,5 +43,9 @@ public class ConnectOperationResult implements OperationResult {
 
 	public void setResultCode(ConnectResultCode resultCode) {
 		this.resultCode = resultCode;
+	}
+
+	public StorageTestResult getTestResult() {
+		return testResult;
 	}                
 }

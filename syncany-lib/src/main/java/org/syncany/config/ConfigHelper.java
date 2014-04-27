@@ -27,6 +27,8 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 
@@ -44,7 +46,7 @@ public class ConfigHelper {
 			throw new ConfigException("Argument localDir cannot be null.");
 		}
 		
-		File appDir = new File(localDir+"/"+Config.DIR_APPLICATION);
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
 		
 		if (appDir.exists()) {
 			logger.log(Level.INFO, "Loading config from {0} ...", localDir);				
@@ -52,7 +54,17 @@ public class ConfigHelper {
 			ConfigTO configTO = ConfigHelper.loadConfigTO(localDir);
 			RepoTO repoTO = ConfigHelper.loadRepoTO(localDir, configTO);
 			
-			return new Config(localDir, configTO, repoTO);
+			String pluginId = (configTO.getConnectionTO() != null) ? configTO.getConnectionTO().getType() : null;
+			Plugin plugin = Plugins.get(pluginId);
+			
+			if (plugin == null) {
+				logger.log(Level.WARNING, "Not loading config! Plugin with id '{0}' does not exist.", pluginId);
+				return null;
+			}
+			else {
+				logger.log(Level.INFO, "Initializing Config instance ...");
+				return new Config(localDir, configTO, repoTO);
+			}
 		}		
 		else {
 			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);

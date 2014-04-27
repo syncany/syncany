@@ -36,10 +36,12 @@ import org.syncany.tests.crypto.MultiCipherStreamsTest;
 import org.syncany.tests.operations.CleanupOperationTest;
 import org.syncany.tests.operations.ConnectOperationTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
+import org.syncany.tests.operations.FileSystemActionReconciliatorTest;
 import org.syncany.tests.operations.IndexerTest;
 import org.syncany.tests.operations.InitOperationTest;
 import org.syncany.tests.operations.NotificationListenerTest;
 import org.syncany.tests.operations.OperationPerformanceTest;
+import org.syncany.tests.operations.PluginOperationTest;
 import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
@@ -68,16 +70,18 @@ import org.syncany.tests.util.FileUtilTest;
 	UploadInterruptedTest.class,
 	
 	// Operations
+	CleanupOperationTest.class,
+	ConnectOperationTest.class,
 	FileSystemActionComparatorTest.class,
+	FileSystemActionReconciliatorTest.class,
 	IndexerTest.class,
 	InitOperationTest.class,
-	OperationPerformanceTest.class,
-	RecursiveWatcherTest.class,
-	SyncUpOperationTest.class,
-	StatusOperationTest.class,
 	NotificationListenerTest.class,
-	ConnectOperationTest.class,
-	CleanupOperationTest.class,
+	OperationPerformanceTest.class,
+	PluginOperationTest.class,
+	RecursiveWatcherTest.class,
+	StatusOperationTest.class,
+	SyncUpOperationTest.class,
 	
 	// Config
 	ConfigHelperTest.class,

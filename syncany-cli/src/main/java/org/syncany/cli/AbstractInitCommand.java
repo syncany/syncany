@@ -17,13 +17,13 @@
  */
 package org.syncany.cli;
 
-import java.net.InetAddress;
+import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -37,6 +37,7 @@ import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
@@ -53,7 +54,7 @@ public abstract class AbstractInitCommand extends Command {
 		ConfigTO configTO = new ConfigTO();
 
 		configTO.setDisplayName(getDefaultDisplayName());
-		configTO.setMachineName(getDefaultMachineName());
+		configTO.setMachineName(getRandomMachineName());
 		configTO.setMasterKey(null); 
 		configTO.setConnectionTO(connectionTO); // can be null
 
@@ -288,9 +289,9 @@ public abstract class AbstractInitCommand extends Command {
 		return plugin;
 	}
 
-	protected String getDefaultMachineName() throws UnknownHostException {
-		return new String(InetAddress.getLocalHost().getHostName() + System.getProperty("user.name") + Math.abs(new Random().nextInt())).replaceAll(
-				"[^a-zA-Z0-9]", "");
+	protected String getRandomMachineName() {
+		String randomStr = new BigInteger(128, new SecureRandom()).toString(32);
+		return (randomStr.length() > 16) ? randomStr.substring(0, 16) : randomStr;
 	}
 
 	protected String getDefaultDisplayName() throws UnknownHostException {
@@ -334,4 +335,19 @@ public abstract class AbstractInitCommand extends Command {
 			out.println();
 		}
 	}	
+	
+	protected void printTestResult(StorageTestResult testResult) {
+		out.println("Details:");
+		out.println("- Target connect success: " + testResult.isTargetCanConnect());
+		out.println("- Target exists:          " + testResult.isTargetExists());
+		out.println("- Target creatable:       " + testResult.isTargetCanCreate());
+		out.println("- Target writable:        " + testResult.isTargetCanWrite());
+		out.println("- Repo file exists:       " + testResult.isRepoFileExists());
+		out.println();		
+		
+		if (testResult.getException() != null) {
+			out.println("Error message (see log file for details):");
+			out.println("  " + testResult.getException().getMessage());
+		}
+	}
 } 

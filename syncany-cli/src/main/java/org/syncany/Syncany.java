@@ -52,6 +52,6 @@ import org.syncany.cli.CommandLineClient;
  */
 public class Syncany {
 	public static void main(String[] args) throws Exception {
-		new CommandLineClient(args).start();
+		System.exit(new CommandLineClient(args).start());
 	}		
 }
