@@ -124,6 +124,9 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
 
 				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
+
+				chunkInputStream.close();
+				multiChunk.close();
 			}
 		}
 
