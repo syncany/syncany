@@ -48,14 +48,11 @@ public class RemoteTransaction {
 	private Config config;
 	private Map<File, RemoteFile> temporaryLocations;
 	private Map<RemoteFile, RemoteFile> finalLocations;
-	private Map<RemoteFile, RemoteFile> deletedLocations;
-	private boolean committed = false;
 	
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.transferManager = transferManager;
 		temporaryLocations = new HashMap<File, RemoteFile>();
 		finalLocations = new HashMap<RemoteFile, RemoteFile>();
-		deletedLocations = new HashMap<RemoteFile, RemoteFile>();
 		this.config = config;
 	}
 	
@@ -63,7 +60,6 @@ public class RemoteTransaction {
 	 * Adds a file to this transaction. Generates a temporary file to store it.
 	 */
 	public void add(File localFile, RemoteFile remoteFile) throws StorageException {
-		checkCommitted();
 		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
 		RemoteFile temporaryFile = new TempRemoteFile(localFile);
 		temporaryLocations.put(localFile, temporaryFile);
@@ -71,24 +67,10 @@ public class RemoteTransaction {
 	}
 	
 	/**
-	 * Adds a file deletion to this transaction. This file will first be moved to 
-	 * a temporary file.
-	 * 
-	 * @throws StorageException if the file pattern of the temporary file is not okay
-	 */
-	public void delete(RemoteFile remoteFile) throws StorageException {
-		checkCommitted();
-		logger.log(Level.INFO, "Deleting file in transaction: " + remoteFile);
-		RemoteFile temporaryFile = new TempRemoteFile(remoteFile);
-		deletedLocations.put(remoteFile, temporaryFile);
-	}
-	
-	/**
 	 * Moves all files to the temporary remote location. If
 	 * no errors occur, all files are moved to their final location.
 	 */
 	public void commit() throws StorageException {
-		checkCommitted();
 		File localTransactionFile = writeLocalTransactionFile();
 		RemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
@@ -101,25 +83,9 @@ public class RemoteTransaction {
 			transferManager.move(temporaryFile, finalLocations.get(temporaryFile));
 		}
 		
-		for (RemoteFile deletableFile : deletedLocations.keySet()) {
-			transferManager.move(deletableFile, deletedLocations.get(deletableFile));
-		}
-		
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
-		logger.log(Level.INFO, "Transaction completed, deleting final files");
-		
-		for (RemoteFile finalDeletableFile : deletedLocations.values()) {
-			transferManager.delete(finalDeletableFile);
-		}
 		logger.log(Level.INFO, "Succesfully committed transaction.");
-		committed = true;
-	}
-	
-	private void checkCommitted() throws StorageException {
-		if (committed) {
-			throw new StorageException("Tried to alter committed transaction.");
-		}
 	}
 	
 	private File writeLocalTransactionFile() throws StorageException {
@@ -138,7 +104,7 @@ public class RemoteTransaction {
 		
 		try {
 			Serializer serializer = new Persister();
-			serializer.write(new TransactionTO(config.getMachineName(),finalLocations, deletedLocations), out);
+			serializer.write(new TransactionTO(config.getMachineName(),finalLocations), out);
 		}
 		catch (Exception e) {
 			throw new StorageException("Could not serialize transaction manifest", e);

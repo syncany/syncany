@@ -104,43 +104,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 	 */
 	protected Set<RemoteFile> getFilesInTransactions() throws StorageException {
 		Set<RemoteFile> filesInTransaction = new HashSet<RemoteFile>();
-			
-		for (TransactionTO transactionTO : getAllTransactions()) {
-			filesInTransaction.addAll(transactionTO.getFinalLocations().values());
-		}
-		
-		return filesInTransaction;
-	}
-	
-	/**
-	 * Returns the temporary location if a file is in a deleting transaction,
-	 * otherwise returns null.
-	 */
-	protected RemoteFile getDeletedFile(RemoteFile deletedFile) throws StorageException {
-		for (TransactionTO transactionTO : getAllTransactions()) {
-			if (transactionTO.getDeletedLocations().containsKey(deletedFile)) {
-				return transactionTO.getDeletedLocations().get(deletedFile);
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * This method removes all files related to an unfinished transaction.
-	 */
-	protected boolean cleanup(TransactionRemoteFile transaction, TransactionTO transactionTO) throws StorageException {
-		for (RemoteFile temporaryLocation : transactionTO.getFinalLocations().keySet()) {
-			delete(temporaryLocation);
-			delete(transactionTO.getFinalLocations().get(temporaryLocation));
-		}
-		
-		return delete(transaction);
-	}
-	
-	private Set<TransactionTO> getAllTransactions() throws StorageException {
-		Set<TransactionTO> transactions = new HashSet();
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
+			Map<RemoteFile, RemoteFile> finalLocations = null;
+			String machineName = null;
 			try {
 				File transactionFile = File.createTempFile("transaction-", "", connection.getConfig().getCacheDir());
 				// Download transaction file
@@ -149,23 +116,34 @@ public abstract class AbstractTransferManager implements TransferManager {
 				// Deserialize it
 				Serializer serializer = new Persister();
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
-				
-				boolean cleaned = false;
-				if (connection.getConfig().getMachineName().equals(transactionTO.getMachineName())) {
-					cleaned = cleanup(transaction, transactionTO);
-				}
-				
-				if (!cleaned) {
-					transactions.add(transactionTO);
-				}
 				// Extract final locations
+				finalLocations = transactionTO.getFinalLocations();
+				machineName = transactionTO.getMachineName();
 				transactionFile.delete();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 				throw new StorageException("Failed to read transactionFile", e);
 			}
+			boolean cleaned = false;
+			if (connection.getConfig().getMachineName().equals(machineName)) {
+				cleaned = cleanup(transaction, finalLocations);
+			}
+			if (finalLocations != null && !cleaned) {
+				filesInTransaction.addAll(finalLocations.values());
+			}
 		}
-		return transactions;
+		
+		return filesInTransaction;
+	}
+	/**
+	 * This method removes all files related to an unfinished transaction.
+	 */
+	protected boolean cleanup(TransactionRemoteFile transaction, Map<RemoteFile, RemoteFile> finalLocations) throws StorageException {
+		for (RemoteFile temporaryLocation : finalLocations.keySet()) {
+			delete(temporaryLocation);
+			delete(finalLocations.get(temporaryLocation));
+		}
+		return delete(transaction);
 	}
 }

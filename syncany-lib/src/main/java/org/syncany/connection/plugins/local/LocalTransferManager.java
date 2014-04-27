@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.connection.plugins.AbstractTransferManager;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
@@ -121,13 +120,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File repoFile = getRemoteFile(remoteFile);
 
 		if (!repoFile.exists()) {
-			File deletedFile = getRemoteFile(getDeletedFile(remoteFile));
-			if (deletedFile == null || !deletedFile.exists()) {
-				throw new StorageException("No such file in local repository: " + repoFile);
-			}
-			else {
-				repoFile = deletedFile;
-			}
+			throw new StorageException("No such file in local repository: " + repoFile);
 		}
 
 		try {
@@ -179,21 +172,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File target = getRemoteFile(targetFile);
 
 		try {
-			if (target.exists()) {
-				if (source.length() == target.length()) {
-					//target.delete();
-					//FileUtils.moveFile(source, target);
-				}
-			}
-			else {
-				FileUtils.moveFile(source, target);
-			}
-		}
-		catch (FileExistsException ex) {
-			if (source.length() != target.length()) {
-				target.delete();
-			}
-			
+			FileUtils.moveFile(source, target);
 		}
 		catch (IOException ex) {
 			throw new StorageException("Unable to move file " + source + " to destination " + target, ex);
