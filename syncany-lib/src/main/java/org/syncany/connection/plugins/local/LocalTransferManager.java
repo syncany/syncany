@@ -195,6 +195,15 @@ public class LocalTransferManager extends AbstractTransferManager {
 	@Override
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
 		connect();
+		
+		Set<RemoteFile> filesToIgnore;
+		if (remoteFileClass.equals(TransactionRemoteFile.class)) {
+			// If we are listing transaction files, we don't want to ignore any
+			filesToIgnore = new HashSet<RemoteFile>();
+		}
+		else {
+			filesToIgnore = getFilesInTransactions();
+		}
 
 		// List folder
 		File remoteFilePath = getRemoteFilePath(remoteFileClass);
@@ -204,15 +213,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to read local respository " + repoPath);
 		}
 
-		Set<RemoteFile> filesToIgnore;
-		if (remoteFileClass.equals(TransactionRemoteFile.class)) {
-			// If we are listing transaction files, we don't want to ignore any
-			filesToIgnore = new HashSet<RemoteFile>();
-		}
-		else {
-			filesToIgnore = getFilesInTransactions();
-			
-		}
+		
 		
 		// Create RemoteFile objects
 		Map<String, T> remoteFiles = new HashMap<String, T>();
