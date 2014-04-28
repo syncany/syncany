@@ -24,7 +24,7 @@ applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
 startScripts {
-	defaultJvmOpts = [ "-Xmx1024m", "-Dfile.encoding=utf-8" ]
+	defaultJvmOpts = [ "-Xmx2048m", "-Dfile.encoding=utf-8" ]
 	
 	doLast {
 		def winFile = file getWindowsScript()
