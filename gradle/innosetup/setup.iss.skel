@@ -47,13 +47,79 @@ Source: "lib\\*"; DestDir: "{app}\\lib"
 Name: modifypath; Description: Adds syncany's application directory to environmental path;
 
 [Code]
+
+// 1. Set JAVA_HOME env. variable ///////////
+
+var
+  javaVersion: String;
+  javaPath: String;
+
+function InitializeSetup(): Boolean;
+var 
+  rootKey: Integer;
+begin
+  if IsWin64 then begin
+    rootKey := HKLM64;
+  end
+  else begin
+    rootKey := HKLM;
+  end;
+  
+  javaPath := GetEnv('JAVA_HOME')   
+  
+  if javaPath <> '' then begin
+    Result := True;
+  end
+  else begin
+    if RegValueExists(rootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit', 'CurrentVersion') then begin
+      RegQueryStringValue(rootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit', 'CurrentVersion', javaVersion);
+      
+      if RegValueExists(rootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit\\' + javaVersion, 'JavaHome') then begin
+        RegQueryStringValue(rootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit\\' + javaVersion, 'JavaHome', javaPath);
+        Result := True;
+      end
+      else begin
+        MsgBox('Java Path not set for JDK ' + javaVersion + '. Please re-install Java.', mbInformation, MB_OK);
+        Result := False;
+      end
+    end
+    else if RegValueExists(rootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment', 'CurrentVersion') then begin
+      RegQueryStringValue(rootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment', 'CurrentVersion', javaVersion);
+    
+      if RegValueExists(rootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment\\' + javaVersion, 'JavaHome') then begin
+        RegQueryStringValue(rootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment\\' + javaVersion, 'JavaHome', javaPath);
+        Result := True;
+      end
+      else begin
+        MsgBox('Java Path not set for JRE ' + javaVersion + '. Please re-install Java.', mbInformation, MB_OK);
+        Result := False;
+      end
+    end
+    else begin
+      MsgBox('Java is not installed on your computer.'#13#13'Please install Java from java.com try again.', MbError, Mb_Ok);
+      Result := False;
+    end
+  end
+end;
+
+function GetJavaHome(S: String) : String;
+begin
+  Result := javaPath;
+end;
+
+// 2. Set PATH variable (if ticked)  ////////
+
 const 
-    ModPathName = 'modifypath'; 
-    ModPathType = 'user'; 
+  ModPathName = 'modifypath'; 
+  ModPathType = 'user'; 
 
 function ModPathDir(): TArrayOfString; 
-begin 
-    setArrayLength(Result, 1) 
-    Result[0] := ExpandConstant('{app}\\bin'); 
+begin
+  setArrayLength(Result, 1) 
+  Result[0] := ExpandConstant('{app}\\bin'); 
 end; 
+
 #include "modpath.iss"
+
+[Registry]
+Root: HKCU; Subkey: Environment; ValueType: expandsz; ValueName: JAVA_HOME; ValueData: {code:GetJavaHome|Default}
