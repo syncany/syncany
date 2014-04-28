@@ -103,6 +103,7 @@ public class UpOperation extends Operation {
 		this.listener = listener;
 		this.options = options;
 		this.transferManager = config.getConnection().createTransferManager();
+		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 		this.localDatabase = new SqlDatabase(config);
 	}
 
@@ -169,7 +170,6 @@ public class UpOperation extends Operation {
 			return result;
 		}		
 		
-		remoteTransaction = new RemoteTransaction(config, transferManager);
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
@@ -327,9 +327,6 @@ public class UpOperation extends Operation {
 				if (listener != null) {
 					listener.onUploadFile(remoteMultiChunkFile.getName(), multiChunkIndex);
 				}
-
-				logger.log(Level.INFO, "  + Removing " + multiChunkEntry.getId() + " locally ...");
-				
 			}
 		}
 	}

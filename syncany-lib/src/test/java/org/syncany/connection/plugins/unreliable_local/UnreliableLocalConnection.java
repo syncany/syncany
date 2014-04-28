@@ -79,10 +79,10 @@ public class UnreliableLocalConnection extends LocalConnection {
 	
 	@Override
 	public void init(Config config, Map<String, String> optionValues) throws StorageException {
-		//Skip validation, because we actually don't use an OptionSpec here
-		//getOptionSpecs().validate(optionValues);
-		repositoryPath = new File(optionValues.get("path"));
-		failingOperationPatterns = new ArrayList<String>(Arrays.asList(optionValues.get("patterns").split(",")));
+		// Skip validation, because we actually don't use an OptionSpec here
+
 		this.config = config;
+		this.repositoryPath = new File(optionValues.get("path"));
+		this.failingOperationPatterns = new ArrayList<String>(Arrays.asList(optionValues.get("patterns").split(",")));
 	}
 }

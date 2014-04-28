@@ -19,8 +19,6 @@ package org.syncany.connection.plugins;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -30,40 +28,41 @@ import java.util.logging.Logger;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
-
 
 /**
  * This class represents a transaction in a remote system. It will keep track of
  * what files are to be added and ensures atomic operation.
  * 
  * @author Pim Otte
- *
  */
 public class RemoteTransaction {
 	private static final Logger logger = Logger.getLogger(RemoteTransaction.class.getSimpleName());
 	
 	private TransferManager transferManager;
 	private Config config;
-	private Map<File, RemoteFile> temporaryLocations;
-	private Map<RemoteFile, RemoteFile> finalLocations;
+	private Map<File, TempRemoteFile> localToTempRemoteFileMap;
+	private Map<TempRemoteFile, RemoteFile> tempToTargetRemoteFileMap;
 	
 	public RemoteTransaction(Config config, TransferManager transferManager) {
-		this.transferManager = transferManager;
-		temporaryLocations = new HashMap<File, RemoteFile>();
-		finalLocations = new HashMap<RemoteFile, RemoteFile>();
 		this.config = config;
+		this.transferManager = transferManager;
+
+		this.localToTempRemoteFileMap = new HashMap<File, TempRemoteFile>();
+		this.tempToTargetRemoteFileMap = new HashMap<TempRemoteFile, RemoteFile>();
 	}
 	
 	/**
 	 * Adds a file to this transaction. Generates a temporary file to store it.
 	 */
 	public void add(File localFile, RemoteFile remoteFile) throws StorageException {
+		TempRemoteFile temporaryRemoteFile = new TempRemoteFile(localFile);
+
 		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
-		RemoteFile temporaryFile = new TempRemoteFile(localFile);
-		temporaryLocations.put(localFile, temporaryFile);
-		finalLocations.put(temporaryFile, remoteFile);
+		logger.log(Level.INFO, " -> Temp. remote file: " + temporaryRemoteFile + ", final location: " + remoteFile);
+		
+		localToTempRemoteFileMap.put(localFile, temporaryRemoteFile);
+		tempToTargetRemoteFileMap.put(temporaryRemoteFile, remoteFile);
 	}
 	
 	/**
@@ -71,47 +70,42 @@ public class RemoteTransaction {
 	 * no errors occur, all files are moved to their final location.
 	 */
 	public void commit() throws StorageException {
+		logger.log(Level.INFO, "Starting TX.commit() ...");
+
 		File localTransactionFile = writeLocalTransactionFile();
 		RemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
+		
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
-		for (File localFile : temporaryLocations.keySet()) {
-			transferManager.upload(localFile, temporaryLocations.get(localFile));
+		for (File localFile : localToTempRemoteFileMap.keySet()) {
+			transferManager.upload(localFile, localToTempRemoteFileMap.get(localFile));
 		}
 		
-		for (RemoteFile temporaryFile : finalLocations.keySet()) {
-			transferManager.move(temporaryFile, finalLocations.get(temporaryFile));
+		for (RemoteFile temporaryFile : tempToTargetRemoteFileMap.keySet()) {
+			transferManager.move(temporaryFile, tempToTargetRemoteFileMap.get(temporaryFile));
 		}
 		
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
+		
 		logger.log(Level.INFO, "Succesfully committed transaction.");
 	}
 	
 	private File writeLocalTransactionFile() throws StorageException {
-		File localTransactionFile;
-		PrintWriter out;
 		try {
-			localTransactionFile = File.createTempFile("transaction-", "", config.getCacheDir());
-				
-			out = new PrintWriter(new OutputStreamWriter(
-						new FileOutputStream(localTransactionFile), "UTF-8"));
-
-		}
-		catch (IOException e) {
-			throw new StorageException("Could not create temporary file for transaction", e);
-		}
+			File localTransactionFile = File.createTempFile("transaction-", "", config.getCacheDir());
 		
-		try {
-			Serializer serializer = new Persister();
-			serializer.write(new TransactionTO(config.getMachineName(),finalLocations), out);
+			try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(localTransactionFile), "UTF-8"))) {
+				Serializer serializer = new Persister();
+				serializer.write(new TransactionTO(config.getMachineName(), tempToTargetRemoteFileMap), out);
+			}
+			
+			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
+			
+			return localTransactionFile;
 		}
 		catch (Exception e) {
-			throw new StorageException("Could not serialize transaction manifest", e);
+			throw new StorageException("Could not create temporary file for transaction", e);
 		}
-		
-		logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
-		
-		return localTransactionFile;
 	}
 }

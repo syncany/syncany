@@ -35,16 +35,17 @@ import org.syncany.config.Config;
  */
 public abstract class Connection {
 	protected Config config;
-    public abstract TransferManager createTransferManager();
-    public abstract PluginOptionSpecs getOptionSpecs();        
-    public abstract void init(Config config, Map<String, String> optionValues) throws StorageException;    
-    
-    public Config getConfig() {
-    	return config;
-    }
-    
-    public void setConfig(Config config) {
-    	this.config = config;
-    }
+
+	public abstract TransferManager createTransferManager();
+	public abstract PluginOptionSpecs getOptionSpecs();
+	public abstract void init(Config config, Map<String, String> optionValues) throws StorageException;
+
+	public Config getConfig() {
+		return config;
+	}
+
+	public void setConfig(Config config) {
+		this.config = config;
+	}
 }
 

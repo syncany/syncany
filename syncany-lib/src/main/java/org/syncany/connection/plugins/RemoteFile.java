@@ -97,8 +97,11 @@ public abstract class RemoteFile {
 	
 	public static <T extends RemoteFile> T createRemoteFile(String name) throws StorageException {
 		// TODO [medium] prevent this hack by using naming conventions somehow
-		Reflections reflections = new Reflections("org.syncany");
-		for (Class remoteFileClass : reflections.getSubTypesOf(RemoteFile.class)) {
+		// e.g. database-0001 -> DatabaseRemoteFile, multichunk-123 --> MultichunkRemoteFile
+		
+		Reflections reflections = new Reflections(RemoteFile.class.getPackage().getName());
+		
+		for (Class<? extends RemoteFile> remoteFileClass : reflections.getSubTypesOf(RemoteFile.class)) {
 			try {
 				return (T) createRemoteFile(name, remoteFileClass);
 			}
@@ -106,6 +109,7 @@ public abstract class RemoteFile {
 				// Invalid type, skip.
 			}
 		}
+		
 		throw new StorageException("Attempted to make a remote file which does not follow any naming pattern.");
 	}
 

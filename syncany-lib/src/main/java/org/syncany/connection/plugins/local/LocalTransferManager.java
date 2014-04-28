@@ -213,8 +213,6 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to read local respository " + repoPath);
 		}
 
-		
-		
 		// Create RemoteFile objects
 		Map<String, T> remoteFiles = new HashMap<String, T>();
 

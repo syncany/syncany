@@ -45,18 +45,19 @@ import org.simpleframework.xml.core.Persist;
 public class TransactionTO {
 	private static final Logger logger = Logger.getLogger(TransactionTO.class.getSimpleName()); 
 	
-	@Element(name="MachineName") 
+	@Element(name="machineName") 
 	private String machineName;
-	@ElementMap(entry="File", key="TempLocation", value="FinalLocation", attribute=false)
+	
+	@ElementMap(entry="file", key="tempLocation", value="finalLocation", attribute=false)
 	private Map<String, String> finalLocationNames;
 	
-	Map<RemoteFile, RemoteFile> finalLocations;
+	private Map<TempRemoteFile, RemoteFile> finalLocations;
 	
 	public TransactionTO() {
-		
+		// Nothing
 	}
 	
-	public TransactionTO(String machineName, Map<RemoteFile, RemoteFile> finalLocations) {
+	public TransactionTO(String machineName, Map<TempRemoteFile, RemoteFile> finalLocations) {
 		this.finalLocations = finalLocations;
 		this.machineName = machineName;
 	}
@@ -64,6 +65,7 @@ public class TransactionTO {
 	@Persist
 	public void prepare() {
 		finalLocationNames = new HashMap<String, String>();
+		
 		for (RemoteFile tempFile : finalLocations.keySet()) {
 			finalLocationNames.put(tempFile.getName(), finalLocations.get(tempFile).getName());
 		}
@@ -71,7 +73,8 @@ public class TransactionTO {
 	
 	@Commit
 	public void commit() {
-		finalLocations = new HashMap<RemoteFile, RemoteFile>();
+		finalLocations = new HashMap<TempRemoteFile, RemoteFile>();
+		
 		for (String tempFile : finalLocationNames.keySet()) {
 			try {
 				finalLocations.put(new TempRemoteFile(tempFile), RemoteFile.createRemoteFile(finalLocationNames.get(tempFile)));
@@ -82,7 +85,7 @@ public class TransactionTO {
 		}
 	}
 	
-	public Map<RemoteFile, RemoteFile> getFinalLocations() {
+	public Map<TempRemoteFile, RemoteFile> getFinalLocations() {
 		return finalLocations;
 	}
 	

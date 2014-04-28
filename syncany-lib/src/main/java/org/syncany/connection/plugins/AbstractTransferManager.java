@@ -28,7 +28,6 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -105,45 +104,54 @@ public abstract class AbstractTransferManager implements TransferManager {
 	protected Set<RemoteFile> getFilesInTransactions() throws StorageException {
 		Set<RemoteFile> filesInTransaction = new HashSet<RemoteFile>();
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
+		
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
-			Map<RemoteFile, RemoteFile> finalLocations = null;
+			Map<TempRemoteFile, RemoteFile> finalLocations = null;
 			String machineName = null;
+			
 			try {
 				File transactionFile = File.createTempFile("transaction-", "", connection.getConfig().getCacheDir());
+				
 				// Download transaction file
 				download(transaction, transactionFile);
 				String transactionFileStr = FileUtils.readFileToString(transactionFile);
+				
 				// Deserialize it
 				Serializer serializer = new Persister();
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
+				
 				// Extract final locations
 				finalLocations = transactionTO.getFinalLocations();
 				machineName = transactionTO.getMachineName();
 				transactionFile.delete();
 			}
 			catch (Exception e) {
-				e.printStackTrace();
 				throw new StorageException("Failed to read transactionFile", e);
 			}
-			boolean cleaned = false;
-			if (connection.getConfig().getMachineName().equals(machineName)) {
-				cleaned = cleanup(transaction, finalLocations);
+
+			boolean cleanedTemporaryFiles = false;
+			
+			if (connection.getConfig() != null && connection.getConfig().getMachineName().equals(machineName)) {
+				cleanedTemporaryFiles = cleanup(transaction, finalLocations);
 			}
-			if (finalLocations != null && !cleaned) {
+			
+			if (finalLocations != null && !cleanedTemporaryFiles) {
 				filesInTransaction.addAll(finalLocations.values());
 			}
 		}
 		
 		return filesInTransaction;
 	}
+	
 	/**
 	 * This method removes all files related to an unfinished transaction.
 	 */
-	protected boolean cleanup(TransactionRemoteFile transaction, Map<RemoteFile, RemoteFile> finalLocations) throws StorageException {
+	protected boolean cleanup(TransactionRemoteFile transaction, Map<TempRemoteFile, RemoteFile> finalLocations) throws StorageException {
 		for (RemoteFile temporaryLocation : finalLocations.keySet()) {
 			delete(temporaryLocation);
 			delete(finalLocations.get(temporaryLocation));
 		}
+		
 		return delete(transaction);
 	}
 }

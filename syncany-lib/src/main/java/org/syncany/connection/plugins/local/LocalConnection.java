@@ -55,8 +55,9 @@ public class LocalConnection extends Connection {
 	@Override
 	public void init(Config config, Map<String, String> optionValues) throws StorageException {
 		getOptionSpecs().validate(optionValues);
-		repositoryPath = new File(optionValues.get("path"));
+		
 		this.config = config;
+		this.repositoryPath = new File(optionValues.get("path"));
 	}
 
 	@Override
