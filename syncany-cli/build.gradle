@@ -49,6 +49,12 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
 }
 
+applicationDistribution.from("${startScripts.outputDir}/") {
+	into("bin")
+	include "syncany*"
+	rename(/syncany(.*)/, 'sy$1')
+}
+
 distTar {
 	baseName = "syncany"
 	version = "$applicationVersionFull"
