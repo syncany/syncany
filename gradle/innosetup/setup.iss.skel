@@ -20,7 +20,7 @@ AppId=Syncany
 AppVersion=${applicationVersionFull}
 AppVerName=Syncany ${applicationVersion}
 AppPublisher=Philipp Heckel
-AppPublisherURL=http://www.syncany.org/
+AppPublisherURL=https://www.syncany.org/
 AppCopyright=Copyright (C) 2011-2014 Philipp Heckel
 
 DefaultDirName={pf}\\Syncany
@@ -44,7 +44,7 @@ Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany"
 Source: "lib\\*"; DestDir: "{app}\\lib"
 
 [Tasks]
-Name: modifypath; Description: Adds syncany's application directory to environmental path;
+Name: modifypath; Description: Add Syncany to PATH environment variable
 
 [Code]
 
