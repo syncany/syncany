@@ -24,7 +24,7 @@ applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
 startScripts {
-	defaultJvmOpts = [ "-Xmx1024m", "-Dfile.encoding=utf-8" ]
+	defaultJvmOpts = [ "-Xmx2048m", "-Dfile.encoding=utf-8" ]
 	
 	doLast {
 		def winFile = file getWindowsScript()
@@ -47,6 +47,12 @@ startScripts {
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
+}
+
+applicationDistribution.from("${startScripts.outputDir}/") {
+	into("bin")
+	include "syncany*"
+	rename(/syncany(.*)/, 'sy$1')
 }
 
 distTar {
