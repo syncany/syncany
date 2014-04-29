@@ -47,9 +47,18 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return connection;
 	}
 
-	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
 	protected File createTempFile(String name) throws IOException {
-		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		try {
+			if (connection.getConfig() != null) {
+				return connection.getConfig().getCache().createTempFile("temp-" + name);
+			}
+			else {
+				return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+			}
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
@@ -106,7 +115,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
-			Map<TempRemoteFile, RemoteFile> finalLocations = null;
+			Map<TempRemoteFile, RemoteFile> tempFileToTargetFileMap = null;
 			String machineName = null;
 			
 			try {
@@ -121,7 +130,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
 				
 				// Extract final locations
-				finalLocations = transactionTO.getFinalLocations();
+				tempFileToTargetFileMap = transactionTO.getTempToTargetFileMap();
 				machineName = transactionTO.getMachineName();
 				transactionFile.delete();
 			}
@@ -132,11 +141,11 @@ public abstract class AbstractTransferManager implements TransferManager {
 			boolean cleanedTemporaryFiles = false;
 			
 			if (connection.getConfig() != null && connection.getConfig().getMachineName().equals(machineName)) {
-				cleanedTemporaryFiles = cleanup(transaction, finalLocations);
+				cleanedTemporaryFiles = cleanup(transaction, tempFileToTargetFileMap);
 			}
 			
-			if (finalLocations != null && !cleanedTemporaryFiles) {
-				filesInTransaction.addAll(finalLocations.values());
+			if (tempFileToTargetFileMap != null && !cleanedTemporaryFiles) {
+				filesInTransaction.addAll(tempFileToTargetFileMap.values());
 			}
 		}
 		
@@ -146,12 +155,12 @@ public abstract class AbstractTransferManager implements TransferManager {
 	/**
 	 * This method removes all files related to an unfinished transaction.
 	 */
-	protected boolean cleanup(TransactionRemoteFile transaction, Map<TempRemoteFile, RemoteFile> finalLocations) throws StorageException {
-		for (RemoteFile temporaryLocation : finalLocations.keySet()) {
-			delete(temporaryLocation);
-			delete(finalLocations.get(temporaryLocation));
+	protected boolean cleanup(TransactionRemoteFile transactionFile, Map<TempRemoteFile, RemoteFile> tempFileToTargetFileMap) throws StorageException {
+		for (TempRemoteFile tempRemoteFile : tempFileToTargetFileMap.keySet()) {
+			delete(tempRemoteFile);
+			delete(tempFileToTargetFileMap.get(tempRemoteFile));
 		}
 		
-		return delete(transaction);
+		return delete(transactionFile);
 	}
 }

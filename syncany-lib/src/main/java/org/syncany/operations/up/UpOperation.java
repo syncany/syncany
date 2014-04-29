@@ -319,7 +319,7 @@ public class UpOperation extends Operation {
 				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
 				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
 
-				logger.log(Level.INFO, "- Uploading multichunk {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
+				logger.log(Level.INFO, "- Adding multichunk to TX: {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
 						remoteMultiChunkFile });
 				
 				remoteTransaction.add(localMultiChunkFile, remoteMultiChunkFile);
@@ -339,7 +339,7 @@ public class UpOperation extends Operation {
 	}
 
 	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
-		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
+		logger.log(Level.INFO, "- Adding database file to TX: " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.add(localDatabaseFile, remoteDatabaseFile);
 	}
 

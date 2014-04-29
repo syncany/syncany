@@ -75,7 +75,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
 		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
 		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
-		this.transactionPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transaction");
+		this.transactionPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transactions");
 	}
 
 	@Override
@@ -168,14 +168,14 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException {
 		connect();
 
-		File source = getRemoteFile(sourceFile);
-		File target = getRemoteFile(targetFile);
+		File sourceRemoteFile = getRemoteFile(sourceFile);
+		File targetRemoteFile = getRemoteFile(targetFile);
 
 		try {
-			FileUtils.moveFile(source, target);
+			FileUtils.moveFile(sourceRemoteFile, targetRemoteFile);
 		}
 		catch (IOException ex) {
-			throw new StorageException("Unable to move file " + source + " to destination " + target, ex);
+			throw new StorageException("Unable to move file " + sourceRemoteFile + " to destination " + targetRemoteFile, ex);
 		}
 	}
 

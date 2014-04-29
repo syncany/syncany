@@ -50,7 +50,7 @@ public class TempRemoteFile extends RemoteFile {
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public TempRemoteFile(File localFile) throws StorageException {
-		super(String.format(NAME_FORMAT, Integer.toHexString(localFile.hashCode())));
+		super(String.format(NAME_FORMAT, Integer.toHexString(localFile.hashCode()))); // TODO [low] This should be a random string or the actual file name, right?
 	}
 
 	@Override

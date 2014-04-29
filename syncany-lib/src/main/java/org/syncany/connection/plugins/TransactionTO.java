@@ -49,44 +49,44 @@ public class TransactionTO {
 	private String machineName;
 	
 	@ElementMap(entry="file", key="tempLocation", value="finalLocation", attribute=false)
-	private Map<String, String> finalLocationNames;
+	private Map<String, String> tempToTargetFileNamesMap;
 	
-	private Map<TempRemoteFile, RemoteFile> finalLocations;
+	private Map<TempRemoteFile, RemoteFile> tempToTargetFileMap;
 	
 	public TransactionTO() {
 		// Nothing
 	}
 	
 	public TransactionTO(String machineName, Map<TempRemoteFile, RemoteFile> finalLocations) {
-		this.finalLocations = finalLocations;
 		this.machineName = machineName;
+		this.tempToTargetFileMap = finalLocations;
 	}
 	
 	@Persist
 	public void prepare() {
-		finalLocationNames = new HashMap<String, String>();
+		tempToTargetFileNamesMap = new HashMap<String, String>();
 		
-		for (RemoteFile tempFile : finalLocations.keySet()) {
-			finalLocationNames.put(tempFile.getName(), finalLocations.get(tempFile).getName());
+		for (TempRemoteFile tempFile : tempToTargetFileMap.keySet()) {
+			tempToTargetFileNamesMap.put(tempFile.getName(), tempToTargetFileMap.get(tempFile).getName());
 		}
 	}
 	
 	@Commit
 	public void commit() {
-		finalLocations = new HashMap<TempRemoteFile, RemoteFile>();
+		tempToTargetFileMap = new HashMap<TempRemoteFile, RemoteFile>();
 		
-		for (String tempFile : finalLocationNames.keySet()) {
+		for (String tempFile : tempToTargetFileNamesMap.keySet()) {
 			try {
-				finalLocations.put(new TempRemoteFile(tempFile), RemoteFile.createRemoteFile(finalLocationNames.get(tempFile)));
+				tempToTargetFileMap.put(new TempRemoteFile(tempFile), RemoteFile.createRemoteFile(tempToTargetFileNamesMap.get(tempFile)));
 			}
 			catch (StorageException e) {
-				logger.log(Level.INFO, "Invalid remote temporary filename: " + tempFile + " or " + finalLocationNames.get(tempFile));
+				logger.log(Level.INFO, "Invalid remote temporary filename: " + tempFile + " or " + tempToTargetFileNamesMap.get(tempFile));
 			}
 		}
 	}
 	
-	public Map<TempRemoteFile, RemoteFile> getFinalLocations() {
-		return finalLocations;
+	public Map<TempRemoteFile, RemoteFile> getTempToTargetFileMap() {
+		return tempToTargetFileMap;
 	}
 	
 	public String getMachineName() {

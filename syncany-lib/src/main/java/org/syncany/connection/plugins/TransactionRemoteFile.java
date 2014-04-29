@@ -17,12 +17,8 @@
  */
 package org.syncany.connection.plugins;
 
-import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.util.StringUtil;
 
 /**
  * The transaction file represents a manifest of a transaction on the remote storage. 

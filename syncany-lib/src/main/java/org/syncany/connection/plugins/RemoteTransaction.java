@@ -78,13 +78,16 @@ public class RemoteTransaction {
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
 		for (File localFile : localToTempRemoteFileMap.keySet()) {
+			logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, localToTempRemoteFileMap.get(localFile) });
 			transferManager.upload(localFile, localToTempRemoteFileMap.get(localFile));
 		}
-		
+
 		for (RemoteFile temporaryFile : tempToTargetRemoteFileMap.keySet()) {
+			logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { temporaryFile, tempToTargetRemoteFileMap.get(temporaryFile) });
 			transferManager.move(temporaryFile, tempToTargetRemoteFileMap.get(temporaryFile));
 		}
 		
+		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
 		
