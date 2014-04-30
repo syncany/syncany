@@ -17,14 +17,11 @@
  */
 package org.syncany;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;

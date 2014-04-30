@@ -48,7 +48,6 @@ import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
