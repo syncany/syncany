@@ -143,7 +143,7 @@ public class PluginOperation extends Operation {
 
 			// JAR files are locked on Windows, adding JAR filename to a list for delayed deletion (by batch file)
 			if (EnvironmentUtil.isWindows()) {
-				File purgefilePath = new File(UserConfig.getUserAppDir(), PURGEFILE_FILENAME);
+				File purgefilePath = new File(UserConfig.getUserConfigDir(), PURGEFILE_FILENAME);
 				
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgefilePath, true)))) {
 					out.println(pluginJarFile.getAbsolutePath());
