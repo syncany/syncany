@@ -17,7 +17,6 @@
  */
 package org.syncany.connection.plugins.local;
 
-import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.TransferManager;
@@ -45,8 +44,8 @@ public class LocalPlugin extends Plugin {
 	}
 
     @Override
-    public Connection createConnection(Config config) {
-        return new LocalConnection(config);
+    public Connection createConnection() {
+        return new LocalConnection();
     }
     
 	@Override

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.syncany.config.Config;
 import org.syncany.connection.plugins.local.LocalConnection;
 
 /**
@@ -36,8 +35,8 @@ public class UnreliableLocalConnection extends LocalConnection {
 	private Map<String, Integer> typeOperationCounters;
 	private List<String> failingOperationPatterns;	
 
-	public UnreliableLocalConnection(Config config) {
-		super(config);
+	public UnreliableLocalConnection() {
+		super();
 		
         this.totalOperationCounter = 0;
         this.typeOperationCounters = new HashMap<String, Integer>();

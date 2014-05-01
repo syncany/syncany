@@ -227,7 +227,7 @@ public class Config {
 	    	}
 	    	
 	    	try {
-		    	connection = plugin.createConnection(this);
+		    	connection = plugin.createConnection();
 		    	connection.init(configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {

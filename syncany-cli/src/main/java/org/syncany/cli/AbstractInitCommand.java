@@ -123,7 +123,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
-		Connection connection = plugin.createConnection(client.getConfig());
+		Connection connection = plugin.createConnection();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
 		Map<String, String> pluginOptionValues = new HashMap<String, String>();
@@ -160,7 +160,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			knownPluginOptionValues = new HashMap<String, String>();
 		}
 		
-		Connection connection = plugin.createConnection(client.getConfig());
+		Connection connection = plugin.createConnection();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();		
 
 		pluginOptionSpecs.validate(knownPluginOptionValues); // throws error if invalid

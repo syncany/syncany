@@ -252,7 +252,7 @@ public class TestConfigUtil {
 
 	public static Connection createTestLocalConnection() throws Exception {
 		Plugin plugin = Plugins.get("local");
-		Connection conn = plugin.createConnection(createDummyConfig());
+		Connection conn = plugin.createConnection();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", conn));
 
@@ -276,7 +276,7 @@ public class TestConfigUtil {
 	}
 	
 	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin, List<String> failingOperationPatterns) throws Exception {		
-		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection(createDummyConfig());
+		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 

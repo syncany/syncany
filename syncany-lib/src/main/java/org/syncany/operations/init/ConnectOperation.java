@@ -30,7 +30,6 @@ import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
-import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
@@ -108,9 +107,8 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Init plugin and transfer manager
 		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
-		plugin.setup();
 		
-		Connection connection = plugin.createConnection(null);
+		Connection connection = plugin.createConnection();
 		
 		connection.init(options.getConfigTO().getConnectionTO().getSettings());
 		connection.setUserInteractionListener(listener);
@@ -188,15 +186,10 @@ public class ConnectOperation extends AbstractInitOperation {
 			File masterFile = new File(appDir, Config.FILE_MASTER);
 			writeXmlFile(new MasterTO(configTO.getMasterKey().getSalt()), masterFile);
 		}
-		
-		// Loading config (needed in some plugins!)
-		logger.log(Level.INFO, "Loading config to application context ...");
-		connection.setConfig(ConfigHelper.loadConfig(options.getLocalDir())); 
-		
+				
 		// Shutdown plugin
 		transferManager.disconnect();
-		plugin.shutdown();
-				
+		
 		return new ConnectOperationResult(ConnectResultCode.OK);
 	}		
 

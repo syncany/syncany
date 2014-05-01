@@ -19,8 +19,6 @@ package org.syncany.connection.plugins;
 
 import java.util.Map;
 
-import org.syncany.config.Config;
-
 /**
  * A connection represents the configuration settings of a storage/connection
  * plugin. It is created through the concrete implementation of a {@link Plugin}.
@@ -34,20 +32,7 @@ import org.syncany.config.Config;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Connection {
-	protected Config config;
 	protected UserInteractionListener userInteractionListener;
-	
-	public Connection(Config config) {
-		this.config = config;
-	}
-	
-    public Config getConfig() {
-		return config;
-	}
-
-	public void setConfig(Config config) {
-		this.config = config;
-	}
 
 	public UserInteractionListener getUserInteractionListener() {
 		return userInteractionListener;

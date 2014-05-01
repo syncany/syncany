@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
@@ -83,9 +82,8 @@ public class InitOperation extends AbstractInitOperation {
 
 		// Init plugin and transfer manager
 		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
-		plugin.setup();
 		
-		Connection connection = plugin.createConnection(null);
+		Connection connection = plugin.createConnection();
 		
 		connection.init(options.getConfigTO().getConnectionTO().getSettings());
 		connection.setUserInteractionListener(listener);
@@ -127,10 +125,6 @@ public class InitOperation extends AbstractInitOperation {
 		
 		writeXmlFile(options.getConfigTO(), configFile);
 		
-		// Loading config (needed in some plugins!)
-		logger.log(Level.INFO, "Loading config to application context ...");		
-		connection.setConfig(ConfigHelper.loadConfig(options.getLocalDir()));
-		
 		// Make remote changes
 		logger.log(Level.INFO, "Uploading local repository");
 		
@@ -149,7 +143,6 @@ public class InitOperation extends AbstractInitOperation {
 		
 		// Shutdown plugin 
 		transferManager.disconnect();
-		plugin.shutdown();
 		
 		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
