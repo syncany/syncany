@@ -351,7 +351,6 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			out.println("  " + testResult.getException().getMessage());
 		}
 	}
-	
 
 	@Override
 	public boolean onUserConfirm(String subject, String message, String question) {
@@ -369,5 +368,16 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		else {
 			return true;
 		}
-	}	
+	}
+
+	@Override
+	public void onShowMessage(String message) {
+		out.println(message);
+	}
+
+	@Override
+	public String onUserPassword(String message) {
+		out.print(message);
+		return String.copyValueOf(console.readPassword());
+	}
 } 
