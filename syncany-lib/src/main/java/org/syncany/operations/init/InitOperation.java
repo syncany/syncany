@@ -35,6 +35,7 @@ import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
@@ -61,17 +62,15 @@ public class InitOperation extends AbstractInitOperation {
     
     private InitOperationOptions options;
     private InitOperationResult result;
-    private InitOperationListener listener;
     
     private Plugin plugin;
     private TransferManager transferManager;
     
-	public InitOperation(InitOperationOptions options, InitOperationListener listener) {
-		super(null);
+	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
+		super(null, listener);
         
         this.options = options;
         this.result = null;
-        this.listener = listener;
     }        
             
     @Override
@@ -182,7 +181,6 @@ public class InitOperation extends AbstractInitOperation {
 	}
 	
 	private void cleanLocalRepository(Exception e) throws Exception {
-		
 		try {
 			deleteAppDirs(options.getLocalDir());
 		}
@@ -204,7 +202,7 @@ public class InitOperation extends AbstractInitOperation {
 				throw new RuntimeException("Cannot get password from user interface. No listener.");
 			}
 			
-			return listener.getPasswordCallback();
+			return listener.onUserNewPassword();
 		}
 		else {
 			return options.getPassword();
@@ -212,9 +210,7 @@ public class InitOperation extends AbstractInitOperation {
 	}	
 	
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
-		if (listener != null) {
-			listener.notifyGenerateMasterKey();
-		}
+		fireNotifyCreateMaster();
 		
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;

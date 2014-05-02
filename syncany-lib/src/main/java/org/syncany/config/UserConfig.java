@@ -44,12 +44,13 @@ public class UserConfig {
 	
 	private static final File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
 	private static final File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
-	private static final String USER_PLUGINS_DIR = "plugins";
+	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
+	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
 	private static final String USER_TRUSTSTORE_FILE = "truststore.jks";
 	
 	private static File userConfigDir;
-	private static File userPluginsDir;
+	private static File userPluginLibDir;
 	private static File userConfigFile;
 	private static File userTrustStoreFile;
 	private static KeyStore userTrustStore;	
@@ -90,8 +91,15 @@ public class UserConfig {
 		return userConfigDir;
 	}
 
-	public static File getUserPluginDir() {
-		return userPluginsDir;
+	public static File getUserPluginLibDir() {
+		return userPluginLibDir;
+	}
+	
+	public static File getUserPluginsUserdataDir(String pluginId) {
+		File pluginConfigDir = new File(userConfigDir, String.format(USER_PLUGINS_USERDATA_DIR_FORMAT, pluginId));
+		pluginConfigDir.mkdirs();
+
+		return pluginConfigDir;
 	}
 	
 	public static File getUserConfigFile() {
@@ -122,8 +130,8 @@ public class UserConfig {
 		userConfigDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
 		userConfigDir.mkdirs();
 		
-		userPluginsDir = new File(userConfigDir, USER_PLUGINS_DIR);		
-		userPluginsDir.mkdirs();
+		userPluginLibDir = new File(userConfigDir, USER_PLUGINS_LIB_DIR);		
+		userPluginLibDir.mkdirs();
 	}
 
 	private static void initUserConfig() {

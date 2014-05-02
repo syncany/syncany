@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,12 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
+import com.google.common.base.Strings;
+
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
+	public static final int PASSWORD_MIN_LENGTH = 10;
+	public static final int PASSWORD_WARN_LENGTH = 12;
+	
 	protected InitConsole console;
 	protected boolean isInteractive;	
 
@@ -300,8 +306,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected boolean askRetryConnection() {
-		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
-		return yesno.toLowerCase().startsWith("y") || yesno.trim().equals("");
+		return onUserConfirm(null, "Connection failure", "Would you change the settings and retry the connection");		
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
@@ -351,17 +356,19 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			out.println("  " + testResult.getException().getMessage());
 		}
 	}
-	
 
 	@Override
-	public boolean onUserConfirm(String subject, String message, String question) {
-		out.println();
-		out.println(subject);
-		out.println("------------------------------");
+	public boolean onUserConfirm(String header, String message, String question) {
+		if (header != null) {
+			out.println();
+			out.println(header);
+			out.println(Strings.repeat("-", header.length()));
+		}
+		
 		out.println(message);
 		out.println();
 		
-		String yesno = InitConsole.getInstance().readLine(question + " (y/n)? ");
+		String yesno = console.readLine(question + " (y/n)? ");
 		
 		if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
 			return false;
@@ -369,5 +376,72 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		else {
 			return true;
 		}
-	}	
+	}
+
+	@Override
+	public void onShowMessage(String message) {
+		out.println(message);
+	}
+
+	@Override
+	public String onUserPassword(String header, String message) {
+		out.println();
+
+		if (header != null) {
+			out.println(header);
+			out.println(Strings.repeat("-", header.length()));
+		}
+		
+		if (!message.trim().endsWith(":")) {
+			message += ": ";
+		}
+		
+		char[] passwordChars = console.readPassword(message);
+		return String.copyValueOf(passwordChars);
+	}
+	
+	@Override
+	public String onUserNewPassword() {
+		out.println();
+		out.println("The password is used to encrypt data on the remote storage.");
+		out.println("Choose wisely!");
+		out.println();
+		
+		String password = null;
+		
+		while (password == null) {
+			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
+			
+			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
+				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
+				out.println();
+				
+				continue;
+			}
+			
+			char[] confirmPasswordChars = console.readPassword("Confirm: ");
+			
+			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
+				out.println("ERROR: Passwords do not match.");
+				out.println();
+				
+				continue;
+			} 
+			
+			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
+				out.println();
+				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
+				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
+				
+				if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
+					out.println();
+					continue;
+				}
+			}
+			
+			password = new String(passwordChars);			
+		}	
+		
+		return password;
+	}
 } 

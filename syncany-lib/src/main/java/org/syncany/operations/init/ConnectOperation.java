@@ -43,6 +43,7 @@ import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -74,15 +75,18 @@ public class ConnectOperation extends AbstractInitOperation {
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_ENCODED = 4;
 
+	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
+	private int retryPasswordCount = 0;
+
 	private ConnectOperationOptions options;
 	private ConnectOperationResult result;
-	private ConnectOperationListener listener;
+	private UserInteractionListener listener;
 	
 	private Plugin plugin;
     private TransferManager transferManager;
 	
-	public ConnectOperation(ConnectOperationOptions options, ConnectOperationListener listener) {
-		super(null);
+	public ConnectOperation(ConnectOperationOptions options, UserInteractionListener listener) {
+		super(null, null);
 		
 		this.options = options;
 		this.result = null;
@@ -254,11 +258,10 @@ public class ConnectOperation extends AbstractInitOperation {
 			
 			while (retryPassword) {
 				// Ask password
-				String password = getOrAskPassword();
+				String masterPassword = getOrAskPassword();
 				
 				// Generate master key
-				fireNotifyCreateMaster();
-				SaltedSecretKey masterKey = CipherUtil.createMasterKey(password, masterKeySalt);
+				SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, masterKeySalt);
 				configTO.setMasterKey(masterKey);
 				
 				// Decrypt config 
@@ -301,21 +304,6 @@ public class ConnectOperation extends AbstractInitOperation {
 		return configTO;			
 	}
 
-	private boolean askRetryPassword() {
-		if (listener != null) {
-			return listener.askRetryPassword();
-		}
-		else {
-			return false;
-		}
-	}
-
-	private void fireNotifyCreateMaster() {
-		if (listener != null) {
-			listener.notifyCreateMasterKey();
-		}
-	}
-
 	private boolean performRepoTest(TransferManager transferManager) {
 		StorageTestResult testResult = transferManager.test(false);
 		
@@ -338,11 +326,26 @@ public class ConnectOperation extends AbstractInitOperation {
 				throw new RuntimeException("Repository file is encrypted, but password cannot be queried (no listener).");
 			}
 			
-			return listener.askPassword();
+			return listener.onUserPassword(null, "Password: ");
 		}
 		else {
 			return options.getPassword();
 		}		
+	}
+	
+	private boolean askRetryPassword() {
+		retryPasswordCount++;		
+		
+		if (retryPasswordCount < MAX_RETRY_PASSWORD_COUNT) {
+			int triesLeft = MAX_RETRY_PASSWORD_COUNT - retryPasswordCount;
+			String triesLeftStr = triesLeft != 1 ? triesLeft + " tries left." : "Last chance.";  
+
+			listener.onShowMessage("ERROR: Invalid password or corrupt ciphertext. " + triesLeftStr);
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	protected File downloadFile(TransferManager transferManager, RemoteFile remoteFile) throws StorageException {		
@@ -358,9 +361,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 	
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword, byte[] masterKeySalt) throws CipherException {
-		if (listener != null) {
-			listener.notifyCreateMasterKey();
-		}
+		fireNotifyCreateMaster();
 		
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword, masterKeySalt);
 		return masterKey;

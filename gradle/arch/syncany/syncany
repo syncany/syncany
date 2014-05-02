@@ -1,9 +1,11 @@
 #!/bin/sh
+
 for name in /usr/share/java/syncany/*.jar ; do
   CP=$CP:$name
 done
 
-for name in $HOME/.config/syncany/plugins/*.jar ; do
+for name in $HOME/.config/syncany/plugins/lib/*.jar ; do
   CP=$CP:$name
 done
+
 "$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$@"
