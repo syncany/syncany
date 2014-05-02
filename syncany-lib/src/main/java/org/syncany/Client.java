@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.CleanupOperation;
 import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
@@ -45,13 +46,11 @@ import org.syncany.operations.down.DownOperationListener;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.init.ConnectOperation;
-import org.syncany.operations.init.ConnectOperationListener;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.GenlinkOperation;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperationListener;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
@@ -161,7 +160,7 @@ public class Client {
 		return init(options, null);
 	}
 
-	public InitOperationResult init(InitOperationOptions options, InitOperationListener listener) throws Exception {
+	public InitOperationResult init(InitOperationOptions options, UserInteractionListener listener) throws Exception {
 		return new InitOperation(options, listener).execute();
 	}
 
@@ -169,7 +168,7 @@ public class Client {
 		return connect(options, null);
 	}
 
-	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws Exception,
+	public ConnectOperationResult connect(ConnectOperationOptions options, UserInteractionListener listener) throws Exception,
 			CipherException {
 		
 		return new ConnectOperation(options, listener).execute();
