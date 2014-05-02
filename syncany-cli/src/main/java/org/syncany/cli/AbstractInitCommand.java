@@ -385,8 +385,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	@Override
 	public String onUserPassword(String header, String message) {
+		out.println();
+
 		if (header != null) {
-			out.println();
 			out.println(header);
 			out.println(Strings.repeat("-", header.length()));
 		}
