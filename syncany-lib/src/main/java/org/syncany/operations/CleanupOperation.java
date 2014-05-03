@@ -32,11 +32,11 @@ import java.util.logging.Logger;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
@@ -70,7 +70,7 @@ import com.google.common.collect.Lists;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class CleanupOperation extends Operation {
+public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	private static final String LOCK_CLIENT_NAME = "lock";
 
@@ -80,7 +80,6 @@ public class CleanupOperation extends Operation {
 	private CleanupOperationOptions options;
 	private CleanupOperationResult result;
 
-	private TransferManager transferManager;
 	private SqlDatabase localDatabase;
 
 	private DatabaseRemoteFile lockFile;
@@ -90,14 +89,12 @@ public class CleanupOperation extends Operation {
 	}
 
 	public CleanupOperation(Config config, CleanupOperationOptions options) {
-		super(config);
+		super(config, "cleanup");
 
 		this.options = options;
 		this.result = new CleanupOperationResult();
 
-		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
 		this.localDatabase = new SqlDatabase(config);
-		
 		this.lockFile = null;
 	}
 
@@ -107,11 +104,13 @@ public class CleanupOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Cleanup' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		 CleanupResultCode preconditionResult = checkPreconditions();
+		CleanupResultCode preconditionResult = checkPreconditions();
 		
 		if (preconditionResult != CleanupResultCode.OK) {
 			return new CleanupOperationResult(preconditionResult);
 		}
+		
+		uploadActionFile();
 		
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
@@ -125,6 +124,8 @@ public class CleanupOperation extends Operation {
 			// To be done at a later time
 			// repackageMultiChunks();
 		}
+		
+		finishOperation();
 
 		return updateResultCode(result);
 	}
@@ -153,7 +154,30 @@ public class CleanupOperation extends Operation {
 			return CleanupResultCode.NOK_REMOTE_CHANGES;
 		}
 		
+		if (otherRemoteOperationsRunning()) {
+			return CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING;
+		}
+		
 		return CleanupResultCode.OK;
+	}
+
+	private boolean otherRemoteOperationsRunning() throws StorageException {
+		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
+		
+		boolean otherRemoteOperationsRunning = false;
+		
+		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
+			// Delete our own action remote files, remember if others exist
+			
+			if (actionRemoteFile.getClientName().equals(config.getMachineName())) {
+				transferManager.delete(actionRemoteFile);
+			}
+			else {
+				otherRemoteOperationsRunning = true;
+			}
+		}
+		
+		return otherRemoteOperationsRunning;
 	}
 
 	private boolean hasLocalChanges() throws Exception {
@@ -439,7 +463,7 @@ public class CleanupOperation extends Operation {
 	}
 
 	public enum CleanupResultCode {
-		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR
+		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR, NOK_OTHER_OPERATIONS_RUNNING
 	}
 	
 	public static class CleanupOperationResult implements OperationResult {
