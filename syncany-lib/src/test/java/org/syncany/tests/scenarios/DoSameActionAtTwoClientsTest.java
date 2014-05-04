@@ -64,11 +64,11 @@ public class DoSameActionAtTwoClientsTest {
 	
 		// Now, both upload that
 		UpOperationResult upResultA = clientA.upWithForceChecksum(); // (A1)
-		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultA.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResultA.getResultCode());
 		assertEquals(8, upResultA.getChangeSet().getNewFiles().size());
 		
 		UpOperationResult upResultB = clientB.up(upOperationOptionsWithForce); // (B1)
-		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultB.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResultB.getResultCode());
 		assertEquals(8, upResultB.getChangeSet().getNewFiles().size());
 		
 		DownOperationResult downResultA = clientA.down(); 
@@ -90,7 +90,7 @@ public class DoSameActionAtTwoClientsTest {
 		
 		Files.setPosixFilePermissions(clientB.getLocalFile("sphinxbase-0.8").toPath(), PosixFilePermissions.fromString("rwxrwxrwx"));
 		UpOperationResult upResultB2 = clientB.up(); // (B2)
-		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultB2.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResultB2.getResultCode());
 		assertEquals(1, upResultB2.getChangeSet().getChangedFiles().size());
 		
 		// For peaking (does NOT affect the test)

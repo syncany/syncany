@@ -24,7 +24,7 @@ import org.syncany.operations.cleanup.CleanupOperationResult;
 
 public class UpOperationResult implements OperationResult {
 	public enum UpResultCode {
-		OK_APPLIED_CHANGES, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
+		OK_CHANGES_UPLOADED, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
 	};
 
 	private UpResultCode resultCode;

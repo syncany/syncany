@@ -88,7 +88,7 @@ public class UpCommand extends Command {
 		if (operationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
 			out.println("Sync up skipped, because there are remote changes.");
 		}
-		else if (operationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES) {
+		else if (operationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
 			ChangeSet changeSet = operationResult.getChangeSet();
 
 			for (String newFile : changeSet.getNewFiles()) {

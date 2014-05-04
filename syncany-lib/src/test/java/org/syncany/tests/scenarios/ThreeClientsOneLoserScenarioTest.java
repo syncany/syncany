@@ -73,7 +73,7 @@ public class ThreeClientsOneLoserScenarioTest {
 		
 		// A uploads again, this time it should succeed, because C's file is in knowndbs.list
 		aUpResult = clientA.upWithForceChecksum(); 
-		assertEquals("Expected to succeed, because db-C-1 has already been looked at", UpResultCode.OK_APPLIED_CHANGES, aUpResult.getResultCode());
+		assertEquals("Expected to succeed, because db-C-1 has already been looked at", UpResultCode.OK_CHANGES_UPLOADED, aUpResult.getResultCode());
 		
 		// C calls down and up, to sync its changes
 		clientC.down(); // Adds dirty database

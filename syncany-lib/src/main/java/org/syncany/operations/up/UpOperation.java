@@ -186,7 +186,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
-		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
+		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 		
 		return result;
 	}
