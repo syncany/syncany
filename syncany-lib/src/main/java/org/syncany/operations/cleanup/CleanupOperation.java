@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.cleanup;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +48,12 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.LsRemoteOperation;
 import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.StatusOperation;
 import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 
 import com.google.common.collect.Lists;
 
@@ -403,113 +406,5 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		return ownDatabaseRemoteFiles;
-	}
-
-	public static class CleanupOperationOptions implements OperationOptions {
-		private StatusOperationOptions statusOptions = new StatusOperationOptions();
-		private boolean mergeRemoteFiles = true;
-		private boolean removeOldVersions = true;
-		private int keepVersionsCount = 5;
-		private boolean repackageMultiChunks = true;
-		private double repackageUnusedThreshold = 0.7;
-		
-		public StatusOperationOptions getStatusOptions() {
-			return statusOptions;
-		}
-
-		public void setStatusOptions(StatusOperationOptions statusOptions) {
-			this.statusOptions = statusOptions;
-		}
-
-		public boolean isMergeRemoteFiles() {
-			return mergeRemoteFiles;
-		}
-
-		public boolean isRemoveOldVersions() {
-			return removeOldVersions;
-		}
-
-		public double getRepackageUnusedThreshold() {
-			return repackageUnusedThreshold;
-		}
-
-		public int getKeepVersionsCount() {
-			return keepVersionsCount;
-		}
-
-		public boolean isRepackageMultiChunks() {
-			return repackageMultiChunks;
-		}
-
-		public void setMergeRemoteFiles(boolean mergeRemoteFiles) {
-			this.mergeRemoteFiles = mergeRemoteFiles;
-		}
-
-		public void setRemoveOldVersions(boolean removeOldVersions) {
-			this.removeOldVersions = removeOldVersions;
-		}
-
-		public void setKeepVersionsCount(int keepVersionsCount) {
-			this.keepVersionsCount = keepVersionsCount;
-		}
-
-		public void setRepackageMultiChunks(boolean repackageMultiChunks) {
-			this.repackageMultiChunks = repackageMultiChunks;
-		}
-
-		public void setRepackageUnusedThreshold(double repackageUnusedThreshold) {
-			this.repackageUnusedThreshold = repackageUnusedThreshold;
-		}
-	}
-
-	public enum CleanupResultCode {
-		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR, NOK_OTHER_OPERATIONS_RUNNING
-	}
-	
-	public static class CleanupOperationResult implements OperationResult {
-		private CleanupResultCode resultCode = CleanupResultCode.OK_NOTHING_DONE;
-		private int mergedDatabaseFilesCount = 0;
-		private int removedOldVersionsCount = 0;
-		private List<MultiChunkEntry> removedMultiChunks = new ArrayList<MultiChunkEntry>();
-
-		public CleanupOperationResult() {
-			// Nothing.
-		}
-
-		public CleanupOperationResult(CleanupResultCode resultCode) {
-			this.resultCode = resultCode;
-		}
-		
-		public void setResultCode(CleanupResultCode resultCode) {
-			this.resultCode = resultCode;
-		}
-		
-		public CleanupResultCode getResultCode() {
-			return resultCode;
-		}
-
-		public int getMergedDatabaseFilesCount() {
-			return mergedDatabaseFilesCount;
-		}
-
-		public void setMergedDatabaseFilesCount(int mergedDatabaseFilesCount) {
-			this.mergedDatabaseFilesCount = mergedDatabaseFilesCount;
-		}
-
-		public int getRemovedOldVersionsCount() {
-			return removedOldVersionsCount;
-		}
-
-		public void setRemovedOldVersionsCount(int removedOldVersionsCount) {
-			this.removedOldVersionsCount = removedOldVersionsCount;
-		}
-
-		public List<MultiChunkEntry> getRemovedMultiChunks() {
-			return removedMultiChunks;
-		}
-
-		public void setRemovedMultiChunks(List<MultiChunkEntry> removedMultiChunks) {
-			this.removedMultiChunks = removedMultiChunks;
-		}			
 	}
 }

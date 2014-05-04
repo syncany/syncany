@@ -26,6 +26,9 @@ import org.syncany.config.Config;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 
+/*
+ * TODO [high] The log operation is experimental and needs refactoring #86 
+ */
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
 	private LogOperationOptions options;
