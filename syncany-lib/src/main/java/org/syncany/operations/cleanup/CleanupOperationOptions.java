@@ -25,8 +25,8 @@ public class CleanupOperationOptions implements OperationOptions {
 	private boolean mergeRemoteFiles = true;
 	private boolean removeOldVersions = true;
 	private int keepVersionsCount = 5;
-	private boolean repackageMultiChunks = true;
-	private double repackageUnusedThreshold = 0.7;
+	private boolean repackageMultiChunks = true; // TODO [medium] Not used
+	private double repackageUnusedThreshold = 0.7; // TODO [medium] Not used
 	
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;

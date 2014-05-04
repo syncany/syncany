@@ -116,7 +116,7 @@ public class CleanupCommand extends Command {
 			if (operationResult.getRemovedMultiChunks().size() > 0) {
 				long totalRemovedMultiChunkSize = 0;
 				
-				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks()) {
+				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks().values()) {
 					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
 				}
 				

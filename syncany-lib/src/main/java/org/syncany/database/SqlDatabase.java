@@ -218,7 +218,7 @@ public class SqlDatabase {
 		return multiChunkDao.getDirtyMultiChunkIds();
 	}	
 
-	public List<MultiChunkEntry> getUnusedMultiChunks() {
+	public Map<MultiChunkId, MultiChunkEntry> getUnusedMultiChunks() {
 		return multiChunkDao.getUnusedMultiChunks();
 	}
 	
@@ -226,7 +226,7 @@ public class SqlDatabase {
 		multiChunkDao.removeUnreferencedMultiChunks();
 	}
 
-	public Iterator<MultiChunkEntry> getMultiChunks() {
+	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks() {
 		return multiChunkDao.getMultiChunks();
 	}
 

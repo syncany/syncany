@@ -17,10 +17,11 @@
  */
 package org.syncany.operations.cleanup;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.operations.OperationResult;
 
 public class CleanupOperationResult implements OperationResult {
@@ -31,7 +32,7 @@ public class CleanupOperationResult implements OperationResult {
 	private CleanupResultCode resultCode = CleanupResultCode.OK_NOTHING_DONE;
 	private int mergedDatabaseFilesCount = 0;
 	private int removedOldVersionsCount = 0;
-	private List<MultiChunkEntry> removedMultiChunks = new ArrayList<MultiChunkEntry>();
+	private Map<MultiChunkId, MultiChunkEntry> removedMultiChunks = new HashMap<MultiChunkId, MultiChunkEntry>();
 
 	public CleanupOperationResult() {
 		// Nothing.
@@ -65,11 +66,11 @@ public class CleanupOperationResult implements OperationResult {
 		this.removedOldVersionsCount = removedOldVersionsCount;
 	}
 
-	public List<MultiChunkEntry> getRemovedMultiChunks() {
+	public Map<MultiChunkId, MultiChunkEntry> getRemovedMultiChunks() {
 		return removedMultiChunks;
 	}
 
-	public void setRemovedMultiChunks(List<MultiChunkEntry> removedMultiChunks) {
+	public void setRemovedMultiChunks(Map<MultiChunkId, MultiChunkEntry> removedMultiChunks) {
 		this.removedMultiChunks = removedMultiChunks;
 	}
 }

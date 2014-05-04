@@ -87,6 +87,7 @@ public class LsRemoteOperation extends Operation {
 		
 		// No local database yet
 		if (lastLocalDatabaseVersionHeader == null) {
+			logger.log(Level.INFO, "- Not local database versions yet. Assuming all {0} remote database files are unknown. ", remoteDatabaseFiles.size());
 			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
 		}
 		
