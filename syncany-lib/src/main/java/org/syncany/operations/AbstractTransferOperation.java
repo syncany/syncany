@@ -17,50 +17,33 @@
  */
 package org.syncany.operations;
 
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
 public abstract class AbstractTransferOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(AbstractTransferOperation.class.getSimpleName());
-
 	protected TransferManager transferManager;
-	protected ActionRemoteFile actionFile;
+	protected ActionHandler actionHandler;
 
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
 
 		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
-		this.actionFile = createActionFile(operationName);
+		this.actionHandler = new ActionHandler(transferManager, operationName, config.getMachineName());
+	}
+	
+	protected void startOperation() throws Exception {
+		actionHandler.start();
+	}
+	
+	protected void finishOperation() throws StorageException {
+		actionHandler.finish();
+		
+		disconnectTransferManager();
+		clearCache();
 	}
 
-	protected ActionRemoteFile createActionFile(String operationName) {
-		try {
-			return new ActionRemoteFile(operationName, config.getMachineName(), System.currentTimeMillis());
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected void deleteActionFile() throws StorageException {
-		logger.log(Level.INFO, "Deleting action file: " + actionFile);
-		transferManager.delete(actionFile);
-	}
-
-	protected void uploadActionFile() throws Exception {
-		logger.log(Level.INFO, "Uploading action file: " + actionFile);
-
-		File tempActionFile = config.getCache().createTempFile(actionFile.getName());
-		transferManager.upload(tempActionFile, actionFile);
-	}
-
-	protected void disconnectTransferManager() {
+	private void disconnectTransferManager() {
 		try {
 			transferManager.disconnect();
 		}
@@ -69,13 +52,7 @@ public abstract class AbstractTransferOperation extends Operation {
 		}
 	}
 
-	protected void clearCache() {
+	private void clearCache() {
 		config.getCache().clear();
-	}
-
-	protected void finishOperation() throws StorageException {
-		deleteActionFile();
-		disconnectTransferManager();
-		clearCache();
 	}
 }

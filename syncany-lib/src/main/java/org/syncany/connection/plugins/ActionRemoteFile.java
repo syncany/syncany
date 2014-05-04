@@ -47,6 +47,10 @@ public class ActionRemoteFile extends RemoteFile {
 	public long getTimestamp() {
 		return timestamp;
 	}
+	
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
+	}
 
 	@Override
 	protected String validateName(String name) throws StorageException {

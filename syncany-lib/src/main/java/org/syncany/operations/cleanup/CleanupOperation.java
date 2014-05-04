@@ -114,8 +114,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 
+		startOperation();
 		lockRemoteRepository(); // Write-lock sufficient?
-		uploadActionFile();
 
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();

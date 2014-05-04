@@ -126,7 +126,7 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 		
 		// Upload action file (lock for cleanup)
-		uploadActionFile();
+		startOperation();
 
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
@@ -175,15 +175,16 @@ public class UpOperation extends AbstractTransferOperation {
 
 		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");	
 		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);		
-		
+
+		// Finish 'up' before 'cleanup' starts
+		finishOperation();
+		logger.log(Level.INFO, "Sync up done.");
+
 		if (options.cleanupEnabled()) {
 			CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
 			result.setCleanupResult(cleanupOperationResult); 
 		}
 					
-		finishOperation();
-		logger.log(Level.INFO, "Sync up done.");
-
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);

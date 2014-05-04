@@ -141,7 +141,7 @@ public class DownOperation extends AbstractTransferOperation {
 		localBranch = localDatabase.getLocalDatabaseBranch();
 		
 		// 1. Upload action file 
-		uploadActionFile();
+		startOperation();
 
 		// 2. Check which remote databases to download based on the last local vector clock
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager);
