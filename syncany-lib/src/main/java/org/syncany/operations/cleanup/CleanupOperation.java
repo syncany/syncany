@@ -50,11 +50,11 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
-import org.syncany.operations.LsRemoteOperation;
-import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.StatusOperation;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.ls_remote.LsRemoteOperation;
+import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.status.StatusOperation;
+import org.syncany.operations.status.StatusOperation.StatusOperationResult;
 
 import com.google.common.collect.Lists;
 

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.ls_remote;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +30,8 @@ import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationResult;
 
 /**
  * The list remote operation queries the transfer manager for any unknown 

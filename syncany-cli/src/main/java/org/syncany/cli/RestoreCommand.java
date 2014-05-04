@@ -32,9 +32,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
-import org.syncany.operations.RestoreOperation.RestoreOperationResult;
-import org.syncany.operations.RestoreOperation.RestoreOperationStrategy;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationOptions;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationResult;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationStrategy;
 
 public class RestoreCommand extends Command {
 	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());

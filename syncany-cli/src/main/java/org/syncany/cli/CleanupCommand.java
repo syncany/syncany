@@ -23,9 +23,9 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 
 public class CleanupCommand extends Command {
 	@Override
