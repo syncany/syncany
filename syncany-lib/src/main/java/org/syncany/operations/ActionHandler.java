@@ -26,11 +26,32 @@ import java.util.logging.Logger;
 import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.operations.cleanup.CleanupOperation;
 
-public class ActionHandler {
+/**
+ * The action handler manages the {@link ActionRemoteFile}s written during an {@link Operation}.
+ * 
+ * <p>In particular, it uploads an initial action file when the operation is started, deletes it
+ * when it is finished/terminated, and renews the operation's action file in a given interval.
+ * 
+ * <p>The renewal is necessary to show other clients that the operation is still running. To ensure 
+ * action file renewal, the {@link #start()} method starts a timer that uploads a new {@link ActionRemoteFile}
+ * every {@link #ACTION_RENEWAL_INTERVAL} milliseconds. The {@link #finish()} method stops this timer.
+ * 
+ * @see CleanupOperation
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+public class ActionHandler {	
 	private static final Logger logger = Logger.getLogger(ActionHandler.class.getSimpleName());
-	private static final int ACTION_RENEWAL_INTERVAL = 2*60*1000; // Minutes
-	
+
+	/**
+	 * Defines the time that the action files updated while an operation is running. 
+	 * 
+	 * This time period must be (significantly) smaller than the ignore time defined in 
+	 * {@link CleanupOperation#ACTION_FILE_DELETE_TIME}.
+	 */
+	public static final int ACTION_RENEWAL_INTERVAL = 2*60*1000; // Minutes
+
 	protected TransferManager transferManager;
 	protected ActionRemoteFile actionFile;
 	protected Timer actionRenewalTimer;

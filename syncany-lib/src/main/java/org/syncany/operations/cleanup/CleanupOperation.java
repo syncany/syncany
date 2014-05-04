@@ -50,6 +50,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.ActionHandler;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
@@ -78,8 +79,17 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	private static final String LOCK_CLIENT_NAME = "lock";
 
-	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
-	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
+	private static final int MIN_KEEP_DATABASE_VERSIONS = 5;
+	private static final int MAX_KEEP_DATABASE_VERSIONS = 15;
+	
+	/**
+	 * Defines the time after which old/outdated action files from other clients are
+	 * deleted. This time must be significantly larger than the time action files are 
+	 * renewed by the {@link ActionHandler}.
+	 * 
+	 * @see ActionHandler#ACTION_RENEWAL_INTERVAL
+	 */
+	private static final int ACTION_FILE_DELETE_TIME = ActionHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
 
 	private CleanupOperationOptions options;
 	private CleanupOperationResult result;
@@ -193,8 +203,17 @@ public class CleanupOperation extends AbstractTransferOperation {
 				transferManager.delete(actionRemoteFile);
 			}
 			else {
-				logger.log(Level.INFO, "- Action file from other client; marking operations running; " + actionRemoteFile);
-				otherRemoteOperationsRunning = true;
+				// TODO [low] Even though this is UTC and the times frames are large, this might be an issue with different timezones or wrong system clocks
+				boolean isOutdatedActionFile = System.currentTimeMillis() - ACTION_FILE_DELETE_TIME > actionRemoteFile.getTimestamp();
+				
+				if (isOutdatedActionFile) {
+					logger.log(Level.INFO, "- Action file from other client is OUTDATED; deleting " + actionRemoteFile + " ...");
+					transferManager.delete(actionRemoteFile);
+				}
+				else {
+					logger.log(Level.INFO, "- Action file from other client; marking operations running; " + actionRemoteFile);
+					otherRemoteOperationsRunning = true;
+				}
 			}
 		}
 
