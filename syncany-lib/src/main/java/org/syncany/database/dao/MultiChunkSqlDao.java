@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -270,5 +271,55 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 		
 		return multiChunkEntries;
+	}
+
+	public Iterator<MultiChunkEntry> getMultiChunks() {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunks.sql")) {
+			return new MultiChunkIterator(preparedStatement.executeQuery());
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private class MultiChunkIterator implements Iterator<MultiChunkEntry> {
+		private ResultSet resultSet;
+		private boolean hasNext;
+
+		public MultiChunkIterator(ResultSet resultSet) throws SQLException {
+			this.resultSet = resultSet;
+			this.hasNext = resultSet.next();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return hasNext;
+		}
+
+		@Override
+		public MultiChunkEntry next() {
+			if (hasNext) {
+				try {
+					MultiChunkId multiChunkId = MultiChunkId.parseMultiChunkId(resultSet.getString("multichunk_id"));
+					long multiChunkSize = resultSet.getLong("size");
+								
+					MultiChunkEntry multiChunk = new MultiChunkEntry(multiChunkId, multiChunkSize);
+					hasNext = resultSet.next();
+
+					return multiChunk;
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Cannot load next SQL row.", e);
+				}
+			}
+			else {
+				return null;
+			}
+		}
+
+		@Override
+		public void remove() {
+			throw new RuntimeException("Not implemented.");
+		}
 	}
 }

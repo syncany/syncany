@@ -123,6 +123,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 			removeOldVersions();
 		}
 
+		removeLostMultiChunks();
+		
 		if (options.isRepackageMultiChunks()) {
 			// To be done at a later time
 			// repackageMultiChunks();
@@ -131,6 +133,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 		finishOperation();
 
 		return updateResultCode(result);
+	}
+
+	private void removeLostMultiChunks() throws StorageException {
+		Map<String, MultiChunkRemoteFile> remoteMultiChunks = transferManager.list(MultiChunkRemoteFile.class);
+		
+		Iterator<MultiChunkEntry> localMultiChunkIterator = localDatabase.getMultiChunks();
+		
+		while (localMultiChunkIterator.hasNext()) {
+			MultiChunkEntry localMultiChunk = localMultiChunkIterator.next();
+			MultiChunkRemoteFile localMultiChunkRemoteFile = new MultiChunkRemoteFile(localMultiChunk.getId());
+			
+			boolean multiChunkExists;
+		}
 	}
 
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {

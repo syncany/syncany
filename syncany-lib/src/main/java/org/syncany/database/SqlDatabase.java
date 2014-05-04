@@ -226,6 +226,10 @@ public class SqlDatabase {
 		multiChunkDao.removeUnreferencedMultiChunks();
 	}
 
+	public Iterator<MultiChunkEntry> getMultiChunks() {
+		return multiChunkDao.getMultiChunks();
+	}
+
 	// Chunk
 
 	protected Map<ChunkChecksum, ChunkEntry> getChunks(VectorClock vectorClock) {
