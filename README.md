@@ -5,7 +5,7 @@ Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=
 
 Syncany is an open-source cloud storage and filesharing application. It allows
 users to backup and share certain folders of their workstations using any kind
-of storage, e.g. FTP, Amazon S3 or Google Storage.
+of storage, e.g. FTP, SFTP, WebDAV and Amazon S3.
 
 While the basic idea is similar to Dropbox, Syncany is
 open-source and additionally provides data encryption and more flexibility in
@@ -31,7 +31,7 @@ Download and install Syncany
 You can download the current binary packages and installers from the [releases page](https://github.com/binwiederhier/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
-Syncany 0.1.1-alpha, 14 April 2014, [[tar.gz]](https://syncany.org/dist/syncany-0.1.1-alpha.tar.gz) [[zip]](https://syncany.org/dist/syncany-0.1.1-alpha.zip) [[deb]](https://syncany.org/dist/syncany_0.1.1-alpha_all.deb) [[exe]](https://syncany.org/dist/syncany-0.1.1-alpha.exe)
+Syncany 0.1.2-alpha, 27 April 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.2-alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.exe)
 
 Quick [install and usage instructions](https://github.com/binwiederhier/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
 If you like it a bit more detailed, [there's lots more you can explore](https://github.com/binwiederhier/syncany/wiki).
@@ -43,18 +43,24 @@ Sample usage: Try Syncany
 Usage is pretty similar to a version control system. If you have used Git or
 SVN, it should feel a lot alike.
 
-**1. Initialize a local directory**
+**1. Choose and install a storage plugin**   
+First choose the storage backend you'd like to use by doing `sy plugin list` and then `sy plugin install`. As of today, we've implemented plugins for [FTP](https://github.com/syncany/syncany-plugin-ftp), [SFTP](https://github.com/syncany/syncany-plugin-sftp), [WebDAV](https://github.com/syncany/syncany-plugin-webdav) and [Amazon S3](https://github.com/syncany/syncany-plugin-s3). For this example, we'll install the FTP plugin:
+```
+$ sy plugin install ftp
+```
+
+**2. Initialize a local directory**
 
 ```
 $ sy init
-Choose a storage plugin. Available plugins are: ftp, local, webdav
+Choose a storage plugin. Available plugins are: ftp, local, webdav, s3, sftp
 Plugin: ftp
 
 Connection details for FTP connection:
 - Hostname: example.com
 - Username: ftpuser
 - Password (not displayed): 
-- Path: /repo-folder
+- Path: repo-folder
 - Port (optional, default is 21): 
 
 Password (min. 10 chars): (user enters repo password)
@@ -68,7 +74,7 @@ This sets up a new repository on the given remote storage and initializes the
 local folder. You can now use `sy connect` to connect to this repository
 from other clients.
 
-**2. Add files and synchronize**
+**3. Add files and synchronize**
 
 To let Syncany do everything automatically, simple use the `sy watch` command. 
 This command will synchronize your local files. 
@@ -84,7 +90,7 @@ $ sy up
 $ sy down
 ```
 
-**3. Connect other clients**   
+**4. Connect other clients**   
 To connect new clients to an existing repository, use the `sy connect` command.
 This will set up your local folder to sync with the chosen remote repository.
 
@@ -115,7 +121,7 @@ Break some hashes for us and [donate some Bitcoins](https://blockchain.info/addr
 Licensing, website and contact
 ------------------------------
 
-Syncany is licensed under the GPLv2 open source license. It is mainly developed by [Philipp C. Heckel](http://blog.philippheckel.com/). We are always looking for people to join or help out. Feel free to contact us:
+Syncany is licensed under the GPLv2 open source license. It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/) and [many others](https://github.com/binwiederhier/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany website](https://www.syncany.org/), still with screenshots of the old interface
 - [Syncany wiki page](https://github.com/binwiederhier/syncany/wiki), **most important resource, and always updated**

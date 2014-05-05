@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
-import org.syncany.Client;
+import org.syncany.config.UserConfig;
 
 /**
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -38,13 +38,13 @@ public class DaemonControlServer implements TailerListener {
 	private ShutdownListener shutdownListener;
 
 	public DaemonControlServer(ShutdownListener shutdownListener) {
-		this.controlFile = new File(Client.getUserAppDir(), "control");
+		this.controlFile = new File(UserConfig.getUserAppDir(), "control");
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
 		this.shutdownListener = shutdownListener;
 	}
 
 	public void enterLoop() throws IOException {
-		File userAppDir = Client.getUserAppDir();
+		File userAppDir = UserConfig.getUserAppDir();
 		userAppDir.mkdirs();
 				
 		if (!controlFile.exists()) {
