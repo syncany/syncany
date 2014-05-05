@@ -30,7 +30,7 @@ import org.syncany.operations.OperationResult;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DaemonOperation extends Operation implements ShutdownListener {	
+public class DaemonOperation extends Operation implements DaemonControlListener {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
 
 	private DaemonWebSocketServer webSocketServer;
@@ -82,5 +82,11 @@ public class DaemonOperation extends Operation implements ShutdownListener {
 
 		logger.log(Level.INFO, "Stopping watch server ...");
 		watchServer.stop();
+	}
+
+	@Override
+	public void onDaemonReload() {
+		logger.log(Level.INFO, "RELOAD requested.");
+		watchServer.reload();
 	}
 }

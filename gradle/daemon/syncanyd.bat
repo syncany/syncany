@@ -1,18 +1,29 @@
 @if "%DEBUG%" == "" @echo off
 
+set APP_NAME=syncanyd
+set APP_USER_DIR=%AppData%\Syncany
+set APP_DAEMON_CONTROL=%APP_USER_DIR%\daemon.ctrl
+if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%"
+
 @if "%1" == "start" goto start
 @if "%1" == "stop" goto stop
+@if "%1" == "reload" goto reload
+@if "%1" == "status" goto status
 
-echo Usage: syncanyd (start/stop)
+echo Usage: syncanyd (start/stop/reload/status)
 goto mainEnd
 
 :stop
-set APP_USER_DIR=%AppData%\Syncany
-set APP_DAEMON_CONTROL=%APP_USER_DIR%\control
-
-if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%"
 echo shutdown > %APP_DAEMON_CONTROL%
+goto mainEnd
 
+:reload
+echo reload > %APP_DAEMON_CONTROL%
+goto mainEnd
+
+:status
+if exist %APP_DAEMON_CONTROL% echo "%APP_NAME% running"
+else echo "%APP_NAME% not running"
 goto mainEnd
 
 :start

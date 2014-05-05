@@ -21,6 +21,7 @@ package org.syncany.operations.daemon;
  * @author pheckel
  *
  */
-public interface ShutdownListener {
+public interface DaemonControlListener {
 	public void onDaemonShutdown();
+	public void onDaemonReload();
 }

@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,7 +67,8 @@ public class NotificationListener {
 	private int port;
 	private NotificationListenerListener listener;
 
-	private boolean connected;
+	private AtomicBoolean connected;
+	private AtomicBoolean running;
 
 	private Socket socket;
 	private OutputStream socketOut;
@@ -84,9 +86,12 @@ public class NotificationListener {
 		this.subscribedChannels = new HashSet<String>();
 		this.incomingMessageThread = null;
 		this.outgoingMessageQueue = new LinkedList<String>();
+		
+		this.connected = new AtomicBoolean(false);
+		this.running = new AtomicBoolean(false);
 	}
 
-	public synchronized void start() {
+	public void start() {
 		logger.log(Level.INFO, "Starting notification listener thread ...");
 
 		stop();
@@ -95,12 +100,23 @@ public class NotificationListener {
 		incomingMessageThread.start();
 	}
 
-	public synchronized void stop() {
+	public void stop() {
 		if (incomingMessageThread != null) {
 			logger.log(Level.INFO, "Stopping notification listener thread ...");
 
 			try {
-				incomingMessageThread.interrupt();
+				running.set(false);
+
+				if (socket != null) {
+					socket.close();				
+				}
+				
+				if (incomingMessageThread != null) {
+					incomingMessageThread.interrupt();
+				}
+			}
+			catch (Exception e) {
+				// Don't care
 			}
 			finally {
 				incomingMessageThread = null;
@@ -108,27 +124,27 @@ public class NotificationListener {
 		}
 	}
 
-	public synchronized void subscribe(String channel) {
+	public void subscribe(String channel) {
 		subscribedChannels.add(channel);
 
 		logger.log(Level.INFO, "Subscribing to channel " + channel + "...");
 		sendMessageOrAddToOutgoingQueue(String.format("subscribe %s\n", channel));
 	}
 
-	public synchronized void unsubscribe(String channel) {
+	public void unsubscribe(String channel) {
 		subscribedChannels.remove(channel);
 
 		logger.log(Level.INFO, "Unsubscribing from channel " + channel + "...");
 		sendMessageOrAddToOutgoingQueue(String.format("unsubscribe %s\n", channel));
 	}
 
-	public synchronized void announce(String channel, String message) {
+	public void announce(String channel, String message) {
 		logger.log(Level.INFO, "Announcing to channel " + channel + ": " + message.trim());
 		sendMessageOrAddToOutgoingQueue(String.format("announce %s %s\n", channel, message));
 	}
 
 	private void sendMessageOrAddToOutgoingQueue(String message) {
-		if (connected) {
+		if (connected.get()) {
 			try {
 				socketOut.write(StringUtil.toBytesUTF8(message));
 				logger.log(Level.INFO, "Sent message: " + message.trim());
@@ -162,7 +178,7 @@ public class NotificationListener {
 			socketOut = socket.getOutputStream();
 			socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			connected = socket.isConnected();
+			connected.set(socket.isConnected());
 		}
 		catch (Exception e) {
 			disconnect();
@@ -193,23 +209,21 @@ public class NotificationListener {
 			socketIn = null;
 			socketOut = null;
 
-			connected = false;
+			connected.set(false);
 		}
 	}
 
 	private class SocketThread extends Thread {
-		private boolean running;
-
 		public SocketThread() {
 			super("NotifyThread");
 		}
 
 		@Override
 		public void run() {
-			running = true;
+			running.set(true);
 			connect();
 
-			while (running) {
+			while (running.get()) {
 				try {
 					if (socket == null || socketIn == null) {
 						throw new Exception("Socket closed");
@@ -225,6 +239,10 @@ public class NotificationListener {
 				}
 				catch (SocketTimeoutException e) {
 					// Nothing!
+				}
+				catch (InterruptedException e) {
+					logger.log(Level.INFO, "Notification listener interrupted.");
+					running.set(false);
 				}
 				catch (Exception e) {
 					try {
@@ -243,12 +261,13 @@ public class NotificationListener {
 						}
 					}
 					catch (InterruptedException e2) {
-						running = false;
+						logger.log(Level.INFO, "Notification listener interrupted.");
+						running.set(false);
 					}
 				}
 			}
 
-			logger.log(Level.INFO, "EXITING notification listener!");
+			logger.log(Level.INFO, "STOPPED notification listener!");
 		}
 
 		private void processOutgoingMessages() throws IOException {

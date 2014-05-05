@@ -31,16 +31,20 @@ import org.syncany.config.UserConfig;
  */
 public class DaemonControlServer implements TailerListener {	
 	private static final Logger logger = Logger.getLogger(DaemonControlServer.class.getSimpleName());
-	private static final String COMMAND_SHUTDOWN = "shutdown";
+	private static final String CONTROL_FILE = "daemon.ctrl";
+	
+	private enum ControlCommand {
+		SHUTDOWN, RELOAD
+	}
 	
 	private File controlFile;
 	private Tailer controlFileTailer;
-	private ShutdownListener shutdownListener;
+	private DaemonControlListener controlListener;
 
-	public DaemonControlServer(ShutdownListener shutdownListener) {
-		this.controlFile = new File(UserConfig.getUserConfigDir(), "control");
+	public DaemonControlServer(DaemonControlListener controlListener) {
+		this.controlFile = new File(UserConfig.getUserConfigDir(), CONTROL_FILE);
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
-		this.shutdownListener = shutdownListener;
+		this.controlListener = controlListener;
 	}
 
 	public void enterLoop() throws IOException {
@@ -54,7 +58,7 @@ public class DaemonControlServer implements TailerListener {
 		controlFile.deleteOnExit();		
 
 		logger.log(Level.INFO, "Monitoring control file for commands at " + controlFile + " ...");
-		logger.log(Level.INFO, "   (Note: This is a blocking operation. The 'main' thread is now blocked until '" + COMMAND_SHUTDOWN + "' is received.)");
+		logger.log(Level.INFO, "   (Note: This is a blocking operation. The 'main' thread is now blocked until '" + ControlCommand.SHUTDOWN + "' is received.)");
 		
 		controlFileTailer.run(); 
 	}	
@@ -67,16 +71,28 @@ public class DaemonControlServer implements TailerListener {
 	
 	@Override
 	public void handle(String command) {
-		switch (command) {
-		case COMMAND_SHUTDOWN:
-			logger.log(Level.INFO, "Control file: Received shutdown command. Shutting down.");
-
-			shutdownListener.onDaemonShutdown();
-			controlFileTailer.stop();
-			break;
+		try {
+			ControlCommand controlCommand = ControlCommand.valueOf(command.toUpperCase());
 			
-		default:
-			logger.log(Level.WARNING, "Control file: Ignoring unknown command: " + command);
+			switch (controlCommand) {
+			case SHUTDOWN:
+				logger.log(Level.INFO, "Control file: Received shutdown command. Shutting down.");
+
+				controlListener.onDaemonShutdown();
+				controlFileTailer.stop();
+				break;
+				
+			case RELOAD:
+				logger.log(Level.INFO, "Control file: Received reload command. Reloading config ...");
+				controlListener.onDaemonReload();
+				break;
+				
+			default:
+				throw new RuntimeException("This command should have been handled.");
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Control file: Ignoring unknown command: " + command, e);
 		}
 	}
 

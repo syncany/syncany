@@ -20,22 +20,12 @@ package org.syncany.config.to;
 import java.io.File;
 import java.util.ArrayList;
 
-import javax.crypto.spec.SecretKeySpec;
-
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Complete;
-import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config.ConfigException;
-import org.syncany.config.to.TypedPropertyListTO;
-import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.crypto.CipherParams;
-import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.util.StringUtil;
 
 @Root(name="daemon")
 @Namespace(reference="http://syncany.org/daemon/1")
@@ -50,6 +40,10 @@ public class DaemonConfigTO {
 		catch (Exception ex) {
 			throw new ConfigException("Config file does not exist or is invalid: " + file, ex);
 		}
+	}
+	
+	public ArrayList<FolderTO> getFolders() {
+		return folders;
 	}
 	
 	public static class FolderTO {

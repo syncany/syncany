@@ -17,46 +17,69 @@
  */
 package org.syncany.operations.daemon;
 
+import java.io.File;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.syncany.config.Config;
+import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigHelper;
 import org.syncany.operations.watch.WatchOperation;
+import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
 
 /**
  * @author pheckel
  *
  */
-public class WatchOperationThread implements Service {
+public class WatchOperationThread extends AbstractService {
+	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
+
+	private Config config;
+	private Thread watchThread;
 	private WatchOperation watchOperation;
 
+	public WatchOperationThread(File localDir, WatchOperationListener listener) throws ConfigException {
+		File configFile = ConfigHelper.findLocalDirInPath(localDir);
+		
+		if (configFile == null) {
+			throw new ConfigException("Config file in folder " + localDir + " not found.");
+		}
+		
+		this.config = ConfigHelper.loadConfig(configFile);
+		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), listener);
+	}
+	
 	@Override
 	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
-		// TODO Auto-generated method stub
+		watchThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
+					
+					watchOperation.execute();
+					
+					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());
+				}
+				catch (Exception e) {
+					logger.log(Level.SEVERE, "ERROR while running watch at " + config.getLocalDir(), e);
+				}
+			}
+		});
 		
+		watchThread.start();
 	}
 
 	@Override
 	public void stop() {
-		// TODO Auto-generated method stub
-		
+		watchOperation.stop();
 	}
 
 	@Override
 	public boolean isRunning() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public void setIdentifier(String id) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public String getIdentifier() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	
+	}	
 }

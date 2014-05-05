@@ -5,7 +5,7 @@ set -e
 # Must be a valid filename
 NAME=syncanyd
 APPDIR=~/.config/syncany
-CONTROLFILE=$APPDIR/control
+CONTROLFILE=$APPDIR/daemon.ctrl
 
 DAEMON=$(dirname $0)/syncany
 DAEMON_OPTS="daemon"
@@ -17,9 +17,15 @@ mkdir -p $APPDIR
 case "$1" in
 start)
 	echo -n "Starting daemon: "$NAME
-	start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
-	echo "."
+	
+	if [ -e $CONTROLFILE ]; then
+		echo " already running"
+	else
+		start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
+		echo "."
+	fi
 	;;
+	
 stop)
 	echo -n "Stopping daemon: "$NAME
 	
@@ -30,9 +36,30 @@ stop)
 		echo "."
 	fi
 	;;
+	
+reload)
+	echo -n "Reloading daemon: "$NAME
+	
+	if [ ! -e $CONTROLFILE ]; then
+		echo " not running"
+	else
+		echo "reload" >> $CONTROLFILE
+		echo "."
+	fi
+	;;
+	
+status)
+	echo -n "Checking daemon: "$NAME
+	
+	if [ ! -e $CONTROLFILE ]; then
+		echo " not running"
+	else
+		echo " running"
+	fi
+	;;
  
 *)
-	echo "Usage: "$1" {start|stop}"
+	echo "Usage: "$1" (start|stop|reload|status)"
 	exit 1
 esac
  
