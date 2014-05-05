@@ -14,16 +14,29 @@ echo Usage: syncanyd (start/stop/reload/status)
 goto mainEnd
 
 :stop
-echo shutdown > %APP_DAEMON_CONTROL%
+if exist %APP_DAEMON_CONTROL% (
+  echo shutdown >> %APP_DAEMON_CONTROL%
+  echo Stopping daemon: %APP_NAME%.
+) else (
+  echo Stopping daemon: %APP_NAME% not running
+)
 goto mainEnd
 
 :reload
-echo reload > %APP_DAEMON_CONTROL%
+if exist %APP_DAEMON_CONTROL% (
+  echo reload >> %APP_DAEMON_CONTROL%
+  echo Reloading daemon: %APP_NAME%.
+) else (
+  echo Reloading daemon: %APP_NAME% not running
+)
 goto mainEnd
 
 :status
-if exist %APP_DAEMON_CONTROL% echo "%APP_NAME% running"
-else echo "%APP_NAME% not running"
+if exist %APP_DAEMON_CONTROL% (
+  echo Checking daemon: %APP_NAME% running
+) else (
+  echo Checking daemon: %APP_NAME% not running
+)
 goto mainEnd
 
 :start
@@ -74,6 +87,7 @@ goto fail
 set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\*
 
 @rem Execute syncany
+echo Starting daemon: %APP_NAME%.
 start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany daemon
 
 :end

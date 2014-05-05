@@ -91,7 +91,7 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 }
 
 applicationDistribution.from("${rootProject.projectDir}/gradle/daemon/") {
-	include "syncanyd"
+	include "syncanyd", "syncanyd.bat"
 	into "bin"
 }
 
@@ -206,9 +206,17 @@ task fakeinstall(dependsOn: ["fakeuninstall"]) << {
 	
 	if (osName.startsWith("windows")) {
 		copy {
-			from "../gradle/windows/syncany.bat"
+			from "gradle/windows/syncany.bat"
 			into System.getenv()["windir"]
-			expand(appBinary: "${buildDir}/install/${applicationName}/bin/${applicationName}.bat")
+			rename("syncany.bat", "sy.bat")
+			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncany.bat")
+		}
+
+		copy {
+			from "gradle/windows/syncany.bat"
+			into System.getenv()["windir"]
+			rename("syncany.bat", "syd.bat")
+			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncanyd.bat")
 		}
 	}
 	else{
@@ -225,6 +233,9 @@ task fakeuninstall << {
 
 	if (osName.startsWith("windows")) {
 		new File(System.getenv()["windir"] + "/syncany.bat").delete()
+		new File(System.getenv()["windir"] + "/sy.bat").delete()
+		new File(System.getenv()["windir"] + "/syncanyd.bat").delete()
+		new File(System.getenv()["windir"] + "/syd.bat").delete()
 	}
 	else {
 		new File("/usr/local/bin/syncany").delete()

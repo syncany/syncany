@@ -72,7 +72,7 @@ public class DaemonControlServer implements TailerListener {
 	@Override
 	public void handle(String command) {
 		try {
-			ControlCommand controlCommand = ControlCommand.valueOf(command.toUpperCase());
+			ControlCommand controlCommand = ControlCommand.valueOf(command.trim().toUpperCase());
 			
 			switch (controlCommand) {
 			case SHUTDOWN:

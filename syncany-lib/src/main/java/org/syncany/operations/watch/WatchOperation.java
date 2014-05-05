@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
@@ -74,6 +75,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	
 	private WatchOperationOptions options;
 	private WatchOperationListener listener;
+	
+	private SqlDatabase localDatabase;
 
 	private Thread watchThread;
 	private AtomicBoolean syncRunning;
@@ -93,6 +96,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.options = options;
 		this.listener = listener;
 
+		this.localDatabase = new SqlDatabase(config);
+		
 		this.watchThread = null;
 		this.syncRunning = new AtomicBoolean(false);
 		this.syncRequested = new AtomicBoolean(false);
@@ -170,6 +175,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		if (options.watcherEnabled()) {
 			stopRecursiveWatcher();
 		}
+		
+		localDatabase.shutdown();
 		
 		return new WatchOperationResult();
 	}
