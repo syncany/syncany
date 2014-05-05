@@ -27,11 +27,15 @@ import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.MasterRemoteFile;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.RepoRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
@@ -58,15 +62,15 @@ public class InitOperation extends AbstractInitOperation {
     
     private InitOperationOptions options;
     private InitOperationResult result;
-    private InitOperationListener listener;
+    
+    private Plugin plugin;
     private TransferManager transferManager;
     
-    public InitOperation(InitOperationOptions options, InitOperationListener listener) {
-        super(null);
+	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
+		super(null, listener);
         
         this.options = options;
         this.result = null;
-        this.listener = listener;
     }        
             
     @Override
@@ -75,7 +79,15 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");                      
 
-		transferManager = createTransferManager(options.getConfigTO().getConnectionTO());
+		// Init plugin and transfer manager
+		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
+		
+		Connection connection = plugin.createConnection();
+		
+		connection.init(options.getConfigTO().getConnectionTO().getSettings());
+		connection.setUserInteractionListener(listener);
+		
+		transferManager = plugin.createTransferManager(connection);
 		
 		// Test the repo
 		if (!performRepoTest()) {
@@ -111,11 +123,12 @@ public class InitOperation extends AbstractInitOperation {
 		}	
 		
 		writeXmlFile(options.getConfigTO(), configFile);
-
-		logger.log(Level.INFO, "Uploading local repository");
 		
 		// Make remote changes
+		logger.log(Level.INFO, "Uploading local repository");
+		
 		initRemoteRepository();		
+		
 		try {
 			if (options.isEncryptionEnabled()) {
 				uploadMasterFile(masterFile, transferManager);
@@ -125,8 +138,10 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		catch (StorageException|IOException e) {
 			cleanLocalRepository(e);
-		}
+		}		
 		
+		// Shutdown plugin 
+		transferManager.disconnect();
 		
 		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
@@ -166,7 +181,6 @@ public class InitOperation extends AbstractInitOperation {
 	}
 	
 	private void cleanLocalRepository(Exception e) throws Exception {
-		
 		try {
 			deleteAppDirs(options.getLocalDir());
 		}
@@ -188,7 +202,7 @@ public class InitOperation extends AbstractInitOperation {
 				throw new RuntimeException("Cannot get password from user interface. No listener.");
 			}
 			
-			return listener.getPasswordCallback();
+			return listener.onUserNewPassword();
 		}
 		else {
 			return options.getPassword();
@@ -196,9 +210,7 @@ public class InitOperation extends AbstractInitOperation {
 	}	
 	
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
-		if (listener != null) {
-			listener.notifyGenerateMasterKey();
-		}
+		fireNotifyCreateMaster();
 		
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;

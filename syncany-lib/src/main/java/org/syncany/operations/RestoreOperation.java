@@ -127,7 +127,7 @@ public class RestoreOperation extends Operation {
 		// TODO [medium] Duplicate code in DownOperation
 
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
-		TransferManager transferManager = config.getConnection().createTransferManager();
+		TransferManager transferManager = config.getPlugin().createTransferManager(config.getConnection());
 
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);

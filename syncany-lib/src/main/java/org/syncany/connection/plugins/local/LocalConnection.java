@@ -25,7 +25,6 @@ import org.syncany.connection.plugins.PluginOptionSpec;
 import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
 import org.syncany.connection.plugins.PluginOptionSpecs;
 import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 
 /**
  * The local connection represents the settings required to create to a
@@ -35,13 +34,8 @@ import org.syncany.connection.plugins.TransferManager;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection implements Connection {
+public class LocalConnection extends Connection {
 	protected File repositoryPath;
-
-	@Override
-	public TransferManager createTransferManager() {
-		return new LocalTransferManager(this);
-	}
 
 	public File getRepositoryPath() {
 		return repositoryPath;
@@ -54,7 +48,7 @@ public class LocalConnection implements Connection {
 	@Override
 	public void init(Map<String, String> optionValues) throws StorageException {
 		getOptionSpecs().validate(optionValues);
-		repositoryPath = new File(optionValues.get("path"));
+		this.repositoryPath = new File(optionValues.get("path"));
 	}
 
 	@Override

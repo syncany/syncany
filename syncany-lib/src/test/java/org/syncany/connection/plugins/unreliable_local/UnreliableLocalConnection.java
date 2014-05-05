@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalConnection;
 
 /**
@@ -38,15 +36,12 @@ public class UnreliableLocalConnection extends LocalConnection {
 	private List<String> failingOperationPatterns;	
 
 	public UnreliableLocalConnection() {
+		super();
+		
         this.totalOperationCounter = 0;
         this.typeOperationCounters = new HashMap<String, Integer>();
         this.failingOperationPatterns = new ArrayList<String>();
 	}
-
-    @Override
-    public TransferManager createTransferManager() {
-        return new UnreliableLocalTransferManager(this);
-    }
 
 	public List<String> getFailingOperationPatterns() {
 		return failingOperationPatterns;
@@ -77,9 +72,9 @@ public class UnreliableLocalConnection extends LocalConnection {
 	}		
 	
 	@Override
-	public void init(Map<String, String> optionValues) throws StorageException {
-		//Skip validation, because we actually don't use an OptionSpec here
-		//getOptionSpecs().validate(optionValues);
+	public void init(Map<String, String> optionValues) {
+		// Skip validation, because we actually don't use an OptionSpec here
+		
 		repositoryPath = new File(optionValues.get("path"));
 		failingOperationPatterns = new ArrayList<String>(Arrays.asList(optionValues.get("patterns").split(",")));
 	}

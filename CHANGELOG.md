@@ -1,7 +1,20 @@
 Change Log
 ==========
 
-### Release 0.1.2-alpha (Date: tbd.)
+### Release 0.1.3-alpha (Date: tbd.)
+
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features:
+  + [WebDAV](https://github.com/syncany/syncany-plugin-webdav) now supports HTTP
+    and HTTPS (ask user for certificate confirmation) #50
+  + [SFTP](https://github.com/syncany/syncany-plugin-sftp) now implements strict
+    host checking (ask user for host fingerprint confirmation) #127
+- Windows-specific:
+  + Set JAVA_HOME during installation #121/#122
+  + Replace uninstall icons with high-depth icons
+  + Ship 'sy.bat' to allow `sy` command on Windows (not only `syncany`)
+
+### Release 0.1.2-alpha (Date: 27 Apr 2014)
 
 - Developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Features:

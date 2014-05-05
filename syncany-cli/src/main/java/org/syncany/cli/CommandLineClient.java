@@ -88,7 +88,7 @@ public class CommandLineClient extends Client {
 		this.args = args;		
 		this.out = System.out;
 	}
-	
+
 	public void setOut(OutputStream out) {
 		this.out = new PrintStream(out);
 	}
@@ -358,5 +358,4 @@ public class CommandLineClient extends Client {
 		
 		return -1; // Never reached
 	}
-	
 }

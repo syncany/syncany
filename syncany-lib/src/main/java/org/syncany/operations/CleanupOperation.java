@@ -95,7 +95,7 @@ public class CleanupOperation extends Operation {
 		this.options = options;
 		this.result = new CleanupOperationResult();
 
-		this.transferManager = config.getConnection().createTransferManager();
+		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
 		this.localDatabase = new SqlDatabase(config);
 		
 		this.lockFile = null;

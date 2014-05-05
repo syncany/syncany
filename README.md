@@ -1,4 +1,4 @@
-Syncany [![Build Status](https://travis-ci.org/binwiederhier/syncany.png?branch=master)](https://travis-ci.org/binwiederhier/syncany) [![Coverage Status](https://api.syncany.org/badge/coverage.php)](https://syncany.org/reports/coverage/) [![Test Status](https://api.syncany.org/badge/tests.php)](https://syncany.org/reports/tests/) [![Lines of Code](https://api.syncany.org/badge/lines.php)](https://syncany.org/reports/cloc.xml)
+Syncany [![Build Status](https://travis-ci.org/syncany/syncany.png?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/badge/coverage.php)](https://syncany.org/reports/coverage/) [![Test Status](https://api.syncany.org/badge/tests.php)](https://syncany.org/reports/tests/) [![Lines of Code](https://api.syncany.org/badge/lines.php)](https://syncany.org/reports/cloc.xml)
 =======
 > **Important:** Please be aware that this is still **ALPHA code**! Do not use it
                  for important files.
@@ -28,13 +28,13 @@ terms of storage type and provider:
 
 Download and install Syncany
 ----------------------------
-You can download the current binary packages and installers from the [releases page](https://github.com/binwiederhier/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
+You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
 Syncany 0.1.2-alpha, 27 April 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.2-alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.exe)
 
-Quick [install and usage instructions](https://github.com/binwiederhier/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
-If you like it a bit more detailed, [there's lots more you can explore](https://github.com/binwiederhier/syncany/wiki).
+Quick [install and usage instructions](https://github.com/syncany/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
+If you like it a bit more detailed, [there's lots more you can explore](https://github.com/syncany/syncany/wiki).
 
 
 Sample usage: Try Syncany
@@ -103,12 +103,12 @@ Repository connected, and local folder initialized.
 You can now use the 'syncany' command to sync your files.
 ```
 
-For a detailed demo, please refer to a [screencast](https://github.com/binwiederhier/syncany/wiki/Documentation).
+For a detailed demo, please refer to a [screencast](https://github.com/syncany/syncany/wiki/Documentation).
 
 
 Build and development instructions
 ----------------------------------
-Excited? Want to help? Or just build it yourself? For information about building, development, documentation, screencasts, diagrams and contributions, please check out **[the Syncany wiki page](https://github.com/binwiederhier/syncany/wiki)**. It'll hopefully give you all the information you need!
+Excited? Want to help? Or just build it yourself? For information about building, development, documentation, screencasts, diagrams and contributions, please check out **[the Syncany wiki page](https://github.com/syncany/syncany/wiki)**. It'll hopefully give you all the information you need!
 
 
 Buy us a coffee
@@ -121,10 +121,10 @@ Break some hashes for us and [donate some Bitcoins](https://blockchain.info/addr
 Licensing, website and contact
 ------------------------------
 
-Syncany is licensed under the GPLv2 open source license. It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/) and [many others](https://github.com/binwiederhier/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
+Syncany is licensed under the GPLv2 open source license. It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/) and [many others](https://github.com/syncany/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany website](https://www.syncany.org/), still with screenshots of the old interface
-- [Syncany wiki page](https://github.com/binwiederhier/syncany/wiki), **most important resource, and always updated**
+- [Syncany wiki page](https://github.com/syncany/syncany/wiki), **most important resource, and always updated**
 - [Mailing list](https://launchpad.net/~syncany-team), still on Launchpad (**active!**)
 - [IRC channel #syncany on Freenode](https://webchat.freenode.net/?channels=syncany) (my nick is *binwiederhier*)
 - [@syncany on Twitter](https://twitter.com/#!/syncany), somewhat quiet there, though ...

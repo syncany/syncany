@@ -39,11 +39,11 @@ public class GenlinkOperation extends AbstractInitOperation {
     private ConfigTO configTO;
     
     public GenlinkOperation(Config config) {
-        super(config);
+        super(config, null);
     }
     
     public GenlinkOperation(ConfigTO configTO) {
-        super(null);
+        super(null, null);
         this.configTO = configTO;
     }        
             

@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.connection.plugins;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.HashMap;
@@ -83,7 +85,7 @@ public abstract class AbstractTransferManagerTest {
 		Connection connection = plugin.createConnection();
 		connection.init(invalidEmptyPluginSettings);
 
-		TransferManager transferManager = connection.createTransferManager();
+		TransferManager transferManager = plugin.createTransferManager(connection);
 
 		// This should cause a Storage exception, because the path does not exist
 		transferManager.connect();
@@ -192,6 +194,6 @@ public abstract class AbstractTransferManagerTest {
 		Connection connection = pluginInfo.createConnection();
 		connection.init(createPluginSettings());
 
-		return connection.createTransferManager();
+		return pluginInfo.createTransferManager(connection);
 	}
 }

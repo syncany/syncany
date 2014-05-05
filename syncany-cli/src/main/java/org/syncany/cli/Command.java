@@ -43,8 +43,8 @@ import org.syncany.Client;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class Command {
-	protected File localDir;
 	protected Client client;
+	protected File localDir;
 	protected PrintStream out;
 
 	/**

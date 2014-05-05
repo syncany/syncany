@@ -29,7 +29,7 @@ import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
 /**
- * This test was created to reproduce https://github.com/binwiederhier/syncany/issues/92
+ * This test was created to reproduce https://github.com/syncany/syncany/issues/92
  * This bug was caused by an issue in which the checksum of a chunk was used instead
  * of the the checksum of the content. These are the same for small files. Involving
  * some large files and triggering a cleanup caused this bug.

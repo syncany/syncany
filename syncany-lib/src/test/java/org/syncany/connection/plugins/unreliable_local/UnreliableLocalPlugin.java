@@ -18,6 +18,7 @@
 package org.syncany.connection.plugins.unreliable_local;
 
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.TransferManager;
 import org.syncany.connection.plugins.local.LocalPlugin;
 
 /**
@@ -36,5 +37,10 @@ public class UnreliableLocalPlugin extends LocalPlugin {
     @Override
     public Connection createConnection() {
         return new UnreliableLocalConnection();
+    }
+    
+    @Override
+    public TransferManager createTransferManager(Connection connection) {
+        return new UnreliableLocalTransferManager((UnreliableLocalConnection) connection);
     }
 }
