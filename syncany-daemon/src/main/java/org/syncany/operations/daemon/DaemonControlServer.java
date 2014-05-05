@@ -38,13 +38,13 @@ public class DaemonControlServer implements TailerListener {
 	private ShutdownListener shutdownListener;
 
 	public DaemonControlServer(ShutdownListener shutdownListener) {
-		this.controlFile = new File(UserConfig.getUserAppDir(), "control");
+		this.controlFile = new File(UserConfig.getUserConfigDir(), "control");
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
 		this.shutdownListener = shutdownListener;
 	}
 
 	public void enterLoop() throws IOException {
-		File userAppDir = UserConfig.getUserAppDir();
+		File userAppDir = UserConfig.getUserConfigDir();
 		userAppDir.mkdirs();
 				
 		if (!controlFile.exists()) {

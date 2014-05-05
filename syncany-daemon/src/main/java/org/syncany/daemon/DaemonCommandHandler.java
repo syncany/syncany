@@ -1,27 +1,16 @@
 package org.syncany.daemon;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.crypto.CipherSpecs;
 import org.syncany.daemon.command.Command;
-import org.syncany.daemon.command.ConnectCommand;
-import org.syncany.daemon.command.InitCommand;
 import org.syncany.daemon.command.WatchCommand;
 import org.syncany.daemon.websocket.DaemonWebSocketServer;
-import org.syncany.daemon.websocket.messages.DaemonConnectMessage;
-import org.syncany.daemon.websocket.messages.DaemonInitMessage;
 import org.syncany.daemon.websocket.messages.DaemonMessage;
-import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
-import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
 import org.syncany.daemon.websocket.messages.DaemonResultMessage;
 import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
 import org.syncany.daemon.websocket.messages.DaemonWatchMessage;
-import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
 import org.syncany.util.JsonHelper;
 
@@ -160,105 +149,6 @@ public class DaemonCommandHandler {
 		return null;
 	}
 
-	private DaemonResultInitMessage handleInit(DaemonInitMessage message) {
-		List<String> pluginArgs= new ArrayList<>();
-		
-		Map<String, String> args = message.getPluginArgs();
-		
-		for (String key : args.keySet()){
-			pluginArgs.add(key + "=" + args.get(key));
-		}
-		
-		String pluginName = message.getPluginId();
-		String localDir = message.getLocalFolder();
-		String passsword = message.getPassword();
-		int chunkSize = message.getChunkSize();
-		
-		boolean gzip = message.isGzip();
-		boolean encrypted = message.isEncryption();
-		
-		int[] cipherSpec;
-		
-		String cipherString = message.getCipherSpec();
-		if (cipherString != null && cipherString.length() > 0) {
-			String[] cipherSpecString = cipherString.split(",");
-			cipherSpec = new int[cipherSpecString.length];
-		
-			for (int i = 0 ; i < cipherSpecString.length ; i ++){
-				cipherSpec[i] = Integer.parseInt(cipherSpecString[i]);
-			}
-		}
-		else {
-			cipherSpec = CipherSpecs.DEFAULT_CIPHER_SPECS;
-		}
-		
-		// Creation of local Syncany folder
-		File localDirFile = new File(localDir);
-		if (!localDirFile.exists()){
-			localDirFile.mkdir();
-		}
-
-		// Creation of local repo ==> TODO[medium]: should'n be handled by plugin directly ?
-		if (pluginName.equals("local")){
-			File repoPath = new File(args.get("path"));
-			
-			if (!repoPath.exists()){
-				repoPath.mkdir();
-			}
-		}
-		
-		InitCommand ic = new InitCommand(pluginName, pluginArgs, localDir, passsword, encrypted, gzip, chunkSize, cipherSpec);
-		
-		DaemonResultInitMessage ret = new DaemonResultInitMessage(buildReturnObject(message));
-		try {
-			GenlinkOperationResult result = ic.execute().getGenLinkResult();
-			ret.setSuccess(true);
-			ret.setShareLink(result.getShareLink());
-			ret.setShareLinkEncrypted(result.isShareLinkEncrypted());
-		}
-		catch (Exception e) {
-			logger.warning("Exception " + e);
-			ret.setSuccess(false);
-		}
-		
-		return ret;
-	}
-	
-	private DaemonResultConnectMessage handleConnect(DaemonConnectMessage message) {
-		List<String> pluginArgs= new ArrayList<>();
-		
-		Map<String, String> args = message.getPluginArgs();
-		
-		for (String key : args.keySet()){
-			pluginArgs.add(key + "=" + args.get(key));
-		}
-		
-		String pluginName = message.getPluginId();
-		String localDir = message.getLocalFolder();
-		String passsword = message.getPassword();
-		String url = message.getUrl();
-		
-		File localDirFile = new File(localDir);
-		if (!localDirFile.exists()){
-			localDirFile.mkdir();
-		}
-		
-		ConnectCommand ic = new ConnectCommand(url, pluginName, pluginArgs, localDir, passsword);
-	
-		DaemonResultConnectMessage ret = new DaemonResultConnectMessage(message);
-		
-		try {
-			ic.execute();
-			ret.setSuccess(true);
-		}
-		catch (Exception e) {
-			logger.warning("Exception " + e);
-			ret.setSuccess(false);
-		}
-		
-		return ret;
-	}
-	
 	private static DaemonResultMessage buildReturnObject(DaemonMessage message) {
 		DaemonResultMessage ret = new DaemonResultMessage(message);
 		ret.setTimeStamp(System.nanoTime());
@@ -312,17 +202,6 @@ public class DaemonCommandHandler {
 				
 			case "resume_watch":
 				handleResumeWatch(message);
-				break;
-				
-			case "create":
-				DaemonInitMessage dim = JsonHelper.fromStringToObject(s, DaemonInitMessage.class);
-				DaemonMessage retInit = handleInit(dim);
-				server.sendToAll(JsonHelper.fromObjectToString(retInit));
-				break;
-				
-			case "connect":
-				DaemonMessage retConn = handleConnect(JsonHelper.fromStringToObject(s, DaemonConnectMessage.class));
-				server.sendToAll(JsonHelper.fromObjectToString(retConn));
 				break;
 				
 			case "quit":

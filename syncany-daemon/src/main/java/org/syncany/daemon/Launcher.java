@@ -50,10 +50,10 @@ public class Launcher implements TailerListener {
 	}
 
 	private void startTailer() throws IOException {
-		File userAppDir = UserConfig.getUserAppDir();
+		File userAppDir = UserConfig.getUserConfigDir();
 		userAppDir.mkdirs();
 		
-		File controlFile = new File(UserConfig.getUserAppDir(), "control");
+		File controlFile = new File(UserConfig.getUserConfigDir(), "control");
 		controlFile.deleteOnExit();
 		
 		if (!controlFile.exists()) {
