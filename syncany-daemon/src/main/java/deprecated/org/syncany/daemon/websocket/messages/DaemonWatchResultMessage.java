@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package deprecated.org.syncany.daemon.websocket.messages;
+
+import java.util.Map;
 
 
 
@@ -23,26 +25,17 @@ package org.syncany.daemon.websocket.messages;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonResultMessage extends DaemonMessage {
-
-	public DaemonResultMessage(DaemonMessage parent) {
+public class DaemonWatchResultMessage extends DaemonResultMessage {
+	private Map<String, Map<String, String>> foldersUpdate;
+	
+	public DaemonWatchResultMessage(DaemonMessage parent) {
 		super(parent);
 	}
-	
-	private String originalAction;
-	private boolean success;
-	
-	public boolean isSuccess() {
-		return success;
+
+	public Map<String, Map<String, String>> getFoldersUpdate() {
+		return foldersUpdate;
 	}
-	public void setSuccess(boolean success) {
-		this.success = success;
-	}
-	
-	public String getOriginalAction() {
-		return originalAction;
-	}
-	public void setOriginalAction(String originalAction) {
-		this.originalAction = originalAction;
+	public void setFoldersUpdate(Map<String, Map<String, String>> foldersUpdate) {
+		this.foldersUpdate = foldersUpdate;
 	}
 }

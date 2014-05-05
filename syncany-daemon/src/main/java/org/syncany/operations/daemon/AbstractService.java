@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.daemon;
 
-import org.syncany.daemon.Service;
 
 /**
  * @author vincent

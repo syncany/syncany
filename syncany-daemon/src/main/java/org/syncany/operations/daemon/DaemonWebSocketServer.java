@@ -27,8 +27,6 @@ import java.util.logging.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.syncany.daemon.DaemonRequestHandler;
-import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 import org.syncany.util.JsonHelper;
 
 public class DaemonWebSocketServer extends AbstractService {

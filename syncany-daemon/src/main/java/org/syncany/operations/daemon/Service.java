@@ -15,25 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package org.syncany.operations.daemon;
 
+import java.util.Map;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonConnectMessage extends DaemonAbstractInitMessage {
-	public DaemonConnectMessage(DaemonMessage parent) {
-		super(parent);
-		setAction("connect");
-	}
-
-	private String url;
+public interface Service {
+	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException;
+	public void stop();
+	public boolean isRunning();
 	
-	public String getUrl() {
-		return url;
-	}
-	public void setUrl(String url) {
-		this.url = url;
-	}
+	public void setIdentifier(String id);
+	public String getIdentifier();
 }

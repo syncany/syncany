@@ -22,7 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.daemon.exception.ServiceAlreadyStartedException;
+import org.syncany.config.Config.ConfigException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 
@@ -59,7 +59,7 @@ public class DaemonOperation extends Operation implements ShutdownListener {
 		webSocketServer.start(null);
 	}
 
-	private void startWatchServer() {
+	private void startWatchServer() throws ConfigException {
 		logger.log(Level.INFO, "Starting websocket server ...");
 
 		watchServer = new DaemonWatchServer();

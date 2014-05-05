@@ -15,34 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package deprecated.org.syncany.daemon.websocket.messages;
+
 
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonWatchMessage extends DaemonMessage {
-
-	public DaemonWatchMessage(DaemonMessage parent) {
+public class DaemonResultConnectMessage extends DaemonResultMessage {
+	private String shareLink;
+	private boolean isShareLinkEncrypted;
+	
+	public DaemonResultConnectMessage(DaemonMessage parent) {
 		super(parent);
-		setAction("watch");
+		setAction("daemon_connect_result");
 	}
 	
-	private int interval;
-	boolean automaticWatcher;
-	
-	public int getInterval() {
-		return interval;
+	public String getShareLink() {
+		return shareLink;
 	}
-	public void setInterval(int interval) {
-		this.interval = interval;
+	public void setShareLink(String shareLink) {
+		this.shareLink = shareLink;
 	}
-	
-	public boolean isAutomaticWatcher() {
-		return automaticWatcher;
+
+	public boolean isShareLinkEncrypted() {
+		return isShareLinkEncrypted;
 	}
-	public void setAutomaticWatcher(boolean automaticWatcher) {
-		this.automaticWatcher = automaticWatcher;
+	public void setShareLinkEncrypted(boolean isShareLinkEncrypted) {
+		this.isShareLinkEncrypted = isShareLinkEncrypted;
 	}
 }

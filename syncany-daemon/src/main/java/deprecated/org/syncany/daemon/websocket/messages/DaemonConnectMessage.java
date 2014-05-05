@@ -15,27 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
-
-import java.util.Map;
-
+package deprecated.org.syncany.daemon.websocket.messages;
 
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonWatchResultMessage extends DaemonResultMessage {
-	private Map<String, Map<String, String>> foldersUpdate;
-	
-	public DaemonWatchResultMessage(DaemonMessage parent) {
+public class DaemonConnectMessage extends DaemonAbstractInitMessage {
+	public DaemonConnectMessage(DaemonMessage parent) {
 		super(parent);
+		setAction("connect");
 	}
 
-	public Map<String, Map<String, String>> getFoldersUpdate() {
-		return foldersUpdate;
+	private String url;
+	
+	public String getUrl() {
+		return url;
 	}
-	public void setFoldersUpdate(Map<String, Map<String, String>> foldersUpdate) {
-		this.foldersUpdate = foldersUpdate;
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

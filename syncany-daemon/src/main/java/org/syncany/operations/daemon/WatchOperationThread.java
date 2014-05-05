@@ -19,8 +19,6 @@ package org.syncany.operations.daemon;
 
 import java.util.Map;
 
-import org.syncany.daemon.Service;
-import org.syncany.daemon.exception.ServiceAlreadyStartedException;
 import org.syncany.operations.watch.WatchOperation;
 
 /**

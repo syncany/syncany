@@ -15,42 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket.messages;
+package deprecated.org.syncany.daemon.websocket.messages;
 
-import java.util.Map;
+
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
-public class DaemonAbstractInitMessage extends DaemonMessage {
+public class DaemonResultInitMessage extends DaemonResultMessage {
+	private String shareLink;
+	private boolean isShareLinkEncrypted;
 	
-	private Map<String, String> pluginArgs;
-	private String pluginId;
-	private String password;
-	
-	public Map<String, String> getPluginArgs() {
-		return pluginArgs;
-	}
-	public void setPluginArgs(Map<String, String> pluginArgs) {
-		this.pluginArgs = pluginArgs;
+	public DaemonResultInitMessage(DaemonResultMessage buildReturnObject) {
+		super(buildReturnObject);
+		setAction("daemon_init_result");
 	}
 	
-	public DaemonAbstractInitMessage(DaemonMessage parent) {
-		super(parent);
+	public String getShareLink() {
+		return shareLink;
+	}
+	public void setShareLink(String shareLink) {
+		this.shareLink = shareLink;
 	}
 
-	public String getPassword() {
-		return password;
+	public boolean isShareLinkEncrypted() {
+		return isShareLinkEncrypted;
 	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	
-	public String getPluginId() {
-		return pluginId;
-	}
-	public void setPluginId(String pluginId) {
-		this.pluginId = pluginId;
+	public void setShareLinkEncrypted(boolean isShareLinkEncrypted) {
+		this.isShareLinkEncrypted = isShareLinkEncrypted;
 	}
 }

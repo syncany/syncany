@@ -17,10 +17,15 @@
  */
 package org.syncany.operations.daemon;
 
+import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.syncany.config.Config.ConfigException;
+import org.syncany.config.UserConfig;
+import org.syncany.config.to.DaemonConfigTO;
 
 /**
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -34,9 +39,13 @@ public class DaemonWatchServer {
 		this.watchOperations = new TreeMap<String, WatchOperationThread>();
 	}
 	
-	public void start() {
+	public void start() throws ConfigException {
 		logger.log(Level.INFO, "Starting watch server ...  NOT IMPLEMENTED");
 		// TODO This should load from ~/.config/syncany/daemon.xml
+		File daemonConfigFile = new File(UserConfig.getUserConfigDir(), "daemon.xml");
+		DaemonConfigTO daemonConfigTO = DaemonConfigTO.load(daemonConfigFile);
+		
+		System.out.println(daemonConfigTO);
 	}
 	
 	public void stop() {

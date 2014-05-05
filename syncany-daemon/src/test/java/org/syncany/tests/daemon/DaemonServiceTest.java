@@ -23,7 +23,7 @@ import java.util.Map;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.syncany.daemon.ServiceManager;
+import org.syncany.operations.daemon.ServiceManager;
 
 /**
  * 

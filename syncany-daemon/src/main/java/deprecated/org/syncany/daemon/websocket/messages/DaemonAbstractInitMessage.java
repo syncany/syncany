@@ -15,12 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon;
+package deprecated.org.syncany.daemon.websocket.messages;
+
+import java.util.Map;
 
 /**
- * @author vwiencek
+ * @author vincent
  *
  */
-public class DaemonEvent {
+public class DaemonAbstractInitMessage extends DaemonMessage {
+	
+	private Map<String, String> pluginArgs;
+	private String pluginId;
+	private String password;
+	
+	public Map<String, String> getPluginArgs() {
+		return pluginArgs;
+	}
+	public void setPluginArgs(Map<String, String> pluginArgs) {
+		this.pluginArgs = pluginArgs;
+	}
+	
+	public DaemonAbstractInitMessage(DaemonMessage parent) {
+		super(parent);
+	}
 
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+	public String getPluginId() {
+		return pluginId;
+	}
+	public void setPluginId(String pluginId) {
+		this.pluginId = pluginId;
+	}
 }

@@ -15,24 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.daemon.websocket;
-
-import org.syncany.daemon.Service;
+package org.syncany.operations.daemon;
 
 /**
- * @author vincent
+ * @author pheckel
  *
  */
-public abstract class AbstractService implements Service {
-	private String identifier;
-	
-	@Override
-	public void setIdentifier(String id) {
-		this.identifier = id;
+public class DaemonRequestHandler {
+
+	/**
+	 * @param daemonWebSocketServer
+	 */
+	public DaemonRequestHandler(DaemonWebSocketServer daemonWebSocketServer) {
+		// TODO Auto-generated constructor stub
 	}
 
-	@Override
-	public String getIdentifier() {
-		return identifier;
+	public void handle(String message) {
+		// TODO Auto-generated method stub
+		
 	}
+
 }
