@@ -24,7 +24,6 @@ start)
 		echo " already running"
 	else
 		start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
-		echo start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
 		echo "."
 	fi
 	;;
