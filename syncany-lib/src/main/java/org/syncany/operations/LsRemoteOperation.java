@@ -65,11 +65,13 @@ public class LsRemoteOperation extends Operation {
 		
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
-				: config.getConnection().createTransferManager();
+				: config.getPlugin().createTransferManager(config.getConnection());
 		
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
 		
+		transferManager.disconnect();
+
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 

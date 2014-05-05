@@ -168,9 +168,10 @@ public interface TransferManager {
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 
 	 * or initial connection).
 	 * 
-	 * @return Returns <tt>true</tt> if the target exists, <tt>false</tt> otherwise 
+	 * @return Returns <tt>true</tt> if the target exists, <tt>false</tt> otherwise
+	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
-	public boolean testTargetExists();
+	public boolean testTargetExists() throws StorageException;
 	
 	/**
 	 * Tests whether the target path/folder is <b>writable</b> by the application. This method may either
@@ -182,8 +183,9 @@ public interface TransferManager {
 	 * or initial connection).
 	 * 
 	 * @return Returns <tt>true</tt> if the target can be written to, <tt>false</tt> otherwise
+	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
-	public boolean testTargetCanWrite();
+	public boolean testTargetCanWrite() throws StorageException;
 
 	/**
 	 * Tests whether the target path/folder <b>can be created</b> (if it <b>does not exist already</b>). This method 
@@ -197,8 +199,9 @@ public interface TransferManager {
 	 * is set to <tt>true</tt>!
 	 * 
 	 * @return Returns <tt>true</tt> if the target can be created or already exists, <tt>false</tt> otherwise 
+	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
-	public boolean testTargetCanCreate();
+	public boolean testTargetCanCreate() throws StorageException; 
 
 	/**
 	 * Tests whether the <b>repository file exists</b> (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
@@ -208,6 +211,7 @@ public interface TransferManager {
 	 * or initial connection).
 	 * 
 	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise 
+	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
-	public boolean testRepoFileExists();
+	public boolean testRepoFileExists() throws StorageException;
 }

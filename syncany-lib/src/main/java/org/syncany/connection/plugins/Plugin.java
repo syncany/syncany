@@ -71,12 +71,13 @@ public abstract class Plugin {
 	public String getVersion() {
 		return pluginProperties.getProperty(PLUGIN_PROPERTIES_VERSION_KEY);
 	}
-
+	
 	/**
 	 * Creates a plugin-specific {@link Connection}
 	 */
 	public abstract Connection createConnection();
 	
+	public abstract TransferManager createTransferManager(Connection connection);
 
 	/**
 	 * Loads the plugin properties (ID, name, version)

@@ -29,16 +29,12 @@ import joptsimple.OptionSpec;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.connection.plugins.StorageTestResult;
-import org.syncany.operations.init.ConnectOperationListener;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
 
-public class ConnectCommand extends AbstractInitCommand implements ConnectOperationListener {
-	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
-	private int retryPasswordCount = 0;
-	
+public class ConnectCommand extends AbstractInitCommand {	
 	public ConnectCommand() {
 		super();
 	}
@@ -164,36 +160,6 @@ public class ConnectCommand extends AbstractInitCommand implements ConnectOperat
 			out.println();
 			out.println("ERROR: Cannot connect to repository. Unknown error code: " + operationResult);
 			out.println();
-		}
-	}
-
-	@Override
-	public String askPassword() {
-		out.println();
-
-		char[] passwordChars = console.readPassword("Password: ");
-		return new String(passwordChars);
-	}
-
-	@Override
-	public void notifyCreateMasterKey() {
-		out.println();
-		out.println("Creating master key from password (this might take a while) ...");
-	}
-
-	@Override
-	public boolean askRetryPassword() {
-		retryPasswordCount++;		
-		
-		if (retryPasswordCount < MAX_RETRY_PASSWORD_COUNT) {
-			int triesLeft = MAX_RETRY_PASSWORD_COUNT-retryPasswordCount;
-			String triesLeftStr = triesLeft != 1 ? triesLeft + " tries left." : "Last chance.";  
-
-			out.println("ERROR: Invalid password or corrupt ciphertext. " + triesLeftStr);
-			return true;
-		}
-		else {
-			return false;
 		}
 	}
 }

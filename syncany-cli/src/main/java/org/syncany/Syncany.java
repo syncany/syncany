@@ -43,8 +43,8 @@ import org.syncany.cli.CommandLineClient;
  * <p>Many thanks to all the people who have supported the project over the years and who have
  * continued to listen to my constant never-ending Syncany talk! Thank you all!
  * 
- * @see <a href="http://www.syncany.org/">Syncany website</a> at syncany.org
- * @see <a href="https://github.com/binwiederhier/syncany">GitHub code repository</a> at github.com
+ * @see <a href="https://www.syncany.org/">Syncany website</a> at syncany.org
+ * @see <a href="https://github.com/syncany/syncany">GitHub code repository</a> at github.com
  * @see <a href="http://www.philippheckel.com/files/syncany-heckel-thesis.pdf">Master thesis describing core concepts</a> at philippheckel.com
  * @see <a href="http://blog.philippheckel.com/tag/syncany/">Blog posts about Syncany</a> at blog.philippheckel.com
  * 

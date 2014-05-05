@@ -18,6 +18,9 @@
 package org.syncany.config;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.security.KeyStore;
 import java.util.Map;
 
 import org.syncany.config.Config.ConfigException;
@@ -32,43 +35,107 @@ import org.syncany.util.EnvironmentUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class UserConfig {	
+	/* 
+	 * Note: 
+	 *   This class can't have any logging methods, because the init() method is called 
+	 *   BEFORE the logging initialization. All errors must be printed to STDERR.
+	 *    
+	 */
+	
 	private static final File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
 	private static final File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
-	private static final String USER_PLUGINS_DIR = "plugins";
+	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
+	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
+	private static final String USER_TRUSTSTORE_FILE = "truststore.jks";
 	
-	private static File userAppDir;
-	private static File userPluginsDir;
+	private static File userConfigDir;
+	private static File userPluginLibDir;
+	private static File userConfigFile;
+	private static File userTrustStoreFile;
+	private static KeyStore userTrustStore;	
 	
 	static {
 		init();
 	}
 	
 	public static void init() {
-		if (userAppDir == null) {
+		if (userConfigDir == null) {
 			initUserAppDirs();	
 			initUserConfig();
+			initUserTrustStore();
 		}
 	}
 
-	public static File getUserAppDir() { 
-		return userAppDir;
+	private static void initUserTrustStore() {
+		try {				
+			userTrustStoreFile = new File(userConfigDir, USER_TRUSTSTORE_FILE);
+			userTrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+								
+			if (userTrustStoreFile.exists()) {
+				FileInputStream trustStoreInputStream = new FileInputStream(userTrustStoreFile); 		 		
+				userTrustStore.load(trustStoreInputStream, new char[0]);
+				
+				trustStoreInputStream.close();
+			}	
+			else {
+				userTrustStore.load(null, new char[0]); // Initialize empty store						
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	public static File getUserPluginDir() {
-		return userPluginsDir;
-	}	
+	public static File getUserConfigDir() { 
+		return userConfigDir;
+	}
+
+	public static File getUserPluginLibDir() {
+		return userPluginLibDir;
+	}
+	
+	public static File getUserPluginsUserdataDir(String pluginId) {
+		File pluginConfigDir = new File(userConfigDir, String.format(USER_PLUGINS_USERDATA_DIR_FORMAT, pluginId));
+		pluginConfigDir.mkdirs();
+
+		return pluginConfigDir;
+	}
+	
+	public static File getUserConfigFile() {
+		return userConfigFile;
+	}
+	
+	public static File getUserTrustStoreFile() {
+		return userTrustStoreFile;
+	}
+	
+	public static KeyStore getUserTrustStore() {
+		return userTrustStore;
+	}
+	
+	public static void storeTrustStore() {
+		try {
+			FileOutputStream trustStoreOutputStream = new FileOutputStream(userTrustStoreFile);
+			userTrustStore.store(trustStoreOutputStream, new char[0]);
+			
+			trustStoreOutputStream.close();
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot store truststore to file " + userTrustStoreFile, e);
+		}		
+	}
 	
 	private static void initUserAppDirs() {
-		userAppDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
-		userAppDir.mkdirs();
+		userConfigDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
+		userConfigDir.mkdirs();
 		
-		userPluginsDir = new File(userAppDir, USER_PLUGINS_DIR);		
-		userPluginsDir.mkdirs();
+		userPluginLibDir = new File(userConfigDir, USER_PLUGINS_LIB_DIR);		
+		userPluginLibDir.mkdirs();
 	}
 
 	private static void initUserConfig() {
-		File userConfigFile = new File(userAppDir, USER_CONFIG_FILE);
+		userConfigFile = new File(userConfigDir, USER_CONFIG_FILE);
 		
 		if (userConfigFile.exists()) {
 			loadAndInitUserConfigFile(userConfigFile);			

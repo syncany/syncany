@@ -31,9 +31,18 @@ import java.util.Map;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public interface Connection {
-    public TransferManager createTransferManager();
-    public PluginOptionSpecs getOptionSpecs();        
-    public void init(Map<String, String> optionValues) throws StorageException;    
+public abstract class Connection {
+	protected UserInteractionListener userInteractionListener;
+
+	public UserInteractionListener getUserInteractionListener() {
+		return userInteractionListener;
+	}
+
+	public void setUserInteractionListener(UserInteractionListener userInteractionListener) {
+		this.userInteractionListener = userInteractionListener;
+	}
+
+	public abstract PluginOptionSpecs getOptionSpecs();    
+    public abstract void init(Map<String, String> optionValues) throws StorageException;    
 }
 

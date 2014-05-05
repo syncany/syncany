@@ -4,11 +4,11 @@ pkgver=0.1.1.alpha.gce6bd65
 pkgrel=1
 pkgdesc="An open-source cloud storage and filesharing application (a Dropbox work-alike with more flexibility in terms of storage type and provider)"
 arch=(any)
-url=http://www.syncany.org/
+url=https://www.syncany.org/
 license=(GPL2)
 depends=('java-runtime>=7')
 makedepends=(git)
-source=("${pkgname}"::'git+http://github.com/binwiederhier/syncany')
+source=("${pkgname}"::'git+http://github.com/syncany/syncany')
 md5sums=('SKIP')
 
 pkgver(){

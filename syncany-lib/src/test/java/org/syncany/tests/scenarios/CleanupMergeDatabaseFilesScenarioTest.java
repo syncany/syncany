@@ -123,7 +123,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	public void testIssue58_1() throws Exception {
 		/*
 		 * This is the attempt to reproduce issue #58
-		 * https://github.com/binwiederhier/syncany/issues/58
+		 * https://github.com/syncany/syncany/issues/58
 		 * 
 		 */
 		
@@ -438,7 +438,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	public void testIssue58_2() throws Exception {
 		/*
 		 * This is the attempt to reproduce issue #58
-		 * https://github.com/binwiederhier/syncany/issues/58
+		 * https://github.com/syncany/syncany/issues/58
 		 * 
 		 */
 		

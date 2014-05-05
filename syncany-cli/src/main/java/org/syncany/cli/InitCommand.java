@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,17 +45,14 @@ import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
-import org.syncany.operations.init.InitOperationListener;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
-public class InitCommand extends AbstractInitCommand implements InitOperationListener {
+public class InitCommand extends AbstractInitCommand {
 	public static final int REPO_ID_LENGTH = 32;
-	public static final int PASSWORD_MIN_LENGTH = 10;
-	public static final int PASSWORD_WARN_LENGTH = 12;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
@@ -296,50 +292,6 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		return cipherSpecs;		
 	}
 	
-	protected String askPasswordAndConfirm() {
-		out.println();
-		out.println("The password is used to encrypt data on the remote storage.");
-		out.println("Choose wisely!");
-		out.println();
-		
-		String password = null;
-		
-		while (password == null) {
-			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
-			
-			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
-				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
-				out.println();
-				
-				continue;
-			}
-			
-			char[] confirmPasswordChars = console.readPassword("Confirm: ");
-			
-			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
-				out.println("ERROR: Passwords do not match.");
-				out.println();
-				
-				continue;
-			} 
-			
-			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
-				out.println();
-				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
-				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
-				
-				if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
-					out.println();
-					continue;
-				}
-			}
-			
-			password = new String(passwordChars);			
-		}	
-		
-		return password;
-	}
-	
 	protected RepoTO createRepoTO(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) throws Exception {
 		// Make transfer object
 		RepoTO repoTO = new RepoTO();
@@ -402,16 +354,5 @@ public class InitCommand extends AbstractInitCommand implements InitOperationLis
 		cipherTransformerTO.setSettings(cipherTransformerSettings);
 
 		return cipherTransformerTO;
-	}
-
-	@Override
-	public void notifyGenerateMasterKey() {
-		out.println();
-		out.println("Generating master key from password (this might take a while) ...");
-	}
-
-	@Override
-	public String getPasswordCallback() {
-		return askPasswordAndConfirm();
 	}
 }

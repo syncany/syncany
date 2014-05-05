@@ -260,21 +260,22 @@ public class TestConfigUtil {
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 
 		conn.init(pluginSettings);
-		conn.createTransferManager().init(true);
+		
+		plugin.createTransferManager(conn).init(true);
 
 		return conn;
 	}
 
 	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
-		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(failingOperationPatterns);
+		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
+		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin, failingOperationPatterns);
 
-		unreliableLocalConnection.createTransferManager().init(true);
+		unreliableLocalPlugin.createTransferManager(unreliableLocalConnection).init(true);
 
 		return unreliableLocalConnection;
 	}
 	
-	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(List<String> failingOperationPatterns) throws Exception {
-		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
+	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin, List<String> failingOperationPatterns) throws Exception {		
 		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
