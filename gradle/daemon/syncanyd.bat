@@ -3,7 +3,11 @@
 set APP_NAME=syncanyd
 set APP_USER_DIR=%AppData%\Syncany
 set APP_DAEMON_CONTROL=%APP_USER_DIR%\daemon.ctrl
+set APP_LOG_DIR=%APP_USER_DIR%\logs
+set APP_LOG_FILE=%APP_LOG_DIR%\daemon.log
+
 if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%"
+if not exist "%APP_LOG_DIR%" mkdir "%APP_LOG_DIR%"
 
 @if "%1" == "start" goto start
 @if "%1" == "stop" goto stop
@@ -88,7 +92,7 @@ set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\*
 
 @rem Execute syncany
 echo Starting daemon: %APP_NAME%.
-start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany daemon
+start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany --log=%APP_LOG_FILE% daemon
 
 :end
 @rem End local scope for the variables with windows NT shell

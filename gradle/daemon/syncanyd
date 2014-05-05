@@ -2,17 +2,19 @@
  
 set -e
  
-# Must be a valid filename
 NAME=syncanyd
 APPDIR=~/.config/syncany
 CONTROLFILE=$APPDIR/daemon.ctrl
+LOGDIR=$APPDIR/logs
+LOGFILE=$LOGDIR/daemon.log
 
-DAEMON=$(dirname $0)/syncany
-DAEMON_OPTS="daemon"
+DAEMON=$(cd "$(dirname "$0")"; pwd)/syncany
+DAEMON_OPTS="--log=$LOGFILE daemon"
  
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 mkdir -p $APPDIR
+mkdir -p $LOGDIR
  
 case "$1" in
 start)
@@ -22,6 +24,7 @@ start)
 		echo " already running"
 	else
 		start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
+		echo start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
 		echo "."
 	fi
 	;;
