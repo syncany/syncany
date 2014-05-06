@@ -46,15 +46,15 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.CleanupOperation;
-import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.LsRemoteOperation;
-import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.operations.Operation;
-import org.syncany.operations.StatusOperation;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.down.DownOperation;
+import org.syncany.operations.ls_remote.LsRemoteOperation;
+import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.status.StatusOperation;
+import org.syncany.operations.status.StatusOperation.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 
 /**
@@ -76,14 +76,13 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class UpOperation extends Operation {
+public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
 
 	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 
 	private UpOperationOptions options;
-	private TransferManager transferManager;
 	private SqlDatabase localDatabase;
 	private UpOperationListener listener;
 	
@@ -96,11 +95,10 @@ public class UpOperation extends Operation {
 	}
 
 	public UpOperation(Config config, UpOperationOptions options, UpOperationListener listener) {
-		super(config);
+		super(config, "up");
 
 		this.listener = listener;
 		this.options = options;
-		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
 		this.localDatabase = new SqlDatabase(config);
 	}
 
@@ -123,11 +121,12 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
 
-			disconnectTransferManager();
-			clearCache();
-
+			finishOperation();
 			return result;
 		}
+		
+		// Upload action file (lock for cleanup)
+		startOperation();
 
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
@@ -138,9 +137,7 @@ public class UpOperation extends Operation {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
 				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
 
-				disconnectTransferManager();
-				clearCache();
-
+				finishOperation();
 				return result;
 			}
 			else {
@@ -161,9 +158,7 @@ public class UpOperation extends Operation {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
 
-			disconnectTransferManager();
-			clearCache();
-
+			finishOperation();
 			return result;
 		}		
 
@@ -180,20 +175,19 @@ public class UpOperation extends Operation {
 
 		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");	
 		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);		
-		
+
+		// Finish 'up' before 'cleanup' starts
+		finishOperation();
+		logger.log(Level.INFO, "Sync up done.");
+
 		if (options.cleanupEnabled()) {
 			CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
 			result.setCleanupResult(cleanupOperationResult); 
 		}
 					
-		disconnectTransferManager();
-		clearCache();
-
-		logger.log(Level.INFO, "Sync up done.");
-
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
-		result.setResultCode(UpResultCode.OK_APPLIED_CHANGES);
+		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 		
 		return result;
 	}
@@ -378,18 +372,5 @@ public class UpOperation extends Operation {
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
 		return newVectorClock;
-	}
-
-	private void disconnectTransferManager() {
-		try {
-			transferManager.disconnect();
-		}
-		catch (StorageException e) {
-			// Don't care!
-		}
-	}
-	
-	private void clearCache() {
-		config.getCache().clear();
 	}
 }

@@ -47,6 +47,7 @@ import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationOptions;
+import org.syncany.util.StringUtil;
 
 import com.google.common.collect.Lists;
 
@@ -183,8 +184,20 @@ public class TestConfigUtil {
 		localConnectionSettings.put("path", tempLocalDir.getAbsolutePath());
 		
 		ConnectionTO connectionTO = new ConnectionTO();
-		connectionTO.setType("local");
-		connectionTO.setSettings(localConnectionSettings);
+		
+		if (connection instanceof UnreliableLocalConnection) { // Dirty hack
+			UnreliableLocalConnection unreliableConnection = (UnreliableLocalConnection) connection;
+			String failingPatterns = StringUtil.join(unreliableConnection.getFailingOperationPatterns(), ",");
+			
+			localConnectionSettings.put("patterns", failingPatterns);
+
+			connectionTO.setType("unreliable_local");
+			connectionTO.setSettings(localConnectionSettings);			
+		}
+		else {
+			connectionTO.setType("local");
+			connectionTO.setSettings(localConnectionSettings);
+		}		
 		
 		configTO.setConnectionTO(connectionTO);
 				

@@ -13,7 +13,10 @@ Change Log
   + Set JAVA_HOME during installation #121/#122
   + Replace uninstall icons with high-depth icons
   + Ship 'sy.bat' to allow `sy` command on Windows (not only `syncany`)
-
+- Bugfixes:
+  + Fix S3 plugin connect failure (delete repo file) #128
+  + Proper remote locking for cleanup through action files #104
+  
 ### Release 0.1.2-alpha (Date: 27 Apr 2014)
 
 - Developer/alpha release (**NOT FOR PRODUCTION USE!**)
@@ -29,7 +32,7 @@ Change Log
   + Ignore files using wildcards in .syignore (e.g. *.bak, *.r??) #108
   + Added Arch Linux 'syncany-git' package #99
   + Allow speicifying HTTP(S)/WebDAV proxy and other global system properties #109
-- Bugfixes
+- Bugfixes:
   + Fix semantic in TransferManager `test()` (incl. all plugins) #103/#102
   + WebDAV plugin fix to create "multichunks"/"databases" folder #110
   + Fix "Plugin not supported" stack trace #111
@@ -64,4 +67,18 @@ Change Log
 - First developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Command line interface (CLI) with commands
   + init: initialize local folder and remote repository
-  + connect
+  + connect: connect to an existing remote repository
+  + up: index and upload local files
+  + down: download changes and apply locally
+  + status: list local changes
+  + ls-remote: list remote changes
+  + watch: watches local dir, subscribes to pub/sub, and calls down/up 
+           command in a set interval
+  + restore: restores a given set of files (experimental)
+  + log: Outputs formatted file histories (experimental)
+  + genlink: Generates syncany:// links to share
+  + cleanup: Deletes old file versions and frees remote space
+- Storage plugins:
+  + Local: Allows to store repository files in a local/mounted folder 
+  + FTP: Allows the use of an FTP folder as repository
+  + WebDAV: Allows using a WebDAV folder as repository (currently no HTTPS)

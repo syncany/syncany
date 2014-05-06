@@ -48,8 +48,7 @@ import org.syncany.operations.down.DatabaseBranch;
 /**
  * The database version data access object (DAO) writes and queries the SQL database for information
  * on {@link DatabaseVersion}s. It translates the relational data in the "databaseversion" table to
- * Java objects; but also uses the other DAOs to persist entire {@link DatabaseVersion} objects.
- * 
+ * Java objects; but also uses the other DAOs to persist entire {@link DatabaseVersion} objects. 
  * 
  * @see ChunkSqlDao
  * @see FileContentSqlDao
@@ -253,7 +252,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getDirtyDatabaseVersions.sql")) {
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 
-			return new DatabaseVersionIteration(preparedStatement.executeQuery());
+			return new DatabaseVersionIterator(preparedStatement.executeQuery());
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -266,18 +265,18 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setString(2, machineName);
 			preparedStatement.setLong(3, maxLocalClientVersion);
 
-			return new DatabaseVersionIteration(preparedStatement.executeQuery());
+			return new DatabaseVersionIterator(preparedStatement.executeQuery());
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private class DatabaseVersionIteration implements Iterator<DatabaseVersion> {
+	private class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 		private ResultSet resultSet;
 		private boolean hasNext;
 
-		public DatabaseVersionIteration(ResultSet resultSet) throws SQLException {
+		public DatabaseVersionIterator(ResultSet resultSet) throws SQLException {
 			this.resultSet = resultSet;
 			this.hasNext = resultSet.next();
 		}

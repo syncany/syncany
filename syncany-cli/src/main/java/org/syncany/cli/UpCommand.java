@@ -23,8 +23,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
@@ -88,7 +88,7 @@ public class UpCommand extends Command {
 		if (operationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
 			out.println("Sync up skipped, because there are remote changes.");
 		}
-		else if (operationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES) {
+		else if (operationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
 			ChangeSet changeSet = operationResult.getChangeSet();
 
 			for (String newFile : changeSet.getNewFiles()) {

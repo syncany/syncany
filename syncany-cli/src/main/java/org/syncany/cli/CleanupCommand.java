@@ -23,9 +23,9 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 
 public class CleanupCommand extends Command {
 	@Override
@@ -103,6 +103,10 @@ public class CleanupCommand extends Command {
 		case NOK_REMOTE_CHANGES:
 			out.println("Remote changes detected or repository is locked by another user. Please call 'down' first.");
 			break;
+			
+		case NOK_OTHER_OPERATIONS_RUNNING:
+			out.println("Cannot run cleanup while other clients are performing up/down/cleanup. Try again later.");
+			break;
 
 		case OK:
 			if (operationResult.getMergedDatabaseFilesCount() > 0) {
@@ -112,7 +116,7 @@ public class CleanupCommand extends Command {
 			if (operationResult.getRemovedMultiChunks().size() > 0) {
 				long totalRemovedMultiChunkSize = 0;
 				
-				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks()) {
+				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks().values()) {
 					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
 				}
 				
