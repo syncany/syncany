@@ -89,8 +89,12 @@ public class ActionFileHandler {
 	private void uploadActionFile(ActionRemoteFile actionFile) throws Exception {
 		logger.log(Level.INFO, "Uploading action file: " + actionFile);
 
-		File tempActionFile = File.createTempFile("action", "tmp");
+		File tempActionFile = File.createTempFile("syncany-action-", ".tmp");
+		tempActionFile.deleteOnExit();
+		
 		transferManager.upload(tempActionFile, actionFile);
+		
+		tempActionFile.delete();
 	}
 	
 	private void scheduleActionRenewalTask() {
