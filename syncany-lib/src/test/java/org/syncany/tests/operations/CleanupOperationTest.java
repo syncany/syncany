@@ -17,23 +17,34 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.Arrays;
 
 import org.junit.Test;
+import org.syncany.config.Logging;
 import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.CleanupOperation.CleanupResultCode;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.down.DownOperationResult;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class CleanupOperationTest {
+	static {
+		Logging.init();
+	}
+	
 	@Test
 	public void testEasyCleanup() throws Exception {
 		// Setup
@@ -347,6 +358,81 @@ public class CleanupOperationTest {
 		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();	
+	}
+	
+
+	@Test
+	public void testCleanupAfterFailedUpOperation() throws Exception {
+		// Setup
+		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
+			// List of failing operations (regex)
+			// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+
+			"rel=3.+upload.+multichunk"				
+		}));
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
+		removeOldCleanupOperationOptions.setMergeRemoteFiles(false);
+		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
+		removeOldCleanupOperationOptions.setRepackageMultiChunks(false);
+		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
+		
+		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
+		forceChecksumStatusOperationOptions.setForceChecksum(true);
+		
+		UpOperationOptions noCleanupAndForceUpOperationOptions = new UpOperationOptions();
+		noCleanupAndForceUpOperationOptions.setCleanupEnabled(false);
+		noCleanupAndForceUpOperationOptions.setForceUploadEnabled(true);
+		noCleanupAndForceUpOperationOptions.setStatusOptions(forceChecksumStatusOperationOptions);
+
+		// Run
+		
+		// 1. Call A.up(); this fails AFTER the first multichunk
+		clientA.createNewFile("A-file1", 5*1024*1024);
+		boolean operationFailed = false;
+		
+		try {
+			clientA.up();
+		}
+		catch (Exception e) {
+			operationFailed = true; // That is supposed to happen!
+		}
+		
+		File repoMultiChunkDir = new File(testConnection.getRepositoryPath() + "/multichunks");
+		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
+		
+		assertTrue(operationFailed);
+		assertEquals(1, repoMultiChunkDir.listFiles().length);
+		assertEquals(1, repoActionsDir.listFiles().length);
+		
+		// 2. Call A.cleanup(); this does not run, because there are local changes
+		CleanupOperationResult cleanupOperationResultA = clientA.cleanup();
+		assertEquals(CleanupResultCode.NOK_LOCAL_CHANGES, cleanupOperationResultA.getResultCode());
+
+		// 3. Call B.cleanup(); this does not run, because of the leftover 'action' file
+		CleanupOperationResult cleanupOperationResultB = clientB.cleanup();
+		assertEquals(CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING, cleanupOperationResultB.getResultCode());
+		
+		// 4. Call B.down(); this does not deliver any results, because no databases have been uploaded
+		DownOperationResult downOperationResult = clientB.down();
+		assertEquals(DownResultCode.OK_NO_REMOTE_CHANGES, downOperationResult.getResultCode());
+		
+		// 5. Call 'up' again, this uploads previously crashed stuff, and then runs cleanup.
+		//    The cleanup then removes the old multichunk and the old action files.		
+		File oldMultiChunkFile = repoMultiChunkDir.listFiles()[0];
+		
+		UpOperationResult secondUpResult = clientA.up();
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, secondUpResult.getResultCode());
+		assertEquals(2, repoMultiChunkDir.listFiles().length);
+		assertEquals(0, repoActionsDir.listFiles().length);
+		assertFalse(oldMultiChunkFile.exists());
+	
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();	

@@ -52,13 +52,13 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
-import org.syncany.operations.LsRemoteOperation;
-import org.syncany.operations.Operation;
+import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.down.actions.FileSystemAction;
 import org.syncany.operations.down.actions.FileSystemAction.InconsistentFileSystemException;
+import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.util.FileUtil;
 
@@ -93,7 +93,7 @@ import org.syncany.util.FileUtil;
  * @see DatabaseReconciliator
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DownOperation extends Operation {
+public class DownOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 	
 	private DownOperationOptions options;
@@ -101,7 +101,6 @@ public class DownOperation extends Operation {
 
 	private SqlDatabase localDatabase;
 	private DatabaseBranch localBranch;
-	private TransferManager transferManager;
 	private DatabaseReconciliator databaseReconciliator;
 	private DownOperationListener listener;
 	
@@ -114,14 +113,13 @@ public class DownOperation extends Operation {
 	}
 
 	public DownOperation(Config config, DownOperationOptions options, DownOperationListener listener) {
-		super(config);
+		super(config, "down");
 
 		this.options = options;
 		this.result = new DownOperationResult();
 		this.listener = listener;
 
 		this.localDatabase = new SqlDatabase(config);
-		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
 		this.databaseReconciliator = new DatabaseReconciliator();
 	}
 
@@ -141,41 +139,41 @@ public class DownOperation extends Operation {
 		
 		// 0. Load database and create TM
 		localBranch = localDatabase.getLocalDatabaseBranch();
+		
+		// 1. Upload action file 
+		startOperation();
 
-		// 1. Check which remote databases to download based on the last local vector clock
+		// 2. Check which remote databases to download based on the last local vector clock
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager);
 
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 
-			disconnectTransferManager();
-			clearCache();
-
+			finishOperation();
 			return result;
 		}
 
-		// 2. Download the remote databases to the local cache folder
+		// 3. Download the remote databases to the local cache folder
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 
-		// 3. Read version headers (vector clocks)
+		// 4. Read version headers (vector clocks)
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 
-		// 4. Determine winner branch
+		// 5. Determine winner branch
 		DatabaseBranch winnersBranch = determineWinnerBranch(unknownRemoteBranches);
 		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
 
-		// 5. Prune local stuff (if local conflicts exist)
+		// 6. Prune local stuff (if local conflicts exist)
 		purgeConflictingLocalBranch(winnersBranch);
 
-		// 6. Apply winner's branch
+		// 7. Apply winner's branch
 		applyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 
-		// 7. Write names of newly analyzed remote databases (so we don't download them again)
+		// 8. Write names of newly analyzed remote databases (so we don't download them again)
 		localDatabase.writeKnownRemoteDatabases(unknownRemoteDatabases);
 
-		disconnectTransferManager();
-		clearCache();
+		finishOperation();
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
@@ -647,18 +645,5 @@ public class DownOperation extends Operation {
 		}
 
 		return unknownRemoteDatabasesInCache;
-	}
-
-	private void disconnectTransferManager() {
-		try {
-			transferManager.disconnect();
-		}
-		catch (StorageException e) {
-			// Don't care!
-		}
-	}
-	
-	private void clearCache() {
-		config.getCache().clear();
 	}
 }

@@ -19,10 +19,7 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-
 import org.junit.Test;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;

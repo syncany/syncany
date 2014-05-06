@@ -33,8 +33,8 @@ import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.LogOperation.LogOperationOptions;
-import org.syncany.operations.LogOperation.LogOperationResult;
+import org.syncany.operations.log.LogOperation.LogOperationOptions;
+import org.syncany.operations.log.LogOperation.LogOperationResult;
 
 public class LogCommand extends Command {
 	private static final Logger logger = Logger.getLogger(LogCommand.class.getSimpleName());
