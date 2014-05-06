@@ -50,7 +50,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
-import org.syncany.operations.ActionHandler;
+import org.syncany.operations.ActionFileHandler;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
@@ -85,11 +85,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * Defines the time after which old/outdated action files from other clients are
 	 * deleted. This time must be significantly larger than the time action files are 
-	 * renewed by the {@link ActionHandler}.
+	 * renewed by the {@link ActionFileHandler}.
 	 * 
-	 * @see ActionHandler#ACTION_RENEWAL_INTERVAL
+	 * @see ActionFileHandler#ACTION_RENEWAL_INTERVAL
 	 */
-	private static final int ACTION_FILE_DELETE_TIME = ActionHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
+	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
 
 	private CleanupOperationOptions options;
 	private CleanupOperationResult result;

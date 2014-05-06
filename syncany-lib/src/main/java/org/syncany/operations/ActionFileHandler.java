@@ -41,8 +41,8 @@ import org.syncany.operations.cleanup.CleanupOperation;
  * @see CleanupOperation
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class ActionHandler {	
-	private static final Logger logger = Logger.getLogger(ActionHandler.class.getSimpleName());
+public class ActionFileHandler {	
+	private static final Logger logger = Logger.getLogger(ActionFileHandler.class.getSimpleName());
 
 	/**
 	 * Defines the time that the action files updated while an operation is running. 
@@ -56,7 +56,7 @@ public class ActionHandler {
 	protected ActionRemoteFile actionFile;
 	protected Timer actionRenewalTimer;
 
-	public ActionHandler(TransferManager transferManager, String operationName, String machineName) {		
+	public ActionFileHandler(TransferManager transferManager, String operationName, String machineName) {		
 		try {
 			this.transferManager = transferManager;
 			this.actionFile = new ActionRemoteFile(operationName, machineName, System.currentTimeMillis());

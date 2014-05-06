@@ -18,18 +18,29 @@
 package org.syncany.operations;
 
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
+/**
+ * Represents and is inherited by a transfer operation. Transfer operations are operations 
+ * that modify the repository and/or are relevant for the consistency of the local directory
+ * or the remote repository. 
+ * 
+ * <p>This abstract class offers convenience methods to handle {@link ActionRemoteFile} as well
+ * as to handle the connection and local cache.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class AbstractTransferOperation extends Operation {
 	protected TransferManager transferManager;
-	protected ActionHandler actionHandler;
+	protected ActionFileHandler actionHandler;
 
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
 
 		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
-		this.actionHandler = new ActionHandler(transferManager, operationName, config.getMachineName());
+		this.actionHandler = new ActionFileHandler(transferManager, operationName, config.getMachineName());
 	}
 	
 	protected void startOperation() throws Exception {

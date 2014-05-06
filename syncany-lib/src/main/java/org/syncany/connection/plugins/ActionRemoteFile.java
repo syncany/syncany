@@ -20,6 +20,18 @@ package org.syncany.connection.plugins;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Action remote files represent a running transfer operation on the remote storage. Transfer
+ * operations are operations that modify the repository and/or are relevant for the 
+ * consistency of the local directory or the remote repository. Action files have no content,
+ * they are just markers and exist only while an operation is running.
+ * 
+ * <p><b>Name pattern:</b> The name pattern of an action file is
+ * <b>action-&lt;operationname&gt;-&lt;machinename&gt;-&lt;timestamp&gt;</b>. Initializing an 
+ * instance with a non-matching name will throw an exception.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class ActionRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("action-(up|down|cleanup)-([^-]+)-(\\d+)");
 	private static final String NAME_FORMAT = "action-%s-%s-%010d";
@@ -48,10 +60,6 @@ public class ActionRemoteFile extends RemoteFile {
 		return timestamp;
 	}
 	
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
-
 	@Override
 	protected String validateName(String name) throws StorageException {
 		Matcher matcher = NAME_PATTERN.matcher(name);
