@@ -15,6 +15,7 @@ Change Log
   + Ship 'sy.bat' to allow `sy` command on Windows (not only `syncany`)
 - Bugfixes:
   + Fix S3 plugin connect failure (delete repo file) #128
+  + Proper remote locking for cleanup through action files #104
   
 ### Release 0.1.2-alpha (Date: 27 Apr 2014)
 
