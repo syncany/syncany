@@ -82,6 +82,8 @@ public class UpOperation extends AbstractTransferOperation {
 	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 
+	public static final String ACTION_ID = "up";
+
 	private UpOperationOptions options;
 	private SqlDatabase localDatabase;
 	private UpOperationListener listener;
@@ -95,7 +97,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	public UpOperation(Config config, UpOperationOptions options, UpOperationListener listener) {
-		super(config, "up");
+		super(config, ACTION_ID);
 
 		this.listener = listener;
 		this.options = options;
@@ -128,6 +130,15 @@ public class UpOperation extends AbstractTransferOperation {
 		// Upload action file (lock for cleanup)
 		startOperation();
 
+		// Check if other operations are running
+		if (otherRemoteOperationsRunning("cleanup")) {
+			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
+			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); // TODO [medium] Add new result code
+
+			finishOperation();
+			return result;
+		}
+		
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
 			LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config, transferManager).execute();

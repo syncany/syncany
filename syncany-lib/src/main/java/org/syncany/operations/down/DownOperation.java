@@ -95,6 +95,8 @@ import org.syncany.util.FileUtil;
  */
 public class DownOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
+
+	public static final String ACTION_ID = "down";
 	
 	private DownOperationOptions options;
 	private DownOperationResult result;
@@ -113,7 +115,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	public DownOperation(Config config, DownOperationOptions options, DownOperationListener listener) {
-		super(config, "down");
+		super(config, ACTION_ID);
 
 		this.options = options;
 		this.result = new DownOperationResult();
@@ -145,7 +147,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 		// 2. Check which remote databases to download based on the last local vector clock
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager);
-
+		
 		if (unknownRemoteDatabases.isEmpty()) {
 			logger.log(Level.INFO, "* Nothing new. Skipping down operation.");
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
@@ -153,24 +155,33 @@ public class DownOperation extends AbstractTransferOperation {
 			finishOperation();
 			return result;
 		}
+		
+		// 3. Check if other operations are running
+		if (otherRemoteOperationsRunning("cleanup")) {
+			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
+			result.setResultCode(DownResultCode.NOK);
 
-		// 3. Download the remote databases to the local cache folder
+			finishOperation();
+			return result;
+		}
+
+		// 4. Download the remote databases to the local cache folder
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(transferManager, unknownRemoteDatabases);
 
-		// 4. Read version headers (vector clocks)
+		// 5. Read version headers (vector clocks)
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 
-		// 5. Determine winner branch
+		// 6. Determine winner branch
 		DatabaseBranch winnersBranch = determineWinnerBranch(unknownRemoteBranches);
 		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
 
-		// 6. Prune local stuff (if local conflicts exist)
+		// 7. Prune local stuff (if local conflicts exist)
 		purgeConflictingLocalBranch(winnersBranch);
 
-		// 7. Apply winner's branch
+		// 8. Apply winner's branch
 		applyWinnersBranch(winnersBranch, unknownRemoteDatabasesInCache);
 
-		// 8. Write names of newly analyzed remote databases (so we don't download them again)
+		// 9. Write names of newly analyzed remote databases (so we don't download them again)
 		localDatabase.writeKnownRemoteDatabases(unknownRemoteDatabases);
 
 		finishOperation();
