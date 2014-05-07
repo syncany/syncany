@@ -67,7 +67,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	protected void finishOperation() throws StorageException {
 		actionHandler.finish();
 		
-		cleanOldOwnActionFiles();
+		cleanActionFiles();
 		disconnectTransferManager();
 		clearCache();
 	}
@@ -84,18 +84,11 @@ public abstract class AbstractTransferOperation extends Operation {
 			String machineName = actionRemoteFile.getClientName();
 			
 			boolean isOwnActionFile = machineName.equals(config.getMachineName());
+			boolean isOperationAllowed = !disallowedOperationIdentifiers.contains(operationName);
+			boolean isOutdatedActionFile = isOutdatedActionFile(actionRemoteFile);
 			
-			if (!isOwnActionFile) {
-				// TODO [low] Even though this is UTC and the times frames are large, this might be an issue with different timezones or wrong system clocks
-
-				boolean isOperationAllowed = !disallowedOperationIdentifiers.contains(operationName);
-				boolean isOutdatedActionFile = System.currentTimeMillis() - ACTION_FILE_DELETE_TIME > actionRemoteFile.getTimestamp();
-			
-				if (isOutdatedActionFile) {
-					logger.log(Level.INFO, "- Action file from other client is OUTDATED; deleting " + actionRemoteFile + " ...");
-					transferManager.delete(actionRemoteFile);
-				}
-				else {
+			if (!isOwnActionFile) {			
+				if (!isOutdatedActionFile) {
 					if (isOperationAllowed) {
 						logger.log(Level.INFO, "- Action file from other client, but allowed operation; not marking running; " + actionRemoteFile);
 					}
@@ -104,25 +97,42 @@ public abstract class AbstractTransferOperation extends Operation {
 						otherRemoteOperationsRunning = true;
 					}
 				}
+				else {
+					logger.log(Level.INFO, "- Action file outdated; ignoring " + actionRemoteFile);
+				}
 			}
 		}
 
 		return otherRemoteOperationsRunning;
 	}
 
-	private void cleanOldOwnActionFiles() throws StorageException {
+	private void cleanActionFiles() throws StorageException {
 		logger.log(Level.INFO, "Cleaning own old action files ...");
 		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
 		
 		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
 			String machineName = actionRemoteFile.getClientName();			
+			
 			boolean isOwnActionFile = machineName.equals(config.getMachineName());
+			boolean isOutdatedActionFile = isOutdatedActionFile(actionRemoteFile);
 			
 			if (isOwnActionFile) {
 				logger.log(Level.INFO, "- Deleting own action file " + actionRemoteFile + " ...");
 				transferManager.delete(actionRemoteFile);
 			}
+			else if (isOutdatedActionFile) {
+				logger.log(Level.INFO, "- Action file from other client is OUTDATED; deleting " + actionRemoteFile + " ...");
+				transferManager.delete(actionRemoteFile);
+			}
+			else {
+				logger.log(Level.INFO, "- Action file is current; ignoring " + actionRemoteFile + " ...");
+			}
 		}
+	}
+	
+	private boolean isOutdatedActionFile(ActionRemoteFile actionFile) {
+		// TODO [low] Even though this is UTC and the times frames are large, this might be an issue with different timezones or wrong system clocks
+		return System.currentTimeMillis() - ACTION_FILE_DELETE_TIME > actionFile.getTimestamp();
 	}
 	
 	private void disconnectTransferManager() {

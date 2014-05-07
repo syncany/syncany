@@ -192,7 +192,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			}
 		}
 		else {
-			logger.log(Level.INFO, "Sync already running, setting 'sync requested' flag ...");
+			// Can't do a log message here, because this bit is called thousand 
+			// of times when file system events occur.
+			
 			syncRequested.set(true);
 		}
 	}
