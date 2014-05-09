@@ -644,4 +644,67 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.deleteTestData();
 		clientC.deleteTestData();
 	}	
+	
+	@Test
+	public void testIssue58_3() throws Exception {		
+		// Setup 
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		TestClient clientC = new TestClient("C", testConnection);
+		
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+
+		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
+		cleanupOptionsKeep1.setMergeRemoteFiles(true);
+		cleanupOptionsKeep1.setRemoveOldVersions(true);
+		cleanupOptionsKeep1.setRepackageMultiChunks(false);
+		cleanupOptionsKeep1.setKeepVersionsCount(1);		
+		
+		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
+		statusOptionsForceChecksum.setForceChecksum(true);		
+
+		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
+		upNoCleanupForceChecksum.setCleanupEnabled(false);
+		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
+
+		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
+		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
+		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
+		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
+
+		clientA.createNewFile("fileA");
+		clientB.createNewFile("fileB");
+		
+		clientA.up(upNoCleanupForceChecksum);
+		clientB.down();
+		
+		TestFileUtil.copyFile(clientA.getLocalFile("fileA"), clientB.getLocalFile("fileB"));
+		clientB.up(upNoCleanupForceChecksum);
+		
+		for (int i=0; i<20; i++) {
+			clientA.down();
+			clientA.changeFile("fileA");
+			clientA.up(upNoCleanupForceChecksum);
+
+			clientB.down();
+			clientB.changeFile("fileB");
+			clientB.up(upNoCleanupForceChecksum);
+		}
+		
+		clientB.cleanup();
+
+		clientA.down();
+		clientA.cleanup();
+		
+		clientA.down();
+		clientC.down();
+
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
+	}	
 }
