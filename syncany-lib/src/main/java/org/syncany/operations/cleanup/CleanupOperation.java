@@ -127,12 +127,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		startOperation();
 		lockRemoteRepository(); // Write-lock sufficient?
 
-		if (options.isMergeRemoteFiles()) {
-			mergeRemoteFiles();
-		}
-
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
+		}
+
+		if (options.isMergeRemoteFiles()) {
+			mergeRemoteFiles();
 		}
 
 		removeLostMultiChunks();
