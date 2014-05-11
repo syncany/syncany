@@ -46,6 +46,7 @@ import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 public class CleanupMergeDatabaseFilesScenarioTest {
@@ -682,6 +683,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		
 		TestFileUtil.copyFile(clientA.getLocalFile("fileA"), clientB.getLocalFile("fileB"));
+		String problemChecksum = StringUtil.toHex(FileUtil.createChecksum(clientA.getLocalFile("fileA"), "SHA1"));
 		clientB.up(upNoCleanupForceChecksum);
 		
 		for (int i=0; i<20; i++) {
@@ -693,10 +695,13 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 			clientB.changeFile("fileB");
 			clientB.up(upNoCleanupForceChecksum);
 		}
+
+		System.out.println("Problem checksum: " + problemChecksum);
 		
 		clientB.cleanup();
-
+		
 		clientA.down();
+		
 		clientA.cleanup();
 		
 		clientA.down();
