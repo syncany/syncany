@@ -131,12 +131,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		
 		// Now do the actual work!
 		
-		if (options.isMergeRemoteFiles()) {
-			mergeRemoteFiles();
-		}
-
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
+		}
+
+		if (options.isMergeRemoteFiles()) {
+			mergeRemoteFiles();
 		}
 
 		removeLostMultiChunks();
