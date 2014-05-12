@@ -64,7 +64,7 @@ import com.github.zafarkhaja.semver.Version;
  * 
  * <ul>
  *   <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
- *       as specified by {@link Client#getUserPluginDir()}. A plugin can be installed 
+ *       as specified by {@link Client#getUserPluginLibDir()}. A plugin can be installed 
  *       from a local JAR file, a URL (the operation downloads a JAR file), or the 
  *       API host (the operation find the plugin using the 'list' action and downloads
  *       the JAR file).</li>
@@ -126,7 +126,7 @@ public class PluginOperation extends Operation {
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
 
-		File globalUserPluginDir = UserConfig.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
 
 		int indexStartAfterSchema = "jar:file:".length();
 		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
@@ -143,7 +143,7 @@ public class PluginOperation extends Operation {
 
 			// JAR files are locked on Windows, adding JAR filename to a list for delayed deletion (by batch file)
 			if (EnvironmentUtil.isWindows()) {
-				File purgefilePath = new File(UserConfig.getUserAppDir(), PURGEFILE_FILENAME);
+				File purgefilePath = new File(UserConfig.getUserConfigDir(), PURGEFILE_FILENAME);
 				
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgefilePath, true)))) {
 					out.println(pluginJarFile.getAbsolutePath());
@@ -302,7 +302,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
-		File globalUserPluginDir = UserConfig.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),

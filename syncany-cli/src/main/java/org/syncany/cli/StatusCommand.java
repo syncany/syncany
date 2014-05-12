@@ -22,8 +22,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperation.StatusOperationResult;
 
 public class StatusCommand extends Command {
 	@Override

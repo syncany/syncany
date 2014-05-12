@@ -35,11 +35,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
-import org.syncany.operations.RestoreOperation.RestoreOperationStrategy;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationOptions;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationStrategy;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.tests.util.TestAssertUtil;
@@ -123,7 +123,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	public void testIssue58_1() throws Exception {
 		/*
 		 * This is the attempt to reproduce issue #58
-		 * https://github.com/binwiederhier/syncany/issues/58
+		 * https://github.com/syncany/syncany/issues/58
 		 * 
 		 */
 		
@@ -438,7 +438,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	public void testIssue58_2() throws Exception {
 		/*
 		 * This is the attempt to reproduce issue #58
-		 * https://github.com/binwiederhier/syncany/issues/58
+		 * https://github.com/syncany/syncany/issues/58
 		 * 
 		 */
 		

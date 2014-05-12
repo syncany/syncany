@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,13 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 
+/*
+ * TODO [high] The log operation is experimental and needs refactoring #86 
+ */
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());	
 	private LogOperationOptions options;

@@ -17,48 +17,45 @@
  */
 package org.syncany;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.connection.plugins.StorageException;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
-import org.syncany.operations.CleanupOperation;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.CleanupOperation.CleanupOperationResult;
-import org.syncany.operations.LogOperation;
-import org.syncany.operations.LogOperation.LogOperationOptions;
-import org.syncany.operations.LogOperation.LogOperationResult;
-import org.syncany.operations.LsRemoteOperation;
-import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.RestoreOperation;
-import org.syncany.operations.RestoreOperation.RestoreOperationOptions;
-import org.syncany.operations.RestoreOperation.RestoreOperationResult;
-import org.syncany.operations.StatusOperation;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.down.DownOperationListener;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.init.ConnectOperation;
-import org.syncany.operations.init.ConnectOperationListener;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.GenlinkOperation;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperationListener;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
+import org.syncany.operations.log.LogOperation;
+import org.syncany.operations.log.LogOperation.LogOperationOptions;
+import org.syncany.operations.log.LogOperation.LogOperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperation;
+import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationResult;
+import org.syncany.operations.restore.RestoreOperation;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationOptions;
+import org.syncany.operations.restore.RestoreOperation.RestoreOperationResult;
+import org.syncany.operations.status.StatusOperation;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperation.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
@@ -89,6 +86,10 @@ public class Client {
 	static {
 		initUserConfig();
 		initApplicationProperties();
+	}
+	
+	public Client() {
+		this.config = null;
 	}
 
 	public void setConfig(Config config) {
@@ -159,15 +160,15 @@ public class Client {
 		return init(options, null);
 	}
 
-	public InitOperationResult init(InitOperationOptions options, InitOperationListener listener) throws Exception {
+	public InitOperationResult init(InitOperationOptions options, UserInteractionListener listener) throws Exception {
 		return new InitOperation(options, listener).execute();
 	}
 
-	public ConnectOperationResult connect(ConnectOperationOptions options) throws IOException, StorageException, CipherException {
+	public ConnectOperationResult connect(ConnectOperationOptions options) throws Exception {
 		return connect(options, null);
 	}
 
-	public ConnectOperationResult connect(ConnectOperationOptions options, ConnectOperationListener listener) throws IOException, StorageException,
+	public ConnectOperationResult connect(ConnectOperationOptions options, UserInteractionListener listener) throws Exception,
 			CipherException {
 		
 		return new ConnectOperation(options, listener).execute();

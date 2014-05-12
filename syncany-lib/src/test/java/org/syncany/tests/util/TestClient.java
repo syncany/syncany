@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.Connection;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;

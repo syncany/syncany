@@ -40,7 +40,7 @@ import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.SqlDatabase;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperation.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
@@ -130,7 +130,7 @@ public class FileLockedScenarioTest {
 		
 		// Test 3: Check file system for inconsistencies
 		File repoPath = ((LocalConnection) connection).getRepositoryPath();		
-		assertEquals("Repository should contain any files.", 2, repoPath.list().length);			
+		assertEquals("Repository should contain any files.", 3, repoPath.list().length);			
 	}
 	
 	private void runUpAndTestForEmptyDatabase(Connection connection, TestClient client) throws Exception {

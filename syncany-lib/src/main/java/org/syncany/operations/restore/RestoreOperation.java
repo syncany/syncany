@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.restore;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,6 +41,9 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.down.actions.FileSystemAction;
 import org.syncany.operations.down.actions.NewFileSystemAction;
 import org.syncany.util.FileUtil;
@@ -127,7 +130,7 @@ public class RestoreOperation extends Operation {
 		// TODO [medium] Duplicate code in DownOperation
 
 		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
-		TransferManager transferManager = config.getConnection().createTransferManager();
+		TransferManager transferManager = config.getPlugin().createTransferManager(config.getConnection());
 
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);

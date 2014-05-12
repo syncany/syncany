@@ -18,13 +18,13 @@
 package org.syncany.operations.up;
 
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.CleanupOperation.CleanupOperationResult;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.status.StatusOperation.StatusOperationResult;
 
 public class UpOperationResult implements OperationResult {
 	public enum UpResultCode {
-		OK_APPLIED_CHANGES, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
+		OK_CHANGES_UPLOADED, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
 	};
 
 	private UpResultCode resultCode;

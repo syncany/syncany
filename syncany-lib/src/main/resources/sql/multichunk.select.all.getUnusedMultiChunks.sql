@@ -1,4 +1,4 @@
-select distinct mcc1.multichunk_id, mc.size
+select distinct mcc1.multichunk_id id, mc.size
 from multichunk_chunk mcc1
 join multichunk mc on mcc1.multichunk_id=mc.id
 where multichunk_id not in (

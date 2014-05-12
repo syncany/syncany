@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.status;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +36,10 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.ChangeSet;
+import org.syncany.operations.Operation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.util.FileUtil;
 
 /**

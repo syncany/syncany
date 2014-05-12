@@ -182,7 +182,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				// Run up
 				UpOperationResult upOperationResult = new UpOperation(config, listener).execute();
 
-				if (upOperationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES && upOperationResult.getChangeSet().hasChanges()) {
+				if (upOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED && upOperationResult.getChangeSet().hasChanges()) {
 					notifyChanges();
 				}
 			}

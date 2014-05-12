@@ -59,11 +59,11 @@ public class ConnectOperationTest {
 		assertNotNull(connectLinkA);
 		
 		// B.connect()
-		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp(TestConfigUtil.createUniqueName("client-B", initOperationOptionsA));
+		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp(TestConfigUtil.createUniqueName("clientB", initOperationOptionsA));
 		File localConnectDirB = new File(localDirB, Config.DIR_APPLICATION);
 		
 		ConfigTO connectionConfigToB = initOperationOptionsA.getConfigTO();
-		connectionConfigToB.setMachineName("client-B"+ Math.abs(new Random().nextInt()));
+		connectionConfigToB.setMachineName("clientB"+ Math.abs(new Random().nextInt()));
 		connectionConfigToB.setMasterKey(null);
 		
 		ConnectOperationOptions connectOperationOptionsB = new ConnectOperationOptions();

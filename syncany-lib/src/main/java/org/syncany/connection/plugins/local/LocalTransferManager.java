@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.connection.plugins.AbstractTransferManager;
+import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
@@ -62,14 +63,16 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 	private File repoPath;
 	private File multichunksPath;
-	private File databasePath;
+	private File databasesPath;
+	private File actionsPath;
 
 	public LocalTransferManager(LocalConnection connection) {
 		super(connection);
 
 		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
 		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
-		this.databasePath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
+		this.databasesPath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
+		this.actionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "actions");
 	}
 
 	@Override
@@ -98,8 +101,12 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Cannot create multichunk directory: " + multichunksPath);
 		}
 
-		if (!databasePath.mkdir()) {
-			throw new StorageException("Cannot create database directory: " + databasePath);
+		if (!databasesPath.mkdir()) {
+			throw new StorageException("Cannot create databases directory: " + databasesPath);
+		}
+		
+		if (!actionsPath.mkdir()) {
+			throw new StorageException("Cannot create actions directory: " + databasesPath);
 		}
 	}
 
@@ -205,7 +212,10 @@ public class LocalTransferManager extends AbstractTransferManager {
 			return multichunksPath;
 		}
 		else if (remoteFile.equals(DatabaseRemoteFile.class)) {
-			return databasePath;
+			return databasesPath;
+		}
+		else if (remoteFile.equals(ActionRemoteFile.class)) {
+			return actionsPath;
 		}
 		else {
 			return repoPath;

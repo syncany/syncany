@@ -71,6 +71,7 @@ public class Config {
 	private SaltedSecretKey masterKey;
 
 	private Cache cache;	
+	private Plugin plugin;
 	private Connection connection;
     private Chunker chunker;
     private MultiChunker multiChunker;
@@ -94,7 +95,7 @@ public class Config {
 		initRepo(repoTO);
     	initConnection(configTO);  	
 	}		
-	
+
 	private void initNames(ConfigTO configTO) throws ConfigException {
 		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
 			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
@@ -219,7 +220,7 @@ public class Config {
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
 		if (configTO.getConnectionTO() != null) {
-			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());
+			plugin = Plugins.get(configTO.getConnectionTO().getType());
 	    	
 	    	if (plugin == null) {
 	    		throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
@@ -262,7 +263,11 @@ public class Config {
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
-
+		
+	public Plugin getPlugin() {
+		return plugin;
+	}
+	
 	public Connection getConnection() {
         return connection;
     }

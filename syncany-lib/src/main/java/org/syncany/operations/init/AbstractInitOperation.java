@@ -32,11 +32,7 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
+import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
@@ -52,19 +48,13 @@ import org.syncany.util.EnvironmentUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractInitOperation extends Operation {
-	public AbstractInitOperation(Config config) {
+    protected UserInteractionListener listener;
+
+	public AbstractInitOperation(Config config, UserInteractionListener listener) {
 		super(config);
+		this.listener = listener;
 	}
-
-	protected TransferManager createTransferManager(ConnectionTO connectionTO) throws StorageException {
-		Plugin plugin = Plugins.get(connectionTO.getType());
-
-		Connection connection = plugin.createConnection();
-		connection.init(connectionTO.getSettings());
-
-		return connection.createTransferManager();
-	}
-
+	
 	protected File createAppDirs(File localDir) throws IOException {
 		if (localDir == null) {
 			throw new RuntimeException("Unable to create app dir, local dir is null.");
@@ -164,5 +154,11 @@ public abstract class AbstractInitOperation extends Operation {
 		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedStorageXml;
+	}
+
+	protected void fireNotifyCreateMaster() {
+		if (listener != null) {
+			listener.onShowMessage("\nCreating master key from password (this might take a while) ...");
+		}
 	}
 }

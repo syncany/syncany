@@ -24,14 +24,14 @@ applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
 startScripts {
-	defaultJvmOpts = [ "-Xmx1024m", "-Dfile.encoding=utf-8" ]
+	defaultJvmOpts = [ "-Xmx2048m", "-Dfile.encoding=utf-8" ]
 	
 	doLast {
 		def winFile = file getWindowsScript()
 		def unixFile = file getUnixScript()
 
-		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\*')
-		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/*')
+		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\lib\\\\*')
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/lib/*')
 		
 		// Post Java process commands: Delayed plugin JAR file deletion (Windows only)
 		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs\r\n"
@@ -47,6 +47,12 @@ startScripts {
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
+}
+
+applicationDistribution.from("${startScripts.outputDir}/") {
+	into("bin")
+	include "syncany*"
+	rename(/syncany(.*)/, 'sy$1')
 }
 
 distTar {

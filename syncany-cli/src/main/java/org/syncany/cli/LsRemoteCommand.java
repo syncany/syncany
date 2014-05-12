@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.operations.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 
 public class LsRemoteCommand extends Command {
 	@Override
