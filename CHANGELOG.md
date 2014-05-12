@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### Release 0.1.4-alpha (Date: tbd.)
+
+- Nothing yet.
+
 ### Release 0.1.3-alpha (Date: 12 May 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
