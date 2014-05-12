@@ -135,7 +135,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			mergeRemoteFiles();
 		}
 
-		removeLostMultiChunks();
+		// removeLostMultiChunks(); // Deactivated for 0.1.3 due to issue #132
 
 		unlockRemoteRepository();
 		finishOperation();
