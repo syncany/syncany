@@ -53,6 +53,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
@@ -157,7 +158,7 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		
 		// 3. Check if other operations are running
-		if (otherRemoteOperationsRunning("cleanup")) {
+		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
 			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
 			result.setResultCode(DownResultCode.NOK);
 
