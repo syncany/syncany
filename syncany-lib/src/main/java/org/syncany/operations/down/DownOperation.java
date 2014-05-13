@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -151,11 +152,14 @@ public class DownOperation extends AbstractTransferOperation {
 
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(unknownRemoteDatabases);
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
-		DatabaseBranch winnersBranch = determineWinnerBranch(localBranch, unknownRemoteBranches);		
+		
+		DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
+		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);		
 
 		purgeConflictingLocalBranch(localBranch, winnersBranch);
 		applyWinnersBranch(localBranch, winnersBranch, unknownRemoteDatabasesInCache);
-
+		markDirtyBranches(localBranch, winnersBranch, allStitchedBranches);
+		
 		localDatabase.writeKnownRemoteDatabases(unknownRemoteDatabases);
 
 		finishOperation();
@@ -165,7 +169,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	private boolean checkPreconditions() throws Exception {
-		// Check strategies
+		// 1. Check strategies
 		if (options.getConflictStrategy() != DownConflictStrategy.RENAME) {
 			logger.log(Level.INFO, "Conflict strategy "+options.getConflictStrategy()+" not yet implemented.");
 			result.setResultCode(DownResultCode.NOK);
@@ -195,9 +199,9 @@ public class DownOperation extends AbstractTransferOperation {
 		return true;
 	}
 
-	private void applyWinnersBranch(DatabaseBranch localBranch, DatabaseBranch winnersBranch, TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabases) throws Exception {
-		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch);
-		logger.log(Level.INFO, "Database versions to APPLY locally: " + winnersApplyBranch);
+	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabases) throws Exception {
+		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
+		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
 
 		if (winnersApplyBranch.size() == 0) {
 			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
@@ -218,8 +222,7 @@ public class DownOperation extends AbstractTransferOperation {
 			downloadAndDecryptMultiChunks(unknownMultiChunks);
 
 			applyFileSystemActions(actions);
-			applyDatabaseVersions(winnersApplyBranch, winnersDatabase, winnersPurgeDatabase);
-			//applyPurgeDatabaseVersions(winnersPurgeDatabase);			
+			applyDatabaseVersions(winnersApplyBranch, winnersDatabase, winnersPurgeDatabase);		
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
@@ -271,8 +274,8 @@ public class DownOperation extends AbstractTransferOperation {
 		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
 	}
 
-	private void purgeConflictingLocalBranch(DatabaseBranch localBranch, DatabaseBranch winnersBranch) throws Exception {
-		DatabaseBranch localPurgeBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch);
+	private void purgeConflictingLocalBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch) throws Exception {
+		DatabaseBranch localPurgeBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch.getValue());
 		logger.log(Level.INFO, "- Database versions to REMOVE locally: " + localPurgeBranch);
 
 		if (localPurgeBranch.size() == 0) {
@@ -297,6 +300,11 @@ public class DownOperation extends AbstractTransferOperation {
 			}						
 		}
 	}
+	
+	private void markDirtyBranches(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches) {
+		//databaseReconciliator.findDirtyBranches(winnersBranch.getKey(), winnersBranch.getValue(), allStitchedBranches);
+		logger.log(Level.SEVERE, "DownOperation: markDirtyBranches is not yet implemented. See issue #132");
+	}
 
 	/**
 	 * This method uses the {@link DatabaseReconciliator} to compare the local database with the 
@@ -312,19 +320,18 @@ public class DownOperation extends AbstractTransferOperation {
 	 * @param localBranch 
 	 * 
 	 * @param localDatabase The local database (to be compared with the remote databases)
-	 * @param unknownRemoteBranches The newly downloaded remote database version headers (= branches)
+	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
 	 * @return Returns the branch of the winner 
 	 * @throws Exception If any kind of error occurs (...)
 	 */
-	private DatabaseBranch determineWinnerBranch(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) throws Exception {
-		logger.log(Level.INFO, "Detect updates and conflicts ...");
-		
-		DatabaseReconciliator databaseReconciliator = new DatabaseReconciliator();
-		DatabaseBranch winnersBranch = databaseReconciliator.findWinnerBranch(config.getMachineName(), localBranch, unknownRemoteBranches);
-
-		logger.log(Level.INFO, "We have a winner! Now determine what to do locally ...");
-		
-		return winnersBranch;
+	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranch localBranch, DatabaseBranches allStitchedBranches) throws Exception {
+		logger.log(Level.INFO, "Determine winner using database reconciliator ...");		
+		return databaseReconciliator.findWinnerBranch(config.getMachineName(), localBranch, allStitchedBranches);
+	}
+	
+	private DatabaseBranches determineStitchedBranches(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) {
+		logger.log(Level.INFO, "Determine stitched branches using database reconciliator ...");		
+		return databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 	}
 
 	private Set<MultiChunkId> determineRequiredMultiChunks(List<FileSystemAction> actions, MemoryDatabase winnersDatabase) {

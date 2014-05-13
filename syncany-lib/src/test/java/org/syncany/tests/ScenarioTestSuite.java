@@ -50,7 +50,7 @@ import org.syncany.tests.scenarios.RestoreFileScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
-import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
+import org.syncany.tests.scenarios.DirtyDatabaseVersionsScenarioTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -84,7 +84,7 @@ import org.syncany.tests.scenarios.ThreeClientsOneLoserScenarioTest;
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,
 	SymlinkSyncScenarioTest.class,
-	ThreeClientsOneLoserScenarioTest.class
+	DirtyDatabaseVersionsScenarioTest.class
 })
 public class ScenarioTestSuite {
 	// This class executes all tests
