@@ -140,7 +140,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		removeLostMultiChunks();
-		
+
 		finishOperation();
 		return updateResultCode(result);
 	}
