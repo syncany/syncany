@@ -268,6 +268,8 @@ public class DirtyDatabaseScenarioTest {
 			}
 		}
 		
+		clientA.cleanup();
+		
 		clientB.down();
 		clientC.down();
 		clientD.down();

@@ -1,8 +1,7 @@
 %RESOURCE:/help/copyright.skel%
   
 SYNOPSIS
-  sy up [-c | --no-cleanup] 
-        [options of 'status' command]
+  sy up [options of 'status' command]
   
 DESCRIPTION 
   This command detects changes in the local folder, indexes new files and 
@@ -18,9 +17,5 @@ DESCRIPTION
   no multichunks and no metadata.
   
 OPTIONS
-  -c, --no-cleanup
-    Do not merge own databases in repo
-
-  In addition to these options, all arguments of the 'status' command can
-  be used.
+  All arguments of the 'status' command can be used.
  

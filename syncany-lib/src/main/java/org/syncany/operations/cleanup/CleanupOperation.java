@@ -80,7 +80,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	
 	public static final String ACTION_ID = "cleanup";
 	
-	private static final int BEFORE_DOUBLE_CHECK_TIME = 2000;
+	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
 	private static final int MIN_KEEP_DATABASE_VERSIONS = 5;
 	private static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
@@ -156,6 +156,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 			if (!multiChunkExistsLocally) {
 				logger.log(Level.WARNING, "- Deleting lost/unknown remote multichunk " + remoteMultiChunk + " ...");
 				transferManager.delete(remoteMultiChunk);
+
+				result.getRemovedMultiChunks().put(remoteMultiChunkId, new MultiChunkEntry(remoteMultiChunkId, -1));
 			}
 		}
 	}

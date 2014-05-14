@@ -303,6 +303,13 @@ public class DownOperation extends AbstractTransferOperation {
 	
 	private void markDirtyBranches(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches) {
 		//databaseReconciliator.findDirtyBranches(winnersBranch.getKey(), winnersBranch.getValue(), allStitchedBranches);
+		
+		
+		
+		
+		
+		
+		
 		logger.log(Level.SEVERE, "DownOperation: markDirtyBranches is not yet implemented. See issue #132");
 	}
 

@@ -49,7 +49,6 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
@@ -78,8 +77,7 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
  */
 public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
-
-	public static final int CLEANUP_RUN_INTERVAL = 15;
+	
 	public static final String ACTION_ID = "up";
 
 	private UpOperationOptions options;
@@ -150,10 +148,6 @@ public class UpOperation extends AbstractTransferOperation {
 		finishOperation();
 		logger.log(Level.INFO, "Sync up done.");
 
-		if (options.cleanupEnabled()) {
-			runCleanupOperation(newDatabaseVersion);
-		}
-
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
@@ -204,21 +198,6 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 		
 		return true;
-	}
-
-	private void runCleanupOperation(DatabaseVersion newDatabaseVersion) throws Exception {
-		Long ownClock = newDatabaseVersion.getVectorClock().getClock(config.getMachineName());
-		boolean cleanupIntervalReached = ownClock != null && ownClock % CLEANUP_RUN_INTERVAL == 0;
-		
-		if (cleanupIntervalReached) {
-			logger.log(Level.INFO, "Post-up cleanup requested and interval reached; Running cleanup ...");
-			
-			CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
-			result.setCleanupResult(cleanupOperationResult);	
-		}
-		else {
-			logger.log(Level.INFO, "Post-up cleanup requested, but interval NOT reached; Not running cleanup.");			
-		}
 	}
 
 	private void writeAndUploadDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
