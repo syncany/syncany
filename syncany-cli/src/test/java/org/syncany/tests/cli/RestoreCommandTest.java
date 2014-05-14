@@ -46,8 +46,7 @@ public class RestoreCommandTest {
 		TestFileUtil.createRandomFile(new File(clientA.get("localdir"),"file1"), 50L);
 		new CommandLineClient(new String[] { 
 			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--no-cleanup" 
+			 "up" 
 		}).start();
 		
 		Thread.sleep(1000);
@@ -55,8 +54,7 @@ public class RestoreCommandTest {
 		TestFileUtil.deleteFile(new File(clientA.get("localdir"),"file1"));
 		new CommandLineClient(new String[] { 
 			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--no-cleanup" 
+			 "up" 
 		}).start();
 				
 		Thread.sleep(1000);

@@ -77,9 +77,6 @@ COMMANDS
   up [<args>]
     Detect local changes and upload to repository.
 
-    Arguments:
-    -c, --no-cleanup                 Do not merge own databases in repo
-
     In addition to these arguments, all arguments of the 'status' command
     can be used.
 

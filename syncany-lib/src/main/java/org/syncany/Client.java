@@ -61,8 +61,8 @@ import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
-import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.watch.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperationOptions;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s

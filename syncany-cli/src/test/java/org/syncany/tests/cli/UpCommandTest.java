@@ -40,8 +40,7 @@ public class UpCommandTest {
 
 		new CommandLineClient(new String[] { 
 			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--no-cleanup" 
+			 "up"
 		}).start();
 
 		for (int i=1; i<=20; i++) {
@@ -49,8 +48,7 @@ public class UpCommandTest {
 
 			new CommandLineClient(new String[] { 
 				"--localdir", clientA.get("localdir"),
-				"up",
-				"--no-cleanup"
+				"up"
 			}).start();
 		}
 		

@@ -52,9 +52,9 @@ public class ActionFileHandler {
 	 */
 	public static final int ACTION_RENEWAL_INTERVAL = 2*60*1000; // Minutes
 
-	protected TransferManager transferManager;
-	protected ActionRemoteFile actionFile;
-	protected Timer actionRenewalTimer;
+	private TransferManager transferManager;
+	private ActionRemoteFile actionFile;
+	private Timer actionRenewalTimer;
 
 	public ActionFileHandler(TransferManager transferManager, String operationName, String machineName) {		
 		try {

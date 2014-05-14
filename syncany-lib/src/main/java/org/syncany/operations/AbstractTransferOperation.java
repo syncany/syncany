@@ -17,6 +17,12 @@
  */
 package org.syncany.operations;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.StorageException;
@@ -33,6 +39,17 @@ import org.syncany.connection.plugins.TransferManager;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(AbstractTransferOperation.class.getSimpleName());
+
+	/**
+	 * Defines the time after which old/outdated action files from other clients are
+	 * deleted. This time must be significantly larger than the time action files are 
+	 * renewed by the {@link ActionFileHandler}.
+	 * 
+	 * @see ActionFileHandler#ACTION_RENEWAL_INTERVAL
+	 */
+	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
+
 	protected TransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
@@ -50,10 +67,74 @@ public abstract class AbstractTransferOperation extends Operation {
 	protected void finishOperation() throws StorageException {
 		actionHandler.finish();
 		
+		cleanActionFiles();
 		disconnectTransferManager();
 		clearCache();
 	}
+	
+	protected boolean otherRemoteOperationsRunning(String... operationIdentifiers) throws StorageException {
+		logger.log(Level.INFO, "Looking for other running remote operations ...");
+		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
+		
+		boolean otherRemoteOperationsRunning = false;
+		List<String> disallowedOperationIdentifiers = Arrays.asList(operationIdentifiers);
+		
+		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
+			String operationName = actionRemoteFile.getOperationName();
+			String machineName = actionRemoteFile.getClientName();
+			
+			boolean isOwnActionFile = machineName.equals(config.getMachineName());
+			boolean isOperationAllowed = !disallowedOperationIdentifiers.contains(operationName);
+			boolean isOutdatedActionFile = isOutdatedActionFile(actionRemoteFile);
+			
+			if (!isOwnActionFile) {			
+				if (!isOutdatedActionFile) {
+					if (isOperationAllowed) {
+						logger.log(Level.INFO, "- Action file from other client, but allowed operation; not marking running; " + actionRemoteFile);
+					}
+					else {
+						logger.log(Level.INFO, "- Action file from other client; --> marking operations running (!); " + actionRemoteFile);
+						otherRemoteOperationsRunning = true;
+					}
+				}
+				else {
+					logger.log(Level.INFO, "- Action file outdated; ignoring " + actionRemoteFile);
+				}
+			}
+		}
 
+		return otherRemoteOperationsRunning;
+	}
+
+	private void cleanActionFiles() throws StorageException {
+		logger.log(Level.INFO, "Cleaning own old action files ...");
+		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
+		
+		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
+			String machineName = actionRemoteFile.getClientName();			
+			
+			boolean isOwnActionFile = machineName.equals(config.getMachineName());
+			boolean isOutdatedActionFile = isOutdatedActionFile(actionRemoteFile);
+			
+			if (isOwnActionFile) {
+				logger.log(Level.INFO, "- Deleting own action file " + actionRemoteFile + " ...");
+				transferManager.delete(actionRemoteFile);
+			}
+			else if (isOutdatedActionFile) {
+				logger.log(Level.INFO, "- Action file from other client is OUTDATED; deleting " + actionRemoteFile + " ...");
+				transferManager.delete(actionRemoteFile);
+			}
+			else {
+				logger.log(Level.INFO, "- Action file is current; ignoring " + actionRemoteFile + " ...");
+			}
+		}
+	}
+	
+	private boolean isOutdatedActionFile(ActionRemoteFile actionFile) {
+		// TODO [low] Even though this is UTC and the times frames are large, this might be an issue with different timezones or wrong system clocks
+		return System.currentTimeMillis() - ACTION_FILE_DELETE_TIME > actionFile.getTimestamp();
+	}
+	
 	private void disconnectTransferManager() {
 		try {
 			transferManager.disconnect();
