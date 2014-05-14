@@ -79,10 +79,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	
 	public static final String ACTION_ID = "cleanup";
+	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
+	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
 	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
-	private static final int MIN_KEEP_DATABASE_VERSIONS = 5;
-	private static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
 	private CleanupOperationOptions options;
 	private CleanupOperationResult result;
