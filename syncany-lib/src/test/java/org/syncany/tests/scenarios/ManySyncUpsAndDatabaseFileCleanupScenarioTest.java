@@ -50,6 +50,8 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 		// ROUND 2: 1x sync up (cleanup expected!)
 		clientA.createNewFile("file16", 1);
 		clientA.up();		
+		
+		clientA.cleanup(); // Force cleanup
 
 		for (int i=1; i<=10; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
@@ -88,6 +90,8 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 		// ROUND 4: 1x sync up (cleanup expected!)
 		clientA.createNewFile("file26", 1);
 		clientA.up();		
+		
+		clientA.cleanup(); // Force cleanup 
 
 		for (int i=1; i<=20; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);

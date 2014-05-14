@@ -31,7 +31,7 @@ Download and install Syncany
 You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
-Syncany 0.1.2-alpha, 27 April 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.2-alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.2-alpha.exe)
+Syncany 0.1.3-alpha, 12 May 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.3-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.3-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.3-alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.3-alpha.exe)
 
 Quick [install and usage instructions](https://github.com/syncany/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
 If you like it a bit more detailed, [there's lots more you can explore](https://github.com/syncany/syncany/wiki).

@@ -26,20 +26,21 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.OperationResult;
+import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.down.DownOperation;
-import org.syncany.operations.down.DownOperationListener;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.up.UpOperation;
-import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.operations.watch.NotificationListener.NotificationListenerListener;
@@ -83,6 +84,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private AtomicBoolean syncRequested;
 	private AtomicBoolean stopRequested;
 	private AtomicBoolean pauseRequested;
+	
+	private AtomicLong cleanupLastRun;
+	private AtomicInteger upCount;
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
@@ -103,6 +107,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.syncRequested = new AtomicBoolean(false);
 		this.stopRequested = new AtomicBoolean(false);
 		this.pauseRequested = new AtomicBoolean(false);
+		
+		this.cleanupLastRun = new AtomicLong(0);
+		this.upCount = new AtomicInteger(0);
 
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
@@ -229,6 +236,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "RUNNING SYNC ...");
 
 			try {
+				boolean notifyChanges = false;
+				
 				// Run down
 				DownOperationResult downResult = new DownOperation(config, listener).execute();
 				
@@ -240,6 +249,27 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				UpOperationResult upOperationResult = new UpOperation(config, listener).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED && upOperationResult.getChangeSet().hasChanges()) {
+					upCount.incrementAndGet();
+					notifyChanges = true;
+				}
+				
+				// Run cleanup
+				boolean lastCleanupExpired = cleanupLastRun.get() + options.getCleanupInterval() < System.currentTimeMillis();
+				boolean enoughUpsForCleanup = upCount.get() > CleanupOperation.MAX_KEEP_DATABASE_VERSIONS;
+				
+				if (lastCleanupExpired || enoughUpsForCleanup) {
+					CleanupOperationResult cleanupOperationResult = new CleanupOperation(config).execute();
+					
+					if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
+						notifyChanges = true;
+						
+						cleanupLastRun.set(System.currentTimeMillis());
+						upCount.set(0);
+					}
+				}
+				
+				// Fire change event if up and/or cleanup  
+				if (notifyChanges) {
 					notifyChanges();
 				}
 			}
@@ -249,7 +279,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			}
 		}
 		else {
-			logger.log(Level.INFO, "Sync already running, setting 'sync requested' flag ...");
+			// Can't do a log message here, because this bit is called thousand 
+			// of times when file system events occur.
+			
 			syncRequested.set(true);
 		}
 	}
@@ -337,73 +369,5 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		catch (Exception e) {
 			logger.log(Level.INFO, "Forcefully stopping watch thread FAILED at " + config.getLocalDir() + ". Giving up.");
 		}
-	}
-
-	/**
-	 * @author Vincent Wiencek
-	 */
-	public interface WatchOperationListener extends UpOperationListener, DownOperationListener {
-		// Nothing
-	}
-
-	public static class WatchOperationOptions implements OperationOptions {
-		private int interval = 120000;
-		private boolean announcements = true;
-		private String announcementsHost = "notify.syncany.org";
-		private int announcementsPort = 8080;
-		private int settleDelay = 3000;
-		private boolean watcher = true;
-
-		public int getInterval() {
-			return interval;
-		}
-
-		public void setInterval(int interval) {
-			this.interval = interval;
-		}
-
-		public boolean announcementsEnabled() {
-			return announcements;
-		}
-
-		public void setAnnouncements(boolean announcements) {
-			this.announcements = announcements;
-		}
-
-		public String getAnnouncementsHost() {
-			return announcementsHost;
-		}
-
-		public void setAnnouncementsHost(String announcementsHost) {
-			this.announcementsHost = announcementsHost;
-		}
-
-		public int getAnnouncementsPort() {
-			return announcementsPort;
-		}
-
-		public void setAnnouncementsPort(int announcementsPort) {
-			this.announcementsPort = announcementsPort;
-		}
-
-		public int getSettleDelay() {
-			return settleDelay;
-		}
-
-		public void setSettleDelay(int settleDelay) {
-			this.settleDelay = settleDelay;
-		}
-
-		public boolean watcherEnabled() {
-			return watcher;
-		}
-
-		public void setWatcher(boolean watcher) {
-			this.watcher = watcher;
-		}
-	}
-
-	public static class WatchOperationResult implements OperationResult {
-		// Fressen
 	}
 }

@@ -29,7 +29,7 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
-import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.watch.WatchOperationOptions;
 
 public class TestClient extends Client {
 	public TestClient(String machineName, Connection connection) throws Exception {

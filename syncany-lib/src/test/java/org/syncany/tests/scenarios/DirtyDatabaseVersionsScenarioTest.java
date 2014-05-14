@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlResultEquals;
 
@@ -33,7 +31,7 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class ThreeClientsOneLoserScenarioTest {
+public class DirtyDatabaseVersionsScenarioTest {
 	@Test
 	public void testThreeClientsOneLoser() throws Exception {		
 		// Setup 
@@ -89,5 +87,71 @@ public class ThreeClientsOneLoserScenarioTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 		clientC.deleteTestData();
+	}	
+	
+	@Test
+	public void testRemoveDirtyLostMultiChunksIssue132() throws Exception {
+		/*
+		 * This test tries to provoke issue #132, i.e. the deletion of 
+		 * multichunks of DIRTY database versions of other clients. 
+		 */
+		
+		// Setup 
+		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		UpOperationOptions upOptionsWithForce = new UpOperationOptions();
+		upOptionsWithForce.setForceUploadEnabled(true);
+		
+		// Run 
+		clientA.createNewFile("file1.jpg");
+		clientA.up();
+		
+		clientB.down();		
+		clientB.createNewFile("file2.jpg");
+		clientB.up();
+		
+		clientA.createNewFile("file3.jpg");
+		clientA.up(upOptionsWithForce);	  // No 'down' (creates dirty version)	
+		
+		
+		clientB.down(); // Download A's version, realize it's dirty, do nothing
+		clientB.cleanup(); // <<< This should NOT delete any lost multichunks of DIRTY database versions!
+		
+		clientA.down(); // Adds dirty database
+		assertSqlResultEquals(clientA.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "1");
+		
+		clientA.up(); 
+		assertSqlResultEquals(clientA.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "0");
+
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());		
+
+		fail("xx");
+		
+		// A tries to upload, this fails due to C's unknown database
+		clientA.createNewFile("file4.jpg");
+		UpOperationResult aUpResult = clientA.upWithForceChecksum(); // 
+		assertEquals("Expected to fail, because db-C-1 has not been looked at", UpResultCode.NOK_UNKNOWN_DATABASES, aUpResult.getResultCode());
+		assertFalse(clientA.getLocalFile("file2.jpg").exists());
+		assertFalse(clientA.getLocalFile("file3.jpg").exists());
+		
+		// A downloads C's changes, no file changes are expected
+		DownOperationResult aDownResult = clientA.down(); 
+		assertEquals("Expected to succeed with remote changes (a new database file, but no file changes!).", DownResultCode.OK_WITH_REMOTE_CHANGES, aDownResult.getResultCode());
+		assertTrue(clientA.getLocalFile("file2.jpg").exists());
+		assertFalse(clientA.getLocalFile("file3.jpg").exists());
+		
+		// TODO [low] Add assert: "no file changes are expected"
+		
+		// A uploads again, this time it should succeed, because C's file is in knowndbs.list
+		aUpResult = clientA.upWithForceChecksum(); 
+		assertEquals("Expected to succeed, because db-C-1 has already been looked at", UpResultCode.OK_CHANGES_UPLOADED, aUpResult.getResultCode());
+		
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}	
 }

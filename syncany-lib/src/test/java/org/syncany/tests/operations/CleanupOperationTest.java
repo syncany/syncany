@@ -429,9 +429,15 @@ public class CleanupOperationTest {
 		
 		UpOperationResult secondUpResult = clientA.up();
 		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, secondUpResult.getResultCode());
-		assertEquals(2, repoMultiChunkDir.listFiles().length);
+		assertEquals(3, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
+		
+		// 6. Call 'cleanup' manually
+		CleanupOperationResult cleanupOperationResult = clientA.cleanup();
+		assertEquals(CleanupOperationResult.CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(1, cleanupOperationResult.getRemovedMultiChunks().size());
 		assertFalse(oldMultiChunkFile.exists());
+		assertEquals(0, repoActionsDir.listFiles().length);
 	
 		// Tear down
 		clientA.deleteTestData();

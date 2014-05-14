@@ -26,8 +26,8 @@ import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
-import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.watch.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperationOptions;
 
 /**
  * @author pheckel

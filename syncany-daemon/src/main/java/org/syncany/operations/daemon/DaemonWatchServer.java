@@ -29,7 +29,7 @@ import org.syncany.config.Config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.DaemonConfigTO.FolderTO;
-import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperationListener;
 
 import com.google.common.collect.Maps;
 

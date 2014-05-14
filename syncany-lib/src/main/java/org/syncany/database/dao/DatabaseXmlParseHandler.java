@@ -213,8 +213,8 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				logger.log(Level.INFO, "   + Added database version " + databaseVersion.getHeader());
 			}
 			else {
-				logger.log(Level.INFO, "   + IGNORING database version " + databaseVersion.getHeader() + " (not in load range " + versionFrom + " - "
-						+ versionTo + " OR type filter mismatch: " + filterType + " =?= " + databaseVersion.getHeader().getType());
+				//logger.log(Level.FINEST, "   + IGNORING database version " + databaseVersion.getHeader() + " (not in load range " + versionFrom + " - "
+				//		+ versionTo + " OR type filter mismatch: " + filterType + " =?= " + databaseVersion.getHeader().getType());
 			}
 
 			databaseVersion = null;

@@ -26,6 +26,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 
 public class DownOperationResult implements OperationResult {
 	public enum DownResultCode {
@@ -37,6 +38,7 @@ public class DownOperationResult implements OperationResult {
 	private List<DatabaseVersionHeader> dirtyDatabasesCreated = new ArrayList<DatabaseVersionHeader>();
 	private Set<String> downloadedUnknownDatabases = new HashSet<String>();
 	private Set<MultiChunkId> downloadedMultiChunks = new HashSet<MultiChunkId>();
+	private LsRemoteOperationResult lsRemoteResult = null;
 
 	public DownResultCode getResultCode() {
 		return resultCode;
@@ -76,5 +78,13 @@ public class DownOperationResult implements OperationResult {
 
 	public void setDownloadedMultiChunks(Set<MultiChunkId> downloadedMultiChunks) {
 		this.downloadedMultiChunks = downloadedMultiChunks;
+	}
+
+	public LsRemoteOperationResult getLsRemoteResult() {
+		return lsRemoteResult;
+	}
+
+	public void setLsRemoteResult(LsRemoteOperationResult lsRemoteResult) {
+		this.lsRemoteResult = lsRemoteResult;
 	}
 }
