@@ -47,11 +47,14 @@ public class DaemonControlServer implements TailerListener {
 		this.controlListener = controlListener;
 	}
 
-	public void enterLoop() throws IOException {
+	public void enterLoop() throws IOException, ServiceAlreadyStartedException {
 		File userAppDir = UserConfig.getUserConfigDir();
 		userAppDir.mkdirs();
-				
-		if (!controlFile.exists()) {
+		
+		if (controlFile.exists()) {
+			throw new ServiceAlreadyStartedException("Syncany daemon already running or crashed. Control file already exists at " + controlFile);
+		}
+		else {
 			controlFile.createNewFile();
 		}
 		

@@ -20,7 +20,6 @@ package org.syncany.operations.daemon;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
@@ -29,7 +28,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.syncany.util.JsonHelper;
 
-public class DaemonWebSocketServer extends AbstractService {
+public class DaemonWebSocketServer {
 	private static final Logger log = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
 	private static int DEFAULT_PORT = 8887;
 	
@@ -92,13 +91,11 @@ public class DaemonWebSocketServer extends AbstractService {
 		ws.send(text);
 	}
 
-	@Override
-	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
+	public void start() throws ServiceAlreadyStartedException {
 		delegate.start();
 		running.set(true);
 	}
 
-	@Override
 	public void stop() {
 		try {
 			delegate.stop();
@@ -112,7 +109,6 @@ public class DaemonWebSocketServer extends AbstractService {
 		}
 	}
 
-	@Override
 	public boolean isRunning() {
 		return running.get();
 	}

@@ -18,7 +18,6 @@
 package org.syncany.operations.daemon;
 
 import java.io.File;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,7 +32,7 @@ import org.syncany.operations.watch.WatchOperationOptions;
  * @author pheckel
  *
  */
-public class WatchOperationThread extends AbstractService {
+public class WatchOperationThread {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
 
 	private Config config;
@@ -51,8 +50,7 @@ public class WatchOperationThread extends AbstractService {
 		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), listener);
 	}
 	
-	@Override
-	public void start(Map<String, Object> parameters) throws ServiceAlreadyStartedException {
+	public void start() throws ServiceAlreadyStartedException {
 		watchThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -72,14 +70,7 @@ public class WatchOperationThread extends AbstractService {
 		watchThread.start();
 	}
 
-	@Override
 	public void stop() {
 		watchOperation.stop();
 	}
-
-	@Override
-	public boolean isRunning() {
-		// TODO Auto-generated method stub
-		return false;
-	}	
 }

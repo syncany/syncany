@@ -90,7 +90,7 @@ public class DaemonWatchServer implements WatchOperationListener {
 				logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
 				
 				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, this);	
-				watchOperationThread.start(null);
+				watchOperationThread.start();
 
 				watchOperations.put(localDir, watchOperationThread);
 			}

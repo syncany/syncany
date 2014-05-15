@@ -56,7 +56,7 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 		logger.log(Level.INFO, "Starting websocket server ...");
 
 		webSocketServer = new DaemonWebSocketServer();
-		webSocketServer.start(null);
+		webSocketServer.start();
 	}
 
 	private void startWatchServer() throws ConfigException {
@@ -66,7 +66,7 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 		watchServer.start();
 	}
 
-	private void startDaemonControlLoop() throws IOException {
+	private void startDaemonControlLoop() throws IOException, ServiceAlreadyStartedException {
 		logger.log(Level.INFO, "Starting daemon control server ...");
 
 		controlServer = new DaemonControlServer(this);
