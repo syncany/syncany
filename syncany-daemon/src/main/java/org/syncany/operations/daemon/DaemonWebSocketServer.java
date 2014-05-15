@@ -31,7 +31,8 @@ import org.syncany.util.JsonHelper;
 
 public class DaemonWebSocketServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
-	private static int DEFAULT_PORT = 8625;
+	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
+	private static final int DEFAULT_PORT = 8625;
 	
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	
@@ -46,9 +47,20 @@ public class DaemonWebSocketServer {
 	private WebSocketServer initWebSocketServer() {
 		return new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
-			public void onOpen(WebSocket conn, ClientHandshake handshake) {
-				String clientId = handshake.getFieldValue("client_id");
-				logger.log(Level.INFO, "Client with id '" + clientId + "' connected");
+			public void onOpen(WebSocket clientSocket, ClientHandshake clientHandshake) {
+				String clientAddress = clientSocket.getRemoteSocketAddress().toString();
+				String clientOrigin = clientHandshake.getFieldValue("origin");
+				String clientId = clientHandshake.getFieldValue("clientId");
+				
+				if (clientOrigin == null || !clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER)) {
+					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header: " + clientOrigin);
+					logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
+					
+					clientSocket.close();
+					return;
+				}
+				
+				logger.log(Level.INFO, "Client " + clientAddress + " connected. Origin: " + clientOrigin + ", ID: " + clientId);
 			}
 			
 			@Override
