@@ -60,4 +60,3 @@ Gradle should also be able to use the iscc compiler. You can run it like this:
 
 	gradle exe
 
-

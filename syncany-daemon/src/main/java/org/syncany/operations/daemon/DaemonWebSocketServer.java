@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.syncany.util.JsonHelper;
 
 public class DaemonWebSocketServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
@@ -47,10 +46,10 @@ public class DaemonWebSocketServer {
 	private WebSocketServer initWebSocketServer() {
 		return new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
-			public void onOpen(WebSocket clientSocket, ClientHandshake clientHandshake) {
+			public void onOpen(WebSocket clientSocket, ClientHandshake handshake) {
 				String clientAddress = clientSocket.getRemoteSocketAddress().toString();
-				String clientOrigin = clientHandshake.getFieldValue("origin");
-				String clientId = clientHandshake.getFieldValue("clientId");
+				String clientOrigin = handshake.getFieldValue("origin");
+				String clientId = handshake.getFieldValue("clientId");
 				
 				if (clientOrigin == null || !clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER)) {
 					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header: " + clientOrigin);
@@ -84,26 +83,21 @@ public class DaemonWebSocketServer {
 	/**
 	 * Sends message to all currently connected WebSocket clients.
 	 * 
-	 * @param text The String to send across the network.
+	 * @param message The String to send across the network.
 	 * @throws InterruptedException When socket related I/O errors occur.
 	 */
-	public void sendToAll(String text) {
+	public void sendToAll(String message) {
 		Collection<WebSocket> clientSockets = webSocketServer.connections();
 		
 		synchronized (clientSockets) {
 			for (WebSocket clientSocket : clientSockets) {
-				sendTo(clientSocket, text);
+				sendTo(clientSocket, message);
 			}
 		}
 	}
 	
-	public void sendToAll(Object message) {
-		String text = JsonHelper.fromObjectToString(message);
-		sendToAll(text);
-	}
-	
-	private void sendTo(WebSocket ws, String text) {
-		ws.send(text);
+	private void sendTo(WebSocket clientSocket, String message) {
+		clientSocket.send(message);
 	}
 
 	public void start() throws ServiceAlreadyStartedException {
