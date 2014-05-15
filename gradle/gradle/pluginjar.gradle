@@ -1,0 +1,35 @@
+// Generic gradle script for 'pluginJar' task
+
+// Can be embedded using 
+//    apply from: 'core/gradle/gradle/pluginjar.gradle'
+
+repositories {
+	mavenCentral()
+}
+
+processResources {	
+	filter{ String line -> line.replaceAll('%pluginId%', "${pluginId}") }        	            
+	filter{ String line -> line.replaceAll('%pluginName%', "${pluginName}") }        	            
+	filter{ String line -> line.replaceAll('%pluginVersion%', "${pluginVersionFull}") }      	            
+	filter{ String line -> line.replaceAll('%pluginDate%', "${pluginDate}") }    	
+	filter{ String line -> line.replaceAll('%pluginAppMinVersion%', "${pluginAppMinVersion}") }    	
+	filter{ String line -> line.replaceAll('%pluginRelease%', "${pluginRelease}") }    	
+}		
+
+task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
+	from files(sourceSets.main.output.classesDir)
+	from files(sourceSets.main.output.resourcesDir)
+	from { configurations.pluginjar.collect { zipTree(it) } }
+
+	baseName = "syncany-plugin-${pluginId}"
+	version  = "${pluginVersionFull}"
+	
+	manifest {
+		attributes("Plugin-Id": "${pluginId}")
+		attributes("Plugin-Name": "${pluginName}")
+		attributes("Plugin-Version": "${pluginVersionFull}")
+		attributes("Plugin-Date": "${pluginDate}")		
+		attributes("Plugin-App-Min-Version": "${pluginAppMinVersion}")		
+		attributes("Plugin-Release": "${pluginRelease}")		
+	}						
+}
