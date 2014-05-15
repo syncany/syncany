@@ -31,6 +31,8 @@ public class DaemonWebSocketHandler {
 	public void handle(String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 		logger.log(Level.WARNING, "--> NO MESSAGE HANDLING IMPLEMENTED YET.");
+		
+		webSocketServer.sendToAll("{code: 400, message: \"Not supported\"}");
 	}
 
 }

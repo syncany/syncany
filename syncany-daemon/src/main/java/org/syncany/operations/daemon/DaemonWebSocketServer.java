@@ -52,7 +52,7 @@ public class DaemonWebSocketServer {
 				String clientId = handshake.getFieldValue("clientId");
 				
 				if (clientOrigin == null || !clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER)) {
-					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header: " + clientOrigin);
+					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header. Origin: " + clientOrigin + ", ID: " + clientId);
 					logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
 					
 					clientSocket.close();

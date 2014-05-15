@@ -45,11 +45,30 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 	public OperationResult execute() throws Exception {		
 		logger.log(Level.INFO, "Starting daemon operation ...");
 		
-		startWebSocketServer();
-		startWatchServer();
-		startDaemonControlLoop();	
-		
+		startOperation();
 		return null;
+	}
+
+	private void startOperation() throws ServiceAlreadyStartedException, ConfigException, IOException {
+		// startWebSocketServer();
+		startWatchServer();
+		
+		startDaemonControlLoop(); // This blocks until SHUTDOWN is received!
+	}
+	
+	private void stopOperation() {
+		// stopWebSocketServer();
+		stopWatchServer();
+	}
+
+	private void stopWebSocketServer() {
+		logger.log(Level.INFO, "Stopping websocket server ...");
+		webSocketServer.stop();
+	}
+
+	private void stopWatchServer() {
+		logger.log(Level.INFO, "Stopping watch server ...");
+		watchServer.stop();
 	}
 
 	private void startWebSocketServer() throws ServiceAlreadyStartedException {
@@ -76,12 +95,7 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 	@Override
 	public void onDaemonShutdown() {
 		logger.log(Level.INFO, "SHUTDOWN requested.");
-		
-		logger.log(Level.INFO, "Stopping websocket server ...");
-		webSocketServer.stop();
-
-		logger.log(Level.INFO, "Stopping watch server ...");
-		watchServer.stop();
+		stopOperation();
 	}
 
 	@Override
