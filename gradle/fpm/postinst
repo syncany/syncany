@@ -2,3 +2,5 @@
 
 ln -s /usr/lib/syncany/bin/syncany /usr/bin/syncany
 ln -s /usr/lib/syncany/bin/sy /usr/bin/sy
+ln -s /usr/lib/syncany/bin/syncanyd /usr/bin/syncanyd
+ln -s /usr/lib/syncany/bin/syd /usr/bin/syd
