@@ -66,65 +66,11 @@ dependencies {
 	testCompile		project(path: ":syncany-daemon", configuration: "tests")	
 }
 
+// Application /////////////////////////////////////////////////////////////////
 
-// Application Plugin Settings and Hooks ///////////////////////////////////////	
-
-apply plugin: "application"
-
-applicationName = "syncany"
-mainClassName = "org.syncany.Syncany"
-
-startScripts {
-	defaultJvmOpts = [ "-Xmx2048m", "-Dfile.encoding=utf-8" ]
-	
-	doLast {
-		def winFile = file getWindowsScript()
-		def unixFile = file getUnixScript()
-
-		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\lib\\\\*')
-		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/lib/*')
-		
-		// Post Java process commands: Delayed plugin JAR file deletion (Windows only)
-		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs\r\n"
-		winPurgeFileDeletionCommands += "SET PURGEFILE=%AppData%\\\\Syncany\\\\purgefile\r\n";
-		winPurgeFileDeletionCommands += "if exist %PURGEFILE% (\r\n";
-		winPurgeFileDeletionCommands += "  @for /f %%b in (%PURGEFILE%) do del /q \"%%b\" 2>NUL\r\n";
-		winPurgeFileDeletionCommands += "  del /q %PURGEFILE% 2>NUL\r\n";
-		winPurgeFileDeletionCommands += ")\r\n\r\n";
-		
-		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
-	}
-}
-
-applicationDistribution.from("${rootProject.projectDir}/") {
-	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
-	
-	// Copy daemon script
-	from("gradle/daemon/") {
-		include "syncanyd", "syncanyd.bat"
-		into "bin"
-	}
-
-	// Copy syncany/syncanyd to sy/syd
-	from(files("gradle/daemon/", "${startScripts.outputDir}/")) {
-		include "syncany*"
-		rename(/syncany(.*)/, 'sy$1')
-		into "bin"
-	}
-}
-
-distTar {
-	baseName = "syncany"
-	version = "$applicationVersionFull"
-	compression = Compression.GZIP
-	extension = "tar.gz"	
-}
-
-distZip {
-	baseName = "syncany"
-	version = "$applicationVersionFull"
-}
-
+apply from: 'gradle/gradle/application.gradle'
+apply from: 'gradle/gradle/packaging.innosetup.gradle'
+apply from: 'gradle/gradle/develop.fakeinstall.gradle'
 
 // Packaging ///////////////////////////////////////////////////////////////////
 
@@ -177,93 +123,6 @@ debian.dependsOn installApp
 rpm.dependsOn installApp
 
 
-// Windows Installer ///////////////////////////////////////////////////////////
-
-task exe(dependsOn: ["installApp"]) << {
-	def innoSetupDir = new File("${buildDir}/innosetup")
-
-	delete innoSetupDir	
-	innoSetupDir.mkdir();	
-	
-	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")		
-		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")		
-		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")		
-		from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
-		into(innoSetupDir)
-	}
-
-	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
-		rename("setup.iss.skel", "setup.iss")
-		expand([
-			applicationVersion: "${applicationVersion}",
-			applicationVersionFull: "${applicationVersionFull}",			
-		])
-		into(innoSetupDir)
-	}
-
-	exec {
-		workingDir rootProject.projectDir
-		commandLine "iscc ${innoSetupDir}/setup.iss".split()
-	}
-}
-
-
-// CLI-specific Tasks //////////////////////////////////////////////////////////
-
-String osName = System.getProperty("os.name").toLowerCase();
-
-task fakeinstall(dependsOn: ["fakeuninstall"]) << {
-	description = "Must be run as root: Makes syncany/sy command available everywhere (symlink to syncany-cli/build/..)"
-	
-	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
-	// running fakeinstall as "root"; manually calling installApp required
-	
-	if (osName.startsWith("windows")) {
-		copy {
-			from "gradle/windows/syncany.bat"
-			into System.getenv()["windir"]
-			rename("syncany.bat", "sy.bat")
-			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncany.bat")
-		}
-
-		copy {
-			from "gradle/windows/syncany.bat"
-			into System.getenv()["windir"]
-			rename("syncany.bat", "syd.bat")
-			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncanyd.bat")
-		}
-	}
-	else{
-    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/syncany")
-    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/sy")
-    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/syncanyd", link: "/usr/local/bin/syncanyd")
-    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/syncanyd", link: "/usr/local/bin/syd")
-
-	}
-}
-
-task fakeuninstall << {
-	description = "Must be run as root: Removes symlink for syncany/sy command (complement to fakeinstall)"
-
-	if (osName.startsWith("windows")) {
-		new File(System.getenv()["windir"] + "/syncany.bat").delete()
-		new File(System.getenv()["windir"] + "/sy.bat").delete()
-		new File(System.getenv()["windir"] + "/syncanyd.bat").delete()
-		new File(System.getenv()["windir"] + "/syd.bat").delete()
-	}
-	else {
-		new File("/usr/local/bin/syncany").delete()
-		new File("/usr/local/bin/sy").delete()
-		new File("/usr/local/bin/syncanyd").delete()
-		new File("/usr/local/bin/syd").delete()
-	}
-}
-
-
 // Coverage (Cobertura) ////////////////////////////////////////////////////////
 // Run as: gradle testGlobal coberturaReport performCoverageCheck
 
@@ -297,27 +156,6 @@ cobertura {
 }
 
 
-// JavaDoc Requirements ////////////////////////////////////////////////////////
-
-configurations {
-	doclet 
-}
-
-allprojects {
-	apply plugin: 'eclipse'	
-
-	configurations {
-		doclet
-	}
-	
-	dependencies {
-		doclet group: 'org.jboss.apiviz', name: 'apiviz', version: '1.3.2.GA'
-	}
-	
-	repositories {
-		mavenCentral()
-	}
-}
 
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
 
@@ -457,45 +295,7 @@ subprojects {
 	tasks["eclipse"].dependsOn(eclipseSettings)
 }
 
-
-// JavaDoc /////////////////////////////////////////////////////////////////////
-
-task javadocAll(type: Javadoc) {
-	group = "documentation"
-	description = "Creates the JavaDoc for all subprojects and puts it into build/javadoc"
-	
-	source subprojects.collect { project -> project.sourceSets.main.allJava } 
-	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
-	destinationDir = new File(projectDir, 'build/javadoc')
-	
-	doFirst {
-	  subprojects.each { project -> project.sourceSets.main.output.each { dir -> dir.mkdirs() } }
-	}
-	
-	options.linkSource = true
-        options.addStringOption('sourceclasspath', files(subprojects.collect { project -> project.sourceSets.main.output }).getAsPath())
-
-	configure(options) {
-	        doclet "org.jboss.apiviz.APIviz"
-	        docletpath file(configurations.doclet.asPath)
-		windowTitle = 'Syncany API Documentation'
-		docTitle = "Syncany JavaDoc ($applicationVersion)"
-		bottom = " \
-			<span style=\"font-size: 13px\"><br /> \
-				<a href=\"http://www.syncany.org/\" target=\"_top\">Syncany</a> is an open-source cloud storage and filesharing application.<br /><br /> \
-				Code located at <a href=\"https://github.com/syncany/syncany\" target=\"_top\">https://github.com/syncany/syncany</a><br /> \
-				JavaDoc for version $applicationVersion generated based on commit <a href=\"https://github.com/syncany/syncany/tree/$applicationRevision\" target=\"_top\">$applicationRevision</a> at $applicationDate<br /><br /> \
-				Copyright &copy; 2011-2014 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
-			</span> \
-		"
-	}
-}
-
-task cleanJavadocAll(type: Delete) {
-	group = "documentation"
-	description = "Deletes the all subprojects from build/javadoc (completent to javadocAll)"
-	delete 'build/javadoc'	
-}
+apply from: 'gradle/gradle/javadoc.gradle'
 
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
 
