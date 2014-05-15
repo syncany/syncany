@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.java_websocket.WebSocket;
@@ -29,55 +30,57 @@ import org.java_websocket.server.WebSocketServer;
 import org.syncany.util.JsonHelper;
 
 public class DaemonWebSocketServer {
-	private static final Logger log = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
-	private static int DEFAULT_PORT = 8887;
+	private static final Logger logger = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
+	private static int DEFAULT_PORT = 8625;
 	
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	
-	private WebSocketServer delegate;
-	private DaemonRequestHandler dch;
+	private WebSocketServer webSocketServer;
+	private DaemonWebSocketHandler requestHandler;
 	
 	public DaemonWebSocketServer() {
-		dch = new DaemonRequestHandler(this);
-		
-		delegate = new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
+		this.requestHandler = new DaemonWebSocketHandler(this);
+		this.webSocketServer = initWebSocketServer();
+	}
+
+	private WebSocketServer initWebSocketServer() {
+		return new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
 			public void onOpen(WebSocket conn, ClientHandshake handshake) {
-				String id = handshake.getFieldValue("client_id");
-				log.fine("Client with id '" + id + "' connected");
+				String clientId = handshake.getFieldValue("client_id");
+				logger.log(Level.INFO, "Client with id '" + clientId + "' connected");
 			}
 			
 			@Override
 			public void onMessage(WebSocket conn, String message) {
-				log.fine("Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
-				dch.handle(message);
+				logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
+				requestHandler.handle(message);
 			}
 			
 			@Override
 			public void onError(WebSocket conn, Exception ex) {
-				log.fine("Server error : " + ex.toString());
+				logger.log(Level.INFO, "Server error : " + ex.toString());
 			}
 			
 			@Override
-			public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-				log.fine(conn.getRemoteSocketAddress().toString() + " disconnected");
+			public void onClose(WebSocket clientSocket, int code, String reason, boolean remote) {
+				logger.log(Level.INFO, clientSocket.getRemoteSocketAddress().toString() + " disconnected");
 			}
 		};
 	}
 
 	/**
-	 * Sends <var>text</var> to all currently connected WebSocket clients.
+	 * Sends message to all currently connected WebSocket clients.
 	 * 
-	 * @param text
-	 *            The String to send across the network.
-	 * @throws InterruptedException
-	 *             When socket related I/O errors occur.
+	 * @param text The String to send across the network.
+	 * @throws InterruptedException When socket related I/O errors occur.
 	 */
 	public void sendToAll(String text) {
-		Collection<WebSocket> con = delegate.connections();
-		synchronized (con) {
-			for (WebSocket c : con) {
-				sendTo(c, text);
+		Collection<WebSocket> clientSockets = webSocketServer.connections();
+		
+		synchronized (clientSockets) {
+			for (WebSocket clientSocket : clientSockets) {
+				sendTo(clientSocket, text);
 			}
 		}
 	}
@@ -92,13 +95,13 @@ public class DaemonWebSocketServer {
 	}
 
 	public void start() throws ServiceAlreadyStartedException {
-		delegate.start();
+		webSocketServer.start();
 		running.set(true);
 	}
 
 	public void stop() {
 		try {
-			delegate.stop();
+			webSocketServer.stop();
 			running.set(false);
 		}
 		catch (IOException e) {

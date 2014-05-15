@@ -17,22 +17,20 @@
  */
 package org.syncany.operations.daemon;
 
-/**
- * @author pheckel
- *
- */
-public class DaemonRequestHandler {
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-	/**
-	 * @param daemonWebSocketServer
-	 */
-	public DaemonRequestHandler(DaemonWebSocketServer daemonWebSocketServer) {
-		// TODO Auto-generated constructor stub
+public class DaemonWebSocketHandler {
+	private static final Logger logger = Logger.getLogger(DaemonWebSocketHandler.class.getSimpleName());
+	private DaemonWebSocketServer webSocketServer;
+
+	public DaemonWebSocketHandler(DaemonWebSocketServer webSocketServer) {
+		this.webSocketServer = webSocketServer;
 	}
 
 	public void handle(String message) {
-		// TODO Auto-generated method stub
-		
+		logger.log(Level.INFO, "Web socket message received: " + message);
+		logger.log(Level.WARNING, "--> NO MESSAGE HANDLING IMPLEMENTED YET.");
 	}
 
 }
