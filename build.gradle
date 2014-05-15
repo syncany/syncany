@@ -98,17 +98,19 @@ startScripts {
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
-}
+	
+	// Copy daemon script
+	from("gradle/daemon/") {
+		include "syncanyd", "syncanyd.bat"
+		into "bin"
+	}
 
-applicationDistribution.from("${startScripts.outputDir}/") {
-	into("bin")
-	include "syncany*"
-	rename(/syncany(.*)/, 'sy$1')
-}
-
-applicationDistribution.from("${rootProject.projectDir}/gradle/daemon/") {
-	include "syncanyd", "syncanyd.bat"
-	into "bin"
+	// Copy syncany/syncanyd to sy/syd
+	from(files("gradle/daemon/", "${startScripts.outputDir}/")) {
+		include "syncany*"
+		rename(/syncany(.*)/, 'sy$1')
+		into "bin"
+	}
 }
 
 distTar {
@@ -331,9 +333,6 @@ subprojects {
 	
 	repositories {
 		mavenCentral()
-		maven {
-     	   url "https://swt-repo.googlecode.com/svn/repo/"
-   	    }
 	}
 	
 	sourceSets {
@@ -402,7 +401,7 @@ subprojects {
 	
 	jar {
 		baseName = "${project.name}"
-		version  = "$applicationVersion"				
+		version  = "$applicationVersionFull"				
 	}
 
 	
