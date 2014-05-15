@@ -10,7 +10,6 @@ repositories {
 
 dependencies {
 	compile			"commons-io:commons-io:2.4"
-	compile			"com.google.code.gson:gson:2.2.4"
             	
 	testCompile		"junit:junit:4.9"   	      
 }
