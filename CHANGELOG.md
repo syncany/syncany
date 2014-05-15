@@ -4,7 +4,8 @@ Change Log
 ### Release 0.1.4-alpha (Date: tbd.)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
-- Significant changes:
+- Features and significant changes:
+  + Rudimentary daemon implementation: syd start|stop|reload|status
   + Remove automatic cleanup in 'up', add interval-based cleanup to 'watch',
     relates to #64
 
