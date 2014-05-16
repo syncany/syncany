@@ -5,9 +5,11 @@ Change Log
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
-  + Rudimentary daemon implementation: syd start|stop|reload|status
+  + Rudimentary daemon implementation: `syd (start|stop|reload|status)`
   + Remove automatic cleanup in 'up', add interval-based cleanup to 'watch',
     relates to #64
+- Others:
+  + Simplify Gradle build script by splitting to several scripts
 
 ### Release 0.1.3-alpha (Date: 12 May 2014)
 
