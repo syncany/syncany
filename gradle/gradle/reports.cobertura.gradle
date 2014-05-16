@@ -1,4 +1,3 @@
-
 // Coverage (Cobertura) ////////////////////////////////////////////////////////
 // Run as: gradle testGlobal coberturaReport performCoverageCheck
 

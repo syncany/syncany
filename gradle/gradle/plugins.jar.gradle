@@ -1,7 +1,8 @@
 // Generic gradle script for 'pluginJar' task
+// This script MUST be embedded by plugins; do not embed in root project!
 
-// Can be embedded using 
-//    apply from: 'core/gradle/gradle/pluginjar.gradle'
+// Can be embedded in build.gradle using 
+//    apply from: 'core/gradle/gradle/plugins.jar.gradle'
 
 repositories {
 	mavenCentral()

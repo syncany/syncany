@@ -1,0 +1,31 @@
+// Global Helpers //////////////////////////////////////////////////////////////
+
+rootProject.ext.execAndGetOutput = { String command ->
+	try {
+		def stdout = new ByteArrayOutputStream()
+
+		exec {
+			workingDir rootProject.projectDir
+			commandLine command.split()
+			standardOutput = stdout
+		}
+
+		return stdout.toString().trim()
+	}
+	catch (Exception e) {
+		return null
+	}
+}
+
+rootProject.ext.getRevision = {
+	String currentCommit = execAndGetOutput("git rev-parse --short HEAD")
+	return (currentCommit != null) ? currentCommit : "UNKNOWN"
+}
+
+rootProject.ext.isApplicationRelease = {
+	// Note: This must work for detached commits (git checkout -qf <commit>)
+
+	String currentBranches = execAndGetOutput("git log -n 1 --pretty=%d HEAD")
+	return currentBranches.contains("origin/master")
+}
+
