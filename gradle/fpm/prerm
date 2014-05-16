@@ -2,3 +2,5 @@
 
 rm /usr/bin/syncany
 rm /usr/bin/sy
+rm /usr/bin/syncanyd
+rm /usr/bin/syd

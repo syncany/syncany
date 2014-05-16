@@ -1,0 +1,18 @@
+// Misc ////////////////////////////////////////////////////////////////////////
+
+// Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '1.11'
+	jarFile = 'gradle/wrapper/wrapper.jar'
+}
+
+
+// Task to clean build folder on project root //////////////////////////////////	
+
+task cleanBuildDir(type: Delete) {
+	delete 'build'	
+}
+
+tasks["clean"].dependsOn(cleanBuildDir)
+
