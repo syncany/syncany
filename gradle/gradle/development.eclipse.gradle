@@ -1,7 +1,7 @@
+// Eclipse Settings and Hooks //////////////////////////////////////////////////
+
 subprojects {
 	apply plugin: 'eclipse'
-
-	// Eclipse Settings and Hooks //////////////////////////////////////////////
 	
 	eclipse {
 		classpath {

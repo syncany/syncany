@@ -1,8 +1,6 @@
 //
 // Build script for Syncany
 //
-// The bulid script is split into many different gradle scripts
-//
 
 apply from: 'gradle/gradle/helpers.gradle'
 
