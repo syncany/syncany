@@ -71,16 +71,16 @@ dependencies {
 apply from: 'gradle/gradle/application.gradle'
 apply from: 'gradle/gradle/packaging.innosetup.gradle'
 apply from: 'gradle/gradle/packaging.fpm.gradle'
-apply from: 'gradle/gradle/develop.fakeinstall.gradle'
+apply from: 'gradle/gradle/development.fakeinstall.gradle'
 apply from: 'gradle/gradle/reports.gradle'
 apply from: 'gradle/gradle/javadoc.gradle'
+apply from: 'gradle/gradle/tests.gradle'
 
 
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
 
 subprojects {
 	apply plugin: 'java'
-	apply plugin: 'eclipse'
 	
 	group = 'org.syncany'		
 		
@@ -111,106 +111,12 @@ subprojects {
 		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
 	}		
 	
-	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
-		description = "Test long running scenarios"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		include '**/LongRunning*'
-	}
-	
-	task testScenario(type: Test, dependsOn: testClasses, group: 'Verification') {
-		description = "Test all scenarios"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		include '**/*ScenarioTest*'
-	}
-	
-	task testAll(type: Test, dependsOn: testClasses, group: 'Verification') {
-		description = "All tests"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		exclude '**/*TestSuite*'
-	}
-	
-	task testAllButLongCrypto(type: Test, dependsOn: testClasses, group: 'Verification') {
-		jvmArgs '-Dcrypto.enable=true'
-		description = "All tests except long running with crypto"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		exclude '**/LongRunning*', '**/*TestSuite*'
-	}
-	
-	test {
-		group = "verification"	
-		description = "All tests except long running"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		exclude '**/LongRunning*', '**/*TestSuite*'
-	}
-	
 	// JAR /////////////////////////////////////////////////////////////////////
 	
 	jar {
 		baseName = "${project.name}"
 		version  = "$applicationVersionFull"				
 	}
-
-	
-	// Test JARs ///////////////////////////////////////////////////////////////
-	
-	task testJar(type: Jar, dependsOn: testClasses) {
-		baseName = "test-${project.archivesBaseName}"
-		from sourceSets.test.output
-	}
-
-
-	configurations {
-	      tests
-	}
-	
-
-	artifacts {
-		tests testJar
-	}	
-		
-	// Eclipse Settings and Hooks //////////////////////////////////////////////
-	
-	eclipse {
-		classpath {
-			downloadSources = true
-		}
-		
-		jdt {
-			sourceCompatibility = 1.7
-			targetCompatibility = 1.7			
-		}		
-	}
-	
-	task eclipseSettings(type: Copy) {
-		from rootProject.files(
-			"gradle/eclipse/org.eclipse.jdt.ui.prefs",			
-			"gradle/eclipse/org.eclipse.jdt.core.prefs"
-		)
-		
-		into project.file('.settings/')
-		
-		outputs.upToDateWhen { 
-			false 
-		}
-	}
-	
-	task cleanEclipseJdtUi(type: Delete) {
-		delete project.file(".settings/")
-		delete project.file("bin/")
-	}	
-	
-	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)
-	tasks["eclipse"].dependsOn(eclipseSettings)
 }
 
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
@@ -229,12 +135,3 @@ task cleanBuildDir(type: Delete) {
 
 tasks["clean"].dependsOn(cleanBuildDir)
 
-
-// Global Tests ////////////////////////////////////////////////////////////////
-
-task testGlobal(type: TestReport) {
-	group = "verification"	
-	description = "All the results from the 'test' task in all subprojects (global report!)"
-	destinationDir = file("$buildDir/reports/tests")
-	reportOn subprojects*.test
-}
