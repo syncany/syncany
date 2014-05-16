@@ -66,64 +66,14 @@ dependencies {
 	testCompile		project(path: ":syncany-daemon", configuration: "tests")	
 }
 
-// Application /////////////////////////////////////////////////////////////////
+// Tasks ///////////////////////////////////////////////////////////////////////
 
 apply from: 'gradle/gradle/application.gradle'
 apply from: 'gradle/gradle/packaging.innosetup.gradle'
+apply from: 'gradle/gradle/packaging.fpm.gradle'
 apply from: 'gradle/gradle/develop.fakeinstall.gradle'
 apply from: 'gradle/gradle/reports.gradle'
-
-// Packaging ///////////////////////////////////////////////////////////////////
-
-buildscript {
-	repositories {
-		mavenCentral()
-	}
-	dependencies {
-		classpath "com.kenshoo:gradle-fpm:0.4"
-	}
-}
-
-apply plugin: "fpm-packaging"
-
-packaging {
-	dependencies = ["openjdk-7-jre"] 
-	baseDir = "${buildDir}/install/${applicationName}"
-	prefix = "/usr/lib/syncany"
-	extraOptions = [ 
-		"--name": "syncany", 
-		"--architecture": "all",
-		"--license": "GPLv2",
-		"--version": "${applicationVersionFull}",
-		"--maintainer": "Philipp Heckel <philipp.heckel@gmail.com>",
-		"--vendor": "Philipp Heckel <philipp.heckel@gmail.com>",		
-		"--url": "http://www.syncany.org/",
-		"--description": 
-"""
-Syncany is an open-source cloud storage and filesharing application. 
-
-It allows users to backup and share certain folders of their workstations
-using any kind of storage. Syncany is open-source and provides data encryption
-and incredible flexibility in terms of storage type and provider:
-
- - Data encryption: Syncany encrypts the files locally, so that any online 
-   storage can be used even for sensitive data.
-                   
- - Arbitrary storage: Syncany uses a plug-in based storage system. It can be
-   used with any type of remote storage.
-""",
-		"--after-install": "${rootProject.projectDir}/gradle/fpm/postinst",
-		"--before-remove": "${rootProject.projectDir}/gradle/fpm/prerm",
-		"--exclude": "*.bat"
-	] 
-	filesArgs = ["."]
-	force = true
-}
-
-debian.dependsOn installApp
-rpm.dependsOn installApp
-
-
+apply from: 'gradle/gradle/javadoc.gradle'
 
 
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
@@ -262,8 +212,6 @@ subprojects {
 	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)
 	tasks["eclipse"].dependsOn(eclipseSettings)
 }
-
-apply from: 'gradle/gradle/javadoc.gradle'
 
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
 
