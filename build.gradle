@@ -71,6 +71,7 @@ dependencies {
 apply from: 'gradle/gradle/application.gradle'
 apply from: 'gradle/gradle/packaging.innosetup.gradle'
 apply from: 'gradle/gradle/develop.fakeinstall.gradle'
+apply from: 'gradle/gradle/reports.gradle'
 
 // Packaging ///////////////////////////////////////////////////////////////////
 
@@ -123,38 +124,6 @@ debian.dependsOn installApp
 rpm.dependsOn installApp
 
 
-// Coverage (Cobertura) ////////////////////////////////////////////////////////
-// Run as: gradle testGlobal coberturaReport performCoverageCheck
-
-apply plugin: 'cobertura'
-
-buildscript {
-	repositories {
-		mavenCentral()
-	}
-
-	dependencies {
-		classpath 'net.saliman:gradle-cobertura-plugin:2.2.2' 
-	}
-}
-
-cobertura {	
-	coverageFormats = ['html', 'xml'] 
-	coverageReportDatafile = file("build/cobertura/cobertura.ser")
-	coverageReportDir = file("build/reports/coverage")
-	
-	coverageDirs = []
-	coverageSourceDirs = []
-	coverageMergeDatafiles = []
-	
-	rootProject.subprojects.each {
-		coverageFormats = ['html', 'xml'] 
-		coverageDirs << file("${it.buildDir}/classes/main")
-		coverageSourceDirs << file("${it.projectDir}/src/main/java")
-		coverageMergeDatafiles << file("${it.buildDir}/cobertura/cobertura.ser")
-	}		
-}
-
 
 
 // Sub-Project Settings and Hooks //////////////////////////////////////////////
@@ -162,7 +131,6 @@ cobertura {
 subprojects {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
-	apply plugin: 'cobertura'
 	
 	group = 'org.syncany'		
 		
