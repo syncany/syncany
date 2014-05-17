@@ -29,6 +29,7 @@ apply from: 'gradle/gradle/reports.cobertura.gradle'
 apply from: 'gradle/gradle/reports.tests.gradle'
 apply from: 'gradle/gradle/reports.javadoc.gradle'
 
+apply from: 'gradle/gradle/development.eclipse.gradle'
 apply from: 'gradle/gradle/development.fakeinstall.gradle'
 apply from: 'gradle/gradle/development.misc.gradle'
 
