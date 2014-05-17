@@ -71,14 +71,14 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 	}
 
 	private void startOperation() throws ServiceAlreadyStartedException, ConfigException, IOException {
-		// startWebSocketServer();
+		startWebSocketServer();
 		startWatchServer();
 		
 		startDaemonControlLoop(); // This blocks until SHUTDOWN is received!
 	}
 	
 	private void stopOperation() {
-		// stopWebSocketServer();
+		stopWebSocketServer();
 		stopWatchServer();
 	}
 
