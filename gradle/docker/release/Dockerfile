@@ -2,24 +2,26 @@
 # Docker file for Syncany  
 #
 # Build:
-#  docker build -t syncany:latest .
+#  docker build -t syncany/release .
 # 
 # Run:
-#  docker run -t -i syncany:latest
+#  docker run -t -i syncany/release
 #
 
 FROM ubuntu
 MAINTAINER Philipp Heckel <philipp.heckel@gmail.com>
 
-RUN apt-get update
-
+# Install Syncany and dependencies
 # TODO: Once 0.1.4 is 'latest', change to: openjdk-7-jre-headless
+RUN apt-get update
 RUN apt-get install -y wget openjdk-7-jre vim
-
 RUN wget -O syncany.deb https://syncany.org/r/latest.deb
 RUN dpkg -i syncany.deb
 RUN rm syncany.deb
-RUN useradd -m -d/home/syncany syncany
+
+# Add user 'syncany'
+RUN useradd -m -d/home/syncany -s /bin/bash syncany
+RUN echo 'syncany ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER syncany
 ENV HOME /home/syncany
