@@ -25,8 +25,29 @@ import org.syncany.config.Config;
 import org.syncany.config.Config.ConfigException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.watch.WatchOperation;
 
 /**
+ * This operation is the central part of the daemon. It can manage many different
+ * {@link WatchOperation}s and exposes a web socket server to control and query the 
+ * daemon. It furthermore offers a file-based control server to stop and reload the
+ * daemon.
+ * 
+ * <p>When started via {@link #execute()}, the operation starts the following core
+ * components:
+ * 
+ * <ul>
+ *  <li>The {@link DaemonWatchServer} starts a {@link WatchOperation} for every 
+ *      folder registered in the <tt>daemon.xml</tt> file. It can be reloaded via
+ *      the <tt>syd reload</tt> command.</li>
+ *  <li>The {@link DaemonWebSocketServer} starts a websocket and allows clients 
+ *      (e.g. GUI, Web) to control the daemon (if authenticated). 
+ *      TODO [medium] This is not yet implemented!</li>
+ *  <li>The {@link DaemonControlServer} creates and watches the daemon control file
+ *      which allows the <tt>syd</tt> shell/batch script to write reload/shutdown
+ *      commands.</li>  
+ * </ul>
+ * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */

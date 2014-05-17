@@ -27,6 +27,18 @@ import org.apache.commons.io.input.TailerListener;
 import org.syncany.config.UserConfig;
 
 /**
+ * The control server watches the daemon control file for changes and 
+ * reacts on certain commands. 
+ * 
+ * <p>Although it is not a real socket, it can be seen as a cross-platform
+ * unix-like socket. Due to the nature of the commands in the control 
+ * file (shutdown/reload), a normal TCP socket is not possible.
+ * 
+ * <p>The central method is {@link #enterLoop()}: This method tails file changes
+ * in the daemon control file in the currently active thread. It does not
+ * fork a new thread. It <b>blocks</b> and waits for commands until 
+ * <b>shutdown</b> is received.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DaemonControlServer implements TailerListener {	
