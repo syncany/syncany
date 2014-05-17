@@ -35,7 +35,7 @@ cd $TEMPDISTDIR
 sha256sum * 2>/dev/null 
 cd "$PWD"
 
-if [ $(ls $TEMPDISTDIR | wc -l) != "5" ]; then
+if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
 	echo "ERROR: Wrong files in $TEMPDISTDIR: "
 	ls $TEMPDISTDIR
 	
