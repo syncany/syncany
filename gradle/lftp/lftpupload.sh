@@ -25,6 +25,7 @@ mkdir $TEMPDISTDIR
 echo ""
 echo "Gathering distributables ..."
 echo "----------------------------"
+cp $REPODIR/syncany-lib/build/resources/main/application.properties $TEMPDIR
 cp $REPODIR/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
 cp $REPODIR/build/linux-package/*.deb $TEMPDISTDIR
 cp $REPODIR/build/innosetup/*.exe $TEMPDISTDIR
@@ -34,10 +35,11 @@ cd $TEMPDISTDIR
 sha256sum * 2>/dev/null 
 cd "$PWD"
 
-if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
+if [ $(ls $TEMPDISTDIR | wc -l) != "5" ]; then
 	echo "ERROR: Wrong files in $TEMPDISTDIR: "
 	ls $TEMPDISTDIR
 	
+	rm -rf "$TEMPDIR"
 	exit 2
 fi
 
