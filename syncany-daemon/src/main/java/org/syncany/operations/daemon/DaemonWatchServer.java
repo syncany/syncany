@@ -25,19 +25,27 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.DaemonConfigTO.FolderTO;
+import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 
 import com.google.common.collect.Maps;
 
 /**
+ * The watch server can manage many different {@link WatchOperation}s. When started
+ * with {@link #start()} or {@link #reload()}, it first reads the daemon configuration file
+ * and then runs new threads for each configured Syncany folder. Invalid or non-existing folders
+ * are ignored.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DaemonWatchServer implements WatchOperationListener {	
 	private static final Logger logger = Logger.getLogger(DaemonWatchServer.class.getSimpleName());
+	private static final String DAEMON_FILE = "daemon.xml";
+	private static final String DEFAULT_FOLDER = "Syncany";
 	
 	private Map<File, WatchOperationThread> watchOperations;
 	
@@ -52,8 +60,7 @@ public class DaemonWatchServer implements WatchOperationListener {
 	
 	public void reload() {		
 		try {
-			File daemonConfigFile = new File(UserConfig.getUserConfigDir(), "daemon.xml");
-			DaemonConfigTO daemonConfigTO = DaemonConfigTO.load(daemonConfigFile);
+			DaemonConfigTO daemonConfigTO = loadOrCreateConfig();
 			
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
 			Map<File, FolderTO> newWatchedFolderTOs = determineNewWatchedFolderTOs(watchedFolders);
@@ -150,6 +157,43 @@ public class DaemonWatchServer implements WatchOperationListener {
 		return removedWatchedFolderIds;
 	}
 
+	private DaemonConfigTO loadOrCreateConfig() throws ConfigException {
+		File configFile = new File(UserConfig.getUserConfigDir(), DAEMON_FILE);
+		
+		if (configFile.exists()) {
+			return loadConfig(configFile);
+		}
+		else {
+			return createAndWriteDefaultConfig(configFile);
+		}
+	}
+
+	private DaemonConfigTO loadConfig(File configFile) throws ConfigException {
+		return DaemonConfigTO.load(configFile);
+	}
+
+	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
+		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
+		
+		FolderTO defaultFolderTO = new FolderTO();
+		defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
+		
+		ArrayList<FolderTO> folders = new ArrayList<>();
+		folders.add(defaultFolderTO);
+		
+		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
+		defaultDaemonConfigTO.setFolders(folders);
+		
+		try {
+			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);
+		}
+		catch (Exception e) {
+			// Don't care!
+		}
+		
+		return defaultDaemonConfigTO;
+	}
+	
 	@Override
 	public void onUploadStart(int fileCount) {
 		// TODO Auto-generated method stub

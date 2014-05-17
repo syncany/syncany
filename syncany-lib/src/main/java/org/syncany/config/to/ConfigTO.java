@@ -28,7 +28,7 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
