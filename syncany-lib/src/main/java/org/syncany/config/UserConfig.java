@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.security.KeyStore;
 import java.util.Map;
 
-import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.UserConfigTO;
 import org.syncany.util.EnvironmentUtil;
 

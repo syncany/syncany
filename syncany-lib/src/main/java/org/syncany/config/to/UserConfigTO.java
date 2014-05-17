@@ -25,7 +25,7 @@ import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 
 @Root(name="userConfig")
 @Namespace(reference="http://syncany.org/userconfig/1")

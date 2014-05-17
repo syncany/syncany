@@ -58,6 +58,7 @@ public class Config {
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
 	public static final String FILE_IGNORE = ".syignore";
+	public static final String FILE_DATABASE = "local.db";
 		
 	private byte[] repoId;
 	private String machineName;
@@ -143,29 +144,10 @@ public class Config {
 	}
 
 	private void initChunker(RepoTO repoTO) throws Exception {
-		// TODO [feature request] make chunking options configurable, something like this:
-		//  chunker = Chunker.getInstance(repoTO.getChunker().getType());
-		//  chunker.init(repoTO.getChunker().getSettings());
+		// TODO [feature request] make chunking options configurable, something like described in #29
+		// See: https://github.com/syncany/syncany/issues/29#issuecomment-43425647
 		
 		chunker = new FixedChunker(512*1024, "SHA1");
-		
-		/*new MimeTypeChunker(
-			new FixedChunker(64*1024, "SHA1"),
-			new FixedChunker(2*1024*1024, "SHA1"),
-			Arrays.asList(new String[] {
-				"application/x-gzip",
-				"application/x-compressed.*",
-				"application/zip",		
-				"application/x-java-archive",	
-				"application/octet-stream",
-				"application/x-sharedlib",
-				"application/x-executable",
-				"application/x-iso9660-image",
-				"image/.+",
-				"audio/.+",
-				"video/.+",				
-			})
-		);*/
 	}
 
 	private void initMultiChunker(RepoTO repoTO) throws ConfigException {
@@ -317,22 +299,10 @@ public class Config {
 	}
 
 	public File getDatabaseFile() {
-		return new File(databaseDir+File.separator+"local.db");	
+		return new File(databaseDir, FILE_DATABASE);	
 	}	
 
 	public File getLogDir() {
 		return logDir;
-	}
-	
-	public static class ConfigException extends Exception {
-		private static final long serialVersionUID = 4414807565457521855L;
-
-	    public ConfigException(String message, Throwable cause) {
-	        super(message, cause);
-	    }
-
-	    public ConfigException(String message) {
-	        super(message);
-	    }
 	}
 }

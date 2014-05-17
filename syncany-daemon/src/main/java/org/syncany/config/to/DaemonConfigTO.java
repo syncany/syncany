@@ -25,7 +25,7 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 
 @Root(name="daemon")
 @Namespace(reference="http://syncany.org/daemon/1")
@@ -37,8 +37,17 @@ public class DaemonConfigTO {
 		try {
 			return new Persister().read(DaemonConfigTO.class, file);
 		}
-		catch (Exception ex) {
-			throw new ConfigException("Config file does not exist or is invalid: " + file, ex);
+		catch (Exception e) {
+			throw new ConfigException("Config file does not exist or is invalid: " + file, e);
+		}
+	}
+	
+	public static void save(DaemonConfigTO daemonConfigTO, File file) throws ConfigException {
+		try {
+			new Persister().write(daemonConfigTO, file);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Config could not be written: " + file, e);
 		}
 	}
 	
@@ -46,10 +55,14 @@ public class DaemonConfigTO {
 		return folders;
 	}
 	
+	public void setFolders(ArrayList<FolderTO> folders) {
+		this.folders = folders;
+	}
+	
 	public static class FolderTO {
 		@Element(name="path")
 		private String path;
-
+		
 		public String getPath() {
 			return path;
 		}
