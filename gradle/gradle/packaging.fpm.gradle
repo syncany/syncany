@@ -13,7 +13,7 @@ buildscript {
 apply plugin: com.kenshoo.watership.PackagingPlugin
 
 packaging {
-	dependencies = ["openjdk-7-jre"] 
+	dependencies = ["default-jre (>= 1.7) | openjdk-7-jre-headless | openjdk-8-jre-headless"] 
 	baseDir = "${buildDir}/install/${applicationName}"
 	prefix = "/usr/lib/syncany"
 	extraOptions = [ 
