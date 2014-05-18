@@ -29,10 +29,14 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.DaemonConfigTO.FolderTO;
+import org.syncany.operations.daemon.messages.BadRequestWebSocketResponse;
+import org.syncany.operations.daemon.messages.WatchWebSocketRequest;
+import org.syncany.operations.daemon.messages.WebSocketResponse;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * The watch server can manage many different {@link WatchOperation}s. When started
@@ -48,9 +52,13 @@ public class DaemonWatchServer implements WatchOperationListener {
 	private static final String DEFAULT_FOLDER = "Syncany";
 	
 	private Map<File, WatchOperationThread> watchOperations;
+	private DaemonEventBus eventBus;
 	
 	public DaemonWatchServer() {
 		this.watchOperations = new TreeMap<File, WatchOperationThread>();
+		
+		this.eventBus = DaemonEventBus.getInstance();
+		this.eventBus.register(this);
 	}
 	
 	public void start() throws ConfigException {
@@ -192,6 +200,23 @@ public class DaemonWatchServer implements WatchOperationListener {
 		}
 		
 		return defaultDaemonConfigTO;
+	}
+	
+	@Subscribe
+	public void onRequestReceived(WatchWebSocketRequest watchRequest) {
+		logger.log(Level.INFO, "Received " + watchRequest);
+		
+		File rootFolder = new File(watchRequest.getRoot());
+		WatchOperationThread watchOperationThread = watchOperations.get(rootFolder);
+		
+		boolean rootFolderExists = watchOperationThread != null;
+		
+		if (!rootFolderExists) {
+			eventBus.post(new BadRequestWebSocketResponse(watchRequest.getId(), "Unknown root folder."));
+		}
+		else {
+			eventBus.post(new WebSocketResponse(200, watchRequest.getId(), "OK (This should be a real response)."));
+		}
 	}
 	
 	@Override

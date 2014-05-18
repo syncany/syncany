@@ -25,7 +25,10 @@ import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.DaemonControlServer.ControlCommand;
 import org.syncany.operations.watch.WatchOperation;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * This operation is the central part of the daemon. It can manage many different
@@ -51,12 +54,13 @@ import org.syncany.operations.watch.WatchOperation;
  * @author Vincent Wiencek <vwiencek@gmail.com>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DaemonOperation extends Operation implements DaemonControlListener {	
+public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
-
+	
 	private DaemonWebSocketServer webSocketServer;
 	private DaemonWatchServer watchServer;
 	private DaemonControlServer controlServer;
+	private DaemonEventBus eventBus;
 
 	public DaemonOperation(Config config) {
 		super(config);
@@ -71,12 +75,19 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 	}
 
 	private void startOperation() throws ServiceAlreadyStartedException, ConfigException, IOException {
+		initEventBus();
+		
 		startWebSocketServer();
 		startWatchServer();
 		
-		startDaemonControlLoop(); // This blocks until SHUTDOWN is received!
+		enterControlLoop(); // This blocks until SHUTDOWN is received!
 	}
 	
+	private void initEventBus() {
+		eventBus = DaemonEventBus.getInstance();
+		eventBus.register(this);
+	}
+
 	private void stopOperation() {
 		stopWebSocketServer();
 		stopWatchServer();
@@ -106,22 +117,25 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 		watchServer.start();
 	}
 
-	private void startDaemonControlLoop() throws IOException, ServiceAlreadyStartedException {
+	private void enterControlLoop() throws IOException, ServiceAlreadyStartedException {
 		logger.log(Level.INFO, "Starting daemon control server ...");
 
-		controlServer = new DaemonControlServer(this);
+		controlServer = new DaemonControlServer();
 		controlServer.enterLoop(); // This blocks! 
 	}
 
-	@Override
-	public void onDaemonShutdown() {
-		logger.log(Level.INFO, "SHUTDOWN requested.");
-		stopOperation();
-	}
-
-	@Override
-	public void onDaemonReload() {
-		logger.log(Level.INFO, "RELOAD requested.");
-		watchServer.reload();
+	@Subscribe
+	public void onControlCommand(ControlCommand controlCommand) {
+		switch (controlCommand) {
+		case SHUTDOWN:
+			logger.log(Level.INFO, "SHUTDOWN requested.");
+			stopOperation();
+			break;
+			
+		case RELOAD:
+			logger.log(Level.INFO, "RELOAD requested.");
+			watchServer.reload();
+			break;
+		}
 	}
 }

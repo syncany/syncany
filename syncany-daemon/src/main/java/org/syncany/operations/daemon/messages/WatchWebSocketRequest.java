@@ -15,24 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon;
+package org.syncany.operations.daemon.messages;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.simpleframework.xml.Element;
 
-public class DaemonWebSocketHandler {
-	private static final Logger logger = Logger.getLogger(DaemonWebSocketHandler.class.getSimpleName());
-	private DaemonWebSocketServer webSocketServer;
+public class WatchWebSocketRequest extends WebSocketRequest {
+	@Element(required = true)
+	private String root;
 
-	public DaemonWebSocketHandler(DaemonWebSocketServer webSocketServer) {
-		this.webSocketServer = webSocketServer;
+	public String getRoot() {
+		return root;
 	}
 
-	public void handle(String message) {
-		logger.log(Level.INFO, "Web socket message received: " + message);
-		logger.log(Level.WARNING, "--> NO MESSAGE HANDLING IMPLEMENTED YET.");
-		
-		webSocketServer.sendToAll("{code: 400, message: \"Not supported\"}");
+	public void setRoot(String root) {
+		this.root = root;
 	}
-
 }

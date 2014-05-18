@@ -15,13 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon;
+package org.syncany.operations.daemon.messages;
 
-/**
- * @author pheckel
- *
- */
-public interface DaemonControlListener {
-	public void onDaemonShutdown();
-	public void onDaemonReload();
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
+
+@Root(name = "response", strict = false)
+@Namespace(reference = "http://syncany.org/ws/1")
+public class BadRequestWebSocketResponse extends WebSocketResponse {
+	public BadRequestWebSocketResponse(int requestId, String message) {
+		super(400, requestId, message);
+	}
 }

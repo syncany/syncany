@@ -18,6 +18,7 @@
 package org.syncany.operations.daemon;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +28,14 @@ import java.util.logging.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.syncany.operations.daemon.messages.BadRequestWebSocketResponse;
+import org.syncany.operations.daemon.messages.WebSocketRequest;
+import org.syncany.operations.daemon.messages.WebSocketRequestFactory;
+import org.syncany.operations.daemon.messages.WebSocketResponse;
+
+import com.google.common.eventbus.Subscribe;
 
 public class DaemonWebSocketServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
@@ -36,22 +45,33 @@ public class DaemonWebSocketServer {
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	
 	private WebSocketServer webSocketServer;
-	private DaemonWebSocketHandler requestHandler;
+	private Serializer serializer; 
+	private DaemonEventBus eventBus;
 	
 	public DaemonWebSocketServer() {
-		this.requestHandler = new DaemonWebSocketHandler(this);
-		this.webSocketServer = initWebSocketServer();
+		this.serializer = new Persister();
+		
+		initEventBus();
+		initWebSocketServer();
 	}
 
-	private WebSocketServer initWebSocketServer() {
-		return new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
+	private void initEventBus() {
+		eventBus = DaemonEventBus.getInstance();
+		eventBus.register(this);
+	}
+
+	private void initWebSocketServer() {
+		webSocketServer = new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
 			@Override
 			public void onOpen(WebSocket clientSocket, ClientHandshake handshake) {
 				String clientAddress = clientSocket.getRemoteSocketAddress().toString();
 				String clientOrigin = handshake.getFieldValue("origin");
 				String clientId = handshake.getFieldValue("clientId");
 				
-				if (clientOrigin == null || !clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER)) {
+				boolean isAllowedClient = clientOrigin == null || "null".equals(clientOrigin) ||
+						clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER);
+				
+				if (!isAllowedClient) {
 					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header. Origin: " + clientOrigin + ", ID: " + clientId);
 					logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
 					
@@ -65,7 +85,7 @@ public class DaemonWebSocketServer {
 			@Override
 			public void onMessage(WebSocket conn, String message) {
 				logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
-				requestHandler.handle(message);
+				handleMessage(message);
 			}
 			
 			@Override
@@ -78,6 +98,29 @@ public class DaemonWebSocketServer {
 				logger.log(Level.INFO, clientSocket.getRemoteSocketAddress().toString() + " disconnected");
 			}
 		};
+	}
+
+	public void handleMessage(String message) {
+		logger.log(Level.INFO, "Web socket message received: " + message);
+		
+		int requestId = -1;
+		String requestType = null;
+		
+		try {
+			WebSocketRequest basicRequest = serializer.read(WebSocketRequest.class, message);
+			
+			requestType = basicRequest.getType();
+			requestId = basicRequest.getId();
+			
+			Class<? extends WebSocketRequest> requestClass = WebSocketRequestFactory.getRequestClass(requestType);
+			WebSocketRequest concreteRequest = serializer.read(requestClass, message);
+			
+			eventBus.post(concreteRequest);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+			eventBus.post(new BadRequestWebSocketResponse(requestId, "Invalid request."));
+		}	
 	}
 
 	/**
@@ -120,5 +163,21 @@ public class DaemonWebSocketServer {
 
 	public boolean isRunning() {
 		return running.get();
+	}
+	
+	@Subscribe
+	public void onResponse(WebSocketResponse response) {
+		try {
+			StringWriter responseWriter = new StringWriter();
+			serializer.write(response, responseWriter);
+			
+			String responseMessage = responseWriter.toString();
+			logger.log(Level.INFO, "Sending " + responseMessage);
+			
+			sendToAll(responseMessage);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}		
 	}
 }

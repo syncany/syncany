@@ -50,7 +50,7 @@ public class WatchOperationThread {
 		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), listener);
 	}
 	
-	public void start() throws ServiceAlreadyStartedException {
+	public void start() {
 		watchThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
