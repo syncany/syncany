@@ -19,16 +19,20 @@ package org.syncany.operations.daemon;
 
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.java_websocket.WebSocket;
+import org.java_websocket.exceptions.InvalidFrameException;
+import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.BinaryResponse;
 import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.RequestFactory;
 import org.syncany.operations.daemon.messages.Response;
@@ -114,6 +118,40 @@ public class DaemonWebSocketServer {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}		
+	}
+	
+	@Subscribe
+	public void onResponse(final BinaryResponse response) {
+		logger.log(Level.INFO, "Sending binary frame ...");
+		
+		for (WebSocket clientSocket : webSocketServer.connections()) {
+			clientSocket.sendFrame(new Framedata() {
+				@Override
+				public boolean isFin() {
+					return response.getData() == null;
+				}
+				
+				@Override
+				public boolean getTransfereMasked() {
+					return false;
+				}
+				
+				@Override
+				public ByteBuffer getPayloadData() {
+					return response.getData() != null ? response.getData() : ByteBuffer.wrap(new byte[0]);
+				}
+				
+				@Override
+				public Opcode getOpcode() {
+					return response.getData() != null ? Opcode.BINARY : Opcode.CLOSING;
+				}
+				
+				@Override
+				public void append(Framedata nextframe) throws InvalidFrameException {
+					// Nothing.
+				}
+			});
+		}
 	}
 	
 	private class InternalWebSocketServer extends WebSocketServer {

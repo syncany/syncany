@@ -17,9 +17,12 @@
  */
 package org.syncany.operations.daemon;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,10 +31,11 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.FileDataBinaryResponse;
+import org.syncany.operations.daemon.messages.GetFileRequest;
+import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
-import org.syncany.operations.daemon.messages.GetFileRequest;
-import org.syncany.operations.daemon.messages.Response;
 import org.syncany.operations.daemon.messages.WatchEventResponse;
 import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
@@ -111,8 +115,27 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	private void handleGetRequest(GetFileRequest getRequest) {
+		// TODO [high] This is experimental code, it returns random binary data. This code should return actual file data!
 		
+		int bundleId = new Random().nextInt();
+		eventBus.post(new GetFileResponse(getRequest.getId(), bundleId));
 		
+		try (ByteArrayInputStream fileInputStream = new ByteArrayInputStream(new byte[1*1024*1024])) {
+			int frameNumber = 0;
+			int read = -1;
+			byte[] buffer = new byte[512*1024];
+			
+			while (-1 != (read = fileInputStream.read(buffer))) {
+				FileDataBinaryResponse fileDataResponse = new FileDataBinaryResponse(bundleId, frameNumber++, ByteBuffer.wrap(buffer, 0, read));
+				eventBus.post(fileDataResponse);
+			}
+
+			FileDataBinaryResponse lastFrameFileDataResponse = new FileDataBinaryResponse(bundleId, frameNumber++, null);
+			eventBus.post(lastFrameFileDataResponse);
+		}
+		catch (Exception e) {
+			eventBus.post(new BadRequestResponse(getRequest.getId(), "Error while reading file data."));
+		}
 	}
 
 	private void handleFileTreeRequest(GetFileTreeRequest fileTreeRequest) {

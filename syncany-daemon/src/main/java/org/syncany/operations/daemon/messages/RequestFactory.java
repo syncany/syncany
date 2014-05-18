@@ -28,7 +28,7 @@ import org.syncany.util.StringUtil;
 
 public class RequestFactory {
 	private static final Logger logger = Logger.getLogger(RequestFactory.class.getSimpleName());
-	private static final Pattern REQUEST_TYPE_PATTERN = Pattern.compile("^\\<([^>\\s]+)");
+	private static final Pattern REQUEST_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");
 	private static final int REQUEST_TYPE_PATTERN_GROUP = 1;
 	
 	private static Serializer serializer = new Persister();
