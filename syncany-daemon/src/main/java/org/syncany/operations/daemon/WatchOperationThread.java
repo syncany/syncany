@@ -26,13 +26,12 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bouncycastle.util.Arrays;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.FileDataBinaryResponse;
+import org.syncany.operations.daemon.messages.FileFrameResponse;
 import org.syncany.operations.daemon.messages.GetFileRequest;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
@@ -117,18 +116,22 @@ public class WatchOperationThread implements WatchOperationListener {
 
 	private void handleGetRequest(GetFileRequest getRequest) {
 		// TODO [high] This is experimental code, it returns random binary data. This code should return actual file data!
+		int maxFrameLength = 512*1024;
+
+		byte[] fakeData = new byte[(1+new Random().nextInt(10))*1024*1024+10];
 		
-		int bundleId = new Random().nextInt();
-		eventBus.post(new GetFileResponse(getRequest.getId(), bundleId));
+		int length = fakeData.length;
+		int frames = (int) Math.ceil((double) length / maxFrameLength);
 		
-		try (ByteArrayInputStream fileInputStream = new ByteArrayInputStream(new byte[2*1024*1024])) {
-			int frameNumber = 0;
+		try (ByteArrayInputStream fileInputStream = new ByteArrayInputStream(fakeData)) {
+			eventBus.post(new GetFileResponse(getRequest.getId(), "somename.png", length, frames, "image/png"));
+			
 			int read = -1;
-			byte[] buffer = new byte[512*1024];
+			byte[] buffer = new byte[maxFrameLength];
+			int frameNumber = 0;
 			
 			while (-1 != (read = fileInputStream.read(buffer))) {
-				System.out.println("read: "+ read);
-				FileDataBinaryResponse fileDataResponse = new FileDataBinaryResponse(bundleId, frameNumber++, ByteBuffer.wrap(buffer, 0, read));
+				FileFrameResponse fileDataResponse = new FileFrameResponse(frameNumber++, ByteBuffer.wrap(buffer, 0, read));
 				eventBus.post(fileDataResponse);
 			}
 		}

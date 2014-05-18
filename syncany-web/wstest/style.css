@@ -724,3 +724,9 @@ footer {
 .demo-summary .details .desc {
 }
 
+
+
+pre {
+	margin: 1px;
+	padding: 1px;
+}

@@ -30,15 +30,11 @@ function echoHandlePageLoad() {
 	sendBut.onclick = doSend;
 
 	document.getElementById("req1").onclick = function () {
-		sendMessage.value = '<getFileTreeRequest><id>123</id><root>/home/pheckel/Syncany</root><prefix></prefix></getFileTreeRequest>';
+		sendMessage.value = "<getFileTreeRequest>\n  <id>123</id>\n  <root>/home/pheckel/Syncany</root>\n  <prefix></prefix>\n</getFileTreeRequest>";
 	};
 
 	document.getElementById("req2").onclick = function () {
-		sendMessage.value = '<getFileRequest><id>123</id><root>/home/pheckel/Syncany</root><file>file1.txt</file></getFileRequest>';
-	};
-
-	document.getElementById("req3").onclick = function () {
-		sendMessage.value = '<getFileRequest><id>123</id><root>/home/pheckel/Syncany</root><file>file1.txt</file></getFileRequest>';
+		sendMessage.value = "<getFileRequest>\n  <id>123</id>\n  <root>/home/pheckel/Syncany</root>\n  <file>file1.txt</file>\n</getFileRequest>";
 	};
 
 	consoleLog = document.getElementById("consoleLog");
@@ -77,14 +73,14 @@ function doDisconnect() {
 }
 
 function doSend() {
-	logToConsole("SENT: " + sendMessage.value);
+	logToConsole("SENT:\n" + sendMessage.value + "\n", "green");
 	websocket.send(sendMessage.value);
 }
 
-function logToConsole(message) {
+function logToConsole(message, color) {
 	var pre = document.createElement("p");
 	pre.style.wordWrap = "break-word";
-	pre.innerHTML = message;
+	pre.innerHTML = '<pre style="color: ' + color + ';">' + htmlEncode(message) + '</pre>';
 	consoleLog.appendChild(pre);
 
 	while (consoleLog.childNodes.length > 50) {
@@ -95,60 +91,50 @@ function logToConsole(message) {
 }
 
 function onOpen(evt) {
-	logToConsole("CONNECTED");
+	logToConsole("CONNECTED", "black");
 	setGuiConnected(true);
 }
 
 function onClose(evt) {
-	logToConsole("DISCONNECTED");
+	logToConsole("DISCONNECTED", "black");
 	setGuiConnected(false);
 }
 
-var blobs = [];
+var frames = [];
+var framesExpected = 0;
 
 function onMessage(evt) {
 	if (evt.data instanceof Blob) {
-		logToConsole('<span style="color: blue;">RESPONSE: Binary data received: ' + evt.data + '</span>');
+		logToConsole('RESPONSE: Binary data received: ' + evt.data, 'blue');
 
-		blobs[blobs.length] = evt.data;
-		console.log(blobs);
+		frames[frames.length] = evt.data;
+		console.log(frames);
 
-		if (blobs.length == 3) {
-			var blob = new Blob(blobs, { type: "image/png" });
+		if (frames.length == framesExpected) {
+			var blob = new Blob(frames, { type: "application/octet-stream" });
 			saveAs(blob, "somefile.png");
+
+			frames = [];
 		}
-	} else {
-		logToConsole('<span style="color: blue;">RESPONSE: ' + evt.data + '</span>');
+	} 
+	else {
+		logToConsole("RESPONSE:\n" + evt.data + "\n", "blue");
 		console.log(evt);
+		
+		var xml = $(evt.data.toString());
+		
+		var framesXml = xml.find('frames');
+		
+		if (framesXml) {
+			console.log(framesXml);
+			framesExpected = xml.find('frames')[0].textContent;
+		}
 	}
 }
 
-
-/*
-WORKS FOR SMALL FILES:
-
-function onMessage(evt) {
-	logToConsole('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>');
-	console.log(evt);
-
-	if (evt.data instanceof Blob) {
-		console.log("isblob");
-		reader.readAsDataURL(evt.data);
-	}
-}
-
-function onFileReaderDataFinished(evt) {
-	console.log("file reader data finished ");
-	console.log(evt);
-
-	file_contents = evt.target.result;
-	document.getElementById("filecontents").value = document.getElementById("filecontents").value + evt.target.result;
-
-	document.getElementById("filecontentsiframe").src = file_contents;
-}*/
 
 function onError(evt) {
-	logToConsole('<span style="color: red;">ERROR:</span> ' + evt.data);
+	logToConsole('ERROR: ' + evt.data, "red");
 }
 
 function setGuiConnected(isConnected) {
@@ -170,6 +156,11 @@ function clearLog() {
 	while (consoleLog.childNodes.length > 0) {
 		consoleLog.removeChild(consoleLog.lastChild);
 	}
+}
+
+function htmlEncode( html ) {
+    return document.createElement( 'a' ).appendChild( 
+        document.createTextNode( html ) ).parentNode.innerHTML;
 }
 
 window.addEventListener("load", echoHandlePageLoad, false);

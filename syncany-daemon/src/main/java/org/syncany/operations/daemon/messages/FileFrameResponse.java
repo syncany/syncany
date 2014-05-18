@@ -23,9 +23,9 @@ import java.nio.ByteBuffer;
  * @author pheckel
  *
  */
-public class FileDataBinaryResponse extends BinaryResponse {
-	public FileDataBinaryResponse(int bundleId, int frameNumber, ByteBuffer data) {
-		super(bundleId, frameNumber, data);
+public class FileFrameResponse extends BinaryResponse {
+	public FileFrameResponse(int frameNumber, ByteBuffer data) {
+		super(frameNumber, data);
 	}
 
 }

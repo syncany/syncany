@@ -21,13 +21,39 @@ import org.simpleframework.xml.Element;
 
 public class GetFileResponse extends Response {
 	@Element(required = true)
-	private int bundleId;
+	private String name;
+	
+	@Element(required = true)
+	private int length;
+	
+	@Element(required = true)
+	private int frames;
+	
+	@Element(required = false)
+	private String mimeType;
 
-	public GetFileResponse(int requestId, int bundleId) {
+	public GetFileResponse(int requestId, String name, int length, int frames, String mimeType) {
 		super(200, requestId, null);
+		
+		this.name = name;
+		this.length = length;
+		this.frames = frames;
+		this.mimeType = mimeType;
 	}
 
-	public int getBundleId() {
-		return bundleId;
+	public String getName() {
+		return name;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public int getFrames() {
+		return frames;
+	}
+
+	public String getMimeType() {
+		return mimeType;
 	}
 }

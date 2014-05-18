@@ -7,6 +7,7 @@
 
 	<link rel="stylesheet" href="style.css">
 
+	<script src="jquery.js"></script>
 	<script src="Blob.js" type="text/javascript"></script>
 	<script src="FileSaver.js" type="text/javascript"></script>
 </head>
@@ -25,21 +26,19 @@
 	<br>
 	<br>
 	<strong>Message:</strong>
+	<button id="req1" class="wsButton">GetFileTree</button>
+	<button id="req2" class="wsButton">GetFile</button><br>
 	<br>
 	<textarea disabled="disabled" id="sendMessage" cols=50 rows=5></textarea>
 	<br>
-	<button id="req1" class="wsButton">GetFileTree</button>
-	<button id="req2" class="wsButton">GetFile</button>
-	<button id="req3" class="wsButton">...</button>
 	<button disabled="disabled" id="send" class="wsButton">Send</button>
 </div>
 
 <div id="echo-log" style="float: left; margin-left: 20px; padding-left: 20px; width: 550px; border-left: solid 1px #cccccc;"> <strong>Log:</strong>
-	<div id="consoleLog"></div>
+	<div id="consoleLog" style="height: 450px"></div>
 	<button id="clearLogBut" style="position: relative; top: 3px;">Clear log</button>
 </div>
 
-<!-- <script src="jquery.js"></script> -->
 <script type="text/javascript" src="echo.js"></script>
 
 </body>
