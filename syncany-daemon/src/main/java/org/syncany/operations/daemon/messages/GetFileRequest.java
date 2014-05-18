@@ -17,22 +17,13 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.util.List;
-
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
 
-public class FileTreeResponse extends Response {
+public class GetFileRequest extends WatchRequest {
 	@Element(required = true)
-	private String root;
+	private String file;
 	
-	@ElementList(required = true, entry="file")
-	private List<String> files;	
-	
-	public FileTreeResponse(int requestId, String root, List<String> files) {
-		super(292, requestId, null);
-		
-		this.root = root;
-		this.files = files;
-	}	
+	public String getFile() {
+		return file;
+	}
 }

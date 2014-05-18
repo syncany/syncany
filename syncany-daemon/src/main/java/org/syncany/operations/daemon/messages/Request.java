@@ -21,14 +21,11 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-@Root(name = "request", strict = false)
+@Root(strict = false)
 @Namespace(reference = "http://syncany.org/ws/1")
-public class Request {
+public abstract class Request {
 	@Element(required = true)
 	private int id;
-
-	@Element(required = true)
-	private String type;
 
 	public int getId() {
 		return id;
@@ -36,13 +33,5 @@ public class Request {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 }

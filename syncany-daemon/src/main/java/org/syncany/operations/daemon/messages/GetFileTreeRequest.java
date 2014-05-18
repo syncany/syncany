@@ -19,11 +19,15 @@ package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
 
-public class GetRequest extends WatchRequest {
-	@Element(required = true)
-	private String file;
+public class GetFileTreeRequest extends WatchRequest {
+	@Element(required = false)
+	private String prefix;
 	
-	public String getFile() {
-		return file;
+	public String getPrefix() {
+		return prefix;
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
 	}
 }

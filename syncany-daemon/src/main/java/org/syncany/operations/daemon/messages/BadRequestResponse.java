@@ -20,7 +20,7 @@ package org.syncany.operations.daemon.messages;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-@Root(name = "response", strict = false)
+@Root(strict = false)
 @Namespace(reference = "http://syncany.org/ws/1")
 public class BadRequestResponse extends Response {
 	public BadRequestResponse(int requestId, String message) {

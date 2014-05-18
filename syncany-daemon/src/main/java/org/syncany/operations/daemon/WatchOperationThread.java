@@ -27,9 +27,10 @@ import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.database.FileVersion;
-import org.syncany.operations.daemon.messages.FileTreeRequest;
-import org.syncany.operations.daemon.messages.FileTreeResponse;
-import org.syncany.operations.daemon.messages.GetRequest;
+import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.GetFileTreeRequest;
+import org.syncany.operations.daemon.messages.GetFileTreeResponse;
+import org.syncany.operations.daemon.messages.GetFileRequest;
 import org.syncany.operations.daemon.messages.Response;
 import org.syncany.operations.daemon.messages.WatchEventResponse;
 import org.syncany.operations.daemon.messages.WatchRequest;
@@ -97,26 +98,26 @@ public class WatchOperationThread implements WatchOperationListener {
 		if (localDirMatches) {
 			logger.log(Level.INFO, "Received " + watchRequest);
 			
-			if (watchRequest instanceof FileTreeRequest) {
-				handleFileTreeRequest((FileTreeRequest) watchRequest);			
+			if (watchRequest instanceof GetFileTreeRequest) {
+				handleFileTreeRequest((GetFileTreeRequest) watchRequest);			
 			}
-			else if (watchRequest instanceof GetRequest) {
-				handleGetRequest((GetRequest) watchRequest);			
+			else if (watchRequest instanceof GetFileRequest) {
+				handleGetRequest((GetFileRequest) watchRequest);			
 			}
 			else {
-				eventBus.post(new Response(400, watchRequest.getId(), "Invalid watch request for root."));
+				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
 		}		
 	}
 
-	private void handleGetRequest(GetRequest getRequest) {
+	private void handleGetRequest(GetFileRequest getRequest) {
 		
 		
 	}
 
-	private void handleFileTreeRequest(FileTreeRequest fileTreeRequest) {
+	private void handleFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
 		Map<String, FileVersion> fileTree = watchOperation.getFileTree(fileTreeRequest.getPrefix());
-		FileTreeResponse fileTreeResponse = new FileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<String>(fileTree.keySet()));
+		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<String>(fileTree.keySet()));
 		
 		eventBus.post(fileTreeResponse);	
 	}

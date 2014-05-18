@@ -75,24 +75,14 @@ public class DaemonWebSocketServer {
 
 	private void handleMessage(String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);
-		
-		int requestId = -1;
-		String requestType = null;
-		
+
 		try {
-			Request basicRequest = serializer.read(Request.class, message);
-			
-			requestType = basicRequest.getType();
-			requestId = basicRequest.getId();
-			
-			Class<? extends Request> requestClass = RequestFactory.getRequestClass(requestType);
-			Request concreteRequest = serializer.read(requestClass, message);
-			
+			Request concreteRequest = RequestFactory.createRequest(message);
 			eventBus.post(concreteRequest);
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-			eventBus.post(new BadRequestResponse(requestId, "Invalid request."));
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
 		}	
 	}
 

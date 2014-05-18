@@ -36,6 +36,9 @@ public class StringUtil {
 	 * <ul>
 	 *  <li><tt>toCamelCase("hello world") -&gt; "HelloWorld"</tt></li>
 	 *  <li><tt>toCamelCase("hello_world") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("hello_World") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("helloWorld") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("HelloWorld") -&gt; "HelloWorld"</tt></li>
 	 * </ul>
 	 */
     public static String toCamelCase(String str) {
@@ -46,7 +49,7 @@ public class StringUtil {
 	            sb.append(Character.toUpperCase(s.charAt(0)));
 	
 	            if (s.length() > 1) {
-	                sb.append(s.substring(1, s.length()).toLowerCase());
+	                sb.append(s.substring(1, s.length()));
 	            }
         	}
         }
