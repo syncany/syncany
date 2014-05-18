@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.daemon;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -52,52 +51,29 @@ public class DaemonWebSocketServer {
 		initWebSocketServer();
 	}
 
+	public void start() throws ServiceAlreadyStartedException {
+		webSocketServer.start();
+	}
+
+	public void stop() {
+		try {
+			webSocketServer.stop();
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Could not stop websocket server.", e);
+		}
+	}
+	
 	private void initEventBus() {
 		eventBus = DaemonEventBus.getInstance();
 		eventBus.register(this);
 	}
 
 	private void initWebSocketServer() {
-		webSocketServer = new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
-			@Override
-			public void onOpen(WebSocket clientSocket, ClientHandshake handshake) {
-				String clientAddress = clientSocket.getRemoteSocketAddress().toString();
-				String clientOrigin = handshake.getFieldValue("origin");
-				String clientId = handshake.getFieldValue("clientId");
-				
-				boolean isAllowedClient = clientOrigin == null || "null".equals(clientOrigin) ||
-						clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER);
-				
-				if (!isAllowedClient) {
-					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header. Origin: " + clientOrigin + ", ID: " + clientId);
-					logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
-					
-					clientSocket.close();
-					return;
-				}
-				
-				logger.log(Level.INFO, "Client " + clientAddress + " connected. Origin: " + clientOrigin + ", ID: " + clientId);
-			}
-			
-			@Override
-			public void onMessage(WebSocket conn, String message) {
-				logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
-				handleMessage(message);
-			}
-			
-			@Override
-			public void onError(WebSocket conn, Exception ex) {
-				logger.log(Level.INFO, "Server error : " + ex.toString());
-			}
-			
-			@Override
-			public void onClose(WebSocket clientSocket, int code, String reason, boolean remote) {
-				logger.log(Level.INFO, clientSocket.getRemoteSocketAddress().toString() + " disconnected");
-			}
-		};
+		webSocketServer = new InternalWebSocketServer(new InetSocketAddress(DEFAULT_PORT));
 	}
 
-	public void handleMessage(String message) {
+	private void handleMessage(String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 		
 		int requestId = -1;
@@ -120,13 +96,7 @@ public class DaemonWebSocketServer {
 		}	
 	}
 
-	/**
-	 * Sends message to all currently connected WebSocket clients.
-	 * 
-	 * @param message The String to send across the network.
-	 * @throws InterruptedException When socket related I/O errors occur.
-	 */
-	public void sendToAll(String message) {
+	private void sendToAll(String message) {
 		Collection<WebSocket> clientSockets = webSocketServer.connections();
 		
 		synchronized (clientSockets) {
@@ -138,22 +108,6 @@ public class DaemonWebSocketServer {
 	
 	private void sendTo(WebSocket clientSocket, String message) {
 		clientSocket.send(message);
-	}
-
-	public void start() throws ServiceAlreadyStartedException {
-		webSocketServer.start();
-	}
-
-	public void stop() {
-		try {
-			webSocketServer.stop();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Subscribe
@@ -170,5 +124,46 @@ public class DaemonWebSocketServer {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}		
+	}
+	
+	private class InternalWebSocketServer extends WebSocketServer {
+		public InternalWebSocketServer(InetSocketAddress address) {
+			super(address);
+		}
+
+		@Override
+		public void onOpen(WebSocket clientSocket, ClientHandshake handshake) {
+			String clientAddress = clientSocket.getRemoteSocketAddress().toString();
+			String clientOrigin = handshake.getFieldValue("origin");
+			
+			boolean isAllowedClient = clientOrigin == null || "null".equals(clientOrigin) ||
+					clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER);
+			
+			if (!isAllowedClient) {
+				logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header. Origin: " + clientOrigin);
+				logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
+				
+				clientSocket.close();
+				return;
+			}
+			
+			logger.log(Level.INFO, "Client " + clientAddress + " connected. Origin: " + clientOrigin);
+		}
+		
+		@Override
+		public void onMessage(WebSocket conn, String message) {
+			logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
+			handleMessage(message);
+		}
+		
+		@Override
+		public void onError(WebSocket conn, Exception ex) {
+			logger.log(Level.INFO, "Server error : " + ex.toString());
+		}
+		
+		@Override
+		public void onClose(WebSocket clientSocket, int code, String reason, boolean remote) {
+			logger.log(Level.INFO, clientSocket.getRemoteSocketAddress().toString() + " disconnected");
+		}
 	}
 }

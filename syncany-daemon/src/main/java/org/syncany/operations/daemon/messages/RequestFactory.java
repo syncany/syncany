@@ -28,11 +28,10 @@ public class RequestFactory {
 	public static Class<? extends Request> getRequestClass(String requestType) {
 		String thisPackage = RequestFactory.class.getPackage().getName();
 		String camelCaseRequestType = StringUtil.toCamelCase(requestType);
-		String fqRequestClassName = thisPackage+"."+camelCaseRequestType+Request.class.getSimpleName();
-		
+		String fqRequestClassName = thisPackage + "." + camelCaseRequestType + Request.class.getSimpleName();
+
 		// Try to load!
-		try {
-			
+		try {		
 			Class<? extends Request> requestClass = Class.forName(fqRequestClassName).asSubclass(Request.class);
 			return requestClass;
 		} 
