@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bouncycastle.util.Arrays;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
@@ -120,18 +121,16 @@ public class WatchOperationThread implements WatchOperationListener {
 		int bundleId = new Random().nextInt();
 		eventBus.post(new GetFileResponse(getRequest.getId(), bundleId));
 		
-		try (ByteArrayInputStream fileInputStream = new ByteArrayInputStream(new byte[1*1024*1024])) {
+		try (ByteArrayInputStream fileInputStream = new ByteArrayInputStream(new byte[2*1024*1024])) {
 			int frameNumber = 0;
 			int read = -1;
 			byte[] buffer = new byte[512*1024];
 			
 			while (-1 != (read = fileInputStream.read(buffer))) {
+				System.out.println("read: "+ read);
 				FileDataBinaryResponse fileDataResponse = new FileDataBinaryResponse(bundleId, frameNumber++, ByteBuffer.wrap(buffer, 0, read));
 				eventBus.post(fileDataResponse);
 			}
-
-			FileDataBinaryResponse lastFrameFileDataResponse = new FileDataBinaryResponse(bundleId, frameNumber++, null);
-			eventBus.post(lastFrameFileDataResponse);
 		}
 		catch (Exception e) {
 			eventBus.post(new BadRequestResponse(getRequest.getId(), "Error while reading file data."));

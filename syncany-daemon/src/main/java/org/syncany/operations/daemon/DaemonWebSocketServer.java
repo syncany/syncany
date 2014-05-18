@@ -122,13 +122,13 @@ public class DaemonWebSocketServer {
 	
 	@Subscribe
 	public void onResponse(final BinaryResponse response) {
-		logger.log(Level.INFO, "Sending binary frame ...");
-		
 		for (WebSocket clientSocket : webSocketServer.connections()) {
+			logger.log(Level.INFO, "Sending binary frame to " + clientSocket + "...");
+			
 			clientSocket.sendFrame(new Framedata() {
 				@Override
 				public boolean isFin() {
-					return response.getData() == null;
+					return true;
 				}
 				
 				@Override
@@ -138,12 +138,12 @@ public class DaemonWebSocketServer {
 				
 				@Override
 				public ByteBuffer getPayloadData() {
-					return response.getData() != null ? response.getData() : ByteBuffer.wrap(new byte[0]);
+					return response.getData();
 				}
 				
 				@Override
 				public Opcode getOpcode() {
-					return response.getData() != null ? Opcode.BINARY : Opcode.CLOSING;
+					return Opcode.BINARY;
 				}
 				
 				@Override
