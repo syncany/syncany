@@ -18,31 +18,26 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
 
-@Root(name = "request", strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public class WebSocketRequest {
+public class WatchEventResponse extends Response {
 	@Element(required = true)
-	private int id;
-
+	private String root;
+	
 	@Element(required = true)
-	private String type;
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
+	private String action;
+	
+	@Element(required = false)
+	private String subject;
+	
+	public WatchEventResponse(String root, String action) {
+		this(root, action, null);
+	}	
+	
+	public WatchEventResponse(String root, String action, String subject) {
+		super(291, null, null);
+		
+		this.root = root;
+		this.action = action;
+		this.subject = subject;
+	}	
 }

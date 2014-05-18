@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,10 +29,10 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.operations.daemon.messages.BadRequestWebSocketResponse;
-import org.syncany.operations.daemon.messages.WebSocketRequest;
-import org.syncany.operations.daemon.messages.WebSocketRequestFactory;
-import org.syncany.operations.daemon.messages.WebSocketResponse;
+import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.Request;
+import org.syncany.operations.daemon.messages.RequestFactory;
+import org.syncany.operations.daemon.messages.Response;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -41,8 +40,6 @@ public class DaemonWebSocketServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
 	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
 	private static final int DEFAULT_PORT = 8625;
-	
-	private final AtomicBoolean running = new AtomicBoolean(false);
 	
 	private WebSocketServer webSocketServer;
 	private Serializer serializer; 
@@ -107,19 +104,19 @@ public class DaemonWebSocketServer {
 		String requestType = null;
 		
 		try {
-			WebSocketRequest basicRequest = serializer.read(WebSocketRequest.class, message);
+			Request basicRequest = serializer.read(Request.class, message);
 			
 			requestType = basicRequest.getType();
 			requestId = basicRequest.getId();
 			
-			Class<? extends WebSocketRequest> requestClass = WebSocketRequestFactory.getRequestClass(requestType);
-			WebSocketRequest concreteRequest = serializer.read(requestClass, message);
+			Class<? extends Request> requestClass = RequestFactory.getRequestClass(requestType);
+			Request concreteRequest = serializer.read(requestClass, message);
 			
 			eventBus.post(concreteRequest);
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-			eventBus.post(new BadRequestWebSocketResponse(requestId, "Invalid request."));
+			eventBus.post(new BadRequestResponse(requestId, "Invalid request."));
 		}	
 	}
 
@@ -145,13 +142,11 @@ public class DaemonWebSocketServer {
 
 	public void start() throws ServiceAlreadyStartedException {
 		webSocketServer.start();
-		running.set(true);
 	}
 
 	public void stop() {
 		try {
 			webSocketServer.stop();
-			running.set(false);
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -160,13 +155,9 @@ public class DaemonWebSocketServer {
 			e.printStackTrace();
 		}
 	}
-
-	public boolean isRunning() {
-		return running.get();
-	}
 	
 	@Subscribe
-	public void onResponse(WebSocketResponse response) {
+	public void onResponse(Response response) {
 		try {
 			StringWriter responseWriter = new StringWriter();
 			serializer.write(response, responseWriter);

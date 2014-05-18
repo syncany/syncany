@@ -18,28 +18,40 @@
 package org.syncany.operations.daemon;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
+import org.syncany.database.FileVersion;
+import org.syncany.operations.daemon.messages.FileTreeRequest;
+import org.syncany.operations.daemon.messages.FileTreeResponse;
+import org.syncany.operations.daemon.messages.GetRequest;
+import org.syncany.operations.daemon.messages.Response;
+import org.syncany.operations.daemon.messages.WatchEventResponse;
+import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * @author pheckel
  *
  */
-public class WatchOperationThread {
+public class WatchOperationThread implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
 
 	private Config config;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
+	private DaemonEventBus eventBus;
 
-	public WatchOperationThread(File localDir, WatchOperationListener listener) throws ConfigException {
+	public WatchOperationThread(File localDir) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
 		
 		if (configFile == null) {
@@ -47,7 +59,10 @@ public class WatchOperationThread {
 		}
 		
 		this.config = ConfigHelper.loadConfig(configFile);
-		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), listener);
+		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), this);
+		
+		this.eventBus = DaemonEventBus.getInstance();
+		this.eventBus.register(this);
 	}
 	
 	public void start() {
@@ -72,5 +87,88 @@ public class WatchOperationThread {
 
 	public void stop() {
 		watchOperation.stop();
+	}
+	
+	@Subscribe
+	public void onRequestReceived(WatchRequest watchRequest) {		
+		File requestRootFolder = new File(watchRequest.getRoot());
+		boolean localDirMatches = requestRootFolder.equals(config.getLocalDir());
+		
+		if (localDirMatches) {
+			logger.log(Level.INFO, "Received " + watchRequest);
+			
+			if (watchRequest instanceof FileTreeRequest) {
+				handleFileTreeRequest((FileTreeRequest) watchRequest);			
+			}
+			else if (watchRequest instanceof GetRequest) {
+				handleGetRequest((GetRequest) watchRequest);			
+			}
+			else {
+				eventBus.post(new Response(400, watchRequest.getId(), "Invalid watch request for root."));
+			}
+		}		
+	}
+
+	private void handleGetRequest(GetRequest getRequest) {
+		
+		
+	}
+
+	private void handleFileTreeRequest(FileTreeRequest fileTreeRequest) {
+		Map<String, FileVersion> fileTree = watchOperation.getFileTree(fileTreeRequest.getPrefix());
+		FileTreeResponse fileTreeResponse = new FileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<String>(fileTree.keySet()));
+		
+		eventBus.post(fileTreeResponse);	
+	}
+
+	@Override
+	public void onUploadStart(int fileCount) {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "UPLOAD_START";
+		
+		eventBus.post(new WatchEventResponse(root, action));
+	}
+
+	@Override
+	public void onUploadFile(String fileName, int fileNumber) {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "UPLOAD_FILE";
+		String subject = fileName;
+		
+		eventBus.post(new WatchEventResponse(root, action, subject));
+	}
+
+	@Override
+	public void onIndexStart(int fileCount) {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "INDEX_START";
+		
+		eventBus.post(new WatchEventResponse(root, action));
+	}
+
+	@Override
+	public void onIndexFile(String fileName, int fileNumber) {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "INDEX_FILE";
+		String subject = fileName;
+		
+		eventBus.post(new WatchEventResponse(root, action, subject));
+	}
+
+	@Override
+	public void onDownloadStart(int fileCount) {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "DOWNLOAD_START";
+		
+		eventBus.post(new WatchEventResponse(root, action));
+	}
+
+	@Override
+	public void onDownloadFile(String fileName, int fileNumber) {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "DOWNLOAD_FILE";
+		String subject = fileName;
+		
+		eventBus.post(new WatchEventResponse(root, action, subject));
 	}
 }

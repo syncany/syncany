@@ -17,13 +17,17 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Element;
 
-@Root(name = "response", strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public class BadRequestWebSocketResponse extends WebSocketResponse {
-	public BadRequestWebSocketResponse(int requestId, String message) {
-		super(400, requestId, message);
+public class FileTreeRequest extends WatchRequest {
+	@Element(required = false)
+	private String prefix;
+	
+	public String getPrefix() {
+		return prefix;
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
 	}
 }

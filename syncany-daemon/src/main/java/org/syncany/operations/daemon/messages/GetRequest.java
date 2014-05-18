@@ -19,15 +19,11 @@ package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
 
-public class WatchWebSocketRequest extends WebSocketRequest {
+public class GetRequest extends WatchRequest {
 	@Element(required = true)
-	private String root;
-
-	public String getRoot() {
-		return root;
-	}
-
-	public void setRoot(String root) {
-		this.root = root;
+	private String file;
+	
+	public String getFile() {
+		return file;
 	}
 }

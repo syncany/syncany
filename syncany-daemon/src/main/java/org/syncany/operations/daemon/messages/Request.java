@@ -21,33 +21,28 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-@Root(name = "response", strict = false)
+@Root(name = "request", strict = false)
 @Namespace(reference = "http://syncany.org/ws/1")
-public class WebSocketResponse {
+public class Request {
 	@Element(required = true)
-	private int code;
-	
-	@Element
-	private int requestId;
-	
+	private int id;
+
 	@Element(required = true)
-	private String message;
+	private String type;
 
-	public WebSocketResponse(int code, int requestId, String message) {
-		this.code = code;
-		this.requestId = requestId;
-		this.message = message;
+	public int getId() {
+		return id;
 	}
 
-	public int getCode() {
-		return code;
+	public void setId(int id) {
+		this.id = id;
 	}
 
-	public int getRequestId() {
-		return requestId;
+	public String getType() {
+		return type;
 	}
-	
-	public String getMessage() {
-		return message;
+
+	public void setType(String type) {
+		this.type = type;
 	}
 }

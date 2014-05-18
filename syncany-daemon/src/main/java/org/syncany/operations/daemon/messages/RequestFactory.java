@@ -22,35 +22,19 @@ import java.util.logging.Logger;
 
 import org.syncany.util.StringUtil;
 
-public class WebSocketRequestFactory {
-	private static final Logger logger = Logger.getLogger(WebSocketRequestFactory.class.getSimpleName());
+public class RequestFactory {
+	private static final Logger logger = Logger.getLogger(RequestFactory.class.getSimpleName());
 	
-	public static Class<? extends WebSocketRequest> getRequestClass(String requestType) {
-		String thisPackage = WebSocketRequestFactory.class.getPackage().getName();
+	public static Class<? extends Request> getRequestClass(String requestType) {
+		String thisPackage = RequestFactory.class.getPackage().getName();
 		String camelCaseRequestType = StringUtil.toCamelCase(requestType);
-		String fqRequestClassName = thisPackage+"."+camelCaseRequestType+WebSocketRequest.class.getSimpleName();
+		String fqRequestClassName = thisPackage+"."+camelCaseRequestType+Request.class.getSimpleName();
 		
 		// Try to load!
 		try {
 			
-			Class<? extends WebSocketRequest> requestClass = Class.forName(fqRequestClassName).asSubclass(WebSocketRequest.class);
+			Class<? extends Request> requestClass = Class.forName(fqRequestClassName).asSubclass(Request.class);
 			return requestClass;
-		} 
-		catch (Exception ex) {
-			logger.log(Level.INFO, "Could not find FQCN " + fqRequestClassName, ex);
-			return null;
-		}		
-	}
-	
-	public static WebSocketRequest getInstance(String requestType) {
-		String thisPackage = WebSocketRequestFactory.class.getPackage().getName();
-		String camelCaseRequestType = StringUtil.toCamelCase(requestType);
-		String fqRequestClassName = thisPackage+"."+camelCaseRequestType+WebSocketRequest.class.getSimpleName();
-		
-		// Try to load!
-		try {
-			Class<?> requestClass = Class.forName(fqRequestClassName);
-			return (WebSocketRequest) requestClass.newInstance();
 		} 
 		catch (Exception ex) {
 			logger.log(Level.INFO, "Could not find FQCN " + fqRequestClassName, ex);
