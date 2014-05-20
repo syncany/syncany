@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
@@ -452,6 +450,120 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "2_after_cleanup"));
 
 		clientC.down(); // <<< "Cannot determine file content for checksum X"
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
+	}	
+	
+	@Test
+	public void testIssue58_5() throws Exception {		
+		// Test for https://github.com/syncany/syncany/issues/58#issuecomment-43472118
+		
+		// Setup 
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		TestClient clientC = new TestClient("C", testConnection);
+		TestClient clientD = new TestClient("D", testConnection);
+		TestClient clientE = new TestClient("E", testConnection);
+		
+		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
+		cleanupOptionsKeep1.setMergeRemoteFiles(true);
+		cleanupOptionsKeep1.setRemoveOldVersions(true);
+		cleanupOptionsKeep1.setRepackageMultiChunks(false);
+		cleanupOptionsKeep1.setKeepVersionsCount(1);		
+		
+		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
+		statusOptionsForceChecksum.setForceChecksum(true);		
+
+		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
+		upNoCleanupForceChecksum.setCleanupEnabled(false);
+		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
+
+		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
+		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
+		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
+		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
+		
+		// First round
+		
+		clientB.createNewFile("fileA");		
+		clientB.up(upNoCleanupForceChecksum);
+		
+		clientA.down();
+		TestFileUtil.copyFile(clientA.getLocalFile("fileA"), clientA.getLocalFile("fileAcopy"));
+		clientA.up(upNoCleanupForceChecksum);
+		
+		clientA.down();
+		
+		for (int i=0; i<30; i++) {
+			clientA.down();
+			clientA.changeFile("fileA");
+			clientA.up(upNoCleanupForceChecksum);
+		}
+		
+		// First cleanup
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_1_before_cleanup"));
+		FileUtils.copyDirectory(clientA.getConfig().getDatabaseDir(), new File(clientA.getConfig().getAppDir(), "1_before_cleanup"));
+		
+		CleanupOperationOptions cleanupMergeAndRemoveOldFiles = new CleanupOperationOptions();
+		cleanupMergeAndRemoveOldFiles.setMergeRemoteFiles(true);
+		cleanupMergeAndRemoveOldFiles.setRemoveOldVersions(true);
+		clientA.cleanup(cleanupMergeAndRemoveOldFiles);
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_2_after_cleanup"));
+		FileUtils.copyDirectory(clientA.getConfig().getDatabaseDir(), new File(clientA.getConfig().getAppDir(), "2_after_cleanup"));
+
+		clientC.down(); // If this doesn't crash that's a win!
+		
+		// Second round
+		
+		for (int i=0; i<30; i++) {
+			clientB.down();
+			clientB.changeFile("fileA");
+			clientB.up(upNoCleanupForceChecksum);
+		}
+		
+		// Second cleanup
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_3_before_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "3_before_cleanup"));
+		
+		clientB.cleanup(cleanupMergeAndRemoveOldFiles);
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_4_after_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "4_after_cleanup"));
+		
+		clientD.down(); // If this doesn't crash that's a win!
+		
+		// Third round
+		
+		for (int i=0; i<30; i++) {
+			clientB.down();
+			clientB.changeFile("fileA");
+			clientB.up(upNoCleanupForceChecksum);
+		}
+		
+		clientB.deleteFile("fileAcopy"); // < Remove original checksum from first DBV
+		clientB.up(upNoCleanupForceChecksum);
+		
+		// Third cleanup
+
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_5_before_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "5_before_cleanup"));
+		
+		clientB.cleanup(cleanupMergeAndRemoveOldFiles);
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_6_after_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "6_after_cleanup"));
+		
+		clientE.down(); // If this doesn't crash that's a win!
+
+		fail("xx");
 		
 		// Tear down
 		clientA.deleteTestData();
