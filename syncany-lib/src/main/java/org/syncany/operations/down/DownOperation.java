@@ -208,11 +208,12 @@ public class DownOperation extends AbstractTransferOperation {
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 		}
 		else {
-			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");			
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabases, DatabaseVersionType.DEFAULT);
-
 			logger.log(Level.INFO, "Loading winners database (PURGE) ...");			
-			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabases, DatabaseVersionType.PURGE);
+			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabases, DatabaseVersionType.PURGE, null);
+			Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions = extractMostRecentPurgeVersions(winnersPurgeDatabase.getFileHistories());
+			
+			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");			
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, unknownRemoteDatabases, DatabaseVersionType.DEFAULT, ignoredMostRecentPurgeVersions);
 
 			logger.log(Level.INFO, "Determine file system actions ...");			
 			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
@@ -226,6 +227,17 @@ public class DownOperation extends AbstractTransferOperation {
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
+	}
+
+	private Map<FileHistoryId, FileVersion> extractMostRecentPurgeVersions(Collection<PartialFileHistory> fileHistories) {
+		Map<FileHistoryId, FileVersion> mostRecentPurgeVersions = new HashMap<FileHistoryId, FileVersion>();
+		
+		for (PartialFileHistory fileHistory : fileHistories) {
+			FileVersion mostRecentPurgeVersion = fileHistory.getLastVersion();
+			mostRecentPurgeVersions.put(fileHistory.getFileHistoryId(), mostRecentPurgeVersion);
+		}
+		
+		return mostRecentPurgeVersions;
 	}
 
 	private void applyDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase, MemoryDatabase winnersPurgeDatabase) throws SQLException {
@@ -489,10 +501,13 @@ public class DownOperation extends AbstractTransferOperation {
 	 * db-A-0005 must be processed twice; each time loading separate parts of the file. In this case:
 	 * First load (A1)-(A2) from db-A-0005, then load (A2,B1) from db-B-0001, then load (A3,B1)-(A4,B1)
 	 * from db-A-0005, and ignore (A5,B1).
+	 * @param ignoredMostRecentPurgeVersions 
 	 * 
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
 	 */
-	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabases, DatabaseVersionType filterType) throws IOException, StorageException {
+	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabases,
+			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions) throws IOException, StorageException {
+		
 		// Make map 'short filename' -> 'full filename'
 		Map<String, File> shortFilenameToFileMap = new HashMap<String, File>();
 
@@ -533,7 +548,7 @@ public class DownOperation extends AbstractTransferOperation {
 			File databaseVersionFile = getExactDatabaseVersionFile(currentDatabaseVersionHeader, shortFilenameToFileMap);
 						
 			if (databaseVersionFile != null) {
-				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, filterType);				
+				xmlDatabaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, false, filterType, ignoredMostRecentPurgeVersions);				
 				rangeClientName = null;
 			}
 			else {

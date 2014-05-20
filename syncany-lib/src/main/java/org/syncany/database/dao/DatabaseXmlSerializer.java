@@ -26,6 +26,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +37,9 @@ import javax.xml.stream.XMLStreamException;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 
 /**
@@ -104,9 +107,17 @@ public class DatabaseXmlSerializer {
 		load(db, databaseFile, fromVersion, toVersion, false, filterType);
 	}
 	
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly, DatabaseVersionType filterType) throws IOException {
-        InputStream is;
-        
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly,
+			DatabaseVersionType filterType) throws IOException {
+
+		load(db, databaseFile, fromVersion, toVersion, false, filterType, null);
+	}
+
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly,
+			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions) throws IOException {
+		
+		InputStream is;
+
 		if (transformer == null) {
 			is = new FileInputStream(databaseFile);
 		}
@@ -123,10 +134,11 @@ public class DatabaseXmlSerializer {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
 			
-			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, headersOnly, filterType));
+			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, headersOnly, filterType, ignoredMostRecentPurgeVersions));
         }
         catch (Exception e) {
         	throw new IOException(e);
         } 
-	}			
+	}
+
 }
