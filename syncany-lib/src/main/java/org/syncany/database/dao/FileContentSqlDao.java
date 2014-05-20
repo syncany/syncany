@@ -57,15 +57,17 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 * <p><b>Note:</b> This method executes, but does not commit the queries.
 	 * 
 	 * @param connection The connection used to execute the statements
+	 * @param databaseVersionId 
 	 * @param fileContents List of {@link FileContent}s to be inserted in the database
 	 * @throws SQLException If the SQL statement fails
 	 */
-	public void writeFileContents(Connection connection, Collection<FileContent> fileContents) throws SQLException {
+	public void writeFileContents(Connection connection, long databaseVersionId, Collection<FileContent> fileContents) throws SQLException {
 		for (FileContent fileContent : fileContents) {
 			PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContents.sql");
 
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
-			preparedStatement.setLong(2, fileContent.getSize());
+			preparedStatement.setLong(2, databaseVersionId);
+			preparedStatement.setLong(3, fileContent.getSize());
 			
 			preparedStatement.executeUpdate();
 			preparedStatement.close();	
@@ -156,9 +158,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 */
 	public Map<FileChecksum, FileContent> getFileContents(VectorClock vectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql")) {
-			
 			preparedStatement.setString(1, vectorClock.toString());
-			preparedStatement.setString(2, vectorClock.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileContents(resultSet);
@@ -245,5 +245,18 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		}
 		
 		return fileContents;
+	}
+
+	/**
+	 * no commit
+	 */
+	public void updateDirtyFileContentsNewDatabaseId(long newDatabaseVersionId) {
+		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.update.dirty.updateDirtyFileContentsNewDatabaseId.sql")) {
+			preparedStatement.setLong(1, newDatabaseVersionId);
+			preparedStatement.executeUpdate();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}		
 	}
 }

@@ -81,15 +81,19 @@ public class UpCommandTest {
 			}).start();
 		}
 		
+		new CommandLineClient(new String[] { 
+			 "--localdir", clientA.get("localdir"),
+			 "cleanup" 
+		}).start();
 
-		for (int i=1; i<=10; i++) {
+		for (int i=1; i<=14; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertFalse("Database file SHOULD NOT exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}
 		
-		for (int i=11; i<=20; i++) {
+		for (int i=15; i<=20; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 

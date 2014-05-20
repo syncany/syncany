@@ -1,11 +1,5 @@
 -- Tables
 
-CREATE CACHED TABLE chunk (
-  checksum varchar(40) NOT NULL,
-  size bigint NOT NULL,
-  PRIMARY KEY (checksum)
-);
-
 CREATE CACHED TABLE databaseversion (
   id int NOT NULL IDENTITY,
   status varchar(45) NOT NULL,
@@ -13,6 +7,14 @@ CREATE CACHED TABLE databaseversion (
   client varchar(45) NOT NULL,
   vectorclock_serialized varchar(1024) NOT NULL,
   UNIQUE (vectorclock_serialized)
+);
+
+CREATE CACHED TABLE chunk (
+  checksum varchar(40) NOT NULL,
+  databaseversion_id int NOT NULL,
+  size bigint NOT NULL,
+  PRIMARY KEY (checksum),
+  FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE CACHED TABLE databaseversion_vectorclock (
@@ -25,8 +27,10 @@ CREATE CACHED TABLE databaseversion_vectorclock (
 
 CREATE CACHED TABLE filecontent (
   checksum varchar(40) NOT NULL,
+  databaseversion_id int NOT NULL,
   size bigint NOT NULL,
-  PRIMARY KEY (checksum)
+  PRIMARY KEY (checksum),
+  FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE CACHED TABLE filecontent_chunk (
@@ -149,7 +153,6 @@ create view fileversion_full as
 	
 create view filecontent_full as
 	select 		
-		fvf.databaseversion_id,
 		fvf.databaseversion_status, 
 		fvf.databaseversion_localtime, 
 		fvf.databaseversion_client, 	
@@ -172,13 +175,3 @@ create view multichunk_full as
 	from filecontent_full fcf 
 	join multichunk_chunk mcc on fcf.chunk_checksum=mcc.chunk_checksum;		
 		
-create view chunk_full as				
-	select 		
-		fcf.databaseversion_id,
-		fcf.databaseversion_status, 
-		fcf.databaseversion_localtime, 
-		fcf.databaseversion_client, 	
-		fcf.databaseversion_vectorclock_serialized, 	
-		c.*
-	from filecontent_full fcf 
-	join chunk c on fcf.chunk_checksum=c.checksum;

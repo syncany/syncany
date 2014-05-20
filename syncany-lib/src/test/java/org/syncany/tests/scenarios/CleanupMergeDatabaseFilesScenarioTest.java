@@ -24,6 +24,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
@@ -439,15 +440,17 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 			clientB.up(upNoCleanupForceChecksum);
 		}
 		
-		CleanupOperationOptions cleanupNoRemoveOldFiles = new CleanupOperationOptions();
-		cleanupNoRemoveOldFiles.setMergeRemoteFiles(true);
-		cleanupNoRemoveOldFiles.setRemoveOldVersions(true);
-		clientB.cleanup(cleanupNoRemoveOldFiles);
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_1_before_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "1_before_cleanup"));
 		
-		clientA.down();
-		clientA.changeFile("fileB");
-		clientA.up(upNoCleanupForceChecksum);
+		CleanupOperationOptions cleanupMergeAndRemoveOldFiles = new CleanupOperationOptions();
+		cleanupMergeAndRemoveOldFiles.setMergeRemoteFiles(true);
+		cleanupMergeAndRemoveOldFiles.setRemoveOldVersions(true);
+		clientB.cleanup(cleanupMergeAndRemoveOldFiles);
 		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_2_after_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "2_after_cleanup"));
+
 		clientC.down(); // <<< "Cannot determine file content for checksum X"
 		
 		// Tear down

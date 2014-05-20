@@ -200,10 +200,10 @@ public class TestAssertUtil {
 	public static void assertSqlDatabaseEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException, SQLException {
 		// Compare tables + ignore columns
 		String[][] compareTablesAndIgnoreColumns = new String[][] { 
-			new String[] { "chunk" },
+			new String[] { "chunk", "DATABASEVERSION_ID" },
 			new String[] { "databaseversion", "ID" }, 
 			new String[] { "databaseversion_vectorclock", "DATABASEVERSION_ID" },
-			new String[] { "filecontent" },
+			new String[] { "filecontent", "DATABASEVERSION_ID"},
 			new String[] { "filecontent_chunk" },
 			new String[] { "filehistory", "DATABASEVERSION_ID" },
 			new String[] { "fileversion", "DATABASEVERSION_ID" },

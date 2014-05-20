@@ -79,7 +79,8 @@ public class Config {
     private Transformer transformer;
     private IgnoredFiles ignoredFiles;
       
-    static {    	    	
+    static {    	    
+    	UserConfig.init();
     	Logging.init();
     }
     
