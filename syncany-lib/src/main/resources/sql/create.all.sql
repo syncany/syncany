@@ -151,27 +151,3 @@ create view fileversion_full as
 	from filehistory_full fhf
 	join fileversion fv on fhf.id=fv.filehistory_id and fhf.databaseversion_id=fv.databaseversion_id;	
 	
-create view filecontent_full as
-	select 		
-		fvf.databaseversion_status, 
-		fvf.databaseversion_localtime, 
-		fvf.databaseversion_client, 	
-		fvf.databaseversion_vectorclock_serialized, 	
-		fc.*,
-		fcc.chunk_checksum,
-		fcc.num		
-	from fileversion_full fvf
-	join filecontent fc on fc.checksum=fvf.filecontent_checksum
-	join filecontent_chunk fcc on fc.checksum=fcc.filecontent_checksum;
-	
-create view multichunk_full as
-	select 		
-		fcf.databaseversion_id,
-		fcf.databaseversion_status, 
-		fcf.databaseversion_localtime, 
-		fcf.databaseversion_client, 	
-		fcf.databaseversion_vectorclock_serialized, 	
-		mcc.*
-	from filecontent_full fcf 
-	join multichunk_chunk mcc on fcf.chunk_checksum=mcc.chunk_checksum;		
-		
