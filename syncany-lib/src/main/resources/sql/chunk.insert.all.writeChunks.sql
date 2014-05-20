@@ -8,4 +8,4 @@
 merge into chunk as chunk_target
 using (values(?)) as chunk_ref(checksum)
 on (chunk_target.checksum = chunk_ref.checksum)
-when not matched then insert (checksum, size) values (chunk_ref.checksum, ?)
+when not matched then insert (checksum, databaseversion_id, size) values (chunk_ref.checksum, ?, ?)

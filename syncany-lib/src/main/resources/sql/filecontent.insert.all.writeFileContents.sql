@@ -8,4 +8,4 @@
 merge into filecontent as filecontent_target
 using (values(?)) as filecontent_ref(checksum)
 on (filecontent_target.checksum = filecontent_ref.checksum)
-when not matched then insert (checksum, size) values (filecontent_ref.checksum, ?)
+when not matched then insert (checksum, databaseversion_id, size) values (filecontent_ref.checksum, ?, ?)
