@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;

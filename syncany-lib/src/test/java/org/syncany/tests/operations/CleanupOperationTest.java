@@ -32,7 +32,7 @@ import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
