@@ -18,6 +18,7 @@
 package org.syncany.database.dao;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,6 +62,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private VectorClock versionTo;
 	private boolean headersOnly;
 	private DatabaseVersionType filterType;
+	private Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -71,13 +73,15 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private PartialFileHistory fileHistory;
 
 	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly,
-			DatabaseVersionType filterType) {
+			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions) {
+		
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
 		this.versionTo = toVersion;
 		this.headersOnly = headersOnly;
 		this.filterType = filterType;
+		this.ignoredMostRecentFileVersions = ignoredMostRecentFileVersions;
 	}
 
 	@Override
@@ -168,38 +172,64 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 					throw new SAXException("FileVersion: Attributes missing: version, path, type, status, size and last modified are mandatory");
 				}
 
-				FileVersion fileVersion = new FileVersion();
-
-				fileVersion.setVersion(Long.parseLong(fileVersionStr));
-				fileVersion.setPath(path);
-				fileVersion.setType(FileType.valueOf(typeStr));
-				fileVersion.setStatus(FileStatus.valueOf(statusStr));
-				fileVersion.setSize(Long.parseLong(sizeStr));
-				fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
-
-				if (updatedStr != null) {
-					fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
+				// Filter it if it was purged somewhere in the future, see #58
+				Long fileVersionNum = Long.parseLong(fileVersionStr);
+				boolean addThisFileVersion = !filterFileVersion(fileHistory, fileVersionNum);
+				
+				// Go add it!
+				if (addThisFileVersion) {
+					FileVersion fileVersion = new FileVersion();
+	
+					fileVersion.setVersion(fileVersionNum);
+					fileVersion.setPath(path);
+					fileVersion.setType(FileType.valueOf(typeStr));
+					fileVersion.setStatus(FileStatus.valueOf(statusStr));
+					fileVersion.setSize(Long.parseLong(sizeStr));
+					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
+	
+					if (updatedStr != null) {
+						fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
+					}
+	
+					if (checksumStr != null) {
+						fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
+					}
+	
+					if (linkTarget != null) {
+						fileVersion.setLinkTarget(linkTarget);
+					}
+	
+					if (dosAttributes != null) {
+						fileVersion.setDosAttributes(dosAttributes);
+					}
+	
+					if (posixPermissions != null) {
+						fileVersion.setPosixPermissions(posixPermissions);
+					}
+	
+					fileHistory.addFileVersion(fileVersion);
 				}
-
-				if (checksumStr != null) {
-					fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
-				}
-
-				if (linkTarget != null) {
-					fileVersion.setLinkTarget(linkTarget);
-				}
-
-				if (dosAttributes != null) {
-					fileVersion.setDosAttributes(dosAttributes);
-				}
-
-				if (posixPermissions != null) {
-					fileVersion.setPosixPermissions(posixPermissions);
-				}
-
-				fileHistory.addFileVersion(fileVersion);
 			}
 		}
+	}
+
+	private boolean filterFileVersion(PartialFileHistory fileHistory, Long fileVersionNum) {
+		if (ignoredMostRecentFileVersions != null) {
+			FileVersion mostRecentPurgeVersion = ignoredMostRecentFileVersions.get(fileHistory.getFileHistoryId());
+			
+			if (mostRecentPurgeVersion != null) {
+				boolean hasBeenPurged = fileVersionNum.compareTo(mostRecentPurgeVersion.getVersion()) <= 0;
+				
+				if (hasBeenPurged) {
+					logger.log(Level.FINE, "   - File history {0}, version {1} will be ignored because it has been purged in a later version.",
+							new Object[] { fileHistory.getFileHistoryId(), fileVersionNum });
+					
+					return true;
+				}
+			}
+		}
+		
+		return false;		
 	}
 
 	@Override
@@ -236,7 +266,11 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				multiChunk = null;
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
-				databaseVersion.addFileHistory(fileHistory);
+				// File history might be empty if file versions are ignored!
+				if (fileHistory.getFileVersions().size() > 0) {
+					databaseVersion.addFileHistory(fileHistory);
+				}
+				
 				fileHistory = null;
 			}
 			else {

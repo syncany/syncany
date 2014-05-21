@@ -562,8 +562,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "6_after_cleanup"));
 		
 		clientE.down(); // If this doesn't crash that's a win!
-
-		fail("xx");
 		
 		// Tear down
 		clientA.deleteTestData();
