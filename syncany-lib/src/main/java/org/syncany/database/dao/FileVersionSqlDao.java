@@ -124,12 +124,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			}
 		}
 	}
-
-	public void removeDeletedVersions() throws SQLException {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.all.removeDeletedVersions.sql")) {	
-			preparedStatement.executeUpdate();
-		}
-	}
 	
 	/**
 	 * Queries the database for the currently active {@link FileVersion}s and returns it
@@ -178,21 +172,34 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setInt(1, keepVersionsCount);
 			preparedStatement.setInt(2, keepVersionsCount);
 
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
-				
-				while (resultSet.next()) {
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-					FileVersion fileVersion = createFileVersionFromRow(resultSet);
-					
-					mostRecentPurgeFileVersions.put(fileHistoryId, fileVersion);
-				}	 
-				
-				return mostRecentPurgeFileVersions;
-			}
+			return getSingleVersionInHistory(preparedStatement);			
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
+		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.all.getDeletedFileVersions.sql")) {
+			return getSingleVersionInHistory(preparedStatement);			
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private Map<FileHistoryId, FileVersion> getSingleVersionInHistory(PreparedStatement preparedStatement) throws SQLException {
+		try (ResultSet resultSet = preparedStatement.executeQuery()) {
+			Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+			
+			while (resultSet.next()) {
+				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+				FileVersion fileVersion = createFileVersionFromRow(resultSet);
+				
+				mostRecentPurgeFileVersions.put(fileHistoryId, fileVersion);
+			}	 
+			
+			return mostRecentPurgeFileVersions;
 		}
 	}
 	

@@ -272,7 +272,6 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		
 		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
-		localDatabase.removeDeletedFileVersions();  
 		localDatabase.removeUnreferencedDatabaseEntities();
 		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());		
 		

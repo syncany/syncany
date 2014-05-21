@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -214,9 +215,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * @throws Exception 
 	 */
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options
-				.getKeepVersionsCount());
-		boolean purgeDatabaseVersionNecessary = mostRecentPurgeFileVersions.size() > 0;
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
+		
+		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount()));
+		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
+		
+		boolean purgeDatabaseVersionNecessary = purgeFileVersions.size() > 0;
 
 		if (!purgeDatabaseVersionNecessary) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary (no file histories longer than {0} versions found).",
@@ -225,15 +229,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		logger.log(Level.INFO, "- Old version removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
-				mostRecentPurgeFileVersions.size(), options.getKeepVersionsCount() });
+				purgeFileVersions.size(), options.getKeepVersionsCount() });
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeSmallerOrEqualFileVersions(mostRecentPurgeFileVersions);
-		localDatabase.removeDeletedFileVersions();
+		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
-		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
+		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(purgeFileVersions);
 
 		localDatabase.removeUnreferencedDatabaseEntities();
 
@@ -248,7 +251,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// Update stats
-		result.setRemovedOldVersionsCount(mostRecentPurgeFileVersions.size());
+		result.setRemovedOldVersionsCount(purgeFileVersions.size());
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
