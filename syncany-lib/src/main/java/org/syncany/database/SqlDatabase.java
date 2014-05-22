@@ -19,6 +19,7 @@ package org.syncany.database;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -228,6 +229,18 @@ public class SqlDatabase {
 
 	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks() {
 		return multiChunkDao.getMultiChunks();
+	}
+	
+	public void writeMuddyMultiChunks(Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunks) throws SQLException {
+		multiChunkDao.writeMuddyMultiChunks(muddyMultiChunks);
+	}
+
+	public Map<MultiChunkId, MultiChunkEntry> getMuddyMultiChunks() {
+		return multiChunkDao.getMuddyMultiChunks();
+	}
+
+	public void removeNonMuddyMultiChunks() throws SQLException {
+		multiChunkDao.removeNonMuddyMultiChunks();
 	}
 
 	// Chunk

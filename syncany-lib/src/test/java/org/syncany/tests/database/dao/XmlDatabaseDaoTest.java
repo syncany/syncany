@@ -49,6 +49,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -399,7 +400,7 @@ public class XmlDatabaseDaoTest {
 		MemoryDatabase readDatabase = new MemoryDatabase();
 		
 		DatabaseXmlSerializer readDAO = new DatabaseXmlSerializer();
-		readDAO.load(readDatabase, writtenDatabaseFile, DatabaseVersionType.DEFAULT);
+		readDAO.load(readDatabase, writtenDatabaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
 		
 		for (int i=0; i<10; i++) {
 			DatabaseVersion writtenDatabaseVersion = writtenDatabaseVersions.get(i);

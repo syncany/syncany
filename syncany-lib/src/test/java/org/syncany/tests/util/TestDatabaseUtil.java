@@ -35,6 +35,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.down.DatabaseBranch;
 
 public class TestDatabaseUtil {
@@ -115,7 +116,7 @@ public class TestDatabaseUtil {
 		MemoryDatabase db = new MemoryDatabase();
 		
 		DatabaseXmlSerializer dao = new DatabaseXmlSerializer(transformer);
-		dao.load(db, databaseFile, DatabaseVersionType.DEFAULT);
+		dao.load(db, databaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
 		
 		return db;
 	}

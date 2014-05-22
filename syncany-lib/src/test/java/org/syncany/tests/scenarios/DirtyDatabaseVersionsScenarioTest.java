@@ -21,8 +21,12 @@ import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlResultEquals;
 
+import java.io.File;
+
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
+import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.up.UpOperationOptions;
@@ -90,14 +94,14 @@ public class DirtyDatabaseVersionsScenarioTest {
 	}	
 	
 	@Test
-	public void testRemoveDirtyLostMultiChunksIssue132() throws Exception {
+	public void testRemoveDirtyLostMultiChunksIssue132_1() throws Exception {
 		/*
 		 * This test tries to provoke issue #132, i.e. the deletion of 
 		 * multichunks of DIRTY database versions of other clients. 
 		 */
 		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -115,9 +119,24 @@ public class DirtyDatabaseVersionsScenarioTest {
 		clientA.createNewFile("file3.jpg");
 		clientA.up(upOptionsWithForce);	  // No 'down' (creates dirty version)	
 		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_1_before_down"));
+		FileUtils.copyDirectory(clientB.getConfig().getLocalDir(), new File(clientB.getConfig().getLocalDir()+"_1_before_down"));
+
+		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "0");
+
+		clientB.down(); // Download A's version, realize it's muddy (= dirty by other client)
 		
-		clientB.down(); // Download A's version, realize it's dirty, do nothing
+		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "1");
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_2_after_down_before_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getLocalDir(), new File(clientB.getConfig().getLocalDir()+"_2_after_down_before_cleanup"));
+		
+		assertEquals(3, new File(testConnection.getRepositoryPath(), "multichunks").listFiles().length);
 		clientB.cleanup(); // <<< This should NOT delete any lost multichunks of DIRTY database versions!
+		assertEquals(3, new File(testConnection.getRepositoryPath(), "multichunks").listFiles().length);
+		
+		FileUtils.copyDirectory(testConnection.getRepositoryPath(), new File(testConnection.getRepositoryPath()+"_3_after_cleanup"));
+		FileUtils.copyDirectory(clientB.getConfig().getLocalDir(), new File(clientB.getConfig().getLocalDir()+"_3_after_cleanup"));
 		
 		clientA.down(); // Adds dirty database
 		assertSqlResultEquals(clientA.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "1");
@@ -127,28 +146,68 @@ public class DirtyDatabaseVersionsScenarioTest {
 
 		clientB.down();
 		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());		
+		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "0");
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}	
+	
+	@Test
+	public void testRemoveDirtyLostMultiChunksIssue132_2() throws Exception {
+		/*
+		 * This test tries to provoke issue #132, i.e. the deletion of 
+		 * multichunks of DIRTY database versions of other clients. 
+		 */
+		
+		// Setup 
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
 
-		fail("xx");
+		UpOperationOptions upOptionsWithForce = new UpOperationOptions();
+		upOptionsWithForce.setForceUploadEnabled(true);
 		
-		// A tries to upload, this fails due to C's unknown database
+		// Run 
+		
+		// Round 1
+		clientA.createNewFile("file1.jpg");
+		clientA.up();
+		
+		clientB.down();		
+		clientB.createNewFile("file2.jpg");
+		clientB.up();
+		
+		clientA.createNewFile("file3.jpg");
+		clientA.up(upOptionsWithForce);	  // No 'down' (creates dirty version)	
+		
+		clientB.down(); // Download A's version, realize it's muddy (= dirty by other client)
+		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "1");
+
+		assertEquals(3, new File(testConnection.getRepositoryPath(), "multichunks").listFiles().length);
+		clientB.cleanup(); // <<< This should NOT delete any lost multichunks of DIRTY database versions!
+		assertEquals(3, new File(testConnection.getRepositoryPath(), "multichunks").listFiles().length);
+		
+		// Round 2
 		clientA.createNewFile("file4.jpg");
-		UpOperationResult aUpResult = clientA.upWithForceChecksum(); // 
-		assertEquals("Expected to fail, because db-C-1 has not been looked at", UpResultCode.NOK_UNKNOWN_DATABASES, aUpResult.getResultCode());
-		assertFalse(clientA.getLocalFile("file2.jpg").exists());
-		assertFalse(clientA.getLocalFile("file3.jpg").exists());
+		clientA.up(upOptionsWithForce);	  // This creates ANOTHER dirty version remotely!	
 		
-		// A downloads C's changes, no file changes are expected
-		DownOperationResult aDownResult = clientA.down(); 
-		assertEquals("Expected to succeed with remote changes (a new database file, but no file changes!).", DownResultCode.OK_WITH_REMOTE_CHANGES, aDownResult.getResultCode());
-		assertTrue(clientA.getLocalFile("file2.jpg").exists());
-		assertFalse(clientA.getLocalFile("file3.jpg").exists());
+		clientB.down(); // Download A's version, realize it's muddy (= dirty by other client)
+		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "2");
 		
-		// TODO [low] Add assert: "no file changes are expected"
+		assertEquals(4, new File(testConnection.getRepositoryPath(), "multichunks").listFiles().length);
+		clientB.cleanup(); // <<< This should NOT delete any lost multichunks of DIRTY database versions!
+		assertEquals(4, new File(testConnection.getRepositoryPath(), "multichunks").listFiles().length);
+
+		clientA.down(); // Adds dirty databases
+		assertSqlResultEquals(clientA.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "2");
 		
-		// A uploads again, this time it should succeed, because C's file is in knowndbs.list
-		aUpResult = clientA.upWithForceChecksum(); 
-		assertEquals("Expected to succeed, because db-C-1 has already been looked at", UpResultCode.OK_CHANGES_UPLOADED, aUpResult.getResultCode());
-		
+		clientA.up(); 
+		assertSqlResultEquals(clientA.getDatabaseFile(), "select count(*) from databaseversion where status='DIRTY'", "0");
+
+		clientB.down();
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());		
+		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "0");
 		
 		// Tear down
 		clientA.deleteTestData();
