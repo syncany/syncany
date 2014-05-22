@@ -322,9 +322,9 @@ public class XmlDatabaseDaoTest {
 		// Create new vector clock
 		VectorClock vc = new VectorClock();
 		
-		vc.setClock("User 1", 14234234L);
-		vc.setClock("User 2", 9433431232432L);
-		vc.setClock("User 3", 1926402374L);
+		vc.setClock("UserA", 14234234L);
+		vc.setClock("UserB", 9433431232432L);
+		vc.setClock("UserC", 1926402374L);
 		
 		newDatabaseVersion.setVectorClock(vc);
 		

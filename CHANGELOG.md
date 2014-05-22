@@ -12,6 +12,7 @@ Change Log
   + Fix deletion of invalid merge/cleanup and integrity issues (tough one!) #58
   + Fix remove lost multichunks from other clients' dirty databases (major!) #132
   + Fix wrong 'down' output when only a purge file is applied #129
+  + Make vector clock serialization pattern unambigious (only allow A-Z/a-z) #123
   + Simplify Gradle build script by splitting to several scripts
 
 ### Release 0.1.3-alpha (Date: 12 May 2014)

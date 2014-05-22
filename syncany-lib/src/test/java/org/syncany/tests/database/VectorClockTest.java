@@ -28,39 +28,39 @@ public class VectorClockTest {
 	public void testNormalVectorClockUsage() {
 		VectorClock vc = new  VectorClock();
 		
-		vc.setClock("Unit1", 1);
-		vc.setClock("Unit2", 2);
-		vc.setClock("Unit3", 3);
+		vc.setClock("UnitA", 1);
+		vc.setClock("UnitB", 2);
+		vc.setClock("UnitC", 3);
 		
-		assertEquals("Expected clock value to be different.", 1L, (long) vc.getClock("Unit1"));
-		assertEquals("Expected clock value to be different.", 2L, (long) vc.getClock("Unit2"));
-		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("Unit3"));
+		assertEquals("Expected clock value to be different.", 1L, (long) vc.getClock("UnitA"));
+		assertEquals("Expected clock value to be different.", 2L, (long) vc.getClock("UnitB"));
+		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("UnitC"));
 	}
 		
 	@Test
 	public void testIncrementUnit() {
 		VectorClock vc = new  VectorClock();
 		
-		vc.setClock("Unit1", 1);		
-		vc.incrementClock("Unit1"); // 2
-		vc.incrementClock("Unit1"); // 3
+		vc.setClock("UnitA", 1);		
+		vc.incrementClock("UnitA"); // 2
+		vc.incrementClock("UnitA"); // 3
 		
-		vc.setClock("Unit2", 2);
-		vc.incrementClock("Unit2"); // 3
+		vc.setClock("UnitB", 2);
+		vc.incrementClock("UnitB"); // 3
 		
-		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("Unit1"));
-		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("Unit2"));
+		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("UnitA"));
+		assertEquals("Expected clock value to be different.", 3L, (long) vc.getClock("UnitB"));
 	}	
 	
 	@Test
 	public void testCompareEqualClocks() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 		
 		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L); // same
-		vc2.setClock("Unit2", 5L); // same
+		vc2.setClock("UnitA", 4L); // same
+		vc2.setClock("UnitB", 5L); // same
 		
 		assertEquals("Expected clock 1 and 2 to be equal.", VectorClockComparison.EQUAL, VectorClock.compare(vc1, vc2));
 		assertEquals("Expected clock 2 and 1 to be equal.", VectorClockComparison.EQUAL, VectorClock.compare(vc2, vc1));
@@ -69,12 +69,12 @@ public class VectorClockTest {
 	@Test
 	public void testCompareSmallerClocksWithSameUnitCount() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 		
 		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L);
-		vc2.setClock("Unit2", 100000L); // greater!
+		vc2.setClock("UnitA", 4L);
+		vc2.setClock("UnitB", 100000L); // greater!
 		
 		assertEquals("Expected clock 1 to be smaller than clock 2.", VectorClockComparison.SMALLER, VectorClock.compare(vc1, vc2));
 		assertEquals("Expected clock 2 to be greater than clock 1.", VectorClockComparison.GREATER, VectorClock.compare(vc2, vc1));
@@ -83,13 +83,13 @@ public class VectorClockTest {
 	@Test
 	public void testCompareSmallerClocksWithDifferentUnitCount() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 		
 		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L); // same
-		vc2.setClock("Unit2", 5L); // same
-		vc2.setClock("Unit3", 100000L); // not in vc1
+		vc2.setClock("UnitA", 4L); // same
+		vc2.setClock("UnitB", 5L); // same
+		vc2.setClock("UnitC", 100000L); // not in vc1
 		
 		assertEquals("Expected clock 1 to be smaller than clock 2.", VectorClockComparison.SMALLER, VectorClock.compare(vc1, vc2));
 		assertEquals("Expected clock 2 to be greater than clock 1.", VectorClockComparison.GREATER, VectorClock.compare(vc2, vc1));
@@ -98,12 +98,12 @@ public class VectorClockTest {
 	@Test
 	public void testCompareGreaterClocksWithSameUnitCount() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 		
 		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L);
-		vc2.setClock("Unit2", 100000L); // greater!
+		vc2.setClock("UnitA", 4L);
+		vc2.setClock("UnitB", 100000L); // greater!
 		
 		assertEquals("Expected clock 2 to be greater than clock 1.", VectorClockComparison.GREATER, VectorClock.compare(vc2, vc1));
 		assertEquals("Expected clock 1 to be smaller than clock 2.", VectorClockComparison.SMALLER, VectorClock.compare(vc1, vc2));
@@ -112,13 +112,13 @@ public class VectorClockTest {
 	@Test
 	public void testCompareGreaterClocksWithDifferentUnitCount() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 		
 		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit1", 4L); // same
-		vc2.setClock("Unit2", 5L); // same
-		vc2.setClock("Unit3", 1L); // not in vc1
+		vc2.setClock("UnitA", 4L); // same
+		vc2.setClock("UnitB", 5L); // same
+		vc2.setClock("UnitC", 1L); // not in vc1
 		
 		assertEquals("Expected clock 2 to be greater than clock 1.", VectorClockComparison.GREATER, VectorClock.compare(vc2, vc1));
 		assertEquals("Expected clock 1 to be smaller than clock 2.", VectorClockComparison.SMALLER, VectorClock.compare(vc1, vc2));
@@ -127,12 +127,12 @@ public class VectorClockTest {
 	@Test
 	public void testSimultaneousClocks() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 		
 		VectorClock vc2 = new  VectorClock();
-		vc2.setClock("Unit3", 1L); 
-		vc2.setClock("Unit4", 2L); 
+		vc2.setClock("UnitC", 1L); 
+		vc2.setClock("UnitD", 2L); 
 		
 		assertEquals("Expected clock 1 and 2 to be simulataneous.", VectorClockComparison.SIMULTANEOUS, VectorClock.compare(vc1, vc2));
 		assertEquals("Expected clock 2 and 1 to be simulataneous.", VectorClockComparison.SIMULTANEOUS, VectorClock.compare(vc2, vc1));
@@ -166,12 +166,12 @@ public class VectorClockTest {
 	@Test
 	public void testClone() {
 		VectorClock vc1 = new  VectorClock();
-		vc1.setClock("Unit1", 4L);
-		vc1.setClock("Unit2", 5L);
+		vc1.setClock("UnitA", 4L);
+		vc1.setClock("UnitB", 5L);
 
 		VectorClock vc2 = vc1.clone();
 				
-		assertEquals("Expected clock value of cloned clock to be different.", 4L, (long) vc2.getClock("Unit1"));
-		assertEquals("Expected clock value of cloned clock to be different.", 5L, (long) vc2.getClock("Unit2"));
+		assertEquals("Expected clock value of cloned clock to be different.", 4L, (long) vc2.getClock("UnitA"));
+		assertEquals("Expected clock value of cloned clock to be different.", 5L, (long) vc2.getClock("UnitB"));
 	}	
 }
