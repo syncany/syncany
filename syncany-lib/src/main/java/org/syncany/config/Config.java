@@ -36,6 +36,7 @@ import org.syncany.connection.plugins.Plugins;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
+import org.syncany.database.VectorClock;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -98,13 +99,9 @@ public class Config {
     	initConnection(configTO);  	
 	}		
 
-	private void initNames(ConfigTO configTO) throws ConfigException {
-		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
-			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
-		}
-		
-		machineName = configTO.getMachineName();
-		displayName = configTO.getDisplayName();
+	private void initNames(ConfigTO configTO) throws ConfigException {		
+		setMachineName(configTO.getMachineName());
+		setDisplayName(configTO.getDisplayName());
 	}
 	
 	private void initMasterKey(ConfigTO configTO) {
@@ -235,7 +232,11 @@ public class Config {
 		return machineName;
 	}
 
-	public void setMachineName(String machineName) {
+	public void setMachineName(String machineName) throws ConfigException {
+		if (machineName == null || !VectorClock.MACHINE_PATTERN.matcher(machineName).matches()) {
+			throw new ConfigException("Machine name cannot be empty and must be only characters (A-Z).");
+		}
+		
 		this.machineName = machineName;
 	}			
 

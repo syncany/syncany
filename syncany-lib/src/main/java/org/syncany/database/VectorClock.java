@@ -18,6 +18,7 @@
 package org.syncany.database;
 
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 /**
  * Implements a vector clock that records the time stamps of all send and receive
@@ -39,7 +40,8 @@ import java.util.TreeMap;
  */
 public class VectorClock extends TreeMap<String, Long> {
 	private static final long serialVersionUID = 109876543L;
-
+	public static final Pattern MACHINE_PATTERN = Pattern.compile("[a-zA-Z]+");
+	
 	public enum VectorClockComparison {
 		SMALLER, GREATER, EQUAL, SIMULTANEOUS;
 	}	
@@ -50,6 +52,8 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * @param unit The identifier of the vector element being increased
 	 */
 	public void incrementClock(String unit) {
+		validateUnitName(unit);
+		
 		if (this.containsKey(unit)) {
 			this.put(unit, this.get(unit).longValue() + 1);
 		}
@@ -58,6 +62,12 @@ public class VectorClock extends TreeMap<String, Long> {
 		}
 	}
 	
+	private void validateUnitName(String unit) {
+		if (!MACHINE_PATTERN.matcher(unit).matches()) {
+			throw new RuntimeException("Machine name cannot be empty and must be only characters (A-Z).");
+		}
+	}
+
 	/**
 	 * Set the component of a unit.
 	 * 
@@ -65,6 +75,7 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * @value value The new value of the unit being set
 	 */
 	public void setClock(String unit, long value) {
+		validateUnitName(unit);
 		this.put(unit, value);	
 	}
 	
@@ -95,6 +106,11 @@ public class VectorClock extends TreeMap<String, Long> {
 
 	@Override
 	public String toString() {
+		/*
+		 * Please note that this is an incredibly important method.
+		 * It is used in hundreds of tests! Don't mess with it!
+		 */
+		
 		Object[] lIDs = this.keySet().toArray();
 		Object[] lRequests = this.values().toArray();
 
@@ -102,7 +118,6 @@ public class VectorClock extends TreeMap<String, Long> {
 
 		for (int i = 0; i < lRequests.length; i++) {
 			lText += lIDs[i];
-			//lText += "-";
 			lText += lRequests[i].toString();
 
 			if (i + 1 < lRequests.length) {

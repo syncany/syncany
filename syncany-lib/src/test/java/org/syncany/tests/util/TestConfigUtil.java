@@ -175,7 +175,7 @@ public class TestConfigUtil {
 		
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
-		configTO.setMachineName(machineName + Math.abs(new Random().nextInt()));
+		configTO.setMachineName(machineName + StringUtil.createRandomMachineName());
 
 		// Get Masterkey
 		SaltedSecretKey masterKey = getMasterKey();
