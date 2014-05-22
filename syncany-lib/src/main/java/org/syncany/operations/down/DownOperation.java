@@ -54,6 +54,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
@@ -225,7 +226,7 @@ public class DownOperation extends AbstractTransferOperation {
 			
 			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");			
 			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.DEFAULT, ignoredMostRecentPurgeVersions);
-
+			
 			logger.log(Level.INFO, "Determine file system actions ...");			
 			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
 			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
@@ -349,7 +350,7 @@ public class DownOperation extends AbstractTransferOperation {
 						VectorClock toVersion = muddyDatabaseVersionHeader.getVectorClock();
 						
 						logger.log(Level.INFO, "  - Loading " + muddyDatabaseVersionHeader + " from file " + localFileForMuddyDatabaseVersion);
-						databaseSerializer.load(muddyMultiChunksDatabase, localFileForMuddyDatabaseVersion, fromVersion, toVersion, false, DatabaseVersionType.DEFAULT);
+						databaseSerializer.load(muddyMultiChunksDatabase, localFileForMuddyDatabaseVersion, fromVersion, toVersion, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
 						
 						boolean hasMuddyMultiChunks = muddyMultiChunksDatabase.getMultiChunks().size() > 0;
 						
@@ -591,7 +592,7 @@ public class DownOperation extends AbstractTransferOperation {
 			File databaseVersionFile = databaseFileList.getExactDatabaseVersionFile(currentDatabaseVersionHeader);
 						
 			if (databaseVersionFile != null) {
-				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, false, filterType, ignoredMostRecentPurgeVersions);				
+				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL, filterType, ignoredMostRecentPurgeVersions);				
 				rangeClientName = null;
 			}
 			else {
@@ -602,7 +603,7 @@ public class DownOperation extends AbstractTransferOperation {
 				if (rangeEnds) {
 					databaseVersionFile = databaseFileList.getNextDatabaseVersionFile(currentDatabaseVersionHeader);
 					
-					databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, filterType);					
+					databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL, filterType, ignoredMostRecentPurgeVersions);					
 					rangeClientName = null;
 				}
 			}
@@ -624,7 +625,7 @@ public class DownOperation extends AbstractTransferOperation {
 			File remoteDatabaseFileInCache = remoteDatabaseFileEntry.getKey();
 			DatabaseRemoteFile remoteDatabaseFile = remoteDatabaseFileEntry.getValue();
 			
-			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, true, null); // only load headers!
+			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY, null, null); // only load headers!
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();
 
 			// Populate branches
