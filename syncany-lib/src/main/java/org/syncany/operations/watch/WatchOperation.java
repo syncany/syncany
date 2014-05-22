@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -32,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.database.FileVersion;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
 import org.syncany.operations.cleanup.CleanupOperation;
@@ -186,6 +188,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		localDatabase.shutdown();
 		
 		return new WatchOperationResult();
+	}
+	
+	public Map<String, FileVersion> getFileTree(String prefix) {
+		return localDatabase.getCurrentFileTree(); // TODO [medium] Actually do something with prefix
 	}
 
 	private void startRecursiveWatcher() {

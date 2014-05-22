@@ -15,24 +15,45 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon;
+package org.syncany.operations.daemon.messages;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.simpleframework.xml.Element;
 
-public class DaemonWebSocketHandler {
-	private static final Logger logger = Logger.getLogger(DaemonWebSocketHandler.class.getSimpleName());
-	private DaemonWebSocketServer webSocketServer;
+public class GetFileResponse extends Response {
+	@Element(required = true)
+	private String name;
+	
+	@Element(required = true)
+	private int length;
+	
+	@Element(required = true)
+	private int frames;
+	
+	@Element(required = false)
+	private String mimeType;
 
-	public DaemonWebSocketHandler(DaemonWebSocketServer webSocketServer) {
-		this.webSocketServer = webSocketServer;
-	}
-
-	public void handle(String message) {
-		logger.log(Level.INFO, "Web socket message received: " + message);
-		logger.log(Level.WARNING, "--> NO MESSAGE HANDLING IMPLEMENTED YET.");
+	public GetFileResponse(int requestId, String name, int length, int frames, String mimeType) {
+		super(200, requestId, null);
 		
-		webSocketServer.sendToAll("{code: 400, message: \"Not supported\"}");
+		this.name = name;
+		this.length = length;
+		this.frames = frames;
+		this.mimeType = mimeType;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public int getFrames() {
+		return frames;
+	}
+
+	public String getMimeType() {
+		return mimeType;
+	}
 }

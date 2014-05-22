@@ -29,10 +29,12 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.DaemonConfigTO.FolderTO;
+import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperationListener;
 
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * The watch server can manage many different {@link WatchOperation}s. When started
@@ -42,15 +44,19 @@ import com.google.common.collect.Maps;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DaemonWatchServer implements WatchOperationListener {	
+public class DaemonWatchServer {	
 	private static final Logger logger = Logger.getLogger(DaemonWatchServer.class.getSimpleName());
 	private static final String DAEMON_FILE = "daemon.xml";
 	private static final String DEFAULT_FOLDER = "Syncany";
 	
 	private Map<File, WatchOperationThread> watchOperations;
+	private DaemonEventBus eventBus;
 	
 	public DaemonWatchServer() {
 		this.watchOperations = new TreeMap<File, WatchOperationThread>();
+		
+		this.eventBus = DaemonEventBus.getInstance();
+		this.eventBus.register(this);
 	}
 	
 	public void start() throws ConfigException {
@@ -96,7 +102,7 @@ public class DaemonWatchServer implements WatchOperationListener {
 			try {	
 				logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
 				
-				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, this);	
+				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir);	
 				watchOperationThread.start();
 
 				watchOperations.put(localDir, watchOperationThread);
@@ -194,40 +200,12 @@ public class DaemonWatchServer implements WatchOperationListener {
 		return defaultDaemonConfigTO;
 	}
 	
-	@Override
-	public void onUploadStart(int fileCount) {
-		// TODO Auto-generated method stub
+	@Subscribe
+	public void onRequestReceived(WatchRequest watchRequest) {		
+		File rootFolder = new File(watchRequest.getRoot());
 		
+		if (!watchOperations.containsKey(rootFolder)) {
+			eventBus.post(new BadRequestResponse(watchRequest.getId(), "Unknown root folder."));
+		}
 	}
-
-	@Override
-	public void onUploadFile(String fileName, int fileNumber) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onIndexStart(int fileCount) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onIndexFile(String fileName, int fileNumber) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onDownloadStart(int fileCount) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onDownloadFile(String fileName, int fileNumber) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

@@ -17,76 +17,80 @@
  */
 package org.syncany.operations.daemon;
 
-import java.io.IOException;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.java_websocket.WebSocket;
+import org.java_websocket.exceptions.InvalidFrameException;
+import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.BinaryResponse;
+import org.syncany.operations.daemon.messages.Request;
+import org.syncany.operations.daemon.messages.RequestFactory;
+import org.syncany.operations.daemon.messages.Response;
+
+import com.google.common.eventbus.Subscribe;
 
 public class DaemonWebSocketServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebSocketServer.class.getSimpleName());
 	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
 	private static final int DEFAULT_PORT = 8625;
 	
-	private final AtomicBoolean running = new AtomicBoolean(false);
-	
 	private WebSocketServer webSocketServer;
-	private DaemonWebSocketHandler requestHandler;
+	private Serializer serializer; 
+	private DaemonEventBus eventBus;
 	
 	public DaemonWebSocketServer() {
-		this.requestHandler = new DaemonWebSocketHandler(this);
-		this.webSocketServer = initWebSocketServer();
+		this.serializer = new Persister();
+		
+		initEventBus();
+		initWebSocketServer();
 	}
 
-	private WebSocketServer initWebSocketServer() {
-		return new WebSocketServer(new InetSocketAddress(DEFAULT_PORT)) {
-			@Override
-			public void onOpen(WebSocket clientSocket, ClientHandshake handshake) {
-				String clientAddress = clientSocket.getRemoteSocketAddress().toString();
-				String clientOrigin = handshake.getFieldValue("origin");
-				String clientId = handshake.getFieldValue("clientId");
-				
-				if (clientOrigin == null || !clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER)) {
-					logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header. Origin: " + clientOrigin + ", ID: " + clientId);
-					logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
-					
-					clientSocket.close();
-					return;
-				}
-				
-				logger.log(Level.INFO, "Client " + clientAddress + " connected. Origin: " + clientOrigin + ", ID: " + clientId);
-			}
-			
-			@Override
-			public void onMessage(WebSocket conn, String message) {
-				logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
-				requestHandler.handle(message);
-			}
-			
-			@Override
-			public void onError(WebSocket conn, Exception ex) {
-				logger.log(Level.INFO, "Server error : " + ex.toString());
-			}
-			
-			@Override
-			public void onClose(WebSocket clientSocket, int code, String reason, boolean remote) {
-				logger.log(Level.INFO, clientSocket.getRemoteSocketAddress().toString() + " disconnected");
-			}
-		};
+	public void start() throws ServiceAlreadyStartedException {
+		webSocketServer.start();
 	}
 
-	/**
-	 * Sends message to all currently connected WebSocket clients.
-	 * 
-	 * @param message The String to send across the network.
-	 * @throws InterruptedException When socket related I/O errors occur.
-	 */
-	public void sendToAll(String message) {
+	public void stop() {
+		try {
+			webSocketServer.stop();
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Could not stop websocket server.", e);
+		}
+	}
+	
+	private void initEventBus() {
+		eventBus = DaemonEventBus.getInstance();
+		eventBus.register(this);
+	}
+
+	private void initWebSocketServer() {
+		webSocketServer = new InternalWebSocketServer(new InetSocketAddress(DEFAULT_PORT));
+	}
+
+	private void handleMessage(String message) {
+		logger.log(Level.INFO, "Web socket message received: " + message);
+
+		try {
+			Request concreteRequest = RequestFactory.createRequest(message);
+			eventBus.post(concreteRequest);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+		}	
+	}
+
+	private void sendToAll(String message) {
 		Collection<WebSocket> clientSockets = webSocketServer.connections();
 		
 		synchronized (clientSockets) {
@@ -99,26 +103,95 @@ public class DaemonWebSocketServer {
 	private void sendTo(WebSocket clientSocket, String message) {
 		clientSocket.send(message);
 	}
-
-	public void start() throws ServiceAlreadyStartedException {
-		webSocketServer.start();
-		running.set(true);
-	}
-
-	public void stop() {
+	
+	@Subscribe
+	public void onResponse(Response response) {
 		try {
-			webSocketServer.stop();
-			running.set(false);
+			StringWriter responseWriter = new StringWriter();
+			serializer.write(response, responseWriter);
+			
+			String responseMessage = responseWriter.toString();
+			logger.log(Level.INFO, "Sending " + responseMessage);
+			
+			sendToAll(responseMessage);
 		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}		
+	}
+	
+	@Subscribe
+	public void onResponse(final BinaryResponse response) {
+		for (WebSocket clientSocket : webSocketServer.connections()) {
+			logger.log(Level.INFO, "Sending binary frame to " + clientSocket + "...");
+			
+			clientSocket.sendFrame(new Framedata() {
+				@Override
+				public boolean isFin() {
+					return true;
+				}
+				
+				@Override
+				public boolean getTransfereMasked() {
+					return false;
+				}
+				
+				@Override
+				public ByteBuffer getPayloadData() {
+					return response.getData();
+				}
+				
+				@Override
+				public Opcode getOpcode() {
+					return Opcode.BINARY;
+				}
+				
+				@Override
+				public void append(Framedata nextframe) throws InvalidFrameException {
+					// Nothing.
+				}
+			});
 		}
 	}
+	
+	private class InternalWebSocketServer extends WebSocketServer {
+		public InternalWebSocketServer(InetSocketAddress address) {
+			super(address);
+		}
 
-	public boolean isRunning() {
-		return running.get();
+		@Override
+		public void onOpen(WebSocket clientSocket, ClientHandshake handshake) {
+			String clientAddress = clientSocket.getRemoteSocketAddress().toString();
+			String clientOrigin = handshake.getFieldValue("origin");
+			
+			boolean isAllowedClient = clientOrigin == null || "null".equals(clientOrigin) ||
+					clientOrigin.equals(WEBSOCKET_ALLOWED_ORIGIN_HEADER);
+			
+			if (!isAllowedClient) {
+				logger.log(Level.WARNING, "Client " + clientAddress + " did not sent correct origin header. Origin: " + clientOrigin);
+				logger.log(Level.WARNING, "Disconnecting client " + clientAddress + ".");
+				
+				clientSocket.close();
+				return;
+			}
+			
+			logger.log(Level.INFO, "Client " + clientAddress + " connected. Origin: " + clientOrigin);
+		}
+		
+		@Override
+		public void onMessage(WebSocket conn, String message) {
+			logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
+			handleMessage(message);
+		}
+		
+		@Override
+		public void onError(WebSocket conn, Exception ex) {
+			logger.log(Level.INFO, "Server error : " + ex.toString());
+		}
+		
+		@Override
+		public void onClose(WebSocket clientSocket, int code, String reason, boolean remote) {
+			logger.log(Level.INFO, clientSocket.getRemoteSocketAddress().toString() + " disconnected");
+		}
 	}
 }

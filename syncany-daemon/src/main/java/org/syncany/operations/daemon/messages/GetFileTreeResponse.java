@@ -15,13 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon;
+package org.syncany.operations.daemon.messages;
 
-/**
- * @author pheckel
- *
- */
-public interface DaemonControlListener {
-	public void onDaemonShutdown();
-	public void onDaemonReload();
+import java.util.List;
+
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+
+public class GetFileTreeResponse extends Response {
+	@Element(required = true)
+	private String root;
+	
+	@ElementList(required = true, entry="file")
+	private List<String> files;	
+	
+	public GetFileTreeResponse(int requestId, String root, List<String> files) {
+		super(292, requestId, null);
+		
+		this.root = root;
+		this.files = files;
+	}	
 }
