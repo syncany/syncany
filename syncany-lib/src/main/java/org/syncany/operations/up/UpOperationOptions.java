@@ -19,7 +19,7 @@ package org.syncany.operations.up;
 
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 
 public class UpOperationOptions implements OperationOptions {
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();

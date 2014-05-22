@@ -140,9 +140,9 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader());
 		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
 		
-		chunkDao.writeChunks(connection, databaseVersion.getChunks());
+		chunkDao.writeChunks(connection, databaseVersionId, databaseVersion.getChunks());
 		multiChunkDao.writeMultiChunks(connection, databaseVersionId, databaseVersion.getMultiChunks());
-		fileContentDao.writeFileContents(connection, databaseVersion.getFileContents());
+		fileContentDao.writeFileContents(connection, databaseVersionId, databaseVersion.getFileContents());
 		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
 		
 		return databaseVersionId;
@@ -212,6 +212,8 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			
 			// Change foreign key of multichunks
 			multiChunkDao.updateDirtyMultiChunksNewDatabaseId(newDatabaseVersionId);
+			fileContentDao.updateDirtyFileContentsNewDatabaseId(newDatabaseVersionId);
+			chunkDao.updateDirtyChunksNewDatabaseId(newDatabaseVersionId);
 			
 			// And the database versions
 			removeDirtyVectorClocks();

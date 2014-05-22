@@ -37,7 +37,7 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.down.DownOperationResult;
-import org.syncany.operations.status.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;

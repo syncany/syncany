@@ -178,10 +178,6 @@ public class SqlDatabase {
 		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}
 	
-	public void removeDeletedFileVersions() throws SQLException {
-		fileVersionDao.removeDeletedVersions();
-	}
-
 	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {
 		return fileVersionDao.getFileVersionByPath(path);
@@ -199,6 +195,10 @@ public class SqlDatabase {
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
 		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}	
+
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
+		return fileVersionDao.getDeletedFileVersions();
+	}
 
 	// Multi Chunk
 

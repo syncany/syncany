@@ -23,7 +23,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
