@@ -84,6 +84,13 @@ CREATE CACHED TABLE multichunk_chunk (
   FOREIGN KEY (chunk_checksum) REFERENCES chunk (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+CREATE CACHED TABLE multichunk_muddy (
+  id varchar(40) NOT NULL,
+  machine_name varchar(255) NOT NULL,
+  machine_version int NOT NULL,
+  PRIMARY KEY (id)
+);
+
 CREATE CACHED TABLE known_databases (
   id int NOT NULL IDENTITY,
   database_name varchar(255) NOT NULL,

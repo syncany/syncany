@@ -38,6 +38,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
+import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -60,7 +61,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MemoryDatabase database;
 	private VectorClock versionFrom;
 	private VectorClock versionTo;
-	private boolean headersOnly;
+	private DatabaseReadType readType;
 	private DatabaseVersionType filterType;
 	private Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions;
 
@@ -72,14 +73,14 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MultiChunkEntry multiChunk;
 	private PartialFileHistory fileHistory;
 
-	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly,
+	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
 			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions) {
 		
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
 		this.versionTo = toVersion;
-		this.headersOnly = headersOnly;
+		this.readType = readType;
 		this.filterType = filterType;
 		this.ignoredMostRecentFileVersions = ignoredMostRecentFileVersions;
 	}
@@ -112,7 +113,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 
 			vectorClock.setClock(clientName, clientValue);
 		}
-		else if (!headersOnly) {
+		else if (readType == DatabaseReadType.FULL) {
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/chunks/chunk")) {
 				String chunkChecksumStr = attributes.getValue("checksum");
 				ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(chunkChecksumStr);
@@ -256,7 +257,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 			databaseVersion.setVectorClock(vectorClock);
 			vectorClock = null;
 		}
-		else if (!headersOnly) {
+		else if (readType == DatabaseReadType.FULL) {
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent")) {
 				databaseVersion.addFileContent(fileContent);
 				fileContent = null;

@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
@@ -81,6 +82,29 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}	
 
+	public void writeMuddyMultiChunks(Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunksPerDatabaseVersion) throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/multichunk_muddy.insert.muddy.writeMuddyMultiChunks.sql");
+		
+		for (DatabaseVersionHeader muddyDatabaseVersionHeader : muddyMultiChunksPerDatabaseVersion.keySet()) {
+			Collection<MultiChunkEntry> muddyMultiChunks = muddyMultiChunksPerDatabaseVersion.get(muddyDatabaseVersionHeader);
+			
+			for (MultiChunkEntry muddyMultiChunk : muddyMultiChunks) {
+				String multiChunkIdStr = muddyMultiChunk.getId().toString();
+				String clientName = muddyDatabaseVersionHeader.getClient();
+				Long clientVersion = muddyDatabaseVersionHeader.getVectorClock().getClock(clientName);
+				
+				preparedStatement.setString(1, multiChunkIdStr);
+				preparedStatement.setString(2, clientName);
+				preparedStatement.setLong(3, clientVersion);
+				
+				preparedStatement.addBatch();	
+			}
+		}
+		
+		preparedStatement.executeBatch();
+		preparedStatement.close();
+	}
+
 	public void removeUnreferencedMultiChunks() throws SQLException {
 		// Note: Chunk references (multichunk_chunk) must be removed first, because
 		//       of the foreign key constraints. 
@@ -97,6 +121,12 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 	
 	private void removeUnreferencedMultiChunkChunkRefs() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("/sql/multichunk.delete.all.removeUnreferencedMultiChunkChunkRefs.sql");
+		preparedStatement.executeUpdate();	
+		preparedStatement.close();
+	}
+	
+	public void removeNonMuddyMultiChunks() throws SQLException {
+		PreparedStatement preparedStatement = getStatement("/sql/multichunk_muddy.delete.muddy.removeNonMuddyMultiChunks.sql");
 		preparedStatement.executeUpdate();	
 		preparedStatement.close();
 	}
@@ -239,6 +269,17 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 
 	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks() {
 		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.all.getMultiChunks.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createMultiChunkEntriesWithoutChunks(resultSet);
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Map<MultiChunkId, MultiChunkEntry> getMuddyMultiChunks() {
+		try (PreparedStatement preparedStatement = getStatement("/sql/multichunk.select.muddy.getMuddyMultiChunks.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createMultiChunkEntriesWithoutChunks(resultSet);
 			}

@@ -148,11 +148,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void removeLostMultiChunks() throws StorageException {
 		Map<String, MultiChunkRemoteFile> remoteMultiChunks = transferManager.list(MultiChunkRemoteFile.class);
-		Map<MultiChunkId, MultiChunkEntry> localMultiChunks = localDatabase.getMultiChunks();
-
+		
+		Map<MultiChunkId, MultiChunkEntry> locallyKnownMultiChunks = new HashMap<>();
+		
+		locallyKnownMultiChunks.putAll(localDatabase.getMultiChunks());
+		locallyKnownMultiChunks.putAll(localDatabase.getMuddyMultiChunks());
+		
 		for (MultiChunkRemoteFile remoteMultiChunk : remoteMultiChunks.values()) {
 			MultiChunkId remoteMultiChunkId = new MultiChunkId(remoteMultiChunk.getMultiChunkId());
-			boolean multiChunkExistsLocally = localMultiChunks.containsKey(remoteMultiChunkId);
+			boolean multiChunkExistsLocally = locallyKnownMultiChunks.containsKey(remoteMultiChunkId);
 
 			if (!multiChunkExistsLocally) {
 				logger.log(Level.WARNING, "- Deleting lost/unknown remote multichunk " + remoteMultiChunk + " ...");
