@@ -61,7 +61,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */
 	public void writeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId, Collection<FileVersion> fileVersions) throws SQLException {
-		PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.insert.writeFileVersions.sql");
+		PreparedStatement preparedStatement = getStatement(connection, "fileversion.insert.writeFileVersions.sql");
 
 		for (FileVersion fileVersion : fileVersions) {
 			String fileContentChecksumStr = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : null;					  		
@@ -96,7 +96,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */	
 	public void removeDirtyFileVersions() throws SQLException {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.delete.dirty.removeDirtyFileVersions.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.delete.dirty.removeDirtyFileVersions.sql")) {
 			preparedStatement.executeUpdate();
 		}
 	}
@@ -109,7 +109,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 */
 	public void removeFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
 		if (purgeFileVersions.size() > 0) {
-			try (PreparedStatement preparedStatement = getStatement(connection, "/sql/fileversion.delete.all.removeFileVersionsByIds.sql")) {
+			try (PreparedStatement preparedStatement = getStatement(connection, "fileversion.delete.all.removeFileVersionsByIds.sql")) {
 				for (Map.Entry<FileHistoryId, FileVersion> purgeFileVersionEntry : purgeFileVersions.entrySet()) {
 					FileHistoryId purgeFileHistoryId = purgeFileVersionEntry.getKey();
 					FileVersion purgeFileVersion = purgeFileVersionEntry.getValue();
@@ -136,7 +136,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @return Returns the current file tree as a map of relative paths to {@link FileVersion} objects
 	 */
 	public Map<String, FileVersion> getCurrentFileTree() {		
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getCurrentFileTree.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTree.sql")) {
 			return getFileTree(preparedStatement);				
 		}
 		catch (SQLException e) {
@@ -155,7 +155,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 * @return Returns the file tree at the given date as a map of relative paths to {@link FileVersion} objects
 	 */
 	public Map<String, FileVersion> getFileTreeAtDate(Date date) {		
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileTreeAtDate.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileTreeAtDate.sql")) {
 			preparedStatement.setTimestamp(1, new Timestamp(date.getTime()));
 			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
 			
@@ -168,7 +168,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.all.getMostRecentPurgeVersions.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getMostRecentPurgeVersions.sql")) {
 			preparedStatement.setInt(1, keepVersionsCount);
 			preparedStatement.setInt(2, keepVersionsCount);
 
@@ -180,7 +180,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.all.getDeletedFileVersions.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersions.sql")) {
 			return getSingleVersionInHistory(preparedStatement);			
 		}
 		catch (SQLException e) {
@@ -221,7 +221,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByPath.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileVersionByPath.sql")) {
 			preparedStatement.setString(1, path);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
@@ -236,24 +236,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	@Deprecated
-	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/fileversion.select.master.getFileVersionByFileHistoryId.sql")) {
-			preparedStatement.setString(1, fileHistoryId.toString());
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				if (resultSet.next()) {
-					return createFileVersionFromRow(resultSet);
-				}
-			}
-
-			return null;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	// TODO [low] This should be private; but it has to be public for a test
 	public FileVersion createFileVersionFromRow(ResultSet resultSet) throws SQLException {
 		FileVersion fileVersion = new FileVersion();

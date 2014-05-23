@@ -63,7 +63,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 */
 	public void writeFileContents(Connection connection, long databaseVersionId, Collection<FileContent> fileContents) throws SQLException {
 		for (FileContent fileContent : fileContents) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContents.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "filecontent.insert.all.writeFileContents.sql");
 
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
 			preparedStatement.setLong(2, databaseVersionId);
@@ -78,7 +78,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 	
 	private void writeFileContentChunkRefs(Connection connection, FileContent fileContent) throws SQLException {
-		PreparedStatement preparedStatement = getStatement(connection, "/sql/filecontent.insert.all.writeFileContentChunkRefs.sql");
+		PreparedStatement preparedStatement = getStatement(connection, "filecontent.insert.all.writeFileContentChunkRefs.sql");
 		int order = 0;
 		
 		for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
@@ -114,13 +114,13 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 	
 	private void removeUnreferencedFileContentsInt() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/filecontent.delete.all.removeUnreferencedFileContents.sql");
+		PreparedStatement preparedStatement = getStatement("filecontent.delete.all.removeUnreferencedFileContents.sql");
 		preparedStatement.executeUpdate();	
 		preparedStatement.close();
 	}
 	
 	private void removeUnreferencedFileContentChunkRefs() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/filecontent.delete.all.removeUnreferencedFileContentRefs.sql");
+		PreparedStatement preparedStatement = getStatement("filecontent.delete.all.removeUnreferencedFileContentRefs.sql");
 		preparedStatement.executeUpdate();	
 		preparedStatement.close();
 	}
@@ -157,7 +157,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 * @return Returns all {@link FileContent}s that originally belong to a database version
 	 */
 	public Map<FileChecksum, FileContent> getFileContents(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filecontent.select.master.getFileContentsWithChunkChecksumsForDatabaseVersion.sql")) {
 			preparedStatement.setString(1, vectorClock.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -170,7 +170,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private FileContent getFileContentWithoutChunkChecksums(FileChecksum fileChecksum) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.all.getFileContentByChecksumWithoutChunkChecksums.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filecontent.select.all.getFileContentByChecksumWithoutChunkChecksums.sql")) {
 			preparedStatement.setString(1, fileChecksum.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -192,7 +192,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	private FileContent getFileContentWithChunkChecksums(FileChecksum fileChecksum) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.select.all.getFileContentByChecksumWithChunkChecksums.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filecontent.select.all.getFileContentByChecksumWithChunkChecksums.sql")) {
 			preparedStatement.setString(1, fileChecksum.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -251,7 +251,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 * no commit
 	 */
 	public void updateDirtyFileContentsNewDatabaseId(long newDatabaseVersionId) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filecontent.update.dirty.updateDirtyFileContentsNewDatabaseId.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filecontent.update.dirty.updateDirtyFileContentsNewDatabaseId.sql")) {
 			preparedStatement.setLong(1, newDatabaseVersionId);
 			preparedStatement.executeUpdate();
 		}

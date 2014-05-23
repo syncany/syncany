@@ -37,7 +37,7 @@ public class TestSqlDatabaseUtil {
 			System.err.println();
 			System.err.println("-------------------------------------------------------------------------");
 			System.err.println("Syntax: gradle runSql -Pdb=DBPATH -Psql=SCRIPTRESOURCE");
-			System.err.println("   e.g. gradle runSql -Pdb=/tmp/a/test.db -Psql=/sql/test.insert.set1.sql");
+			System.err.println("   e.g. gradle runSql -Pdb=/tmp/a/test.db -Psql=test.insert.set1.sql");
 			System.err.println("-------------------------------------------------------------------------");
 			System.exit(0);
 		}

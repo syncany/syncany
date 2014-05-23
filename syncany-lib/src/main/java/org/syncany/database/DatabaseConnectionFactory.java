@@ -49,8 +49,10 @@ public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
 	
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";	
-	public static final String DATABASE_SCRIPT_RESOURCE = "/sql/create.all.sql";	
+	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
+	public static final String DATABASE_RESOURCE_PATTERN = "/org/syncany/database/sql/%s";
+	public static final String DATABASE_RESOURCE_CREATE_ALL = "create.all.sql";	
+	
 	public static final Map<String, String> DATABASE_STATEMENTS = new HashMap<String, String>(); 
 	
 	static {
@@ -89,24 +91,25 @@ public class DatabaseConnectionFactory {
 	 * <p>The statement is either loaded from the resource (if it is first encountered),
 	 * or loaded from the cache if it has been seen before.
 	 * 
-	 * @param resourceIdentifier Path to the resource, e.g. "/sql/create.all.sql"
+	 * @param resourceIdentifier Path to the resource, e.g. "create.all.sql"
 	 * @return Returns the SQL statement read from the resource
 	 */
 	public synchronized static String getStatement(String resourceIdentifier) {
-		String preparedStatement = DATABASE_STATEMENTS.get(resourceIdentifier);
+		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, resourceIdentifier);
+		String preparedStatement = DATABASE_STATEMENTS.get(fullResourcePath);
 		
 		if (preparedStatement != null) {
 			return preparedStatement;
 		}
 		else {
-			InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(resourceIdentifier);
+			InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
 			
 			if (statementInputStream == null) {
-				throw new RuntimeException("Unable to load SQL statement '"+resourceIdentifier+"'.");
+				throw new RuntimeException("Unable to load SQL statement '" + fullResourcePath + "'.");
 			}
 			
 			preparedStatement = readDatabaseStatement(statementInputStream);			
-			DATABASE_STATEMENTS.put(resourceIdentifier, preparedStatement);			
+			DATABASE_STATEMENTS.put(fullResourcePath, preparedStatement);			
 			
 			return preparedStatement;
 		}		
@@ -146,13 +149,14 @@ public class DatabaseConnectionFactory {
 	}
 	
 	private static void createTables(Connection connection) throws SQLException {
-		logger.log(Level.INFO, "Database has no tables. Creating tables from "+DATABASE_SCRIPT_RESOURCE);
+		logger.log(Level.INFO, "Database has no tables. Creating tables from "+DATABASE_RESOURCE_CREATE_ALL);
 		
-		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(DATABASE_SCRIPT_RESOURCE);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, DATABASE_RESOURCE_CREATE_ALL);
+		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
+		BufferedReader resourceReader = new BufferedReader(new InputStreamReader(inputStream));
 		
 		connection.setAutoCommit(true);
-		new SqlRunner(connection).runScript(reader);
+		new SqlRunner(connection).runScript(resourceReader);
 		 
 		connection.setAutoCommit(false);
 	}

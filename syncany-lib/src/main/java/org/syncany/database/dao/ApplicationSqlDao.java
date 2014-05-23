@@ -48,7 +48,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */
 	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/application.insert.all.persistNewKnownRemoteDatabases.sql");
+		PreparedStatement preparedStatement = getStatement("application.insert.all.persistNewKnownRemoteDatabases.sql");
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
 			preparedStatement.setString(1, databaseRemoteFile.getName());
@@ -69,7 +69,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	public List<DatabaseRemoteFile> getKnownDatabases() {
 		List<DatabaseRemoteFile> knownDatabases = new ArrayList<DatabaseRemoteFile>();
 				
-		try (PreparedStatement preparedStatement = getStatement("/sql/application.select.all.getKnownDatabases.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("application.select.all.getKnownDatabases.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {		
 				while (resultSet.next()) {
 					knownDatabases.add(new DatabaseRemoteFile(resultSet.getString("database_name")));

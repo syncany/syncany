@@ -20,7 +20,6 @@ package org.syncany.tests.database.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.sql.Connection;
 import java.util.List;
@@ -28,7 +27,6 @@ import java.util.List;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
@@ -37,60 +35,13 @@ import org.syncany.tests.util.TestSqlDatabaseUtil;
 
 public class FileHistoryDaoTest {	
 	@Test
-	public void testGetFileHistoryWithLastVersionByIdAndPath() throws Exception {
-		// Setup
-		Config testConfig = TestConfigUtil.createTestLocalConfig();
-		Connection databaseConnection = testConfig.createDatabaseConnection();
-				
-		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql"); 
-
-		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
-		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
-		
-		PartialFileHistory fileHistory1Deleted = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("851c441915478a539a5bab2b263ffa4cc48e282f"));
-		PartialFileHistory fileHistory1ByIdNew = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
-		PartialFileHistory fileHistory2ById = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("c021aecb2ae36f2a8430eb10309923454b93b61e"));
-		PartialFileHistory fileHistory3ById = fileHistoryDao.getFileHistoryWithLastVersion(FileHistoryId.parseFileId("4fef2d605640813464792b18b16e1a5e07aa4e53"));
-						
-		// Test
-		
-		// - File 1 (deleted)
-		assertNull(fileHistory1Deleted);
-		
-		// - File 1 (new)
-		assertNotNull(fileHistory1ByIdNew);
-		assertEquals(1, fileHistory1ByIdNew.getFileVersions().size());		
-		assertNotNull(fileHistory1ByIdNew.getLastVersion().getChecksum());
-		assertEquals("ffffffffffffffffffffffffffffffffffffffff", fileHistory1ByIdNew.getLastVersion().getChecksum().toString());		
-		assertEquals("rw-r--r--", fileHistory1ByIdNew.getLastVersion().getPosixPermissions());
-		assertNull(fileHistory1ByIdNew.getLastVersion().getDosAttributes());		
-		
-		// - File 2 
-		assertNotNull(fileHistory2ById);
-		assertEquals(1, fileHistory2ById.getFileVersions().size());		
-		assertNotNull(fileHistory2ById.getLastVersion().getChecksum());
-		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", fileHistory2ById.getLastVersion().getChecksum().toString());		
-
-		// - File 3 
-		assertNotNull(fileHistory3ById);
-		assertEquals(1, fileHistory3ById.getFileVersions().size());		
-		assertNotNull(fileHistory3ById.getLastVersion().getChecksum());
-		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", fileHistory3ById.getLastVersion().getChecksum().toString());		
-		
-		// Tear down
-		databaseConnection.close();
-		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
-	}	
-	
-	@Test
 	public void testGetFileHistoriesWithFileVersionByVectorClock() throws Exception {
 		// Setup
 		Config testConfig = TestConfigUtil.createTestLocalConfig();
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql"); 
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql"); 
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);

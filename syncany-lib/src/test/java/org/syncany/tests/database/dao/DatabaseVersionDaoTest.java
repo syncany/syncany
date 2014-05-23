@@ -62,7 +62,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -98,7 +98,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -144,7 +144,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -172,7 +172,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -262,7 +262,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -306,7 +306,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -344,7 +344,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -373,7 +373,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set2.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set2.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -407,7 +407,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
