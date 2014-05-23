@@ -56,6 +56,7 @@ public class DownCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 
 		OptionSpec<String> optionConflictStrategy = parser.acceptsAll(asList("C", "conflict-strategy")).withRequiredArg();
+		OptionSpec<Void> optionNoApply = parser.acceptsAll(asList("A", "no-apply"));
 
 		OptionSet options = parser.parse(operationArguments);
 
@@ -63,6 +64,11 @@ public class DownCommand extends Command {
 		if (options.has(optionConflictStrategy)) {
 			String conflictStrategyStr = options.valueOf(optionConflictStrategy).toUpperCase();
 			operationOptions.setConflictStrategy(DownConflictStrategy.valueOf(conflictStrategyStr));
+		}
+		
+		// --no-apply
+		if (options.has(optionNoApply)) {
+			operationOptions.setApplyChanges(false);
 		}
 
 		return operationOptions;

@@ -25,6 +25,7 @@ public class DownOperationOptions implements OperationOptions {
 	}
 	
 	private DownConflictStrategy conflictStrategy = DownConflictStrategy.RENAME;
+	private boolean applyChanges = true;
 
 	public DownConflictStrategy getConflictStrategy() {
 		return conflictStrategy;
@@ -32,5 +33,13 @@ public class DownOperationOptions implements OperationOptions {
 
 	public void setConflictStrategy(DownConflictStrategy conflictStrategy) {
 		this.conflictStrategy = conflictStrategy;
-	}				
+	}
+
+	public boolean isApplyChanges() {
+		return applyChanges;
+	}
+
+	public void setApplyChanges(boolean applyChanges) {
+		this.applyChanges = applyChanges;
+	}		
 }

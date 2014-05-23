@@ -135,12 +135,16 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * - Download the remote databases to the local cache folder
-	 * - Read version headers (vector clocks)
-	 * - Determine winner branch
-	 * - Prune local stuff (if local conflicts exist)
-	 * - Apply winner's branch
-	 * - Write names of newly analyzed remote databases (so we don't download them again)
+	 * Executes the down operation, roughly following these steps:
+	 * 
+	 * <ul>
+	 *  <li>Download the remote databases to the local cache folder
+	 *  <li>Read version headers (vector clocks)
+	 *  <li>Determine winner branch
+	 *  <li>Prune local stuff (if local conflicts exist)
+	 *  <li>Apply winner's branch
+	 *  <li>Write names of newly analyzed remote databases (so we don't download them again)
+	 * </ul>
 	 */
 	@Override
 	public DownOperationResult execute() throws Exception {
@@ -178,8 +182,16 @@ public class DownOperation extends AbstractTransferOperation {
 		return result;
 	}
 
+	/**
+	 * Checks whether any new databases are only and whether any other conflicting
+	 * actions are running.  
+	 * 
+	 * <p>This method sets the result code in <tt>result</tt> according to the 
+	 * checking result and returns <tt>true</tt> if the rest of the operation can 
+	 * continue, <tt>false</tt> otherwise. 
+	 */
 	private boolean checkPreconditions() throws Exception {
-		// 1. Check strategies
+		// Check strategies
 		if (options.getConflictStrategy() != DownConflictStrategy.RENAME) {
 			logger.log(Level.INFO, "Conflict strategy "+options.getConflictStrategy()+" not yet implemented.");
 			result.setResultCode(DownResultCode.NOK);
@@ -187,7 +199,7 @@ public class DownOperation extends AbstractTransferOperation {
 			return false;
 		}
 		
-		// 2. Check which remote databases to download based on the last local vector clock
+		// Check which remote databases to download based on the last local vector clock
 		LsRemoteOperationResult lsRemoteResult = listUnknownRemoteDatabases();
 		result.setLsRemoteResult(lsRemoteResult);
 		
@@ -198,7 +210,7 @@ public class DownOperation extends AbstractTransferOperation {
 			return false;
 		}
 		
-		// 3. Check if other operations are running
+		// Check if other operations are running
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
 			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
 			result.setResultCode(DownResultCode.NOK);
@@ -209,100 +221,95 @@ public class DownOperation extends AbstractTransferOperation {
 		return true;
 	}
 
-	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			DatabaseFileList databaseFileList) throws Exception {
-		
-		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
-		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
-
-		if (winnersApplyBranch.size() == 0) {
-			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
-			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
-		}
-		else {			
-			logger.log(Level.INFO, "Loading winners database (PURGE) ...");			
-			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.PURGE, null);
-			Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions = extractMostRecentPurgeVersions(winnersPurgeDatabase.getFileHistories());
-			
-			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");			
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.DEFAULT, ignoredMostRecentPurgeVersions);
-			
-			logger.log(Level.INFO, "Determine file system actions ...");			
-			FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
-			List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
-
-			Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
-			downloadAndDecryptMultiChunks(unknownMultiChunks);
-
-			applyFileSystemActions(actions);
-			persistDatabaseVersions(winnersApplyBranch, winnersDatabase, winnersPurgeDatabase);	
-			
-			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
-		}
+	/**
+	 * Lists unknown/new remote databases using the {@link LsRemoteOperation}. 
+	 */
+	private LsRemoteOperationResult listUnknownRemoteDatabases() throws Exception {
+		return new LsRemoteOperation(config, transferManager).execute();
 	}
 
-	private Map<FileHistoryId, FileVersion> extractMostRecentPurgeVersions(Collection<PartialFileHistory> fileHistories) {
-		Map<FileHistoryId, FileVersion> mostRecentPurgeVersions = new HashMap<FileHistoryId, FileVersion>();
+	/**
+	 * Downloads the previously identified new/unknown remote databases to the local cache
+	 * and returns a map with the local cache files mapped to the given remote database 
+	 * files. The method additionally fires events for every database it downloads.
+	 */
+	private TreeMap<File, DatabaseRemoteFile> downloadUnknownRemoteDatabases(List<DatabaseRemoteFile> unknownRemoteDatabases)
+			throws StorageException {
 		
-		for (PartialFileHistory fileHistory : fileHistories) {
-			FileVersion mostRecentPurgeVersion = fileHistory.getLastVersion();
-			mostRecentPurgeVersions.put(fileHistory.getFileHistoryId(), mostRecentPurgeVersion);
+		logger.log(Level.INFO, "Downloading unknown databases.");
+
+		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
+		int downloadFileIndex = 0;
+
+		if (listener != null) {
+			listener.onDownloadStart(unknownRemoteDatabases.size());
 		}
 		
-		return mostRecentPurgeVersions;
-	}
+		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
+			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
+			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
+			
+			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
 
-	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase, MemoryDatabase winnersPurgeDatabase) throws SQLException {
-		// Add winners database to local database
-		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
-		logger.log(Level.INFO, "- Adding database versions to SQL database ...");
-		
-		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
-			if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
-				persistDatabaseVersion(winnersDatabase, currentDatabaseVersionHeader);				
+			downloadFileIndex++;
+			if (listener != null) {
+				listener.onDownloadFile(remoteFile.getName(), downloadFileIndex);
 			}
-			else if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.PURGE) {
-				persistPurgeDatabaseVersion(winnersPurgeDatabase, currentDatabaseVersionHeader);					
-			}
-			else {
-				throw new RuntimeException("Unknow database version type: " + currentDatabaseVersionHeader.getType());
-			}
-		}
-	}
-
-	private void persistPurgeDatabaseVersion(MemoryDatabase winnersPurgeDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) throws SQLException {
-		logger.log(Level.INFO, "  + Applying PURGE database version " + currentDatabaseVersionHeader.getVectorClock());
-
-		DatabaseVersion purgeDatabaseVersion = winnersPurgeDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
-		
-		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
-			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] { 
-					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion() });
 			
-			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());				
+			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
+
+			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
+			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
 		}
-		
-		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
-		localDatabase.removeUnreferencedDatabaseEntities();
-		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());		
-		
-		localDatabase.commit(); // TODO [medium] Harmonize commit behavior		
+
+		return unknownRemoteDatabasesInCache;
+	}
+	
+	/**
+	 * Uses the {@link DatabaseReconciliator} to stitch together the partial database branches of 
+	 * the other clients to full database branches that can be used in further algorithms.
+	 * 
+	 * <p>Input to this algorithm are the locally complete branch (extracted from the local database)
+	 * and the partial remote databases read from the new database files. 
+	 */
+	private DatabaseBranches determineStitchedBranches(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) {
+		logger.log(Level.INFO, "Determine stitched branches using database reconciliator ...");		
+		return databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 	}
 
-	private void persistDatabaseVersion(MemoryDatabase winnersDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) {
-		logger.log(Level.INFO, "  + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
-
-		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());				
-		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
+	/**
+	 * This method uses the {@link DatabaseReconciliator} to compare the local database with the 
+	 * downloaded remote databases, in order to determine a winner. The winner's database versions
+	 * will be applied locally.
+	 * 
+	 * <p>For the comparison, the {@link DatabaseVersionHeader}s (mainly the {@link VectorClock}) of each
+	 * database version are compared. Using these vector clocks, the underlying algorithms determine  
+	 * potential conflicts (between database versions, = simultaneous vector clocks), and resolve these 
+	 * conflicts by comparing local timestamps. 
+	 * 
+	 * <p>The detailed algorithm is described in the {@link DatabaseReconciliator}.
+	 * 
+	 * @param localBranch Local database branch (extracted from the local database)
+	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
+	 * @return Returns the branch of the winner 
+	 * @throws Exception If any kind of error occurs (...)
+	 */
+	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranch localBranch, DatabaseBranches allStitchedBranches) throws Exception {
+		logger.log(Level.INFO, "Determine winner using database reconciliator ...");		
+		return databaseReconciliator.findWinnerBranch(config.getMachineName(), localBranch, allStitchedBranches);
 	}
-
+	
+	/**
+	 * Marks locally conflicting database versions as <tt>DIRTY</tt> and removes remote databases that
+	 * correspond to those database versions. This method uses the {@link DatabaseReconciliator}
+	 * to determine whether there is a local purge branch. 
+	 */
 	private void purgeConflictingLocalBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch) throws Exception {
 		DatabaseBranch localPurgeBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch.getValue());
 		logger.log(Level.INFO, "- Database versions to REMOVE locally: " + localPurgeBranch);
 
 		if (localPurgeBranch.size() == 0) {
-			logger.log(Level.INFO, "  + Nothing to prune locally. No conflicts. Only updates. Nice!");
+			logger.log(Level.INFO, "  + Nothing to purge locally. No conflicts. Only updates. Nice!");
 		}
 		else {
 			// Load dirty database (if existent)
@@ -324,201 +331,49 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 	}
 	
-	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches, DatabaseFileList databaseFileList) throws StorageException, IOException, SQLException {
-		// Find dirty database versions (from other clients!) and load them from files
-		Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunksPerDatabaseVersion = new HashMap<>();
-		Set<DatabaseVersionHeader> winnersDatabaseVersionHeaders = Sets.newHashSet(winnersBranch.getValue().getAll());
-		
-		for (String otherClientName : allStitchedBranches.getClients()) {
-			boolean isLocalMachine = config.getMachineName().equals(otherClientName);
-			
-			if (!isLocalMachine) {
-				DatabaseBranch otherClientBranch = allStitchedBranches.getBranch(otherClientName);
-				Set<DatabaseVersionHeader> otherClientDatabaseVersionHeaders = Sets.newHashSet(otherClientBranch.getAll());
-				
-				SetView<DatabaseVersionHeader> otherMuddyDatabaseVersionHeaders = Sets.difference(otherClientDatabaseVersionHeaders, winnersDatabaseVersionHeaders);
-				boolean hasDirtyDatabaseVersionHeaders = otherMuddyDatabaseVersionHeaders.size() > 0;
-				
-				if (hasDirtyDatabaseVersionHeaders) {
-					logger.log(Level.INFO, "DIRTY database version headers of "+ otherClientName + ":  " +otherMuddyDatabaseVersionHeaders);
-	
-					for (DatabaseVersionHeader muddyDatabaseVersionHeader : otherMuddyDatabaseVersionHeaders) {
-						MemoryDatabase muddyMultiChunksDatabase = new MemoryDatabase();
-						
-						File localFileForMuddyDatabaseVersion = databaseFileList.getNextDatabaseVersionFile(muddyDatabaseVersionHeader);
-						VectorClock fromVersion = muddyDatabaseVersionHeader.getVectorClock();
-						VectorClock toVersion = muddyDatabaseVersionHeader.getVectorClock();
-						
-						logger.log(Level.INFO, "  - Loading " + muddyDatabaseVersionHeader + " from file " + localFileForMuddyDatabaseVersion);
-						databaseSerializer.load(muddyMultiChunksDatabase, localFileForMuddyDatabaseVersion, fromVersion, toVersion, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
-						
-						boolean hasMuddyMultiChunks = muddyMultiChunksDatabase.getMultiChunks().size() > 0;
-						
-						if (hasMuddyMultiChunks) {
-							muddyMultiChunksPerDatabaseVersion.put(muddyDatabaseVersionHeader, muddyMultiChunksDatabase.getMultiChunks());
-						}
-					}
-					
-				}
-			}
-		}
-		
-		// Add muddy multichunks to 'multichunks_muddy' database table 
-		boolean hasMuddyMultiChunks = muddyMultiChunksPerDatabaseVersion.size() > 0;
-		
-		if (hasMuddyMultiChunks) {
-			localDatabase.writeMuddyMultiChunks(muddyMultiChunksPerDatabaseVersion);
-		}
-		
-		logger.log(Level.SEVERE, "DownOperation: markDirtyBranches is not yet implemented. See issue #132");
-	}
-	
-	private void removeNonMuddyMultiChunks() throws SQLException {
-		localDatabase.removeNonMuddyMultiChunks();
-	}
-
 	/**
-	 * This method uses the {@link DatabaseReconciliator} to compare the local database with the 
-	 * downloaded remote databases, in order to determine a winner. The winner's database versions
-	 * will be applied locally.
-	 * 
-	 * <p>For the comparison, the {@link DatabaseVersionHeader}s (mainly the {@link VectorClock}) of each
-	 * database version are compared. Using these vector clocks, the underlying algorithms determine  
-	 * potential conflicts (between database versions, = simultaneous vector clocks), and resolve these 
-	 * conflicts by comparing local timestamps. 
-	 * 
-	 * <p>The detailed algorithm is described in the {@link DatabaseReconciliator}.
-	 * @param localBranch 
-	 * 
-	 * @param localDatabase The local database (to be compared with the remote databases)
-	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
-	 * @return Returns the branch of the winner 
-	 * @throws Exception If any kind of error occurs (...)
+	 * Applies the winner's branch locally in the local database as well as on the local file system. To
+	 * do so, it reads the winner's database, downloads newly required multichunks, determines file system actions
+	 * and applies these actions locally.
 	 */
-	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranch localBranch, DatabaseBranches allStitchedBranches) throws Exception {
-		logger.log(Level.INFO, "Determine winner using database reconciliator ...");		
-		return databaseReconciliator.findWinnerBranch(config.getMachineName(), localBranch, allStitchedBranches);
+	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
+			DatabaseFileList databaseFileList) throws Exception {
+		
+		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
+		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
+
+		if (winnersApplyBranch.size() == 0) {
+			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
+			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
+		}
+		else {			
+			logger.log(Level.INFO, "Loading winners database (PURGE) ...");			
+			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.PURGE, null);
+			Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions = extractMostRecentPurgeVersions(winnersPurgeDatabase.getFileHistories());
+			
+			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");			
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.DEFAULT, ignoredMostRecentPurgeVersions);
+			
+			if (options.isApplyChanges()) {
+				logger.log(Level.INFO, "Determine file system actions ...");			
+				FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result);
+				List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
+	
+				Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
+				downloadAndDecryptMultiChunks(unknownMultiChunks);
+	
+				applyFileSystemActions(actions);
+			}
+			else {
+				logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");			
+			}
+			
+			persistDatabaseVersions(winnersApplyBranch, winnersDatabase, winnersPurgeDatabase);	
+			
+			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
+		}
 	}
 	
-	private DatabaseBranches determineStitchedBranches(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) {
-		logger.log(Level.INFO, "Determine stitched branches using database reconciliator ...");		
-		return databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
-	}
-
-	private Set<MultiChunkId> determineRequiredMultiChunks(List<FileSystemAction> actions, MemoryDatabase winnersDatabase) {
-		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
-
-		for (FileSystemAction action : actions) {
-			if (action instanceof FileCreatingFileSystemAction) { // TODO [low] This adds ALL multichunks even though some might be available locally
-				multiChunksToDownload.addAll(determineMultiChunksToDownload(action.getFile2(), winnersDatabase));
-			}
-		}
-
-		return multiChunksToDownload;
-	}
-
-	private Collection<MultiChunkId> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase winnersDatabase) {
-		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
-
-		// First: Check if we know this file locally!
-		List<MultiChunkId> multiChunkIds = localDatabase.getMultiChunkIds(fileVersion.getChecksum());
-		
-		if (multiChunkIds.size() > 0) {
-			multiChunksToDownload.addAll(multiChunkIds);
-		}
-		else {
-			// Second: We don't know it locally; must be from the winners database
-			FileContent winningFileContent = winnersDatabase.getContent(fileVersion.getChecksum());			
-			boolean winningFileHasContent = winningFileContent != null;
-
-			if (winningFileHasContent) { // File can be empty!
-				List<ChunkChecksum> fileChunks = winningFileContent.getChunks(); 
-				
-				// TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well
-				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
-				
-				Map<ChunkChecksum, MultiChunkId> checksumsWithMultiChunkIds = localDatabase.getMultiChunkIdsByChecksums(fileChunks);
-				
-				for (ChunkChecksum chunkChecksum : fileChunks) {
-					MultiChunkId multiChunkIdForChunk = checksumsWithMultiChunkIds.get(chunkChecksum);
-					if (multiChunkIdForChunk == null) {
-						multiChunkIdForChunk = winnersDatabase.getMultiChunkIdForChunk(chunkChecksum);
-						
-						if (multiChunkIdForChunk == null) {
-							throw new RuntimeException("Cannot find multichunk for chunk "+chunkChecksum);	
-						}
-					}
-					
-					if (!multiChunksToDownload.contains(multiChunkIdForChunk)) {
-						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkIdForChunk + " to download list ...");
-						multiChunksToDownload.add(multiChunkIdForChunk);
-					}
-				}
-			}
-		}
-		
-		return multiChunksToDownload;
-	}
-
-	private List<FileSystemAction> sortFileSystemActions(List<FileSystemAction> actions) {
-		FileSystemActionComparator actionComparator = new FileSystemActionComparator();
-		actionComparator.sort(actions);
-
-		return actions;
-	}
-
-	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
-		// Sort
-		actions = sortFileSystemActions(actions);
-
-		logger.log(Level.FINER, "- Applying file system actions (sorted!) ...");
-
-		// Apply
-		for (FileSystemAction action : actions) {
-			if (logger.isLoggable(Level.FINER)) {
-				logger.log(Level.FINER, "   +  {0}", action);
-			}
-
-			try {
-				action.execute();
-			}
-			catch (InconsistentFileSystemException e) {
-				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
-			}
-		}
-	}
-
-	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
-		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
-
-		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
-
-		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
-
-			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
-			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-			result.getDownloadedMultiChunks().add(multiChunkId);
-
-			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
-			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
-			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
-
-			// TODO [medium] Calculate checksum while writing file, to verify correct content
-			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
-
-			decryptedMultiChunkOutputStream.close();
-			multiChunkInputStream.close();
-
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
-			localEncryptedMultiChunkFile.delete();
-		}
-
-		transferManager.disconnect();
-	}
-
 	/**
 	 * Loads the winner's database branch into the memory in a {@link MemoryDatabase} object, by using
 	 * the already downloaded list of remote database files.
@@ -611,6 +466,245 @@ public class DownOperation extends AbstractTransferOperation {
 	
 		return winnerBranchDatabase;
 	}
+
+	/**
+	 * Takes a collection of {@link PartialFileHistory}s and returns a map of their history 
+	 * identifiers to the last version in the history. This method is used to determine the 
+	 * details purge versions (from a purge database file).
+	 * 
+	 * <p>The result of this method is used to ignore the already purged file histories when
+	 * reading the winner's database in {@link #readWinnersDatabase(DatabaseBranch, DatabaseFileList, DatabaseVersionType, Map)}.
+	 */
+	private Map<FileHistoryId, FileVersion> extractMostRecentPurgeVersions(Collection<PartialFileHistory> fileHistories) {
+		Map<FileHistoryId, FileVersion> mostRecentPurgeVersions = new HashMap<FileHistoryId, FileVersion>();
+		
+		for (PartialFileHistory fileHistory : fileHistories) {
+			FileVersion mostRecentPurgeVersion = fileHistory.getLastVersion();
+			mostRecentPurgeVersions.put(fileHistory.getFileHistoryId(), mostRecentPurgeVersion);
+		}
+		
+		return mostRecentPurgeVersions;
+	}
+	
+	/**
+	 * Finds the multichunks that need to be downloaded to apply the given file system actions.
+	 * The method looks at all {@link FileCreatingFileSystemAction}s and returns their multichunks. 
+	 */
+	private Set<MultiChunkId> determineRequiredMultiChunks(List<FileSystemAction> actions, MemoryDatabase winnersDatabase) {
+		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
+
+		for (FileSystemAction action : actions) {
+			if (action instanceof FileCreatingFileSystemAction) { // TODO [low] This adds ALL multichunks even though some might be available locally
+				multiChunksToDownload.addAll(determineMultiChunksToDownload(action.getFile2(), winnersDatabase));
+			}
+		}
+
+		return multiChunksToDownload;
+	}
+	
+	private Collection<MultiChunkId> determineMultiChunksToDownload(FileVersion fileVersion, MemoryDatabase winnersDatabase) {
+		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
+
+		// First: Check if we know this file locally!
+		List<MultiChunkId> multiChunkIds = localDatabase.getMultiChunkIds(fileVersion.getChecksum());
+		
+		if (multiChunkIds.size() > 0) {
+			multiChunksToDownload.addAll(multiChunkIds);
+		}
+		else {
+			// Second: We don't know it locally; must be from the winners database
+			FileContent winningFileContent = winnersDatabase.getContent(fileVersion.getChecksum());			
+			boolean winningFileHasContent = winningFileContent != null;
+
+			if (winningFileHasContent) { // File can be empty!
+				List<ChunkChecksum> fileChunks = winningFileContent.getChunks(); 
+				
+				// TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well
+				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
+				
+				Map<ChunkChecksum, MultiChunkId> checksumsWithMultiChunkIds = localDatabase.getMultiChunkIdsByChecksums(fileChunks);
+				
+				for (ChunkChecksum chunkChecksum : fileChunks) {
+					MultiChunkId multiChunkIdForChunk = checksumsWithMultiChunkIds.get(chunkChecksum);
+					if (multiChunkIdForChunk == null) {
+						multiChunkIdForChunk = winnersDatabase.getMultiChunkIdForChunk(chunkChecksum);
+						
+						if (multiChunkIdForChunk == null) {
+							throw new RuntimeException("Cannot find multichunk for chunk "+chunkChecksum);	
+						}
+					}
+					
+					if (!multiChunksToDownload.contains(multiChunkIdForChunk)) {
+						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkIdForChunk + " to download list ...");
+						multiChunksToDownload.add(multiChunkIdForChunk);
+					}
+				}
+			}
+		}
+		
+		return multiChunksToDownload;
+	}
+
+	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase, MemoryDatabase winnersPurgeDatabase) throws SQLException {
+		// Add winners database to local database
+		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
+		logger.log(Level.INFO, "- Adding database versions to SQL database ...");
+		
+		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
+			if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
+				persistDatabaseVersion(winnersDatabase, currentDatabaseVersionHeader);				
+			}
+			else if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.PURGE) {
+				persistPurgeDatabaseVersion(winnersPurgeDatabase, currentDatabaseVersionHeader);					
+			}
+			else {
+				throw new RuntimeException("Unknow database version type: " + currentDatabaseVersionHeader.getType());
+			}
+		}
+	}
+
+	private void persistPurgeDatabaseVersion(MemoryDatabase winnersPurgeDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) throws SQLException {
+		logger.log(Level.INFO, "  + Applying PURGE database version " + currentDatabaseVersionHeader.getVectorClock());
+
+		DatabaseVersion purgeDatabaseVersion = winnersPurgeDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+		
+		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
+			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] { 
+					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion() });
+			
+			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());				
+		}
+		
+		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
+		localDatabase.removeUnreferencedDatabaseEntities();
+		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());		
+		
+		localDatabase.commit(); // TODO [medium] Harmonize commit behavior		
+	}
+
+	private void persistDatabaseVersion(MemoryDatabase winnersDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) {
+		logger.log(Level.INFO, "  + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
+
+		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());				
+		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
+	}
+	
+	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches, DatabaseFileList databaseFileList) throws StorageException, IOException, SQLException {
+		// Find dirty database versions (from other clients!) and load them from files
+		Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunksPerDatabaseVersion = new HashMap<>();
+		Set<DatabaseVersionHeader> winnersDatabaseVersionHeaders = Sets.newHashSet(winnersBranch.getValue().getAll());
+		
+		for (String otherClientName : allStitchedBranches.getClients()) {
+			boolean isLocalMachine = config.getMachineName().equals(otherClientName);
+			
+			if (!isLocalMachine) {
+				DatabaseBranch otherClientBranch = allStitchedBranches.getBranch(otherClientName);
+				Set<DatabaseVersionHeader> otherClientDatabaseVersionHeaders = Sets.newHashSet(otherClientBranch.getAll());
+				
+				SetView<DatabaseVersionHeader> otherMuddyDatabaseVersionHeaders = Sets.difference(otherClientDatabaseVersionHeaders, winnersDatabaseVersionHeaders);
+				boolean hasDirtyDatabaseVersionHeaders = otherMuddyDatabaseVersionHeaders.size() > 0;
+				
+				if (hasDirtyDatabaseVersionHeaders) {
+					logger.log(Level.INFO, "DIRTY database version headers of "+ otherClientName + ":  " +otherMuddyDatabaseVersionHeaders);
+	
+					for (DatabaseVersionHeader muddyDatabaseVersionHeader : otherMuddyDatabaseVersionHeaders) {
+						MemoryDatabase muddyMultiChunksDatabase = new MemoryDatabase();
+						
+						File localFileForMuddyDatabaseVersion = databaseFileList.getNextDatabaseVersionFile(muddyDatabaseVersionHeader);
+						VectorClock fromVersion = muddyDatabaseVersionHeader.getVectorClock();
+						VectorClock toVersion = muddyDatabaseVersionHeader.getVectorClock();
+						
+						logger.log(Level.INFO, "  - Loading " + muddyDatabaseVersionHeader + " from file " + localFileForMuddyDatabaseVersion);
+						databaseSerializer.load(muddyMultiChunksDatabase, localFileForMuddyDatabaseVersion, fromVersion, toVersion, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
+						
+						boolean hasMuddyMultiChunks = muddyMultiChunksDatabase.getMultiChunks().size() > 0;
+						
+						if (hasMuddyMultiChunks) {
+							muddyMultiChunksPerDatabaseVersion.put(muddyDatabaseVersionHeader, muddyMultiChunksDatabase.getMultiChunks());
+						}
+					}
+					
+				}
+			}
+		}
+		
+		// Add muddy multichunks to 'multichunks_muddy' database table 
+		boolean hasMuddyMultiChunks = muddyMultiChunksPerDatabaseVersion.size() > 0;
+		
+		if (hasMuddyMultiChunks) {
+			localDatabase.writeMuddyMultiChunks(muddyMultiChunksPerDatabaseVersion);
+		}
+		
+		logger.log(Level.SEVERE, "DownOperation: markDirtyBranches is not yet implemented. See issue #132");
+	}
+	
+	private void removeNonMuddyMultiChunks() throws SQLException {
+		localDatabase.removeNonMuddyMultiChunks();
+	}
+
+	
+
+	private List<FileSystemAction> sortFileSystemActions(List<FileSystemAction> actions) {
+		FileSystemActionComparator actionComparator = new FileSystemActionComparator();
+		actionComparator.sort(actions);
+
+		return actions;
+	}
+
+	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
+		// Sort
+		actions = sortFileSystemActions(actions);
+
+		logger.log(Level.FINER, "- Applying file system actions (sorted!) ...");
+
+		// Apply
+		for (FileSystemAction action : actions) {
+			if (logger.isLoggable(Level.FINER)) {
+				logger.log(Level.FINER, "   +  {0}", action);
+			}
+
+			try {
+				action.execute();
+			}
+			catch (InconsistentFileSystemException e) {
+				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
+			}
+		}
+	}
+
+	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
+		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
+
+		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
+
+		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
+			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
+			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
+			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
+
+			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
+			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
+			result.getDownloadedMultiChunks().add(multiChunkId);
+
+			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
+			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
+			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
+
+			// TODO [medium] Calculate checksum while writing file, to verify correct content
+			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
+
+			decryptedMultiChunkOutputStream.close();
+			multiChunkInputStream.close();
+
+			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
+			localEncryptedMultiChunkFile.delete();
+		}
+
+		transferManager.disconnect();
+	}
+
+	
 	
 
 	private DatabaseBranches readUnknownDatabaseVersionHeaders(TreeMap<File, DatabaseRemoteFile> remoteDatabases) throws IOException, StorageException {
@@ -638,41 +732,5 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 
 		return unknownRemoteBranches;
-	}
-	
-	private LsRemoteOperationResult listUnknownRemoteDatabases() throws Exception {
-		return new LsRemoteOperation(config, transferManager).execute();
-	}
-
-	private TreeMap<File, DatabaseRemoteFile> downloadUnknownRemoteDatabases(List<DatabaseRemoteFile> unknownRemoteDatabases)
-			throws StorageException {
-		
-		logger.log(Level.INFO, "Downloading unknown databases.");
-
-		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
-		int downloadFileIndex = 0;
-
-		if (listener != null) {
-			listener.onDownloadStart(unknownRemoteDatabases.size());
-		}
-		
-		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
-			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
-			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
-			
-			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
-
-			downloadFileIndex++;
-			if (listener != null) {
-				listener.onDownloadFile(remoteFile.getName(), downloadFileIndex);
-			}
-			
-			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
-
-			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
-			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
-		}
-
-		return unknownRemoteDatabasesInCache;
 	}
 }

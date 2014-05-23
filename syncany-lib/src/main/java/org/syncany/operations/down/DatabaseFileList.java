@@ -27,8 +27,11 @@ import org.syncany.connection.plugins.StorageException;
 import org.syncany.database.DatabaseVersionHeader;
 
 /**
- * @author pheckel
- *
+ * Helper class to help map a database version header to its corresponding
+ * downloaded remote database. This class is used by the {@link DownOperation}
+ * to read the new/unknown remote databases. 
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseFileList {
 	private TreeMap<File, DatabaseRemoteFile> newRemoteDatabases;
@@ -63,9 +66,9 @@ public class DatabaseFileList {
 	 *   - Does db-A-0003 exist? No, return null.
 	 * </pre>
 	 */
-	public File getExactDatabaseVersionFile(DatabaseVersionHeader currentDatabaseVersionHeader) throws StorageException {
-		String clientName = currentDatabaseVersionHeader.getClient();
-		long clientFileClock = currentDatabaseVersionHeader.getVectorClock().getClock(clientName);
+	public File getExactDatabaseVersionFile(DatabaseVersionHeader databaseVersionHeader) throws StorageException {
+		String clientName = databaseVersionHeader.getClient();
+		long clientFileClock = databaseVersionHeader.getVectorClock().getClock(clientName);
 		
 		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);				
 		return shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
@@ -86,9 +89,9 @@ public class DatabaseFileList {
 	 *   - Does db-A-0005 exist. Yes, return db-A-0005.
 	 * </pre>
 	 */
-	public File getNextDatabaseVersionFile(DatabaseVersionHeader currentDatabaseVersionHeader) throws StorageException {
-		String clientName = currentDatabaseVersionHeader.getClient();
-		long clientFileClock = currentDatabaseVersionHeader.getVectorClock().getClock(clientName);
+	public File getNextDatabaseVersionFile(DatabaseVersionHeader databaseVersionHeader) throws StorageException {
+		String clientName = databaseVersionHeader.getClient();
+		long clientFileClock = databaseVersionHeader.getVectorClock().getClock(clientName);
 		
 		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = null;
 		File databaseFileForRange = null;
