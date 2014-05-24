@@ -1,6 +1,10 @@
 // Packaging ///////////////////////////////////////////////////////////////////
 
-task debian(dependsOn: installApp) {
+task debianClean(type: Delete) {
+	delete 'build/debian'	
+}
+
+task debianPrepare(dependsOn: [installApp, debianClean]) {
 	String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", "~")
 	String applicationSigningAuthor = "Philipp Heckel <philipp.heckel@gmail.com>"
 	
@@ -31,10 +35,23 @@ task debian(dependsOn: installApp) {
 			])
 			into rootProject.file("build/debian/syncany/debian")
 		}
-	
+	}
+}
+
+task debian(dependsOn: debianPrepare) {
+	doLast {
 		exec {
 			workingDir rootProject.file("build/debian/syncany")
 			commandLine "debuild"
+		}
+	}
+}
+
+task debianPPA(dependsOn: debianPrepare) {
+	doLast {
+		exec {
+			workingDir rootProject.file("build/debian/syncany")
+			commandLine "debuild -S".split()
 		}
 	}
 }
