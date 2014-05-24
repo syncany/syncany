@@ -23,7 +23,7 @@ apply from: 'gradle/gradle/application.java.gradle'
 apply from: 'gradle/gradle/application.distribution.gradle'
 
 apply from: 'gradle/gradle/packaging.innosetup.gradle'
-apply from: 'gradle/gradle/packaging.fpm.gradle'
+apply from: 'gradle/gradle/packaging.debian.gradle'
 
 apply from: 'gradle/gradle/reports.cobertura.gradle'
 apply from: 'gradle/gradle/reports.tests.gradle'
