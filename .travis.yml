@@ -26,10 +26,6 @@ notifications:
   irc: "chat.freenode.net#syncany"
   
 before_install:
-  # Fix timezone
-  - sudo cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-  - date
-  
   # Update APT (necessary!)
   - sudo apt-get update
 
