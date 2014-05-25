@@ -40,39 +40,40 @@ before_install:
   - lftp -v 
 
   # Graphviz (for JavaDoc images; see Gradle tasks)
-  #- sudo apt-get install -y -q graphviz 
+  - sudo apt-get install -y -q graphviz 
   
   # Inno Setup (for Windows executable/installer)
-  #- sudo add-apt-repository --yes ppa:arx/release
-  #- sudo apt-get update -d
-  #- sudo apt-get install -y -q innoextract wine python-software-properties
-  #- wine --version 
-  #- innoextract --version 
-  #- ./gradle/innosetup/innoinstall.sh
-  #- sudo cp gradle/innosetup/iscc /usr/local/bin/iscc
-  #- iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
+  - sudo add-apt-repository --yes ppa:arx/release
+  - sudo apt-get update -d
+  - sudo apt-get install -y -q innoextract wine python-software-properties
+  - wine --version 
+  - innoextract --version 
+  - ./gradle/innosetup/innoinstall.sh
+  - sudo cp gradle/innosetup/iscc /usr/local/bin/iscc
+  - iscc /? 2> /dev/null | grep "Inno Setup Preprocessor"
 
   # Line of code tool (cloc)
-  #- sudo apt-get install -y -q cloc
-  #- cloc --version
+  - sudo apt-get install -y -q cloc
+  - cloc --version
 
 install:
   # Disable default travis behavior 'gradle assemble'
   - ./gradlew -v
 
 script: 
-  - ./gradlew -v
   # Run JUnit tests and generate reports
-  #- ./gradlew testGlobal coberturaReport performCoverageCheck
+  - ./gradlew testGlobal coberturaReport performCoverageCheck javadocAll
 
 after_success:
-  # Create distributables and JavaDoc
-  #- ./gradlew installApp distTar distZip debian exe javadocAll
-  - ./gradlew installApp ppa debian
-  
   # Line of code stats
-  #- cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
+  - cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
+ 
+  # Upload to PPA
+  - ./gradlew installApp ppa
   
+  # Create distributables and JavaDoc
+  - ./gradlew installApp distTar distZip debian exe 
+    
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh
 
