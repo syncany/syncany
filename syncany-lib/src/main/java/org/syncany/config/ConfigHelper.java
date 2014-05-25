@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.connection.plugins.Plugin;

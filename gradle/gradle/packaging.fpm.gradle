@@ -1,0 +1,50 @@
+// Packaging ///////////////////////////////////////////////////////////////////
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath "com.kenshoo:gradle-fpm:0.4"
+	}
+}
+
+// Reference by FQCN instead of name: http://forums.gradle.org/gradle/topics/plugin_not_found_when_i_using_a_gradle_from_other_gradle_file
+apply plugin: com.kenshoo.watership.PackagingPlugin
+
+packaging {
+	dependencies = ["default-jre (>= 1.7) | openjdk-7-jre-headless | openjdk-8-jre-headless"] 
+	baseDir = "${buildDir}/install/${applicationName}"
+	prefix = "/usr/lib/syncany"
+	extraOptions = [ 
+		"--name": "syncany", 
+		"--architecture": "all",
+		"--license": "GPLv2",
+		"--version": "${applicationVersionFull}",
+		"--maintainer": "Philipp Heckel <philipp.heckel@gmail.com>",
+		"--vendor": "Philipp Heckel <philipp.heckel@gmail.com>",		
+		"--url": "https://www.syncany.org/",
+		"--description": '\
+Syncany is an open-source cloud storage and filesharing application.\n\
+\n\
+It allows users to backup and share certain folders of their workstations\n\
+using any kind of storage. Syncany is open-source and provides data encryption\n\
+and incredible flexibility in terms of storage type and provider:\n\
+\n\
+ - Data encryption: Syncany encrypts the files locally, so that any online \n\
+   storage can be used even for sensitive data.\n\
+\n\
+ - Arbitrary storage: Syncany uses a plug-in based storage system. It can be\n\
+   used with any type of remote storage.',
+		"--after-install": "${rootProject.projectDir}/gradle/fpm/postinst",
+		"--before-remove": "${rootProject.projectDir}/gradle/fpm/prerm",
+		"--exclude": "*.bat"
+	] 
+	filesArgs = ["."]
+	force = true
+}
+
+debian.dependsOn installApp
+rpm.dependsOn installApp
+
+

@@ -20,14 +20,21 @@ package org.syncany.util;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
 /**
- *
+ * Utility class for common application string functions.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class StringUtil {    
+public class StringUtil {   
+	private static final String MACHINE_NAME_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	private static final int MACHINE_NAME_LENGTH = 20;
+	
+	private static Random random = new Random();
+
 	/**
 	 * Transforms a string to a camel case representation, including the
 	 * first character.
@@ -54,6 +61,10 @@ public class StringUtil {
         return sb.toString();
     }
     
+    /**
+     * Converts a byte array to a lower case hex representation.
+     * If the given byte array is <tt>null</tt>, an empty string is returned.
+     */
     public static String toHex(byte[] bytes) {
     	if (bytes == null) {
     		return "";
@@ -63,6 +74,9 @@ public class StringUtil {
     	}
     }
     
+    /**
+     * Creates byte array from a hex represented string.
+     */
     public static byte[] fromHex(String s) {
     	return DatatypeConverter.parseHexBinary(s); // fast!    	
     }
@@ -75,6 +89,20 @@ public class StringUtil {
 			throw new RuntimeException("JVM does not support UTF-8 encoding.", e);
 		}
     }
+    
+    /**
+     * Generates a random machine name of length 20. Only uses characters 
+     * A-Z/a-z (in order to always create valid serialized vector clock representations)  
+     */
+	public static String createRandomMachineName() {
+		StringBuilder sb = new StringBuilder(MACHINE_NAME_LENGTH);
+		
+		for (int i = 0; i < MACHINE_NAME_LENGTH; i++) {
+			sb.append(MACHINE_NAME_CHARS.charAt(random.nextInt(MACHINE_NAME_CHARS.length())));
+		}
+		
+		return sb.toString();
+	}
 	
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
 		StringBuilder objectsStr = new StringBuilder();

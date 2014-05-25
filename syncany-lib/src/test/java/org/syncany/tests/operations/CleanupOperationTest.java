@@ -32,7 +32,7 @@ import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
@@ -429,9 +429,15 @@ public class CleanupOperationTest {
 		
 		UpOperationResult secondUpResult = clientA.up();
 		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, secondUpResult.getResultCode());
-		assertEquals(2, repoMultiChunkDir.listFiles().length);
+		assertEquals(3, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
+		
+		// 6. Call 'cleanup' manually
+		CleanupOperationResult cleanupOperationResult = clientA.cleanup();
+		assertEquals(CleanupOperationResult.CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(1, cleanupOperationResult.getRemovedMultiChunks().size());
 		assertFalse(oldMultiChunkFile.exists());
+		assertEquals(0, repoActionsDir.listFiles().length);
 	
 		// Tear down
 		clientA.deleteTestData();

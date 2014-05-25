@@ -41,7 +41,7 @@ public class FileContentDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 
@@ -103,7 +103,7 @@ public class FileContentDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 

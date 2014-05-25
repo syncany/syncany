@@ -1,0 +1,16 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+dependencies {
+	compile			project(':syncany-lib')
+	compile			project(':syncany-util')
+	compile			project(':syncany-cli')	
+
+	compile			"org.java-websocket:Java-WebSocket:1.3.0"
+	compile 		"commons-io:commons-io:2.4"
+}
+
+task(runDaemon, dependsOn: 'classes', type: JavaExec) {
+	main = 'org.syncany.daemon.Daemon'
+	classpath = sourceSets.main.runtimeClasspath
+}

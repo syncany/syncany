@@ -49,12 +49,11 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.status.StatusOperation;
-import org.syncany.operations.status.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 
 /**
@@ -78,27 +77,29 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
  */
 public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
-
-	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
-	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
+	
+	public static final String ACTION_ID = "up";
 
 	private UpOperationOptions options;
+	private UpOperationResult result;
+
 	private SqlDatabase localDatabase;
 	private UpOperationListener listener;
-	
+
 	public UpOperation(Config config) {
 		this(config, new UpOperationOptions(), null);
 	}
-	
+
 	public UpOperation(Config config, UpOperationListener listener) {
 		this(config, new UpOperationOptions(), listener);
 	}
 
 	public UpOperation(Config config, UpOperationOptions options, UpOperationListener listener) {
-		super(config, "up");
+		super(config, ACTION_ID);
 
-		this.listener = listener;
 		this.options = options;
+		this.result = new UpOperationResult();
+		this.listener = listener;
 		this.localDatabase = new SqlDatabase(config);
 	}
 
@@ -108,48 +109,15 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		UpOperationResult result = new UpOperationResult();
-		
-		// Find local changes
-		StatusOperation statusOperation = new StatusOperation(config, options.getStatusOptions());
-		StatusOperationResult statusOperationResult = statusOperation.execute();
-		ChangeSet localChanges = statusOperationResult.getChangeSet();
-		
-		result.getStatusResult().setChangeSet(localChanges);
-
-		if (!localChanges.hasChanges()) {
-			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
-			result.setResultCode(UpResultCode.OK_NO_CHANGES);
-
-			finishOperation();
+		if (!checkPreconditions()) {
 			return result;
 		}
-		
+
 		// Upload action file (lock for cleanup)
 		startOperation();
 
-		// Find remote changes (unless --force is enabled)
-		if (!options.forceUploadEnabled()) {
-			LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config, transferManager).execute();
-			List<DatabaseRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
-
-			if (unknownRemoteDatabases.size() > 0) {
-				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
-				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
-
-				finishOperation();
-				return result;
-			}
-			else {
-				logger.log(Level.INFO, "No remote changes, ready to upload.");
-			}
-		}
-		else {
-			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
-		}
-
+		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
-		localChanges = null; // allow GC to clean up
 
 		// Index
 		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles);
@@ -160,7 +128,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 			finishOperation();
 			return result;
-		}		
+		}
 
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
@@ -169,87 +137,127 @@ public class UpOperation extends AbstractTransferOperation {
 		// Create delta database
 		writeAndUploadDeltaDatabase(newDatabaseVersion);
 
-		// Save local database		
+		// Save local database
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
 		long newDatabaseVersionId = localDatabase.persistDatabaseVersion(newDatabaseVersion);
 
-		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");	
-		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);		
+		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
+		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
 
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
 		logger.log(Level.INFO, "Sync up done.");
 
-		if (options.cleanupEnabled()) {
-			CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
-			result.setCleanupResult(cleanupOperationResult); 
-		}
-					
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
-		
+
 		return result;
+	}
+
+	private boolean checkPreconditions() throws Exception {
+		// Find local changes
+		StatusOperation statusOperation = new StatusOperation(config, options.getStatusOptions());
+		StatusOperationResult statusOperationResult = statusOperation.execute();
+		ChangeSet localChanges = statusOperationResult.getChangeSet();
+
+		result.getStatusResult().setChangeSet(localChanges);
+
+		if (!localChanges.hasChanges()) {
+			logger.log(Level.INFO, "Local database is up-to-date (change set). NOTHING TO DO!");
+			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+
+			return false;
+		}
+
+		// Check if other operations are running
+		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
+			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
+			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); // TODO [medium] Add new result code
+
+			return false;
+		}
+
+		// Find remote changes (unless --force is enabled)
+		if (!options.forceUploadEnabled()) {
+			LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config, transferManager).execute();
+			List<DatabaseRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
+
+			if (unknownRemoteDatabases.size() > 0) {
+				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
+				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
+
+				return false;
+			}
+			else {
+				logger.log(Level.INFO, "No remote changes, ready to upload.");
+			}
+		}
+		else {
+			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
+		}
+		
+		return true;
 	}
 
 	private void writeAndUploadDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
 		// Clone database version (necessary, because the original must not be touched)
-		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();		
-		
+		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
+
 		// Add dirty data (if existent)
-		addDirtyData(deltaDatabaseVersion);		
-		
+		addDirtyData(deltaDatabaseVersion);
+
 		// New delta database
 		MemoryDatabase deltaDatabase = new MemoryDatabase();
-		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);		
-				
+		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);
+
 		// Save delta database locally
 		long newestLocalDatabaseVersion = deltaDatabaseVersion.getVectorClock().getClock(config.getMachineName());
 		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
 		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
-		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] {
-				deltaDatabaseVersion.getHeader(), localDeltaDatabaseFile });
-		
-		saveDeltaDatabase(deltaDatabase, localDeltaDatabaseFile);				
+		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] { deltaDatabaseVersion.getHeader(),
+				localDeltaDatabaseFile });
+
+		saveDeltaDatabase(deltaDatabase, localDeltaDatabaseFile);
 
 		// Upload delta database
 		logger.log(Level.INFO, "- Uploading local delta database file ...");
 		uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
 	}
 
-	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {	
-		logger.log(Level.INFO, "- Saving database to "+localDatabaseFile+" ...");
-		
+	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {
+		logger.log(Level.INFO, "- Saving database to " + localDatabaseFile + " ...");
+
 		DatabaseXmlSerializer dao = new DatabaseXmlSerializer(config.getTransformer());
-		dao.save(db.getDatabaseVersions(), localDatabaseFile);		
-	}			
-	
+		dao.save(db.getDatabaseVersions(), localDatabaseFile);
+	}
+
 	private void addDirtyData(DatabaseVersion newDatabaseVersion) {
 		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDirtyDatabaseVersions();
-		
+
 		if (!dirtyDatabaseVersions.hasNext()) {
 			logger.log(Level.INFO, "No DIRTY data found in database (no dirty databases); Nothing to do here.");
 		}
 		else {
 			logger.log(Level.INFO, "Adding DIRTY data to new database version: ");
-		
+
 			while (dirtyDatabaseVersions.hasNext()) {
 				DatabaseVersion dirtyDatabaseVersion = dirtyDatabaseVersions.next();
-				
-				logger.log(Level.INFO, "- Adding chunks/multichunks/filecontents from database version "+dirtyDatabaseVersion.getHeader());
-				
+
+				logger.log(Level.INFO, "- Adding chunks/multichunks/filecontents from database version " + dirtyDatabaseVersion.getHeader());
+
 				for (ChunkEntry chunkEntry : dirtyDatabaseVersion.getChunks()) {
 					newDatabaseVersion.addChunk(chunkEntry);
 				}
-				
+
 				for (MultiChunkEntry multiChunkEntry : dirtyDatabaseVersion.getMultiChunks()) {
 					newDatabaseVersion.addMultiChunk(multiChunkEntry);
 				}
-				
+
 				for (FileContent fileContent : dirtyDatabaseVersion.getFileContents()) {
 					newDatabaseVersion.addFileContent(fileContent);
-				}			
+				}
 			}
 		}
 	}
@@ -292,11 +300,11 @@ public class UpOperation extends AbstractTransferOperation {
 	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
 		int multiChunkIndex = 0;
-		
+
 		if (listener != null) {
 			listener.onUploadStart(multiChunksEntries.size());
 		}
-		
+
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			multiChunkIndex++;
 
@@ -309,9 +317,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 				logger.log(Level.INFO, "- Uploading multichunk {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
 						remoteMultiChunkFile });
-				
+
 				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
-				
+
 				if (listener != null) {
 					listener.onUploadFile(remoteMultiChunkFile.getName(), multiChunkIndex);
 				}
@@ -347,7 +355,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		return newDatabaseVersion;
 	}
-	
+
 	private VectorClock findNewVectorClock(VectorClock lastVectorClock) {
 		VectorClock newVectorClock = lastVectorClock.clone();
 
@@ -358,7 +366,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		if (lastDirtyLocalValue != null) {
 			// TODO [medium] Does this lead to problems? C-1 does not exist! Possible problems with DatabaseReconciliator?
-			newLocalValue = lastDirtyLocalValue + 1; 
+			newLocalValue = lastDirtyLocalValue + 1;
 		}
 		else {
 			if (lastLocalValue != null) {

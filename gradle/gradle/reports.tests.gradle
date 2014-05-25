@@ -1,0 +1,74 @@
+// Global Tests ////////////////////////////////////////////////////////////////
+
+task testGlobal(type: TestReport) {
+	group = "verification"	
+	description = "All the results from the 'test' task in all subprojects (global report!)"
+	destinationDir = file("$buildDir/reports/tests")
+	reportOn subprojects*.test
+}
+
+
+// Subproject Tests ////////////////////////////////////////////////////////////
+
+subprojects {
+	// Test JARs ///////////////////////////////////////////////////////////
+	
+	task testJar(type: Jar, dependsOn: testClasses) {
+		baseName = "test-${project.archivesBaseName}"
+		from sourceSets.test.output
+	}
+
+
+	configurations {
+	      tests
+	}
+	
+
+	artifacts {
+		tests testJar
+	}	
+	
+	// Test Tasks //////////////////////////////////////////////////////////
+
+	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
+		description = "Test long running scenarios"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		include '**/LongRunning*'
+	}
+	
+	task testScenario(type: Test, dependsOn: testClasses, group: 'Verification') {
+		description = "Test all scenarios"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		include '**/*ScenarioTest*'
+	}
+	
+	task testAll(type: Test, dependsOn: testClasses, group: 'Verification') {
+		description = "All tests"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		exclude '**/*TestSuite*'
+	}
+	
+	task testAllButLongCrypto(type: Test, dependsOn: testClasses, group: 'Verification') {
+		jvmArgs '-Dcrypto.enable=true'
+		description = "All tests except long running with crypto"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		exclude '**/LongRunning*', '**/*TestSuite*'
+	}
+	
+	test {
+		group = "verification"	
+		description = "All tests except long running"
+		ignoreFailures = true
+		maxParallelForks = 2
+		testLogging { events 'started', 'passed'}
+		exclude '**/LongRunning*', '**/*TestSuite*'
+	}
+}

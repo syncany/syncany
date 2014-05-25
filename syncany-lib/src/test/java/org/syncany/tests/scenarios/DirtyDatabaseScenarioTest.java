@@ -41,8 +41,8 @@ import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.status.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
@@ -252,21 +252,28 @@ public class DirtyDatabaseScenarioTest {
 		assertEquals("6", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
 		
 		clientA.createNewFile("A-file2.jpg");
+
+		int numberOfDatabaseVersions = 6;
+		int cleanupEveryXUps = 7; // For every X up's call 'cleanup' ("X" is larger than the max. length of file versions in a history)
 		
 		for (int i=1; i<=21; i++) {
 			clientA.changeFile("A-file2.jpg");
+			
 			clientA.up(upOptionsForceEnabled);
-			
-			// This is odd but correct: 
-			// After 5 file versions, for every "up", two database versions are added
-			
-			if (i < 5) {
-				assertEquals(""+(6+i), TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
+			numberOfDatabaseVersions++;
+					
+			if (i % cleanupEveryXUps == 0) {
+				clientA.cleanup();
+				numberOfDatabaseVersions++;
+
+				assertEquals(""+numberOfDatabaseVersions, TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
 			}
 			else {
-				assertEquals(""+(6+5+(i-5)*2), TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
+				assertEquals(""+numberOfDatabaseVersions, TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
 			}
 		}
+		
+		clientA.cleanup();
 		
 		clientB.down();
 		clientC.down();

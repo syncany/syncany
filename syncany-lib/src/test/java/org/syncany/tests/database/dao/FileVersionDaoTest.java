@@ -50,7 +50,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set2.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set2.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		Map<String, FileVersion> currentFileTree = fileVersionDao.getCurrentFileTree();
@@ -74,7 +74,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
@@ -147,7 +147,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
@@ -193,51 +193,6 @@ public class FileVersionDaoTest {
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}
 	
-	@Test
-	public void testFileVersionGetByFileHistoryId() throws Exception {
-		// Setup
-		Config testConfig = TestConfigUtil.createTestLocalConfig();
-		Connection databaseConnection = testConfig.createDatabaseConnection();
-				
-		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
-
-		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
-		
-		FileVersion file1ByDeletedId = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("851c441915478a539a5bab2b263ffa4cc48e282f"));
-		FileVersion file1ById = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
-		FileVersion file2ById = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("c021aecb2ae36f2a8430eb10309923454b93b61e"));
-		FileVersion file3ById = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("4fef2d605640813464792b18b16e1a5e07aa4e53"));
-		FileVersion file4ByNonExistingId = fileVersionDao.getFileVersionByFileHistoryId(FileHistoryId.parseFileId("0000000000000000000000000000000000000000"));
-		
-		// Test		
-		
-		// - By FileHistoryId: File 1 (DELETED Id)
-		assertNull(file1ByDeletedId);
-		
-		// - By FileHistoryId: File 1 (New! Not version 2!)
-		assertNotNull(file1ById);
-		assertEquals(1, (long) file1ById.getVersion());
-		assertEquals("ffffffffffffffffffffffffffffffffffffffff", file1ById.getChecksum().toString());
-		
-		// - By FileHistoryId: File 2
-		assertNotNull(file2ById);
-		assertEquals(1, (long) file2ById.getVersion());
-		assertEquals("bf8b4530d8d246dd74ac53a13471bba17941dff7", file2ById.getChecksum().toString());
-		
-		// - By FileHistoryId: File 3
-		assertNotNull(file3ById);				
-		assertEquals(1, (long) file3ById.getVersion());
-		assertEquals("8ce24fc0ea8e685eb23bf6346713ad9fef920425", file3ById.getChecksum().toString());
-		
-		// - By FileHistoryId: File 4 (does not exist)		
-		assertNull(file4ByNonExistingId);	
-		
-		// Tear down
-		databaseConnection.close();
-		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
-	}
-
 	private Date toDate(String dateString) throws ParseException {
 		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(dateString);
 	}

@@ -1,43 +1,13 @@
 //
-// Build script for main project
+// Build script for Syncany
 //
 
-// Global Helpers //////////////////////////////////////////////////////////////
-
-String execAndGetOutput(String command) {
-	try {
-		def stdout = new ByteArrayOutputStream()
-
-		exec {
-			workingDir rootProject.projectDir
-			commandLine command.split()
-			standardOutput = stdout
-		}
-
-		return stdout.toString().trim()
-	}
-	catch (Exception e) {
-		return null
-	}
-}
-
-String getRevision() {
-	String currentCommit = execAndGetOutput("git rev-parse --short HEAD")
-	return (currentCommit != null) ? currentCommit : "UNKNOWN"
-}
-
-boolean isApplicationRelease() {
-	// Note: This must work for detached commits (git checkout -qf <commit>)
-
-	String currentBranches = execAndGetOutput("git log -n 1 --pretty=%d HEAD")
-	return currentBranches.contains("origin/master")
-}
-
+apply from: 'gradle/gradle/helpers.gradle'
 
 // Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
-	applicationVersion = "0.1.3-alpha"
+	applicationVersion = "0.1.4-alpha"
 
 	applicationRelease = isApplicationRelease()
 	applicationDate = new Date()
@@ -47,255 +17,36 @@ project.ext {
 	applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
 }
 
+// Gradle scripts and tasks ////////////////////////////////////////////////////
+
+apply from: 'gradle/gradle/application.java.gradle'
+apply from: 'gradle/gradle/application.distribution.gradle'
+
+apply from: 'gradle/gradle/packaging.innosetup.gradle'
+apply from: 'gradle/gradle/packaging.fpm.gradle'
+
+apply from: 'gradle/gradle/reports.cobertura.gradle'
+apply from: 'gradle/gradle/reports.tests.gradle'
+apply from: 'gradle/gradle/reports.javadoc.gradle'
+
+apply from: 'gradle/gradle/development.eclipse.gradle'
+apply from: 'gradle/gradle/development.fakeinstall.gradle'
+apply from: 'gradle/gradle/development.misc.gradle'
+
+// Projects settings  //////////////////////////////////////////////////////////
+
 repositories {
 	mavenCentral()
 }
 
-// Coverage (Cobertura) ////////////////////////////////////////////////////////
-// Run as: gradle testGlobal coberturaReport performCoverageCheck
-
-apply plugin: 'cobertura'
-
-buildscript {
-	repositories {
-		mavenCentral()
-	}
-
-	dependencies {
-		classpath 'net.saliman:gradle-cobertura-plugin:2.2.2' 
-	}
-}
-
-cobertura {	
-	coverageFormats = ['html', 'xml'] 
-	coverageReportDatafile = file("build/cobertura/cobertura.ser")
-	coverageReportDir = file("build/reports/coverage")
-	
-	coverageDirs = []
-	coverageSourceDirs = []
-	coverageMergeDatafiles = []
-	
-	rootProject.subprojects.each {
-		coverageFormats = ['html', 'xml'] 
-		coverageDirs << file("${it.buildDir}/classes/main")
-		coverageSourceDirs << file("${it.projectDir}/src/main/java")
-		coverageMergeDatafiles << file("${it.buildDir}/cobertura/cobertura.ser")
-	}		
-}
-
-
-// JavaDoc Requirements ////////////////////////////////////////////////////////
-
-configurations {
-	doclet 
-}
-
 dependencies {
-	doclet group: 'org.jboss.apiviz', name: 'apiviz', version: '1.3.2.GA'
-}
-
-
-// Sub-Project Settings and Hooks //////////////////////////////////////////////
-
-subprojects {
-	apply plugin: 'java'
-	apply plugin: 'eclipse'
-	apply plugin: 'cobertura'
-	
-	group = 'org.syncany'		
-		
-	sourceCompatibility = 1.7
-	targetCompatibility = 1.7
-	
-	repositories {
-		mavenCentral()
-	}
-	
-	sourceSets {
-		main {
-			java      { srcDir 'src/main/java'}
-			resources { srcDir 'src/main/resources'}
-		}
-		
-		test {
-			java      { srcDir 'src/test/java'}
-			resources { srcDir 'src/test/resources'}
-		}
-	}
-	
-	processResources {	
-		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
-		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
-		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
-		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
-		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
-	}		
-	
-	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
-		description = "Test long running scenarios"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		include '**/LongRunning*'
-	}
-	
-	task testScenario(type: Test, dependsOn: testClasses, group: 'Verification') {
-		description = "Test all scenarios"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		include '**/*ScenarioTest*'
-	}
-	
-	task testAll(type: Test, dependsOn: testClasses, group: 'Verification') {
-		description = "All tests"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		exclude '**/*TestSuite*'
-	}
-	
-	task testAllButLongCrypto(type: Test, dependsOn: testClasses, group: 'Verification') {
-		jvmArgs '-Dcrypto.enable=true'
-		description = "All tests except long running with crypto"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		exclude '**/LongRunning*', '**/*TestSuite*'
-	}
-	
-	test {
-		group = "verification"	
-		description = "All tests except long running"
-		ignoreFailures = true
-		maxParallelForks = 2
-		testLogging { events 'started', 'passed'}
-		exclude '**/LongRunning*', '**/*TestSuite*'
-	}
-	
-	// JAR /////////////////////////////////////////////////////////////////////
-	
-	jar {
-		baseName = "${project.name}"
-		version  = "$applicationVersion"				
-	}
-
-	
-	// Test JARs ///////////////////////////////////////////////////////////////
-	
-	task testJar(type: Jar, dependsOn: testClasses) {
-		baseName = "test-${project.archivesBaseName}"
-		from sourceSets.test.output
-	}
-
-
-	configurations {
-	      tests
-	}
-	
-
-	artifacts {
-		tests testJar
-	}	
-		
-	// Eclipse Settings and Hooks //////////////////////////////////////////////
-	
-	eclipse {
-		classpath {
-			downloadSources = true
-		}
-		
-		jdt {
-			sourceCompatibility = 1.7
-			targetCompatibility = 1.7			
-		}		
-	}
-	
-	task eclipseSettings(type: Copy) {
-		from rootProject.files(
-			"gradle/eclipse/org.eclipse.jdt.ui.prefs",			
-			"gradle/eclipse/org.eclipse.jdt.core.prefs"
-		)
-		
-		into project.file('.settings/')
-		
-		outputs.upToDateWhen { 
-			false 
-		}
-	}
-	
-	task cleanEclipseJdtUi(type: Delete) {
-		delete project.file(".settings/")
-		delete project.file("bin/")
-	}	
-	
-	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)
-	tasks["eclipse"].dependsOn(eclipseSettings)
-}
-
-
-// JavaDoc /////////////////////////////////////////////////////////////////////
-
-task javadocAll(type: Javadoc) {
-	group = "documentation"
-	description = "Creates the JavaDoc for all subprojects and puts it into build/javadoc"
-	
-	source subprojects.collect { project -> project.sourceSets.main.allJava } 
-	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
-	destinationDir = new File(projectDir, 'build/javadoc')
-	
-	doFirst {
-	  subprojects.each { project -> project.sourceSets.main.output.each { dir -> dir.mkdirs() } }
-	}
-	
-	options.linkSource = true
-        options.addStringOption('sourceclasspath', files(subprojects.collect { project -> project.sourceSets.main.output }).getAsPath())
-
-	configure(options) {
-	        doclet "org.jboss.apiviz.APIviz"
-	        docletpath file(configurations.doclet.asPath)
-		windowTitle = 'Syncany API Documentation'
-		docTitle = "Syncany JavaDoc ($applicationVersion)"
-		bottom = " \
-			<span style=\"font-size: 13px\"><br /> \
-				<a href=\"http://www.syncany.org/\" target=\"_top\">Syncany</a> is an open-source cloud storage and filesharing application.<br /><br /> \
-				Code located at <a href=\"https://github.com/syncany/syncany\" target=\"_top\">https://github.com/syncany/syncany</a><br /> \
-				JavaDoc for version $applicationVersion generated based on commit <a href=\"https://github.com/syncany/syncany/tree/$applicationRevision\" target=\"_top\">$applicationRevision</a> at $applicationDate<br /><br /> \
-				Copyright &copy; 2011-2014 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
-			</span> \
-		"
-	}
-}
-
-task cleanJavadocAll(type: Delete) {
-	group = "documentation"
-	description = "Deletes the all subprojects from build/javadoc (completent to javadocAll)"
-	delete 'build/javadoc'	
-}
-
-
-// Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
-
-task wrapper(type: Wrapper) {
-	gradleVersion = '1.11'
-	jarFile = 'gradle/wrapper/wrapper.jar'
-}
-
-
-// Task to clean build folder on project root //////////////////////////////////	
-
-task cleanBuildDir(type: Delete) {
-	delete 'build'	
-}
-
-tasks["clean"].dependsOn(cleanBuildDir)
-
-
-// Global Tests ////////////////////////////////////////////////////////////////
-
-task testGlobal(type: TestReport) {
-	group = "verification"	
-	description = "All the results from the 'test' task in all subprojects (global report!)"
-	destinationDir = file("$buildDir/reports/tests")
-	reportOn subprojects*.test
+	compile			project(":syncany-lib")
+	compile			project(":syncany-cli")
+	compile			project(":syncany-util")
+	compile			project(":syncany-daemon")
+      	
+	testCompile		project(path: ":syncany-lib", configuration: "tests")
+	testCompile		project(path: ":syncany-cli", configuration: "tests")
+	testCompile		project(path: ":syncany-util", configuration: "tests")  	      
+	testCompile		project(path: ":syncany-daemon", configuration: "tests")	
 }

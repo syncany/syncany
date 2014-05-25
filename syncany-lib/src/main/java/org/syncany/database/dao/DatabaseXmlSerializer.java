@@ -26,6 +26,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +37,9 @@ import javax.xml.stream.XMLStreamException;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
+import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 
 /**
@@ -57,6 +60,10 @@ import org.syncany.database.VectorClock;
 public class DatabaseXmlSerializer {
 	private static final Logger logger = Logger.getLogger(DatabaseXmlSerializer.class.getSimpleName());
 
+	public enum DatabaseReadType {
+		FULL, HEADER_ONLY
+	}
+	
 	private Transformer transformer;
 	
 	public DatabaseXmlSerializer() {
@@ -92,21 +99,11 @@ public class DatabaseXmlSerializer {
 		}
 	}		
 
-	public void load(MemoryDatabase db, File databaseFile, DatabaseVersionType filterType) throws IOException {
-        load(db, databaseFile, false, filterType);
-	}
-	
-	public void load(MemoryDatabase db, File databaseFile, boolean headersOnly, DatabaseVersionType filterType) throws IOException {
-        load(db, databaseFile, null, null, headersOnly, filterType);
-	}
-	
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseVersionType filterType) throws IOException {
-		load(db, databaseFile, fromVersion, toVersion, false, filterType);
-	}
-	
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly, DatabaseVersionType filterType) throws IOException {
-        InputStream is;
-        
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
+			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions) throws IOException {
+		
+		InputStream is;
+
 		if (transformer == null) {
 			is = new FileInputStream(databaseFile);
 		}
@@ -115,18 +112,16 @@ public class DatabaseXmlSerializer {
 		}
         
         try {
-        	if (logger.isLoggable(Level.INFO)) {
-	        	String fullOrHeader = (headersOnly) ? "HEADER" : "FULL";
-				logger.log(Level.INFO, "- Loading database ({0}, {1}) from file {2} ...", new Object[] { fullOrHeader, filterType, databaseFile });
-        	}
+			logger.log(Level.INFO, "- Loading database ({0}, {1}) from file {2} ...", new Object[] { readType, filterType, databaseFile });
 
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
 			
-			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, headersOnly, filterType));
+			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, readType, filterType, ignoredMostRecentPurgeVersions));
         }
         catch (Exception e) {
         	throw new IOException(e);
         } 
-	}			
+	}
+
 }

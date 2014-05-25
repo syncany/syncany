@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.status.StatusOperation;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.tests.util.TestConfigUtil;

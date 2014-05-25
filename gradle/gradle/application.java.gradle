@@ -1,0 +1,42 @@
+// Standard Java Project ///////////////////////////////////////////////////////
+
+subprojects {
+	apply plugin: 'java'
+	
+	group = 'org.syncany'		
+		
+	sourceCompatibility = 1.7
+	targetCompatibility = 1.7
+	
+	repositories {
+		mavenCentral()
+	}
+	
+	sourceSets {
+		main {
+			java      { srcDir 'src/main/java'}
+			resources { srcDir 'src/main/resources'}
+		}
+		
+		test {
+			java      { srcDir 'src/test/java'}
+			resources { srcDir 'src/test/resources'}
+		}
+	}
+	
+	processResources {	
+		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
+		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
+		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
+		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
+		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
+	}		
+	
+	// JAR /////////////////////////////////////////////////////////////////////
+	
+	jar {
+		baseName = "${project.name}"
+		version  = "$applicationVersionFull"				
+	}
+}
+

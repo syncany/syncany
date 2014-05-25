@@ -51,6 +51,10 @@ before_install:
   - sudo apt-get install -y -q cloc
   - cloc --version
 
+install:
+  # Disable default travis behavior 'gradle assemble'
+  - ./gradlew -v
+
 script: 
   # Run JUnit tests and generate reports
   - ./gradlew testGlobal coberturaReport performCoverageCheck

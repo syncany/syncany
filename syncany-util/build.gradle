@@ -1,4 +1,3 @@
-apply plugin: 'java'
 apply plugin: 'eclipse'
 
 configurations {
@@ -10,6 +9,7 @@ repositories {
 }
 
 dependencies {
-	compile			"commons-io:commons-io:2.4"	
+	compile			"commons-io:commons-io:2.4"
+            	
 	testCompile		"junit:junit:4.9"   	      
 }

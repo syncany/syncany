@@ -25,9 +25,10 @@ mkdir $TEMPDISTDIR
 echo ""
 echo "Gathering distributables ..."
 echo "----------------------------"
-cp $REPODIR/syncany-cli/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
-cp $REPODIR/syncany-cli/build/linux-package/*.deb $TEMPDISTDIR
-cp $REPODIR/syncany-cli/build/innosetup/*.exe $TEMPDISTDIR
+cp $REPODIR/syncany-lib/build/resources/main/application.properties $TEMPDIR
+cp $REPODIR/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
+cp $REPODIR/build/linux-package/*.deb $TEMPDISTDIR
+cp $REPODIR/build/innosetup/*.exe $TEMPDISTDIR
 
 PWD=`pwd`
 cd $TEMPDISTDIR
@@ -38,6 +39,7 @@ if [ $(ls $TEMPDISTDIR | wc -l) != "4" ]; then
 	echo "ERROR: Wrong files in $TEMPDISTDIR: "
 	ls $TEMPDISTDIR
 	
+	rm -rf "$TEMPDIR"
 	exit 2
 fi
 

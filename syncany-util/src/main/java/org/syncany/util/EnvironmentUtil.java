@@ -21,6 +21,7 @@ import java.io.File;
 
 public class EnvironmentUtil {
 	public enum OperatingSystem { WINDOWS, UNIX_LIKE };
+
 	private static OperatingSystem operatingSystem;
 	
 	static {
@@ -42,7 +43,7 @@ public class EnvironmentUtil {
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
-	
+
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
 	}

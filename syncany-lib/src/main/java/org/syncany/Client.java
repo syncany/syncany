@@ -54,15 +54,15 @@ import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperation.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperation.RestoreOperationResult;
 import org.syncany.operations.status.StatusOperation;
-import org.syncany.operations.status.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.status.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperation.WatchOperationListener;
-import org.syncany.operations.watch.WatchOperation.WatchOperationOptions;
+import org.syncany.operations.watch.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperationOptions;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s

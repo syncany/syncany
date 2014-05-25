@@ -31,6 +31,7 @@ import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.Config;
+import org.syncany.config.UserConfig;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
@@ -58,6 +59,7 @@ public class TestConfigUtil {
 
 	static {
 		try {
+			UserConfig.init(); // Load userconfig (include system properties, e.g. org.syncany.test.tmpdir)
 			TestConfigUtil.cryptoEnabled = Boolean.parseBoolean(System.getProperty("crypto.enable"));
 		}
 		catch (Exception e) {
@@ -173,7 +175,7 @@ public class TestConfigUtil {
 		
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
-		configTO.setMachineName(machineName + Math.abs(new Random().nextInt()));
+		configTO.setMachineName(machineName + StringUtil.createRandomMachineName());
 
 		// Get Masterkey
 		SaltedSecretKey masterKey = getMasterKey();

@@ -87,8 +87,7 @@ public class CommandLineInterfaceTest {
 	
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
 			"--localdir", clientA.get("localdir"),
-			"up",
-			"--no-cleanup" 
+			"up" 
 		}));
 		
 		

@@ -73,7 +73,7 @@ public class FileSystemActionReconciliatorTest {
 		
 		// Run! Finally!
 		DownOperationResult outDownOperationResult = new DownOperationResult();
-		FileSystemActionReconciliator fileSystemActionReconciliator = new FileSystemActionReconciliator(testConfigA, outDownOperationResult);
+		FileSystemActionReconciliator fileSystemActionReconciliator = new FileSystemActionReconciliator(testConfigA, outDownOperationResult.getChangeSet());
 		List<FileSystemAction> fileSystemActions = fileSystemActionReconciliator.determineFileSystemActions(winnersDatabase);
 		
 		assertNotNull(fileSystemActions);

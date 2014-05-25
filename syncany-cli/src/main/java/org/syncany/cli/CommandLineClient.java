@@ -42,7 +42,7 @@ import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
 import org.syncany.Client;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;

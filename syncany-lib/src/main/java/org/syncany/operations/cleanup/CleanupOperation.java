@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,6 @@ import java.util.logging.Logger;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.ActionRemoteFile;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.RemoteFile;
@@ -50,12 +50,13 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
-import org.syncany.operations.ActionFileHandler;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.status.StatusOperation;
-import org.syncany.operations.status.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationResult;
+import org.syncany.operations.up.UpOperation;
 
 import com.google.common.collect.Lists;
 
@@ -77,39 +78,29 @@ import com.google.common.collect.Lists;
  */
 public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
-	private static final String LOCK_CLIENT_NAME = "lock";
-
-	private static final int MIN_KEEP_DATABASE_VERSIONS = 5;
-	private static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
-	/**
-	 * Defines the time after which old/outdated action files from other clients are
-	 * deleted. This time must be significantly larger than the time action files are 
-	 * renewed by the {@link ActionFileHandler}.
-	 * 
-	 * @see ActionFileHandler#ACTION_RENEWAL_INTERVAL
-	 */
-	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
-
+	public static final String ACTION_ID = "cleanup";
+	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
+	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
+	
+	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
+	
 	private CleanupOperationOptions options;
 	private CleanupOperationResult result;
 
 	private SqlDatabase localDatabase;
-
-	private DatabaseRemoteFile lockFile;
 
 	public CleanupOperation(Config config) {
 		this(config, new CleanupOperationOptions());
 	}
 
 	public CleanupOperation(Config config, CleanupOperationOptions options) {
-		super(config, "cleanup");
+		super(config, ACTION_ID);
 
 		this.options = options;
 		this.result = new CleanupOperationResult();
 
 		this.localDatabase = new SqlDatabase(config);
-		this.lockFile = null;
 	}
 
 	@Override
@@ -118,6 +109,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Cleanup' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		// Do initial check out remote repository preconditions
 		CleanupResultCode preconditionResult = checkPreconditions();
 
 		if (preconditionResult != CleanupResultCode.OK) {
@@ -125,8 +117,21 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		startOperation();
-		lockRemoteRepository(); // Write-lock sufficient?
+		
+		// Wait two seconds (conservative cleanup, see #104)
+		logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");
+		Thread.sleep(BEFORE_DOUBLE_CHECK_TIME);
+		
+		// Check again
+		preconditionResult = checkPreconditions();
 
+		if (preconditionResult != CleanupResultCode.OK) {
+			finishOperation();
+			return new CleanupOperationResult(preconditionResult);
+		}
+		
+		// Now do the actual work!
+		
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
 		}
@@ -135,25 +140,29 @@ public class CleanupOperation extends AbstractTransferOperation {
 			mergeRemoteFiles();
 		}
 
-		// removeLostMultiChunks(); // Deactivated for 0.1.3 due to issue #132
+		removeLostMultiChunks();
 
-		unlockRemoteRepository();
 		finishOperation();
-
 		return updateResultCode(result);
 	}
 
 	private void removeLostMultiChunks() throws StorageException {
 		Map<String, MultiChunkRemoteFile> remoteMultiChunks = transferManager.list(MultiChunkRemoteFile.class);
-		Map<MultiChunkId, MultiChunkEntry> localMultiChunks = localDatabase.getMultiChunks();
-
+		
+		Map<MultiChunkId, MultiChunkEntry> locallyKnownMultiChunks = new HashMap<>();
+		
+		locallyKnownMultiChunks.putAll(localDatabase.getMultiChunks());
+		locallyKnownMultiChunks.putAll(localDatabase.getMuddyMultiChunks());
+		
 		for (MultiChunkRemoteFile remoteMultiChunk : remoteMultiChunks.values()) {
 			MultiChunkId remoteMultiChunkId = new MultiChunkId(remoteMultiChunk.getMultiChunkId());
-			boolean multiChunkExistsLocally = localMultiChunks.containsKey(remoteMultiChunkId);
+			boolean multiChunkExistsLocally = locallyKnownMultiChunks.containsKey(remoteMultiChunkId);
 
 			if (!multiChunkExistsLocally) {
 				logger.log(Level.WARNING, "- Deleting lost/unknown remote multichunk " + remoteMultiChunk + " ...");
 				transferManager.delete(remoteMultiChunk);
+
+				result.getRemovedMultiChunks().put(remoteMultiChunkId, new MultiChunkEntry(remoteMultiChunkId, -1));
 			}
 		}
 	}
@@ -182,42 +191,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return CleanupResultCode.NOK_REMOTE_CHANGES;
 		}
 
-		if (otherRemoteOperationsRunning()) {
+		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID, UpOperation.ACTION_ID, DownOperation.ACTION_ID)) {
 			return CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING;
 		}
 
 		return CleanupResultCode.OK;
-	}
-
-	private boolean otherRemoteOperationsRunning() throws StorageException {
-		logger.log(Level.INFO, "Looking for other running remote operations ...");
-		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
-
-		boolean otherRemoteOperationsRunning = false;
-
-		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
-			// Delete our own action remote files, remember if others exist
-
-			if (actionRemoteFile.getClientName().equals(config.getMachineName())) {
-				logger.log(Level.INFO, "- Deleting own action file " + actionRemoteFile + " ...");
-				transferManager.delete(actionRemoteFile);
-			}
-			else {
-				// TODO [low] Even though this is UTC and the times frames are large, this might be an issue with different timezones or wrong system clocks
-				boolean isOutdatedActionFile = System.currentTimeMillis() - ACTION_FILE_DELETE_TIME > actionRemoteFile.getTimestamp();
-				
-				if (isOutdatedActionFile) {
-					logger.log(Level.INFO, "- Action file from other client is OUTDATED; deleting " + actionRemoteFile + " ...");
-					transferManager.delete(actionRemoteFile);
-				}
-				else {
-					logger.log(Level.INFO, "- Action file from other client; marking operations running; " + actionRemoteFile);
-					otherRemoteOperationsRunning = true;
-				}
-			}
-		}
-
-		return otherRemoteOperationsRunning;
 	}
 
 	private boolean hasLocalChanges() throws Exception {
@@ -241,9 +219,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * @throws Exception 
 	 */
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions = localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options
-				.getKeepVersionsCount());
-		boolean purgeDatabaseVersionNecessary = mostRecentPurgeFileVersions.size() > 0;
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
+		
+		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount()));
+		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
+		
+		boolean purgeDatabaseVersionNecessary = purgeFileVersions.size() > 0;
 
 		if (!purgeDatabaseVersionNecessary) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary (no file histories longer than {0} versions found).",
@@ -252,15 +233,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		logger.log(Level.INFO, "- Old version removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
-				mostRecentPurgeFileVersions.size(), options.getKeepVersionsCount() });
+				purgeFileVersions.size(), options.getKeepVersionsCount() });
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeSmallerOrEqualFileVersions(mostRecentPurgeFileVersions);
-		localDatabase.removeDeletedFileVersions();
+		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
-		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(mostRecentPurgeFileVersions);
+		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(purgeFileVersions);
 
 		localDatabase.removeUnreferencedDatabaseEntities();
 
@@ -275,7 +255,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// Update stats
-		result.setRemovedOldVersionsCount(mostRecentPurgeFileVersions.size());
+		result.setRemovedOldVersionsCount(purgeFileVersions.size());
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
@@ -343,23 +323,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private boolean hasRemoteChanges() throws Exception {
 		LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config).execute();
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
-	}
-
-	private void lockRemoteRepository() throws StorageException, IOException {
-		File tempLockFile = File.createTempFile("syncany", "lock");
-		tempLockFile.deleteOnExit();
-
-		lockFile = new DatabaseRemoteFile(LOCK_CLIENT_NAME, System.currentTimeMillis());
-
-		logger.log(Level.INFO, "- Setting repository write lock: uploading {0} ...", lockFile);
-		transferManager.upload(tempLockFile, lockFile);
-
-		tempLockFile.delete();
-	}
-
-	private void unlockRemoteRepository() throws StorageException {
-		logger.log(Level.INFO, "- Removing repository lock: deleting {0} ...", lockFile);
-		transferManager.delete(lockFile);
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {

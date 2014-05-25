@@ -17,9 +17,7 @@
  */
 package org.syncany.cli;
 
-import java.math.BigInteger;
 import java.net.UnknownHostException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -297,8 +295,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected String getRandomMachineName() {
-		String randomStr = new BigInteger(128, new SecureRandom()).toString(32);
-		return (randomStr.length() > 16) ? randomStr.substring(0, 16) : randomStr;
+		return StringUtil.createRandomMachineName();
 	}
 
 	protected String getDefaultDisplayName() throws UnknownHostException {

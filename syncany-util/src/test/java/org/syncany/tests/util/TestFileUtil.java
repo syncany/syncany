@@ -75,16 +75,26 @@ public class TestFileUtil {
 		return createTempDirectoryInSystemTemp("syncanytest");
 	}
 
+	public static File getAppTempDir() {
+		String tempDirStr = System.getProperty("org.syncany.test.tmpdir");
+		
+		if (tempDirStr == null) {
+			tempDirStr = System.getProperty("java.io.tmpdir");
+		}
+		
+		return new File(tempDirStr, "syncanytest");
+	}
+	
 	public static File createTempDirectoryInSystemTemp(String prefix) throws Exception {
-		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir") + "/" + prefix);
+		File tempDirectoryInSystemTemp = new File(getAppTempDir() + "/" + prefix);
 
 		int i = 1;
 		while (tempDirectoryInSystemTemp.exists()) {
-			tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir") + "/" + prefix + "-" + i);
+			tempDirectoryInSystemTemp = new File(getAppTempDir() + "/" + prefix + "-" + i);
 			i++;
 		}
 
-		if (!tempDirectoryInSystemTemp.mkdir()) {
+		if (!tempDirectoryInSystemTemp.mkdirs()) {
 			throw new Exception("Cannot create temp. directory " + tempDirectoryInSystemTemp);
 		}
 

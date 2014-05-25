@@ -1,0 +1,59 @@
+// JavaDoc Requirements ////////////////////////////////////////////////////////
+
+configurations {
+	doclet 
+}
+
+allprojects {
+	configurations {
+		doclet
+	}
+	
+	dependencies {
+		doclet group: 'org.jboss.apiviz', name: 'apiviz', version: '1.3.2.GA'
+	}
+	
+	repositories {
+		mavenCentral()
+	}
+}
+
+// JavaDoc /////////////////////////////////////////////////////////////////////
+
+task javadocAll(type: Javadoc) {
+	group = "documentation"
+	description = "Creates the JavaDoc for all subprojects and puts it into build/javadoc"
+	
+	source subprojects.collect { project -> project.sourceSets.main.allJava } 
+	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
+	destinationDir = new File(projectDir, 'build/javadoc')
+	
+	doFirst {
+	  subprojects.each { project -> project.sourceSets.main.output.each { dir -> dir.mkdirs() } }
+	}
+	
+	options.linkSource = true
+        options.addStringOption('sourceclasspath', files(subprojects.collect { project -> project.sourceSets.main.output }).getAsPath())
+
+	configure(options) {
+	        doclet "org.jboss.apiviz.APIviz"
+	        docletpath file(configurations.doclet.asPath)
+		windowTitle = 'Syncany API Documentation'
+		docTitle = "Syncany JavaDoc ($applicationVersion)"
+		bottom = " \
+			<span style=\"font-size: 13px\"><br /> \
+				<a href=\"http://www.syncany.org/\" target=\"_top\">Syncany</a> is an open-source cloud storage and filesharing application.<br /><br /> \
+				Code located at <a href=\"https://github.com/syncany/syncany\" target=\"_top\">https://github.com/syncany/syncany</a><br /> \
+				JavaDoc for version $applicationVersion generated based on commit <a href=\"https://github.com/syncany/syncany/tree/$applicationRevision\" target=\"_top\">$applicationRevision</a> at $applicationDate<br /><br /> \
+				Copyright &copy; 2011-2014 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
+			</span> \
+		"
+	}
+}
+
+task cleanJavadocAll(type: Delete) {
+	group = "documentation"
+	description = "Deletes the all subprojects from build/javadoc (completent to javadocAll)"
+	delete 'build/javadoc'	
+}
+

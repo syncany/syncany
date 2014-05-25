@@ -1,14 +1,29 @@
 Change Log
 ==========
 
+### Release 0.1.4-alpha (Date: 25 May 2014)
+
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Rudimentary daemon implementation: `syd (start|stop|reload|status)`
+  + Remove automatic cleanup in 'up', add interval-based cleanup to 'watch',
+    relates to #64
+- Bugfixes and other things:
+  + Fix deletion of invalid merge/cleanup and integrity issues (tough one!) #58
+  + Fix remove lost multichunks from other clients' dirty databases (major!) #132
+  + Fix wrong 'down' output when only a purge file is applied #129
+  + Make vector clock serialization pattern unambigious (only allow A-Z/a-z) #123
+  + Fix ignore purged files when loading database files #135
+  + Simplify Gradle build script by splitting to several scripts
+
 ### Release 0.1.3-alpha (Date: 12 May 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features:
-  + [WebDAV](https://github.com/syncany/syncany-plugin-webdav) now supports HTTP
-    and HTTPS (ask user for certificate confirmation) #50
-  + [SFTP](https://github.com/syncany/syncany-plugin-sftp) now implements strict
-    host checking (ask user for host fingerprint confirmation) #127
+  + [WebDAV](https://github.com/syncany/syncany-plugin-webdav) now supports 
+    HTTP and HTTPS (ask user for certificate confirmation) #50
+  + [SFTP](https://github.com/syncany/syncany-plugin-sftp) now implements 
+    strict host checking (ask user for host fingerprint confirmation) #127
 - Windows-specific:
   + Set JAVA_HOME during installation #121/#122
   + Replace uninstall icons with high-depth icons
@@ -32,7 +47,8 @@ Change Log
       [Amazon S3](https://github.com/syncany/syncany-plugin-s3)
   + Ignore files using wildcards in .syignore (e.g. *.bak, *.r??) #108
   + Added Arch Linux 'syncany-git' package #99
-  + Allow speicifying HTTP(S)/WebDAV proxy and other global system properties #109
+  + Allow speicifying HTTP(S)/WebDAV proxy and other global system 
+    properties #109
 - Bugfixes:
   + Fix semantic in TransferManager `test()` (incl. all plugins) #103/#102
   + WebDAV plugin fix to create "multichunks"/"databases" folder #110

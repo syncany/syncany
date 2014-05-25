@@ -38,8 +38,6 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.OperationResult;
 import org.syncany.util.FileUtil;
 
 /**
@@ -226,34 +224,6 @@ public class StatusOperation extends Operation {
 		@Override
 		public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 			return FileVisitResult.CONTINUE;
-		}
-	}
-	
-	public static class StatusOperationOptions implements OperationOptions {
-		private boolean forceChecksum = false;
-
-		public boolean isForceChecksum() {
-			return forceChecksum;
-		}
-
-		public void setForceChecksum(boolean forceChecksum) {
-			this.forceChecksum = forceChecksum;
-		}				
-	}
-	
-	public static class StatusOperationResult implements OperationResult {
-		private ChangeSet changeSet;
-
-		public StatusOperationResult() {
-			changeSet = new ChangeSet();
-		}
-		
-		public void setChangeSet(ChangeSet changeSet) {
-			this.changeSet = changeSet;
-		}
-
-		public ChangeSet getChangeSet() {
-			return changeSet;
 		}
 	}
 }

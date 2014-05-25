@@ -118,6 +118,10 @@ public class MemoryDatabase {
 		return fullDatabaseVersionCache.getFileHistories();		
 	}
 	
+	public Collection<MultiChunkEntry> getMultiChunks() {
+		return fullDatabaseVersionCache.getMultiChunks();		
+	}
+	
 	public void addDatabaseVersion(DatabaseVersion databaseVersion) {		
 		databaseVersions.add(databaseVersion);
 		
@@ -127,12 +131,6 @@ public class MemoryDatabase {
 		updateFullDatabaseVersionCache(databaseVersion);
 		updateFilenameHistoryCache();
 		updateContentChecksumCache();
-	} 	
-	
-	public void addDatabaseVersions(List<DatabaseVersion> databaseVersions) {		
-		for (DatabaseVersion databaseVersion : databaseVersions) {
-			addDatabaseVersion(databaseVersion);
-		}
 	} 	
 
 	public void removeDatabaseVersion(DatabaseVersion databaseVersion) {

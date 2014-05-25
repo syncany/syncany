@@ -20,7 +20,7 @@ package org.syncany.operations.up;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult;
-import org.syncany.operations.status.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationResult;
 
 public class UpOperationResult implements OperationResult {
 	public enum UpResultCode {

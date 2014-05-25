@@ -1,7 +1,7 @@
 %RESOURCE:/help/copyright.skel%
   
 SYNOPSIS
-  sy down [-C | --conflict-strategy=<rename|ask>] 
+  sy down [-C | --conflict-strategy=<rename|ask>] [-A | --no-apply]
   
 DESCRIPTION 
   This command detects changes made by other clients and applies them
@@ -18,6 +18,11 @@ DESCRIPTION
   To determine the remote changes, the 'ls-remote' command is used.
   
 OPTIONS
+  -A, --no-apply
+    All local file system actions are skipped, i.e. the local folder will not
+    be changed. Only the new/unknown database versions will be downloaded and
+    persisted to the database.   
+    
   -C, --conflict-strategy=<rename|ask>
     Chooses the conflict resolve strategy if a local file does not match the 
     expected local file (as per the local database). The conflict strategy 

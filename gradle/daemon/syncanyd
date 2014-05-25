@@ -1,0 +1,68 @@
+#!/bin/sh
+ 
+set -e
+ 
+NAME=syncanyd
+APPDIR=~/.config/syncany
+CONTROLFILE=$APPDIR/daemon.ctrl
+LOGDIR=$APPDIR/logs
+LOGFILE=$LOGDIR/daemon.log
+
+DAEMON=$(cd "$(dirname "$0")"; pwd)/syncany
+DAEMON_OPTS="--log=$LOGFILE daemon"
+ 
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+mkdir -p $APPDIR
+mkdir -p $LOGDIR
+ 
+case "$1" in
+start)
+	echo -n "Starting daemon: "$NAME
+	
+	if [ -e $CONTROLFILE ]; then
+		echo " already running"
+	else
+		start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
+		echo "."
+	fi
+	;;
+	
+stop)
+	echo -n "Stopping daemon: "$NAME
+	
+	if [ ! -e $CONTROLFILE ]; then
+		echo " not running"
+	else
+		echo "shutdown" >> $CONTROLFILE
+		echo "."
+	fi
+	;;
+	
+reload)
+	echo -n "Reloading daemon: "$NAME
+	
+	if [ ! -e $CONTROLFILE ]; then
+		echo " not running"
+	else
+		echo "reload" >> $CONTROLFILE
+		echo "."
+	fi
+	;;
+	
+status)
+	echo -n "Checking daemon: "$NAME
+	
+	if [ ! -e $CONTROLFILE ]; then
+		echo " not running"
+	else
+		echo " running"
+	fi
+	;;
+ 
+*)
+	echo "Usage: "$1" (start|stop|reload|status)"
+	exit 1
+esac
+ 
+exit 0

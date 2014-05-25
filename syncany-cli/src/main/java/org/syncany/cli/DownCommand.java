@@ -31,6 +31,7 @@ import org.syncany.operations.ChangeSet;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
 
 public class DownCommand extends Command {
 	@Override
@@ -55,6 +56,7 @@ public class DownCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 
 		OptionSpec<String> optionConflictStrategy = parser.acceptsAll(asList("C", "conflict-strategy")).withRequiredArg();
+		OptionSpec<Void> optionNoApply = parser.acceptsAll(asList("A", "no-apply"));
 
 		OptionSet options = parser.parse(operationArguments);
 
@@ -63,38 +65,49 @@ public class DownCommand extends Command {
 			String conflictStrategyStr = options.valueOf(optionConflictStrategy).toUpperCase();
 			operationOptions.setConflictStrategy(DownConflictStrategy.valueOf(conflictStrategyStr));
 		}
+		
+		// --no-apply
+		if (options.has(optionNoApply)) {
+			operationOptions.setApplyChanges(false);
+		}
 
 		return operationOptions;
 	}
 
 	public void printResults(DownOperationResult operationResult) {
-		ChangeSet changeSet = operationResult.getChangeSet();
+		if (operationResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
+			ChangeSet changeSet = operationResult.getChangeSet();
+			
+			if (changeSet.hasChanges()) {
+				List<String> newFiles = new ArrayList<String>(changeSet.getNewFiles());
+				List<String> changedFiles = new ArrayList<String>(changeSet.getChangedFiles());
+				List<String> deletedFiles = new ArrayList<String>(changeSet.getDeletedFiles());
+				
+				Collections.sort(newFiles);
+				Collections.sort(changedFiles);
+				Collections.sort(deletedFiles);
+				
+				for (String newFile : newFiles) {
+					out.println("A "+newFile);
+				}
 		
-		if (changeSet.hasChanges()) {
-			List<String> newFiles = new ArrayList<String>(changeSet.getNewFiles());
-			List<String> changedFiles = new ArrayList<String>(changeSet.getChangedFiles());
-			List<String> deletedFiles = new ArrayList<String>(changeSet.getDeletedFiles());
-			
-			Collections.sort(newFiles);
-			Collections.sort(changedFiles);
-			Collections.sort(deletedFiles);
-			
-			for (String newFile : newFiles) {
-				out.println("A "+newFile);
+				for (String changedFile : changedFiles) {
+					out.println("M "+changedFile);
+				}
+				
+				for (String deletedFile : deletedFiles) {
+					out.println("D "+deletedFile);
+				}		
 			}
-	
-			for (String changedFile : changedFiles) {
-				out.println("M "+changedFile);
+			else {
+				out.println(operationResult.getDownloadedUnknownDatabases().size() + " database file(s) processed.");
 			}
-			
-			for (String deletedFile : deletedFiles) {
-				out.println("D "+deletedFile);
-			}	
 			
 			out.println("Sync down finished.");
 		}
 		else {
 			out.println("Sync down skipped, no remote changes.");
 		}
+
 	}
 }

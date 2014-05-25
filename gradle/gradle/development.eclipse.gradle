@@ -1,0 +1,37 @@
+// Eclipse Settings and Hooks //////////////////////////////////////////////////
+
+subprojects {
+	apply plugin: 'eclipse'
+	
+	eclipse {
+		classpath {
+			downloadSources = true
+		}
+		
+		jdt {
+			sourceCompatibility = 1.7
+			targetCompatibility = 1.7			
+		}		
+	}
+	
+	task eclipseSettings(type: Copy) {
+		from rootProject.files(
+			"gradle/eclipse/org.eclipse.jdt.ui.prefs",			
+			"gradle/eclipse/org.eclipse.jdt.core.prefs"
+		)
+		
+		into project.file('.settings/')
+		
+		outputs.upToDateWhen { 
+			false 
+		}
+	}
+	
+	task cleanEclipseJdtUi(type: Delete) {
+		delete project.file(".settings/")
+		delete project.file("bin/")
+	}	
+	
+	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)
+	tasks["eclipse"].dependsOn(eclipseSettings)
+}
