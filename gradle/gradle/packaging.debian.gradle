@@ -6,7 +6,7 @@ task debianClean(type: Delete) {
 
 task debianPrepare(dependsOn: [installApp, debianClean]) {
 	String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", "~")
-	String applicationSigningAuthor = "Philipp Heckel <philipp.heckel@gmail.com>"
+	String applicationSigningAuthor = "Syncany Team <hello@syncany.org>"
 	
 	doLast {
 		copy {
@@ -38,20 +38,20 @@ task debianPrepare(dependsOn: [installApp, debianClean]) {
 	}
 }
 
-task debian(dependsOn: debianPrepare) {
+task debianPPA(dependsOn: debianPrepare) {
 	doLast {
 		exec {
-			workingDir rootProject.file("build/debian/syncany")
-			commandLine "debuild"
+			workingDir rootProject.file("gradle/debian")
+			commandLine "./debuild-signed.sh"
 		}
 	}
 }
 
-task debianPPA(dependsOn: debianPrepare) {
+task debian(dependsOn: debianPrepare) {
 	doLast {
 		exec {
 			workingDir rootProject.file("build/debian/syncany")
-			commandLine "debuild -S".split()
+			commandLine "debuild -i -us -uc -b".split()
 		}
 	}
 }
