@@ -38,7 +38,7 @@ task debianPrepare(dependsOn: [installApp, debianClean]) {
 	}
 }
 
-task debianPpa(dependsOn: debianPrepare) {
+task ppaBuild(dependsOn: debianPrepare) {
 	doLast {
 		exec {
 			workingDir rootProject.file("gradle/debian")
@@ -47,7 +47,7 @@ task debianPpa(dependsOn: debianPrepare) {
 	}
 }
 
-task debianPpaUpload {
+task ppa(dependsOn: ppaBuild) {
 	doLast {
 		exec {
 			workingDir rootProject.file("gradle/debian")
