@@ -40,8 +40,8 @@ before_install:
   - debuild --version
   
   # LFTP (to upload the distributables and JavaDoc)
-  #- sudo apt-get install -y -q lftp graphviz wine python-software-properties
-  #- lftp -v 
+  - sudo apt-get install -y -q lftp 
+  - lftp -v 
 
   # Graphviz (for JavaDoc images; see Gradle tasks)
   #- sudo apt-get install -y -q graphviz 
@@ -78,5 +78,5 @@ after_success:
   #- cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
   
   # Upload distributables and JavaDoc
-  #- ./gradle/lftp/lftpupload.sh
+  - ./gradle/lftp/lftpupload.sh
 
