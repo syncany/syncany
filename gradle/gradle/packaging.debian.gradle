@@ -38,11 +38,20 @@ task debianPrepare(dependsOn: [installApp, debianClean]) {
 	}
 }
 
-task debianPPA(dependsOn: debianPrepare) {
+task debianPpa(dependsOn: debianPrepare) {
 	doLast {
 		exec {
 			workingDir rootProject.file("gradle/debian")
 			commandLine "./debuild-signed.sh"
+		}
+	}
+}
+
+task debianPpaUpload {
+	doLast {
+		exec {
+			workingDir rootProject.file("gradle/debian")
+			commandLine "./dput-ppa.sh"
 		}
 	}
 }

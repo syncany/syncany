@@ -11,8 +11,8 @@ That's easy. The gradle task `gradle debian` copies the `gradle/debian` folder t
 
 That's hard! To upload to a PPA, we need to do the following things:
 
-1. Generate RSA-4096 keypair, set a passphrase ***key-priv*** export it to `syncany-team.asc` (e.g. using Seahorse)
-2. Encrypt private key with passphrase ***key-wrap***: `cat syncany-team.asc | gpg --symmetric --cipher-algo aes256 > syncany-team.asc.aes256`
+1. Generate RSA-4096 keypair, set a passphrase to "***key-priv***", and export it to `syncany-team.asc` (e.g. using Seahorse)
+2. Encrypt private key with passphrase "***key-wrap***": `cat syncany-team.asc | gpg --symmetric --cipher-algo aes256 > syncany-team.asc.aes256`
 3. Encrypt the keys for Travis-CI in the `.travis.yml` file like this:
 
     ```

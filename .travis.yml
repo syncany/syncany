@@ -68,7 +68,7 @@ script:
 after_success:
   # Create distributables and JavaDoc
   #- ./gradlew installApp distTar distZip debian exe javadocAll
-  - ./gradlew installApp debian debianppa
+  - ./gradlew installApp debian debianppa debianppaupload
   
   # Line of code stats
   #- cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
