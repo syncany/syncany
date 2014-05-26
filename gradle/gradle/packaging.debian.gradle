@@ -7,8 +7,8 @@ task debianClean(type: Delete) {
 tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 	if (taskName.startsWith("debianPrepare")) {
 		task(taskName, dependsOn: [installApp, debianClean]){
-			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", "~")
 			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
+			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".")+"~${debianDistribution}ppa1"
 	
 			doLast {
 				copy {
@@ -37,7 +37,7 @@ tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 	}
 }
 
-task ppaBuild {
+task ppaBuild { // depends on debianPrepare*
 	doLast {
 		exec {
 			workingDir rootProject.file("gradle/debian")
@@ -55,7 +55,7 @@ task ppa(dependsOn: ppaBuild) {
 	}
 }
 
-task debian {
+task debian { // depends on debianPrepare*
 	doLast {
 		exec {
 			workingDir rootProject.file("build/debian/syncany")
