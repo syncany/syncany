@@ -39,7 +39,7 @@ while (<IN>) {
 			$last_date = "n/a";
 		}
 
-		print OUT "syncany ($last_version) trusty; urgency=low\n";
+		print OUT "syncany ($last_version) unstable; urgency=low\n";
 		print OUT "\n";
 	}
 	elsif (/^\s|-/) {	

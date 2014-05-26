@@ -14,11 +14,9 @@ fi
 IS_RELEASE=$(git log -n 1 --pretty=%d HEAD | grep origin/master)
 
 if [ -n "$IS_RELEASE" ]; then 
-	#TARGET_PPA="syncany/release"
-	TARGET_PPA="ppa:syncany/release-test"
+	TARGET_PPA="ppa:syncany/release"
 else
-	#TARGET_PPA="syncany/snapshot"
-	TARGET_PPA="ppa:syncany/snapshot-test"
+	TARGET_PPA="ppa:syncany/snapshot"
 fi
 
 # Test files

@@ -6,7 +6,6 @@ task debianClean(type: Delete) {
 
 task debianPrepare(dependsOn: [installApp, debianClean]) {
 	String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", "~")
-	String applicationSigningAuthor = "Syncany Team <hello@syncany.org>"
 	
 	doLast {
 		copy {
