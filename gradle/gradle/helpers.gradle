@@ -35,6 +35,6 @@ rootProject.ext.isApplicationRelease = {
 	// Note: This must work for detached commits (git checkout -qf <commit>)
 
 	String currentBranches = execAndGetOutput("git log -n 1 --pretty=%d HEAD")
-	return currentBranches.contains("origin/master")
+	return currentBranches.contains("master")
 }
 

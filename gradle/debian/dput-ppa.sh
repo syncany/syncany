@@ -9,7 +9,7 @@ if [ -n "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
 fi
 
 # Choose PPA
-IS_RELEASE=$(git log -n 1 --pretty=%d HEAD | grep origin/master)
+IS_RELEASE=$(git log -n 1 --pretty=%d HEAD | grep master)
 
 if [ -n "$IS_RELEASE" ]; then 
 	TARGET_PPA="ppa:syncany/release"

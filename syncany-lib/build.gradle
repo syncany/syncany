@@ -25,20 +25,3 @@ dependencies {
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
 	testCompile		"junit:junit:4.9"
 }
-	
-	
-// Test helper tasks ///////////////////////////////////////////////////////////
-
-task(runSql, dependsOn: "classes", type: JavaExec) {
-	String db = (project.ext.has("db")) ? $db : ""
-	String sql = (project.ext.has("sql")) ? $sql : ""
-
-	description = "Creates database and runs SQL query, syntax: runSql -Pdb=DBPATH -P=SCRIPTRESOURCE"
-	main = "org.syncany.tests.util.TestSqlDatabaseUtil"
-	classpath = sourceSets.test.runtimeClasspath
-	args = [ "${db}", "${sql}" ]
-}		
-
-repositories {
-	mavenCentral()
-}
