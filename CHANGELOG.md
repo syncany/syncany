@@ -1,7 +1,11 @@
 Change Log
 ==========
 
-### Release 0.1.4-alpha (Date: 25 May 2014)
+### Syncany 0.1.5-alpha (Date: tbd.)
+
+- Nothing yet
+
+### Syncany 0.1.4-alpha (Date: 25 May 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
@@ -16,7 +20,7 @@ Change Log
   + Fix ignore purged files when loading database files #135
   + Simplify Gradle build script by splitting to several scripts
 
-### Release 0.1.3-alpha (Date: 12 May 2014)
+### Syncany 0.1.3-alpha (Date: 12 May 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features:
@@ -33,7 +37,7 @@ Change Log
   + Proper remote locking for cleanup through action files #104
   + Fix WebDAV plugin/server compatibility #15
   
-### Release 0.1.2-alpha (Date: 27 Apr 2014)
+### Syncany 0.1.2-alpha (Date: 27 Apr 2014)
 
 - Developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Features:
@@ -61,7 +65,7 @@ Change Log
   + Rotate logs to max. 4x25 MB #116
   + Fix multichunk resource close issue #118/#120
   
-### Release 0.1.1-alpha (Date: 14 Apr 2014)
+### Syncany 0.1.1-alpha (Date: 14 Apr 2014)
 
 - Developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Features:
@@ -79,7 +83,7 @@ Change Log
   + Tests for 'connect' command  
   + Tests for .syignore
 
-### Release 0.1.0-alpha (Date: 30 March 2014)
+### Syncany 0.1.0-alpha (Date: 30 March 2014)
 
 - First developer/alpha release (**NOT FOR PRODUCTION USE!**)
 - Command line interface (CLI) with commands
@@ -99,3 +103,4 @@ Change Log
   + Local: Allows to store repository files in a local/mounted folder 
   + FTP: Allows the use of an FTP folder as repository
   + WebDAV: Allows using a WebDAV folder as repository (currently no HTTPS)
+
