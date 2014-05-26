@@ -29,7 +29,7 @@ subprojects {
 		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
 		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
 		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
-		filter{ String line -> line.replaceAll('%applicationDate%', "${applicationDate}") }          	            
+		filter{ String line -> line.replaceAll('%applicationDate%', "${asUTC(applicationDate, 'EEE, dd MMM yyyy HH:mm:ss Z')}") }          	            
 	}		
 	
 	// JAR /////////////////////////////////////////////////////////////////////

@@ -28,6 +28,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -67,10 +69,11 @@ public class CommandLineClient extends Client {
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
 	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
+	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "/help/version_short.skel";
+	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "/help/version_full.skel";
 	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "/help/usage.skel";
 	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "/help/cmd/help.%CMD%.skel";
 	private static final String HELP_VAR_CMD= "%CMD%";
-	private static final String HELP_VAR_VERSION= "%VERSION%";
 	private static final String HELP_VAR_PLUGINS = "%PLUGINS%";
 	private static final String HELP_VAR_LOGFORMATS = "%LOGFORMATS%";
 	
@@ -105,12 +108,15 @@ public class CommandLineClient extends Client {
 			OptionSpec<Void> optionLogPrint = parser.acceptsAll(asList("print"));		
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
+			OptionSpec<Void> optionShortVersion = parser.acceptsAll(asList("v"));
+			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv"));
 			
 			// Parse global options and operation name
 			OptionSet options = parser.parse(args);
 			
 			// Evaluate options
 			// WARNING: Do not re-order unless you know what you are doing!
+			initVersionOptions(options, optionShortVersion, optionFullVersion);
 			initConfigOption(options, optionLocalDir);
 			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
 	
@@ -123,6 +129,15 @@ public class CommandLineClient extends Client {
 		}
 	}	
 
+	private void initVersionOptions(OptionSet options, OptionSpec<Void> optionShortVersion, OptionSpec<Void> optionFullVersion) throws IOException {
+		if (options.has(optionShortVersion)) {
+			showShortVersionAndExit();
+		}
+		else if (options.has(optionFullVersion)) {
+			showFullVersionAndExit();
+		}
+	}
+
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);		
 		initLogLevel(options, optionDebug, optionLogLevel);		
@@ -133,7 +148,6 @@ public class CommandLineClient extends Client {
 
 		// --debug
 		if (options.has(optionDebug)) {
-			out.println("debug");
 			newLogLevel = Level.ALL;			
 		}
 		
@@ -154,6 +168,14 @@ public class CommandLineClient extends Client {
 		
 		// Add handler to existing loggers, and future ones
 		Logging.setGlobalLogLevel(newLogLevel);	
+		
+		// Debug output
+		if (options.has(optionDebug)) {
+			out.println("debug");
+			out.println(String.format("Application version: %s, Git revision: %s", Client.getApplicationVersion(), Client.getApplicationRevision()));
+			
+			logger.log(Level.INFO, "Application version: {0}, Git revision: {1}", new Object[] { Client.getApplicationVersion(), Client.getApplicationRevision() });
+		}
 	}
 
 	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
@@ -258,6 +280,14 @@ public class CommandLineClient extends Client {
 		}	
 	}
 	
+	private void showShortVersionAndExit() throws IOException {
+		printHelpTextAndExit(HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE);
+	}
+	
+	private void showFullVersionAndExit() throws IOException {
+		printHelpTextAndExit(HELP_TEXT_VERSION_FULL_SKEL_RESOURCE);
+	}
+
 	private void showUsageAndExit() throws IOException {
 		printHelpTextAndExit(HELP_TEXT_USAGE_SKEL_RESOURCE);
 	}
@@ -290,8 +320,14 @@ public class CommandLineClient extends Client {
 	}
 
 	private String replaceVariables(String line) throws IOException {
-		if (line.contains(HELP_VAR_VERSION)) {
-			line = line.replace(HELP_VAR_VERSION, getVersionStr());
+		Properties applicationProperties = Client.getApplicationProperties();
+		
+		for (Entry<Object, Object> applicationProperty : applicationProperties.entrySet()) {
+			String variableName = String.format("%%%s%%", applicationProperty.getKey());
+			
+			if (line.contains(variableName)) {
+				line = line.replace(variableName, (String) applicationProperty.getValue());
+			}
 		}
 		
 		if (line.contains(HELP_VAR_PLUGINS)) {
@@ -331,21 +367,6 @@ public class CommandLineClient extends Client {
 		});	
 		
 		return pluginsStr;
-	}
-
-	private String getVersionStr() {
-		String versionStr = Client.getApplicationVersion();
-		
-		if (!Client.isApplicationRelease()) {
-			if (Client.getApplicationRevision() != null && !"".equals(Client.getApplicationRevision())) {
-				versionStr += ", rev. "+Client.getApplicationRevision();
-			}
-			else {
-				versionStr += ", no rev.";
-			}
-		}
-		
-		return versionStr;
 	}
 
 	private int showErrorAndExit(String errorMessage) {

@@ -1,8 +1,8 @@
 %RESOURCE:/help/copyright.skel%
 
 SYNOPSIS
-  sy [-l|--localdir=<path>] [--log=<path>]
-     [--loglevel=OFF|SEVERE|..] [--print]
+  sy [-l|--localdir=<path>] [--log=<path>] [-v]
+     [-vv] [--loglevel=OFF|SEVERE|..] [--print]
      [-d|--debug] [-h|--help] <command> [<args>]
   
 DESCRIPTION
@@ -38,7 +38,10 @@ GLOBAL OPTIONS
       Alias to: --loglevel=ALL --print
 
   -h, --help
-      Print this help screen
+      Print this help screen and exit.
+
+  -v, -vv
+      Print application version exit.
 
   --log=<path>
       Log output to the file given by <path>. If - is given, the

@@ -1,0 +1,5 @@
+Base version:  %applicationVersion%
+Full version:  %applicationVersionFull%
+Compile date:  %applicationDate%
+Git commit:    %applicationRevision%
+Release:       %applicationRelease%
