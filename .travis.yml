@@ -19,7 +19,6 @@ branches:
   only:
     - master
     - develop
-    - feature/ppa
     
 notifications:
   email: false
