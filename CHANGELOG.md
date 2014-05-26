@@ -3,8 +3,10 @@ Change Log
 
 ### Syncany 0.1.5-alpha (Date: tbd.)
 
-- Nothing yet
-
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Implemented Ubuntu PPA and signed deb files #69
+  
 ### Syncany 0.1.4-alpha (Date: 25 May 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
