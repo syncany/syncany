@@ -1,7 +1,5 @@
 #!/bin/bash
 
-SIGNKEYID="651D12BD"
-
 SCRIPTDIR="$( cd "$( dirname "$0" )" && pwd )"
 REPODIR="$SCRIPTDIR/../.."
 
