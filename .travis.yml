@@ -70,10 +70,12 @@ after_success:
   - cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
  
   # Upload to PPA
-  - ./gradlew installApp ppa
+  - ./gradlew debianPreparePrecise ppa
+  - ./gradlew debianPrepareSaucy ppa
+  - ./gradlew debianPrepareTrusty ppa
   
   # Create distributables and JavaDoc
-  - ./gradlew installApp distTar distZip debian exe 
+  - ./gradlew installApp distTar distZip debianPrepareUnstable debian exe 
     
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh

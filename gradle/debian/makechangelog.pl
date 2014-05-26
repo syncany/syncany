@@ -10,15 +10,16 @@ use POSIX qw(locale_h);
 setlocale(LC_CTYPE, "en_US.UTF-8");
 setlocale(LC_TIME, "en_US.UTF-8");
 
-if ($#ARGV+1 != 1) {
-	print "Usage: makechangelog.pl VERSION\n";
+if ($#ARGV+1 != 2) {
+	print "Usage: makechangelog.pl DISTRIBUTION VERSION\n";
 	exit 1;
 }
 
 open(IN, '../../CHANGELOG.md');
 open(OUT, '>', '../../build/debian/syncany/debian/changelog');
 
-my $app_version = $ARGV[0];
+my $app_distribution = $ARGV[0];
+my $app_version = $ARGV[1];
 my $last_date;
 my $last_version;
 
@@ -39,7 +40,7 @@ while (<IN>) {
 			$last_date = "n/a";
 		}
 
-		print OUT "syncany ($last_version) unstable; urgency=low\n";
+		print OUT "syncany ($last_version) $app_distribution; urgency=low\n";
 		print OUT "\n";
 	}
 	elsif (/^\s|-/) {	

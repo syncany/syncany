@@ -4,35 +4,40 @@ task debianClean(type: Delete) {
 	delete 'build/debian'	
 }
 
-task debianPrepare(dependsOn: [installApp, debianClean]) {
-	String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", "~")
+tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
+	if (taskName.startsWith("debianPrepare")) {
+		task(taskName, dependsOn: [installApp, debianClean]){
+			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", "~")
+			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
 	
-	doLast {
-		copy {
-			from rootProject.files("build/install/syncany") 
-			into rootProject.file("build/debian/syncany")
-			exclude("**/*.bat")
-		}
+			doLast {
+				copy {
+					from rootProject.files("build/install/syncany") 
+					into rootProject.file("build/debian/syncany")
+					exclude("**/*.bat")
+				}
 	
-		copy {
-			from rootProject.files("build/install/syncany/LICENSE.md") 
-			into rootProject.file("build/debian/syncany/debian")
-			rename("LICENSE.md", "copyright")
-		}
+				copy {
+					from rootProject.files("build/install/syncany/LICENSE.md") 
+					into rootProject.file("build/debian/syncany/debian")
+					rename("LICENSE.md", "copyright")
+				}
 
-		copy {
-			from rootProject.files("gradle/debian/debian") 
-			into rootProject.file("build/debian/syncany/debian")
-		}
+				copy {
+					from rootProject.files("gradle/debian/debian") 
+					into rootProject.file("build/debian/syncany/debian")
+				}
 	
-		exec {
-			workingDir rootProject.file("gradle/debian")
-			commandLine "./makechangelog.pl", "${debianApplicationVersionFull}"
+				exec {
+					workingDir rootProject.file("gradle/debian")
+					commandLine "./makechangelog.pl", "${debianDistribution}", "${debianApplicationVersionFull}"
+				}
+			}
 		}
 	}
 }
 
-task ppaBuild(dependsOn: debianPrepare) {
+task ppaBuild {
 	doLast {
 		exec {
 			workingDir rootProject.file("gradle/debian")
@@ -50,7 +55,7 @@ task ppa(dependsOn: ppaBuild) {
 	}
 }
 
-task debian(dependsOn: debianPrepare) {
+task debian {
 	doLast {
 		exec {
 			workingDir rootProject.file("build/debian/syncany")
