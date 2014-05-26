@@ -24,7 +24,7 @@ build(){
 package(){
     install -Dm755 "$srcdir/$pkgname/gradle/arch/syncany/syncany" "${pkgdir}/usr/bin/syncany"
 
-    cd "$srcdir/$pkgname/syncany-cli/build/install/syncany/lib"
+    cd "$srcdir/$pkgname/build/install/syncany/lib"
     for jar in *; do
         install -Dm644 "$jar" "${pkgdir}/usr/share/java/syncany/$jar"
     done
