@@ -1,4 +1,4 @@
-%RESOURCE:/help/copyright.skel%
+%RESOURCE:copyright.skel%
   
 SYNOPSIS
   sy watch [-i | --interval=<sec>] [-s | --delay=<sec>] [-W | --no-watcher]

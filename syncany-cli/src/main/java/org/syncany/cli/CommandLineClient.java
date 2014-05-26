@@ -68,11 +68,12 @@ public class CommandLineClient extends Client {
 	private static final int LOG_FILE_LIMIT = 25000000; // 25 MB
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
-	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
-	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "/help/version_short.skel";
-	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "/help/version_full.skel";
-	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "/help/usage.skel";
-	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "/help/cmd/help.%CMD%.skel";
+	private static final String HELP_TEXT_RESOURCE_ROOT = "/org/syncany/cli/help/";
+	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "help.skel";
+	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "version_short.skel";
+	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "version_full.skel";
+	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "usage.skel";
+	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "cmd/help.%CMD%.skel";
 	private static final String HELP_VAR_CMD= "%CMD%";
 	private static final String HELP_VAR_PLUGINS = "%PLUGINS%";
 	private static final String HELP_VAR_LOGFORMATS = "%LOGFORMATS%";
@@ -172,9 +173,9 @@ public class CommandLineClient extends Client {
 		// Debug output
 		if (options.has(optionDebug)) {
 			out.println("debug");
-			out.println(String.format("Application version: %s, Git revision: %s", Client.getApplicationVersion(), Client.getApplicationRevision()));
+			out.println(String.format("Application version: %s", Client.getApplicationVersionFull()));
 			
-			logger.log(Level.INFO, "Application version: {0}, Git revision: {1}", new Object[] { Client.getApplicationVersion(), Client.getApplicationRevision() });
+			logger.log(Level.INFO, "Application version: {0}", Client.getApplicationVersionFull());
 		}
 	}
 
@@ -302,7 +303,8 @@ public class CommandLineClient extends Client {
 	}
 
 	private int printHelpTextAndExit(String helpTextResource) throws IOException {
-		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(helpTextResource);
+		String fullHelpTextResource = HELP_TEXT_RESOURCE_ROOT + helpTextResource;
+		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(fullHelpTextResource);
 		
 		if (helpTextInputStream == null) {
 			showErrorAndExit("No detailed help text available for this command.");
@@ -341,7 +343,7 @@ public class CommandLineClient extends Client {
 		Matcher includeResourceMatcher = HELP_TEXT_RESOURCE_PATTERN.matcher(line);
 		
 		if (includeResourceMatcher.find()) {
-			String includeResource = includeResourceMatcher.group(1);
+			String includeResource = HELP_TEXT_RESOURCE_ROOT + includeResourceMatcher.group(1);
 			InputStream includeResourceInputStream = CommandLineClient.class.getResourceAsStream(includeResource);
 			String includeResourceStr = IOUtils.toString(includeResourceInputStream);
 
