@@ -324,7 +324,6 @@ public class CleanupOperationTest {
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
 		
 		UpOperationOptions noCleanupAndForceUpOperationOptions = new UpOperationOptions();
-		noCleanupAndForceUpOperationOptions.setCleanupEnabled(false);
 		noCleanupAndForceUpOperationOptions.setForceUploadEnabled(true);
 		noCleanupAndForceUpOperationOptions.setStatusOptions(forceChecksumStatusOperationOptions);
 
@@ -387,7 +386,6 @@ public class CleanupOperationTest {
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
 		
 		UpOperationOptions noCleanupAndForceUpOperationOptions = new UpOperationOptions();
-		noCleanupAndForceUpOperationOptions.setCleanupEnabled(false);
 		noCleanupAndForceUpOperationOptions.setForceUploadEnabled(true);
 		noCleanupAndForceUpOperationOptions.setStatusOptions(forceChecksumStatusOperationOptions);
 

@@ -17,9 +17,13 @@
  */
 package org.syncany.operations.status;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
 
+@Root(name="status")
 public class StatusOperationOptions implements OperationOptions {
+	@Element(required = false)
 	private boolean forceChecksum = false;
 
 	public boolean isForceChecksum() {

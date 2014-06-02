@@ -53,8 +53,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		
 		UpOperationOptions upOperationOptionsNoCleanup = new UpOperationOptions();
 		upOperationOptionsNoCleanup.setForceUploadEnabled(true);
-		upOperationOptionsNoCleanup.setCleanupEnabled(true);	
-		upOperationOptionsNoCleanup.setCleanupOptions(cleanupOptionsOnlyMergeDatabases);
 
 		// Run preparations
 		int[] clientUpSequence = new int[] {
@@ -138,8 +136,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		UpOperationOptions upOperationOptionsWithCleanupForce = new UpOperationOptions();
 		upOperationOptionsWithCleanupForce.setStatusOptions(statusOptionsForceChecksum);
 		upOperationOptionsWithCleanupForce.setForceUploadEnabled(true);		
-		upOperationOptionsWithCleanupForce.setCleanupEnabled(true);	
-		upOperationOptionsWithCleanupForce.setCleanupOptions(cleanupOptionsOnlyMergeDatabases);
 
 
 		// Run preparations
@@ -351,12 +347,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		statusOptionsForceChecksum.setForceChecksum(true);		
 
 		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
-		upNoCleanupForceChecksum.setCleanupEnabled(false);
 		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
-		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
-		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
 		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		clientA.createNewFile("fileA");
@@ -417,12 +410,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		statusOptionsForceChecksum.setForceChecksum(true);		
 
 		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
-		upNoCleanupForceChecksum.setCleanupEnabled(false);
 		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
-		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
-		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
 		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		clientB.createNewFile("fileB");		
@@ -480,12 +470,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		statusOptionsForceChecksum.setForceChecksum(true);		
 
 		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
-		upNoCleanupForceChecksum.setCleanupEnabled(false);
 		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
-		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
-		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
 		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 		
 		// First round

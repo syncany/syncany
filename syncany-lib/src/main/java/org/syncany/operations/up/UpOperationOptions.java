@@ -17,23 +17,18 @@
  */
 package org.syncany.operations.up;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
-import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 
+@Root(name="up")
 public class UpOperationOptions implements OperationOptions {
+	@Element(name = "status", required = false)
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
+	
+	@Element(required = false)
 	private boolean forceUploadEnabled = false;
-	private boolean cleanupEnabled = true;
-	private CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-
-	public CleanupOperationOptions getCleanupOptions() {
-		return cleanupOptions;
-	}
-
-	public void setCleanupOptions(CleanupOperationOptions cleanupOptions) {
-		this.cleanupOptions = cleanupOptions;
-	}
 
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
@@ -49,13 +44,5 @@ public class UpOperationOptions implements OperationOptions {
 
 	public void setForceUploadEnabled(boolean forceUploadEnabled) {
 		this.forceUploadEnabled = forceUploadEnabled;
-	}
-
-	public boolean cleanupEnabled() {
-		return cleanupEnabled;
-	}
-
-	public void setCleanupEnabled(boolean cleanupEnabled) {
-		this.cleanupEnabled = cleanupEnabled;
 	}
 }

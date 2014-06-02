@@ -18,12 +18,11 @@
 package org.syncany.operations.watch;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
+import org.syncany.operations.up.UpOperationOptions;
 
 @Root(name="watch")
-@Namespace(reference="http://syncany.org/watch/1")
 public class WatchOperationOptions implements OperationOptions {
 	@Element(required = false)
 	private int interval = 2*60*1000;
@@ -45,7 +44,10 @@ public class WatchOperationOptions implements OperationOptions {
 	
 	@Element(required = false)
 	private boolean watcher = true;
-
+	
+	@Element(name = "up", required = false) 
+	private UpOperationOptions upOptions = new UpOperationOptions();
+	
 	public int getInterval() {
 		return interval;
 	}
@@ -100,5 +102,13 @@ public class WatchOperationOptions implements OperationOptions {
 
 	public void setCleanupInterval(int cleanupInterval) {
 		this.cleanupInterval = cleanupInterval;
+	}
+
+	public UpOperationOptions getUpOptions() {
+		return upOptions;
+	}
+
+	public void setUpOptions(UpOperationOptions upOptions) {
+		this.upOptions = upOptions;
 	}
 }
