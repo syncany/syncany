@@ -64,7 +64,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	 */
 	public void writeFileHistories(Connection connection, long databaseVersionId, Collection<PartialFileHistory> fileHistories) throws SQLException {
 		for (PartialFileHistory fileHistory : fileHistories) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/filehistory.insert.all.writeFileHistories.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "filehistory.insert.all.writeFileHistories.sql");
 
 			preparedStatement.setString(1, fileHistory.getFileHistoryId().toString());
 			preparedStatement.setLong(2, databaseVersionId);
@@ -83,7 +83,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 	
 	public void removeDirtyFileHistories() throws SQLException {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.dirty.removeDirtyFileHistories.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.delete.dirty.removeDirtyFileHistories.sql")) {
 			preparedStatement.executeUpdate();
 		}		
 	}
@@ -97,7 +97,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */	
 	public void removeUnreferencedFileHistories() throws SQLException {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
 			preparedStatement.executeUpdate();
 		}	
 	}
@@ -106,7 +106,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
 	 */
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql")) {
 			preparedStatement.setString(1, databaseVersionVectorClock.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -119,7 +119,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithFileVersions.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithFileVersions.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileHistoriesFromResult(resultSet);
 			}
@@ -163,24 +163,10 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		return fileHistories;
 	}
 
-	public PartialFileHistory getFileHistoryWithLastVersion(FileHistoryId fileHistoryId) {
-		FileVersion lastFileVersion = fileVersionDao.getFileVersionByFileHistoryId(fileHistoryId);
-
-		if (lastFileVersion != null) {
-			PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-			fileHistory.addFileVersion(lastFileVersion);
-
-			return fileHistory;
-		}
-
-		return null;
-	}
-
-
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
 
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithLastVersion.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithLastVersion.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
@@ -203,7 +189,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
 		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
 
-		try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
 			preparedStatement.setString(1, fileContentChecksum.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {

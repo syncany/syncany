@@ -57,7 +57,7 @@ public class TestSqlDatabase extends SqlDatabase {
 
 		public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {
 			try {
-				PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithFileVersions.sql");
+				PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoryWithFileVersions.sql");
 	
 				preparedStatement.setString(1, relativePath);
 				preparedStatement.setString(2, FileStatus.DELETED.toString());
@@ -84,7 +84,7 @@ public class TestSqlDatabase extends SqlDatabase {
 		}
 
 		public PartialFileHistory getFileHistoryWithLastVersion(String relativePath) {
-			try (PreparedStatement preparedStatement = getStatement("/sql/filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
+			try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
 				preparedStatement.setString(1, relativePath);
 
 				try (ResultSet resultSet = preparedStatement.executeQuery()) {

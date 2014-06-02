@@ -18,7 +18,6 @@
 package org.syncany.tests.util;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
@@ -32,34 +31,12 @@ import org.syncany.util.SqlRunner;
  *
  */
 public class TestSqlDatabaseUtil {
-	public static void main(String[] args) throws SQLException {
-		if (args.length != 2 || "".equals(args[0]) || "".equals(args[1])) {
-			System.err.println();
-			System.err.println("-------------------------------------------------------------------------");
-			System.err.println("Syntax: gradle runSql -Pdb=DBPATH -Psql=SCRIPTRESOURCE");
-			System.err.println("   e.g. gradle runSql -Pdb=/tmp/a/test.db -Psql=/sql/test.insert.set1.sql");
-			System.err.println("-------------------------------------------------------------------------");
-			System.exit(0);
-		}
-
-		File databaseFile = new File(args[0]);
-		String sqlScriptResource = args[1];
-
-		System.out.println("Running on '" + databaseFile + " from SQL script '" + sqlScriptResource + "'");
-
-		if (!databaseFile.getParentFile().exists()) {
-			databaseFile.getParentFile().mkdirs();
-		}
-
-		Connection connection = DatabaseConnectionFactory.createConnection(databaseFile);
-		runSqlFromResource(connection, sqlScriptResource);
-	}
-
 	public static void runSqlFromResource(Connection connection, String resourceSqlScript) throws SQLException {
-		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(resourceSqlScript);
+		String fullPathResource = String.format(DatabaseConnectionFactory.DATABASE_RESOURCE_PATTERN, resourceSqlScript);
+		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullPathResource);
 
 		if (inputStream == null) {
-			throw new RuntimeException("Unable to find script: " + resourceSqlScript);
+			throw new RuntimeException("Unable to find script: " + fullPathResource);
 		}
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));

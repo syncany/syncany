@@ -87,7 +87,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	 * @param vectorClock Identifies the database version to mark dirty
 	 */
 	public void markDatabaseVersionDirty(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.update.master.markDatabaseVersionDirty.sql")){
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.update.master.markDatabaseVersionDirty.sql")){
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
@@ -150,7 +150,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	
 	private long writeDatabaseVersionHeaderInternal(Connection connection, DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				DatabaseConnectionFactory.getStatement("/sql/databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
+				DatabaseConnectionFactory.getStatement("databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 	
 			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
 			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
@@ -180,7 +180,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	private void writeVectorClock(Connection connection, long databaseVersionId, VectorClock vectorClock) throws SQLException {
-		try (PreparedStatement preparedStatement = getStatement(connection, "/sql/databaseversion.insert.all.writeVectorClock.sql")) {
+		try (PreparedStatement preparedStatement = getStatement(connection, "databaseversion.insert.all.writeVectorClock.sql")) {
 			for (Map.Entry<String, Long> vectorClockEntry : vectorClock.entrySet()) {
 				preparedStatement.setLong(1, databaseVersionId);
 				preparedStatement.setString(2, vectorClockEntry.getKey());
@@ -233,7 +233,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public Long getMaxDirtyVectorClock(String machineName) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getMaxDirtyVectorClock.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.dirty.getMaxDirtyVectorClock.sql")) {
 			preparedStatement.setMaxRows(1);
 			preparedStatement.setString(1, machineName);
 
@@ -251,7 +251,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Iterator<DatabaseVersion> getDirtyDatabaseVersions() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.dirty.getDirtyDatabaseVersions.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.dirty.getDirtyDatabaseVersions.sql")) {
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 
 			return new DatabaseVersionIterator(preparedStatement.executeQuery());
@@ -262,7 +262,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.master.getDatabaseVersionsTo.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getDatabaseVersionsTo.sql")) {
 			preparedStatement.setString(1, machineName);
 			preparedStatement.setString(2, machineName);
 			preparedStatement.setLong(3, maxLocalClientVersion);
@@ -344,7 +344,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.master.getLastDatabaseVersionHeader.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLastDatabaseVersionHeader.sql")) {
 			preparedStatement.setMaxRows(1);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -374,7 +374,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public DatabaseBranch getLocalDatabaseBranch() {
 		DatabaseBranch databaseBranch = new DatabaseBranch();
 
-		try (PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.master.getLocalDatabaseBranch.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLocalDatabaseBranch.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				DatabaseVersionHeader currentDatabaseVersionHeader = null;
 				int currentDatabaseVersionHeaderId = -1;
@@ -414,7 +414,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	protected VectorClock getVectorClockByDatabaseVersionId(int databaseVersionId) throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/databaseversion.select.all.getVectorClockByDatabaseVersionId.sql");
+		PreparedStatement preparedStatement = getStatement("databaseversion.select.all.getVectorClockByDatabaseVersionId.sql");
 		preparedStatement.setInt(1, databaseVersionId);
 
 		ResultSet resultSet = preparedStatement.executeQuery();
@@ -432,13 +432,13 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	private void removeDirtyVectorClocks() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/databaseversion.delete.dirty.removeDirtyVectorClocks.sql");
+		PreparedStatement preparedStatement = getStatement("databaseversion.delete.dirty.removeDirtyVectorClocks.sql");
 		preparedStatement.executeUpdate();
 		preparedStatement.close();
 	}
 	
 	private void removeDirtyDatabaseVersionsInt() throws SQLException {
-		PreparedStatement preparedStatement = getStatement("/sql/databaseversion.delete.dirty.removeDirtyDatabaseVersionsInt.sql");
+		PreparedStatement preparedStatement = getStatement("databaseversion.delete.dirty.removeDirtyDatabaseVersionsInt.sql");
 		preparedStatement.executeUpdate();		
 		preparedStatement.close();
 	}

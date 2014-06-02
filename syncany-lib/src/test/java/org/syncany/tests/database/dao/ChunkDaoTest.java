@@ -41,7 +41,7 @@ public class ChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		
@@ -72,7 +72,7 @@ public class ChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		

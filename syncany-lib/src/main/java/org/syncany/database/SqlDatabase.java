@@ -184,11 +184,6 @@ public class SqlDatabase {
 		return fileVersionDao.getFileVersionByPath(path);
 	}
 
-	@Deprecated
-	public FileVersion getFileVersionByFileHistoryId(FileHistoryId fileHistoryId) {
-		return fileVersionDao.getFileVersionByFileHistoryId(fileHistoryId);
-	}
-
 	public Map<String, FileVersion> getFileTreeAtDate(Date date) {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
