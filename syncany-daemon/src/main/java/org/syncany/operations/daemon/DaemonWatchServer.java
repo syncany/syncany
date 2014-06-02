@@ -122,7 +122,9 @@ public class DaemonWatchServer implements WatchOperationListener {
 		Map<File, FolderTO> watchedFolderTOs = new TreeMap<File, FolderTO>();
 		
 		for (FolderTO folderTO : watchedFolders) {
-			watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
+			if (folderTO.isEnabled()) {
+				watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
+			}
 		}
 		
 		return watchedFolderTOs;

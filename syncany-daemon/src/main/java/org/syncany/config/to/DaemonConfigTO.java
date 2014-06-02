@@ -60,9 +60,20 @@ public class DaemonConfigTO {
 	}
 	
 	public static class FolderTO {
+		@Element(name="enabled", required=false) 
+		private boolean enabled = true;
+		
 		@Element(name="path")
 		private String path;
 		
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
 		public String getPath() {
 			return path;
 		}
