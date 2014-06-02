@@ -39,7 +39,7 @@ public class WatchOperationThread {
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 
-	public WatchOperationThread(File localDir, WatchOperationListener listener) throws ConfigException {
+	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions, WatchOperationListener listener) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
 		
 		if (configFile == null) {
@@ -47,7 +47,7 @@ public class WatchOperationThread {
 		}
 		
 		this.config = ConfigHelper.loadConfig(configFile);
-		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), listener);
+		this.watchOperation = new WatchOperation(config, watchOperationOptions, listener);
 	}
 	
 	public void start() throws ServiceAlreadyStartedException {

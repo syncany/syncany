@@ -17,15 +17,33 @@
  */
 package org.syncany.operations.watch;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
 
+@Root(name="watch")
+@Namespace(reference="http://syncany.org/watch/1")
 public class WatchOperationOptions implements OperationOptions {
+	@Element(required = false)
 	private int interval = 2*60*1000;
+	
+	@Element(required = false)
 	private boolean announcements = true;
+	
+	@Element(required = false)
 	private String announcementsHost = "notify.syncany.org";
+	
+	@Element(required = false)
 	private int announcementsPort = 8080;
+	
+	@Element(required = false)
 	private int settleDelay = 3000;
+	
+	@Element(required = false)
 	private int cleanupInterval = 1*60*60*1000;
+	
+	@Element(required = false)
 	private boolean watcher = true;
 
 	public int getInterval() {
