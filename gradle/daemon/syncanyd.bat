@@ -3,11 +3,26 @@
 set APP_NAME=syncanyd
 set APP_USER_DIR=%AppData%\Syncany
 set APP_DAEMON_CONTROL=%APP_USER_DIR%\daemon.ctrl
+set APP_DAEMON_PIDFILE=%APP_USER_DIR%\daemon.pid
 set APP_LOG_DIR=%APP_USER_DIR%\logs
 set APP_LOG_FILE=%APP_LOG_DIR%\daemon.log
 
 if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%"
 if not exist "%APP_LOG_DIR%" mkdir "%APP_LOG_DIR%"
+
+if exist %APP_DAEMON_PIDFILE% (
+  set /P PID= < "%APP_DAEMON_PIDFILE%"
+  
+  tasklist /FI "PID eq %PID%" 2>NUL | find /I /N "%PID%" > NUL
+  if "%ERRORLEVEL%"=="0" ( 
+    set RUNNING=1
+  ) else (
+    set RUNNING=0
+  )
+) else (
+  set PID=-1
+  set RUNNING=0
+)
 
 @if "%1" == "start" goto start
 @if "%1" == "stop" goto stop
