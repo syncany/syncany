@@ -20,8 +20,19 @@ package org.syncany.operations.watch;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 
+/**
+ * The watch operation options represent the configuration parameters
+ * of the {@link WatchOperation}. They are used to alter the behavior of the
+ * operation, change interval times and enable/disable certain behaviors.
+ * 
+ * <p>The options can also be stored as XML within the daemon configuration.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name="watch")
 public class WatchOperationOptions implements OperationOptions {
 	@Element(required = false)
@@ -47,6 +58,12 @@ public class WatchOperationOptions implements OperationOptions {
 	
 	@Element(name = "up", required = false) 
 	private UpOperationOptions upOptions = new UpOperationOptions();
+	
+	@Element(name = "down", required = false)
+	private DownOperationOptions downOptions = new DownOperationOptions();
+	
+	@Element(name = "clean", required = false) 
+	private CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 	
 	public int getInterval() {
 		return interval;
@@ -110,5 +127,21 @@ public class WatchOperationOptions implements OperationOptions {
 
 	public void setUpOptions(UpOperationOptions upOptions) {
 		this.upOptions = upOptions;
+	}
+
+	public CleanupOperationOptions getCleanupOptions() {
+		return cleanupOptions;
+	}
+
+	public void setCleanupOptions(CleanupOperationOptions cleanupOptions) {
+		this.cleanupOptions = cleanupOptions;
+	}
+
+	public DownOperationOptions getDownOptions() {
+		return downOptions;
+	}
+
+	public void setDownOptions(DownOperationOptions downOptions) {
+		this.downOptions = downOptions;
 	}
 }

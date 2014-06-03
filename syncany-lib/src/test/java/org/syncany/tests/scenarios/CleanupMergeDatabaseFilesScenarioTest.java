@@ -49,7 +49,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
 		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
 		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(false);
-		cleanupOptionsOnlyMergeDatabases.setRepackageMultiChunks(false);
 		
 		UpOperationOptions upOperationOptionsNoCleanup = new UpOperationOptions();
 		upOperationOptionsNoCleanup.setForceUploadEnabled(true);
@@ -127,7 +126,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
 		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
 		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(true);
-		cleanupOptionsOnlyMergeDatabases.setRepackageMultiChunks(false);
 		cleanupOptionsOnlyMergeDatabases.setKeepVersionsCount(5);		
 				
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
@@ -340,7 +338,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setRepackageMultiChunks(false);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);		
 		
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
@@ -403,7 +400,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setRepackageMultiChunks(false);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);		
 		
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
@@ -463,7 +459,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setRepackageMultiChunks(false);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);		
 		
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();

@@ -17,16 +17,27 @@
  */
 package org.syncany.operations.cleanup;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 
 public class CleanupOperationOptions implements OperationOptions {
+	@Element(name = "status", required = false)
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
+	
+	@Element(required = false)
 	private boolean mergeRemoteFiles = true;
+	
+	@Element(required = false)
 	private boolean removeOldVersions = true;
+	
+	@Element(required = false)
 	private int keepVersionsCount = 5;
-	private boolean repackageMultiChunks = true; // TODO [medium] Not used
-	private double repackageUnusedThreshold = 0.7; // TODO [medium] Not used
+	
+	// TODO [medium] Implement multichunk repackaging
+	
+	// private boolean repackageMultiChunks = true; 
+	// private double repackageUnusedThreshold = 0.7;
 	
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
@@ -44,16 +55,8 @@ public class CleanupOperationOptions implements OperationOptions {
 		return removeOldVersions;
 	}
 
-	public double getRepackageUnusedThreshold() {
-		return repackageUnusedThreshold;
-	}
-
 	public int getKeepVersionsCount() {
 		return keepVersionsCount;
-	}
-
-	public boolean isRepackageMultiChunks() {
-		return repackageMultiChunks;
 	}
 
 	public void setMergeRemoteFiles(boolean mergeRemoteFiles) {
@@ -66,13 +69,5 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public void setKeepVersionsCount(int keepVersionsCount) {
 		this.keepVersionsCount = keepVersionsCount;
-	}
-
-	public void setRepackageMultiChunks(boolean repackageMultiChunks) {
-		this.repackageMultiChunks = repackageMultiChunks;
-	}
-
-	public void setRepackageUnusedThreshold(double repackageUnusedThreshold) {
-		this.repackageUnusedThreshold = repackageUnusedThreshold;
 	}
 }
