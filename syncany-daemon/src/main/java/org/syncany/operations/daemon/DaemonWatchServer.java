@@ -28,10 +28,11 @@ import java.util.logging.Logger;
 import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
-import org.syncany.config.to.DaemonConfigTO.FolderTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
+import org.syncany.operations.watch.WatchOperationOptions;
 
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -98,11 +99,12 @@ public class DaemonWatchServer {
 	private void startWatchOperations(Map<File, FolderTO> newWatchedFolderTOs) throws ConfigException, ServiceAlreadyStartedException {
 		for (Map.Entry<File, FolderTO> folderEntry : newWatchedFolderTOs.entrySet()) {
 			File localDir = folderEntry.getKey();
+			WatchOperationOptions watchOperationOptions = folderEntry.getValue().getWatchOptions();
 
 			try {	
 				logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
 				
-				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir);	
+				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, watchOperationOptions);	
 				watchOperationThread.start();
 
 				watchOperations.put(localDir, watchOperationThread);
@@ -128,7 +130,9 @@ public class DaemonWatchServer {
 		Map<File, FolderTO> watchedFolderTOs = new TreeMap<File, FolderTO>();
 		
 		for (FolderTO folderTO : watchedFolders) {
-			watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
+			if (folderTO.isEnabled()) {
+				watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
+			}
 		}
 		
 		return watchedFolderTOs;

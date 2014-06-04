@@ -15,22 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.status;
+package org.syncany.config.to;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
-import org.syncany.operations.OperationOptions;
+import org.syncany.operations.watch.WatchOperationOptions;
 
-@Root(name="status")
-public class StatusOperationOptions implements OperationOptions {
-	@Element(required = false)
-	private boolean forceChecksum = false;
+public class FolderTO {
+	@Element(name="path")
+	private String path;
 
-	public boolean isForceChecksum() {
-		return forceChecksum;
+	@Element(name="enabled", required=false) 
+	private boolean enabled = true;
+	
+	@Element(name="watch", required = false)
+	private WatchOperationOptions watchOptions = new WatchOperationOptions();
+
+	public String getPath() {
+		return path;
 	}
 
-	public void setForceChecksum(boolean forceChecksum) {
-		this.forceChecksum = forceChecksum;
-	}				
+	public void setPath(String path) {
+		this.path = path;
+	}	
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public WatchOperationOptions getWatchOptions() {
+		return watchOptions;
+	}
+
+	public void setWatchOptions(WatchOperationOptions watchOptions) {
+		this.watchOptions = watchOptions;
+	}
 }

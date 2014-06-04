@@ -56,7 +56,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	private WatchOperation watchOperation;
 	private DaemonEventBus eventBus;
 
-	public WatchOperationThread(File localDir) throws ConfigException {
+	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
 		
 		if (configFile == null) {
@@ -64,7 +64,7 @@ public class WatchOperationThread implements WatchOperationListener {
 		}
 		
 		this.config = ConfigHelper.loadConfig(configFile);
-		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), this);
+		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.eventBus = DaemonEventBus.getInstance();
 		this.eventBus.register(this);

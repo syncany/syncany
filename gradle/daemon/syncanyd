@@ -5,6 +5,7 @@ set -e
 NAME=syncanyd
 APPDIR=~/.config/syncany
 CONTROLFILE=$APPDIR/daemon.ctrl
+PIDFILE=$APPDIR/daemon.pid
 LOGDIR=$APPDIR/logs
 LOGFILE=$LOGDIR/daemon.log
 
@@ -15,53 +16,135 @@ export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 mkdir -p $APPDIR
 mkdir -p $LOGDIR
- 
-case "$1" in
-start)
-	echo -n "Starting daemon: "$NAME
-	
-	if [ -e $CONTROLFILE ]; then
-		echo " already running"
+
+get_pid() {
+	if [ -e $PIDFILE ]; then
+		echo $(cat $PIDFILE)
 	else
-		start-stop-daemon --start --quiet --background --exec $DAEMON -- $DAEMON_OPTS
-		echo "."
+		echo -1
 	fi
-	;;
+}
+
+start() {
+	echo -n "Starting daemon: "
 	
-stop)
-	echo -n "Stopping daemon: "$NAME
+	if [ -e /proc/$PID ]; then
+		echo "$NAME already running (pid $PID)"
+	else
+		nohup $DAEMON $DAEMON_OPTS > /dev/null 2>&1 &
+		
+		PID=-1
+		TRIES=10
+		while [ ! -e /proc/$PID -a $TRIES -gt 0 ]; do
+			echo -n "."
+		
+			PID=$(get_pid)
+			TRIES=$(($TRIES-1))
+			sleep 1
+		done
+		
+		if [ $TRIES -eq 0 ]; then
+			echo " Failed to start process. EXITING."
+			echo "Failed command line: $ $DAEMON $DAEMON_OPTS"
+			exit 2
+		fi
+		
+		echo " $NAME (pid $PID)."
+	fi
+}
+
+stop() {
+	echo -n "Stopping daemon: "
 	
-	if [ ! -e $CONTROLFILE ]; then
-		echo " not running"
+	if [ ! -e /proc/$PID ]; then
+		echo "$NAME not running"
 	else
 		echo "shutdown" >> $CONTROLFILE
-		echo "."
+		
+		TRIES=10
+		while [ -e /proc/$PID -a $TRIES -gt 0 ]; do
+			echo -n "."
+		
+			TRIES=$(($TRIES-1))
+			sleep 1
+		done
+		
+		if [ $TRIES -eq 0 ]; then
+			echo " Failed to stop process $PID. Try 'force-stop'. EXITING."
+			exit 3
+		fi
+		
+		echo " $NAME."
 	fi
-	;;
+}
+
+force_stop() {
+	echo -n "Force-stopping daemon: "
+
+	if [ ! -e /proc/$PID ]; then
+		echo "$NAME not running"
+	else
+		kill -9 $PID
+		sleep 1
+
+		if [ -e /proc/$PID ]; then
+			echo "Failed to kill -9 $PID. EXITING."
+		else 
+			rm $PIDFILE 2> /dev/null
+			rm $CONTROLFILE 2> /dev/null
+
+			echo "Killed $NAME (pid $PID)."
+		fi
+	fi
+}
+
+
+status() {
+	echo -n "Checking daemon: "$NAME
 	
-reload)
+	if [ ! -e /proc/$PID ]; then
+		echo " not running"
+	else
+		echo " running (pid $PID)."
+	fi
+}
+
+reload() {
 	echo -n "Reloading daemon: "$NAME
 	
-	if [ ! -e $CONTROLFILE ]; then
+	if [ ! -e /proc/$PID ]; then
 		echo " not running"
 	else
 		echo "reload" >> $CONTROLFILE
 		echo "."
 	fi
+}
+
+# Run main script
+PID=$(get_pid)
+
+case "$1" in
+start)
+	start
 	;;
-	
+stop)
+	stop
+	;;
+force-stop)
+	force_stop
+	;;
 status)
-	echo -n "Checking daemon: "$NAME
-	
-	if [ ! -e $CONTROLFILE ]; then
-		echo " not running"
-	else
-		echo " running"
-	fi
+	status
 	;;
- 
+reload)
+	reload
+	;;
+restart)
+	stop	
+	start
+	;;
 *)
-	echo "Usage: "$1" (start|stop|reload|status)"
+	echo "Usage: "$1" (start|stop|reload|restart|status|force-stop)"
 	exit 1
 esac
  
