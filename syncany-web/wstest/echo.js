@@ -18,6 +18,8 @@ var rootSelect;
 
 var frames = [];
 var framesExpected = 0;
+var mimeType = "";
+var filename = "";
 
 $(document).ready(function() {
 	secureCb = document.getElementById("secureCb");
@@ -170,11 +172,13 @@ function processBlobMessage(evt) {
 	logToConsole('RESPONSE: Binary data received: ' + evt.data, 'blue');
 
 	frames[frames.length] = evt.data;
-	console.log(frames);
+//	console.log(frames);
 
 	if (frames.length == framesExpected) {
-		var blob = new Blob(frames, { type: "application/octet-stream" });
-		saveAs(blob, "somefile.png");
+		logToConsole('RESPONSE: All blobs received, handing to browser.', 'blue');
+
+		var blob = new Blob(frames, { type: mimeType });
+		saveAs(blob, filename);
 
 		frames = [];
 	}
@@ -249,6 +253,8 @@ function processFileTreeResponse(xml) {
 function processFileResponse(xml) {
 	frames = [];
 	framesExpected = xml.find('frames').text();
+	mimeType = xml.find('mimeType').text();
+	filename = xml.find('name').text();
 }
 
 function processListWatchesResponse(xml) {

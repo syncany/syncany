@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +38,8 @@ import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.RequestFactory;
 import org.syncany.operations.daemon.messages.Response;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.Subscribe;
 
 public class DaemonWebSocketServer {
@@ -47,10 +50,12 @@ public class DaemonWebSocketServer {
 	private WebSocketServer webSocketServer;
 	private Serializer serializer; 
 	private DaemonEventBus eventBus;
+	private Cache<Integer, WebSocket> requestIdCache;
 	
 	public DaemonWebSocketServer() {
 		this.serializer = new Persister();
 		
+		initCache();
 		initEventBus();
 		initWebSocketServer();
 	}
@@ -67,6 +72,14 @@ public class DaemonWebSocketServer {
 			logger.log(Level.SEVERE, "Could not stop websocket server.", e);
 		}
 	}
+
+	private void initCache() {
+		requestIdCache = CacheBuilder.newBuilder()
+			.maximumSize(10000)
+			.concurrencyLevel(2)
+			.expireAfterAccess(1, TimeUnit.MINUTES)
+			.build();
+	}
 	
 	private void initEventBus() {
 		eventBus = DaemonEventBus.getInstance();
@@ -77,12 +90,14 @@ public class DaemonWebSocketServer {
 		webSocketServer = new InternalWebSocketServer(new InetSocketAddress(DEFAULT_PORT));
 	}
 
-	private void handleMessage(String message) {
+	private void handleMessage(WebSocket clientSocket, String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
-			Request concreteRequest = RequestFactory.createRequest(message);
-			eventBus.post(concreteRequest);
+			Request request = RequestFactory.createRequest(message);
+			
+			requestIdCache.put(request.getId(), clientSocket);
+			eventBus.post(request);
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
@@ -90,7 +105,7 @@ public class DaemonWebSocketServer {
 		}	
 	}
 
-	private void sendToAll(String message) {
+	private void sendBroadcast(String message) {
 		Collection<WebSocket> clientSockets = webSocketServer.connections();
 		
 		synchronized (clientSockets) {
@@ -106,14 +121,29 @@ public class DaemonWebSocketServer {
 	
 	@Subscribe
 	public void onResponse(Response response) {
-		try {
+		try {			
+			// Serialize response
 			StringWriter responseWriter = new StringWriter();
 			serializer.write(response, responseWriter);
 			
 			String responseMessage = responseWriter.toString();
-			logger.log(Level.INFO, "Sending " + responseMessage);
 			
-			sendToAll(responseMessage);
+			// Send to one or many receivers
+			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;
+
+			if (responseWithoutRequest) {
+				sendBroadcast(responseMessage);
+			}
+			else {
+				WebSocket responseToClientSocket = requestIdCache.asMap().get(response.getRequestId());
+				
+				if (responseToClientSocket != null) {
+					sendTo(responseToClientSocket, responseMessage);
+				}
+				else {
+					logger.log(Level.WARNING, "Cannot send message, because request ID in response is unknown or timed out." + responseMessage);
+				}
+			}
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -122,10 +152,12 @@ public class DaemonWebSocketServer {
 	
 	@Subscribe
 	public void onResponse(final BinaryResponse response) {
-		for (WebSocket clientSocket : webSocketServer.connections()) {
-			logger.log(Level.INFO, "Sending binary frame to " + clientSocket + "...");
+		WebSocket responseToClientSocket = requestIdCache.asMap().get(response.getRequestId());
+		
+		if (responseToClientSocket != null) {
+			logger.log(Level.INFO, "Sending binary frame to " + responseToClientSocket + "...");
 			
-			clientSocket.sendFrame(new Framedata() {
+			responseToClientSocket.sendFrame(new Framedata() {
 				@Override
 				public boolean isFin() {
 					return true;
@@ -152,6 +184,10 @@ public class DaemonWebSocketServer {
 				}
 			});
 		}
+		else {
+			logger.log(Level.WARNING, "Cannot send BINARY message, because request ID in response is unknown or timed out.");
+		}
+
 	}
 	
 	private class InternalWebSocketServer extends WebSocketServer {
@@ -179,9 +215,9 @@ public class DaemonWebSocketServer {
 		}
 		
 		@Override
-		public void onMessage(WebSocket conn, String message) {
-			logger.log(Level.INFO, "Received from "+conn.getRemoteSocketAddress().toString() + ": " + message);
-			handleMessage(message);
+		public void onMessage(WebSocket clientSocket, String message) {
+			logger.log(Level.INFO, "Received from " + clientSocket.getRemoteSocketAddress().toString() + ": " + message);
+			handleMessage(clientSocket, message);
 		}
 		
 		@Override

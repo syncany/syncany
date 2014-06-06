@@ -20,12 +20,18 @@ package org.syncany.operations.daemon.messages;
 import java.nio.ByteBuffer;
 
 public abstract class BinaryResponse {
+	private int requestId;
 	private int frameNumber;
 	private ByteBuffer data;
 	
-	public BinaryResponse(int frameNumber, ByteBuffer data) {
+	public BinaryResponse(int requestId, int frameNumber, ByteBuffer data) {
+		this.requestId = requestId;
 		this.frameNumber = frameNumber;
 		this.data = data;
+	}
+	
+	public int getRequestId() {
+		return requestId;
 	}
 	
 	public int getFrameNumber() {

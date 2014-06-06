@@ -17,12 +17,12 @@
  */
 package org.syncany.operations.daemon;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +41,7 @@ import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.util.FileUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -53,7 +54,8 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WatchOperationThread implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
-
+	private static final int MAX_FRAME_LENGTH = 512*1024;
+	
 	private Config config;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
@@ -119,23 +121,21 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	private void handleGetRequest(GetFileRequest getRequest) {
-		// TODO [high] This is experimental code, it returns random binary data. This code should return actual file data!
-		int maxFrameLength = 512*1024;
+		String requestedFileStr = getRequest.getFile();		
+		File requestedFile = FileUtil.getCanonicalFile(new File(config.getLocalDir(), requestedFileStr));
 
-		byte[] fakeData = new byte[(1+new Random().nextInt(10))*1024*1024+10];
+		long length = requestedFile.length();
+		int frames = (int) Math.ceil((double) length / MAX_FRAME_LENGTH);
 		
-		int length = fakeData.length;
-		int frames = (int) Math.ceil((double) length / maxFrameLength);
-		
-		try (ByteArrayInputStream fileInputStream = new ByteArrayInputStream(fakeData)) {
-			eventBus.post(new GetFileResponse(getRequest.getId(), "somename.png", length, frames, "image/png"));
+		try (InputStream fileInputStream = new FileInputStream(requestedFile)) {
+			eventBus.post(new GetFileResponse(getRequest.getId(), requestedFile.getName(), length, frames, "application/octet-stream"));
 			
 			int read = -1;
-			byte[] buffer = new byte[maxFrameLength];
+			byte[] buffer = new byte[MAX_FRAME_LENGTH];
 			int frameNumber = 0;
 			
 			while (-1 != (read = fileInputStream.read(buffer))) {
-				FileFrameResponse fileDataResponse = new FileFrameResponse(frameNumber++, ByteBuffer.wrap(buffer, 0, read));
+				FileFrameResponse fileDataResponse = new FileFrameResponse(getRequest.getId(), frameNumber++, ByteBuffer.wrap(buffer, 0, read));
 				eventBus.post(fileDataResponse);
 			}
 		}
@@ -145,7 +145,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	private void handleFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
-		Map<String, FileVersion> fileTree = watchOperation.getFileTree(fileTreeRequest.getPrefix());
+		Map<String, FileVersion> fileTree = watchOperation.getLocalDatabase().getCurrentFileTree(fileTreeRequest.getPrefix());
 		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<FileVersion>(fileTree.values()));
 		
 		eventBus.post(fileTreeResponse);	

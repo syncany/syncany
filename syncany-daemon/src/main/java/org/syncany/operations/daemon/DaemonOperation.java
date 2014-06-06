@@ -19,12 +19,15 @@ package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
+import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.DaemonControlServer.ControlCommand;
@@ -60,16 +63,23 @@ import com.google.common.eventbus.Subscribe;
 public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
 	private static final String PID_FILE = "daemon.pid";
+	private static final String DAEMON_FILE = "daemon.xml";
+	private static final String DEFAULT_FOLDER = "Syncany";
 
 	private File pidFile;
+	private File daemonConfigFile;
+	
 	private DaemonWebSocketServer webSocketServer;
 	private DaemonWatchServer watchServer;
 	private DaemonControlServer controlServer;
 	private DaemonEventBus eventBus;
+	private DaemonConfigTO daemonConfig;
 
 	public DaemonOperation(Config config) {
 		super(config);
+		
 		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);
+		this.daemonConfigFile = new File(UserConfig.getUserConfigDir(), DAEMON_FILE);
 	}
 
 	@Override
@@ -88,10 +98,27 @@ public class DaemonOperation extends Operation {
 		PidFileUtil.createPidFile(pidFile);
 		
 		initEventBus();		
+		loadOrCreateConfig();
+		
 		startWebSocketServer();
 		startWatchServer();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
+	}
+	
+	@Subscribe
+	public void onControlCommand(ControlCommand controlCommand) {
+		switch (controlCommand) {
+		case SHUTDOWN:
+			logger.log(Level.INFO, "SHUTDOWN requested.");
+			stopOperation();
+			break;
+			
+		case RELOAD:
+			logger.log(Level.INFO, "RELOAD requested.");
+			reloadOperation();
+			break;
+		}
 	}
 	
 	private void initEventBus() {
@@ -125,7 +152,7 @@ public class DaemonOperation extends Operation {
 		logger.log(Level.INFO, "Starting websocket server ...");
 
 		watchServer = new DaemonWatchServer();
-		watchServer.start();
+		watchServer.start(daemonConfig);
 	}
 
 	private void enterControlLoop() throws IOException, ServiceAlreadyStartedException {
@@ -134,19 +161,45 @@ public class DaemonOperation extends Operation {
 		controlServer = new DaemonControlServer();
 		controlServer.enterLoop(); // This blocks! 
 	}
-
-	@Subscribe
-	public void onControlCommand(ControlCommand controlCommand) {
-		switch (controlCommand) {
-		case SHUTDOWN:
-			logger.log(Level.INFO, "SHUTDOWN requested.");
-			stopOperation();
-			break;
-			
-		case RELOAD:
-			logger.log(Level.INFO, "RELOAD requested.");
-			watchServer.reload();
-			break;
+	
+	private void loadOrCreateConfig() {
+		try {
+			if (daemonConfigFile.exists()) {
+				daemonConfig = DaemonConfigTO.load(daemonConfigFile);
+			}
+			else {
+				daemonConfig = createAndWriteDefaultConfig(daemonConfigFile);
+			}
 		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
+		}
+	}
+	
+	private void reloadOperation() {
+		loadOrCreateConfig();
+		watchServer.reload(daemonConfig);
+	}
+
+	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
+		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
+		
+		FolderTO defaultFolderTO = new FolderTO();
+		defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
+		
+		ArrayList<FolderTO> folders = new ArrayList<>();
+		folders.add(defaultFolderTO);
+		
+		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
+		defaultDaemonConfigTO.setFolders(folders);
+		
+		try {
+			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);
+		}
+		catch (Exception e) {
+			// Don't care!
+		}
+		
+		return defaultDaemonConfigTO;
 	}
 }

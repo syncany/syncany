@@ -24,7 +24,7 @@ public class GetFileResponse extends Response {
 	private String name;
 	
 	@Element(required = true)
-	private int length;
+	private long length;
 	
 	@Element(required = true)
 	private int frames;
@@ -32,7 +32,7 @@ public class GetFileResponse extends Response {
 	@Element(required = false)
 	private String mimeType;
 
-	public GetFileResponse(int requestId, String name, int length, int frames, String mimeType) {
+	public GetFileResponse(int requestId, String name, long length, int frames, String mimeType) {
 		super(200, requestId, null);
 		
 		this.name = name;
@@ -45,7 +45,7 @@ public class GetFileResponse extends Response {
 		return name;
 	}
 
-	public int getLength() {
+	public long getLength() {
 		return length;
 	}
 

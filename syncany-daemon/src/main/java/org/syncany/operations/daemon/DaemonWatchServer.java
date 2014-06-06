@@ -26,7 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.ConfigException;
-import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
@@ -50,8 +49,6 @@ import com.google.common.eventbus.Subscribe;
  */
 public class DaemonWatchServer {	
 	private static final Logger logger = Logger.getLogger(DaemonWatchServer.class.getSimpleName());
-	private static final String DAEMON_FILE = "daemon.xml";
-	private static final String DEFAULT_FOLDER = "Syncany";
 	
 	private Map<File, WatchOperationThread> watchOperations;
 	private DaemonEventBus eventBus;
@@ -63,15 +60,14 @@ public class DaemonWatchServer {
 		this.eventBus.register(this);
 	}
 	
-	public void start() throws ConfigException {
-		logger.log(Level.INFO, "Starting watch server ... ");
-		reload();
+	public void start(DaemonConfigTO daemonConfigTO) {		
+		reload(daemonConfigTO);
 	}
 	
-	public void reload() {		
+	public void reload(DaemonConfigTO daemonConfigTO) {
+		logger.log(Level.INFO, "Starting/reloading watch server ... ");
+
 		try {
-			DaemonConfigTO daemonConfigTO = loadOrCreateConfig();
-			
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
 			Map<File, FolderTO> newWatchedFolderTOs = determineNewWatchedFolderTOs(watchedFolders);
 			List<File> removedWatchedFolderIds = determineRemovedWatchedFolderIds(watchedFolders);
@@ -168,43 +164,6 @@ public class DaemonWatchServer {
 		}
 		
 		return removedWatchedFolderIds;
-	}
-
-	private DaemonConfigTO loadOrCreateConfig() throws ConfigException {
-		File configFile = new File(UserConfig.getUserConfigDir(), DAEMON_FILE);
-		
-		if (configFile.exists()) {
-			return loadConfig(configFile);
-		}
-		else {
-			return createAndWriteDefaultConfig(configFile);
-		}
-	}
-
-	private DaemonConfigTO loadConfig(File configFile) throws ConfigException {
-		return DaemonConfigTO.load(configFile);
-	}
-
-	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
-		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
-		
-		FolderTO defaultFolderTO = new FolderTO();
-		defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
-		
-		ArrayList<FolderTO> folders = new ArrayList<>();
-		folders.add(defaultFolderTO);
-		
-		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
-		defaultDaemonConfigTO.setFolders(folders);
-		
-		try {
-			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);
-		}
-		catch (Exception e) {
-			// Don't care!
-		}
-		
-		return defaultDaemonConfigTO;
 	}
 	
 	@Subscribe
