@@ -45,8 +45,11 @@ import org.syncany.operations.watch.WatchOperationOptions;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * @author pheckel
- *
+ * The watch operation thread runs a {@link WatchOperation} in a thread. The 
+ * underlying thred can be started using the {@link #start()} method, and stopped
+ * gracefully using {@link #stop()}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WatchOperationThread implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
@@ -92,6 +95,7 @@ public class WatchOperationThread implements WatchOperationListener {
 
 	public void stop() {
 		watchOperation.stop();
+		watchThread = null;
 	}
 	
 	@Subscribe

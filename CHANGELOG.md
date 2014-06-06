@@ -6,7 +6,13 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + Implemented Ubuntu PPA and signed deb files #69
-  
+  + Allow detailed daemon configuration:options for up/down/cleanup,
+    interval times, announcements, etc. in daemon.xml #105
+  + Added retriable transfer managers to support wobbly connections #125
+  + Improve daemon wrapper script: PID-based, force-stop, etc. #105
+- Bugfixes:
+  + Fix undescriptive error message for unknown/removed plugin #119
+
 ### Syncany 0.1.4-alpha (Date: 25 May 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
