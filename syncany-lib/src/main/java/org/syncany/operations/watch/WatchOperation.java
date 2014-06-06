@@ -191,7 +191,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 	
 	public Map<String, FileVersion> getFileTree(String prefix) {
-		return localDatabase.getCurrentFileTree(); // TODO [medium] Actually do something with prefix
+		return localDatabase.getCurrentFileTree(prefix); 
 	}
 
 	private void startRecursiveWatcher() {

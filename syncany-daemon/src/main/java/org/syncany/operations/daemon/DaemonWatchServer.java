@@ -30,6 +30,9 @@ import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.ListWatchesRequest;
+import org.syncany.operations.daemon.messages.ListWatchesResponse;
+import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -205,7 +208,20 @@ public class DaemonWatchServer {
 	}
 	
 	@Subscribe
-	public void onRequestReceived(WatchRequest watchRequest) {		
+	public void onRequestReceived(Request request) {
+		if (request instanceof ListWatchesRequest) {
+			processListWatchesRequest((ListWatchesRequest) request);
+		}
+		else if (request instanceof WatchRequest) {
+			processWatchRequest((WatchRequest) request);
+		}
+	}
+
+	private void processListWatchesRequest(ListWatchesRequest request) {
+		eventBus.post(new ListWatchesResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+	}
+	
+	private void processWatchRequest(WatchRequest watchRequest) {
 		File rootFolder = new File(watchRequest.getRoot());
 		
 		if (!watchOperations.containsKey(rootFolder)) {

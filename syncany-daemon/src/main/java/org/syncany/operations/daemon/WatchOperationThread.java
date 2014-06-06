@@ -146,7 +146,7 @@ public class WatchOperationThread implements WatchOperationListener {
 
 	private void handleFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
 		Map<String, FileVersion> fileTree = watchOperation.getFileTree(fileTreeRequest.getPrefix());
-		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<String>(fileTree.keySet()));
+		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<FileVersion>(fileTree.values()));
 		
 		eventBus.post(fileTreeResponse);	
 	}

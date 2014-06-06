@@ -175,6 +175,10 @@ public class SqlDatabase {
 		return fileVersionDao.getCurrentFileTree();
 	}
 	
+	public Map<String, FileVersion> getCurrentFileTree(String prefix) {
+		return fileVersionDao.getCurrentFileTree(prefix);
+	}
+	
 	public void removeSmallerOrEqualFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
 		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}

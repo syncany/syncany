@@ -18,10 +18,14 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
+import org.syncany.database.FileVersion.FileType;
 
 public class GetFileTreeRequest extends WatchRequest {
 	@Element(required = false)
-	private String prefix;
+	private String prefix = "";
+	
+	@Element(required = false)
+	private FileType type = null;
 	
 	public String getPrefix() {
 		return prefix;
@@ -29,5 +33,13 @@ public class GetFileTreeRequest extends WatchRequest {
 
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
+	}
+
+	public FileType getType() {
+		return type;
+	}
+
+	public void setType(FileType type) {
+		this.type = type;
 	}
 }

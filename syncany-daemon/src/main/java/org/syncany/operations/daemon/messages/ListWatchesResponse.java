@@ -17,27 +17,18 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
-public class WatchEventResponse extends Response {
-	@Element(required = true)
-	private String root;
+import org.simpleframework.xml.ElementList;
+
+public class ListWatchesResponse extends Response {
+	@ElementList(required = true, entry="watch")
+	private ArrayList<File> watches;	
 	
-	@Element(required = true)
-	private String action;
-	
-	@Element(required = false)
-	private String subject;
-	
-	public WatchEventResponse(String root, String action) {
-		this(root, action, null);
-	}	
-	
-	public WatchEventResponse(String root, String action, String subject) {
-		super(200, null, null);
-		
-		this.root = root;
-		this.action = action;
-		this.subject = subject;
+	public ListWatchesResponse(int requestId, List<File> watches) {
+		super(200, requestId, null);
+		this.watches = new ArrayList<File>(watches);
 	}	
 }
