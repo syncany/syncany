@@ -29,8 +29,11 @@ import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
 
 /**
- * @author pheckel
- *
+ * The watch operation thread runs a {@link WatchOperation} in a thread. The 
+ * underlying thred can be started using the {@link #start()} method, and stopped
+ * gracefully using {@link #stop()}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WatchOperationThread {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
@@ -72,5 +75,6 @@ public class WatchOperationThread {
 
 	public void stop() {
 		watchOperation.stop();
+		watchThread = null;
 	}
 }

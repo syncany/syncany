@@ -18,8 +18,6 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
-import static org.syncany.cli.CommandScope.INITIALIZED_LOCALDIR;
-import static org.syncany.cli.CommandScope.UNINITIALIZED_LOCALDIR;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,6 +96,8 @@ public class CommandLineClient extends Client {
 	}
 	
 	public int start() throws Exception {
+		// WARNING: Do not re-order methods unless you know what you are doing!
+
 		try {
 			// Define global options
 			OptionParser parser = new OptionParser();
@@ -110,19 +110,40 @@ public class CommandLineClient extends Client {
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
 			OptionSpec<Void> optionShortVersion = parser.acceptsAll(asList("v"));
-			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv"));
+			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv", "version"));
 			
 			// Parse global options and operation name
 			OptionSet options = parser.parse(args);
-			
-			// Evaluate options
-			// WARNING: Do not re-order unless you know what you are doing!
+			List<?> nonOptions = options.nonOptionArguments();
+
+			// -v, -vv, --version
 			initVersionOptions(options, optionShortVersion, optionFullVersion);
-			initConfigOption(options, optionLocalDir);
-			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
-	
+			initHelpOrUsage(options, nonOptions, optionHelp);
+			
 			// Run!
-			return runCommand(options, optionHelp, options.nonOptionArguments());
+			List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
+			String commandName = (String) nonOptionsCopy.remove(0); 
+			String[] commandArgs = nonOptionsCopy.toArray(new String[0]);
+			
+			// Find command
+			Command command = CommandFactory.getInstance(commandName);
+
+			if (command == null) {			
+				return showErrorAndExit("Given command is unknown: "+commandName);			
+			}
+			
+			// Potentially show help
+			if (options.has(optionHelp)) {
+				return showCommandHelpAndExit(commandName);
+			}
+						
+			// Pre-init operations
+			initLocalDir(options, optionLocalDir);
+			initConfigIfRequired(command.getRequiredCommandScope(), localDir);
+			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
+
+			// Init command
+			return runCommand(command, commandArgs);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Exception while initializing or running command.", e);
@@ -139,11 +160,67 @@ public class CommandLineClient extends Client {
 		}
 	}
 
+	private void initHelpOrUsage(OptionSet options, List<?> nonOptions, OptionSpec<Void> optionHelp) throws IOException {
+		if (nonOptions.size() == 0) {
+			if (options.has(optionHelp)) {
+				showHelpAndExit();
+			}
+			else {
+				showUsageAndExit();
+			}
+		}		
+	}
+
+	private void initLocalDir(OptionSet options, OptionSpec<File> optionLocalDir) throws ConfigException, Exception {
+		// Find config or use --localdir option
+		if (options.has(optionLocalDir)) {
+			localDir = options.valueOf(optionLocalDir);
+		}
+		else {
+			File currentDir = new File(".").getAbsoluteFile();
+			localDir = ConfigHelper.findLocalDirInPath(currentDir);
+
+			// If no local directory was found, choose current directory
+			if (localDir == null) {
+				localDir = currentDir;
+			}
+		}					
+	}
+
+	private void initConfigIfRequired(CommandScope requiredCommandScope, File localDir) throws ConfigException {
+		switch (requiredCommandScope) {
+		case INITIALIZED_LOCALDIR:
+			if (!ConfigHelper.configExists(localDir)) {
+				showErrorAndExit("No repository found in path, or configured plugin not installed. Use 'sy init' to create one.");				
+			}
+			
+			config = ConfigHelper.loadConfig(localDir);
+			
+			if (config == null) {
+				showErrorAndExit("Invalid config in " + localDir);			
+			}	
+
+			break;
+			
+		case UNINITIALIZED_LOCALDIR:
+			if (ConfigHelper.configExists(localDir)) {
+				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");				
+			}
+			
+			break;				
+
+		case ANY:
+		default:		
+			break;
+		}
+	}
+
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);		
 		initLogLevel(options, optionDebug, optionLogLevel);		
 	}
 
+	
 	private void initLogLevel(OptionSet options, OptionSpec<Void> optionDebug, OptionSpec<String> optionLogLevel) {
 		Level newLogLevel = null;
 
@@ -190,7 +267,7 @@ public class CommandLineClient extends Client {
 		}
 		else if (config != null && config.getLogDir().exists()) {
 			logFilePattern = config.getLogDir() + File.separator + LOG_FILE_PATTERN;
-		}
+		} 
 		
 		if (logFilePattern != null) {	
 			Handler fileLogHandler = new FileHandler(logFilePattern, LOG_FILE_LIMIT, LOG_FILE_COUNT, true);			
@@ -208,75 +285,17 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private void initConfigOption(OptionSet options, OptionSpec<File> optionLocalDir) throws ConfigException, Exception {
-		// Find config or use --config option
-		if (options.has(optionLocalDir)) {
-			localDir = options.valueOf(optionLocalDir);
-		}
-		else {
-			File currentDir = new File(".").getAbsoluteFile();
-			localDir = ConfigHelper.findLocalDirInPath(currentDir);
-
-			// If no local directory was found, choose current directory
-			if (localDir == null) {
-				localDir = currentDir;
-			}
-		}					
-		
-		// Load config
-		config = ConfigHelper.loadConfig(localDir);
-	}					
-	
-	private int runCommand(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws Exception {
-		if (nonOptions.size() == 0) {
-			if (options.has(optionHelp)) {
-				showHelpAndExit();
-			}
-			else {
-				showUsageAndExit();
-			}
-		}
-		
-		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String commandName = (String) nonOptionsCopy.remove(0); 
-		String[] commandArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
-		
-		// Find command
-		Command command = CommandFactory.getInstance(commandName);
-
-		if (command == null) {			
-			return showErrorAndExit("Given command is unknown: "+commandName);			
-		}
-		
-		// Potentially show help
-		if (options.has(optionHelp)) {
-			return showCommandHelpAndExit(commandName);
-		}
-		
-		// Init command
+	private int runCommand(Command command, String[] commandArgs) {
 		command.setClient(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
 		
-		// Pre-init operations
-		if (command.getRequiredCommandScope() == INITIALIZED_LOCALDIR) { 
-			if (config == null) {
-				return showErrorAndExit("No repository found in path, or configured plugin not installed. Use 'sy init' to create one.");			
-			}			
-		}
-		else if (command.getRequiredCommandScope() == UNINITIALIZED_LOCALDIR) {
-			if (config != null) {
-				return showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
-			}
-		}
-		
 		// Run!
 		try {
-			int exitCode = command.execute(commandArgs);
-			return exitCode;
+			return command.execute(commandArgs);
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Command "+ commandName+" FAILED. ", e);
+			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
 		}	
 	}
