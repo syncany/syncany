@@ -1,10 +1,13 @@
-function Tree(tree) {
-	this._init = function(tree) {
-		this.tree = tree;
-	}
-	
-	this._init_ui = function() {
-		$('#tree').jstree({
+console.log('Tree still depends on global variables prefix and prefixFile!!');
+
+function Tree(treeElements, onFileClickCallback) {
+	this.treeElements = treeElements;
+	this.onFileClickCallback = onFileClickCallback;
+			
+	this._init = function() {
+		var onFileClickCallback = this.onFileClickCallback;
+		
+		this.treeElements.jstree({
 			'core' : {
 				'data' : function (obj, cb) {
 				    cb.call(this, []);
@@ -30,10 +33,10 @@ function Tree(tree) {
 
 		})
 		.on("select_node.jstree", function (e, data) {
-			this._onFileClick(data);
+			onFileClickCallback(data);
 	 	});
 	 	
-	 	this.tree = $.jstree.reference('#tree');
+	 	this.tree = $.jstree.reference('#'+this.treeElements[0].id);
 	}
 	
 	this.processFileTreeResponse = function(xml) {
@@ -49,6 +52,7 @@ function Tree(tree) {
 		}
 		
 		var files = xml.find('files > file');
+		var tree = this.tree;
 
 		$(files).each(function (i, file) {
 			var fileXml = $(file);
@@ -58,7 +62,7 @@ function Tree(tree) {
 			if (type == "symlink") type = "file";
 		
 			console.log(file);
-			this.tree.create_node(null, {
+			tree.create_node(null, {
 				id: prefix + path,
 				text: path,
 				type: type,
@@ -72,7 +76,7 @@ function Tree(tree) {
 	this.clearTree = function() {
 		var i=0;
 		while (i++<1000) {
-			var node = $("#tree").find('li');
+			var node = this.treeElements.find('li');
 	
 			if (!node) {
 				break;
@@ -83,33 +87,7 @@ function Tree(tree) {
 		}
 	}
 	
-	this._init(tree);
+	this._init();
 }
 
-
-var prefix = "";
-var prefixFile = null;
-
-var root;
-var rootSelect;
-
-function onFileClick(data) {
-	prefixFile = data.node.original.file;
-	
-	var fileXml = data.node.original.file;
-	var path = fileXml.find('path').text();
-	var type = fileXml.find('type').text().toLowerCase();
-
-	if (data.node.type == "up") {
-		sendFileTreeRequestGoUp();
-	}
-	else {
-		if (type == "file" || type == "symlink") {
-			retrieveFile(path);
-		}
-		else if (type == "folder") {
-			sendFileTreeRequest(path);
-		}
-	}
-}
 

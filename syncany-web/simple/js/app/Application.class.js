@@ -2,14 +2,11 @@ function Application() {
 	// ...
 }
 
-
 var wsUri;
 var connectBut;
 var disconnectBut;
 var sendMessage;
 var sendBut;
-
-var tree;
 
 var prefix = "";
 var prefixFile = null;
@@ -17,11 +14,10 @@ var prefixFile = null;
 var root;
 var rootSelect;
 
-var downloader = new Downloader();
-var treex;
+var downloader;
+var tree;
 
 $(document).ready(function() {
-	//treex = new Tree($('#tree'));
 
 	wsUri = document.getElementById("wsUri");
 
@@ -44,37 +40,8 @@ $(document).ready(function() {
 	rootSelect = $("#root");
 	rootSelect.change(onRootSelect);
 
-	
-	$('#tree').jstree({
-		'core' : {
-			'data' : function (obj, cb) {
-			    cb.call(this, []);
-			},
-			'check_callback' : function(o, n, p, i, m) {
-				return true;
-			},
-			'themes' : {
-				'responsive' : false,
-				'variant' : 'medium',
-				'stripes' : true
-			}
-		},
-		'sort' : function(a, b) {
-			return this.get_type(a) === this.get_type(b) ? (this.get_text(a) > this.get_text(b) ? 1 : -1) : (this.get_type(a) >= this.get_type(b) ? -1 : 1);
-		},
-		'types' : {
-			'up' : { 'icon' : 'jstree-folder' },
-			'folder' : { 'icon' : 'jstree-folder' },
-			'file' : { 'valid_children' : [], 'icon' : 'jstree-file' }
-		},
-		'plugins' : ['sort', 'types', 'wholerow'] 
-
-	})
-	.on("select_node.jstree", function (e, data) {
-		onFileClick(data);
- 	});
- 	
- 	tree = $.jstree.reference('#tree');
+	tree = new Tree($('#tree'), onFileClick);
+	downloader = new Downloader();
 	
 	doConnect();
 });
@@ -158,36 +125,64 @@ function processXmlMessage(evt) {
 }
 
 function processFileTreeResponse(xml) {
-	clearTree();
-	
-	if (prefix != "") {
-		tree.create_node(null, {
-			id: "up",
-			text: "..",
-			type: "up",
-			file: prefixFile
-		});
-	}
-		
-	var files = xml.find('files > file');
+	populateDataTable(xml);
+	tree.processFileTreeResponse(xml);
+}
 
-	$(files).each(function (i, file) {
+function populateDataTable(xml) {
+	$('#table').dataTable().fnDestroy();
+	var fileVersions = toFileVersions(xml);
+
+	$('#table').dataTable({
+		paging: false,
+		searching: false,
+		jQueryUI: false,
+		info: false,
+		ordering: true,
+		data: fileVersions,
+		columns: [
+			{ data: 'path', orderData: [2, 0], target: 1 },
+			{ data: 'version' },
+			{ data: 'type', visible: false },
+			{ data: 'status' },
+			{ data: 'size' },
+			{ data: 'lastModified' },
+			{ data: 'posixPermissions' },
+		],
+		createdRow: function ( row, data, index ) {
+			if (data.type == "FOLDER") {
+				$('td', row).eq(0).prepend("<span class='folder'></span>");
+			}
+			else {
+				$('td', row).eq(0).prepend("<span class='file'></span>");
+			}
+		}
+	});
+}
+
+function toFileVersions(xml) {
+	var fileElements = xml.find('files > file');
+	var fileVersions = [];
+		
+	$(fileElements).each(function (i, file) {
 		var fileXml = $(file);
-		var path = fileXml.find('path').text();
-		var type = fileXml.find('type').text().toLowerCase();
-		
-		if (type == "symlink") type = "file";
-		
-		console.log(file);
-		tree.create_node(null, {
-			id: prefix + path,
-			text: path,
-			type: type,
-			file: fileXml
-		});
+
+		fileVersions.push(new FileVersion(
+			fileXml.find('version').text(),
+			fileXml.find('path').text(),
+			fileXml.find('type').text(),
+			fileXml.find('status').text(),
+			fileXml.find('size').text(),
+			fileXml.find('lastModified').text(),
+			"", // TODO fix checksum formatting
+			fileXml.find('updated').text(),
+			fileXml.find('posixPermissions').text(),
+			"" // TODO fix DOS attrs
+		));
 	});
 	
-	tree.scrollTop = 0;
+	console.log(fileVersions);
+	return fileVersions;
 }
 
 function processFileResponse(xml) {
@@ -242,20 +237,6 @@ function onFileClick(data) {
 		}
 		else if (type == "folder") {
 			sendFileTreeRequest(path);
-		}
-	}
-}
-
-function clearTree() {
-	var i=0;
-	while (i++<1000) {
-		var node = $("#tree").find('li');
-	
-		if (!node) {
-			break;
-		}
-		else {
-			tree.delete_node(node);
 		}
 	}
 }

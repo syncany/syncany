@@ -21,16 +21,17 @@
 	<script src="js/jquery-ui/jquery-ui-1.10.4.custom.min.js"></script>
 	
 	<!-- DataTables -->
-	<link rel="stylesheet" type="text/css" href="/js/datatables/css/jquery.dataTables.css">	
-	<script type="text/javascript" charset="utf8" src="/datatables/js/jquery.dataTables.js"></script>
+	<link rel="stylesheet" type="text/css" href="js/datatables/css/jquery.dataTables.css">	
+	<script type="text/javascript" charset="utf8" src="js/datatables/js/jquery.dataTables.js"></script>
 	
 	<!-- Application -->
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/app/Util.class.js"></script>
+	<script type="text/javascript" src="js/app/FileVersion.class.js"></script>
 	<script type="text/javascript" src="js/app/ConnectDialog.class.js"></script>
 	<script type="text/javascript" src="js/app/LoginDialog.class.js"></script>
 	<script type="text/javascript" src="js/app/Downloader.class.js"></script>
-	<!--<script type="text/javascript" src="js/app/Tree.class.js"></script>-->
+	<script type="text/javascript" src="js/app/Tree.class.js"></script>
 	<script type="text/javascript" src="js/app/Application.class.js"></script>
 </head>
 
@@ -45,16 +46,32 @@
 	</div>
 		
 	<div id="tray">
-		<div id="status"></div>
+		<div id="status">All files in sync</div>
 		<button id="button-connect"></button>
 		<button id="button-login"></button>
 		<select id="root"></select>
 	</div>	
 	
 	<div id="content">
-		<div id="tree"></div>
-		<div id="table"></div>
-		<div id="preview"></div>
+		<div id="left">
+			<div id="tree"></div>
+		</div>
+		<div id="right">
+			<table id="table" class="display">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Version</th>
+						<th>Type</th>
+						<th>Status</th>
+						<th>Size</th>
+						<th>Last Modified</th>
+						<th>Posix Perms</th>
+					</tr>
+				</thead>					
+			</table>
+			<div id="preview"></div>
+		</div>
 	</div>
 	
 	<div id="credits"></div>
