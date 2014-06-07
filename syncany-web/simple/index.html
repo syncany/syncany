@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+
+	<!-- jQuery -->
+	<script src="js/jquery/jquery.js"></script>
+	
+	<!-- Blob and FileSaver -->
+	<script src="js/blob/blob.js" type="text/javascript"></script>
+	<script src="js/filesaver/filesaver.js" type="text/javascript"></script>
+
+	<!-- jsTree -->
+	<link rel="stylesheet" href="js/jstree/themes/default/style.min.css" />
+	<script src="js/jstree/jstree.min.js"></script>
+
+	<!-- jQuery UI -->
+	<link rel="stylesheet" href="css/jquery-ui/cupertino/jquery-ui-1.10.4.custom.min.css" />
+	<script src="js/jquery-ui/jquery-ui-1.10.4.custom.min.js"></script>
+	
+	<!-- DataTables -->
+	<link rel="stylesheet" type="text/css" href="/js/datatables/css/jquery.dataTables.css">	
+	<script type="text/javascript" charset="utf8" src="/datatables/js/jquery.dataTables.js"></script>
+	
+	<!-- Application -->
+	<link rel="stylesheet" href="css/style.css">
+	<script type="text/javascript" src="js/app/Util.class.js"></script>
+	<script type="text/javascript" src="js/app/ConnectDialog.class.js"></script>
+	<script type="text/javascript" src="js/app/LoginDialog.class.js"></script>
+	<script type="text/javascript" src="js/app/Downloader.class.js"></script>
+	<!--<script type="text/javascript" src="js/app/Tree.class.js"></script>-->
+	<script type="text/javascript" src="js/app/Application.class.js"></script>
+</head>
+
+<body>
+
+<div id="header"></div>
+
+<div id="site">
+	<div id="headline">
+		<img src="images/logo.png" />
+		<span>Syncany Simple Web Interface</span>
+	</div>
+		
+	<div id="tray">
+		<div id="status"></div>
+		<button id="button-connect"></button>
+		<button id="button-login"></button>
+		<select id="root"></select>
+	</div>	
+	
+	<div id="content">
+		<div id="tree"></div>
+		<div id="table"></div>
+		<div id="preview"></div>
+	</div>
+	
+	<div id="credits"></div>
+</div>
+
+<div id="footer"></div>
+
+<div id="dialog-login">
+	<input id="password" type="password" />
+</div>
+
+<div id="dialog-connect">
+	<strong>Location:</strong>
+	<br>
+	<input value="ws://localhost:8625" id="wsUri" size="35">
+	<br>
+	<input id="secureCb" onclick="toggleTls();" type="checkbox">
+	<span id="secureCbLabel" style="font-size: smaller; color: black;">Use secure WebSocket (TLS)</span>
+	<br>
+	<button id="connect">Connect</button>
+	<button disabled="disabled" id="disconnect">Disconnect</button>
+	<br>
+	<br>
+	<strong>Message:</strong>
+	<button id="req1" class="wsButton">GetFileTree</button>
+	<button id="req2" class="wsButton">GetFile</button>
+	<button id="req3" class="wsButton">ListWatches</button>
+	<br>
+	<br>
+	<textarea disabled="disabled" id="sendMessage" cols=50 rows=5></textarea>
+	<br>
+	<button disabled="disabled" id="send" class="wsButton">Send</button>
+</div>
+
+
+</body>
+</html>

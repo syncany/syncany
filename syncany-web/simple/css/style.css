@@ -1,0 +1,131 @@
+/** Common **/
+
+html, body { 
+	font-size: 12px; 
+	font-family: Arial; 
+	margin: 0; 
+	padding: 0;
+}
+
+
+/** Header **/
+
+#header {
+	position: absolute;
+	width: 100%;
+	height: 40px;
+	background: #eee;
+	border-bottom: 1px solid #ddd;
+}
+
+/** Footer **/
+
+#footer {
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	height: 40px;
+	background: #eee;
+	border-top: 1px solid #ddd;
+}
+
+
+/** Site **/
+
+#site {
+	position: relative;
+	top: 0px;
+	max-width: 1300px;
+	margin: 0 auto;
+}	
+
+#site #headline {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	min-width: 200px;
+	width: 45%;
+	
+	font-size: 20px;
+	color: #888;
+}
+
+#site #headline img {
+	position: absolute;
+	top: 3px;
+	left: 0px;
+}
+
+#site #headline span {
+	position: absolute;
+	top: 9px;
+	left: 40px;
+}
+
+#site #tray {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	min-width: 200px;
+	width: 50%;
+	height: 40px;
+	text-align: right;
+}
+
+#site #content {
+	position: relative;
+	top: 40px;
+}
+
+/** jsTree **/
+
+#container { min-width:320px; margin:0px auto 0 auto; background:white; border-radius:0px; padding:0px; overflow:hidden; }
+#tree { float:left; min-width:319px; border-right:1px solid silver; overflow:auto; padding:0px 0; }
+#data { margin-left:320px; }
+#data textarea { margin:0; padding:0; height:100%; width:100%; border:0; background:white; display:block; line-height:18px; resize:none; }
+#data, #code { font: normal normal normal 12px/18px 'Consolas', monospace !important; }
+
+#tree .folder { background:url('./file_sprite.png') right bottom no-repeat; }
+#tree .file { background:url('./file_sprite.png') 0 0 no-repeat; }
+#tree .file-pdf { background-position: -32px 0 }
+#tree .file-as { background-position: -36px 0 }
+#tree .file-c { background-position: -72px -0px }
+#tree .file-iso { background-position: -108px -0px }
+#tree .file-htm, #tree .file-html, #tree .file-xml, #tree .file-xsl { background-position: -126px -0px }
+#tree .file-cf { background-position: -162px -0px }
+#tree .file-cpp { background-position: -216px -0px }
+#tree .file-cs { background-position: -236px -0px }
+#tree .file-sql { background-position: -272px -0px }
+#tree .file-xls, #tree .file-xlsx { background-position: -362px -0px }
+#tree .file-h { background-position: -488px -0px }
+#tree .file-crt, #tree .file-pem, #tree .file-cer { background-position: -452px -18px }
+#tree .file-php { background-position: -108px -18px }
+#tree .file-jpg, #tree .file-jpeg, #tree .file-png, #tree .file-gif, #tree .file-bmp { background-position: -126px -18px }
+#tree .file-ppt, #tree .file-pptx { background-position: -144px -18px }
+#tree .file-rb { background-position: -180px -18px }
+#tree .file-text, #tree .file-txt, #tree .file-md, #tree .file-log, #tree .file-htaccess { background-position: -254px -18px }
+#tree .file-doc, #tree .file-docx { background-position: -362px -18px }
+#tree .file-zip, #tree .file-gz, #tree .file-tar, #tree .file-rar { background-position: -416px -18px }
+#tree .file-js { background-position: -434px -18px }
+#tree .file-css { background-position: -144px -0px }
+#tree .file-fla { background-position: -398px -0px }
+
+#tree {
+	width: 550px;
+	height: 600px;
+}
+
+/** Preview **/
+
+#preview {
+	float: left;
+}
+
+#preview textarea {
+	background: white;
+	min-width: 500px;
+	width: 100%;
+	height: 100%;
+	min-height: 500px;
+}
+
