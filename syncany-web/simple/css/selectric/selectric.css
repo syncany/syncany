@@ -71,7 +71,7 @@
 }
 .selectric {
   border: 0px solid #B3ADAD;
-  background: #ddd;
+  /*background: #ddd;*/
   position: relative;
   border-radius: 0px;
 }
@@ -81,7 +81,7 @@
   overflow: hidden;
   margin: 0 40px 0 0;
   padding: 6px 6px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 28px;
   color: #444444;
   min-height: 28px;

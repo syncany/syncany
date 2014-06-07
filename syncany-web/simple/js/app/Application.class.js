@@ -136,7 +136,7 @@ function processXmlMessage(evt) {
 }
 
 function processFileTreeResponse(xml) {
-	status.loading('Connected');
+	status.okay('All files in sync');
 
 	populateDataTable(xml);
 	tree.processFileTreeResponse(xml);

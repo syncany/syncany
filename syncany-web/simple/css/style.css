@@ -7,6 +7,10 @@ html, body {
 	padding: 0;
 }
 
+.clear {
+	clear: both;
+}
+
 
 /** Header **/
 
@@ -105,13 +109,18 @@ html, body {
 
 #site #status {
 	position: absolute;
-	top: 11px;
+	top: 12px;
 	right: 110px;
 	width: 300px;
 	text-align: right;
 
 	color: green;
 	font-size: 14px;
+}
+
+#site #status span { /* Image/Throbber */
+	float: right;
+	margin-left: 10px;
 }
 
 #site #status .status-loading {
@@ -123,6 +132,7 @@ html, body {
 
 #site #status .status-okay {
 	display: block;
+	background: url(../images/check.gif);
 	width: 16px;
 	height: 16px;
 }
@@ -184,6 +194,23 @@ html, body {
 }
 
 
+/** Root **/
+
+#content #left .selectricWrapper {
+	width: 100%;
+	margin-bottom: 0px;
+}
+
+#content #left .selectric {
+	background: none;
+}
+
+#content #left .selectric .label {
+	font-size: 19px;
+	font-weight: bold;
+	margin-left: 10px;
+}
+
 /** Table **/
 
 #content #table { width: 100%; }
@@ -204,4 +231,32 @@ html, body {
 	white-space: nowrap;
 	padding: 4px 10px;
 	vertical-align: middle;
+}
+
+
+/** Credits **/
+
+#copyright {
+	position: absolute;
+	display: block;
+	bottom: 0px;
+	height: 40px;
+	width: 100%;
+	margin: 0 auto;
+	text-align: center;
+}
+
+#copyright .link {
+	width: 20%;
+	padding: 0 10px;
+}
+
+#copyright .link a {
+	color: #999;
+	font-size: 15px;
+	text-decoration: none;
+}
+
+#copyright .link a:hover {
+	color: #666;
 }
