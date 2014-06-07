@@ -1,4 +1,6 @@
-function Downloader() {
+function Downloader(status) {
+	this.status = status;
+	
 	this._init = function() {
 		this.frames = [];
 		this.framesExpected = 0;
@@ -16,8 +18,10 @@ function Downloader() {
 	
 	this.processBlobMessage = function(blob) {
 		this.frames[this.frames.length] = blob;
+		this.status.loading("Receiving file part "+this.frames.length+"/"+this.framesExpected+" ...");
 
 		if (this.frames.length == this.framesExpected) {
+			this.status.okay("File successfully downloaded");
 			this._deliverFile();
 		}
 	};

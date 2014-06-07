@@ -24,12 +24,17 @@
 	<link rel="stylesheet" type="text/css" href="js/datatables/css/jquery.dataTables.css">	
 	<script type="text/javascript" charset="utf8" src="js/datatables/js/jquery.dataTables.js"></script>
 	
+	<!-- Selectric -->
+	<link rel="stylesheet" type="text/css" href="css/selectric/selectric.css">	
+	<script type="text/javascript" charset="utf8" src="js/selectric/jquery.selectric.min.js"></script>
+	
 	<!-- Application -->
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/app/Util.class.js"></script>
 	<script type="text/javascript" src="js/app/FileVersion.class.js"></script>
 	<script type="text/javascript" src="js/app/ConnectDialog.class.js"></script>
 	<script type="text/javascript" src="js/app/LoginDialog.class.js"></script>
+	<script type="text/javascript" src="js/app/Status.class.js"></script>
 	<script type="text/javascript" src="js/app/Downloader.class.js"></script>
 	<script type="text/javascript" src="js/app/Tree.class.js"></script>
 	<script type="text/javascript" src="js/app/Application.class.js"></script>
@@ -47,13 +52,17 @@
 		
 	<div id="tray">
 		<div id="status">All files in sync</div>
-		<button id="button-connect"></button>
-		<button id="button-login"></button>
-		<select id="root"></select>
+		<select id="menu">
+			<option value="">Menu</option>
+			<option value="addwatch">Add Folder</option>
+			<option value="shutdown">Shutdown</option>
+			<option value="reload">Reload</option>			
+		</select>
 	</div>	
 	
 	<div id="content">
 		<div id="left">
+			<select id="root"></select>
 			<div id="tree"></div>
 		</div>
 		<div id="right">

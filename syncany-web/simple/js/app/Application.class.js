@@ -16,6 +16,7 @@ var rootSelect;
 
 var downloader;
 var tree;
+var status;
 
 $(document).ready(function() {
 
@@ -37,11 +38,17 @@ $(document).ready(function() {
 	document.getElementById("disconnect").onclick = doDisconnect;
 	$("#send").click(doSend);
 	
+	$('#root').selectric();
+	$('#menu').selectric();
+	
+	
+	
 	rootSelect = $("#root");
 	rootSelect.change(onRootSelect);
 
+	status = new Status($('#status'));
 	tree = new Tree($('#tree'), onFileClick);
-	downloader = new Downloader();
+	downloader = new Downloader(status);
 	
 	doConnect();
 });
@@ -54,10 +61,13 @@ function doConnect() {
 	websocket.onclose = function (evt) { onClose(evt) };
 	websocket.onmessage = function (evt) { onMessage(evt) };
 	websocket.onerror = function (evt) { onError(evt) };
+	
+	status.loading("Connecting to Syncany ...");
 }
 
 function doDisconnect() {
 	websocket.close()
+	status.okay("Disconnected");
 }
 
 function doSend() {
@@ -66,7 +76,8 @@ function doSend() {
 
 function onOpen(evt) {
 	setGuiConnected(true);
-	
+	status.okay("Connected");
+
 	sendListWatchesRequest();
 }
 
@@ -125,6 +136,8 @@ function processXmlMessage(evt) {
 }
 
 function processFileTreeResponse(xml) {
+	status.loading('Connected');
+
 	populateDataTable(xml);
 	tree.processFileTreeResponse(xml);
 }
@@ -195,7 +208,7 @@ function processFileResponse(xml) {
 }
 
 function processWatchEventResponse(xml) {
-	$('#status').html(xml.find('action'));
+	status.loading(xml.find('action'));
 }
 
 function processListWatchesResponse(xml) {
@@ -207,14 +220,15 @@ function processListWatchesResponse(xml) {
 		console.log($(watch).text());
 		
 		var rootPath = $(watch).text();
-		rootSelect.append($("<option />").val(rootPath).text(rootPath));
+		rootSelect.append($("<option />").val(rootPath).text(basename(rootPath)));
 	});
 	
+	$('#root').selectric('refresh');
 	onRootSelect();
 }
 
 function onRootSelect() {
-	root = rootSelect.find("option:selected").first().text();
+	root = rootSelect.find("option:selected").first().val();
 	prefix = "";
 	console.log("new root: "+root);
 	
@@ -222,6 +236,7 @@ function onRootSelect() {
 }
 
 function onFileClick(data) {
+	status.loading('Retrieving file list ...');
 	prefixFile = data.node.original.file;
 	
 	var fileXml = data.node.original.file;
@@ -243,6 +258,8 @@ function onFileClick(data) {
 
 function onError(evt) {
 	console.log('ERROR: ' + evt.data);
+	status.okay("Not connected");
+
 }
 
 function sendListWatchesRequest() {
