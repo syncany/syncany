@@ -5,6 +5,7 @@ html, body {
 	font-family: Arial; 
 	margin: 0; 
 	padding: 0;
+	height: 100%; /* Page full height! */
 }
 
 .clear {
@@ -41,6 +42,7 @@ html, body {
 	top: 0px;
 	max-width: 1300px;
 	margin: 0 auto;
+	height: 100%;
 }	
 
 #site #headline {
@@ -214,6 +216,8 @@ html, body {
 /** Table **/
 
 #content #table { width: 100%; }
+#content #table tr { cursor: pointer }
+#content #table td { border: none }
 
 #content #table span { 
 	display: block;
@@ -240,15 +244,19 @@ html, body {
 	position: absolute;
 	display: block;
 	bottom: 0px;
-	height: 40px;
+	height: 29px;
 	width: 100%;
 	margin: 0 auto;
 	text-align: center;
+	z-index: 10;
+	
+	color: #999;
+	font-size: 15px;
 }
 
 #copyright .link {
 	width: 20%;
-	padding: 0 10px;
+	padding: 0 20px;
 }
 
 #copyright .link a {

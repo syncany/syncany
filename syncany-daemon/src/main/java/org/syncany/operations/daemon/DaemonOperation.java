@@ -49,7 +49,7 @@ import com.google.common.eventbus.Subscribe;
  *  <li>The {@link DaemonWatchServer} starts a {@link WatchOperation} for every 
  *      folder registered in the <tt>daemon.xml</tt> file. It can be reloaded via
  *      the <tt>syd reload</tt> command.</li>
- *  <li>The {@link DaemonWebSocketServer} starts a websocket and allows clients 
+ *  <li>The {@link DaemonWebServer} starts a websocket and allows clients 
  *      (e.g. GUI, Web) to control the daemon (if authenticated). 
  *      TODO [medium] This is not yet implemented!</li>
  *  <li>The {@link DaemonControlServer} creates and watches the daemon control file
@@ -69,7 +69,7 @@ public class DaemonOperation extends Operation {
 	private File pidFile;
 	private File daemonConfigFile;
 	
-	private DaemonWebSocketServer webSocketServer;
+	private DaemonWebServer webSocketServer;
 	private DaemonWatchServer watchServer;
 	private DaemonControlServer controlServer;
 	private DaemonEventBus eventBus;
@@ -144,7 +144,7 @@ public class DaemonOperation extends Operation {
 	private void startWebSocketServer() throws ServiceAlreadyStartedException {
 		logger.log(Level.INFO, "Starting websocket server ...");
 
-		webSocketServer = new DaemonWebSocketServer();
+		webSocketServer = new DaemonWebServer();
 		webSocketServer.start();
 	}
 

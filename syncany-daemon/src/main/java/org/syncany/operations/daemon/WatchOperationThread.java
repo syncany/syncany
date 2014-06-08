@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bouncycastle.util.Arrays;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
@@ -57,7 +58,7 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WatchOperationThread implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
-	private static final int MAX_FRAME_LENGTH = 512*1024;
+	private static final int MAX_FRAME_LENGTH = 64*1024;
 	
 	private Config config;
 	private Thread watchThread;
@@ -112,10 +113,10 @@ public class WatchOperationThread implements WatchOperationListener {
 			logger.log(Level.INFO, "Received " + watchRequest);
 			
 			if (watchRequest instanceof GetFileTreeRequest) {
-				handleFileTreeRequest((GetFileTreeRequest) watchRequest);			
+				handleGetFileTreeRequest((GetFileTreeRequest) watchRequest);			
 			}
 			else if (watchRequest instanceof GetFileRequest) {
-				handleGetRequest((GetFileRequest) watchRequest);			
+				handleGetFileRequest((GetFileRequest) watchRequest);			
 			}
 			else {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
@@ -123,7 +124,7 @@ public class WatchOperationThread implements WatchOperationListener {
 		}		
 	}
 
-	private void handleGetRequest(GetFileRequest getRequest) {
+	private void handleGetFileRequest(GetFileRequest getRequest) {
 		String requestedFileStr = getRequest.getFile();		
 		File requestedFile = FileUtil.getCanonicalFile(new File(config.getLocalDir(), requestedFileStr));
 		String mimeType = findMimeType(requestedFile);
@@ -139,7 +140,9 @@ public class WatchOperationThread implements WatchOperationListener {
 			int frameNumber = 0;
 			
 			while (-1 != (read = fileInputStream.read(buffer))) {
-				FileFrameResponse fileDataResponse = new FileFrameResponse(getRequest.getId(), frameNumber++, ByteBuffer.wrap(buffer, 0, read));
+				ByteBuffer fileFrameData = ByteBuffer.wrap(Arrays.copyOfRange(buffer, 0, read)); // Don't just pass the buffer!
+				
+				FileFrameResponse fileDataResponse = new FileFrameResponse(getRequest.getId(), frameNumber++, fileFrameData);
 				eventBus.post(fileDataResponse);
 			}
 		}
@@ -157,7 +160,7 @@ public class WatchOperationThread implements WatchOperationListener {
 		}
 	}
 
-	private void handleFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
+	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
 		Map<String, FileVersion> fileTree = watchOperation.getLocalDatabase().getCurrentFileTree(fileTreeRequest.getPrefix());
 		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<FileVersion>(fileTree.values()));
 		

@@ -25,11 +25,14 @@ subprojects {
 	}
 	
 	processResources {	
-		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
-		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
-		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
-		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
-		filter{ String line -> line.replaceAll('%applicationDate%', "${asUTC(applicationDate, 'EEE, dd MMM yyyy HH:mm:ss Z')}") }          	            
+		from(source) {
+			include "**/*.properties", "**/*.xml"
+			filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
+			filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
+			filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
+			filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
+			filter{ String line -> line.replaceAll('%applicationDate%', "${asUTC(applicationDate, 'EEE, dd MMM yyyy HH:mm:ss Z')}") }          	            
+		}
 	}		
 	
 	// JAR /////////////////////////////////////////////////////////////////////

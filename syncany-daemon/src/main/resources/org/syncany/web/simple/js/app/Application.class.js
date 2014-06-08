@@ -281,8 +281,10 @@ function sendFileTreeRequestGoUp() {
 
 function retrieveFile(path) {
 	fullpath = (prefix != "") ? prefix + path : path;
-	sendMessage.value = "<getFileRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <file>" + fullpath + "</file>\n</getFileRequest>";
-	doSend();
+	window.location.assign("http://localhost:8080/api/rest/getFileRequest?id=123&root="+root+"&file="+fullpath);
+
+	//sendMessage.value = "<getFileRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <file>" + fullpath + "</file>\n</getFileRequest>";
+	//doSend();
 }
 
 function setGuiConnected(isConnected) {
