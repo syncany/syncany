@@ -24,6 +24,11 @@
 	<link rel="stylesheet" type="text/css" href="js/datatables/css/jquery.dataTables.css">	
 	<script type="text/javascript" charset="utf8" src="js/datatables/js/jquery.dataTables.js"></script>
 	
+	<!-- Context Menu -->
+	<script src="js/jquery-context-menu/jquery.ui.position.js" type="text/javascript"></script>
+	<script src="js/jquery-context-menu/jquery.contextMenu.js" type="text/javascript"></script>
+	<link href="js/jquery-context-menu/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+	
 	<!-- Selectric -->
 	<link rel="stylesheet" type="text/css" href="css/selectric/selectric.css">	
 	<script type="text/javascript" charset="utf8" src="js/selectric/jquery.selectric.min.js"></script>
@@ -95,6 +100,14 @@
 <div id="dialog-login">
 	<input id="password" type="password" />
 </div>
+
+<ul id="the-node" class="contextMenu">
+    <li class="edit"><a href="#">Edit</a></li>
+    <li class="cut separator"><a href="#">Cut</a></li>
+    <li class="copy"><a href="#">Copy</a></li>
+    <li class="paste"><a href="#">Paste</a></li>
+    <li class="delete"><a href="#">Delete</a></li>         
+</ul> 
 
 <div id="dialog-connect">
 	<strong>Location:</strong>

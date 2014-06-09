@@ -25,9 +25,11 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -44,6 +46,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	public List<DatabaseVersionHeader> getDatabaseVersionHeaders() {
 		// for the date picker
+		return null;
 	}
 	
 	public Map<String, ExtendedFileVersion> getFileTree(String prefix, Date date, FileType fileType) {
@@ -92,7 +95,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	public ExtendedFileVersion createFileVersionFromRow(ResultSet resultSet) throws SQLException {
 		ExtendedFileVersion fileVersion = new ExtendedFileVersion();
 
-		fileVersion.setFileHistoryId(FileHistoryId.parseFileId(resultSet.get);
+		fileVersion.setFileHistoryId(FileHistoryId.parseFileId(resultSet.getString("filehistory_id")));
 		fileVersion.setVersion(resultSet.getLong("version"));
 		fileVersion.setPath(resultSet.getString("path"));
 		fileVersion.setType(FileType.valueOf(resultSet.getString("type")));

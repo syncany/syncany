@@ -238,6 +238,28 @@ html, body {
 }
 
 
+/** Context Menu **/
+/*
+#the-node {
+    list-style: none;
+    margin: 0; padding: 0;
+}
+#the-node > li > span {
+    display: inline-block;
+    background: #fff;
+}
+#the-node > li {
+    background: #eee;
+    padding: 20px;
+}
+#the-node > li:hover {
+    background: #ddd;
+}
+#the-node > li + li {
+    margin-top: 5px;
+}*/
+
+
 /** Credits **/
 
 #copyright {

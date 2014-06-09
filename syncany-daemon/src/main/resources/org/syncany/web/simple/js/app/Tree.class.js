@@ -59,15 +59,25 @@ function Tree(treeElements, onFileClickCallback) {
 			var path = fileXml.find('path').text();
 			var type = fileXml.find('type').text().toLowerCase();
 		
-			if (type == "symlink") type = "file";
+			if (type == "folder") {
+				tree.create_node(null, {
+					id: prefix + path,
+					text: path,
+					type: type,
+					file: fileXml
+				});
+			}
+			else {
+				/*if (type == "symlink") type = "file";
 		
-			console.log(file);
-			tree.create_node(null, {
-				id: prefix + path,
-				text: path,
-				type: type,
-				file: fileXml
-			});
+				console.log(file);
+				tree.create_node(null, {
+					id: prefix + path,
+					text: path,
+					type: type,
+					file: fileXml
+				});*/
+			}
 		});
 	
 		this.tree.scrollTop = 0;

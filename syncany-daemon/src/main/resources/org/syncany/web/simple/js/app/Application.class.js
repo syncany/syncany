@@ -17,6 +17,7 @@ var rootSelect;
 var downloader;
 var tree;
 var status;
+var table;
 
 $(document).ready(function() {
 
@@ -145,8 +146,8 @@ function processFileTreeResponse(xml) {
 function populateDataTable(xml) {
 	$('#table').dataTable().fnDestroy();
 	var fileVersions = toFileVersions(xml);
-
-	$('#table').dataTable({
+	
+	table = $('#table').DataTable({
 		paging: false,
 		searching: false,
 		jQueryUI: false,
@@ -154,7 +155,7 @@ function populateDataTable(xml) {
 		ordering: true,
 		data: fileVersions,
 		columns: [
-			{ data: 'path', orderData: [2, 0], target: 1 },
+			{ data: 'path', type: "path"},
 			{ data: 'version' },
 			{ data: 'type', visible: false },
 			{ data: 'status' },
@@ -162,7 +163,7 @@ function populateDataTable(xml) {
 			{ data: 'lastModified' },
 			{ data: 'posixPermissions' },
 		],
-		createdRow: function ( row, data, index ) {
+		createdRow: function (row, data, index) {
 			if (data.type == "FOLDER") {
 				$('td', row).eq(0).prepend("<span class='folder'></span>");
 			}
@@ -171,6 +172,64 @@ function populateDataTable(xml) {
 			}
 		}
 	});
+	
+	$.fn.dataTableExt.oSort['path'] = function(a, b) {
+		console.log(a);
+
+		var aType = a.type == 'file' || a.type == 'symlink' ? 'file' : 'folder';
+		var bType = b.type == 'file' || b.type == 'symlink' ? 'file' : 'folder';
+
+		if (aType == bType) {
+			return a.path.compare(b.path);
+		}
+		else {
+			return aType.compare(bType);
+		}
+	}
+
+	
+	table.on('mouseenter', function (ctx) {       
+		$(this).contextMenu({
+			selector: 'tr', 
+			build: function(row, e) {
+				var data = table.row(row).data();
+				var items = {};
+				
+				console.log(data);
+				
+				if (data.type.toLowerCase() == 'file' || data.type.toLowerCase() == 'symlink') {
+					var filename = data.path;
+					var restoreDisabled = data.version == 1;
+					
+					items = {
+						"preview": {name: "Preview " + data.path, icon: "cut"},
+						"download": {name: "Download " + data.path, icon: "cut"},
+						"restore": {name: "Restore previous versions", icon: "edit", disabled: restoreDisabled},
+						"sep1": "---------",
+						"show-details": {name: "Show file details", icon: "edit"},
+					};
+				}
+				else {
+					items = {
+						"show-previous": {name: "Show previous versions", icon: "edit"},
+						"sep1": "---------",
+						"show-details": {name: "Show file details", icon: "edit"},
+					}
+				}				
+				
+				return {
+					callback: function(row, options) {
+						var m = "clicked: " + row + " on " + $(this).text();
+						var data = table.row(this).data();
+				
+						console.log('Do something');
+					},
+					items: items
+				}
+			}
+		});
+	});
+
 }
 
 function toFileVersions(xml) {
