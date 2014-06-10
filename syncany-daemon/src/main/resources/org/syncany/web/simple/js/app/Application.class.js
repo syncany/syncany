@@ -148,11 +148,8 @@ function processFileTreeResponse(xml) {
 	status.loading('Updating tables');
 
 	var responsePrefix = xml.find('prefix').text();
-	
-	if (prefix != responsePrefix) {
-		populateDataTable(xml);
-	}
-	
+
+	populateDataTable(xml);
 	tree.processFileTreeResponse(xml);
 
 	prefix = responsePrefix; // new prefix!
@@ -331,21 +328,29 @@ function onRootSelect() {
 	root = rootSelect.find("option:selected").first().val();
 	console.log("new root: "+root);
 	
-	tree.clear();
+	tree.clear(root);
+	
 	sendFileTreeRequest("");
 	sendGetDatabaseVersionHeaders();
 }
 
 function onFileClick(data) {
 	status.loading('Retrieving file list');
-	prefixFile = data.node.original.file;
 	
-	var fileXml = data.node.original.file;
-	var path = fileXml.find('path').text();
-	var type = fileXml.find('type').text().toLowerCase();
-	var nodeId = data.node.id;
+	if (data.node.original.file) {
+		prefixFile = data.node.original.file;
 	
-	sendFileTreeRequest(nodeId+"/");
+		var fileXml = data.node.original.file;
+		var path = fileXml.find('path').text();
+		var type = fileXml.find('type').text().toLowerCase();
+		var nodeId = data.node.id;
+	
+		sendFileTreeRequest(nodeId+"/");
+	}
+	else {
+		// Must be the root
+		sendFileTreeRequest("");
+	}
 }
 
 function onFileTreeNodeOpenCallback(data) {

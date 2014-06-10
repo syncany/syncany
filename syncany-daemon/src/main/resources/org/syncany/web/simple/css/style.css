@@ -1,53 +1,126 @@
-/** Common **/
+/**
+ * BOX MODEL
+ * 
+ * This section only describes the essential CSS necessary to keep the basic
+ * outline of header/footer and middle section, and the scroll/overflow stuff.
+ *
+ * See http://jsfiddle.net/5V288/7/
+ *  or http://pastebin.com/k4KhM8Px (copy)
+ *
+ */
+ 
+/** Begin of box model ********************************************************/ 
 
-html, body { 
-	font-size: 12px; 
-	font-family: Arial; 
+html {
+	height: 100%;
+}
+
+body { 
+	position: relative;
 	margin: 0; 
 	padding: 0;
-	height: 100%; /* Page full height! */
+	height: 100%; 
+	min-height: 100%; 
 }
-
-.clear {
-	clear: both;
-}
-
-
-/** Header **/
 
 #header {
 	position: absolute;
 	width: 100%;
 	height: 40px;
-	background: #eee;
-	border-bottom: 1px solid #ddd;
 }
-
-/** Footer **/
 
 #footer {
 	position: absolute;
 	bottom: 0px;
 	width: 100%;
 	height: 40px;
+}
+
+#site {
+	max-width: 1300px;
+	margin: 0 auto;
+	height: 100%;
+	padding: 40px 0;
+	overflow: hidden;
+	
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}	
+
+#content {
+	position: relative;
+	height: 100%;
+	
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+#left {
+	float: left;
+	width: 30%;
+	height: 100%;
+	margin: 0;
+	padding: 0 0 40px 0;	
+	overflow: hidden;
+	
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;	
+}
+
+#right {
+	float: left;
+	width: 70%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+/** End of box model **********************************************************/ 
+
+
+/** Begin of layout ***********************************************************/
+
+/** Common **/
+
+body { 
+	font-size: 12px; 
+	font-family: Arial; 
+}
+
+.clear {
+	clear: both;
+}
+
+/** Header **/
+
+#header {
+	background: #eee;
+	border-bottom: 1px solid #ddd;
+}
+
+#header-wrapper {
+	position: relative;
+	top: 0px;
+	bottom: 0px;
+	max-width: 1300px;
+	margin: 0 auto;	
+}
+
+/** Footer **/
+
+#footer {
 	background: #eee;
 	border-top: 1px solid #ddd;
 }
 
+/** Logo **/
 
-/** Site **/
-
-#site {
-	position: relative;
-	top: 0px;
-	max-width: 1300px;
-	margin: 0 auto;
-	height: 100%;
-}	
-
-#site #headline {
+#logo {
 	position: absolute;
-	left: 0px;
+	left: 5px;
 	top: 0px;
 	min-width: 200px;
 	width: 45%;
@@ -56,53 +129,34 @@ html, body {
 	color: #888;
 }
 
-#site #headline img {
+#logo img {
 	position: absolute;
 	top: 3px;
 	left: 0px;
 }
 
-#site #headline span {
+#logo span {
 	position: absolute;
 	top: 9px;
 	left: 40px;
 }
 
-#site #tray {
-	position: absolute;
-	right: 0px;
-	top: 0px;
-	min-width: 200px;
-	width: 50%;
-	height: 40px;
-}
-
-#site #content {
-	position: relative;
-	top: 40px;
-}
-
-#site #content #left {
-	float: left;
-	width: 30%;
-	margin: 0;
-	padding: 0;	
-}
-
-#site #content #right {
-	float: left;
-	width: 70%;
-	margin: 0;
-	padding: 0;
-}
-
-
 /** Menu **/
 
-#site #tray .selectricWrapper { /* = #menu */
+#menu-wrapper .selectricWrapper { /* = #menu */
 	position: absolute;
 	top: 0px;
 	right: 0px;
+	width: 90px;
+}
+
+
+/** Root **/
+
+#root-wrapper .selectricWrapper { /* = #menu */
+	position: absolute;
+	top: 0px;
+	right: 110px;
 	width: 90px;
 }
 
@@ -112,7 +166,7 @@ html, body {
 #dateselect {
 	position: absolute;
 	top: 14px;
-	right: 110px;
+	right: 230px;
 	width: 300px;
 	
 	width: 300px;
@@ -138,10 +192,10 @@ html, body {
 
 /** Status **/
 
-#site #status {
+#status {
 	position: absolute;
 	top: 12px;
-	right: 390px;
+	right: 510px;
 	width: 300px;
 	text-align: right;
 
@@ -149,19 +203,19 @@ html, body {
 	font-size: 14px;
 }
 
-#site #status span { /* Image/Throbber */
+#status span { /* Image/Throbber */
 	float: right;
 	margin-left: 10px;
 }
 
-#site #status .status-loading {
+#status .status-loading {
 	display: block;
 	background: url(../images/throbber.gif);
 	width: 16px;
 	height: 16px;
 }
 
-#site #status .status-okay {
+#status .status-okay {
 	display: block;
 	background: url(../images/check.gif);
 	width: 16px;
@@ -171,7 +225,7 @@ html, body {
 
 /** jsTree **/
 
-#tree { float:left; min-width:219px; border-right:1px solid silver; overflow:auto; padding:0px 0; }
+#tree { float:left; min-width:219px; border-right:1px solid silver; overflow: auto; padding:0px 0 }
 #tree .folder { background:url('./file_sprite.png') right bottom no-repeat; }
 #tree .file { background:url('./file_sprite.png') 0 0 no-repeat; }
 #tree .file-pdf { background-position: -32px 0 }
@@ -200,7 +254,7 @@ html, body {
 #tree {
 	width: 100%;
 	height: 100%;
-	
+	padding-bottom: 40px;
 	border-right: 1px solid #ddd;
 }
 
@@ -224,34 +278,18 @@ html, body {
 	resize: none; 
 }
 
-
-/** Root **/
-
-#content #left .selectricWrapper {
-	width: 100%;
-	margin-bottom: 0px;
-}
-
-#content #left .selectric {
-	background: none;
-}
-
-#content #left .selectric .label {
-	font-size: 19px;
-	font-weight: bold;
-	margin-left: 10px;
-}
-
 /** Table **/
 
-#content #table { width: 100%; border: none; margin-top: 6px; }
-#content #table tr { cursor: pointer }
-#content #table td { border: none }
-#content #table th { border: none; }
-#content #table .folder { background-position: -265px -8px; }
-#content #table .file { background-position: -104px -73px; }
+#table { width: 100%; border: none; }
+#table tr { cursor: pointer }
+#table td { border: none }
+#table th { border: none; padding: 5px 10px; text-align: left; }
+#table .folder { background-position: -265px -8px; }
+#table .file { background-position: -104px -73px; }
 
-#content #table span { 
+#table tbody tr:hover { background-color: #e7f4f9; }
+
+#table span { 
 	display: block;
 	float: left; 
 	width: 16px; 
@@ -260,13 +298,11 @@ html, body {
 	background: url('../images/file-sprite.png') no-repeat;
 }
 
-#content #table td {
+#table td {
 	white-space: nowrap;
 	padding: 4px 10px;
 	vertical-align: middle;
 }
-
-
 
 /** Credits **/
 

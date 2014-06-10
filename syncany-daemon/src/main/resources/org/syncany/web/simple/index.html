@@ -51,35 +51,42 @@
 
 <body>
 
-<div id="header"></div>
-
-<div id="site">
-	<div id="headline">
-		<img src="images/logo.png" />
-		<span>Syncany</span>
-	</div>
+<div id="header">
+	<div id="header-wrapper">
+		<div id="logo">
+			<img src="images/logo.png" />
+			<span>Syncany</span>
+		</div>
 		
-	<div id="tray">
 		<div id="status"></div>
+		
 		<div id="dateselect">
 			<div id="dateslider"></div>
 			<div id="datetext"></div>
 		</div>
-		<select id="menu">
-			<option value="">Menu</option>
-			<option value="addwatch">Add Folder</option>
-			<option value="shutdown">Shutdown</option>
-			<option value="reload">Reload</option>			
-		</select>
-	</div>	
-	
+		
+		<div id="root-wrapper">
+			<select id="root"></select>
+		</div>
+		
+		<div id="menu-wrapper">
+			<select id="menu">
+				<option value="">Menu</option>
+				<option value="addwatch">Add Folder</option>
+				<option value="shutdown">Shutdown</option>
+				<option value="reload">Reload</option>			
+			</select>
+		</div>
+	</div>
+</div>
+
+<div id="site">
 	<div id="content">
 		<div id="left">
-			<select id="root"></select>
 			<div id="tree"></div>
 		</div>
 		<div id="right">
-			<table id="table" class="display">
+			<table id="table" class="stripe hover">
 				<thead>
 					<tr>
 						<th>Name</th>
@@ -96,14 +103,14 @@
 		</div>
 	</div>
 	
-	<div id="copyright">		
-		<span class="link"><a href="https://www.syncany.org">Made with ♥ by the Syncany Team</a></span>
-	</div>
-	
 	<br class="clear" />
 </div>
 
-<div id="footer"></div>
+<div id="footer">
+	<div id="copyright">		
+		<span class="link"><a href="https://www.syncany.org">Made with ♥ by the Syncany Team</a></span>
+	</div>
+</div>
 
 <div id="dialog-login">
 	<input id="password" type="password" />

@@ -10,29 +10,29 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 		var onFileTreeNodeOpenCallback = this.onFileTreeNodeOpenCallback;
 		
 		this.treeElements.jstree({
-			'core' : {
-				'data' : function (obj, cb) {
+			core: {
+				data: function (obj, cb) {
 				    cb.call(this, []);
 				},
-				'check_callback' : true,
-				'themes' : {
-					'responsive' : false,
-					'variant' : 'medium',
-					'stripes' : true
+				animation: false,
+				check_callback : true,
+				themes: {
+					stripes: true,
+					responsive: false
 				}
 			},
-			'sort' : function(a, b) {
+			sort: function(a, b) {
 				return this.get_type(a) === this.get_type(b) ? (this.get_text(a) > this.get_text(b) ? 1 : -1) : (this.get_type(a) >= this.get_type(b) ? -1 : 1);
 			},
-			'types' : {
+			types: {
 				'up' : { 'icon' : 'jstree-folder' },
 				'folder' : { 'valid_children': ['folder'], 'icon' : 'jstree-folder' },
 				'file' : { 'valid_children' : [], 'icon' : 'jstree-file' }
 			},
-			'plugins' : ['sort', 'types'/*, 'wholerow'*/] 
+			plugins: ['sort', 'types', 'wholerow'] 
 
 		})
-		.on("select_node.jstree", function (e, data) {
+		.on("activate_node.jstree", function (e, data) {
 			onFileClickCallback(data);
 	 	})
 	 	.on("load_node.jstree", function (e, data) {
@@ -47,7 +47,7 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 		var prefix = xml.find('prefix').text();
 		
 		var tree = this.tree;
-		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : null;
+		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : "<ROOT>";
 
 		$(files).each(function (i, file) {
 			var fileXml = $(file);
@@ -70,11 +70,15 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 			}
 		});
 		
+		tree.deselect_all();
 		tree.open_node(parentNode);
+		tree.select_node(parentNode);
+		
 		tree.scrollTop = 0;
 	}
 	
-	this.clear = function() {
+	this.clear = function(root) {
+		// Clear tree entries
 		var i=0;
 		while (i++<1000) {
 			var node = this.treeElements.find('li');
@@ -86,6 +90,17 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 				this.tree.delete_node(node);
 			}
 		}
+		
+		// Create root node
+		var rootNode = this.tree.create_node(null, {
+			id: "<ROOT>",
+			text: basename(root),
+			type: "folder",
+			children: true
+		});
+		
+		// Select root node
+		this.tree.select_node(rootNode);
 	}
 	
 	this._init();
