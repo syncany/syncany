@@ -81,6 +81,10 @@ public class SqlDatabase {
 
 	// General
 	
+	public Connection getConnection() {
+		return connection; // TODO [low] Exposes internal state!
+	}
+	
 	public void commit() throws SQLException {
 		connection.commit();
 	}

@@ -37,10 +37,10 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 
-public class FileVersionSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());
+public class DaemonSqlDao extends AbstractSqlDao {
+	protected static final Logger logger = Logger.getLogger(DaemonSqlDao.class.getSimpleName());
 	
-	public FileVersionSqlDao(Connection connection) {
+	public DaemonSqlDao(Connection connection) {
 		super(connection);
 	}
 	
@@ -74,6 +74,19 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+	@Deprecated
+	public Map<String, ExtendedFileVersion> getCurrentFileTree(String prefix) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTreeWithPrefix.sql")) {
+			preparedStatement.setString(1, prefix);
+			preparedStatement.setString(2, prefix);
+			preparedStatement.setString(3, prefix);
+			
+			return getFileTree(preparedStatement);				
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	private Map<String, ExtendedFileVersion> getFileTree(PreparedStatement preparedStatement) {
 		Map<String, ExtendedFileVersion> fileTree = new HashMap<String, ExtendedFileVersion>();

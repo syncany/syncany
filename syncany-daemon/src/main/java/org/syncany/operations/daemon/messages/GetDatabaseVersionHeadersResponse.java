@@ -17,40 +17,24 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.simpleframework.xml.Element;
-import org.syncany.database.FileVersion.FileType;
+import org.simpleframework.xml.ElementList;
+import org.syncany.database.DatabaseVersionHeader;
 
-public class GetFileTreeRequest extends WatchRequest {
-	@Element(required = false)
-	private String prefix = "";
+public class GetDatabaseVersionHeadersResponse extends Response {
+	@Element(required = true)
+	private String root;
 	
-	@Element(required = false)
-	private FileType type = null;
+	@ElementList(required = true, entry="databaseVersionHeader")
+	private ArrayList<DatabaseVersionHeader> databaseVersionHeaders;	
 	
-	@Element(required = false)
-	private String date = null;
-	
-	public String getPrefix() {
-		return prefix;
-	}
-
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	public FileType getType() {
-		return type;
-	}
-
-	public void setType(FileType type) {
-		this.type = type;
-	}
-
-	public String getDate() {
-		return date;
-	}
-
-	public void setDate(String date) {
-		this.date = date;
-	}
+	public GetDatabaseVersionHeadersResponse(int requestId, String root, List<DatabaseVersionHeader> databaseVersionHeaders) {
+		super(200, requestId, null);
+		
+		this.root = root;
+		this.databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(databaseVersionHeaders);
+	}	
 }

@@ -6,7 +6,7 @@ dependencies {
 	compile			project(':syncany-util')
 	compile			project(':syncany-cli')	
 
-	compile			"io.undertow:undertow-servlet:1.1.0.Beta1"
-	compile			"io.undertow:undertow-websockets-jsr:1.1.0.Beta1"
+	compile			"io.undertow:undertow-servlet:1.0.15.Final"
+	compile			"io.undertow:undertow-websockets-jsr:1.0.15.Final"
 	compile 		"commons-io:commons-io:2.4"
 }

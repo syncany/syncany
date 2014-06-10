@@ -17,7 +17,7 @@
 	<script src="js/jstree/jstree.min.js"></script>
 
 	<!-- jQuery UI -->
-	<link rel="stylesheet" href="css/jquery-ui/cupertino/jquery-ui-1.10.4.custom.min.css" />
+	<link rel="stylesheet" href="css/jquery-ui/custom-theme/jquery-ui-1.10.4.custom.min.css" />
 	<script src="js/jquery-ui/jquery-ui-1.10.4.custom.min.js"></script>
 	
 	<!-- DataTables -->
@@ -33,12 +33,16 @@
 	<link rel="stylesheet" type="text/css" href="css/selectric/selectric.css">	
 	<script type="text/javascript" charset="utf8" src="js/selectric/jquery.selectric.min.js"></script>
 	
+	<!-- Moment.js -->
+	<script type="text/javascript" charset="utf8" src="js/moment/moment.min.js"></script>
+
 	<!-- Application -->
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/app/Util.class.js"></script>
 	<script type="text/javascript" src="js/app/FileVersion.class.js"></script>
 	<script type="text/javascript" src="js/app/ConnectDialog.class.js"></script>
 	<script type="text/javascript" src="js/app/LoginDialog.class.js"></script>
+	<script type="text/javascript" src="js/app/DateSelect.class.js"></script>
 	<script type="text/javascript" src="js/app/Status.class.js"></script>
 	<script type="text/javascript" src="js/app/Downloader.class.js"></script>
 	<script type="text/javascript" src="js/app/Tree.class.js"></script>
@@ -57,6 +61,10 @@
 		
 	<div id="tray">
 		<div id="status"></div>
+		<div id="dateselect">
+			<div id="dateslider"></div>
+			<div id="datetext"></div>
+		</div>
 		<select id="menu">
 			<option value="">Menu</option>
 			<option value="addwatch">Add Folder</option>
@@ -100,14 +108,6 @@
 <div id="dialog-login">
 	<input id="password" type="password" />
 </div>
-
-<ul id="the-node" class="contextMenu">
-    <li class="edit"><a href="#">Edit</a></li>
-    <li class="cut separator"><a href="#">Cut</a></li>
-    <li class="copy"><a href="#">Copy</a></li>
-    <li class="paste"><a href="#">Paste</a></li>
-    <li class="delete"><a href="#">Delete</a></li>         
-</ul> 
 
 <div id="dialog-connect">
 	<strong>Location:</strong>

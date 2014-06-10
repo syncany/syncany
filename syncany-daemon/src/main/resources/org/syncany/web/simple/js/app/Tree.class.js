@@ -1,20 +1,20 @@
 console.log('Tree still depends on global variables prefix and prefixFile!!');
 
-function Tree(treeElements, onFileClickCallback) {
+function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 	this.treeElements = treeElements;
 	this.onFileClickCallback = onFileClickCallback;
+	this.onFileTreeNodeOpenCallback = onFileTreeNodeOpenCallback;		
 			
 	this._init = function() {
 		var onFileClickCallback = this.onFileClickCallback;
+		var onFileTreeNodeOpenCallback = this.onFileTreeNodeOpenCallback;
 		
 		this.treeElements.jstree({
 			'core' : {
 				'data' : function (obj, cb) {
 				    cb.call(this, []);
 				},
-				'check_callback' : function(o, n, p, i, m) {
-					return true;
-				},
+				'check_callback' : true,
 				'themes' : {
 					'responsive' : false,
 					'variant' : 'medium',
@@ -26,64 +26,55 @@ function Tree(treeElements, onFileClickCallback) {
 			},
 			'types' : {
 				'up' : { 'icon' : 'jstree-folder' },
-				'folder' : { 'icon' : 'jstree-folder' },
+				'folder' : { 'valid_children': ['folder'], 'icon' : 'jstree-folder' },
 				'file' : { 'valid_children' : [], 'icon' : 'jstree-file' }
 			},
-			'plugins' : ['sort', 'types', 'wholerow'] 
+			'plugins' : ['sort', 'types'/*, 'wholerow'*/] 
 
 		})
 		.on("select_node.jstree", function (e, data) {
 			onFileClickCallback(data);
+	 	})
+	 	.on("load_node.jstree", function (e, data) {
+	 		onFileTreeNodeOpenCallback(data);
 	 	});
 	 	
 	 	this.tree = $.jstree.reference('#'+this.treeElements[0].id);
 	}
 	
 	this.processFileTreeResponse = function(xml) {
-		this.clearTree();
-	
-		if (prefix != "") {
-			this.tree.create_node(null, {
-				id: "up",
-				text: "..",
-				type: "up",
-				file: prefixFile
-			});
-		}
-		
 		var files = xml.find('files > file');
+		var prefix = xml.find('prefix').text();
+		
 		var tree = this.tree;
+		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : null;
 
 		$(files).each(function (i, file) {
 			var fileXml = $(file);
 			var path = fileXml.find('path').text();
 			var type = fileXml.find('type').text().toLowerCase();
 		
-			if (type == "folder") {
-				tree.create_node(null, {
-					id: prefix + path,
-					text: path,
-					type: type,
-					file: fileXml
-				});
-			}
-			else {
-				/*if (type == "symlink") type = "file";
-		
-				console.log(file);
-				tree.create_node(null, {
-					id: prefix + path,
-					text: path,
-					type: type,
-					file: fileXml
-				});*/
+			var newNodeId = prefix + path;
+			var newNode = tree.get_node(newNodeId);
+
+			if (!newNode) {
+				if (type == "folder") {
+					tree.create_node(parentNode, {
+						id: newNodeId,
+						text: path,
+						type: type,
+						file: fileXml,
+						children: true
+					});
+				}
 			}
 		});
-	
-		this.tree.scrollTop = 0;
+		
+		tree.open_node(parentNode);
+		tree.scrollTop = 0;
 	}
 	
-	this.clearTree = function() {
+	this.clear = function() {
 		var i=0;
 		while (i++<1000) {
 			var node = this.treeElements.find('li');

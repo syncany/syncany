@@ -107,12 +107,41 @@ html, body {
 }
 
 
+/** Date Select **/
+
+#dateselect {
+	position: absolute;
+	top: 14px;
+	right: 110px;
+	width: 300px;
+	
+	width: 300px;
+	height: 40px;
+}
+
+#dateselect #dateslider {
+	float: right;
+	width: 130px;
+}
+
+#dateselect #datetext {
+	float: right;
+	width: 130px;
+	height: 20px;
+	margin-right: 20px;
+	text-align: right;
+	
+	color: #999;
+	font-size: 13px;
+}
+
+
 /** Status **/
 
 #site #status {
 	position: absolute;
 	top: 12px;
-	right: 110px;
+	right: 390px;
 	width: 300px;
 	text-align: right;
 
@@ -170,7 +199,7 @@ html, body {
 
 #tree {
 	width: 100%;
-	height: 600px;
+	height: 100%;
 	
 	border-right: 1px solid #ddd;
 }
@@ -215,9 +244,12 @@ html, body {
 
 /** Table **/
 
-#content #table { width: 100%; }
+#content #table { width: 100%; border: none; margin-top: 6px; }
 #content #table tr { cursor: pointer }
 #content #table td { border: none }
+#content #table th { border: none; }
+#content #table .folder { background-position: -265px -8px; }
+#content #table .file { background-position: -104px -73px; }
 
 #content #table span { 
 	display: block;
@@ -228,36 +260,12 @@ html, body {
 	background: url('../images/file-sprite.png') no-repeat;
 }
 
-#content #table .folder { background-position: -265px -8px; }
-#content #table .file { background-position: -104px -73px; }
-
 #content #table td {
 	white-space: nowrap;
 	padding: 4px 10px;
 	vertical-align: middle;
 }
 
-
-/** Context Menu **/
-/*
-#the-node {
-    list-style: none;
-    margin: 0; padding: 0;
-}
-#the-node > li > span {
-    display: inline-block;
-    background: #fff;
-}
-#the-node > li {
-    background: #eee;
-    padding: 20px;
-}
-#the-node > li:hover {
-    background: #ddd;
-}
-#the-node > li + li {
-    margin-top: 5px;
-}*/
 
 
 /** Credits **/

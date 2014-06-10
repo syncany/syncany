@@ -57,17 +57,17 @@ public class DaemonWebServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebServer.class.getSimpleName());
 	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
 	private static final int DEFAULT_PORT = 8080;
-	
+
 	private Undertow webServer;
-	private Serializer serializer; 
+	private Serializer serializer;
 	private DaemonEventBus eventBus;
 	private Cache<Integer, WebSocketChannel> requestIdCache;
 	private List<WebSocketChannel> clientChannels;
-	
+
 	public DaemonWebServer() {
 		this.serializer = new Persister();
 		this.clientChannels = new ArrayList<WebSocketChannel>();
-		
+
 		initCache();
 		initEventBus();
 		initServer();
@@ -87,13 +87,9 @@ public class DaemonWebServer {
 	}
 
 	private void initCache() {
-		requestIdCache = CacheBuilder.newBuilder()
-			.maximumSize(10000)
-			.concurrencyLevel(2)
-			.expireAfterAccess(1, TimeUnit.MINUTES)
-			.build();
+		requestIdCache = CacheBuilder.newBuilder().maximumSize(10000).concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
 	}
-	
+
 	private void initEventBus() {
 		eventBus = DaemonEventBus.getInstance();
 		eventBus.register(this);
@@ -101,17 +97,15 @@ public class DaemonWebServer {
 
 	private void initServer() {
 		webServer = Undertow
-			.builder()
-			.addHttpListener(DEFAULT_PORT, "localhost")
-			.setHandler(path()
-				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
-				.addPrefixPath("/api/rest", new InternalRestHandler())
-				.addPrefixPath("/", resource(new ClassPathResourceManager(DaemonWebServer.class.getClassLoader(), "org/syncany/web/simple/"))
-						.addWelcomeFiles("index.html")
-						.setDirectoryListingEnabled(true)
-				)
-			)
-			.build();	
+				.builder()
+				.addHttpListener(DEFAULT_PORT, "localhost")
+				.setHandler(
+						path().addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
+								.addPrefixPath("/api/rest", new InternalRestHandler())
+								.addPrefixPath(
+										"/",
+										resource(new ClassPathResourceManager(DaemonWebServer.class.getClassLoader(), "org/syncany/web/simple/"))
+												.addWelcomeFiles("index.html").setDirectoryListingEnabled(true))).build();
 	}
 
 	private void handleMessage(WebSocketChannel clientSocket, String message) {
@@ -119,14 +113,14 @@ public class DaemonWebServer {
 
 		try {
 			Request request = RequestFactory.createRequest(message);
-			
+
 			requestIdCache.put(request.getId(), clientSocket);
 			eventBus.post(request);
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
 			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-		}	
+		}
 	}
 
 	private void sendBroadcast(String message) {
@@ -136,20 +130,21 @@ public class DaemonWebServer {
 			}
 		}
 	}
-	
+
 	private void sendTo(WebSocketChannel clientChannel, String message) {
+		logger.log(Level.INFO, "Sending message to " + clientChannel + ": " + message);
 		WebSockets.sendText(message, clientChannel, null);
 	}
-	
+
 	@Subscribe
 	public void onResponse(Response response) {
-		try {			
+		try {
 			// Serialize response
 			StringWriter responseWriter = new StringWriter();
 			serializer.write(response, responseWriter);
-			
+
 			String responseMessage = responseWriter.toString();
-			
+
 			// Send to one or many receivers
 			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;
 
@@ -158,7 +153,7 @@ public class DaemonWebServer {
 			}
 			else {
 				WebSocketChannel responseToClientSocket = requestIdCache.asMap().get(response.getRequestId());
-				
+
 				if (responseToClientSocket != null) {
 					sendTo(responseToClientSocket, responseMessage);
 				}
@@ -169,16 +164,16 @@ public class DaemonWebServer {
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
-		}		
+		}
 	}
-	
+
 	@Subscribe
 	public void onResponse(final BinaryResponse response) {
 		WebSocketChannel responseToClientChannel = requestIdCache.asMap().get(response.getRequestId());
-		
+
 		if (responseToClientChannel != null) {
 			logger.log(Level.INFO, "Sending binary frame to " + responseToClientChannel + "...");
-			
+
 			try {
 				WebSockets.sendBinaryBlocking(response.getData(), responseToClientChannel);
 				responseToClientChannel.resumeReceives();
@@ -191,7 +186,7 @@ public class DaemonWebServer {
 			logger.log(Level.WARNING, "Cannot send BINARY message, because request ID in response is unknown or timed out.");
 		}
 	}
-	
+
 	private class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		@Override
 		public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
@@ -200,35 +195,35 @@ public class DaemonWebServer {
 				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
 					handleMessage(clientChannel, message.getData());
 				}
-				
+
 				@Override
 				protected void onError(WebSocketChannel webSocketChannel, Throwable error) {
 					logger.log(Level.INFO, "Server error : " + error.toString());
 				}
-				
+
 				@Override
 				protected void onClose(WebSocketChannel clientChannel, StreamSourceFrameChannel streamSourceChannel) throws IOException {
 					logger.log(Level.INFO, clientChannel.toString() + " disconnected");
-					
+
 					synchronized (clientChannels) {
 						clientChannels.remove(clientChannel);
 					}
 				}
 			});
-			
+
 			synchronized (clientChannels) {
 				clientChannels.add(channel);
 			}
-			
+
 			channel.resumeReceives();
 		}
 	}
-	
+
 	private class InternalRestHandler implements HttpHandler {
-        @Override
-        public void handleRequest(final HttpServerExchange exchange) throws Exception {
-            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/xml");
-            exchange.getResponseSender().send("<xml>Hello World</xml>");
-        }
+		@Override
+		public void handleRequest(final HttpServerExchange exchange) throws Exception {
+			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/xml");
+			exchange.getResponseSender().send("<xml>Hello World</xml>");
+		}
 	}
 }

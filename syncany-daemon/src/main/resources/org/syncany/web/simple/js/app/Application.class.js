@@ -14,6 +14,9 @@ var prefixFile = null;
 var root;
 var rootSelect;
 
+var dateSelect;
+var dateSelected;
+
 var downloader;
 var tree;
 var status;
@@ -43,14 +46,16 @@ $(document).ready(function() {
 	$('#menu').selectric();
 	
 	
-	
+		
 	rootSelect = $("#root");
 	rootSelect.change(onRootSelect);
 
 	status = new Status($('#status'));
-	tree = new Tree($('#tree'), onFileClick);
+	tree = new Tree($('#tree'), onFileClick, onFileTreeNodeOpenCallback);
 	downloader = new Downloader(status);
 	
+	dateSelect = new DateSelect($('#dateslider'), $('#datetext'), onDatabaseVersionHeaderChange);
+
 	doConnect();
 });
 
@@ -121,6 +126,9 @@ function processXmlMessage(evt) {
 			else if (responseType == "watcheventresponse") {
 				processWatchEventResponse(xml);
 			}
+			else if (responseType == "getdatabaseversionheadersresponse") {
+				processGetDatabaseVersionHeadersResponse(xml);
+			}
 			else {
 				console.log('WARNING: Unknown response: ' + evt.data.toString());
 			}
@@ -137,10 +145,18 @@ function processXmlMessage(evt) {
 }
 
 function processFileTreeResponse(xml) {
-	status.okay('All files in sync');
+	status.loading('Updating tables');
 
-	populateDataTable(xml);
+	var responsePrefix = xml.find('prefix').text();
+	
+	if (prefix != responsePrefix) {
+		populateDataTable(xml);
+	}
+	
 	tree.processFileTreeResponse(xml);
+
+	prefix = responsePrefix; // new prefix!
+	status.okay('All files in sync');
 }
 
 function populateDataTable(xml) {
@@ -155,10 +171,10 @@ function populateDataTable(xml) {
 		ordering: true,
 		data: fileVersions,
 		columns: [
-			{ data: 'path', type: "path"},
+			{ data: 'path'/*, type: "path", orderDataType: "dom-text"*/},
 			{ data: 'version' },
 			{ data: 'type', visible: false },
-			{ data: 'status' },
+			{ data: 'status', visible: false },
 			{ data: 'size' },
 			{ data: 'lastModified' },
 			{ data: 'posixPermissions' },
@@ -172,10 +188,22 @@ function populateDataTable(xml) {
 			}
 		}
 	});
-	
-	$.fn.dataTableExt.oSort['path'] = function(a, b) {
-		console.log(a);
-
+	/*
+	jQuery.fn.dataTableExt.afnSortData['dom-text'] = function  ( oSettings, iColumn )
+	{
+		console.log(oSettings);
+		console.log(iColumn);
+	    var aData = [];
+	    $( 'td:eq('+iColumn+') input', oSettings.oApi._fnGetRowElements(oSettings, iColumn) ).each( function () {
+		aData.push( this.value );
+	    } );
+	    return aData;
+	}
+	*/	
+	/*
+	var pathSort = function(a, b, ascDesc) {
+		console.log("sort");
+		console.log(typeof a);
 		var aType = a.type == 'file' || a.type == 'symlink' ? 'file' : 'folder';
 		var bType = b.type == 'file' || b.type == 'symlink' ? 'file' : 'folder';
 
@@ -185,9 +213,16 @@ function populateDataTable(xml) {
 		else {
 			return aType.compare(bType);
 		}
-	}
+	};*/
+	/*
+	$.fn.dataTableExt.oSort['path-asc'] = function(a, b, c) {
+		return pathSort(a, b, "asc");
+	};
 
-	
+	$.fn.dataTableExt.oSort['path-desc'] = function(a, b) {
+		return pathSort(a, b, "desc");
+	};
+	*/
 	table.on('mouseenter', function (ctx) {       
 		$(this).contextMenu({
 			selector: 'tr', 
@@ -204,16 +239,14 @@ function populateDataTable(xml) {
 					items = {
 						"preview": {name: "Preview " + data.path, icon: "cut"},
 						"download": {name: "Download " + data.path, icon: "cut"},
-						"restore": {name: "Restore previous versions", icon: "edit", disabled: restoreDisabled},
+						"show-previous": {name: "Previous versions", icon: "edit", disabled: restoreDisabled},
 						"sep1": "---------",
-						"show-details": {name: "Show file details", icon: "edit"},
+						"show-details": {name: "File details", icon: "edit"},
 					};
 				}
 				else {
 					items = {
-						"show-previous": {name: "Show previous versions", icon: "edit"},
-						"sep1": "---------",
-						"show-details": {name: "Show file details", icon: "edit"},
+						"show-details": {name: "File details", icon: "edit"},
 					}
 				}				
 				
@@ -286,33 +319,46 @@ function processListWatchesResponse(xml) {
 	onRootSelect();
 }
 
+function processGetDatabaseVersionHeadersResponse(xml) {
+	var datesXml = xml.find('date');
+	var dates = $.map(datesXml, function(d) { return $(d).text(); });
+	
+	console.log(dates);
+	dateSelect.updateSlider(dates);
+}
+
 function onRootSelect() {
 	root = rootSelect.find("option:selected").first().val();
-	prefix = "";
 	console.log("new root: "+root);
 	
-	sendFileTreeRequestGoUp();
+	tree.clear();
+	sendFileTreeRequest("");
+	sendGetDatabaseVersionHeaders();
 }
 
 function onFileClick(data) {
-	status.loading('Retrieving file list ...');
+	status.loading('Retrieving file list');
 	prefixFile = data.node.original.file;
 	
 	var fileXml = data.node.original.file;
 	var path = fileXml.find('path').text();
 	var type = fileXml.find('type').text().toLowerCase();
+	var nodeId = data.node.id;
+	
+	sendFileTreeRequest(nodeId+"/");
+}
 
-	if (data.node.type == "up") {
-		sendFileTreeRequestGoUp();
-	}
-	else {
-		if (type == "file" || type == "symlink") {
-			retrieveFile(path);
-		}
-		else if (type == "folder") {
-			sendFileTreeRequest(path);
-		}
-	}
+function onFileTreeNodeOpenCallback(data) {
+	var node = data.node;
+	var nodeId = node.id;
+	
+	sendFileTreeRequest(nodeId+"/");
+}
+
+function onDatabaseVersionHeaderChange(databaseVersionHeader) {
+	status.loading("Updating file tree");
+	dateSelected = databaseVersionHeader;
+	sendFileTreeRequest(prefix);
 }
 
 function onError(evt) {
@@ -327,14 +373,12 @@ function sendListWatchesRequest() {
 }
 
 function sendFileTreeRequest(path) {
-	prefix = (prefix != "") ? prefix + path + "/" : path + "/";
-	sendMessage.value = "<getFileTreeRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <prefix>" + prefix + "</prefix>\n</getFileTreeRequest>";
+	sendMessage.value = "<getFileTreeRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <prefix>" + path + "</prefix>\n  <date>" + dateSelected + "</date>\n</getFileTreeRequest>";
 	doSend();
 }
 
-function sendFileTreeRequestGoUp() {
-	prefix = (prefix != "") ? prefix.substr(0, prefix.substr(0, prefix.length-1).lastIndexOf('/')+1) : prefix;
-	sendMessage.value = "<getFileTreeRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <prefix>" + prefix + "</prefix>\n</getFileTreeRequest>";
+function sendGetDatabaseVersionHeaders() {
+	sendMessage.value = "<getDatabaseVersionHeadersRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n</getDatabaseVersionHeadersRequest>";
 	doSend();
 }
 

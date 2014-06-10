@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,9 +34,15 @@ import org.bouncycastle.util.Arrays;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
+import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileVersion;
+import org.syncany.database.SqlDatabase;
+import org.syncany.database.dao.DaemonSqlDao;
+import org.syncany.database.dao.ExtendedFileVersion;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.FileFrameResponse;
+import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
+import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
 import org.syncany.operations.daemon.messages.GetFileRequest;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
@@ -64,6 +71,9 @@ public class WatchOperationThread implements WatchOperationListener {
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 	private DaemonEventBus eventBus;
+	
+	private SqlDatabase localDatabase;
+	private DaemonSqlDao databaseDaemonDao;
 
 	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
@@ -74,6 +84,9 @@ public class WatchOperationThread implements WatchOperationListener {
 		
 		this.config = ConfigHelper.loadConfig(configFile);
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
+		
+		this.localDatabase = new SqlDatabase(config);
+		this.databaseDaemonDao = new DaemonSqlDao(localDatabase.getConnection());
 		
 		this.eventBus = DaemonEventBus.getInstance();
 		this.eventBus.register(this);
@@ -118,6 +131,9 @@ public class WatchOperationThread implements WatchOperationListener {
 			else if (watchRequest instanceof GetFileRequest) {
 				handleGetFileRequest((GetFileRequest) watchRequest);			
 			}
+			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
+				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
+			}
 			else {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
@@ -161,10 +177,17 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
-		Map<String, FileVersion> fileTree = watchOperation.getLocalDatabase().getCurrentFileTree(fileTreeRequest.getPrefix());
-		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), new ArrayList<FileVersion>(fileTree.values()));
+		Map<String, ExtendedFileVersion> fileTree = databaseDaemonDao.getFileTree(fileTreeRequest.getPrefix(), null, null);
+		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<ExtendedFileVersion>(fileTree.values()));
 		
 		eventBus.post(fileTreeResponse);	
+	}
+	
+	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersRequest headersRequest) {
+		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getLocalDatabaseBranch().getAll();
+		GetDatabaseVersionHeadersResponse headersResponse = new GetDatabaseVersionHeadersResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
+		
+		eventBus.post(headersResponse);
 	}
 
 	@Override
