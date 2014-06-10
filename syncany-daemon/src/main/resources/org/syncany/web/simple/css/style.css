@@ -198,29 +198,27 @@ body {
 	right: 510px;
 	width: 300px;
 	text-align: right;
-
-	color: green;
-	font-size: 14px;
 }
 
-#status span { /* Image/Throbber */
+#status .icon, #status .text { 
 	float: right;
 	margin-left: 10px;
 }
 
-#status .status-loading {
+#status .icon {
 	display: block;
-	background: url(../images/throbber.gif);
 	width: 16px;
 	height: 16px;
 }
 
-#status .status-okay {
-	display: block;
-	background: url(../images/check.gif);
-	width: 16px;
-	height: 16px;
-}
+#status .text { font-size: 14px; }
+#status .text-loading { color: #888; }
+#status .text-okay { color: green; }
+#status .text-error { color: red; }
+
+#status .icon-loading { background: url(../images/throbber.gif); }
+#status .icon-okay { background: url(../images/check.gif); }
+#status .icon-error { background: url(../images/error.png); }
 
 
 /** jsTree **/
@@ -281,28 +279,32 @@ body {
 /** Table **/
 
 #table { width: 100%; border: none; }
-#table tr { cursor: pointer }
-#table td { border: none }
-#table th { border: none; padding: 5px 10px; text-align: left; }
-#table .folder { background-position: -265px -8px; }
-#table .file { background-position: -104px -73px; }
 
+#table tr { cursor: pointer }
+#table tbody tr.selected { background-color: #A8E4FF }
 #table tbody tr:hover { background-color: #e7f4f9; }
 
-#table span { 
+#table th { border: none; padding: 5px 10px; text-align: left; }
+
+#table td {
+	border: none;
+	white-space: nowrap;
+	padding: 4px 10px;
+	vertical-align: middle;
+}
+
+#table td.path span { 
 	display: block;
 	float: left; 
 	width: 16px; 
 	height: 16px; 
 	margin-right: 3px;
-	background: url('../images/file-sprite.png') no-repeat;
+	background-image: url('../images/file-sprite.png');
 }
 
-#table td {
-	white-space: nowrap;
-	padding: 4px 10px;
-	vertical-align: middle;
-}
+#table td.path span.folder { background-position: -265px -8px; }
+#table td.path span.file { background-position: -104px -73px; }
+
 
 /** Credits **/
 

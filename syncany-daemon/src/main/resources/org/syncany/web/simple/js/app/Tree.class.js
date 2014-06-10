@@ -1,15 +1,6 @@
-console.log('Tree still depends on global variables prefix and prefixFile!!');
-
-function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
-	this.treeElements = treeElements;
-	this.onFileClickCallback = onFileClickCallback;
-	this.onFileTreeNodeOpenCallback = onFileTreeNodeOpenCallback;		
-			
+function Tree(treeElements, onFileClick) {
 	this._init = function() {
-		var onFileClickCallback = this.onFileClickCallback;
-		var onFileTreeNodeOpenCallback = this.onFileTreeNodeOpenCallback;
-		
-		this.treeElements.jstree({
+		treeElements.jstree({
 			core: {
 				data: function (obj, cb) {
 				    cb.call(this, []);
@@ -33,37 +24,35 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 
 		})
 		.on("activate_node.jstree", function (e, data) {
-			onFileClickCallback(data);
+			onFileClick(data.node.original.file);
 	 	})
 	 	.on("load_node.jstree", function (e, data) {
-	 		onFileTreeNodeOpenCallback(data);
+	 		onFileClick(data.node.original.file);
 	 	});
 	 	
-	 	this.tree = $.jstree.reference('#'+this.treeElements[0].id);
+	 	this.tree = $.jstree.reference('#'+treeElements[0].id);
 	}
 	
-	this.processFileTreeResponse = function(xml) {
-		var files = xml.find('files > file');
-		var prefix = xml.find('prefix').text();
-		
+	this.populateTree = function(prefix, fileVersions) {
 		var tree = this.tree;
-		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : "<ROOT>";
+		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : "ROOT";
 
-		$(files).each(function (i, file) {
-			var fileXml = $(file);
-			var path = fileXml.find('path').text();
-			var type = fileXml.find('type').text().toLowerCase();
-		
-			var newNodeId = prefix + path;
+		console.log("parent node");
+		console.log(prefix.substr(0, prefix.length-1));
+
+		$(fileVersions).each(function (i, file) {	
+			var newNodeId = file.path;
 			var newNode = tree.get_node(newNodeId);
 
 			if (!newNode) {
-				if (type == "folder") {
+				if (file.type.toLowerCase() == "folder") {
+					var newNodeText = basename(file.path);
+				
 					tree.create_node(parentNode, {
 						id: newNodeId,
-						text: path,
-						type: type,
-						file: fileXml,
+						text: newNodeText,
+						type: file.type.toLowerCase(),
+						file: file,
 						children: true
 					});
 				}
@@ -81,7 +70,7 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 		// Clear tree entries
 		var i=0;
 		while (i++<1000) {
-			var node = this.treeElements.find('li');
+			var node = treeElements.find('li');
 	
 			if (!node) {
 				break;
@@ -93,7 +82,7 @@ function Tree(treeElements, onFileClickCallback, onFileTreeNodeOpenCallback) {
 		
 		// Create root node
 		var rootNode = this.tree.create_node(null, {
-			id: "<ROOT>",
+			id: "ROOT",
 			text: basename(root),
 			type: "folder",
 			children: true

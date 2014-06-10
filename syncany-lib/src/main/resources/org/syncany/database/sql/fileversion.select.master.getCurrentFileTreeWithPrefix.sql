@@ -1,11 +1,12 @@
-select * from (
+select *
+from (
 	select 
-		fv.filehistory_id, fv.version, fv.databaseversion_id,
-		substr(path, length(?)+1, length(path)-length(?)) path,
-		fv.type, fv.status, fv.size, fv.lastmodified, fv.linktarget, fv.filecontent_checksum,
-		fv.updated, fv.posixperms, fv.dosattrs		
-	from fileversion_master_last fv
+		filehistory_id, version, databaseversion_id, path,
+		type, status, size, lastmodified, linktarget, filecontent_checksum,
+		updated, posixperms, dosattrs,
+		substr(path, length(?)+1, length(path)-length(?)) path_short	
+	from fileversion_master_last
 	where path like concat(?, '%') 
 	order by path
 )
-where locate('/', path) = 0
+where locate('/', path_short) = 0

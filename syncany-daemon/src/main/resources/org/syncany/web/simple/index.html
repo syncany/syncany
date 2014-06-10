@@ -39,12 +39,13 @@
 	<!-- Application -->
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/app/Util.class.js"></script>
-	<script type="text/javascript" src="js/app/FileVersion.class.js"></script>
+	<script type="text/javascript" src="js/app/ExtendedFileVersion.class.js"></script>
 	<script type="text/javascript" src="js/app/ConnectDialog.class.js"></script>
 	<script type="text/javascript" src="js/app/LoginDialog.class.js"></script>
 	<script type="text/javascript" src="js/app/DateSelect.class.js"></script>
 	<script type="text/javascript" src="js/app/Status.class.js"></script>
 	<script type="text/javascript" src="js/app/Downloader.class.js"></script>
+	<script type="text/javascript" src="js/app/Table.class.js"></script>
 	<script type="text/javascript" src="js/app/Tree.class.js"></script>
 	<script type="text/javascript" src="js/app/Application.class.js"></script>
 </head>
@@ -126,19 +127,14 @@
 	<br>
 	<button id="connect">Connect</button>
 	<button disabled="disabled" id="disconnect">Disconnect</button>
-	<br>
-	<br>
-	<strong>Message:</strong>
-	<button id="req1" class="wsButton">GetFileTree</button>
-	<button id="req2" class="wsButton">GetFile</button>
-	<button id="req3" class="wsButton">ListWatches</button>
-	<br>
-	<br>
-	<textarea disabled="disabled" id="sendMessage" cols=50 rows=5></textarea>
-	<br>
-	<button disabled="disabled" id="send" class="wsButton">Send</button>
 </div>
 
+<div id="dialog-fileinfo">
+	<h1>File information</h1>
+	<span class="text"></span>
+</div>
+
+<div id="dialog-previous-versions"></div>
 
 </body>
 </html>

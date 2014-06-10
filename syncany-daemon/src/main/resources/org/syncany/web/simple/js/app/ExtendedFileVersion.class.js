@@ -1,4 +1,5 @@
-function FileVersion(version, path, type, status, size, lastModified, checksum, updated, posixPermissions) {
+function ExtendedFileVersion(fileHistoryId, version, path, type, status, size, lastModified, checksum, updated, posixPermissions) {
+	this.fileHistoryId = fileHistoryId;
 	this.version = version;
 	this.path = path;
 	this.type = type;
