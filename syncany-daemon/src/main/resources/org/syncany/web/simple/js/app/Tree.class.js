@@ -24,10 +24,20 @@ function Tree(treeElements, onFileClick) {
 
 		})
 		.on("activate_node.jstree", function (e, data) {
-			onFileClick(data.node.original.file);
+			if (data.node.original) {
+				onFileClick(data.node.original.file);
+			}
+			else {
+				onFileClick(false);
+			}
 	 	})
 	 	.on("load_node.jstree", function (e, data) {
-	 		onFileClick(data.node.original.file);
+			if (data.node.original) {
+				onFileClick(data.node.original.file);
+			}
+			else {
+				onFileClick(false);
+			}
 	 	});
 	 	
 	 	this.tree = $.jstree.reference('#'+treeElements[0].id);

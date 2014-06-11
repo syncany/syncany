@@ -12,17 +12,18 @@ function Table(tableElements, onContextFileInfoClick, onContextPreviousVersionsC
 			ordering: true,
 			data: fileVersions,
 			columns: [
-				{ data: 'path', className: 'path', /*, type: "path", orderDataType: "dom-text"*/render: function(path) { 
+				{ data: 'path', className: 'path', orderData: [ 2, 0 ], render: function(path) { 
 					return basename(path); 
 				}},
 				{ data: 'version' },
-				{ data: 'type', visible: false },
+				{ data: 'sortType', visible: false },
 				{ data: 'status', visible: false },
 				{ data: 'size', className: "right", render: function(bytes) { 
 					return "<span title='" + bytes + " byte(s)'>" + formatFileSize(bytes) + "</span>";
 				}},
 				{ data: 'lastModified' },
 				{ data: 'posixPermissions' },
+//				{ data: 'dosAttributes' }
 			],
 			createdRow: function (row, data, index) {
 				if (data.type == "FOLDER") {
@@ -33,41 +34,7 @@ function Table(tableElements, onContextFileInfoClick, onContextPreviousVersionsC
 				}
 			}
 		});
-		/*
-		jQuery.fn.dataTableExt.afnSortData['dom-text'] = function  ( oSettings, iColumn )
-		{
-			console.log(oSettings);
-			console.log(iColumn);
-		    var aData = [];
-		    $( 'td:eq('+iColumn+') input', oSettings.oApi._fnGetRowElements(oSettings, iColumn) ).each( function () {
-			aData.push( this.value );
-		    } );
-		    return aData;
-		}
-		*/	
-		/*
-		var pathSort = function(a, b, ascDesc) {
-			console.log("sort");
-			console.log(typeof a);
-			var aType = a.type == 'file' || a.type == 'symlink' ? 'file' : 'folder';
-			var bType = b.type == 'file' || b.type == 'symlink' ? 'file' : 'folder';
-
-			if (aType == bType) {
-				return a.path.compare(b.path);
-			}
-			else {
-				return aType.compare(bType);
-			}
-		};*/
-		/*
-		$.fn.dataTableExt.oSort['path-asc'] = function(a, b, c) {
-			return pathSort(a, b, "asc");
-		};
-
-		$.fn.dataTableExt.oSort['path-desc'] = function(a, b) {
-			return pathSort(a, b, "desc");
-		};
-		*/
+		
 		dataTable.on('mouseenter', function (ctx) {       
 			$(this).contextMenu({
 				selector: 'tr', 

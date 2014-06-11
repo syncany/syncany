@@ -1,4 +1,6 @@
-function ExtendedFileVersion(fileHistoryId, version, path, type, status, size, lastModified, checksum, updated, posixPermissions) {
+function ExtendedFileVersion(fileHistoryId, version, path, type, status, size, lastModified, 
+	checksum, updated, posixPermissions, dosAttributes) {
+	
 	this.fileHistoryId = fileHistoryId;
 	this.version = version;
 	this.path = path;
@@ -9,4 +11,8 @@ function ExtendedFileVersion(fileHistoryId, version, path, type, status, size, l
 	this.checksum = checksum;
 	this.updated = updated;
 	this.posixPermissions = posixPermissions;
+	this.dosAttributes = (dosAttributes) ? dosAttributes : "";
+
+	// Extensions for the frontend
+	this.sortType = (type.toLowerCase() == 'folder') ? 1 : 2;
 }

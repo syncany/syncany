@@ -42,7 +42,7 @@ function toFileVersions(xml) {
 			fileXml.find('checksum').text(), // TODO fix checksum formatting
 			fileXml.find('updated').text(),
 			fileXml.find('posixPermissions').text(),
-			"" // TODO fix DOS attrs
+			fileXml.find('dosAttributes').text()
 		));
 	});
 	
