@@ -22,20 +22,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent.FileChecksum;
-import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+
+
+// TODO [high] This is a very ugly construct, refactor!!
+
+
 
 public class DaemonSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(DaemonSqlDao.class.getSimpleName());
@@ -43,10 +45,28 @@ public class DaemonSqlDao extends AbstractSqlDao {
 	public DaemonSqlDao(Connection connection) {
 		super(connection);
 	}
-	
-	public List<DatabaseVersionHeader> getDatabaseVersionHeaders() {
-		// for the date picker
-		return null;
+
+	public List<ExtendedFileVersion> getFileHistory(FileHistoryId fileHistoryId) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileHistoryById.sql")) {
+			preparedStatement.setString(1, fileHistoryId.toString());
+			
+			List<ExtendedFileVersion> fileTree = new ArrayList<ExtendedFileVersion>();
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					ExtendedFileVersion fileVersion = createFileVersionFromRow(resultSet);
+					fileTree.add(fileVersion);
+				}
+
+				return fileTree;
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}				
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public Map<String, ExtendedFileVersion> getFileTree(String prefix, Date date, FileType fileType) {
@@ -139,4 +159,5 @@ public class DaemonSqlDao extends AbstractSqlDao {
 
 		return fileVersion;
 	}
+
 }

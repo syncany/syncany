@@ -1,5 +1,12 @@
 function Tree(treeElements, onFileClick) {
+	var ROOT_NODE_ID = "ROOT";
+	var TREE_ID = "#" + treeElements[0].id;
+	
+	var lastNodeId = ROOT_NODE_ID;
+
 	this._init = function() {
+		var fireFileClick = this.fireFileClick;
+	
 		treeElements.jstree({
 			core: {
 				data: function (obj, cb) {
@@ -24,31 +31,40 @@ function Tree(treeElements, onFileClick) {
 
 		})
 		.on("activate_node.jstree", function (e, data) {
-			if (data.node.original) {
-				onFileClick(data.node.original.file);
+			console.log("activate_node");
+			
+			var tree = $.jstree.reference(TREE_ID);
+			
+			if (!tree.is_loaded(data.node)) {
+				tree.load_node(data.node);
 			}
 			else {
-				onFileClick(false);
+				fireFileClick(data);
 			}
-	 	})
+		})
 	 	.on("load_node.jstree", function (e, data) {
-			if (data.node.original) {
-				onFileClick(data.node.original.file);
-			}
-			else {
-				onFileClick(false);
-			}
+			console.log("load_node");
+			fireFileClick(data);			
 	 	});
 	 	
-	 	this.tree = $.jstree.reference('#'+treeElements[0].id);
+	 	this.tree = $.jstree.reference(TREE_ID);
 	}
+	
+	this.fireFileClick = function(data) {
+		var nodeId = data.node.id;
+		var eventAlreadyFired = nodeId == lastNodeId;
+
+		if (!eventAlreadyFired) { // Avoids double-firing of event
+			lastNodeId = nodeId; 
+			
+			var file = (data.node.original) ? data.node.original.file : null;
+			onFileClick(file);
+		}
+	};
 	
 	this.populateTree = function(prefix, fileVersions) {
 		var tree = this.tree;
-		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : "ROOT";
-
-		console.log("parent node");
-		console.log(prefix.substr(0, prefix.length-1));
+		var parentNode = (prefix != "") ? tree.get_node(prefix.substr(0, prefix.length-1)) : ROOT_NODE_ID;
 
 		$(fileVersions).each(function (i, file) {	
 			var newNodeId = file.path;
@@ -58,6 +74,8 @@ function Tree(treeElements, onFileClick) {
 				if (file.type.toLowerCase() == "folder") {
 					var newNodeText = basename(file.path);
 				
+					console.log("Creating node " + newNodeId);
+					
 					tree.create_node(parentNode, {
 						id: newNodeId,
 						text: newNodeText,
@@ -69,12 +87,12 @@ function Tree(treeElements, onFileClick) {
 			}
 		});
 		
-		tree.deselect_all();
+		tree.deselect_all(true);
 		tree.open_node(parentNode);
 		tree.select_node(parentNode);
 		
 		tree.scrollTop = 0;
-	}
+	};
 	
 	this.clear = function(root) {
 		// Clear tree entries
@@ -92,15 +110,15 @@ function Tree(treeElements, onFileClick) {
 		
 		// Create root node
 		var rootNode = this.tree.create_node(null, {
-			id: "ROOT",
+			id: ROOT_NODE_ID,
 			text: basename(root),
 			type: "folder",
 			children: true
 		});
 		
 		// Select root node
-		this.tree.select_node(rootNode);
-	}
+		this.tree.select_node(rootNode, true);
+	};
 	
 	this._init();
 }

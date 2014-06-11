@@ -17,21 +17,43 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.convert.Registry;
+import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
+import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.StringUtil;
 
-public class RequestFactory {
-	private static final Logger logger = Logger.getLogger(RequestFactory.class.getSimpleName());
+public class MessageFactory {
+	private static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
 	private static final Pattern REQUEST_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");
 	private static final int REQUEST_TYPE_PATTERN_GROUP = 1;
 	
-	private static Serializer serializer = new Persister();
+	private static final Serializer serializer;
+	
+	static {
+		try {
+			Registry registry = new Registry();
+			
+			registry.bind(FileHistoryId.class, new FileHistoryIdConverter());
+			registry.bind(FileChecksum.class, new FileChecksumConverter());
+			
+			serializer = new Persister(new RegistryStrategy(registry));
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	public static Request createRequest(String requestMessage) throws Exception {
 		String requestType = getRequestType(requestMessage);			
@@ -41,6 +63,13 @@ public class RequestFactory {
 		logger.log(Level.INFO, "Request received: " + request);
 		
 		return request;
+	}
+	
+	public static String toResponse(Response response) throws Exception {
+		StringWriter responseWriter = new StringWriter();
+		serializer.write(response, responseWriter);
+
+		return responseWriter.toString();
 	}
 	
 	private static String getRequestType(String requestMessage) throws Exception {
@@ -55,7 +84,7 @@ public class RequestFactory {
 	}
 	
 	private static Class<? extends Request> getRequestClass(String requestType) throws Exception {
-		String thisPackage = RequestFactory.class.getPackage().getName();
+		String thisPackage = MessageFactory.class.getPackage().getName();
 		String camelCaseRequestType = StringUtil.toCamelCase(requestType);
 		String fqRequestClassName = thisPackage + "." + camelCaseRequestType;
 
@@ -68,5 +97,29 @@ public class RequestFactory {
 			logger.log(Level.INFO, "Could not find FQCN " + fqRequestClassName, e);
 			throw new Exception("Cannot read request class from request type: " + requestType, e);
 		}		
+	}
+	
+	private static class FileHistoryIdConverter implements Converter<FileHistoryId> {
+		@Override
+		public FileHistoryId read(InputNode node) throws Exception {
+			return FileHistoryId.parseFileId(node.getValue());
+		}
+
+		@Override
+		public void write(OutputNode node, FileHistoryId value) throws Exception {
+			node.setValue(value.toString());
+		}
+	}
+	
+	private static class FileChecksumConverter implements Converter<FileChecksum> {
+		@Override
+		public FileChecksum read(InputNode node) throws Exception {
+			return FileChecksum.parseFileChecksum(node.getValue());
+		}
+
+		@Override
+		public void write(OutputNode node, FileChecksum value) throws Exception {
+			node.setValue(value.toString());
+		}
 	}
 }

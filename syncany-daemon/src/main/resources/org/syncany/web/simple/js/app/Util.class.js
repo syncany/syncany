@@ -39,7 +39,7 @@ function toFileVersions(xml) {
 			fileXml.find('status').text(),
 			fileXml.find('size').text(),
 			fileXml.find('lastModified').text(),
-			fileXml.find('checksum').text(), // TODO fix checksum formatting
+			fileXml.find('checksum').text(),
 			fileXml.find('updated').text(),
 			fileXml.find('posixPermissions').text(),
 			fileXml.find('dosAttributes').text()
@@ -48,4 +48,8 @@ function toFileVersions(xml) {
 	
 	console.log(fileVersions);
 	return fileVersions;
+}
+
+function nextRequestId() {
+	return Math.floor(Math.random() * 13371337);
 }

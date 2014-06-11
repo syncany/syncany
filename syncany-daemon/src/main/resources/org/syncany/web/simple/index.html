@@ -97,6 +97,7 @@
 						<th>Size</th>
 						<th>Last Modified</th>
 						<th>Posix Perms</th>
+						<th>DOS Attrs</th>
 					</tr>
 				</thead>					
 			</table>
@@ -130,11 +131,39 @@
 </div>
 
 <div id="dialog-fileinfo">
-	<h1>File information</h1>
-	<span class="text"></span>
+	<table>
+		<tr><th>Name</th><td class="name"></td></tr>
+		<tr><th>Type</th><td class="type"></td></tr>
+		<tr><th>Size</th><td class="size"></td></tr>
+		<tr><th>Location</th><td class="location"></td></tr>
+		<tr><th>Modified</th><td class="lastModified"></td></tr>
+		<tr><th>Updated</th><td class="updated"></td></tr>
+		<tr><th>Posix Permissions</th><td class="posixPermissions"></td></tr>
+		<tr><th>DOS Attributes</th><td class="dosAttributes"></td></tr>
+		<tr><th>Checksum (SHA-1)</th><td class="checksum"></td></tr>
+		<tr><th>File History ID</th><td class="fileHistoryId"></td></tr>
+		<tr><th>Version</th><td class="version"></td></tr>
+	</table>
 </div>
 
-<div id="dialog-previous-versions"></div>
+<div id="dialog-previous-versions">
+	<table id="table-previous-versions" class="stripe hover">
+		<thead>
+			<tr>
+				<th>Full Path</th>
+				<th>Version</th>
+				<th>Type</th>
+				<th>Status</th>
+				<th>Size</th>
+				<th>Checksum (SHA-1)</th>
+				<th>Updated</th>
+				<th>Last Modified</th>
+				<th>Posix Perms</th>
+				<th>DOS Attrs</th>
+			</tr>
+		</thead>					
+	</table>
+</div>
 
 </body>
 </html>

@@ -34,19 +34,16 @@ import io.undertow.websockets.core.WebSockets;
 import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.BinaryResponse;
+import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.RequestFactory;
 import org.syncany.operations.daemon.messages.Response;
 
 import com.google.common.cache.Cache;
@@ -59,13 +56,11 @@ public class DaemonWebServer {
 	private static final int DEFAULT_PORT = 8080;
 
 	private Undertow webServer;
-	private Serializer serializer;
 	private DaemonEventBus eventBus;
 	private Cache<Integer, WebSocketChannel> requestIdCache;
 	private List<WebSocketChannel> clientChannels;
 
 	public DaemonWebServer() {
-		this.serializer = new Persister();
 		this.clientChannels = new ArrayList<WebSocketChannel>();
 
 		initCache();
@@ -112,7 +107,7 @@ public class DaemonWebServer {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
-			Request request = RequestFactory.createRequest(message);
+			Request request = MessageFactory.createRequest(message);
 
 			requestIdCache.put(request.getId(), clientSocket);
 			eventBus.post(request);
@@ -140,10 +135,7 @@ public class DaemonWebServer {
 	public void onResponse(Response response) {
 		try {
 			// Serialize response
-			StringWriter responseWriter = new StringWriter();
-			serializer.write(response, responseWriter);
-
-			String responseMessage = responseWriter.toString();
+			String responseMessage = MessageFactory.toResponse(response);
 
 			// Send to one or many receivers
 			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;

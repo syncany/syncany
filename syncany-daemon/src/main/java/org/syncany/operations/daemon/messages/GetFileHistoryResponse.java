@@ -17,13 +17,24 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import java.util.ArrayList;
+import java.util.List;
 
-public class GetFileRequest extends WatchRequest {
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.syncany.database.dao.ExtendedFileVersion;
+
+public class GetFileHistoryResponse extends Response {
 	@Element(required = true)
-	private String file;
+	private String root;
+
+	@ElementList(required = true, entry="file")
+	private ArrayList<ExtendedFileVersion> files;	
 	
-	public String getFile() {
-		return file;
-	}
+	public GetFileHistoryResponse(int requestId, String root, List<ExtendedFileVersion> files) {
+		super(200, requestId, null);
+		
+		this.root = root;
+		this.files = new ArrayList<ExtendedFileVersion>(files);
+	}	
 }

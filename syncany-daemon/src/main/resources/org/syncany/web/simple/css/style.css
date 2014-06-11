@@ -281,8 +281,10 @@ body {
 #table { width: 100%; border: none; }
 
 #table tr { cursor: pointer }
-#table tbody tr.selected { background-color: #A8E4FF }
-#table tbody tr:hover { background-color: #e7f4f9; }
+
+#table tbody tr.odd { background-color: #f2f2f2; }      /* < Note the order! */
+#table tbody tr:hover { background-color: #e7f4f9; }    /* < Note the order! */
+#table tbody tr.selected { background-color: #A8E4FF }  /* < Note the order! */
 
 #table th { border: none; padding: 5px 10px; text-align: left; }
 
@@ -335,4 +337,40 @@ body {
 
 #copyright .link a:hover {
 	color: #666;
+}
+
+/** Dialog File Info **/
+
+#dialog-fileinfo { display: none; }
+#dialog-fileinfo table { width: 100%; }
+
+#dialog-fileinfo table th {
+	width: 30%;
+	font-weight: bold;
+	font-size: 10px;
+	text-align: left;
+}
+
+#dialog-fileinfo table td {
+	width: 70%;
+	font-size: 10px;
+}
+
+/** Dialog Previous File Versions **/
+
+#dialog-previous-versions { display: none; }
+#dialog-previous-versions table { width: 100%; border: none; font-size: 10px; }
+#dialog-previous-versions table tr { cursor: pointer }
+#dialog-previous-versions table th { border: none; padding: 5px 10px; text-align: left; }
+
+#dialog-previous-versions table tbody tr.odd { background-color: #f2f2f2; }       /* < Note the order! */
+#dialog-previous-versions table tbody tr:hover{ background-color: #e7f4f9; }      /* < Note the order! */
+#dialog-previous-versions table tbody tr.selected { background-color: #A8E4FF }   /* < Note the order! */
+
+
+#dialog-previous-versions table td, #dialog-previous-versions table th {
+	border: none;
+	white-space: nowrap;
+	padding: 4px 10px;
+	vertical-align: middle;
 }

@@ -19,41 +19,11 @@ package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
 
-public class GetFileResponse extends Response {
+public class GetFileHistoryRequest extends WatchRequest {
 	@Element(required = true)
-	private String name;
+	private String fileHistoryId;
 	
-	@Element(required = true)
-	private long length;
-	
-	@Element(required = true)
-	private int frames;
-	
-	@Element(required = false)
-	private String mimeType;
-
-	public GetFileResponse(int requestId, String name, long length, int frames, String mimeType) {
-		super(200, requestId, null);
-		
-		this.name = name;
-		this.length = length;
-		this.frames = frames;
-		this.mimeType = mimeType;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public long getLength() {
-		return length;
-	}
-
-	public int getFrames() {
-		return frames;
-	}
-
-	public String getMimeType() {
-		return mimeType;
+	public String getFileHistoryId() {
+		return fileHistoryId;
 	}
 }

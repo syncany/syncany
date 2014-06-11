@@ -18,33 +18,25 @@
 package org.syncany.operations.daemon;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bouncycastle.util.Arrays;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DaemonSqlDao;
 import org.syncany.database.dao.ExtendedFileVersion;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.FileFrameResponse;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
-import org.syncany.operations.daemon.messages.GetFileRequest;
-import org.syncany.operations.daemon.messages.GetFileResponse;
+import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
+import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
 import org.syncany.operations.daemon.messages.WatchEventResponse;
@@ -52,7 +44,6 @@ import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
-import org.syncany.util.FileUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -65,7 +56,6 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WatchOperationThread implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
-	private static final int MAX_FRAME_LENGTH = 64*1024;
 	
 	private Config config;
 	private Thread watchThread;
@@ -128,8 +118,8 @@ public class WatchOperationThread implements WatchOperationListener {
 			if (watchRequest instanceof GetFileTreeRequest) {
 				handleGetFileTreeRequest((GetFileTreeRequest) watchRequest);			
 			}
-			else if (watchRequest instanceof GetFileRequest) {
-				handleGetFileRequest((GetFileRequest) watchRequest);			
+			else if (watchRequest instanceof GetFileHistoryRequest) {
+				handleGetFileHistoryRequest((GetFileHistoryRequest) watchRequest);			
 			}
 			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
 				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
@@ -140,47 +130,19 @@ public class WatchOperationThread implements WatchOperationListener {
 		}		
 	}
 
-	private void handleGetFileRequest(GetFileRequest getRequest) {
-		String requestedFileStr = getRequest.getFile();		
-		File requestedFile = FileUtil.getCanonicalFile(new File(config.getLocalDir(), requestedFileStr));
-		String mimeType = findMimeType(requestedFile);
-		
-		long length = requestedFile.length();
-		int frames = (int) Math.ceil((double) length / MAX_FRAME_LENGTH);
-		
-		try (InputStream fileInputStream = new FileInputStream(requestedFile)) {
-			eventBus.post(new GetFileResponse(getRequest.getId(), requestedFile.getName(), length, frames, mimeType));
-			
-			int read = -1;
-			byte[] buffer = new byte[MAX_FRAME_LENGTH];
-			int frameNumber = 0;
-			
-			while (-1 != (read = fileInputStream.read(buffer))) {
-				ByteBuffer fileFrameData = ByteBuffer.wrap(Arrays.copyOfRange(buffer, 0, read)); // Don't just pass the buffer!
-				
-				FileFrameResponse fileDataResponse = new FileFrameResponse(getRequest.getId(), frameNumber++, fileFrameData);
-				eventBus.post(fileDataResponse);
-			}
-		}
-		catch (Exception e) {
-			eventBus.post(new BadRequestResponse(getRequest.getId(), "Error while reading file data."));
-		}
-	}
-	
-	private String findMimeType(File file) {
-		try {
-			return Files.probeContentType(Paths.get(file.getAbsolutePath()));
-		}
-		catch (IOException e) {
-			return "application/octet-stream";
-		}
-	}
-
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
 		Map<String, ExtendedFileVersion> fileTree = databaseDaemonDao.getFileTree(fileTreeRequest.getPrefix(), null, null);
 		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<ExtendedFileVersion>(fileTree.values()));
 		
 		eventBus.post(fileTreeResponse);	
+	}
+	
+	private void handleGetFileHistoryRequest(GetFileHistoryRequest fileHistoryRequest) {
+		FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileHistoryRequest.getFileHistoryId());
+		List<ExtendedFileVersion> fileHistory = databaseDaemonDao.getFileHistory(fileHistoryId);
+		GetFileHistoryResponse fileHistoryRespose = new GetFileHistoryResponse(fileHistoryRequest.getId(), fileHistoryRequest.getRoot(), fileHistory);
+		
+		eventBus.post(fileHistoryRespose);
 	}
 	
 	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersRequest headersRequest) {

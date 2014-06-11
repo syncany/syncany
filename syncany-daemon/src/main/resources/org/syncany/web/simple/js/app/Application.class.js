@@ -67,6 +67,7 @@ function doDisconnect() {
 }
 
 function sendMessage(msg) {
+	console.log(msg);
 	websocket.send(msg);
 }
 
@@ -109,6 +110,9 @@ function processXmlMessage(evt) {
 			}
 			else if (responseType == "getfileresponse") {
 				processFileResponse(xml);
+			}
+			else if (responseType == "getfilehistoryresponse") {
+				processFileHistoryResponse(xml);
 			}
 			else if (responseType == "listwatchesresponse") {
 				processListWatchesResponse(xml);
@@ -156,8 +160,98 @@ function processFileResponse(xml) {
 	);
 }
 
+function processFileHistoryResponse(xml) {
+	status.okay('All files in sync');
+
+	var dialogElements = $("#dialog-previous-versions");
+	var tableElements = $("#dialog-previous-versions table");
+	var fileVersions = toFileVersions(xml);
+	
+	tableElements.dataTable().fnDestroy();
+	
+	tableElements.DataTable({
+		paging: false,
+		searching: false,
+		jQueryUI: false,
+		info: false,
+		ordering: true,
+		data: fileVersions,
+		order: [ [1, 'desc' ] ],
+		columns: [
+			{ data: 'path' },
+			{ data: 'version' },
+			{ data: 'type' },
+			{ data: 'status' },
+			{ data: 'size', className: "right" },
+			{ data: 'checksum' },
+			{ data: 'updated' },
+			{ data: 'lastModified' },
+			{ data: 'posixPermissions' },
+			{ data: 'dosAttributes' }
+		]
+	});
+	
+	tableElements.$('tbody tr').click(function () {
+		// Highlight
+		if ($(this).hasClass('selected')) {
+			$(this).removeClass('selected');
+			dialogElements.parent().find(":button:contains('Restore')").prop("disabled", true).addClass('ui-state-disabled');
+		}
+		else {
+			tableElements.$('tr.selected').removeClass('selected');
+			
+			$(this).addClass('selected');
+			dialogElements.parent().find(":button:contains('Restore')").prop("disabled", false).removeClass('ui-state-disabled');
+		}
+	});
+		
+	dialogElements.dialog({
+		title: "Previous File Versions",
+		position: 'center',
+		width: $(window).width()-100,
+		height: $(window).height()-100,
+		modal: true,
+		buttons: [ 
+			{ 
+				text: "Restore selected", 
+				click: function() { 
+					$(this).dialog("close");  
+				}
+			}, 
+			{ 
+				text: "Close", 
+				click: function() { 
+					$(this).dialog("close");  
+				}
+			}
+		]	
+	});
+	
+	dialogElements.parent().find(":button:contains('Restore')").prop("disabled", true).addClass('ui-state-disabled');
+
+}
+
 function processWatchEventResponse(xml) {
-	status.loading(xml.find('action'));
+	var action = xml.find('action').text();
+	var subject = xml.find('subject').text();
+	
+	var statusText = "";
+	
+	if (action == "UPLOAD_START") {
+		status.loading("Uploading files");
+	}
+	else if (action == "INDEX_START") {
+		status.loading("Indexing files");
+	}
+	else if (action == "UPLOAD_FILE") {
+		status.loading("Uploading " + subject);
+	}
+	else if (action == "INDEX_FILE") {
+		status.loading("Indexing files");
+	}
+	else {
+		status.loading("Unknown action: " + action);
+	}
 }
 
 function processListWatchesResponse(xml) {
@@ -206,25 +300,37 @@ function onFileClick(file) {
 }
 
 function onContextFileInfoClick(file) {
-	$("#dialog-fileinfo .text").html(file.path);
+	$("#dialog-fileinfo .name").html(basename(file.path));
+	$("#dialog-fileinfo .type").html(file.type);
+	$("#dialog-fileinfo .size").html(formatFileSize(file.size));
+	$("#dialog-fileinfo .location").html(file.path);
+	$("#dialog-fileinfo .lastModified").html(file.lastModified);
+	$("#dialog-fileinfo .updated").html(file.updated);
+	$("#dialog-fileinfo .checksum").html(file.checksum);
+	$("#dialog-fileinfo .posixPermissions").html(file.posixPermissions);
+	$("#dialog-fileinfo .dosAttributes").html(file.dosAttributes);
+	$("#dialog-fileinfo .fileHistoryId").html(file.fileHistoryId);
+	$("#dialog-fileinfo .version").html(file.version);
 	
 	$("#dialog-fileinfo").dialog({
-		height: 140,
-		modal: true
+		title: "File Properties",
+		minWidth: 500,
+		minHeight: 300,
+		modal: true,
+		buttons: [ { text: "Okay", click: function() { $( this ).dialog( "close" ); } } ],	
 	});
 }
 
 function onContextPreviousVersionsClick(file) {
-	$("#dialog-previous-versions").html("Retrieving file history for " + file.path + " ...");
-	
-	$("#dialog-previous-versions").dialog({
-		height: 440,
-		modal: true
-	});
+	status.loading("Retrieving file history");
+	sendMessage("<getFileHistoryRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <fileHistoryId>" + file.fileHistoryId + "</fileHistoryId>\n</getFileHistoryRequest>");
 }
 
 function onDatabaseVersionHeaderChange(databaseVersionHeader) {
 	status.loading("Updating file tree");
+	
+	// Clear/Destroy tree, etc.
+	
 	dateSelected = databaseVersionHeader;
 	sendFileTreeRequest(prefix);
 }
@@ -235,21 +341,21 @@ function onError(evt) {
 }
 
 function sendListWatchesRequest() {
-	sendMessage("<listWatchesRequest>\n  <id>123</id>\n</listWatchesRequest>");
+	sendMessage("<listWatchesRequest>\n  <id>" + nextRequestId() + "</id>\n</listWatchesRequest>");
 }
 
 function sendFileTreeRequest(path) {
-	sendMessage("<getFileTreeRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <prefix>" + path + "</prefix>\n  <date>" + dateSelected + "</date>\n</getFileTreeRequest>");
+	sendMessage("<getFileTreeRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <prefix>" + path + "</prefix>\n  <date>" + dateSelected + "</date>\n</getFileTreeRequest>");
 }
 
 function sendGetDatabaseVersionHeaders() {
-	sendMessage("<getDatabaseVersionHeadersRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n</getDatabaseVersionHeadersRequest>");
+	sendMessage("<getDatabaseVersionHeadersRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n</getDatabaseVersionHeadersRequest>");
 }
 
-function retrieveFile(data) {
-	window.location.assign("http://localhost:8080/api/rest/getFileRequest?id=123&root="+root+"&fileHistoryId="+data.fileHistoryId+"&version="+data.version);
+function retrieveFile(file) {
+	window.location.assign("http://localhost:8080/api/rest/getFileRequest?id=" + nextRequestId() + "&root=" + root + "&fileHistoryId=" + file.fileHistoryId + "&version=" + file.version);
 
-	//sendMessage.value = "<getFileRequest>\n  <id>123</id>\n  <root>" + root + "</root>\n  <file>" + fullpath + "</file>\n</getFileRequest>";
+	//sendMessage.value = "<getFileRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <file>" + fullpath + "</file>\n</getFileRequest>";
 	//sendMessage();
 }
 

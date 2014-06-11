@@ -4,7 +4,7 @@ function Table(tableElements, onContextFileInfoClick, onContextPreviousVersionsC
 	this.populateTable = function(prefix, fileVersions) {
 		tableElements.dataTable().fnDestroy();
 	
-		dataTable = $('#table').DataTable({
+		dataTable = tableElements.DataTable({
 			paging: false,
 			searching: false,
 			jQueryUI: false,
@@ -23,7 +23,7 @@ function Table(tableElements, onContextFileInfoClick, onContextPreviousVersionsC
 				}},
 				{ data: 'lastModified' },
 				{ data: 'posixPermissions' },
-//				{ data: 'dosAttributes' }
+				{ data: 'dosAttributes' }
 			],
 			createdRow: function (row, data, index) {
 				if (data.type == "FOLDER") {
