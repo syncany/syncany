@@ -240,14 +240,26 @@ function processWatchEventResponse(xml) {
 	if (action == "UPLOAD_START") {
 		status.loading("Uploading files");
 	}
-	else if (action == "INDEX_START") {
-		status.loading("Indexing files");
-	}
 	else if (action == "UPLOAD_FILE") {
 		status.loading("Uploading " + subject);
 	}
-	else if (action == "INDEX_FILE") {
+	else if (action == "UPLOAD_END") {
+		status.okay("Upload successful");
+	}
+	else if (action == "INDEX_START") {
 		status.loading("Indexing files");
+	}
+	else if (action == "INDEX_FILE") {
+		status.loading("Indexing " + subject);
+	}
+	else if (action == "INDEX_END") {
+		status.okay("Indexing successful");
+	}
+	else if (action == "DOWNLOAD_START") {
+		status.loading("Downloading files");
+	}
+	else if (action == "DOWNLOAD_FILE") {
+		status.loading("Downloading " + subject);
 	}
 	else {
 		status.loading("Unknown action: " + action);

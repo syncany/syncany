@@ -170,6 +170,14 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	@Override
+	public void onUploadEnd() {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "UPLOAD_END";
+		
+		eventBus.post(new WatchEventResponse(root, action));
+	}
+
+	@Override
 	public void onIndexStart(int fileCount) {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "INDEX_START";
@@ -184,6 +192,14 @@ public class WatchOperationThread implements WatchOperationListener {
 		String subject = fileName;
 		
 		eventBus.post(new WatchEventResponse(root, action, subject));
+	}
+	
+	@Override
+	public void onIndexEnd() {
+		String root = config.getLocalDir().getAbsolutePath();
+		String action = "INDEX_END";
+		
+		eventBus.post(new WatchEventResponse(root, action));
 	}
 
 	@Override
