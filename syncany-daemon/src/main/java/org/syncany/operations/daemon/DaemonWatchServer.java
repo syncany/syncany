@@ -234,4 +234,16 @@ public class DaemonWatchServer implements WatchOperationListener {
 		
 	}
 
+	@Override
+	public void onUploadEnd() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onIndexEnd() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

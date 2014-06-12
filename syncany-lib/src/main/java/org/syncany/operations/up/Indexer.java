@@ -561,7 +561,9 @@ public class Indexer {
 		
 		@Override
 		public void onFinish() {
-			// Nothing.
+			if (listener != null) {
+				listener.onIndexEnd();
+			}
 		}
 
 		/**

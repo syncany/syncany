@@ -328,11 +328,23 @@ public class UpOperation extends AbstractTransferOperation {
 				localMultiChunkFile.delete();
 			}
 		}
+		
+		if (listener != null) {
+			listener.onUploadEnd();
+		}
 	}
 
 	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
+		if (listener != null) {
+			listener.onUploadFile(localDatabaseFile.getName(), -1);
+		}
+		
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
+		
+		if (listener != null) {
+			listener.onUploadEnd();
+		}
 	}
 
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
