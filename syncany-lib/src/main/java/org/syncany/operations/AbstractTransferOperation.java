@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.ActionRemoteFile;
+import org.syncany.connection.plugins.RetriableTransferManager;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 
@@ -56,7 +57,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
 
-		this.transferManager = config.getPlugin().createTransferManager(config.getConnection());
+		this.transferManager = new RetriableTransferManager(config.getPlugin().createTransferManager(config.getConnection()));
 		this.actionHandler = new ActionFileHandler(transferManager, operationName, config.getMachineName());
 	}
 	

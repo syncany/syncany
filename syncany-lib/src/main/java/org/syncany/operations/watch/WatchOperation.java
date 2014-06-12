@@ -228,6 +228,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		notificationListener.stop();
 	}
 
+	/**
+	 * Runs one iteration of the main synchronization loop, containing a {@link DownOperation},
+	 * an {@link UpOperation} and (if required), a {@link CleanupOperation}. 
+	 */
 	private void runSync() throws Exception {
 		if (!syncRunning.get()) {
 			syncRunning.set(true);
@@ -239,14 +243,14 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				boolean notifyChanges = false;
 				
 				// Run down
-				DownOperationResult downResult = new DownOperation(config, listener).execute();
+				DownOperationResult downResult = new DownOperation(config, options.getDownOptions(), listener).execute();
 				
 				if (downResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
 					// TODO [low] Do something?
 				}
 				
 				// Run up
-				UpOperationResult upOperationResult = new UpOperation(config, listener).execute();
+				UpOperationResult upOperationResult = new UpOperation(config, options.getUpOptions(), listener).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED && upOperationResult.getChangeSet().hasChanges()) {
 					upCount.incrementAndGet();
@@ -258,7 +262,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				boolean enoughUpsForCleanup = upCount.get() > CleanupOperation.MAX_KEEP_DATABASE_VERSIONS;
 				
 				if (lastCleanupExpired || enoughUpsForCleanup) {
-					CleanupOperationResult cleanupOperationResult = new CleanupOperation(config).execute();
+					CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
 					
 					if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
 						notifyChanges = true;

@@ -63,15 +63,10 @@ public class DaemonControlServer implements TailerListener {
 		File userAppDir = UserConfig.getUserConfigDir();
 		userAppDir.mkdirs();
 		
-		if (controlFile.exists()) {
-			throw new ServiceAlreadyStartedException("Syncany daemon already running or crashed. Control file already exists at " + controlFile);
-		}
-		else {
-			controlFile.createNewFile();
-		}
+		controlFile.delete();
+		controlFile.createNewFile();		
+		controlFile.deleteOnExit();	
 		
-		controlFile.deleteOnExit();		
-
 		logger.log(Level.INFO, "Monitoring control file for commands at " + controlFile + " ...");
 		logger.log(Level.INFO, "   (Note: This is a blocking operation. The 'main' thread is now blocked until '" + ControlCommand.SHUTDOWN + "' is received.)");
 		
@@ -126,5 +121,4 @@ public class DaemonControlServer implements TailerListener {
 	public void fileRotated() {
 		// Don't care
 	}
-
 }

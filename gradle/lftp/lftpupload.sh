@@ -27,7 +27,7 @@ echo "Gathering distributables ..."
 echo "----------------------------"
 cp $REPODIR/syncany-lib/build/resources/main/application.properties $TEMPDIR
 cp $REPODIR/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
-cp $REPODIR/build/linux-package/*.deb $TEMPDISTDIR
+cp $REPODIR/build/debian/*.deb $TEMPDISTDIR
 cp $REPODIR/build/innosetup/*.exe $TEMPDISTDIR
 
 PWD=`pwd`

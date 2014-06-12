@@ -18,8 +18,6 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
-import static org.syncany.cli.CommandScope.INITIALIZED_LOCALDIR;
-import static org.syncany.cli.CommandScope.UNINITIALIZED_LOCALDIR;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +26,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -66,11 +66,13 @@ public class CommandLineClient extends Client {
 	private static final int LOG_FILE_LIMIT = 25000000; // 25 MB
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
-	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "/help/help.skel";
-	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "/help/usage.skel";
-	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "/help/cmd/help.%CMD%.skel";
+	private static final String HELP_TEXT_RESOURCE_ROOT = "/org/syncany/cli/help/";
+	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "help.skel";
+	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "version_short.skel";
+	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "version_full.skel";
+	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "usage.skel";
+	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "cmd/help.%CMD%.skel";
 	private static final String HELP_VAR_CMD= "%CMD%";
-	private static final String HELP_VAR_VERSION= "%VERSION%";
 	private static final String HELP_VAR_PLUGINS = "%PLUGINS%";
 	private static final String HELP_VAR_LOGFORMATS = "%LOGFORMATS%";
 	
@@ -94,6 +96,8 @@ public class CommandLineClient extends Client {
 	}
 	
 	public int start() throws Exception {
+		// WARNING: Do not re-order methods unless you know what you are doing!
+
 		try {
 			// Define global options
 			OptionParser parser = new OptionParser();
@@ -105,17 +109,41 @@ public class CommandLineClient extends Client {
 			OptionSpec<Void> optionLogPrint = parser.acceptsAll(asList("print"));		
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
+			OptionSpec<Void> optionShortVersion = parser.acceptsAll(asList("v"));
+			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv", "version"));
 			
 			// Parse global options and operation name
 			OptionSet options = parser.parse(args);
+			List<?> nonOptions = options.nonOptionArguments();
+
+			// -v, -vv, --version
+			initVersionOptions(options, optionShortVersion, optionFullVersion);
+			initHelpOrUsage(options, nonOptions, optionHelp);
 			
-			// Evaluate options
-			// WARNING: Do not re-order unless you know what you are doing!
-			initConfigOption(options, optionLocalDir);
-			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
-	
 			// Run!
-			return runCommand(options, optionHelp, options.nonOptionArguments());
+			List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
+			String commandName = (String) nonOptionsCopy.remove(0); 
+			String[] commandArgs = nonOptionsCopy.toArray(new String[0]);
+			
+			// Find command
+			Command command = CommandFactory.getInstance(commandName);
+
+			if (command == null) {			
+				return showErrorAndExit("Given command is unknown: "+commandName);			
+			}
+			
+			// Potentially show help
+			if (options.has(optionHelp)) {
+				return showCommandHelpAndExit(commandName);
+			}
+						
+			// Pre-init operations
+			initLocalDir(options, optionLocalDir);
+			initConfigIfRequired(command.getRequiredCommandScope(), localDir);
+			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
+
+			// Init command
+			return runCommand(command, commandArgs);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Exception while initializing or running command.", e);
@@ -123,17 +151,81 @@ public class CommandLineClient extends Client {
 		}
 	}	
 
+	private void initVersionOptions(OptionSet options, OptionSpec<Void> optionShortVersion, OptionSpec<Void> optionFullVersion) throws IOException {
+		if (options.has(optionShortVersion)) {
+			showShortVersionAndExit();
+		}
+		else if (options.has(optionFullVersion)) {
+			showFullVersionAndExit();
+		}
+	}
+
+	private void initHelpOrUsage(OptionSet options, List<?> nonOptions, OptionSpec<Void> optionHelp) throws IOException {
+		if (nonOptions.size() == 0) {
+			if (options.has(optionHelp)) {
+				showHelpAndExit();
+			}
+			else {
+				showUsageAndExit();
+			}
+		}		
+	}
+
+	private void initLocalDir(OptionSet options, OptionSpec<File> optionLocalDir) throws ConfigException, Exception {
+		// Find config or use --localdir option
+		if (options.has(optionLocalDir)) {
+			localDir = options.valueOf(optionLocalDir);
+		}
+		else {
+			File currentDir = new File(".").getAbsoluteFile();
+			localDir = ConfigHelper.findLocalDirInPath(currentDir);
+
+			// If no local directory was found, choose current directory
+			if (localDir == null) {
+				localDir = currentDir;
+			}
+		}					
+	}
+
+	private void initConfigIfRequired(CommandScope requiredCommandScope, File localDir) throws ConfigException {
+		switch (requiredCommandScope) {
+		case INITIALIZED_LOCALDIR:
+			if (!ConfigHelper.configExists(localDir)) {
+				showErrorAndExit("No repository found in path, or configured plugin not installed. Use 'sy init' to create one.");				
+			}
+			
+			config = ConfigHelper.loadConfig(localDir);
+			
+			if (config == null) {
+				showErrorAndExit("Invalid config in " + localDir);			
+			}	
+
+			break;
+			
+		case UNINITIALIZED_LOCALDIR:
+			if (ConfigHelper.configExists(localDir)) {
+				showErrorAndExit("Repository found in path. Command can only be used outside a repository.");				
+			}
+			
+			break;				
+
+		case ANY:
+		default:		
+			break;
+		}
+	}
+
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
 		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);		
 		initLogLevel(options, optionDebug, optionLogLevel);		
 	}
 
+	
 	private void initLogLevel(OptionSet options, OptionSpec<Void> optionDebug, OptionSpec<String> optionLogLevel) {
 		Level newLogLevel = null;
 
 		// --debug
 		if (options.has(optionDebug)) {
-			out.println("debug");
 			newLogLevel = Level.ALL;			
 		}
 		
@@ -154,6 +246,14 @@ public class CommandLineClient extends Client {
 		
 		// Add handler to existing loggers, and future ones
 		Logging.setGlobalLogLevel(newLogLevel);	
+		
+		// Debug output
+		if (options.has(optionDebug)) {
+			out.println("debug");
+			out.println(String.format("Application version: %s", Client.getApplicationVersionFull()));
+			
+			logger.log(Level.INFO, "Application version: {0}", Client.getApplicationVersionFull());
+		}
 	}
 
 	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug) throws SecurityException, IOException {
@@ -167,7 +267,7 @@ public class CommandLineClient extends Client {
 		}
 		else if (config != null && config.getLogDir().exists()) {
 			logFilePattern = config.getLogDir() + File.separator + LOG_FILE_PATTERN;
-		}
+		} 
 		
 		if (logFilePattern != null) {	
 			Handler fileLogHandler = new FileHandler(logFilePattern, LOG_FILE_LIMIT, LOG_FILE_COUNT, true);			
@@ -185,79 +285,29 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private void initConfigOption(OptionSet options, OptionSpec<File> optionLocalDir) throws ConfigException, Exception {
-		// Find config or use --config option
-		if (options.has(optionLocalDir)) {
-			localDir = options.valueOf(optionLocalDir);
-		}
-		else {
-			File currentDir = new File(".").getAbsoluteFile();
-			localDir = ConfigHelper.findLocalDirInPath(currentDir);
-
-			// If no local directory was found, choose current directory
-			if (localDir == null) {
-				localDir = currentDir;
-			}
-		}					
-		
-		// Load config
-		config = ConfigHelper.loadConfig(localDir);
-	}					
-	
-	private int runCommand(OptionSet options, OptionSpec<Void> optionHelp, List<?> nonOptions) throws Exception {
-		if (nonOptions.size() == 0) {
-			if (options.has(optionHelp)) {
-				showHelpAndExit();
-			}
-			else {
-				showUsageAndExit();
-			}
-		}
-		
-		List<Object> nonOptionsCopy = new ArrayList<Object>(nonOptions);
-		String commandName = (String) nonOptionsCopy.remove(0); 
-		String[] commandArgs = nonOptionsCopy.toArray(new String[nonOptionsCopy.size()]);
-		
-		// Find command
-		Command command = CommandFactory.getInstance(commandName);
-
-		if (command == null) {			
-			return showErrorAndExit("Given command is unknown: "+commandName);			
-		}
-		
-		// Potentially show help
-		if (options.has(optionHelp)) {
-			return showCommandHelpAndExit(commandName);
-		}
-		
-		// Init command
+	private int runCommand(Command command, String[] commandArgs) {
 		command.setClient(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
 		
-		// Pre-init operations
-		if (command.getRequiredCommandScope() == INITIALIZED_LOCALDIR) { 
-			if (config == null) {
-				return showErrorAndExit("No repository found in path, or configured plugin not installed. Use 'sy init' to create one.");			
-			}			
-		}
-		else if (command.getRequiredCommandScope() == UNINITIALIZED_LOCALDIR) {
-			if (config != null) {
-				return showErrorAndExit("Repository found in path. Command can only be used outside a repository.");			
-			}
-		}
-		
 		// Run!
 		try {
-			int exitCode = command.execute(commandArgs);
-			return exitCode;
+			return command.execute(commandArgs);
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Command "+ commandName+" FAILED. ", e);
+			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
 		}	
 	}
 	
+	private void showShortVersionAndExit() throws IOException {
+		printHelpTextAndExit(HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE);
+	}
+	
+	private void showFullVersionAndExit() throws IOException {
+		printHelpTextAndExit(HELP_TEXT_VERSION_FULL_SKEL_RESOURCE);
+	}
+
 	private void showUsageAndExit() throws IOException {
 		printHelpTextAndExit(HELP_TEXT_USAGE_SKEL_RESOURCE);
 	}
@@ -272,7 +322,8 @@ public class CommandLineClient extends Client {
 	}
 
 	private int printHelpTextAndExit(String helpTextResource) throws IOException {
-		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(helpTextResource);
+		String fullHelpTextResource = HELP_TEXT_RESOURCE_ROOT + helpTextResource;
+		InputStream helpTextInputStream = CommandLineClient.class.getResourceAsStream(fullHelpTextResource);
 		
 		if (helpTextInputStream == null) {
 			showErrorAndExit("No detailed help text available for this command.");
@@ -290,8 +341,14 @@ public class CommandLineClient extends Client {
 	}
 
 	private String replaceVariables(String line) throws IOException {
-		if (line.contains(HELP_VAR_VERSION)) {
-			line = line.replace(HELP_VAR_VERSION, getVersionStr());
+		Properties applicationProperties = Client.getApplicationProperties();
+		
+		for (Entry<Object, Object> applicationProperty : applicationProperties.entrySet()) {
+			String variableName = String.format("%%%s%%", applicationProperty.getKey());
+			
+			if (line.contains(variableName)) {
+				line = line.replace(variableName, (String) applicationProperty.getValue());
+			}
 		}
 		
 		if (line.contains(HELP_VAR_PLUGINS)) {
@@ -305,7 +362,7 @@ public class CommandLineClient extends Client {
 		Matcher includeResourceMatcher = HELP_TEXT_RESOURCE_PATTERN.matcher(line);
 		
 		if (includeResourceMatcher.find()) {
-			String includeResource = includeResourceMatcher.group(1);
+			String includeResource = HELP_TEXT_RESOURCE_ROOT + includeResourceMatcher.group(1);
 			InputStream includeResourceInputStream = CommandLineClient.class.getResourceAsStream(includeResource);
 			String includeResourceStr = IOUtils.toString(includeResourceInputStream);
 
@@ -331,21 +388,6 @@ public class CommandLineClient extends Client {
 		});	
 		
 		return pluginsStr;
-	}
-
-	private String getVersionStr() {
-		String versionStr = Client.getApplicationVersion();
-		
-		if (!Client.isApplicationRelease()) {
-			if (Client.getApplicationRevision() != null && !"".equals(Client.getApplicationRevision())) {
-				versionStr += ", rev. "+Client.getApplicationRevision();
-			}
-			else {
-				versionStr += ", no rev.";
-			}
-		}
-		
-		return versionStr;
 	}
 
 	private int showErrorAndExit(String errorMessage) {

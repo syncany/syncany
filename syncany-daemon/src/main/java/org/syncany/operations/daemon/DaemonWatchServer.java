@@ -28,9 +28,10 @@ import java.util.logging.Logger;
 import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
-import org.syncany.config.to.DaemonConfigTO.FolderTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
+import org.syncany.operations.watch.WatchOperationOptions;
 
 import com.google.common.collect.Maps;
 
@@ -92,11 +93,12 @@ public class DaemonWatchServer implements WatchOperationListener {
 	private void startWatchOperations(Map<File, FolderTO> newWatchedFolderTOs) throws ConfigException, ServiceAlreadyStartedException {
 		for (Map.Entry<File, FolderTO> folderEntry : newWatchedFolderTOs.entrySet()) {
 			File localDir = folderEntry.getKey();
+			WatchOperationOptions watchOperationOptions = folderEntry.getValue().getWatchOptions();
 
 			try {	
 				logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
 				
-				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, this);	
+				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, watchOperationOptions, this);	
 				watchOperationThread.start();
 
 				watchOperations.put(localDir, watchOperationThread);
@@ -122,7 +124,9 @@ public class DaemonWatchServer implements WatchOperationListener {
 		Map<File, FolderTO> watchedFolderTOs = new TreeMap<File, FolderTO>();
 		
 		for (FolderTO folderTO : watchedFolders) {
-			watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
+			if (folderTO.isEnabled()) {
+				watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
+			}
 		}
 		
 		return watchedFolderTOs;
@@ -226,6 +230,18 @@ public class DaemonWatchServer implements WatchOperationListener {
 
 	@Override
 	public void onDownloadFile(String fileName, int fileNumber) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onUploadEnd() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onIndexEnd() {
 		// TODO Auto-generated method stub
 		
 	}

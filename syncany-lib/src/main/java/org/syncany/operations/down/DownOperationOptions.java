@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.down;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationOptions;
 
 public class DownOperationOptions implements OperationOptions {
@@ -24,7 +25,10 @@ public class DownOperationOptions implements OperationOptions {
 		RENAME, ASK
 	}
 	
+	@Element(required = false)
 	private DownConflictStrategy conflictStrategy = DownConflictStrategy.RENAME;
+	
+	@Element(required = false)
 	private boolean applyChanges = true;
 
 	public DownConflictStrategy getConflictStrategy() {

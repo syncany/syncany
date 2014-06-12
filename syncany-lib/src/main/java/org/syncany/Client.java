@@ -18,6 +18,10 @@
 package org.syncany;
 
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.syncany.config.Config;
@@ -77,7 +81,10 @@ public class Client {
 	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
 	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
 	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
+	private static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
 	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
+	private static final String APPLICATION_PROPERTIES_DATE_KEY = "applicationDate";
+	private static final String APPLICATION_PROPERTIES_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
 	
 	private static Properties applicationProperties;
 	
@@ -198,8 +205,24 @@ public class Client {
 		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_KEY);
 	}
 
+	public static String getApplicationVersionFull() {
+		return applicationProperties.getProperty(APPLICATION_PROPERTIES_VERSION_FULL_KEY);
+	}
+
 	public static String getApplicationRevision() {
 		return applicationProperties.getProperty(APPLICATION_PROPERTIES_REVISION_KEY);
+	}
+	
+	public static Date getApplicationDate() {
+		try {
+			DateFormat dateFormat = new SimpleDateFormat(APPLICATION_PROPERTIES_DATE_FORMAT, Locale.ENGLISH);
+		    Date applicationDate = dateFormat.parse(applicationProperties.getProperty(APPLICATION_PROPERTIES_DATE_KEY)); 
+		    
+			return applicationDate;
+		}
+		catch (Exception e) {
+			return null;
+		}
 	}
 	
 	private static void initUserConfig() {

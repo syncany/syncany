@@ -49,12 +49,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
 		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
 		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(false);
-		cleanupOptionsOnlyMergeDatabases.setRepackageMultiChunks(false);
 		
 		UpOperationOptions upOperationOptionsNoCleanup = new UpOperationOptions();
 		upOperationOptionsNoCleanup.setForceUploadEnabled(true);
-		upOperationOptionsNoCleanup.setCleanupEnabled(true);	
-		upOperationOptionsNoCleanup.setCleanupOptions(cleanupOptionsOnlyMergeDatabases);
 
 		// Run preparations
 		int[] clientUpSequence = new int[] {
@@ -129,7 +126,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
 		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
 		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(true);
-		cleanupOptionsOnlyMergeDatabases.setRepackageMultiChunks(false);
 		cleanupOptionsOnlyMergeDatabases.setKeepVersionsCount(5);		
 				
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
@@ -138,8 +134,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		UpOperationOptions upOperationOptionsWithCleanupForce = new UpOperationOptions();
 		upOperationOptionsWithCleanupForce.setStatusOptions(statusOptionsForceChecksum);
 		upOperationOptionsWithCleanupForce.setForceUploadEnabled(true);		
-		upOperationOptionsWithCleanupForce.setCleanupEnabled(true);	
-		upOperationOptionsWithCleanupForce.setCleanupOptions(cleanupOptionsOnlyMergeDatabases);
 
 
 		// Run preparations
@@ -344,19 +338,15 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setRepackageMultiChunks(false);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);		
 		
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);		
 
 		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
-		upNoCleanupForceChecksum.setCleanupEnabled(false);
 		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
-		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
-		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
 		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		clientA.createNewFile("fileA");
@@ -410,19 +400,15 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setRepackageMultiChunks(false);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);		
 		
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);		
 
 		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
-		upNoCleanupForceChecksum.setCleanupEnabled(false);
 		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
-		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
-		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
 		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		clientB.createNewFile("fileB");		
@@ -473,19 +459,15 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setRepackageMultiChunks(false);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);		
 		
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);		
 
 		UpOperationOptions upNoCleanupForceChecksum = new UpOperationOptions();
-		upNoCleanupForceChecksum.setCleanupEnabled(false);
 		upNoCleanupForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 
 		UpOperationOptions upWithCleanupKeep1ForceChecksum = new UpOperationOptions();
-		upWithCleanupKeep1ForceChecksum.setCleanupEnabled(true);
-		upWithCleanupKeep1ForceChecksum.setCleanupOptions(cleanupOptionsKeep1);
 		upWithCleanupKeep1ForceChecksum.setStatusOptions(statusOptionsForceChecksum);
 		
 		// First round

@@ -1,4 +1,4 @@
-%RESOURCE:/help/copyright.skel%
+%RESOURCE:copyright.skel%
   
 SYNOPSIS
   sy plugin list [-R | --remote-only] [-L | --local-only] [-s | --snapshots]

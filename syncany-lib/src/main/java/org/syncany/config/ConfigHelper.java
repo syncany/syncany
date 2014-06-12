@@ -58,12 +58,11 @@ public class ConfigHelper {
 			
 			if (plugin == null) {
 				logger.log(Level.WARNING, "Not loading config! Plugin with id '{0}' does not exist.", pluginId);
-				return null;
+				throw new ConfigException("Plugin with id '" + pluginId + "' does not exist. Try 'sy plugin install " + pluginId + "'.");
 			}
-			else {
-				logger.log(Level.INFO, "Initializing Config instance ...");
-				return new Config(localDir, configTO, repoTO);
-			}
+
+			logger.log(Level.INFO, "Initializing Config instance ...");
+			return new Config(localDir, configTO, repoTO);
 		}		
 		else {
 			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
@@ -71,8 +70,16 @@ public class ConfigHelper {
 		}
 	}
 	
+	public static boolean configExists(File localDir) {
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File configFile = new File(appDir, Config.FILE_CONFIG);
+		
+		return configFile.exists();
+	}
+	
     public static ConfigTO loadConfigTO(File localDir) throws ConfigException {
-		File configFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG);
+    	File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File configFile = new File(appDir, Config.FILE_CONFIG);
 		
 		if (!configFile.exists()) {
 			throw new ConfigException("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
@@ -82,7 +89,8 @@ public class ConfigHelper {
 	}
     
     public static RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws ConfigException {
-		File repoFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_REPO);
+    	File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File repoFile = new File(appDir, Config.FILE_REPO);
 		
 		if (!repoFile.exists()) {
 			throw new ConfigException("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
@@ -145,8 +153,8 @@ public class ConfigHelper {
 			File currentSearchFolder = startingPath.getCanonicalFile();
 			
 			while (currentSearchFolder != null) {
-				File possibleAppDir = new File(currentSearchFolder+"/"+Config.DIR_APPLICATION);
-				File possibleConfigFile = new File(possibleAppDir+"/"+Config.FILE_CONFIG);
+				File possibleAppDir = new File(currentSearchFolder, Config.DIR_APPLICATION);
+				File possibleConfigFile = new File(possibleAppDir, Config.FILE_CONFIG);
 					
 				if (possibleAppDir.exists() && possibleConfigFile.exists()) {
 					return possibleAppDir.getParentFile().getCanonicalFile();
@@ -161,4 +169,5 @@ public class ConfigHelper {
     		throw new RuntimeException("Unable to determine local directory starting from: "+startingPath, e);
     	}
 	}
+
 }
