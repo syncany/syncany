@@ -8,7 +8,7 @@ tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 	if (taskName.startsWith("debianPrepare")) {
 		task(taskName, dependsOn: [installApp, debianClean]){
 			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
-			String debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa1" : ""
+			String debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa${applicationVersionDebian}" : ""
 			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianPpaVersion
 	
 			doLast {
