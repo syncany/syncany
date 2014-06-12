@@ -4,9 +4,20 @@ task debianClean(type: Delete) {
 	delete 'build/debian'	
 }
 
+task debianManpages {
+	doLast {
+		rootProject.file("build/debian/syncany/debian").mkdirs()
+	
+		exec {
+			workingDir rootProject.file("gradle/debian")
+			commandLine "./makemanpages.pl"
+		}
+	}
+}
+
 tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 	if (taskName.startsWith("debianPrepare")) {
-		task(taskName, dependsOn: [installApp, debianClean]){
+		task(taskName, dependsOn: [installApp, debianClean, debianManpages]){
 			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
 			String debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa1" : ""
 			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianPpaVersion
