@@ -20,7 +20,6 @@ package org.syncany.config.to;
 import java.io.File;
 import java.util.ArrayList;
 
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -57,18 +56,5 @@ public class DaemonConfigTO {
 	
 	public void setFolders(ArrayList<FolderTO> folders) {
 		this.folders = folders;
-	}
-	
-	public static class FolderTO {
-		@Element(name="path")
-		private String path;
-		
-		public String getPath() {
-			return path;
-		}
-
-		public void setPath(String path) {
-			this.path = path;
-		}	
 	}
 }

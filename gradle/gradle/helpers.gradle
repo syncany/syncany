@@ -1,5 +1,7 @@
 // Global Helpers //////////////////////////////////////////////////////////////
 
+import java.text.SimpleDateFormat
+
 rootProject.ext.execAndGetOutput = { String command ->
 	try {
 		def stdout = new ByteArrayOutputStream()
@@ -17,6 +19,13 @@ rootProject.ext.execAndGetOutput = { String command ->
 	}
 }
 
+rootProject.ext.asUTC = { Date date, String format ->
+	def snapshotDateFormat = new SimpleDateFormat(format)
+	snapshotDateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
+	
+	return snapshotDateFormat.format(date)
+}
+
 rootProject.ext.getRevision = {
 	String currentCommit = execAndGetOutput("git rev-parse --short HEAD")
 	return (currentCommit != null) ? currentCommit : "UNKNOWN"
@@ -26,6 +35,6 @@ rootProject.ext.isApplicationRelease = {
 	// Note: This must work for detached commits (git checkout -qf <commit>)
 
 	String currentBranches = execAndGetOutput("git log -n 1 --pretty=%d HEAD")
-	return currentBranches.contains("origin/master")
+	return (currentBranches != null) ? currentBranches.contains("master") : false
 }
 

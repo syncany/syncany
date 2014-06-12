@@ -17,15 +17,18 @@
  */
 package org.syncany.operations.daemon;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.UserConfig;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.watch.WatchOperation;
+import org.syncany.util.PidFileUtil;
 
 /**
  * This operation is the central part of the daemon. It can manage many different
@@ -53,13 +56,16 @@ import org.syncany.operations.watch.WatchOperation;
  */
 public class DaemonOperation extends Operation implements DaemonControlListener {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
+	private static final String PID_FILE = "daemon.pid";
 
+	private File pidFile;
 	private DaemonWebSocketServer webSocketServer;
 	private DaemonWatchServer watchServer;
 	private DaemonControlServer controlServer;
 
 	public DaemonOperation(Config config) {
 		super(config);
+		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);
 	}
 
 	@Override
@@ -71,6 +77,12 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 	}
 
 	private void startOperation() throws ServiceAlreadyStartedException, ConfigException, IOException {
+		if (PidFileUtil.isProcessRunning(pidFile)) {
+			throw new ServiceAlreadyStartedException("Syncany daemon already running.");
+		}
+		
+		PidFileUtil.createPidFile(pidFile);
+		
 		// startWebSocketServer();
 		startWatchServer();
 		

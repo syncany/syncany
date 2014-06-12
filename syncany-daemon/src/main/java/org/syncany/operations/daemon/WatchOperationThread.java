@@ -29,8 +29,11 @@ import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
 
 /**
- * @author pheckel
- *
+ * The watch operation thread runs a {@link WatchOperation} in a thread. The 
+ * underlying thred can be started using the {@link #start()} method, and stopped
+ * gracefully using {@link #stop()}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WatchOperationThread {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
@@ -39,7 +42,7 @@ public class WatchOperationThread {
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 
-	public WatchOperationThread(File localDir, WatchOperationListener listener) throws ConfigException {
+	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions, WatchOperationListener listener) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
 		
 		if (configFile == null) {
@@ -47,7 +50,7 @@ public class WatchOperationThread {
 		}
 		
 		this.config = ConfigHelper.loadConfig(configFile);
-		this.watchOperation = new WatchOperation(config, new WatchOperationOptions(), listener);
+		this.watchOperation = new WatchOperation(config, watchOperationOptions, listener);
 	}
 	
 	public void start() throws ServiceAlreadyStartedException {
@@ -72,5 +75,6 @@ public class WatchOperationThread {
 
 	public void stop() {
 		watchOperation.stop();
+		watchThread = null;
 	}
 }

@@ -7,13 +7,13 @@ apply from: 'gradle/gradle/helpers.gradle'
 // Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
-	applicationVersion = "0.1.4-alpha"
+	applicationVersion = "0.1.5-alpha"
 
 	applicationRelease = isApplicationRelease()
 	applicationDate = new Date()
 	applicationRevision = getRevision()
 	
-	applicationVersionSnapshot = (!applicationRelease) ? "+SNAPSHOT.${applicationDate.format('yyMMddHHmm')}.git${applicationRevision}" : ""
+	applicationVersionSnapshot = (!applicationRelease) ? "+SNAPSHOT.${asUTC(applicationDate, 'yyMMddHHmm')}.git${applicationRevision}" : ""
 	applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
 }
 
@@ -23,7 +23,7 @@ apply from: 'gradle/gradle/application.java.gradle'
 apply from: 'gradle/gradle/application.distribution.gradle'
 
 apply from: 'gradle/gradle/packaging.innosetup.gradle'
-apply from: 'gradle/gradle/packaging.fpm.gradle'
+apply from: 'gradle/gradle/packaging.debian.gradle'
 
 apply from: 'gradle/gradle/reports.cobertura.gradle'
 apply from: 'gradle/gradle/reports.tests.gradle'

@@ -1,4 +1,4 @@
-%RESOURCE:/help/copyright.skel%
+%RESOURCE:copyright.skel%
   
 SYNOPSIS
   sy status [-f | --force-checksum] 

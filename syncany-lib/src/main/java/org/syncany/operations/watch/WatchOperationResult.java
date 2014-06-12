@@ -19,6 +19,14 @@ package org.syncany.operations.watch;
 
 import org.syncany.operations.OperationResult;
 
+/**
+ * The watch operation result is a dummy class returned by the 
+ * {@link WatchOperation}. Since the watch operation is a long-running
+ * process and does not immediately return, the return value of this
+ * operation has no value.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class WatchOperationResult implements OperationResult {
-	// Fressen
+	// Nothing.
 }

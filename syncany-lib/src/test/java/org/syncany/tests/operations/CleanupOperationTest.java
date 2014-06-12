@@ -55,7 +55,6 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
-		options.setRepackageMultiChunks(false);
 		options.setKeepVersionsCount(2);
 
 		// Run
@@ -148,7 +147,6 @@ public class CleanupOperationTest {
 		cleanupOptions.setStatusOptions(statusOptions);
 		cleanupOptions.setMergeRemoteFiles(false);
 		cleanupOptions.setRemoveOldVersions(true);
-		cleanupOptions.setRepackageMultiChunks(false);
 		cleanupOptions.setKeepVersionsCount(2);
 
 		// Run
@@ -186,7 +184,6 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
-		options.setRepackageMultiChunks(false);
 		options.setKeepVersionsCount(2);
 
 		// Run
@@ -227,7 +224,6 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
-		options.setRepackageMultiChunks(false);
 		options.setKeepVersionsCount(10);       // <<<<<< Different!
 
 		// Run
@@ -264,7 +260,6 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
-		options.setRepackageMultiChunks(false);
 		options.setKeepVersionsCount(2);       
 
 		// Run
@@ -317,14 +312,12 @@ public class CleanupOperationTest {
 		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
 		removeOldCleanupOperationOptions.setMergeRemoteFiles(false);
 		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
-		removeOldCleanupOperationOptions.setRepackageMultiChunks(false);
 		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
 		
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
 		
 		UpOperationOptions noCleanupAndForceUpOperationOptions = new UpOperationOptions();
-		noCleanupAndForceUpOperationOptions.setCleanupEnabled(false);
 		noCleanupAndForceUpOperationOptions.setForceUploadEnabled(true);
 		noCleanupAndForceUpOperationOptions.setStatusOptions(forceChecksumStatusOperationOptions);
 
@@ -380,14 +373,12 @@ public class CleanupOperationTest {
 		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
 		removeOldCleanupOperationOptions.setMergeRemoteFiles(false);
 		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
-		removeOldCleanupOperationOptions.setRepackageMultiChunks(false);
 		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
 		
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
 		
 		UpOperationOptions noCleanupAndForceUpOperationOptions = new UpOperationOptions();
-		noCleanupAndForceUpOperationOptions.setCleanupEnabled(false);
 		noCleanupAndForceUpOperationOptions.setForceUploadEnabled(true);
 		noCleanupAndForceUpOperationOptions.setStatusOptions(forceChecksumStatusOperationOptions);
 
