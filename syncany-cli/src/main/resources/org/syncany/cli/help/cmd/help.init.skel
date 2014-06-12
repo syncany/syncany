@@ -1,4 +1,4 @@
-%RESOURCE:/help/copyright.skel%
+%RESOURCE:copyright.skel%
   
 SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]

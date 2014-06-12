@@ -42,7 +42,7 @@ public class DebugCommand extends Command {
 
 	@Override
 	public CommandScope getRequiredCommandScope() {	
-		return CommandScope.ANY;
+		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 
 	@Override

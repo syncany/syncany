@@ -1,8 +1,8 @@
 # Maintainer: Pim Otte <otte dot pim at gmail dot com>
 pkgname=syncany
-pkgver=0.1.3_alpha
-_realver=0.1.3-alpha
-pkgrel=3
+pkgver=0.1.4_alpha
+_realver=0.1.4-alpha
+pkgrel=4
 pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
 url="http://www.syncany.org/"
@@ -10,11 +10,13 @@ license=('GPL2')
 depends=('java-runtime>=7' 'sh')
 source=("http://syncany.org/dist/$pkgname-${_realver}.tar.gz"
         syncany)
-sha256sums=('4caaa9b8a8ed947188110fff9d0d2429dc8d81f5f6c5698f5660d6ab982b812a'
+sha256sums=('9095997f529c99aaecaa3b7ede0e57a479826bcedfb73e0472f449c20cf83e16'
             'ef07ec9a971243b45ec216c3fa4c4acfdd3ef7e165ae2773c4124123fd2463d0')
 
 package() {
     install -Dm755 syncany "${pkgdir}/usr/bin/syncany"
+    #Daemon support temporarily disabled until daemon start-up script is improved
+    #install -Dm755 "$srcdir/$pkgname-${_realver}/bin/syncanyd" "${pkgdir}/usr/bin/syncanyd"
 	cd "$srcdir/$pkgname-${_realver}/lib"
     for jar in *
     do

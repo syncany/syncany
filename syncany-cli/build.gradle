@@ -14,8 +14,3 @@ dependencies {
 	testCompile		project(path: ":syncany-util", configuration: "tests")
 	testCompile		"junit:junit:4.9"   	      
 }
-
-task(runCli, dependsOn: "classes", type: JavaExec) {
-	main = "org.syncany.Syncany"
-	classpath = sourceSets.main.runtimeClasspath
-}	

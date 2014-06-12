@@ -1,4 +1,4 @@
-%RESOURCE:/help/copyright.skel%
+%RESOURCE:copyright.skel%
   
 SYNOPSIS
   sy cleanup [-M | --no-database-merge] [-V | --no-version-remove]

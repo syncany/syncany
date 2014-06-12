@@ -23,4 +23,5 @@ package org.syncany.operations.up;
 public interface UpOperationListener extends IndexerListener {
 	public void onUploadStart(int fileCount);
 	public void onUploadFile(String fileName, int fileNumber);
+	public void onUploadEnd();	
 }
