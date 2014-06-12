@@ -8,7 +8,8 @@ apply from: 'gradle/gradle/helpers.gradle'
 
 project.ext {
 	applicationVersion = "0.1.5-alpha"
-
+	applicationVersionDebian = "2";
+	
 	applicationRelease = isApplicationRelease()
 	applicationDate = new Date()
 	applicationRevision = getRevision()
