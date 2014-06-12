@@ -29,4 +29,4 @@ fi
 
 # Run dput
 cd $REPODIR/build/debian/
-dput --config $REPODIR/gradle/debian/dput.cf $TARGET_PPA *.changes
+dput --config $REPODIR/gradle/debian/dput.cf --force $TARGET_PPA *.changes
