@@ -18,12 +18,10 @@
 package org.syncany.operations.daemon;
 
 import static io.undertow.Handlers.path;
-import static io.undertow.Handlers.resource;
 import static io.undertow.Handlers.websocket;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.util.Headers;
 import io.undertow.websockets.WebSocketConnectionCallback;
 import io.undertow.websockets.core.AbstractReceiveListener;
@@ -36,10 +34,14 @@ import io.undertow.websockets.spi.WebSocketHttpExchange;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.reflections.Reflections;
+import org.syncany.connection.plugins.Plugin;
+import org.syncany.connection.plugins.WebInterfacePlugin;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.BinaryResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
@@ -52,8 +54,12 @@ import com.google.common.eventbus.Subscribe;
 
 public class DaemonWebServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebServer.class.getSimpleName());
+
+	public static final String PLUGIN_FQCN_PREFIX = Plugin.class.getPackage().getName(); // TODO [high] Duplicate code, combine with plugins
 	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
 	private static final int DEFAULT_PORT = 8080;
+
+	private static final Reflections reflections = new Reflections(PLUGIN_FQCN_PREFIX);
 
 	private Undertow webServer;
 	private DaemonEventBus eventBus;
@@ -94,13 +100,11 @@ public class DaemonWebServer {
 		webServer = Undertow
 				.builder()
 				.addHttpListener(DEFAULT_PORT, "localhost")
-				.setHandler(
-						path().addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
-								.addPrefixPath("/api/rest", new InternalRestHandler())
-								.addPrefixPath(
-										"/",
-										resource(new ClassPathResourceManager(DaemonWebServer.class.getClassLoader(), "org/syncany/web/simple/"))
-												.addWelcomeFiles("index.html").setDirectoryListingEnabled(true))).build();
+				.setHandler(path()
+					.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
+					.addPrefixPath("/api/rest", new InternalRestHandler())
+					.addPrefixPath("/", new InternalWebInterfaceHandler())
+				).build();
 	}
 
 	private void handleMessage(WebSocketChannel clientSocket, String message) {
@@ -216,6 +220,57 @@ public class DaemonWebServer {
 		public void handleRequest(final HttpServerExchange exchange) throws Exception {
 			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/xml");
 			exchange.getResponseSender().send("<xml>Hello World</xml>");
+		}
+	}
+	
+	public class InternalWebInterfaceHandler implements HttpHandler {
+		private Set<Class<? extends WebInterfacePlugin>> webInterfacePluginClasses;
+		private WebInterfacePlugin webInterfacePlugin;
+		private HttpHandler requestHandler;
+		
+		public InternalWebInterfaceHandler() {
+			webInterfacePluginClasses = reflections.getSubTypesOf(WebInterfacePlugin.class);
+			
+			if (webInterfacePluginClasses.size() == 1) {
+				initWebInterfacePlugin();
+			}
+		}
+
+		private void initWebInterfacePlugin() {
+			try {
+				Class<? extends WebInterfacePlugin> webInterfacePluginClass = webInterfacePluginClasses.iterator().next();
+				
+				webInterfacePlugin = (WebInterfacePlugin) webInterfacePluginClass.newInstance();
+				requestHandler = webInterfacePlugin.createRequestHandler();
+				
+				webInterfacePlugin.start();
+			}
+			catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public void handleRequest(HttpServerExchange exchange) throws Exception {
+				if (requestHandler != null) {
+					handleRequestWithResourceHandler(exchange);
+				}
+				else {
+					handleRequestNoHandler(exchange);
+				}
+		}
+
+		private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws Exception {
+			requestHandler.handleRequest(exchange);
+		}
+
+		private void handleRequestNoHandler(HttpServerExchange exchange) {
+			if (webInterfacePluginClasses.size() == 0) {
+				exchange.getResponseSender().send("No web interface configured.");
+			}
+			else {
+				exchange.getResponseSender().send("Only one web interface can be loaded.");
+			}
 		}
 	}
 }
