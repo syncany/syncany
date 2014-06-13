@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-  
+NAME
+  sy cleanup - remove old versions and free remote disk space  
+ 
 SYNOPSIS
   sy cleanup [-M | --no-database-merge] [-V | --no-version-remove]
              [-k | --keep-versions=<count>]
@@ -45,4 +46,6 @@ OPTIONS
     shortened to <count> file versions. Metadata and file content of these old
     versions will be deleted, and cannot be restored! This option only works if
     -V is not set.
+    
+%RESOURCE:incl/footer.skel%
     

@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-
+NAME
+  sy - secure file sync software for arbitrary storage backends
+  
 SYNOPSIS
   sy [-l|--localdir=<path>] [--log=<path>] [-v]
      [-vv] [--loglevel=OFF|SEVERE|..] [--print]
@@ -11,18 +12,18 @@ DESCRIPTION
   using any kind of storage.
   
   Command overview:
-  - init       Initialize the current folder as a Syncany folder.
-  - connect    Connect the current folder to an existing Syncany repository.
-  - status     Detect local changes and print to STDOUT.
-  - up         Detect local changes and upload to repository.
-  - ls-remote  Detect remote changes and print to STDOUT.
-  - down       Detect remote changes and apply locally.
-  - watch      Automatically synchronizes the local folder with the repo.
-  - cleanup    Remove old versions from the local database and the repo. 
-  - restore    Restore the given file paths from the remote repository. 
-  - genlink    Create a syncany://-link from an existing local folder. 
-  - log        Print parts of the local database to STDOUT. 
-  - plugin     List, install and remove storage backend plugins.
+    init       Initialize the current folder as a Syncany folder.
+    connect    Connect the current folder to an existing Syncany repository.
+    status     Detect local changes and print to STDOUT.
+    up         Detect local changes and upload to repository.
+    ls-remote  Detect remote changes and print to STDOUT.
+    down       Detect remote changes and apply locally.
+    watch      Automatically synchronizes the local folder with the repo.
+    cleanup    Remove old versions from the local database and the repo. 
+    restore    Restore the given file paths from the remote repository. 
+    genlink    Create a syncany://-link from an existing local folder. 
+    log        Print parts of the local database to STDOUT. 
+    plugin     List, install and remove storage backend plugins.
 
   Short command descriptions and options can be found below. Detailed 
   explanations can be queried with `sy <command> --help`. 
@@ -53,3 +54,12 @@ GLOBAL OPTIONS
 
   --print
       Print the log to the console (in addition to the log file).
+
+AUTHORS
+  Written by Philipp C. Heckel and many others
+
+REPORTING BUGS
+  Please report bugs to the GitHub issues page at
+     https://www.github.com/syncany/syncany/issues
+
+%RESOURCE:incl/footer.skel%

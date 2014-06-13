@@ -1,4 +1,4 @@
-%RESOURCE:copyright.skel%
+%RESOURCE:incl/footer.skel%
   
 SYNOPSIS
   sy up [options of 'status' command]

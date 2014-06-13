@@ -46,10 +46,6 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.util.StringUtil;
-import org.syncany.util.StringUtil.StringJoinListener;
 
 /**
  * The command line client implements a typical CLI. It represents the first entry
@@ -66,15 +62,12 @@ public class CommandLineClient extends Client {
 	private static final int LOG_FILE_LIMIT = 25000000; // 25 MB
 	
 	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
-	private static final String HELP_TEXT_RESOURCE_ROOT = "/org/syncany/cli/help/";
-	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "help.skel";
-	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "version_short.skel";
-	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "version_full.skel";
-	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "usage.skel";
-	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "cmd/help.%CMD%.skel";
-	private static final String HELP_VAR_CMD= "%CMD%";
-	private static final String HELP_VAR_PLUGINS = "%PLUGINS%";
-	private static final String HELP_VAR_LOGFORMATS = "%LOGFORMATS%";
+	private static final String HELP_TEXT_RESOURCE_ROOT = "/" + CommandLineClient.class.getPackage().getName().replace(".", "/") + "/";
+	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "cmd/help.skel";
+	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "incl/version_short.skel";
+	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "incl/version_full.skel";
+	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "incl/usage.skel";
+	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "cmd/help.%s.skel";
 	
 	private String[] args;	
 	private File localDir;
@@ -317,7 +310,7 @@ public class CommandLineClient extends Client {
 	}
 	
 	private int showCommandHelpAndExit(String commandName) throws IOException {
-		String helpTextResource = HELP_TEXT_CMD_SKEL_RESOURCE.replace(HELP_VAR_CMD, commandName);
+		String helpTextResource = String.format(HELP_TEXT_CMD_SKEL_RESOURCE, commandName);
 		return printHelpTextAndExit(helpTextResource);		
 	}
 
@@ -351,14 +344,6 @@ public class CommandLineClient extends Client {
 			}
 		}
 		
-		if (line.contains(HELP_VAR_PLUGINS)) {
-			line = line.replace(HELP_VAR_PLUGINS, getPluginsStr());	
-		}
-		
-		if (line.contains(HELP_VAR_LOGFORMATS)) {
-			line = line.replace(HELP_VAR_LOGFORMATS, getLogFormatsStr());	
-		}
-		
 		Matcher includeResourceMatcher = HELP_TEXT_RESOURCE_PATTERN.matcher(line);
 		
 		if (includeResourceMatcher.find()) {
@@ -371,23 +356,6 @@ public class CommandLineClient extends Client {
 		}
 		
 		return line;
-	}
-
-	private String getLogFormatsStr() {
-		return StringUtil.join(LogCommand.getSupportedFormats(), ", ");
-	}
-
-	private String getPluginsStr() {
-		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		
-		String pluginsStr = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
-			@Override
-			public String getString(Plugin plugin) {
-				return plugin.getId();
-			}			
-		});	
-		
-		return pluginsStr;
 	}
 
 	private int showErrorAndExit(String errorMessage) {

@@ -10,16 +10,26 @@ use POSIX qw(locale_h);
 setlocale(LC_CTYPE, "en_US.UTF-8");
 setlocale(LC_TIME, "en_US.UTF-8");
 
-my $prefix = "../../syncany-cli/src/main/resources/org/syncany/cli/help";
-my @manpages = glob("$prefix/cmd/*.skel");
+my $sourceDir = "../../syncany-cli/src/main/resources/org/syncany/cli/help/cmd";
+my $targetBuildDir = "../../build/debian/syncany/debian";
+my $targetManDir = "$targetBuildDir/man";
+
+my @manpages = glob("$sourceDir/cmd/*.skel");
+my $targetManFile = "$targetBuildDir/syncany.manpages";
+
+system("mkdir -p $targetManDir");
+
+open(MAN, '>', $targetManFile);
 
 foreach (@manpages) {
 	my $skelfile = $_;
 	my $command = ($skelfile =~ /help\.([-a-z]+)\.skel/) ? $1 : "syncany";
 	my $thcommand = $command eq "syncany" ? "syncany" : "syncany-$command"; 
 
+	print MAN "debian/man/$thcommand.1\n";
+
 	open(IN, "$skelfile");
-	open(OUT, '>', "../../build/debian/syncany/debian/manpage.$thcommand.1");
+	open(OUT, '>', "$targetManDir/$thcommand.1");
 
 	print OUT ".TH $thcommand 1\n";
 
@@ -112,4 +122,6 @@ foreach (@manpages) {
 	close(IN);
 	close(OUT);
 }
+
+close(MAN);
 

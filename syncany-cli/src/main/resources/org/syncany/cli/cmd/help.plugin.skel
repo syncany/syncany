@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-  
+NAME
+  sy plugin - list, install and remove Syncany plugins
+    
 SYNOPSIS
   sy plugin list [-R | --remote-only] [-L | --local-only] [-s | --snapshots]
                  [<plugin-id>]
@@ -70,3 +71,5 @@ ACIONS
     Uninstalls a plugin entirely (removes the JAR file). This action can
     only be used for plugins that were installed by the user, and not for
     system-wide plugins.    
+
+%RESOURCE:incl/footer.skel%

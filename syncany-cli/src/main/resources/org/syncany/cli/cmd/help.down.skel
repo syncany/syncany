@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-  
+NAME
+  sy down - fetch remote changes from Syncany repository and apply locally
+
 SYNOPSIS
   sy down [-C | --conflict-strategy=<rename|ask>] [-A | --no-apply]
   
@@ -35,4 +36,6 @@ OPTIONS
       apply the remote file, or create a conflicting file (as above).
       
     The default strategy is 'rename'.
-    The 'ask' strategy is currently NOT implemented!            
+    The 'ask' strategy is currently NOT implemented!  
+    
+%RESOURCE:incl/footer.skel%

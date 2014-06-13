@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-  
+NAME
+  sy init - intialize local directory and create remote Syncany repository
+
 SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
           [-E | --no-encryption] [-G | --no-compression]
@@ -10,8 +11,6 @@ DESCRIPTION
   initializes the local directory. Unless -I is set, the command is
   interactive and queries the user for input.  
                  
-  Currently activated plugins: %PLUGINS%
-
   Depending on the chosen plugin chosen (with -P or interactively), different
   plugin-specific options are required or optional. 
  
@@ -59,3 +58,4 @@ OPTIONS
     given on the command line. This option can be used to automate repository
     creation.
                  
+%RESOURCE:incl/footer.skel%

@@ -1,4 +1,4 @@
-%RESOURCE:copyright.skel%
+%RESOURCE:incl/footer.skel%
   
 SYNOPSIS
   sy watch [-i | --interval=<sec>] [-s | --delay=<sec>] [-W | --no-watcher]
