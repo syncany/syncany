@@ -12,25 +12,25 @@ DESCRIPTION
   This command performs three different actions:
   
   - It lists the locally installed and remotely available plugins, including
-    version information and whether plugins can be upgraded. The 'list' action
-    connects to the Syncany host to retrieve remote plugin information. By 
-    default, only plugin releases will be listed in the result. If instead 
-    daily snapshots are desired, the -s option can be used.
+  version information and whether plugins can be upgraded. The 'list' action
+  connects to the Syncany host to retrieve remote plugin information. By 
+  default, only plugin releases will be listed in the result. If instead 
+  daily snapshots are desired, the -s option can be used.
   
   - It installs new plugins from either a given URL or a local file. URL and
-    local file must point to a valid Syncany plugin JAR file to be installable.
-    If <plugin-id> is given, the command will connect to the Syncany host and
-    download the desired plugin from there. If instead of the release version 
-    the daily snapshot shall be installed, the -s option can be used.
+  local file must point to a valid Syncany plugin JAR file to be installable.
+  If <plugin-id> is given, the command will connect to the Syncany host and
+  download the desired plugin from there. If instead of the release version 
+  the daily snapshot shall be installed, the -s option can be used.
     
-    Plugins installed by the 'install' action will be copied to the Syncany
-    user directory. On Unix-based systems, this directory is located at
-    ~/.config/syncany/plugins, and on Windows at %AppData%\Syncany\plugins. 
+  Plugins installed by the 'install' action will be copied to the Syncany
+  user directory. On Unix-based systems, this directory is located at
+  ~/.config/syncany/plugins, and on Windows at %AppData%\Syncany\plugins. 
     
   - It removes locally installed plugins from the user's local plugin
-    directory. Only plugins installed by the 'install' action can be removed.
-    The plugins shipped with Syncany (e.g. the 'local' plugin) cannot be 
-    removed.
+  directory. Only plugins installed by the 'install' action can be removed.
+  The plugins shipped with Syncany (e.g. the 'local' plugin) cannot be 
+  removed.
     
 ACIONS
   The following actions are available within the 'plugin' command:
