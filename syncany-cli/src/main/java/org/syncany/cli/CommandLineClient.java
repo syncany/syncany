@@ -46,6 +46,7 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.util.EnvironmentUtil;
 
 /**
  * The command line client implements a typical CLI. It represents the first entry
@@ -68,6 +69,9 @@ public class CommandLineClient extends Client {
 	private static final String HELP_TEXT_VERSION_FULL_SKEL_RESOURCE = "incl/version_full.skel";
 	private static final String HELP_TEXT_USAGE_SKEL_RESOURCE = "incl/usage.skel";
 	private static final String HELP_TEXT_CMD_SKEL_RESOURCE = "cmd/help.%s.skel";
+
+	private static final String MAN_PAGE_MAIN = "sy";
+	private static final String MAN_PAGE_COMMAND_FORMAT = "sy-%s";
 	
 	private String[] args;	
 	private File localDir;
@@ -306,12 +310,41 @@ public class CommandLineClient extends Client {
 	}
 
 	private void showHelpAndExit() throws IOException {
+		// Try opening man page (if on Linux)
+		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
+			execManPageAndExit(MAN_PAGE_MAIN);
+		}
+		
+		// Fallback (and on Windows): Display man page on STDOUT
 		printHelpTextAndExit(HELP_TEXT_HELP_SKEL_RESOURCE);
 	}
 	
 	private int showCommandHelpAndExit(String commandName) throws IOException {
+		// Try opening man page (if on Linux)
+		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
+			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);
+			execManPageAndExit(commandManPage);
+		}
+		
+		// Fallback (and on Windows): Display man page on STDOUT
 		String helpTextResource = String.format(HELP_TEXT_CMD_SKEL_RESOURCE, commandName);
 		return printHelpTextAndExit(helpTextResource);		
+	}
+
+	private void execManPageAndExit(String manPage) {
+		try {
+			Runtime runtime = Runtime.getRuntime();
+			Process manProcess = runtime.exec(new String[] { "sh", "-c", "man " + manPage + " > /dev/tty" });
+			
+			int manProcessExitCode = manProcess.waitFor();
+			
+			if (manProcessExitCode == 0) {
+				System.exit(0); 
+			}
+		}
+		catch (Exception e) {
+			// Don't care!
+		}
 	}
 
 	private int printHelpTextAndExit(String helpTextResource) throws IOException {
