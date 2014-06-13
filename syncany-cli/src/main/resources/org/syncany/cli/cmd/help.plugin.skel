@@ -41,7 +41,6 @@ ACIONS
     on api.syncany.org. If <plugin-id> is given, the result list will
     be shortened to the selected plugin.
     
-    Options:  
     -R, --remote-only
       Turns off local plugin discovery. In particular, the result list will 
       not include any information about the locally installed plugins.
@@ -62,7 +61,6 @@ ACIONS
     Installs a plugin from an arbitrary URL, local file or from the 
     available plugins on api.syncany.org (with a plugin identifier)
     
-    Options:
     -s, --snapshot
       Installs the daily snapshot instead of the release version. Only if
       <plugin-id> is given. Not for <URL> or <file>.

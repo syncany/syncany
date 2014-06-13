@@ -10,11 +10,11 @@ use POSIX qw(locale_h);
 setlocale(LC_CTYPE, "en_US.UTF-8");
 setlocale(LC_TIME, "en_US.UTF-8");
 
-my $sourceDir = "../../syncany-cli/src/main/resources/org/syncany/cli/help/cmd";
+my $sourceDir = "../../syncany-cli/src/main/resources/org/syncany/cli/cmd";
 my $targetBuildDir = "../../build/debian/syncany/debian";
 my $targetManDir = "$targetBuildDir/man";
 
-my @manpages = glob("$sourceDir/cmd/*.skel");
+my @manpages = glob("$sourceDir/*.skel");
 my $targetManFile = "$targetBuildDir/syncany.manpages";
 
 system("mkdir -p $targetManDir");
@@ -73,7 +73,19 @@ foreach (@manpages) {
 		else {	
 			# Trim left two spaces
 			$line =~ s/^\s\s//g; 
+						
+			# Highlight options --some-option=<option1|option2> or -o
+			$line =~ s/(^|\W+?)(--?[-\w]+=?)/$1\\fB$2\\fR/g;
 		
+			# Highlight commands `ls -al`
+			$line =~ s/(`[^`]+`)/\\fB$1\\fR/g;
+			
+			# Highlight args <args>
+			$line =~ s/(<[-\w\|]+>)/\\fB$1\\fR/g;
+
+			# Replace - with \-
+			$line =~ s/-/\\-/;
+
 			if ($indentSection) {
 				# Calculate indent (after two left spaces)
 				my $lineindent = 0;

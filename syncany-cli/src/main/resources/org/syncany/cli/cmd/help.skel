@@ -3,7 +3,7 @@ NAME
   
 SYNOPSIS
   sy [-l|--localdir=<path>] [--log=<path>] [-v]
-     [-vv] [--loglevel=OFF|SEVERE|..] [--print]
+     [-vv] [--loglevel=<level>] [--print]
      [-d|--debug] [-h|--help] <command> [<args>]
   
 DESCRIPTION

@@ -1,4 +1,5 @@
-%RESOURCE:incl/footer.skel%
+NAME 
+  sy watch - monitor local Syncany folder and automatically sync changes
   
 SYNOPSIS
   sy watch [-i | --interval=<sec>] [-s | --delay=<sec>] [-W | --no-watcher]
@@ -71,3 +72,4 @@ OPTIONS
   In addition to these options, all arguments of the commands 'status', 
   'ls-remote', 'up' and 'down' can be used.
  
+%RESOURCE:incl/footer.skel%
