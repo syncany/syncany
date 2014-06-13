@@ -1,5 +1,5 @@
 NAME
-  sy status - list new and changed files in local Syncany folder
+  sy-status - list new and changed files in local Syncany folder
     
 SYNOPSIS
   sy status [-f | --force-checksum] 

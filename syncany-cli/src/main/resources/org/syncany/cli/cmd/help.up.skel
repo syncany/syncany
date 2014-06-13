@@ -1,8 +1,8 @@
 NAME
-  sy up - uploads changes in local Syncany folder to remote repository
+  sy-up - uploads changes in local Syncany folder to remote repository
    
 SYNOPSIS
-  sy up [options of 'status' command]
+  sy up [<status-options>]
   
 DESCRIPTION 
   This command detects changes in the local folder, indexes new files and 

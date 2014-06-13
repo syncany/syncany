@@ -1,5 +1,5 @@
 NAME
-  sy plugin - list, install and remove Syncany plugins
+  sy-plugin - list, install and remove Syncany plugins
     
 SYNOPSIS
   sy plugin list [-R | --remote-only] [-L | --local-only] [-s | --snapshots]

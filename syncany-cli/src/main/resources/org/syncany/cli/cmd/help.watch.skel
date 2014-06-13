@@ -1,10 +1,10 @@
 NAME 
-  sy watch - monitor local Syncany folder and automatically sync changes
+  sy-watch - monitor local Syncany folder and automatically sync changes
   
 SYNOPSIS
   sy watch [-i | --interval=<sec>] [-s | --delay=<sec>] [-W | --no-watcher]
            [-a | --announce=<host>:<port>] [-N | --no-announcements]
-           [options of the commands 'status', 'ls-remote', 'up', 'down']
+           [<status-options> | <up-options> | <down-options>]
   
 DESCRIPTION 
   Automatically synchronizes the local folder with the repository. The

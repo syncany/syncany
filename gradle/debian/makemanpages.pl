@@ -10,81 +10,109 @@ use POSIX qw(locale_h);
 setlocale(LC_CTYPE, "en_US.UTF-8");
 setlocale(LC_TIME, "en_US.UTF-8");
 
-my $sourceDir = "../../syncany-cli/src/main/resources/org/syncany/cli/cmd";
+my $sourceDir = "../../syncany-cli/build/resources/main/org/syncany/cli";
 my $targetBuildDir = "../../build/debian/syncany/debian";
 my $targetManDir = "$targetBuildDir/man";
 
-my @manpages = glob("$sourceDir/*.skel");
+my @manpages = glob("$sourceDir/cmd/*.skel");
 my $targetManFile = "$targetBuildDir/syncany.manpages";
 
 system("mkdir -p $targetManDir");
 
 open(MAN, '>', $targetManFile);
 
-foreach (@manpages) {
+foreach (@manpages) {	
 	my $skelfile = $_;
-	my $command = ($skelfile =~ /help\.([-a-z]+)\.skel/) ? $1 : "syncany";
-	my $thcommand = $command eq "syncany" ? "syncany" : "syncany-$command"; 
+	my $command = ($skelfile =~ /help\.([-a-z]+)\.skel/) ? $1 : "sy";
+	my $thcommand = $command eq "sy" ? "sy" : "sy-$command"; 
 
 	print MAN "debian/man/$thcommand.1\n";
 
-	open(IN, "$skelfile");
-	open(OUT, '>', "$targetManDir/$thcommand.1");
+	my $manPage = formatManpage($skelfile, $thcommand);
+	
+	open OUT, '>', "$targetManDir/$thcommand.1";
+	print OUT $manPage;
+	close OUT;
+}
 
-	print OUT ".TH $thcommand 1\n";
+close(MAN);
+
+#EOF
+
+sub formatManpage {
+	my ($skelFile, $thcommand) = @_;
+	
+	my @manPageLines = ();
+		
+	if ($thcommand) {
+		push(@manPageLines, ".TH $thcommand 1\n");
+	}
 
 	my $indent = 0;
 	my $nf = 0;
 	my $indentSection = 0;
 	my @indents = (0);
 
+	open(IN, "$skelFile");
+
 	while (my $line = <IN>) {
 		chomp $line;
 	
+		# Embed %RESOURCE:...%
+		if ($line =~ /\%RESOURCE:([^%]+)\%/) {
+			$includeSkelFile = "$sourceDir/$1";
+			$includeManPage = formatManpage($includeSkelFile);
+			
+			$line =~ s/\%RESOURCE:[^%]+\%/$includeManPage/;
+			push(@manPageLines, "$line\n");
+
+			next;
+		}
+		
 		# Trim right
 		$line =~ s/\s+$//g; 
 		
-		# Escape line 
-		$line =~ s/\\/\\\\/g;
+		# Escape line \ -> \\ and ' -> \'
+		$line =~ s/([\\\'])/\\$1/g;
 	
 		# Header
 		if ($line =~ /^([A-Z\s]+)$/) {	
 			if ($indent > 0) {
-				print OUT ".RE\n";
+				push(@manPageLines, ".RE\n");
 				$indent = 0;
 			}
 			
-			if ($1 =~ /SYNOPSIS|DESCRIPTION/i) {
+			if ($1 =~ /SYNOPSIS|DESCRIPTION|COPYRIGHT/i) {
 				$indentSection = 0;
 			}
 			else {
 				$indentSection = 1;
 			}
 		
-			print OUT ".SH $line\n";
+			push(@manPageLines, ".SH $line\n");
 		}
 	
 		# Empty line
 		elsif ($line =~ /^\s*$/) {
-			print OUT ".PP\n";
+			push(@manPageLines, ".PP\n");
 		}
 
-		# Indent section		
+		# Sections with indents enabled
 		else {	
 			# Trim left two spaces
 			$line =~ s/^\s\s//g; 
 						
-			# Highlight options --some-option=<option1|option2> or -o
+			# Highlight options --some-option=<option1|option2=abc> or -o
 			$line =~ s/(^|\W+?)(--?[-\w]+=?)/$1\\fB$2\\fR/g;
 		
 			# Highlight commands `ls -al`
 			$line =~ s/(`[^`]+`)/\\fB$1\\fR/g;
 			
 			# Highlight args <args>
-			$line =~ s/(<[-\w\|]+>)/\\fB$1\\fR/g;
+			$line =~ s/(<[-\w\|=]+>)/\\fB$1\\fR/g;
 
 			# Replace - with \-
-			$line =~ s/-/\\-/;
+			$line =~ s/-/\\-/g;
 
 			if ($indentSection) {
 				# Calculate indent (after two left spaces)
@@ -96,11 +124,11 @@ foreach (@manpages) {
 		
 				# Don't break list items and option lines
 				if (!$nf && $line =~ /^\s*[-\*]/) {
-					print OUT ".nf\n";
+					push(@manPageLines, ".nf\n");
 					$nf = 1;
 				}
 				elsif ($nf && $line =~ /^\s*[^-\*]/) {
-					print OUT ".fi\n";
+					push(@manPageLines, ".fi\n");
 					$nf = 0;
 				}
 		
@@ -110,30 +138,29 @@ foreach (@manpages) {
 				# End indent sections				
 				while ($lineindent < $indent && $#indents > 0) {
 					$indent = pop(@indents);
-					print OUT ".RE\n";				
+					push(@manPageLines, ".RE\n");				
 				}
 				
 				if ($lineindent > $indent) { 
-					print OUT ".RS\n";
-					print OUT "$line\n";
+					push(@manPageLines, ".RS\n");
+					push(@manPageLines, "$line\n");
 					
 					push(@indents, $indent);
 					$indent = $lineindent;
 				}
 				else {												
-					print OUT "$line\n";
+					push(@manPageLines, "$line\n");
 					$indent = $lineindent;
 				}
 			}
 			else {
-				print OUT "$line\n";
+				push(@manPageLines, "$line\n");
 			}
 		}
 	}
 
 	close(IN);
-	close(OUT);
+	
+	return join("", @manPageLines);
 }
-
-close(MAN);
 

@@ -1,5 +1,5 @@
 NAME
-  sy down - fetch remote changes from Syncany repository and apply locally
+  sy-down - fetch remote changes from Syncany repository and apply locally
 
 SYNOPSIS
   sy down [-C | --conflict-strategy=<rename|ask>] [-A | --no-apply]

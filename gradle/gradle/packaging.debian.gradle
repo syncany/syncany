@@ -4,7 +4,7 @@ task debianClean(type: Delete) {
 	delete 'build/debian'	
 }
 
-task debianManpages {
+task debianManpages(dependsOn: installApp) {
 	doLast {
 		rootProject.file("build/debian/syncany/debian").mkdirs()
 	
@@ -15,9 +15,13 @@ task debianManpages {
 	}
 }
 
+task debianBasic(dependsOn: [debianClean, installApp, debianManpages]) {
+	// Nothing
+}
+
 tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 	if (taskName.startsWith("debianPrepare")) {
-		task(taskName, dependsOn: [installApp, debianClean, debianManpages]){
+		task(taskName, dependsOn: debianBasic){
 			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
 			String debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa1" : ""
 			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianPpaVersion

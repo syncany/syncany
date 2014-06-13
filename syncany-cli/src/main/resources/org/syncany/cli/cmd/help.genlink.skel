@@ -1,5 +1,5 @@
 NAME
-  sy genlink - generate Syncany link for initialized local directory
+  sy-genlink - generate Syncany link for initialized local directory
     
 SYNOPSIS
   sy genlink [-s | --short] 

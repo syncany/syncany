@@ -1,10 +1,9 @@
 NAME
-  sy cleanup - remove old versions and free remote disk space  
+  sy-cleanup - remove old versions and free remote disk space  
  
 SYNOPSIS
   sy cleanup [-M | --no-database-merge] [-V | --no-version-remove]
-             [-k | --keep-versions=<count>]
-             [options of 'status' command]
+             [-k | --keep-versions=<count>] [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 

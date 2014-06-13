@@ -1,5 +1,5 @@
 NAME
-  sy init - intialize local directory and create remote Syncany repository
+  sy-init - intialize local directory and create remote Syncany repository
 
 SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
@@ -34,7 +34,7 @@ OPTIONS
   -E, --no-encryption              
     DO NOT USE THIS OPTION. Turns off the encryption for the newly created
     remote repository. All files are stored in plaintext. No password is
-    needed for either syncany://-link, multichunk or metadata. 
+    needed for either syncany:// link, multichunk or metadata. 
     
   -G, --no-compression             
     Turns off Gzip compression for the newly created remote repository. All

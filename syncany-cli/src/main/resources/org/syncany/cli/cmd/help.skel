@@ -21,7 +21,7 @@ DESCRIPTION
     watch      Automatically synchronizes the local folder with the repo.
     cleanup    Remove old versions from the local database and the repo. 
     restore    Restore the given file paths from the remote repository. 
-    genlink    Create a syncany://-link from an existing local folder. 
+    genlink    Create a syncany:// link from an existing local folder. 
     log        Print parts of the local database to STDOUT. 
     plugin     List, install and remove storage backend plugins.
 

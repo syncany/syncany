@@ -1,5 +1,5 @@
 NAME
-  sy ls-remote - list changes on remote repository
+  sy-ls-remote - list changes on remote repository
      
 SYNOPSIS
   sy ls-remote 
