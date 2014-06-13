@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### Syncany 0.1.6-alpha (Date: tbd.)
+
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Implemented man pages for all Syncany commands: `man (sy|sy-up|..)` #87
+
 ### Syncany 0.1.5-alpha (Date: 12 Jun 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
