@@ -43,7 +43,6 @@ import org.reflections.Reflections;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.WebInterfacePlugin;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.BinaryResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
@@ -160,26 +159,6 @@ public class DaemonWebServer {
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
-		}
-	}
-
-	@Subscribe
-	public void onResponse(final BinaryResponse response) {
-		WebSocketChannel responseToClientChannel = requestIdCache.asMap().get(response.getRequestId());
-
-		if (responseToClientChannel != null) {
-			logger.log(Level.INFO, "Sending binary frame to " + responseToClientChannel + "...");
-
-			try {
-				WebSockets.sendBinaryBlocking(response.getData(), responseToClientChannel);
-				responseToClientChannel.resumeReceives();
-			}
-			catch (IOException e) {
-				logger.log(Level.WARNING, "Cannot send BINARY message, sending frame failed.", e);
-			}
-		}
-		else {
-			logger.log(Level.WARNING, "Cannot send BINARY message, because request ID in response is unknown or timed out.");
 		}
 	}
 
