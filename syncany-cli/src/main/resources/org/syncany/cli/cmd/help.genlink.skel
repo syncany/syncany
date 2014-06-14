@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-  
+NAME
+  sy-genlink - generate Syncany link for initialized local directory
+    
 SYNOPSIS
   sy genlink [-s | --short] 
   
@@ -17,3 +18,5 @@ OPTIONS
   -S, --short
     Only prints the link and leaves out any explanatory text. Useful if the
     link is used in a script.
+    
+%RESOURCE:incl/footer.skel%

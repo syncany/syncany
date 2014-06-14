@@ -98,13 +98,13 @@ public class DaemonWebServer {
 
 	private void initServer() {
 		webServer = Undertow
-				.builder()
-				.addHttpListener(DEFAULT_PORT, "localhost")
-				.setHandler(path()
-					.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
-					.addPrefixPath("/api/rest", new InternalRestHandler())
-					.addPrefixPath("/", new InternalWebInterfaceHandler())
-				).build();
+			.builder()
+			.addHttpListener(DEFAULT_PORT, "localhost")
+			.setHandler(path()
+				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
+				.addPrefixPath("/api/rest", new InternalRestHandler())
+				.addPrefixPath("/", new InternalWebInterfaceHandler())
+			).build();
 	}
 
 	private void handleMessage(WebSocketChannel clientSocket, String message) {

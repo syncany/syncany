@@ -1,5 +1,6 @@
-%RESOURCE:copyright.skel%
-  
+NAME
+  sy-status - list new and changed files in local Syncany folder
+    
 SYNOPSIS
   sy status [-f | --force-checksum] 
   
@@ -22,3 +23,5 @@ OPTIONS
     files are modified in-place very often (last modified date and size 
     do not change). For large local folders, this option can tremendously
     decrease the performance of this command and increase I/O significantly.  
+ 
+%RESOURCE:incl/footer.skel%
