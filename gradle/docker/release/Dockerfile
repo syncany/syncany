@@ -12,9 +12,8 @@ FROM ubuntu
 MAINTAINER Philipp Heckel <philipp.heckel@gmail.com>
 
 # Install Syncany and dependencies
-# TODO: Once 0.1.4 is 'latest', change to: openjdk-7-jre-headless
 RUN apt-get update
-RUN apt-get install -y wget openjdk-7-jre vim
+RUN apt-get install -y wget openjdk-7-jre-headless vim
 RUN wget -O syncany.deb https://syncany.org/r/latest.deb
 RUN dpkg -i syncany.deb
 RUN rm syncany.deb
