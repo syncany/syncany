@@ -50,7 +50,7 @@ public class PidFileUtil {
 	 * 
 	 * @return The Java process PID, or -1 if the PID cannot be determined
 	 */
-	private static int getProcessPid() {
+	public static int getProcessPid() {
 		try {
 			return getProcessPidImpl1();
 		}
