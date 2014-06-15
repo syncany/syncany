@@ -42,6 +42,7 @@ import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsLargeFileScenarioTest;
 import org.syncany.tests.scenarios.MixedUpDownScenarioTest;
+import org.syncany.tests.scenarios.MoveFolderWithQuotesOnWindowsScenario;
 import org.syncany.tests.scenarios.RenameDeleteScenarioTest;
 import org.syncany.tests.scenarios.RenameFileWithDiffModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.RenameNoDownloadMultiChunksScenarioTest;
@@ -76,6 +77,7 @@ import org.syncany.tests.scenarios.DirtyDatabaseVersionsScenarioTest;
 	ManySyncUpsLargeFileScenarioTest.class,
 	ManySyncUpsAndOtherClientSyncDownScenarioTest.class,
 	MixedUpDownScenarioTest.class,
+	MoveFolderWithQuotesOnWindowsScenario.class,
 	RenameFileWithDiffModifiedDateScenarioTest.class,
 	RenameToExistingFileScenarioTest.class,
 	RenameNoDownloadMultiChunksScenarioTest.class,
