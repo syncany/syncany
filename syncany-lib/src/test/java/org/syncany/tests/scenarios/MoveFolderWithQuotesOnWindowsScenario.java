@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
-import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,9 +26,9 @@ import java.io.FileOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.util.EnvironmentUtil;
 
 public class MoveFolderWithQuotesOnWindowsScenario {	
 	@Test
@@ -64,9 +62,16 @@ public class MoveFolderWithQuotesOnWindowsScenario {
 		}
 		
 		clientB.down(); // << In issue 124, this failed because we tried to move the inner "file" to the folder with quotes
-		assertTrue(clientB.getLocalFile("folder with quotes (filename conflict)").exists());
-		assertTrue(clientB.getLocalFile("folder with quotes (filename conflict)/file").exists());
-			
+		
+		if (EnvironmentUtil.isWindows()) {
+			assertTrue(clientB.getLocalFile("folder with quotes (filename conflict)").exists());
+			assertTrue(clientB.getLocalFile("folder with quotes (filename conflict)/file").exists());
+		}
+		else {
+			assertTrue(clientB.getLocalFile("folder \"with\" quotes").exists());
+			assertTrue(clientB.getLocalFile("folder \"with\" quotes/file").exists());
+		}
+		
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();

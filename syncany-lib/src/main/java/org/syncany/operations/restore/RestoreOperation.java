@@ -17,12 +17,6 @@
  */
 package org.syncany.operations.restore;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,40 +27,41 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.operations.Operation;
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.OperationResult;
+import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.Downloader;
 import org.syncany.operations.down.actions.FileSystemAction;
 import org.syncany.operations.down.actions.NewFileSystemAction;
-import org.syncany.util.FileUtil;
+import org.syncany.operations.restore.RestoreOperationOptions.RestoreOperationStrategy;
 
 /**
  * TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation
  * 
  */
-public class RestoreOperation extends Operation {
+public class RestoreOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
+	
+	public static final String ACTION_ID = "restore";
+	
 	private RestoreOperationOptions options;
 	
 	private SqlDatabase localDatabase;
+	private Downloader downloader;
 
 	public RestoreOperation(Config config) {
 		this(config, new RestoreOperationOptions());
 	}
 
 	public RestoreOperation(Config config, RestoreOperationOptions options) {
-		super(config);
+		super(config, ACTION_ID);
 		
 		this.options = options;
 		this.localDatabase = new SqlDatabase(config);
+		this.downloader = new Downloader(config, transferManager);
 	}
 
 	@Override
@@ -94,7 +89,7 @@ public class RestoreOperation extends Operation {
 			throw new Exception("Strategy "+options.getStrategy()+" not supported yet.");
 		}
 
-		downloadAndDecryptMultiChunks(multiChunksToDownload);
+		downloader.downloadAndDecryptMultiChunks(multiChunksToDownload);
 
 		for (FileVersion restoreFileVersion : restoreFileVersions) {
 			logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
@@ -124,83 +119,5 @@ public class RestoreOperation extends Operation {
 		}
 		
 		return restoreFileVersions;
-	}
-
-	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
-		// TODO [medium] Duplicate code in DownOperation
-
-		logger.log(Level.INFO, "- Downloading and extracting multichunks ...");
-		TransferManager transferManager = config.getPlugin().createTransferManager(config.getConnection());
-
-		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
-
-			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
-			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-
-			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
-			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
-			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
-
-			// TODO [medium] Calculate checksum while writing file, to verify correct content
-			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
-
-			decryptedMultiChunkOutputStream.close();
-			multiChunkInputStream.close();
-
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
-			localEncryptedMultiChunkFile.delete();
-		}
-
-		transferManager.disconnect();
-	}
-
-	public static enum RestoreOperationStrategy {
-		DATABASE_DATE, FILE_VERSION
-	}
-
-	public static class RestoreOperationOptions implements OperationOptions {
-		private RestoreOperationStrategy strategy;
-		private Date databaseBeforeDate;
-		private Integer fileVersionNumber;
-		private List<String> restoreFilePaths;
-
-		public Date getDatabaseBeforeDate() {
-			return databaseBeforeDate;
-		}
-
-		public void setDatabaseBeforeDate(Date databaseBeforeDate) {
-			this.databaseBeforeDate = databaseBeforeDate;
-		}
-
-		public List<String> getRestoreFilePaths() {
-			return restoreFilePaths;
-		}
-
-		public void setRestoreFilePaths(List<String> restoreFiles) {
-			this.restoreFilePaths = restoreFiles;
-		}
-
-		public RestoreOperationStrategy getStrategy() {
-			return strategy;
-		}
-
-		public void setStrategy(RestoreOperationStrategy strategy) {
-			this.strategy = strategy;
-		}
-
-		public Integer getFileVersionNumber() {
-			return fileVersionNumber;
-		}
-
-		public void setFileVersionNumber(Integer fileVersionNumber) {
-			this.fileVersionNumber = fileVersionNumber;
-		}
-	}
-
-	public class RestoreOperationResult implements OperationResult {
-		// Fressen
 	}
 }

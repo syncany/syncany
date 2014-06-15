@@ -32,9 +32,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.restore.RestoreOperation.RestoreOperationOptions;
-import org.syncany.operations.restore.RestoreOperation.RestoreOperationResult;
-import org.syncany.operations.restore.RestoreOperation.RestoreOperationStrategy;
+import org.syncany.operations.restore.RestoreOperationOptions;
+import org.syncany.operations.restore.RestoreOperationOptions.RestoreOperationStrategy;
+import org.syncany.operations.restore.RestoreOperationResult;
 
 public class RestoreCommand extends Command {
 	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
@@ -59,15 +59,15 @@ public class RestoreCommand extends Command {
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
-		OptionSpec<Integer> optionVersion = parser.acceptsAll(asList("v", "version")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Integer> optionRevision = parser.acceptsAll(asList("r", "revision")).withRequiredArg().ofType(Integer.class);
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
-		if (options.has(optionDateStr) && options.has(optionVersion)) {
-			throw new Exception("Cannot have both options --date and --revisions.");
+		if (options.has(optionDateStr) && options.has(optionRevision)) {
+			throw new Exception("Cannot have both options --date and --revision.");
 		}
-		else if (!options.has(optionDateStr) && !options.has(optionVersion)) {
-			throw new Exception("Either --version or --date must be specified.");
+		else if (!options.has(optionDateStr) && !options.has(optionRevision)) {
+			throw new Exception("Either --revision or --date must be specified.");
 		}
 		
 		// --date
@@ -123,9 +123,9 @@ public class RestoreCommand extends Command {
 		}
 		
 		// --revisions
-		else if (options.has(optionVersion)) {
+		else if (options.has(optionRevision)) {
 			operationOptions.setStrategy(RestoreOperationStrategy.FILE_VERSION);
-			operationOptions.setFileVersionNumber(options.valueOf(optionVersion));
+			operationOptions.setFileVersionNumber(options.valueOf(optionRevision));
 		}		
 		
 		// Files

@@ -120,6 +120,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
 
+				// TODO [medium] Calculate checksum while writing file, to verify correct content
 				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
 
 				chunkInputStream.close();
