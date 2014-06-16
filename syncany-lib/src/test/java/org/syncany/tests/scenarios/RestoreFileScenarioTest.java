@@ -19,16 +19,15 @@ package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.restore.RestoreOperationOptions;
-import org.syncany.operations.restore.RestoreOperationOptions.RestoreOperationStrategy;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -62,8 +61,10 @@ public class RestoreFileScenarioTest {
 		// A restore
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 		operationOptions.setDatabaseBeforeDate(restoreMoment);
-		operationOptions.setRestoreFilePaths(Arrays.asList("A-original"));
-		operationOptions.setStrategy(RestoreOperationStrategy.DATABASE_DATE);
+		//operationOptions.setRestoreFilePaths(Arrays.asList("A-original"));
+		//operationOptions.setStrategy(RestoreOperationStrategy.DATABASE_DATE);
+		
+		fail("Fix this test");
 		
 		clientA.restore(operationOptions);
 		

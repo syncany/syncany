@@ -26,8 +26,6 @@ import org.syncany.config.Config;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.OperationResult;
 
 /*
  * TODO [high] The log operation is experimental and needs refactoring #86 
@@ -60,48 +58,6 @@ public class LogOperation extends Operation {
 			//fileHistories = getFileHistoriesByPath(options.getPaths(), database);
 		}
 		
-		return new LogOperationResult(fileHistories, options.getFormat());
-	}				
-	
-	public static class LogOperationOptions implements OperationOptions {
-		private List<String> paths;		
-		
-		private String format;
-		
-		public List<String> getPaths() {
-			return paths;
-		}
-		
-		public void setPaths(List<String> paths) {
-			this.paths = paths;
-		}
-
-		public String getFormat() {
-			return format;
-		}
-
-		public void setFormat(String format) {
-			this.format = format;
-		}
-	}
-	
-	public class LogOperationResult implements OperationResult {
-		private List<PartialFileHistory> fileHistories;
-		
-		private String format;
-		
-		public LogOperationResult(List<PartialFileHistory> fileHistories, String format) {
-			this.fileHistories = fileHistories;
-			this.format =format;
-		}
-
-		public List<PartialFileHistory> getFileHistories() {
-			return fileHistories;
-		}	
-		
-		public String getFormat() {
-			return format;
-		}
-		
+		return new LogOperationResult(fileHistories);
 	}
 }

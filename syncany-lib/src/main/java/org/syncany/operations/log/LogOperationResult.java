@@ -15,42 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.restore;
+package org.syncany.operations.log;
 
-import java.io.File;
+import java.util.List;
 
+import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.OperationResult;
 
-public class RestoreOperationResult implements OperationResult {
-	public enum RestoreResultCode {
-		ACK, NACK_INVALID_FILE, NACK_NO_FILE
-	}
+public class LogOperationResult implements OperationResult {
+	private List<PartialFileHistory> fileHistories;
 	
-	private RestoreResultCode resultCode;
-	private File targetFile;
-	
-	public RestoreOperationResult(RestoreResultCode resultCode) {
-		this(resultCode, null);
+	public LogOperationResult(List<PartialFileHistory> fileHistories) {
+		this.fileHistories = fileHistories;
 	}
-	
-	public RestoreOperationResult(RestoreResultCode resultCode, File targetFile) {
-		this.resultCode = resultCode;
-		this.targetFile = targetFile;
-	}
-	
-	public RestoreResultCode getResultCode() {
-		return resultCode;
-	}
-	
-	public void setResultCode(RestoreResultCode resultCode) {
-		this.resultCode = resultCode;
-	}
-	
-	public File getTargetFile() {
-		return targetFile;
-	}
-	
-	public void setTargetFile(File targetFile) {
-		this.targetFile = targetFile;
-	}
+
+	public List<PartialFileHistory> getFileHistories() {
+		return fileHistories;
+	}	
 }

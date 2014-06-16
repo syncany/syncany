@@ -195,6 +195,10 @@ public class SqlDatabase {
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		return fileVersionDao.getDeletedFileVersions();
 	}
+	
+	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
+		return fileVersionDao.getFileVersion(fileHistoryId, version);
+	}
 
 	// Multi Chunk
 

@@ -165,7 +165,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-	
 
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getMostRecentPurgeVersions.sql")) {
@@ -182,6 +181,18 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersions.sql")) {
 			return getSingleVersionInHistory(preparedStatement);			
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileVersionByHistoryAndVersion.sql")) {
+			preparedStatement.setString(1, fileHistoryId.toString());
+			preparedStatement.setLong(2, version);
+			
+			return executeAndCreateFileVersion(preparedStatement);			
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -230,6 +241,20 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			}
 
 			return null;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private FileVersion executeAndCreateFileVersion(PreparedStatement preparedStatement) {
+		try (ResultSet resultSet = preparedStatement.executeQuery()) {
+			if (resultSet.next()) {
+				return createFileVersionFromRow(resultSet);
+			}
+			else {
+				return null;
+			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);

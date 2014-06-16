@@ -15,39 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.restore;
+package org.syncany.operations.log;
 
 import java.util.Date;
+import java.util.List;
 
-import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationOptions;
 
-public class RestoreOperationOptions implements OperationOptions {
-	private FileHistoryId fileHistoryId;
-	private Date databaseBeforeDate;
-	private Integer fileVersionNumber;
-
-	public Date getDatabaseBeforeDate() {
-		return databaseBeforeDate;
+public class LogOperationOptions implements OperationOptions {
+	private Date date;
+	private LogOutputFormat format;
+	private List<String> paths;		
+	
+	public Date getDate() {
+		return date;
 	}
 
-	public void setDatabaseBeforeDate(Date databaseBeforeDate) {
-		this.databaseBeforeDate = databaseBeforeDate;
+	public void setDate(Date date) {
+		this.date = date;
 	}
 
-	public FileHistoryId getFileHistoryId() {
-		return fileHistoryId;
+	public List<String> getPaths() {
+		return paths;
+	}
+	
+	public void setPaths(List<String> paths) {
+		this.paths = paths;
 	}
 
-	public void setFileHistoryId(FileHistoryId fileHistory) {
-		this.fileHistoryId = fileHistory;
+	public LogOutputFormat getFormat() {
+		return format;
 	}
 
-	public Integer getFileVersionNumber() {
-		return fileVersionNumber;
-	}
-
-	public void setFileVersionNumber(Integer fileVersionNumber) {
-		this.fileVersionNumber = fileVersionNumber;
+	public void setFormat(LogOutputFormat format) {
+		this.format = format;
 	}
 }
