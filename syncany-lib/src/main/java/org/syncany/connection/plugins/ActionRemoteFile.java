@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ActionRemoteFile extends RemoteFile {
-	private static final Pattern NAME_PATTERN = Pattern.compile("action-(up|down|cleanup)-([^-]+)-(\\d+)");
+	private static final Pattern NAME_PATTERN = Pattern.compile("action-(up|down|cleanup|restore)-([^-]+)-(\\d+)");
 	private static final String NAME_FORMAT = "action-%s-%s-%010d";
 
 	private String operationName;

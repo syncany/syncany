@@ -19,13 +19,10 @@ package org.syncany.operations.down.actions;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import org.apache.commons.io.FileExistsException;
-import org.apache.commons.io.FileUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
@@ -123,6 +120,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
 
+				// TODO [medium] Calculate checksum while writing file, to verify correct content
 				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
 
 				chunkInputStream.close();
@@ -138,49 +136,4 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		
 		return reconstructedFileInCache;
 	}	
-	
-	private void moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
-		NormalizedPath originalPath = new NormalizedPath(config.getLocalDir(), targetFileVersion.getPath());
-		NormalizedPath targetPath = originalPath;
-				
-		try {
-			// Clean filename
-			if (targetPath.hasIllegalChars()) {
-				targetPath = targetPath.toCreatable("filename conflict", true);
-			}
-
-			// Try creating folder
-			createFolder(targetPath.getParent());
-		}
-		catch (Exception e) {
-			throw new RuntimeException("What to do here?!");
-		}
-		
-		// Try moving file to final destination 
-		try {
-			FileUtils.moveFile(reconstructedFileInCache, targetPath.toFile());
-		}
-		catch (FileExistsException e) {
-			moveToConflictFile(targetPath);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("What to do here?!");
-		}		
-	}
-	
-	protected void createFolder(NormalizedPath targetDir) throws Exception {		
-		if (!FileUtil.exists(targetDir.toFile())) {
-			logger.log(Level.INFO, "     - Creating folder at " + targetDir.toFile() + " ...");
-			boolean targetDirCreated = targetDir.toFile().mkdirs();
-			
-			if (!targetDirCreated) {
-				throw new Exception("Cannot create target dir: "+targetDir);
-			}
-		}
-		else if (!FileUtil.isDirectory(targetDir.toFile())) {
-			logger.log(Level.INFO, "     - Expected a folder at " + targetDir.toFile() + " ...");
-			//throw new FileExistsException("Cannot create target parent directory: "+targetDir);
-			moveToConflictFile(targetDir);
-		}
-	}
 }

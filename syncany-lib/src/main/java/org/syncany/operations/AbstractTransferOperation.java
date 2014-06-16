@@ -57,10 +57,16 @@ public abstract class AbstractTransferOperation extends Operation {
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
 
-		this.transferManager = new RetriableTransferManager(config.getPlugin().createTransferManager(config.getConnection()));
-		this.actionHandler = new ActionFileHandler(transferManager, operationName, config.getMachineName());
+		// Do NOT reuse TransferManager for action file renewal; see #140
+		
+		this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
+		this.transferManager = createReliableTransferManager(config);
 	}
 	
+	private TransferManager createReliableTransferManager(Config config) {
+		return new RetriableTransferManager(config.getPlugin().createTransferManager(config.getConnection()));
+	}
+
 	protected void startOperation() throws Exception {
 		actionHandler.start();
 	}

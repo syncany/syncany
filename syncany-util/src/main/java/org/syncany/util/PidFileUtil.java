@@ -40,6 +40,31 @@ import java.util.logging.Logger;
 */
 public class PidFileUtil {
 	private static final Logger logger = Logger.getLogger(PidFileUtil.class.getSimpleName());
+	
+	/**
+	 * Determines the PID for the current Java process. 
+	 * 
+	 * <p>This is a non-trivial action, since Java does not offer an easy API. This method tries to
+	 * determine the PID using two different methods {@link #getProcessPidImpl1()} and 
+	 * {@link #getProcessPidImpl2()} (if the first one fails) and returns the PID it it succeeds.
+	 * 
+	 * @return The Java process PID, or -1 if the PID cannot be determined
+	 */
+	public static int getProcessPid() {
+		try {
+			return getProcessPidImpl1();
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Retrieving Java Process PID failed with first method, trying second ...");
+
+			try {
+				return getProcessPidImpl2();
+			}
+			catch (Exception e1) {
+				return -1;
+			} 
+		}
+	}
 
 	/**
 	 * Determines the process identifier (PID) for the currently active Java process and writes this
@@ -62,6 +87,11 @@ public class PidFileUtil {
 		pidFile.deleteOnExit();		
 	}
 	
+	/**
+	 * Determines whether a process is running, based on the given PID file. The method
+	 * reads the PID file and then calls {@link #isProcessRunning(int)}. If the PID file
+	 * does not exist, it returns <tt>false</tt>. 
+	 */
 	public static boolean isProcessRunning(File pidFile) {
 		if (pidFile.exists()) {
 			try (BufferedReader pidFileReader = new BufferedReader(new FileReader(pidFile))) {
@@ -79,26 +109,20 @@ public class PidFileUtil {
 	}
 	
 	/**
-	 * Determines the PID for the current Java process. This is a non-trivial action, since Java does
-	 * not offer an easy API. This method tries to determine the PID using two different methods
-	 * {@link #getProcessPidImpl1()} and {@link #getProcessPidImpl2()} (if the first one fails) and
-	 * returns the PID it it succeeds.
+	 * Determines whether a process with the given PID is running. Depending on the
+	 * underlying OS, this method either calls {@link #isProcessRunningUnixLike(int)} 
+	 * or {@link #isProcessRunningWindows(int)}. 
 	 */
-	private static int getProcessPid() {
-		try {
-			return getProcessPidImpl1();
+	private static boolean isProcessRunning(int pid) {
+		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
+			return isProcessRunningUnixLike(pid);
 		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Retrieving Java Process PID failed with first method, trying second ...");
-
-			try {
-				return getProcessPidImpl2();
-			}
-			catch (Exception e1) {
-				return -1;
-			} 
+		else if (EnvironmentUtil.isWindows()) {
+			return isProcessRunningWindows(pid);
 		}
-	}
+		
+		return false;
+	}	
 	
 	/**
 	 * Uses the {@link RuntimeMXBean}'s name to determine the PID. On Linux, this name 
@@ -145,22 +169,6 @@ public class PidFileUtil {
 		logger.log(Level.INFO, "Java Process PID is " + processPid);
 		return processPid;
 	}
-	
-	/**
-	 * Determines whether a process with the given PID is running. Depending on the
-	 * underlying OS, this method either calls {@link #isProcessRunningUnixLike(int)} 
-	 * or {@link #isProcessRunningWindows(int)}. 
-	 */
-	private static boolean isProcessRunning(int pid) {
-		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			return isProcessRunningUnixLike(pid);
-		}
-		else if (EnvironmentUtil.isWindows()) {
-			return isProcessRunningWindows(pid);
-		}
-		
-		return false;
-	}	
 	
 	/**
 	 * Determines whether a process with the given PID is running using the POSIX 
