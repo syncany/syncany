@@ -20,7 +20,6 @@ package org.syncany.cli;
 import static java.util.Arrays.asList;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -31,8 +30,6 @@ import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
 
 public class RestoreCommand extends AbstractHistoryCommand {
-	private static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
-	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
