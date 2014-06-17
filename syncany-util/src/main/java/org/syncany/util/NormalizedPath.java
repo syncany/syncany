@@ -89,28 +89,9 @@ public class NormalizedPath {
 		return Arrays.asList(normalizedPath.split("[/]"));
 	}		
 	
-	public List<NormalizedPath> getParents() {
-		List<NormalizedPath> parents = new ArrayList<NormalizedPath>();
-		List<String> parts = Arrays.asList(normalizedPath.split("[/]"));
-		
-		if (parts.size() > 0) {
-			NormalizedPath previousNormalizedParent = null;
-			
-			for (int i=0; i<parts.size(); i++) {
-				String normalizedParentPath = (previousNormalizedParent != null) ? previousNormalizedParent.toString() + "/" + parts.get(i) : parts.get(i);
-				NormalizedPath parent = new NormalizedPath(root, normalizedParentPath);
-				
-				parents.add(parent);
-				previousNormalizedParent = parent;
-			}			
-		}
-		
-		return parents;
-	}		
-	
 	public File toFile() {
 		if (root != null) {
-			return new File(root+File.separator+normalizedPath);
+			return new File(root, normalizedPath);
 		}
 		else {
 			return new File(normalizedPath);
