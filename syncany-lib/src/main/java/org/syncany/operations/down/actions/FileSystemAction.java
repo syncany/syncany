@@ -192,7 +192,7 @@ public abstract class FileSystemAction {
 		
 		return targetPath.toFile();
 	}
-	
+
 	protected void createFolder(NormalizedPath targetDir) throws Exception {		
 		if (!FileUtil.exists(targetDir.toFile())) {
 			logger.log(Level.INFO, "     - Creating folder at " + targetDir.toFile() + " ...");
@@ -304,28 +304,8 @@ public abstract class FileSystemAction {
 	}
 	
 	protected File getAbsolutePathFile(String relativePath) {
-		return new File(config.getLocalDir()+File.separator+relativePath);
+		return new File(config.getLocalDir(), relativePath);
 	}	
 	
-	public abstract void execute() throws InconsistentFileSystemException, Exception;
-	
-	public static class InconsistentFileSystemException extends Exception {
-		private static final long serialVersionUID = 14239478881237L;
-
-		public InconsistentFileSystemException() {
-			super();
-		}
-
-		public InconsistentFileSystemException(String message, Throwable cause) {
-			super(message, cause);
-		}
-
-		public InconsistentFileSystemException(String message) {
-			super(message);
-		}
-
-		public InconsistentFileSystemException(Throwable cause) {
-			super(cause);
-		}
-	}
+	public abstract void execute() throws Exception;
 }

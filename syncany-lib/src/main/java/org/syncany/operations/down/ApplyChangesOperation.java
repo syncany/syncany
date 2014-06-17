@@ -38,7 +38,6 @@ import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.down.actions.FileSystemAction;
-import org.syncany.operations.down.actions.FileSystemAction.InconsistentFileSystemException;
 
 /**
  * Applies a given winners database to the local directory.
@@ -175,7 +174,7 @@ public class ApplyChangesOperation extends Operation {
 			try {
 				action.execute();
 			}
-			catch (InconsistentFileSystemException e) {
+			catch (Exception e) {
 				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
 			}
 		}

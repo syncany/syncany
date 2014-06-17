@@ -18,19 +18,15 @@
 package org.syncany.operations.restore;
 
 import java.util.Date;
-import java.util.List;
 
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationOptions;
 
 public class RestoreOperationOptions implements OperationOptions {
-	public static enum RestoreOperationStrategy {
-		DATABASE_DATE, FILE_VERSION
-	}
-	
-	private RestoreOperationStrategy strategy;
+	private FileHistoryId fileHistoryId;
 	private Date databaseBeforeDate;
 	private Integer fileVersionNumber;
-	private List<String> restoreFilePaths;
+	private String relativeTargetPath;
 
 	public Date getDatabaseBeforeDate() {
 		return databaseBeforeDate;
@@ -40,20 +36,12 @@ public class RestoreOperationOptions implements OperationOptions {
 		this.databaseBeforeDate = databaseBeforeDate;
 	}
 
-	public List<String> getRestoreFilePaths() {
-		return restoreFilePaths;
+	public FileHistoryId getFileHistoryId() {
+		return fileHistoryId;
 	}
 
-	public void setRestoreFilePaths(List<String> restoreFiles) {
-		this.restoreFilePaths = restoreFiles;
-	}
-
-	public RestoreOperationStrategy getStrategy() {
-		return strategy;
-	}
-
-	public void setStrategy(RestoreOperationStrategy strategy) {
-		this.strategy = strategy;
+	public void setFileHistoryId(FileHistoryId fileHistory) {
+		this.fileHistoryId = fileHistory;
 	}
 
 	public Integer getFileVersionNumber() {
@@ -62,5 +50,13 @@ public class RestoreOperationOptions implements OperationOptions {
 
 	public void setFileVersionNumber(Integer fileVersionNumber) {
 		this.fileVersionNumber = fileVersionNumber;
+	}
+
+	public String getRelativeTargetPath() {
+		return relativeTargetPath;
+	}
+
+	public void setRelativeTargetPath(String relativeTargetPath) {
+		this.relativeTargetPath = relativeTargetPath;
 	}
 }

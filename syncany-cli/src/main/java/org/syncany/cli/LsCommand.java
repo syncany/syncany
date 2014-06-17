@@ -21,11 +21,8 @@ import static java.util.Arrays.asList;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -33,11 +30,11 @@ import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.log.LogOperation.LogOperationOptions;
-import org.syncany.operations.log.LogOperation.LogOperationResult;
+import org.syncany.operations.ls.LsOperationOptions;
+import org.syncany.operations.ls.LsOperationOptions.LogOutputFormat;
+import org.syncany.operations.ls.LsOperationResult;
 
-public class LogCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogCommand.class.getSimpleName());
+public class LsCommand extends AbstractHistoryCommand {
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
 
 	@Override
@@ -47,63 +44,59 @@ public class LogCommand extends Command {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		LogOperationOptions operationOptions = parseOptions(operationArgs);
-		LogOperationResult operationResult = client.log(operationOptions);
+		LsOperationOptions operationOptions = parseOptions(operationArgs);
+		LsOperationResult operationResult = client.ls(operationOptions);
 
-		printResults(operationResult);
+		printResults(operationOptions, operationResult);
 
 		return 0;
 	}	
 
-	public static List<String> getSupportedFormats() {
-		List<String> localFormats = new ArrayList<String>();
-
-		localFormats.add("full");
-		localFormats.add("last");
-
-		return Collections.unmodifiableList(localFormats);
-	}
-
-	private LogOperationOptions parseOptions(String[] operationArgs) throws Exception {
-		LogOperationOptions operationOptions = new LogOperationOptions();
+	private LsOperationOptions parseOptions(String[] operationArgs) throws Exception {
+		LsOperationOptions operationOptions = new LsOperationOptions();
 
 		OptionParser parser = new OptionParser();
-		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo("full");
+		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
+		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.LAST.toString());
 
 		OptionSet options = parser.parse(operationArgs);
 
-		// --format
-		String format = options.valueOf(optionFormat);
-
-		if (!getSupportedFormats().contains(format)) {
-			throw new Exception("Unrecognized log format " + format);
+		// --date=..
+		if (options.has(optionDateStr)) {			
+			Date logViewDate = parseDateOption(options.valueOf(optionDateStr));
+			operationOptions.setDate(logViewDate);
 		}
-
-		// Files
-		List<?> nonOptionArgs = options.nonOptionArguments();
-		List<String> restoreFilePaths = new ArrayList<String>();
-
-		for (Object nonOptionArg : nonOptionArgs) {
-			restoreFilePaths.add(nonOptionArg.toString());
-		}
-
-		operationOptions.setPaths(restoreFilePaths);
+		
+		// --format=full|last
+		LogOutputFormat format = parseLogFormat(options.valueOf(optionFormat));
 		operationOptions.setFormat(format);
+
+		// <filter>
+		List<?> nonOptionArgs = options.nonOptionArguments();
+		
+		if (nonOptionArgs.size() > 0) {
+			operationOptions.setFilter(nonOptionArgs.get(0).toString());
+		}
 
 		return operationOptions;
 	}
 
-	private void printResults(LogOperationResult operationResult) {		
-		if ("full".equals(operationResult.getFormat())) {
+	private LogOutputFormat parseLogFormat(String formatStr) throws Exception {
+		try {
+			return LogOutputFormat.valueOf(formatStr.toUpperCase());
+		}
+		catch (Exception e) {
+			throw new Exception("Unknown log format: " + formatStr);
+		}
+	}
+
+	private void printResults(LsOperationOptions operationOptions, LsOperationResult operationResult) {		
+		if (operationOptions.getFormat() == LogOutputFormat.FULL) {
 			printFullFormat(operationResult.getFileHistories());				
 		}
-		else if ("last".equals(operationResult.getFormat())) {	
+		else if (operationOptions.getFormat() == LogOutputFormat.LAST) {
 			printLastFormat(operationResult.getFileHistories());
-		}
-		else {
-			out.println(" unkown format " + operationResult.getFormat());
-			logger.log(Level.SEVERE, "Unrecognized lof format, should have been rejected earlier " + operationResult.getFormat());
-		}		
+		}	
 	}
 
 	private void printLastFormat(List<PartialFileHistory> fileHistories) {
@@ -158,9 +151,10 @@ public class LogCommand extends Command {
 	private void printOneVersion(FileVersion fileVersion) {
 		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
-
+		String fileChecksum = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : "";
+		
 		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
 				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
-				fileVersion.getChecksum());
+				fileChecksum);
 	}
 }

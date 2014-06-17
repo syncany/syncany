@@ -17,34 +17,27 @@
  */
 package org.syncany.operations.restore;
 
-import java.util.ArrayList;
-import java.util.Date;
+import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
-import org.syncany.database.MemoryDatabase;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.down.actions.FileSystemAction;
-import org.syncany.operations.down.actions.NewFileSystemAction;
-import org.syncany.operations.restore.RestoreOperationOptions.RestoreOperationStrategy;
+import org.syncany.operations.restore.RestoreOperationResult.RestoreResultCode;
 
-/**
- * TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation
- * 
- */
 public class RestoreOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
-	
 	public static final String ACTION_ID = "restore";
 	
 	private RestoreOperationOptions options;
@@ -70,54 +63,43 @@ public class RestoreOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		List<String> restoreFilePaths = options.getRestoreFilePaths();
-		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
-
-		if (options.getStrategy() == RestoreOperationStrategy.DATABASE_DATE) {
-			restoreFileVersions = getFileTreeAtDate(options.getDatabaseBeforeDate(), restoreFilePaths);
-			
-			for (FileVersion restoreFileVersion : restoreFileVersions) {
-				FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
-				
-				if (restoreFileChecksum != null) {
-					multiChunksToDownload.addAll(localDatabase.getMultiChunkIds(restoreFileChecksum));
-				}
-			}
+		FileHistoryId restoreFileHistoryId = options.getFileHistoryId(); 
+		FileVersion restoreFileVersion = null;
+		
+		// Find file version
+		restoreFileVersion = localDatabase.getFileVersion(restoreFileHistoryId, options.getFileVersionNumber());
+		
+		// Validate file version result
+		if (restoreFileVersion == null) {
+			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
 		}
-		else {
-			throw new Exception("Strategy "+options.getStrategy()+" not supported yet.");
+		else if (restoreFileVersion.getType() == FileType.FOLDER) {
+			return new RestoreOperationResult(RestoreResultCode.NACK_INVALID_FILE);
 		}
 
-		downloader.downloadAndDecryptMultiChunks(multiChunksToDownload);
+		logger.log(Level.INFO, "Restore file identified: " + restoreFileVersion);
+		
+		// Download multichunks
+		downloadMultiChunks(restoreFileVersion);
+		
+		// Restore file
+		logger.log(Level.INFO, "- Restoring: " + restoreFileVersion);
 
-		for (FileVersion restoreFileVersion : restoreFileVersions) {
-			logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
+		FileSystemAction restoreFileSystemAction = new RestoreFileSystemAction(config, restoreFileVersion, options.getRelativeTargetPath());
+		restoreFileSystemAction.execute();
 
-			FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, new MemoryDatabase());
-			logger.log(Level.INFO, "  --> " + newFileSystemAction);
-
-			newFileSystemAction.execute();
-		}
-
-		return new RestoreOperationResult();
+		return new RestoreOperationResult(RestoreResultCode.ACK, null);
 	}
 
-	private List<FileVersion> getFileTreeAtDate(Date databaseBeforeDate, List<String> restoreFilePaths) {
-		Map<String, FileVersion> entireFileTreeAtDate = localDatabase.getFileTreeAtDate(databaseBeforeDate);
-		List<FileVersion> restoreFileVersions = new ArrayList<FileVersion>();
-		
-		for (FileVersion restoreFileVersion : entireFileTreeAtDate.values()) {			
-			if (restoreFilePaths.size() > 0) {
-				if (restoreFilePaths.contains(restoreFileVersion.getPath())) {
-					restoreFileVersions.add(restoreFileVersion);	
-				}				
-			}
-			else {
-				restoreFileVersions.add(restoreFileVersion);
-			}			
+	private void downloadMultiChunks(FileVersion restoreFileVersion) throws StorageException, IOException {
+		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
+		FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
+			
+		if (restoreFileChecksum != null) {
+			multiChunksToDownload.addAll(localDatabase.getMultiChunkIds(restoreFileChecksum));
+
+			logger.log(Level.INFO, "Downloading " + multiChunksToDownload.size() + " multichunk(s) to restore file ...");
+			downloader.downloadAndDecryptMultiChunks(multiChunksToDownload);
 		}
-		
-		return restoreFileVersions;
 	}
 }

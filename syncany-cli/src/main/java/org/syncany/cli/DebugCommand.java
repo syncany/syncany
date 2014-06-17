@@ -28,7 +28,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import org.syncany.config.Config;
-import org.syncany.operations.log.LogOperation;
+import org.syncany.operations.ls.LsOperation;
 import org.syncany.util.FileUtil;
 
 /**
@@ -38,7 +38,7 @@ import org.syncany.util.FileUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DebugCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());
 
 	@Override
 	public CommandScope getRequiredCommandScope() {	

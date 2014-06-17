@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
-import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
@@ -185,29 +184,4 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-
-	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
-		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
-
-		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
-			preparedStatement.setString(1, fileContentChecksum.toString());
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				while (resultSet.next()) {
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-	
-					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-					fileHistory.addFileVersion(lastFileVersion);
-	
-					currentFileTree.add(fileHistory);
-				}	
-			}
-
-			return currentFileTree;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}	
 }

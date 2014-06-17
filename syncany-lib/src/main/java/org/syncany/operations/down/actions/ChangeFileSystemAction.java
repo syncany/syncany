@@ -30,7 +30,7 @@ public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
 	}
 	
 	@Override
-	public void execute() throws InconsistentFileSystemException, Exception {
+	public void execute() throws Exception {
 		boolean fromFileExists = fileExists(fileVersion1);
 		boolean fromFileMatches = fromFileExists && fileAsExpected(fileVersion1);
 		

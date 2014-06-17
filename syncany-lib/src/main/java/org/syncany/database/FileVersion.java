@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.Date;
 
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
  * A file version represents a version of a file at a certain time and captures
@@ -37,6 +38,9 @@ import org.syncany.database.FileContent.FileChecksum;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersion implements Cloneable {
+	// Optional
+	private FileHistoryId fileHistoryId;
+	
 	// Mandatory
     private Long version; // TODO [low] This can be an Integer. No need for a long!
     private String path;
@@ -58,7 +62,15 @@ public class FileVersion implements Cloneable {
         // Fressen.
     }      
 
-    public Long getVersion() {
+    public FileHistoryId getFileHistoryId() {
+		return fileHistoryId;
+	}
+
+	public void setFileHistoryId(FileHistoryId fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
+	}
+
+	public Long getVersion() {
         return version;
     }
 

@@ -1,3 +1,3 @@
 select * 
-from fileversion_master_last
+from fileversion_master
 order by filehistory_id, version
