@@ -28,10 +28,9 @@ import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.dao.DaemonSqlDao;
-import org.syncany.database.dao.ExtendedFileVersion;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
@@ -63,7 +62,6 @@ public class WatchOperationThread implements WatchOperationListener {
 	private DaemonEventBus eventBus;
 	
 	private SqlDatabase localDatabase;
-	private DaemonSqlDao databaseDaemonDao;
 
 	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
@@ -76,7 +74,6 @@ public class WatchOperationThread implements WatchOperationListener {
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.localDatabase = new SqlDatabase(config);
-		this.databaseDaemonDao = new DaemonSqlDao(localDatabase.getConnection());
 		
 		this.eventBus = DaemonEventBus.getInstance();
 		this.eventBus.register(this);
@@ -131,15 +128,15 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
-		Map<String, ExtendedFileVersion> fileTree = databaseDaemonDao.getFileTree(fileTreeRequest.getPrefix(), null, null);
-		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<ExtendedFileVersion>(fileTree.values()));
+		Map<String, FileVersion> fileTree = localDatabase.getFileTree(fileTreeRequest.getPrefix(), null, null);
+		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
 		
 		eventBus.post(fileTreeResponse);	
 	}
 	
 	private void handleGetFileHistoryRequest(GetFileHistoryRequest fileHistoryRequest) {
 		FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileHistoryRequest.getFileHistoryId());
-		List<ExtendedFileVersion> fileHistory = databaseDaemonDao.getFileHistory(fileHistoryId);
+		List<FileVersion> fileHistory = localDatabase.getFileHistory(fileHistoryId);
 		GetFileHistoryResponse fileHistoryRespose = new GetFileHistoryResponse(fileHistoryRequest.getId(), fileHistoryRequest.getRoot(), fileHistory);
 		
 		eventBus.post(fileHistoryRespose);

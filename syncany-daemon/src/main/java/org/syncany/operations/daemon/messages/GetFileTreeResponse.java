@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.syncany.database.dao.ExtendedFileVersion;
+import org.syncany.database.FileVersion;
 
 public class GetFileTreeResponse extends Response {
 	@Element(required = true)
@@ -32,13 +32,13 @@ public class GetFileTreeResponse extends Response {
 	private String prefix;
 	
 	@ElementList(required = true, entry="file")
-	private ArrayList<ExtendedFileVersion> files;	
+	private ArrayList<FileVersion> files;	
 	
-	public GetFileTreeResponse(int requestId, String root, String prefix, List<ExtendedFileVersion> files) {
+	public GetFileTreeResponse(int requestId, String root, String prefix, List<FileVersion> files) {
 		super(200, requestId, null);
 		
 		this.root = root;
 		this.prefix = prefix;
-		this.files = new ArrayList<ExtendedFileVersion>(files);
+		this.files = new ArrayList<FileVersion>(files);
 	}	
 }

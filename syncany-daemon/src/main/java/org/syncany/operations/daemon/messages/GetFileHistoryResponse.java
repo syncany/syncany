@@ -22,19 +22,19 @@ import java.util.List;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.syncany.database.dao.ExtendedFileVersion;
+import org.syncany.database.FileVersion;
 
 public class GetFileHistoryResponse extends Response {
 	@Element(required = true)
 	private String root;
 
 	@ElementList(required = true, entry="file")
-	private ArrayList<ExtendedFileVersion> files;	
+	private ArrayList<FileVersion> files;	
 	
-	public GetFileHistoryResponse(int requestId, String root, List<ExtendedFileVersion> files) {
+	public GetFileHistoryResponse(int requestId, String root, List<FileVersion> files) {
 		super(200, requestId, null);
 		
 		this.root = root;
-		this.files = new ArrayList<ExtendedFileVersion>(files);
+		this.files = new ArrayList<FileVersion>(files);
 	}	
 }
