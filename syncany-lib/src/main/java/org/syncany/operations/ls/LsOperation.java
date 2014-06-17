@@ -63,7 +63,7 @@ public class LsOperation extends Operation {
 			fileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		}
 		else if (options.getFormat() == LogOutputFormat.LAST) {
-			String filter = parseFiler(options.getFilter());
+			String filter = parseFilter(options.getFilter());
 			Date date = options.getDate();
 			FileType fileType = null;
 
@@ -74,7 +74,7 @@ public class LsOperation extends Operation {
 		return new LsOperationResult(fileHistories);
 	}
 
-	private String parseFiler(String filter) {
+	private String parseFilter(String filter) {
 		if (filter != null) {
 			 if (filter.contains("^") || filter.contains("*")) {
 				 return filter.replace('^', '%').replace('*', '%');
