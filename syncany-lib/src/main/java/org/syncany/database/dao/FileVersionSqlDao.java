@@ -192,7 +192,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public Map<String, FileVersion> getFileTree(String filter, Date date, FileType fileType) {
-		filter = (filter != null) ? filter : "%";
+		filter = (filter != null && !"".equals(filter)) ? filter : "%";
 		date = (date != null) ? date : new Date(4133984461000L);
 		Object[] fileTypesStr = (fileType != null) ? new Object[] { fileType.toString() } : new Object[] { FileType.FILE.toString(), FileType.FOLDER.toString(), FileType.SYMLINK.toString() };
 		
