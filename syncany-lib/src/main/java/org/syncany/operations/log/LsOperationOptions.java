@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.syncany.operations.OperationOptions;
 
-public class LogOperationOptions implements OperationOptions {
+public class LsOperationOptions implements OperationOptions {
 	public enum LogOutputFormat {
 		FULL, LAST
 	}

@@ -22,9 +22,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -164,6 +166,42 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}	
+
+	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileHistoryById.sql")) {
+			preparedStatement.setString(1, fileHistoryId.toString());
+			
+			List<FileVersion> fileTree = new ArrayList<FileVersion>();
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					FileVersion fileVersion = createFileVersionFromRow(resultSet);
+					fileTree.add(fileVersion);
+				}
+
+				return fileTree;
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}				
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Map<String, FileVersion> getFileTree(String prefix, Date date, FileType fileType) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTreeWithPrefix.sql")) {
+			preparedStatement.setString(1, prefix);
+			preparedStatement.setString(2, prefix);
+			preparedStatement.setString(3, prefix);
+			
+			return getFileTree(preparedStatement);				
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
@@ -265,6 +303,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	public FileVersion createFileVersionFromRow(ResultSet resultSet) throws SQLException {
 		FileVersion fileVersion = new FileVersion();
 
+		fileVersion.setFileHistoryId(FileHistoryId.parseFileId(resultSet.getString("filehistory_id")));
 		fileVersion.setVersion(resultSet.getLong("version"));
 		fileVersion.setPath(resultSet.getString("path"));
 		fileVersion.setType(FileType.valueOf(resultSet.getString("type")));

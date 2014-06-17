@@ -31,11 +31,11 @@ import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.log.LogOperationOptions;
-import org.syncany.operations.log.LogOperationOptions.LogOutputFormat;
-import org.syncany.operations.log.LogOperationResult;
+import org.syncany.operations.log.LsOperationOptions;
+import org.syncany.operations.log.LsOperationOptions.LogOutputFormat;
+import org.syncany.operations.log.LsOperationResult;
 
-public class LogCommand extends AbstractHistoryCommand {
+public class LsCommand extends AbstractHistoryCommand {
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
 
 	@Override
@@ -45,20 +45,20 @@ public class LogCommand extends AbstractHistoryCommand {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		LogOperationOptions operationOptions = parseOptions(operationArgs);
-		LogOperationResult operationResult = client.log(operationOptions);
+		LsOperationOptions operationOptions = parseOptions(operationArgs);
+		LsOperationResult operationResult = client.log(operationOptions);
 
 		printResults(operationOptions, operationResult);
 
 		return 0;
 	}	
 
-	private LogOperationOptions parseOptions(String[] operationArgs) throws Exception {
-		LogOperationOptions operationOptions = new LogOperationOptions();
+	private LsOperationOptions parseOptions(String[] operationArgs) throws Exception {
+		LsOperationOptions operationOptions = new LsOperationOptions();
 
 		OptionParser parser = new OptionParser();
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
-		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.FULL.toString());
+		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.LAST.toString());
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -94,7 +94,7 @@ public class LogCommand extends AbstractHistoryCommand {
 		}
 	}
 
-	private void printResults(LogOperationOptions operationOptions, LogOperationResult operationResult) {		
+	private void printResults(LsOperationOptions operationOptions, LsOperationResult operationResult) {		
 		if (operationOptions.getFormat() == LogOutputFormat.FULL) {
 			printFullFormat(operationResult.getFileHistories());				
 		}

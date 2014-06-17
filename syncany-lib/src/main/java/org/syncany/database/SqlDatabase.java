@@ -30,6 +30,7 @@ import org.syncany.config.Config;
 import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.dao.ApplicationSqlDao;
@@ -160,10 +161,6 @@ public class SqlDatabase {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
 	}
-
-	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
-		return fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum);
-	}
 	
 	private void removeUnreferencedFileHistories() throws SQLException {
 		fileHistoryDao.removeUnreferencedFileHistories();
@@ -184,10 +181,19 @@ public class SqlDatabase {
 		return fileVersionDao.getFileVersionByPath(path);
 	}
 
+	@Deprecated
 	public Map<String, FileVersion> getFileTreeAtDate(Date date) {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
 
+	public Map<String, FileVersion> getFileTree(String prefix, Date date, FileType fileType) {
+		return fileVersionDao.getFileTree(prefix, date, fileType);
+	}
+	
+	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {
+		return fileVersionDao.getFileHistory(fileHistoryId);
+	}
+	
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
 		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}	

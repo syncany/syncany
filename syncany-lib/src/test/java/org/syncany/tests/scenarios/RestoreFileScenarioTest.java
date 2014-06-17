@@ -47,10 +47,7 @@ public class RestoreFileScenarioTest {
 				
 		// A new/up
 		clientA.createNewFile("A-original");		
-		clientA.up();
-		
-		Date restoreMoment = new Date(System.currentTimeMillis());
-		Thread.sleep(50);
+		clientA.upWithForceChecksum();
 		
 		// A "delete"
 		File deletedFile = new File(tempDir, "A-original-DELETED");
@@ -60,7 +57,7 @@ public class RestoreFileScenarioTest {
 		
 		// A restore
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
-		operationOptions.setDatabaseBeforeDate(restoreMoment);
+		//operationOptions.setDatabaseBeforeDate(restoreMoment);
 		//operationOptions.setRestoreFilePaths(Arrays.asList("A-original"));
 		//operationOptions.setStrategy(RestoreOperationStrategy.DATABASE_DATE);
 		

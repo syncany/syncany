@@ -22,10 +22,10 @@ import java.util.List;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.OperationResult;
 
-public class LogOperationResult implements OperationResult {
+public class LsOperationResult implements OperationResult {
 	private List<PartialFileHistory> fileHistories;
 	
-	public LogOperationResult(List<PartialFileHistory> fileHistories) {
+	public LsOperationResult(List<PartialFileHistory> fileHistories) {
 		this.fileHistories = fileHistories;
 	}
 
