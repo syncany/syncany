@@ -23,6 +23,10 @@ import java.util.List;
 import org.syncany.operations.OperationOptions;
 
 public class LogOperationOptions implements OperationOptions {
+	public enum LogOutputFormat {
+		FULL, LAST
+	}
+	
 	private Date date;
 	private LogOutputFormat format;
 	private List<String> paths;		

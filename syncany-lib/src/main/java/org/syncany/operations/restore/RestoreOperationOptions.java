@@ -26,6 +26,7 @@ public class RestoreOperationOptions implements OperationOptions {
 	private FileHistoryId fileHistoryId;
 	private Date databaseBeforeDate;
 	private Integer fileVersionNumber;
+	private String relativeTargetPath;
 
 	public Date getDatabaseBeforeDate() {
 		return databaseBeforeDate;
@@ -49,5 +50,13 @@ public class RestoreOperationOptions implements OperationOptions {
 
 	public void setFileVersionNumber(Integer fileVersionNumber) {
 		this.fileVersionNumber = fileVersionNumber;
+	}
+
+	public String getRelativeTargetPath() {
+		return relativeTargetPath;
+	}
+
+	public void setRelativeTargetPath(String relativeTargetPath) {
+		this.relativeTargetPath = relativeTargetPath;
 	}
 }

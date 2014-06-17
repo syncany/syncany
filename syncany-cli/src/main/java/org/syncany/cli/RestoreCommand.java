@@ -50,11 +50,17 @@ public class RestoreCommand extends AbstractHistoryCommand {
 
 		OptionParser parser = new OptionParser();	
 		OptionSpec<Integer> optionRevision = parser.acceptsAll(asList("r", "revision")).withRequiredArg().ofType(Integer.class).required();
+		OptionSpec<String> optionTarget = parser.acceptsAll(asList("t", "target")).withRequiredArg().ofType(String.class);
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
 		// --revision=<n>
 		operationOptions.setFileVersionNumber(options.valueOf(optionRevision));
+		
+		// --target=<file>
+		if (options.has(optionTarget)) {
+			operationOptions.setRelativeTargetPath(options.valueOf(optionTarget));
+		}
 		
 		// <file-history-id>
 		List<?> nonOptionArgs = options.nonOptionArguments();

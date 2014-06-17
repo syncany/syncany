@@ -32,8 +32,8 @@ import joptsimple.OptionSpec;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.log.LogOperationOptions;
+import org.syncany.operations.log.LogOperationOptions.LogOutputFormat;
 import org.syncany.operations.log.LogOperationResult;
-import org.syncany.operations.log.LogOutputFormat;
 
 public class LogCommand extends AbstractHistoryCommand {
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
@@ -58,7 +58,7 @@ public class LogCommand extends AbstractHistoryCommand {
 
 		OptionParser parser = new OptionParser();
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
-		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.LAST.toString());
+		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.FULL.toString());
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -155,9 +155,10 @@ public class LogCommand extends AbstractHistoryCommand {
 	private void printOneVersion(FileVersion fileVersion) {
 		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
-
+		String fileChecksum = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : "";
+		
 		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
 				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
-				fileVersion.getChecksum());
+				fileChecksum);
 	}
 }

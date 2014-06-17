@@ -192,11 +192,7 @@ public abstract class FileSystemAction {
 		
 		return targetPath.toFile();
 	}
-	
-	protected void moveToFinalLocation(File reconstructedFileInCache, File targetFile) {
-		
-	}
-	
+
 	protected void createFolder(NormalizedPath targetDir) throws Exception {		
 		if (!FileUtil.exists(targetDir.toFile())) {
 			logger.log(Level.INFO, "     - Creating folder at " + targetDir.toFile() + " ...");

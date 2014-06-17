@@ -17,33 +17,27 @@
  */
 package org.syncany.operations.restore;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.connection.plugins.StorageException;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.down.actions.FileSystemAction;
-import org.syncany.operations.down.actions.NewFileSystemAction;
 import org.syncany.operations.restore.RestoreOperationResult.RestoreResultCode;
 
-/**
- * TODO [medium] Quick and dirty implementation of RestoreOperation, duplicate code with DownOperation
- * 
- */
 public class RestoreOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
-	
 	public static final String ACTION_ID = "restore";
 	
 	private RestoreOperationOptions options;
@@ -86,6 +80,18 @@ public class RestoreOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Restore file identified: " + restoreFileVersion);
 		
 		// Download multichunks
+		downloadMultiChunks(restoreFileVersion);
+		
+		// Restore file
+		logger.log(Level.INFO, "- Restoring: " + restoreFileVersion);
+
+		FileSystemAction restoreFileSystemAction = new RestoreFileSystemAction(config, restoreFileVersion, options.getRelativeTargetPath());
+		restoreFileSystemAction.execute();
+
+		return new RestoreOperationResult(RestoreResultCode.ACK, null);
+	}
+
+	private void downloadMultiChunks(FileVersion restoreFileVersion) throws StorageException, IOException {
 		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
 		FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
 			
@@ -95,15 +101,5 @@ public class RestoreOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Downloading " + multiChunksToDownload.size() + " multichunk(s) to restore file ...");
 			downloader.downloadAndDecryptMultiChunks(multiChunksToDownload);
 		}
-
-		// Restore file
-		logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
-
-		FileSystemAction newFileSystemAction = new RestoreFileSystemAction(config, restoreFileVersion, null);
-		logger.log(Level.INFO, "  --> " + newFileSystemAction);
-
-		newFileSystemAction.execute();
-
-		return new RestoreOperationResult(RestoreResultCode.ACK, new File("not implemened"));
 	}
 }

@@ -236,9 +236,11 @@ public class NormalizedPath {
 				if (!exists) {
 					return creatableNormalizedPath;
 				}
+				
+				logger.log(Level.WARNING, " - File exists, trying new file: " + creatableNormalizedPath.toFile());
 			} while (attempt++ < 10);
 			
-			throw new Exception("Cannot create creatable path; "+attempt+" attempts: "+creatableNormalizedPath);
+			throw new Exception("Cannot create creatable path; "+creatableNormalizedPath+" attempts: "+attempt);
 		}
 	}
 	
