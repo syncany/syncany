@@ -28,7 +28,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import org.syncany.config.Config;
-import org.syncany.operations.log.LsOperation;
+import org.syncany.operations.ls.LsOperation;
 import org.syncany.util.FileUtil;
 
 /**

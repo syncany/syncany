@@ -186,8 +186,8 @@ public class SqlDatabase {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
 
-	public Map<String, FileVersion> getFileTree(String prefix, Date date, FileType fileType) {
-		return fileVersionDao.getFileTree(prefix, date, fileType);
+	public Map<String, FileVersion> getFileTree(String filter, Date date, FileType fileType) {
+		return fileVersionDao.getFileTree(filter, date, fileType);
 	}
 	
 	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {

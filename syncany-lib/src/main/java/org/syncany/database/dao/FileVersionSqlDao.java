@@ -191,11 +191,15 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public Map<String, FileVersion> getFileTree(String prefix, Date date, FileType fileType) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTreeWithPrefix.sql")) {
-			preparedStatement.setString(1, prefix);
-			preparedStatement.setString(2, prefix);
-			preparedStatement.setString(3, prefix);
+	public Map<String, FileVersion> getFileTree(String filter, Date date, FileType fileType) {
+		filter = (filter != null) ? filter : "%";
+		date = (date != null) ? date : new Date(4133984461000L);
+		Object[] fileTypesStr = (fileType != null) ? new Object[] { fileType.toString() } : new Object[] { FileType.FILE.toString(), FileType.FOLDER.toString(), FileType.SYMLINK.toString() };
+		
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFilteredFileTree.sql")) {
+			preparedStatement.setString(1, filter);
+			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
+			preparedStatement.setArray(3, connection.createArrayOf("varchar", fileTypesStr));
 			
 			return getFileTree(preparedStatement);				
 		}

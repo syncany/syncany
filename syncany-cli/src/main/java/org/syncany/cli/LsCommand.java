@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -31,9 +30,9 @@ import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.operations.log.LsOperationOptions;
-import org.syncany.operations.log.LsOperationOptions.LogOutputFormat;
-import org.syncany.operations.log.LsOperationResult;
+import org.syncany.operations.ls.LsOperationOptions;
+import org.syncany.operations.ls.LsOperationOptions.LogOutputFormat;
+import org.syncany.operations.ls.LsOperationResult;
 
 public class LsCommand extends AbstractHistoryCommand {
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
@@ -46,7 +45,7 @@ public class LsCommand extends AbstractHistoryCommand {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		LsOperationOptions operationOptions = parseOptions(operationArgs);
-		LsOperationResult operationResult = client.log(operationOptions);
+		LsOperationResult operationResult = client.ls(operationOptions);
 
 		printResults(operationOptions, operationResult);
 
@@ -70,17 +69,14 @@ public class LsCommand extends AbstractHistoryCommand {
 		
 		// --format=full|last
 		LogOutputFormat format = parseLogFormat(options.valueOf(optionFormat));
-
-		// Files
-		List<?> nonOptionArgs = options.nonOptionArguments();
-		List<String> restoreFilePaths = new ArrayList<String>();
-
-		for (Object nonOptionArg : nonOptionArgs) {
-			restoreFilePaths.add(nonOptionArg.toString());
-		}
-
-		operationOptions.setPaths(restoreFilePaths);
 		operationOptions.setFormat(format);
+
+		// <filter>
+		List<?> nonOptionArgs = options.nonOptionArguments();
+		
+		if (nonOptionArgs.size() > 0) {
+			operationOptions.setFilter(nonOptionArgs.get(0).toString());
+		}
 
 		return operationOptions;
 	}

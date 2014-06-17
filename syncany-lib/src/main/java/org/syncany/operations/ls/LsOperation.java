@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.log;
+package org.syncany.operations.ls;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,7 +30,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
-import org.syncany.operations.log.LsOperationOptions.LogOutputFormat;
+import org.syncany.operations.ls.LsOperationOptions.LogOutputFormat;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -63,15 +63,29 @@ public class LsOperation extends Operation {
 			fileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		}
 		else if (options.getFormat() == LogOutputFormat.LAST) {
-			String prefix = "";
+			String filter = parseFiler(options.getFilter());
 			Date date = options.getDate();
 			FileType fileType = null;
 
-			Map<String, FileVersion> fileTree = localDatabase.getFileTree(prefix, date, fileType);
+			Map<String, FileVersion> fileTree = localDatabase.getFileTree(filter, date, fileType);
 			fileHistories = mapToFileHistories(fileTree);
 		}
 		
 		return new LsOperationResult(fileHistories);
+	}
+
+	private String parseFiler(String filter) {
+		if (filter != null) {
+			 if (filter.contains("^") || filter.contains("*")) {
+				 return filter.replace('^', '%').replace('*', '%');
+			 }
+			 else {
+				 return "%" + filter + "%";
+			 }
+		}
+		else {
+			return null;
+		}
 	}
 
 	private List<PartialFileHistory> mapToFileHistories(Map<String, FileVersion> fileTree) {

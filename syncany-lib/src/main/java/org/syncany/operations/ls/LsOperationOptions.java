@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.log;
+package org.syncany.operations.ls;
 
 import java.util.Date;
-import java.util.List;
 
 import org.syncany.operations.OperationOptions;
 
@@ -29,7 +28,7 @@ public class LsOperationOptions implements OperationOptions {
 	
 	private Date date;
 	private LogOutputFormat format;
-	private List<String> paths;		
+	private String filter;		
 	
 	public Date getDate() {
 		return date;
@@ -39,12 +38,12 @@ public class LsOperationOptions implements OperationOptions {
 		this.date = date;
 	}
 
-	public List<String> getPaths() {
-		return paths;
+	public String getFilter() {
+		return filter;
 	}
-	
-	public void setPaths(List<String> paths) {
-		this.paths = paths;
+
+	public void setFilter(String filter) {
+		this.filter = filter;
 	}
 
 	public LogOutputFormat getFormat() {

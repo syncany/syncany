@@ -46,9 +46,9 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
-import org.syncany.operations.log.LsOperation;
-import org.syncany.operations.log.LsOperationOptions;
-import org.syncany.operations.log.LsOperationResult;
+import org.syncany.operations.ls.LsOperation;
+import org.syncany.operations.ls.LsOperationOptions;
+import org.syncany.operations.ls.LsOperationResult;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
@@ -147,7 +147,7 @@ public class Client {
 		return new RestoreOperation(config, options).execute();
 	}
 
-	public LsOperationResult log(LsOperationOptions options) throws Exception {
+	public LsOperationResult ls(LsOperationOptions options) throws Exception {
 		return new LsOperation(config, options).execute();
 	}
 
