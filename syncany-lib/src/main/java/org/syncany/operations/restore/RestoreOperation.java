@@ -99,7 +99,7 @@ public class RestoreOperation extends AbstractTransferOperation {
 		// Restore file
 		logger.log(Level.INFO, "- Restore to: " + restoreFileVersion);
 
-		FileSystemAction newFileSystemAction = new NewFileSystemAction(config, restoreFileVersion, new MemoryDatabase());
+		FileSystemAction newFileSystemAction = new RestoreFileSystemAction(config, restoreFileVersion, null);
 		logger.log(Level.INFO, "  --> " + newFileSystemAction);
 
 		newFileSystemAction.execute();

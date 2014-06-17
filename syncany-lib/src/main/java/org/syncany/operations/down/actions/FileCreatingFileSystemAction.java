@@ -83,7 +83,7 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		moveFileToFinalLocation(reconstructedFileInCache, reconstructedFileVersion);	
 	}
 	
-	private File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
+	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
 		SqlDatabase localDatabase = new SqlDatabase(config);
 
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
