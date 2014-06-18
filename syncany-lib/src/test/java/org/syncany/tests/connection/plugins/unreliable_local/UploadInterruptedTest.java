@@ -42,10 +42,12 @@ public class UploadInterruptedTest {
 			Arrays.asList(new String[] { 
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+					
 				// 1st upload (= multichunk) fails	
-				"rel=2 .+upload.+multichunk",    
+				"rel=[234] .+upload.+multichunk", // << 3 retries!!
+				
 				// Make fourth upload fail
-				"rel=4 .+upload" 
+				"rel=[678] .+upload" // << 3 retries!! 
 					
 			}
 		));

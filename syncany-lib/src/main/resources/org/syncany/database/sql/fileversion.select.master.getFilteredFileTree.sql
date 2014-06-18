@@ -7,7 +7,9 @@ where
 		from fileversion_master
 		where 
 			path like ?
+			and substr_count(path, '/')>=?
+			and substr_count(path, '/')<=?			
 			and updated<?
-			and type in (unnest(?))
+			and type in (unnest(?))			
 		group by filehistory_id
 	)

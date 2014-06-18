@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.database.FileContent.FileChecksum;
@@ -36,6 +38,7 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.util.StringUtil;
 
 /**
  * The file version DAO queries and modifies the <i>fileversion</i> in
@@ -205,21 +208,52 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public Map<String, FileVersion> getFileTree(String filter, Date date, FileType fileType) {
-		filter = (filter != null && !"".equals(filter)) ? filter : "%";
-		date = (date != null) ? date : new Date(4133984461000L);
-		Object[] fileTypesStr = (fileType != null) ? new Object[] { fileType.toString() } : new Object[] { FileType.FILE.toString(), FileType.FOLDER.toString(), FileType.SYMLINK.toString() };
+	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean recursive, FileType... fileTypes) {
+		// Determine sensible query parameters
+		// Basic idea: If null/empty given, match them all!
+		
+		pathExpression = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+		date = (date == null) ? new Date(4133984461000L) : date;
+		
+		int slashCount = StringUtil.substrCount(pathExpression, "/");
+		int filterMinSlashCount = (recursive) ? 0 : slashCount;
+		int filterMaxSlashCount = (recursive) ? Integer.MAX_VALUE : slashCount;
+		
+		String[] fileTypesStr = createFileTypesArray(fileTypes);
+		
+		if (logger.isLoggable(Level.INFO)) {
+			logger.log(Level.INFO, " getFileTree(path = " + pathExpression + ", minSlash = " + filterMinSlashCount + ", maxSlash = " + filterMaxSlashCount + ", date <= " + date + ", types = " + StringUtil.join(fileTypesStr, ", "));
+		}
 		
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFilteredFileTree.sql")) {
-			preparedStatement.setString(1, filter);
-			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
-			preparedStatement.setArray(3, connection.createArrayOf("varchar", fileTypesStr));
+			preparedStatement.setString(1, pathExpression);
+			preparedStatement.setInt(2, filterMinSlashCount);
+			preparedStatement.setInt(3, filterMaxSlashCount);
+			preparedStatement.setTimestamp(4, new Timestamp(date.getTime()));
+			preparedStatement.setArray(5, connection.createArrayOf("varchar", fileTypesStr));
 			
 			return getFileTree(preparedStatement);				
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private String[] createFileTypesArray(FileType[] fileTypes) {
+		String[] fileTypesStr = null;
+		
+		if (fileTypes != null) {
+			fileTypesStr = new String[fileTypes.length];
+
+			for (int i = 0; i < fileTypes.length; i++) {
+				fileTypesStr[i] = fileTypes[i].toString();
+			}
+		}
+		else {
+			fileTypesStr = new String[] { FileType.FILE.toString(), FileType.FOLDER.toString(), FileType.SYMLINK.toString() };
+		}
+		
+		return fileTypesStr;
 	}
 
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
@@ -271,7 +305,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	private Map<String, FileVersion> getFileTree(PreparedStatement preparedStatement) {
-		Map<String, FileVersion> fileTree = new HashMap<String, FileVersion>();
+		Map<String, FileVersion> fileTree = new TreeMap<String, FileVersion>();
 
 		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) {

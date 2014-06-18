@@ -18,6 +18,7 @@
 package org.syncany.tests.util;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
@@ -31,7 +32,7 @@ import org.syncany.util.SqlRunner;
  *
  */
 public class TestSqlDatabaseUtil {
-	public static void runSqlFromResource(Connection connection, String resourceSqlScript) throws SQLException {
+	public static void runSqlFromResource(Connection connection, String resourceSqlScript) throws SQLException, IOException {
 		String fullPathResource = String.format(DatabaseConnectionFactory.DATABASE_RESOURCE_PATTERN, resourceSqlScript);
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullPathResource);
 

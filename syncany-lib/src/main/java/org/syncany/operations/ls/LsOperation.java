@@ -18,7 +18,6 @@
 package org.syncany.operations.ls;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -63,24 +62,23 @@ public class LsOperation extends Operation {
 			fileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		}
 		else if (options.getFormat() == LogOutputFormat.LAST) {
-			String filter = parseFilter(options.getFilter());
-			Date date = options.getDate();
-			FileType fileType = null;
+			String pathExpression = parsePathExpression(options.getPathExpression());
+			List<FileType> fileTypes = options.getFileTypes();
 
-			Map<String, FileVersion> fileTree = localDatabase.getFileTree(filter, date, fileType);
+			Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes.toArray(new FileType[0]));
 			fileHistories = mapToFileHistories(fileTree);
 		}
 		
 		return new LsOperationResult(fileHistories);
 	}
 
-	private String parseFilter(String filter) {
+	private String parsePathExpression(String filter) {
 		if (filter != null) {
 			 if (filter.contains("^") || filter.contains("*")) {
 				 return filter.replace('^', '%').replace('*', '%');
 			 }
 			 else {
-				 return "%" + filter + "%";
+				 return filter + "%";
 			 }
 		}
 		else {

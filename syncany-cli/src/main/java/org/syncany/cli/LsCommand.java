@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -29,6 +30,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationOptions.LogOutputFormat;
@@ -58,6 +60,8 @@ public class LsCommand extends AbstractHistoryCommand {
 		OptionParser parser = new OptionParser();
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
 		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.LAST.toString());
+		OptionSpec<Void> optionRecursive = parser.acceptsAll(asList("r", "recursive"));
+		OptionSpec<String> optionFileTypes = parser.acceptsAll(asList("t", "types")).withRequiredArg();
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -71,11 +75,34 @@ public class LsCommand extends AbstractHistoryCommand {
 		LogOutputFormat format = parseLogFormat(options.valueOf(optionFormat));
 		operationOptions.setFormat(format);
 
-		// <filter>
+		// --recursive
+		operationOptions.setRecursive(options.has(optionRecursive));
+		
+		// --types=[tds]
+		if (options.has(optionFileTypes)) {
+			String fileTypesStr = options.valueOf(optionFileTypes).toLowerCase();
+			List<FileType> fileTypes = new ArrayList<FileType>();
+			
+			if (fileTypesStr.contains("f")) {
+				fileTypes.add(FileType.FILE);
+			}
+			
+			if (fileTypesStr.contains("d")) {
+				fileTypes.add(FileType.FOLDER);
+			}
+			
+			if (fileTypesStr.contains("s")) {
+				fileTypes.add(FileType.SYMLINK);
+			}
+			
+			operationOptions.setFileTypes(fileTypes);
+		}
+		
+		// <path-expr>
 		List<?> nonOptionArgs = options.nonOptionArguments();
 		
 		if (nonOptionArgs.size() > 0) {
-			operationOptions.setFilter(nonOptionArgs.get(0).toString());
+			operationOptions.setPathExpression(nonOptionArgs.get(0).toString());
 		}
 
 		return operationOptions;

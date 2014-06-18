@@ -364,7 +364,7 @@ public class CleanupOperationTest {
 			// List of failing operations (regex)
 			// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-			"rel=3.+upload.+multichunk"				
+			"rel=[345].+upload.+multichunk" // << 3 retries!				
 		}));
 
 		TestClient clientA = new TestClient("A", testConnection);
