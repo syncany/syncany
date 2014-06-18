@@ -129,6 +129,10 @@ public class SqlDatabase {
 	public DatabaseBranch getLocalDatabaseBranch() {
 		return databaseVersionDao.getLocalDatabaseBranch();
 	}
+	
+	public List<DatabaseVersionHeader> getNonEmptyDatabaseVersionHeaders() {
+		return databaseVersionDao.getNonEmptyDatabaseVersionHeaders();
+	}
 
 	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
 		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
