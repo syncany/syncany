@@ -343,6 +343,9 @@ function onDatabaseVersionHeaderChange(databaseVersionHeader) {
 	
 	// Clear/Destroy tree, etc.
 	
+	tree.clear("");
+	tree.clear(root);
+	
 	dateSelected = databaseVersionHeader;
 	sendFileTreeRequest(prefix);
 }

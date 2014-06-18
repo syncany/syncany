@@ -18,7 +18,9 @@
 package org.syncany.operations.daemon;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -29,6 +31,7 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
@@ -128,10 +131,18 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(fileTreeRequest.getPrefix(), null, null);
-		GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
-		
-		eventBus.post(fileTreeResponse);	
+		try {
+			String prefixLikeQuery = fileTreeRequest.getPrefix() + "%";
+			Date date = (fileTreeRequest.getDate() != null) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(fileTreeRequest.getDate()) : null;
+			
+			Map<String, FileVersion> fileTree = localDatabase.getFileTree(prefixLikeQuery, date, false, (FileType[]) null);
+			GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
+			
+			eventBus.post(fileTreeResponse);	
+		}
+		catch (Exception e) {
+			eventBus.post(new BadRequestResponse(fileTreeRequest.getId(), "Invalid request: " + e.getMessage()));
+		}	
 	}
 	
 	private void handleGetFileHistoryRequest(GetFileHistoryRequest fileHistoryRequest) {
@@ -143,7 +154,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 	
 	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersRequest headersRequest) {
-		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getLocalDatabaseBranch().getAll();
+		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getLocalDatabaseBranch().getAll(); 
 		GetDatabaseVersionHeadersResponse headersResponse = new GetDatabaseVersionHeadersResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
 		
 		eventBus.post(headersResponse);
