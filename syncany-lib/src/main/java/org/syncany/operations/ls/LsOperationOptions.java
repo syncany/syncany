@@ -17,8 +17,11 @@
  */
 package org.syncany.operations.ls;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.OperationOptions;
 
 public class LsOperationOptions implements OperationOptions {
@@ -28,7 +31,9 @@ public class LsOperationOptions implements OperationOptions {
 	
 	private Date date;
 	private LogOutputFormat format;
-	private String filter;		
+	private String pathExpression;	
+	private boolean recursive = false;
+	private List<FileType> fileTypes = Arrays.asList(new FileType[] { FileType.FILE, FileType.FOLDER, FileType.SYMLINK });
 	
 	public Date getDate() {
 		return date;
@@ -38,14 +43,6 @@ public class LsOperationOptions implements OperationOptions {
 		this.date = date;
 	}
 
-	public String getFilter() {
-		return filter;
-	}
-
-	public void setFilter(String filter) {
-		this.filter = filter;
-	}
-
 	public LogOutputFormat getFormat() {
 		return format;
 	}
@@ -53,4 +50,30 @@ public class LsOperationOptions implements OperationOptions {
 	public void setFormat(LogOutputFormat format) {
 		this.format = format;
 	}
+
+	public String getPathExpression() {
+		return pathExpression;
+	}
+
+	public void setPathExpression(String pathExpression) {
+		this.pathExpression = pathExpression;
+	}
+
+	public boolean isRecursive() {
+		return recursive;
+	}
+
+	public void setRecursive(boolean recursive) {
+		this.recursive = recursive;
+	}
+
+	public List<FileType> getFileTypes() {
+		return fileTypes;
+	}
+
+	public void setFileTypes(List<FileType> fileTypes) {
+		this.fileTypes = fileTypes;
+	}
+	
+	
 }

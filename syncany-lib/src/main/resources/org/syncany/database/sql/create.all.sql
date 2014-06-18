@@ -158,3 +158,37 @@ create view fileversion_full as
 	from filehistory_full fhf
 	join fileversion fv on fhf.id=fv.filehistory_id and fhf.databaseversion_id=fv.databaseversion_id;	
 	
+
+-- Functions
+
+--!DELIMITER=end;
+
+create function substr_count(haystack varchar(255), needle varchar(255))
+returns integer
+begin atomic
+	declare strCount integer;
+	declare lastIndex integer;
+
+	set strCount = 0;
+	set lastIndex = 1;
+
+	while lastIndex <> 0 do
+		set lastIndex = locate(needle, haystack, lastIndex);
+
+		if lastIndex <> 0 then
+			set strCount = strCount + 1;
+			set lastIndex = lastIndex + length(needle);
+		end if;
+	end while;
+
+	return strCount;
+end;
+
+	
+	
+	
+	
+	
+	
+	
+	

@@ -98,8 +98,6 @@ public class FileVanishedScenarioTest {
 		// --> This will hopefully lead to a couple of 'vanished' files
 		logger.log(Level.INFO, "Starting 'up' thread ...");		
 		runUpThread.start();
-		
-		
 
 		logger.log(Level.INFO, "Starting 'delete' thread ...");
 		deleteFilesThread.start();		
@@ -114,7 +112,9 @@ public class FileVanishedScenarioTest {
 		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistoriesWithFileVersions().size() >= numFilesRemaining);
 		
 		// Test 2: Now up the rest, there should be exactly 50 files in the database
-		clientA.up();		
+		clientA.up();
+		clientA.cleanup();
+		
 		databaseClientA = clientA.loadLocalDatabase();
 		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, databaseClientA.getFileHistoriesWithFileVersions().size());
 		

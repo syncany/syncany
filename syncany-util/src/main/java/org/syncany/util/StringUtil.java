@@ -91,6 +91,27 @@ public class StringUtil {
     }
     
     /**
+     * Returns the count of the substring 
+     */
+    public static int substrCount(String haystack, String needle) {
+    	int lastIndex = 0;
+    	int count = 0;
+
+    	if (needle != null && haystack != null) {
+			while (lastIndex != -1) {
+				lastIndex = haystack.indexOf(needle, lastIndex);
+	
+				if (lastIndex != -1) {
+					count++;
+					lastIndex += needle.length();
+				}
+	    	}
+    	}
+    	
+		return count;
+    }
+    
+    /**
      * Generates a random machine name of length 20. Only uses characters 
      * A-Z/a-z (in order to always create valid serialized vector clock representations)  
      */
