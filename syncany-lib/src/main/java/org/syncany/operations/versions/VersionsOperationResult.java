@@ -15,21 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.ls;
+package org.syncany.operations.versions;
 
-import java.util.Map;
+import java.util.List;
 
-import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.OperationResult;
 
-public class LsOperationResult implements OperationResult {
-	private Map<String, FileVersion> fileTree;
+public class VersionsOperationResult implements OperationResult {
+	private List<PartialFileHistory> fileHistories;
 	
-	public LsOperationResult(Map<String, FileVersion> fileTree) {
-		this.fileTree = fileTree;
+	public VersionsOperationResult(List<PartialFileHistory> fileHistories) {
+		this.fileHistories = fileHistories;
 	}
 
-	public Map<String, FileVersion> getFileTree() {
-		return fileTree;
+	public List<PartialFileHistory> getFileHistories() {
+		return fileHistories;
 	}	
 }

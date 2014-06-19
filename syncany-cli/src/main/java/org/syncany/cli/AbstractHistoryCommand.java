@@ -17,6 +17,8 @@
  */
 package org.syncany.cli;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.logging.Level;
@@ -24,12 +26,21 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author pheckel
- *
- */
+import org.syncany.database.FileVersion;
+
 public abstract class AbstractHistoryCommand extends Command {
-	private static final Logger logger = Logger.getLogger(AbstractHistoryCommand.class.getSimpleName());
+	protected static final Logger logger = Logger.getLogger(AbstractHistoryCommand.class.getSimpleName());
+	protected static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
+
+	protected void printOneVersion(FileVersion fileVersion) {
+		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
+		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
+		String fileChecksum = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : "";
+		
+		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
+				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
+				fileChecksum);
+	}
 	
 	protected Date parseDateOption(String dateStr) throws Exception {
 		Pattern relativeDatePattern = Pattern.compile("^(\\d+(?:[.,]\\d+)?)(mo|[smhdwy])");

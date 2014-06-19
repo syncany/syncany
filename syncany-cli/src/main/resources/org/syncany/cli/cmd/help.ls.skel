@@ -1,0 +1,69 @@
+NAME
+  sy-ls - lists and filters the current and past file tree
+   
+SYNOPSIS
+  sy ls [-t | --types=<types>] [-D | --date=<date>] 
+        [-r | --recursive] [<path-expression>]
+  
+DESCRIPTION 
+  This command lists and filters the file tree based on the local database. 
+  The file tree selection can be performed using the following selection
+  criteria: 
+  
+  (1) Using the <path-expression>, one can select a file pattern (such as
+  `*.txt`) or sub tree (such as `subfolder/`, only with -r). (2) Using -r,
+  the command does not only list the folder relative to the 
+  <path-expression>, but to all sub trees of it. (3)  The -t option limits
+  the result set to a certain file type ('f' for files, 'd' for directories,
+  and 's' for symlinks). Types can be combined, e.g. `sy ls -tfs` selects
+  files and symlinks. (4) The -D option selects the date/time at which to
+  select the file tree, e.g. `sy ls -D20m` to select the file tree 20 minutes
+  ago or `sy ls -D2014-05-02` to select the file tree at May 2.
+  
+  Contrary to the `sy versions` command, this command only displays a full or
+  partial snapshot of the file tree, and not the entire history of each file. 
+  
+OPTIONS
+  -t, --types=<t|d|s>            
+    Limits the result set to a certain file type ('f' for files, 'd' for
+    directories, and 's' for symlinks). Types can be combined, e.g. 
+    `sy ls -tfs` selects files and symlinks. Default setting is 'tds'. 
+     
+  -D, --date<relative-date|absolute-date>
+    Selects the file tree at a certain date. The date can be given as a 
+    relative date to the current time, or an absolute date in form of a 
+    timestamp.
+    
+    Absolute date format: <dd-MM-yy HH:mm:ss>
+
+    Relative date format: <value><unit>, for which <value> may be any 
+    floating point number and <unit> may be any of the following: s(econds),
+    m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
+    shortened if they are unique.                                            
+    
+  -r, --recursive
+    Not only selects the folder relative to the <path-expression>, but to all
+    sub trees of it.
+    
+  <path-expression>
+    Selects a file pattern or sub tree of the database using substring and 
+    wildcard mechanisms. The expression is applied to the relative slash-
+    separated path. The only possible wildcard is * (equivalent: ^).
+    
+    If <path-expression> does not contain a wildcard, it is interpreted as
+    prefix and extended to `<path-expression>*`. If a wildcard is present, no
+    wildcard is appended.
+    
+    Note: The Linux shell expands the * wildcard if a matching file is
+    present. Either use single quotes (e.g. '*.txt') or use ^ instead.
+    
+EXAMPLES   
+  sy ls -r subfolder/
+    Selects all file entries of the current file tree in the folder
+    'subfolder/', including for instance 'subfolder/some/other/file.txt'.
+    
+  sy ls --recursive --types=fs --date=1h '*.txt'
+    Selects all files and symlinks in the entire file tree that end with .txt
+    and existed one hour ago. 
+ 
+%RESOURCE:incl/footer.skel%
