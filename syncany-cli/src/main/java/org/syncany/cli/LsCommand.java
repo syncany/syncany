@@ -19,11 +19,10 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -31,14 +30,10 @@ import joptsimple.OptionSpec;
 
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.ls.LsOperationOptions;
-import org.syncany.operations.ls.LsOperationOptions.LogOutputFormat;
 import org.syncany.operations.ls.LsOperationResult;
 
 public class LsCommand extends AbstractHistoryCommand {
-	private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
-
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -49,7 +44,7 @@ public class LsCommand extends AbstractHistoryCommand {
 		LsOperationOptions operationOptions = parseOptions(operationArgs);
 		LsOperationResult operationResult = client.ls(operationOptions);
 
-		printResults(operationOptions, operationResult);
+		printResults(operationResult);
 
 		return 0;
 	}	
@@ -59,7 +54,6 @@ public class LsCommand extends AbstractHistoryCommand {
 
 		OptionParser parser = new OptionParser();
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
-		OptionSpec<String> optionFormat = parser.acceptsAll(asList("f", "format")).withRequiredArg().defaultsTo(LogOutputFormat.LAST.toString());
 		OptionSpec<Void> optionRecursive = parser.acceptsAll(asList("r", "recursive"));
 		OptionSpec<String> optionFileTypes = parser.acceptsAll(asList("t", "types")).withRequiredArg();
 
@@ -71,10 +65,6 @@ public class LsCommand extends AbstractHistoryCommand {
 			operationOptions.setDate(logViewDate);
 		}
 		
-		// --format=full|last
-		LogOutputFormat format = parseLogFormat(options.valueOf(optionFormat));
-		operationOptions.setFormat(format);
-
 		// --recursive
 		operationOptions.setRecursive(options.has(optionRecursive));
 		
@@ -108,80 +98,23 @@ public class LsCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 
-	private LogOutputFormat parseLogFormat(String formatStr) throws Exception {
-		try {
-			return LogOutputFormat.valueOf(formatStr.toUpperCase());
-		}
-		catch (Exception e) {
-			throw new Exception("Unknown log format: " + formatStr);
-		}
-	}
+	private void printResults(LsOperationResult operationResult) {		
+		int longestPath = calculateLongestPath(operationResult.getFileTree());
 
-	private void printResults(LsOperationOptions operationOptions, LsOperationResult operationResult) {		
-		if (operationOptions.getFormat() == LogOutputFormat.FULL) {
-			printFullFormat(operationResult.getFileHistories());				
-		}
-		else if (operationOptions.getFormat() == LogOutputFormat.LAST) {
-			printLastFormat(operationResult.getFileHistories());
-		}	
-	}
-
-	private void printLastFormat(List<PartialFileHistory> fileHistories) {
-		int longestPath = calculateLongestPath(fileHistories, true);
-
-		for (PartialFileHistory fileHistory : fileHistories) {			
-			FileVersion lastVersion = fileHistory.getLastVersion();
-
-			out.printf("%-" + longestPath + "s %s", lastVersion.getPath(), fileHistory.getFileHistoryId());
-			printOneVersion(lastVersion);
+		for (FileVersion fileVersion : operationResult.getFileTree().values()) {			
+			out.printf("%-" + longestPath + "s %s", fileVersion.getPath(), fileVersion.getFileHistoryId());
+			printOneVersion(fileVersion);
 			out.println();
 		}
 	}
-
-	private void printFullFormat(List<PartialFileHistory> fileHistories) {
-		for (PartialFileHistory fileHistory : fileHistories) {			
-			FileVersion lastVersion = fileHistory.getLastVersion();
 	
-			out.printf("%s %s\n", lastVersion.getPath(), fileHistory.getFileHistoryId());
-	
-			for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
-				out.print('\t');
-				printOneVersion(fileVersion);
-	
-				if (fileVersion.getPath().equals(lastVersion.getPath())) {
-					out.println();
-				}
-				else {
-					out.println(" " + fileVersion.getPath());
-				}
-			}
-		}
-	}
-	
-	private int calculateLongestPath(List<PartialFileHistory> fileHistories, boolean lastOnly) {
+	private int calculateLongestPath(Map<String, FileVersion> fileVersions) {
 		int result = 0;
 		
-		for (PartialFileHistory fileHistory : fileHistories) {
-			if (lastOnly) {
-				result = Math.max(result, fileHistory.getLastVersion().getPath().length());
-			}
-			else {
-				for (FileVersion fileVersion : fileHistory.getFileVersions().values()) {
-					result = Math.max(result, fileVersion.getPath().length());
-				}
-			}
+		for (FileVersion fileVersion : fileVersions.values()) {
+			result = Math.max(result, fileVersion.getPath().length());
 		}
 		
 		return result;	
-	}
-
-	private void printOneVersion(FileVersion fileVersion) {
-		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
-		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
-		String fileChecksum = (fileVersion.getChecksum() != null) ? fileVersion.getChecksum().toString() : "";
-		
-		out.printf("%4d %-20s %9s %4s %8d %7s %8s %40s", fileVersion.getVersion(), dateFormat.format(fileVersion.getLastModified()),
-				posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), fileVersion.getStatus(),
-				fileChecksum);
 	}
 }

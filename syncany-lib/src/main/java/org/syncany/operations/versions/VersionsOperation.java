@@ -15,25 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.ls;
+package org.syncany.operations.versions;
 
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
 
-public class LsOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());	
-	private LsOperationOptions options;
+public class VersionsOperation extends Operation {
+	private static final Logger logger = Logger.getLogger(VersionsOperation.class.getSimpleName());	
+	private VersionsOperationOptions options;
 	private SqlDatabase localDatabase;
 		
-	public LsOperation(Config config, LsOperationOptions options) {
+	public VersionsOperation(Config config, VersionsOperationOptions options) {
 		super(config);		
 		
 		this.options = options;
@@ -41,30 +39,13 @@ public class LsOperation extends Operation {
 	}	
 		
 	@Override
-	public LsOperationResult execute() throws Exception {
+	public VersionsOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Ls' at client "+config.getMachineName()+" ...");
+		logger.log(Level.INFO, "Running 'Versions' at client "+config.getMachineName()+" ...");
 		logger.log(Level.INFO, "--------------------------------------------");		
 
-		String pathExpression = parsePathExpression(options.getPathExpression());
-		List<FileType> fileTypes = options.getFileTypes();
-
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes.toArray(new FileType[0]));
+		List<PartialFileHistory> fileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		
-		return new LsOperationResult(fileTree);
-	}
-
-	private String parsePathExpression(String filter) {
-		if (filter != null) {
-			 if (filter.contains("^") || filter.contains("*")) {
-				 return filter.replace('^', '%').replace('*', '%');
-			 }
-			 else {
-				 return filter + "%";
-			 }
-		}
-		else {
-			return null;
-		}
+		return new VersionsOperationResult(fileHistories);
 	}
 }

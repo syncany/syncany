@@ -25,13 +25,8 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.OperationOptions;
 
 public class LsOperationOptions implements OperationOptions {
-	public enum LogOutputFormat {
-		FULL, LAST
-	}
-	
-	private Date date;
-	private LogOutputFormat format;
-	private String pathExpression;	
+	private Date date = null;
+	private String pathExpression = null;	
 	private boolean recursive = false;
 	private List<FileType> fileTypes = Arrays.asList(new FileType[] { FileType.FILE, FileType.FOLDER, FileType.SYMLINK });
 	
@@ -41,14 +36,6 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setDate(Date date) {
 		this.date = date;
-	}
-
-	public LogOutputFormat getFormat() {
-		return format;
-	}
-
-	public void setFormat(LogOutputFormat format) {
-		this.format = format;
 	}
 
 	public String getPathExpression() {
@@ -73,7 +60,5 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setFileTypes(List<FileType> fileTypes) {
 		this.fileTypes = fileTypes;
-	}
-	
-	
+	}	
 }
