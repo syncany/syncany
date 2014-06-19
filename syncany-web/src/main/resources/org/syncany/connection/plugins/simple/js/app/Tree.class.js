@@ -4,7 +4,7 @@ function Tree(treeElements, onFileClick) {
 	
 	var lastNodeId = ROOT_NODE_ID;
 
-	this._init = function() {
+	this.init = function() {
 		var fireFileClick = this.fireFileClick;
 	
 		treeElements.jstree({
@@ -120,7 +120,7 @@ function Tree(treeElements, onFileClick) {
 		this.tree.select_node(rootNode, true);
 	};
 	
-	this._init();
+	this.init();
 }
 
 

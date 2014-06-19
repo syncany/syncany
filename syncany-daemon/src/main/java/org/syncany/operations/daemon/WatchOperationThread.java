@@ -154,7 +154,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	}
 	
 	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersRequest headersRequest) {
-		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getLocalDatabaseBranch().getAll(); 
+		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getNonEmptyDatabaseVersionHeaders(); 
 		GetDatabaseVersionHeadersResponse headersResponse = new GetDatabaseVersionHeadersResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
 		
 		eventBus.post(headersResponse);

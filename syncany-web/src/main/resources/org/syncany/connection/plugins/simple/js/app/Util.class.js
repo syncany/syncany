@@ -31,7 +31,7 @@ function toFileVersions(xml) {
 	$(fileElements).each(function (i, file) {
 		var fileXml = $(file);
 
-		fileVersions.push(new ExtendedFileVersion(
+		fileVersions.push(new FileVersion(
 			fileXml.find('fileHistoryId').text(),		
 			fileXml.find('version').text(),
 			fileXml.find('path').text(),
