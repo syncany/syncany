@@ -32,7 +32,7 @@ public abstract class AbstractHistoryCommand extends Command {
 	private static final Logger logger = Logger.getLogger(AbstractHistoryCommand.class.getSimpleName());
 	
 	protected Date parseDateOption(String dateStr) throws Exception {
-		Pattern relativeDatePattern = Pattern.compile("^(\\d+(?:[.,]\\d+))(mo|[smhdwy])");
+		Pattern relativeDatePattern = Pattern.compile("^(\\d+(?:[.,]\\d+)?)(mo|[smhdwy])");
 		Pattern absoluteDatePattern = Pattern.compile("^(\\d{2})-(\\d{2})-(\\d{4})$");
 		
 		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
