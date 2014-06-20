@@ -22,10 +22,6 @@ import org.simpleframework.xml.Element;
 public class CliResponse extends Response {
 	@Element(required = true)
 	private String output;	
-		
-	public CliResponse() {
-		super(0, -1, null); // Required
-	}
 	
 	public CliResponse(int requestId, String output) {
 		super(200, requestId, null);

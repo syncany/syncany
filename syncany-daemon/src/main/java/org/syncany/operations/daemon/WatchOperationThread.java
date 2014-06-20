@@ -48,8 +48,13 @@ import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
+import org.syncany.operations.daemon.messages.RestoreRequest;
+import org.syncany.operations.daemon.messages.RestoreResponse;
 import org.syncany.operations.daemon.messages.WatchEventResponse;
 import org.syncany.operations.daemon.messages.WatchRequest;
+import org.syncany.operations.restore.RestoreOperation;
+import org.syncany.operations.restore.RestoreOperationOptions;
+import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -138,6 +143,9 @@ public class WatchOperationThread implements WatchOperationListener {
 			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
 				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
 			}
+			else if (watchRequest instanceof RestoreRequest) {
+				handleRestoreRequest((RestoreRequest) watchRequest);			
+			}
 			else if (watchRequest instanceof CliRequest) {
 				handleCliRequest((CliRequest) watchRequest);
 			}
@@ -145,6 +153,23 @@ public class WatchOperationThread implements WatchOperationListener {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
 		}		
+	}
+
+	private void handleRestoreRequest(RestoreRequest restoreRequest) {
+		RestoreOperationOptions restoreOptions = new RestoreOperationOptions();
+		
+		restoreOptions.setFileHistoryId(FileHistoryId.parseFileId(restoreRequest.getFileHistoryId()));
+		restoreOptions.setFileVersionNumber(restoreRequest.getVersion());
+		
+		try {
+			RestoreOperationResult restoreResult = new RestoreOperation(config, restoreOptions).execute();
+			
+			RestoreResponse restoreResponse = new RestoreResponse(restoreRequest.getId(), restoreResult.getTargetFile());
+			eventBus.post(restoreResponse);								
+		}
+		catch (Exception e) {
+			eventBus.post(new BadRequestResponse(restoreRequest.getId(), "Cannot restore file."));
+		}
 	}
 
 	private void handleCliRequest(CliRequest cliRequest) {		
@@ -171,7 +196,7 @@ public class WatchOperationThread implements WatchOperationListener {
 			cliOutputStream.close();
 		}
 		catch (Exception e) {
-			eventBus.post(new BadRequestResponse(cliRequest.getId(), "Exception while running command: "+e.getMessage()));
+			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
 		}
 		
 	}

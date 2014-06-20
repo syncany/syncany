@@ -140,7 +140,10 @@ public class DaemonWebServer {
 		try {
 			Request request = MessageFactory.createRequest(message);
 
-			requestIdRestSocketCache.put(request.getId(), exchange);
+			synchronized (requestIdRestSocketCache) {
+				requestIdRestSocketCache.put(request.getId(), exchange);	
+			}
+			
 			eventBus.post(request);
 		}
 		catch (Exception e) {

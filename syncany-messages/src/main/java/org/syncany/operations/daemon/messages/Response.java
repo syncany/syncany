@@ -33,6 +33,10 @@ public abstract class Response extends Message {
 	@Element(required = false)
 	private String message;
 
+	public Response() {
+		// Required default constructor!
+	}
+	
 	public Response(int code, Integer requestId, String message) {
 		this.code = code;
 		this.requestId = requestId;

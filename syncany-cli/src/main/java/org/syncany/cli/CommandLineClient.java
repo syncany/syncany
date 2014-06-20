@@ -56,6 +56,7 @@ import org.syncany.config.Logging;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
+import org.syncany.operations.daemon.messages.Response;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -67,6 +68,8 @@ import org.syncany.util.EnvironmentUtil;
  */
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
+	
+	private static final String SERVER_URI = "http://localhost:8080/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
 	private static final int LOG_FILE_COUNT = 4;
@@ -329,9 +332,10 @@ public class CommandLineClient extends Client {
 	private int sendToRest(Command command, String commandName, String[] commandArgs) {
 		CloseableHttpClient client = HttpClients.createDefault();
 		
-		HttpPost post = new HttpPost("http://localhost:8080/api/rs");
+		HttpPost post = new HttpPost(SERVER_URI);
 		
 		try {
+			// Create and send HTTP/REST request
 			CliRequest cliRequest = new CliRequest();
 			
 			cliRequest.setId(Math.abs(new Random().nextInt()));
@@ -341,17 +345,25 @@ public class CommandLineClient extends Client {
 			
 			post.setEntity(new StringEntity(MessageFactory.toRequest(cliRequest)));
 			
-			HttpResponse response = client.execute(post);
-			String responseStr = IOUtils.toString(response.getEntity().getContent());
+			// Handle response
+			HttpResponse httpResponse = client.execute(post);
+			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());
 			
-			CliResponse cliResponse = (CliResponse) MessageFactory.createResponse(responseStr);			
-			out.print(cliResponse.getOutput());
+			Response response = MessageFactory.createResponse(responseStr);
+			
+			if (response instanceof CliResponse) {
+				out.print(((CliResponse) response).getOutput());	
+			}
+			else {
+				out.println(response.getMessage());
+			}
+			
+			return 0;
 		}
 		catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return 0;
+			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
+			return showErrorAndExit(e.getMessage());
+		}		
 	}
 
 	private void showShortVersionAndExit() throws IOException {

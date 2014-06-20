@@ -17,17 +17,20 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Element;
 
-@Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public class BadRequestResponse extends Response {
-	public BadRequestResponse() {
-		super(400, -1, null); // Required
-	}
+public class RestoreRequest extends WatchRequest {
+	@Element(required = true)
+	private String fileHistoryId;
 	
-	public BadRequestResponse(int requestId, String message) {
-		super(400, requestId, message);
+	@Element(required = true)
+	private int version;
+
+	public String getFileHistoryId() {
+		return fileHistoryId;
+	}
+
+	public int getVersion() {
+		return version;
 	}
 }

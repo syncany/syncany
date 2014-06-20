@@ -123,6 +123,9 @@ function processXmlMessage(evt) {
 			else if (responseType == "getdatabaseversionheadersresponse") {
 				processGetDatabaseVersionHeadersResponse(xml);
 			}
+			else if (responseType == "restoreresponse") {
+				processRestoreResponse(xml);
+			}
 			else {
 				console.log('WARNING: Unknown response: ' + evt.data.toString());
 			}
@@ -166,10 +169,11 @@ function processFileHistoryResponse(xml) {
 	var dialogElements = $("#dialog-previous-versions");
 	var tableElements = $("#dialog-previous-versions table");
 	var fileVersions = toFileVersions(xml);
+	var selectedFile = null;
 	
 	tableElements.dataTable().fnDestroy();
 	
-	tableElements.DataTable({
+	var dialogTable = tableElements.DataTable({
 		paging: false,
 		searching: false,
 		jQueryUI: false,
@@ -194,14 +198,18 @@ function processFileHistoryResponse(xml) {
 	tableElements.$('tbody tr').click(function () {
 		// Highlight
 		if ($(this).hasClass('selected')) {
-			$(this).removeClass('selected');
+			$(this).removeClass('selected');			
 			dialogElements.parent().find(":button:contains('Restore')").prop("disabled", true).addClass('ui-state-disabled');
+			
+			selectedFile = null;
 		}
 		else {
 			tableElements.$('tr.selected').removeClass('selected');
 			
 			$(this).addClass('selected');
 			dialogElements.parent().find(":button:contains('Restore')").prop("disabled", false).removeClass('ui-state-disabled');
+
+			selectedFile = dialogTable.row($(this)).data();
 		}
 	});
 		
@@ -215,6 +223,7 @@ function processFileHistoryResponse(xml) {
 			{ 
 				text: "Restore selected", 
 				click: function() { 
+					sendRestoreRequest(selectedFile);				
 					$(this).dialog("close");  
 				}
 			}, 
@@ -229,6 +238,10 @@ function processFileHistoryResponse(xml) {
 	
 	dialogElements.parent().find(":button:contains('Restore')").prop("disabled", true).addClass('ui-state-disabled');
 
+}
+
+function processRestoreResponse(xml) {
+	onRootSelect();
 }
 
 function processWatchEventResponse(xml) {
@@ -367,8 +380,12 @@ function sendGetDatabaseVersionHeaders() {
 	sendMessage("<getDatabaseVersionHeadersRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n</getDatabaseVersionHeadersRequest>");
 }
 
+function sendRestoreRequest(file) {
+	sendMessage("<restoreRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <fileHistoryId>" + file.fileHistoryId + "</fileHistoryId>\n  <version>" + file.version + "</version>\n</restoreRequest>");
+}
+
 function retrieveFile(file) {
-	window.location.assign("http://localhost:8080/api/rest/getFileRequest?id=" + nextRequestId() + "&root=" + root + "&fileHistoryId=" + file.fileHistoryId + "&version=" + file.version);
+	window.location.assign("http://localhost:8080/api/rs/getFileRequest?id=" + nextRequestId() + "&root=" + root + "&fileHistoryId=" + file.fileHistoryId + "&version=" + file.version);
 
 	//sendMessage.value = "<getFileRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <file>" + fullpath + "</file>\n</getFileRequest>";
 	//sendMessage();
