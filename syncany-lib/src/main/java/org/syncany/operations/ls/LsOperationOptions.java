@@ -29,6 +29,7 @@ public class LsOperationOptions implements OperationOptions {
 	private String pathExpression = null;	
 	private boolean recursive = false;
 	private List<FileType> fileTypes = Arrays.asList(new FileType[] { FileType.FILE, FileType.FOLDER, FileType.SYMLINK });
+	private boolean fetchHistories;
 	
 	public Date getDate() {
 		return date;
@@ -60,5 +61,13 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setFileTypes(List<FileType> fileTypes) {
 		this.fileTypes = fileTypes;
+	}
+
+	public boolean isFetchHistories() {
+		return fetchHistories;
+	}
+
+	public void setFetchHistories(boolean fetchHistories) {
+		this.fetchHistories = fetchHistories;
 	}	
 }

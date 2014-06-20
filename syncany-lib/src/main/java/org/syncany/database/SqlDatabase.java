@@ -157,9 +157,13 @@ public class SqlDatabase {
 	// File History
 
 	@Deprecated	
-	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
+	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions() {
 		// TODO [medium] Note: This returns the full database. Don't use this!
 		return fileHistoryDao.getFileHistoriesWithFileVersions();
+	}
+
+	public Map<FileHistoryId, PartialFileHistory> getFileHistories(List<FileHistoryId> fileHistoryIds) {
+		return fileHistoryDao.getFileHistories(fileHistoryIds);
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {

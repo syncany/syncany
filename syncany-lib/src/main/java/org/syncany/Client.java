@@ -64,9 +64,6 @@ import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
-import org.syncany.operations.versions.VersionsOperation;
-import org.syncany.operations.versions.VersionsOperationOptions;
-import org.syncany.operations.versions.VersionsOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -153,10 +150,6 @@ public class Client {
 	public LsOperationResult ls(LsOperationOptions options) throws Exception {
 		return new LsOperation(config, options).execute();
 	}
-	
-	public VersionsOperationResult versions(VersionsOperationOptions options) throws Exception {
-		return new VersionsOperation(config, options).execute();
-	}	
 
 	public void watch(WatchOperationOptions options) throws Exception {
 		watch(options, null);	

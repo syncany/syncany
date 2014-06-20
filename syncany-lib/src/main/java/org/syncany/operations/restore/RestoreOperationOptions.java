@@ -17,24 +17,13 @@
  */
 package org.syncany.operations.restore;
 
-import java.util.Date;
-
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationOptions;
 
 public class RestoreOperationOptions implements OperationOptions {
 	private FileHistoryId fileHistoryId;
-	private Date databaseBeforeDate;
 	private Integer fileVersionNumber;
 	private String relativeTargetPath;
-
-	public Date getDatabaseBeforeDate() {
-		return databaseBeforeDate;
-	}
-
-	public void setDatabaseBeforeDate(Date databaseBeforeDate) {
-		this.databaseBeforeDate = databaseBeforeDate;
-	}
 
 	public FileHistoryId getFileHistoryId() {
 		return fileHistoryId;

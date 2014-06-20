@@ -107,7 +107,7 @@ public class CommandLineClient extends Client {
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("loglevel")).withOptionalArg();
 			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
 			OptionSpec<Void> optionShortVersion = parser.acceptsAll(asList("v"));
-			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv", "version"));
+			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv"));
 			
 			// Parse global options and operation name
 			OptionSet options = parser.parse(args);

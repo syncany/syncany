@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.ls;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -25,8 +26,13 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 public class LsOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());	
@@ -50,8 +56,24 @@ public class LsOperation extends Operation {
 		List<FileType> fileTypes = options.getFileTypes();
 
 		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes.toArray(new FileType[0]));
+		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 		
-		return new LsOperationResult(fileTree);
+		if (options.isFetchHistories()) {
+			fileHistories = fetchFileHistories(fileTree);
+		}
+		
+		return new LsOperationResult(fileTree, fileHistories);
+	}
+
+	private Map<FileHistoryId, PartialFileHistory> fetchFileHistories(Map<String, FileVersion> fileTree) {
+		// Get file history IDs
+		List<FileHistoryId> fileHistoryIds = new ArrayList<>(Collections2.transform(fileTree.values(), new Function<FileVersion, FileHistoryId>() {
+			public FileHistoryId apply(FileVersion fileVersion) {
+				return fileVersion.getFileHistoryId();
+			}			
+		}));
+
+		return localDatabase.getFileHistories(fileHistoryIds);
 	}
 
 	private String parsePathExpression(String filter) {
