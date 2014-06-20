@@ -178,6 +178,10 @@ public class SqlDatabase {
 		fileHistoryDao.removeUnreferencedFileHistories();
 	}
 
+	public FileHistoryId expandFileHistoryId(FileHistoryId fileHistoryId) {
+		return fileHistoryDao.expandFileHistoryId(fileHistoryId);
+	}
+
 	// File Version
 
 	public Map<String, FileVersion> getCurrentFileTree() {

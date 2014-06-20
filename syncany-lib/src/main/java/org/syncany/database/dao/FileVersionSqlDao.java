@@ -278,10 +278,8 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
-		String fileHistoryIdLikeQuery = fileHistoryId.toString() + "%";
-		
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileVersionByHistoryAndVersion.sql")) {
-			preparedStatement.setString(1, fileHistoryIdLikeQuery);
+			preparedStatement.setString(1, fileHistoryId.toString());
 			preparedStatement.setLong(2, version);
 			
 			return executeAndCreateFileVersion(preparedStatement);			
@@ -342,16 +340,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	private FileVersion executeAndCreateFileVersion(PreparedStatement preparedStatement) {
 		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			if (resultSet.next()) {				
-				FileVersion fileVersion = createFileVersionFromRow(resultSet);
-				
-				boolean nonUniqueResult = resultSet.next();
-				
-				if (nonUniqueResult) {
-					return null;
-				}
-				else {
-					return fileVersion;
-				}
+				return createFileVersionFromRow(resultSet);			
 			}
 			else {
 				return null;

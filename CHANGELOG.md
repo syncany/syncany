@@ -5,9 +5,8 @@ Change Log
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
-  + Revamp: List and filter file tree with `sy ls`
-  + Revamp: Display database and file histories with `sy versions`
-  + Revamp: Restore old/deleted files with `sy restore`
+  + Revamp: List and filter file tree and file histories with `sy ls` #86
+  + Revamp: Restore old/deleted files with `sy restore` #87
   + Implemented man pages for all Syncany commands: `man (sy|sy-up|..)` #87
 - Bugfixes:
   + Fixed issue with renaming to folder with quotes on Windows #124 

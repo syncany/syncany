@@ -307,5 +307,5 @@ public abstract class FileSystemAction {
 		return new File(config.getLocalDir(), relativePath);
 	}	
 	
-	public abstract void execute() throws Exception;
+	public abstract FileSystemActionResult execute() throws Exception;
 }

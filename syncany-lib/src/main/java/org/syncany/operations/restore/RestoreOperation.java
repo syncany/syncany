@@ -19,6 +19,7 @@ package org.syncany.operations.restore;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +34,6 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.Downloader;
-import org.syncany.operations.down.actions.FileSystemAction;
 import org.syncany.operations.restore.RestoreOperationResult.RestoreResultCode;
 
 public class RestoreOperation extends AbstractTransferOperation {
@@ -62,15 +62,12 @@ public class RestoreOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		FileHistoryId restoreFileHistoryId = options.getFileHistoryId(); 
-		FileVersion restoreFileVersion = null;
 		
 		// Find file version
-		restoreFileVersion = localDatabase.getFileVersion(restoreFileHistoryId, options.getFileVersionNumber());
-		
-		// Validate file version result
-		if (restoreFileVersion == null) {
+		FileHistoryId restoreFileHistoryId = findFileHistoryId();
+		FileVersion restoreFileVersion = findRestoreFileVersion(restoreFileHistoryId);
+
+		if (restoreFileHistoryId == null || restoreFileVersion == null) {
 			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
 		}
 		else if (restoreFileVersion.getType() == FileType.FOLDER) {
@@ -85,10 +82,30 @@ public class RestoreOperation extends AbstractTransferOperation {
 		// Restore file
 		logger.log(Level.INFO, "- Restoring: " + restoreFileVersion);
 
-		FileSystemAction restoreFileSystemAction = new RestoreFileSystemAction(config, restoreFileVersion, options.getRelativeTargetPath());
-		restoreFileSystemAction.execute();
+		RestoreFileSystemAction restoreAction = new RestoreFileSystemAction(config, restoreFileVersion, options.getRelativeTargetPath());
+		RestoreFileSystemActionResult restoreResult = restoreAction.execute();
 
-		return new RestoreOperationResult(RestoreResultCode.ACK, null);
+		return new RestoreOperationResult(RestoreResultCode.ACK, restoreResult.getTargetFile());
+	}
+
+	private FileHistoryId findFileHistoryId() {
+		return localDatabase.expandFileHistoryId(options.getFileHistoryId()); 
+	}
+
+	private FileVersion findRestoreFileVersion(FileHistoryId restoreFileHistoryId) {
+		if (options.getFileVersionNumber() != null) {
+			return localDatabase.getFileVersion(restoreFileHistoryId, options.getFileVersionNumber());
+		}
+		else {
+			List<FileVersion> fileHistory = localDatabase.getFileHistory(restoreFileHistoryId);
+			
+			if (fileHistory.size() >= 2) { 
+				return fileHistory.get(fileHistory.size()-2);
+			}
+			else {
+				return null;
+			}
+		}
 	}
 
 	private void downloadMultiChunks(FileVersion restoreFileVersion) throws StorageException, IOException {
