@@ -27,10 +27,6 @@ import java.sql.SQLException;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.util.SqlRunner;
 
-/**
- * @author pheckel
- *
- */
 public class TestSqlDatabaseUtil {
 	public static void runSqlFromResource(Connection connection, String resourceSqlScript) throws SQLException, IOException {
 		String fullPathResource = String.format(DatabaseConnectionFactory.DATABASE_RESOURCE_PATTERN, resourceSqlScript);
