@@ -42,6 +42,7 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.down.DatabaseBranch;
@@ -336,7 +337,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
 		Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
 		Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
-		List<PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
+		Map<FileHistoryId, PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
 
 		for (ChunkEntry chunk : chunks.values()) {
 			databaseVersion.addChunk(chunk);
@@ -350,7 +351,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			databaseVersion.addFileContent(fileContent);
 		}
 
-		for (PartialFileHistory fileHistory : fileHistories) {
+		for (PartialFileHistory fileHistory : fileHistories.values()) {
 			databaseVersion.addFileHistory(fileHistory);
 		}
 

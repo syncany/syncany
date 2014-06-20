@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -36,6 +37,7 @@ import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
@@ -89,7 +91,7 @@ public class SyncUpOperationTest {
 		
 		// - Sql Database
 		SqlDatabase localDatabase = new SqlDatabase(testConfig);
-		Collection<PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
+		Map<FileHistoryId, PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
 		
 		// Compare!
 		assertEquals(localDatabase.getLastDatabaseVersionHeader(), remoteDatabaseVersion.getHeader());
@@ -104,10 +106,10 @@ public class SyncUpOperationTest {
 		
 		for (PartialFileHistory partialFileHistory : remoteFileHistories) {
 			remoteFileVersions.add(partialFileHistory.getLastVersion());
-			assertTrue(localFileHistories.contains(partialFileHistory));
+			assertNotNull(localFileHistories.get(partialFileHistory.getFileHistoryId()));
 		}
 		
-		for (PartialFileHistory partialFileHistory : localFileHistories) {
+		for (PartialFileHistory partialFileHistory : localFileHistories.values()) {
 			localFileVersions.add(partialFileHistory.getLastVersion());
 		}
 		

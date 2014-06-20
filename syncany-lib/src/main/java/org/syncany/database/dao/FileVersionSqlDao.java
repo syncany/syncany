@@ -229,8 +229,8 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setString(1, pathExpression);
 			preparedStatement.setInt(2, filterMinSlashCount);
 			preparedStatement.setInt(3, filterMaxSlashCount);
-			preparedStatement.setTimestamp(4, new Timestamp(date.getTime()));
-			preparedStatement.setArray(5, connection.createArrayOf("varchar", fileTypesStr));
+			preparedStatement.setArray(4, connection.createArrayOf("varchar", fileTypesStr));
+			preparedStatement.setTimestamp(5, new Timestamp(date.getTime()));
 			
 			return getFileTree(preparedStatement);				
 		}
@@ -278,8 +278,10 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
+		String fileHistoryIdLikeQuery = fileHistoryId.toString() + "%";
+		
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileVersionByHistoryAndVersion.sql")) {
-			preparedStatement.setString(1, fileHistoryId.toString());
+			preparedStatement.setString(1, fileHistoryIdLikeQuery);
 			preparedStatement.setLong(2, version);
 			
 			return executeAndCreateFileVersion(preparedStatement);			
@@ -339,8 +341,17 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	private FileVersion executeAndCreateFileVersion(PreparedStatement preparedStatement) {
 		try (ResultSet resultSet = preparedStatement.executeQuery()) {
-			if (resultSet.next()) {
-				return createFileVersionFromRow(resultSet);
+			if (resultSet.next()) {				
+				FileVersion fileVersion = createFileVersionFromRow(resultSet);
+				
+				boolean nonUniqueResult = resultSet.next();
+				
+				if (nonUniqueResult) {
+					return null;
+				}
+				else {
+					return fileVersion;
+				}
 			}
 			else {
 				return null;
