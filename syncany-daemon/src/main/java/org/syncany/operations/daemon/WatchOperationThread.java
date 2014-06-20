@@ -17,7 +17,9 @@
  */
 package org.syncany.operations.daemon;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,6 +28,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.Client;
+import org.syncany.cli.Command;
+import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
@@ -35,6 +40,8 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.CliRequest;
+import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
 import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
@@ -60,6 +67,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
 	
 	private Config config;
+	private File portFile;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 	private DaemonEventBus eventBus;
@@ -74,6 +82,7 @@ public class WatchOperationThread implements WatchOperationListener {
 		}
 		
 		this.config = ConfigHelper.loadConfig(configFile);
+		this.portFile = new File(config.getAppDir(), "port");
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.localDatabase = new SqlDatabase(config);
@@ -88,6 +97,9 @@ public class WatchOperationThread implements WatchOperationListener {
 			public void run() {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
+					
+					portFile.createNewFile();
+					portFile.deleteOnExit();
 					
 					watchOperation.execute();
 					
@@ -104,6 +116,8 @@ public class WatchOperationThread implements WatchOperationListener {
 
 	public void stop() {
 		watchOperation.stop();
+		portFile.delete();
+
 		watchThread = null;
 	}
 	
@@ -124,10 +138,42 @@ public class WatchOperationThread implements WatchOperationListener {
 			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
 				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
 			}
+			else if (watchRequest instanceof CliRequest) {
+				handleCliRequest((CliRequest) watchRequest);
+			}
 			else {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
 		}		
+	}
+
+	private void handleCliRequest(CliRequest cliRequest) {		
+		try {
+			Command command = CommandFactory.getInstance(cliRequest.getCommand());			
+			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]); 
+			
+			ByteArrayOutputStream cliOutputStream = new ByteArrayOutputStream();
+			
+			Client client = new Client();
+			client.setConfig(config);
+			
+			command.setOut(new PrintStream(cliOutputStream));
+			command.setClient(client);
+			command.setLocalDir(config.getLocalDir());
+			
+			command.execute(commandArgs);
+			
+			String cliOutput = cliOutputStream.toString();
+			
+			CliResponse cliResponse = new CliResponse(cliRequest.getId(), cliOutput);
+			eventBus.post(cliResponse);
+			
+			cliOutputStream.close();
+		}
+		catch (Exception e) {
+			eventBus.post(new BadRequestResponse(cliRequest.getId(), "Exception while running command: "+e.getMessage()));
+		}
+		
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {

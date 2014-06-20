@@ -25,9 +25,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Random;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -41,11 +43,19 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.syncany.Client;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.operations.daemon.messages.CliRequest;
+import org.syncany.operations.daemon.messages.CliResponse;
+import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -138,9 +148,9 @@ public class CommandLineClient extends Client {
 			initLocalDir(options, optionLocalDir);
 			initConfigIfRequired(command.getRequiredCommandScope(), localDir);
 			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
-
+			
 			// Init command
-			return runCommand(command, commandArgs);
+			return runCommand(command, commandName, commandArgs);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Exception while initializing or running command.", e);
@@ -282,7 +292,26 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private int runCommand(Command command, String[] commandArgs) {
+	private int runCommand(Command command, String commandName, String[] commandArgs) {
+		File portFile = null;
+		
+		if (config != null) {
+			portFile = new File(config.getAppDir(), "port"); // TODO
+		}
+		
+		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
+		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
+		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
+		
+		if (sendToRest) {
+			return sendToRest(command, commandName, commandArgs);
+		}
+		else {
+			return runLocally(command, commandArgs);
+		}
+	}
+	
+	private int runLocally(Command command, String[] commandArgs) {
 		command.setClient(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
@@ -296,7 +325,35 @@ public class CommandLineClient extends Client {
 			return showErrorAndExit(e.getMessage());
 		}	
 	}
-	
+
+	private int sendToRest(Command command, String commandName, String[] commandArgs) {
+		CloseableHttpClient client = HttpClients.createDefault();
+		
+		HttpPost post = new HttpPost("http://localhost:8080/api/rs");
+		
+		try {
+			CliRequest cliRequest = new CliRequest();
+			
+			cliRequest.setId(Math.abs(new Random().nextInt()));
+			cliRequest.setRoot(config.getLocalDir().getAbsolutePath());
+			cliRequest.setCommand(commandName);
+			cliRequest.setCommandArgs(Arrays.asList(commandArgs));
+			
+			post.setEntity(new StringEntity(MessageFactory.toRequest(cliRequest)));
+			
+			HttpResponse response = client.execute(post);
+			String responseStr = IOUtils.toString(response.getEntity().getContent());
+			
+			CliResponse cliResponse = (CliResponse) MessageFactory.createResponse(responseStr);			
+			out.print(cliResponse.getOutput());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return 0;
+	}
+
 	private void showShortVersionAndExit() throws IOException {
 		printHelpTextAndExit(HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE);
 	}

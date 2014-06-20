@@ -18,20 +18,21 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
 
-@Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public abstract class Request {
+public class CliResponse extends Response {
 	@Element(required = true)
-	private int id;
-
-	public int getId() {
-		return id;
+	private String output;	
+		
+	public CliResponse() {
+		super(0, -1, null); // Required
 	}
-
-	public void setId(int id) {
-		this.id = id;
+	
+	public CliResponse(int requestId, String output) {
+		super(200, requestId, null);
+		this.output = output;
+	}	
+	
+	public String getOutput() {
+		return output;
 	}
 }

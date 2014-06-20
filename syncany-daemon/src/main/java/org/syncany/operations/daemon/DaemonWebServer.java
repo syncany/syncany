@@ -22,7 +22,6 @@ import static io.undertow.Handlers.websocket;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
 import io.undertow.websockets.WebSocketConnectionCallback;
 import io.undertow.websockets.core.AbstractReceiveListener;
 import io.undertow.websockets.core.BufferedTextMessage;
@@ -39,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.reflections.Reflections;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.WebInterfacePlugin;
@@ -62,13 +62,16 @@ public class DaemonWebServer {
 
 	private Undertow webServer;
 	private DaemonEventBus eventBus;
-	private Cache<Integer, WebSocketChannel> requestIdCache;
+
+	private Cache<Integer, WebSocketChannel> requestIdWebSocketCache;
+	private Cache<Integer, HttpServerExchange> requestIdRestSocketCache;
+	
 	private List<WebSocketChannel> clientChannels;
 
 	public DaemonWebServer() {
 		this.clientChannels = new ArrayList<WebSocketChannel>();
 
-		initCache();
+		initCaches();
 		initEventBus();
 		initServer();
 	}
@@ -86,8 +89,12 @@ public class DaemonWebServer {
 		}
 	}
 
-	private void initCache() {
-		requestIdCache = CacheBuilder.newBuilder().maximumSize(10000).concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+	private void initCaches() {
+		requestIdWebSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
+				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+		
+		requestIdRestSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
+				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
 	}
 
 	private void initEventBus() {
@@ -101,18 +108,39 @@ public class DaemonWebServer {
 			.addHttpListener(DEFAULT_PORT, "localhost")
 			.setHandler(path()
 				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
-				.addPrefixPath("/api/rest", new InternalRestHandler())
+				.addPrefixPath("/api/rs", new InternalRestHandler())
 				.addPrefixPath("/", new InternalWebInterfaceHandler())
 			).build();
 	}
 
-	private void handleMessage(WebSocketChannel clientSocket, String message) {
+	private void handleWebSocketRequest(WebSocketChannel clientSocket, String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
 			Request request = MessageFactory.createRequest(message);
 
-			requestIdCache.put(request.getId(), clientSocket);
+			synchronized (requestIdWebSocketCache) {
+				requestIdWebSocketCache.put(request.getId(), clientSocket);	
+			}
+			
+			eventBus.post(request);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+		}
+	}
+	
+	private void handleRestRequest(HttpServerExchange exchange) throws IOException {
+		exchange.startBlocking();			
+
+		String message = IOUtils.toString(exchange.getInputStream());
+		logger.log(Level.INFO, "REST message received: " + message);
+
+		try {
+			Request request = MessageFactory.createRequest(message);
+
+			requestIdRestSocketCache.put(request.getId(), exchange);
 			eventBus.post(request);
 		}
 		catch (Exception e) {
@@ -133,6 +161,13 @@ public class DaemonWebServer {
 		logger.log(Level.INFO, "Sending message to " + clientChannel + ": " + message);
 		WebSockets.sendText(message, clientChannel, null);
 	}
+	
+	private void sendTo(HttpServerExchange serverExchange, String message) {
+		logger.log(Level.INFO, "Sending message to " + serverExchange.getHostAndPort() + ": " + message);
+		
+		serverExchange.getResponseSender().send(message);
+		serverExchange.endExchange();
+	}
 
 	@Subscribe
 	public void onResponse(Response response) {
@@ -147,9 +182,13 @@ public class DaemonWebServer {
 				sendBroadcast(responseMessage);
 			}
 			else {
-				WebSocketChannel responseToClientSocket = requestIdCache.asMap().get(response.getRequestId());
+				HttpServerExchange responseServerExchange = requestIdRestSocketCache.asMap().get(response.getRequestId());
+				WebSocketChannel responseToClientSocket = requestIdWebSocketCache.asMap().get(response.getRequestId());
 
-				if (responseToClientSocket != null) {
+				if (responseServerExchange != null) {
+					sendTo(responseServerExchange, responseMessage);
+				}				
+				else if (responseToClientSocket != null) {
 					sendTo(responseToClientSocket, responseMessage);
 				}
 				else {
@@ -168,7 +207,7 @@ public class DaemonWebServer {
 			channel.getReceiveSetter().set(new AbstractReceiveListener() {
 				@Override
 				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
-					handleMessage(clientChannel, message.getData());
+					handleWebSocketRequest(clientChannel, message.getData());
 				}
 
 				@Override
@@ -197,8 +236,7 @@ public class DaemonWebServer {
 	private class InternalRestHandler implements HttpHandler {
 		@Override
 		public void handleRequest(final HttpServerExchange exchange) throws Exception {
-			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/xml");
-			exchange.getResponseSender().send("<xml>Hello World</xml>");
+			handleRestRequest(exchange);
 		}
 	}
 	
@@ -231,12 +269,12 @@ public class DaemonWebServer {
 
 		@Override
 		public void handleRequest(HttpServerExchange exchange) throws Exception {
-				if (requestHandler != null) {
-					handleRequestWithResourceHandler(exchange);
-				}
-				else {
-					handleRequestNoHandler(exchange);
-				}
+			if (requestHandler != null) {
+				handleRequestWithResourceHandler(exchange);
+			}
+			else {
+				handleRequestNoHandler(exchange);
+			}
 		}
 
 		private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws Exception {

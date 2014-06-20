@@ -5,6 +5,7 @@ dependencies {
 	compile			project(':syncany-lib')
 	compile			project(':syncany-util')
 	compile			project(':syncany-cli')	
+	compile			project(':syncany-messages')		
 
 	compile			"io.undertow:undertow-servlet:1.0.15.Final"
 	compile			"io.undertow:undertow-websockets-jsr:1.0.15.Final"

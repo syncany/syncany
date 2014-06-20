@@ -36,8 +36,8 @@ import org.syncany.util.StringUtil;
 
 public class MessageFactory {
 	private static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
-	private static final Pattern REQUEST_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");
-	private static final int REQUEST_TYPE_PATTERN_GROUP = 1;
+	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");
+	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
 	
 	private static final Serializer serializer;
 	
@@ -55,46 +55,74 @@ public class MessageFactory {
 		}
 	}
 	
-	public static Request createRequest(String requestMessage) throws Exception {
-		String requestType = getRequestType(requestMessage);			
-		Class<? extends Request> requestClass = getRequestClass(requestType);
+	public static Request createRequest(String requestMessageStr) throws Exception {
+		Message requestMessage = createMessage(requestMessageStr);
+
+		if (!(requestMessage instanceof Request)) {
+			throw new Exception("Invalid class: Message is not a request type.");
+		}
 		
-		Request request = serializer.read(requestClass, requestMessage);
-		logger.log(Level.INFO, "Request received: " + request);
+		return (Request) requestMessage;
+	}
+	
+	public static Response createResponse(String responseMessageStr) throws Exception {
+		Message responseMessage = createMessage(responseMessageStr);
+
+		if (!(responseMessage instanceof Response)) {
+			throw new Exception("Invalid class: Message is not a response type.");
+		}
 		
-		return request;
+		return (Response) responseMessage;
 	}
 	
 	public static String toResponse(Response response) throws Exception {
-		StringWriter responseWriter = new StringWriter();
-		serializer.write(response, responseWriter);
-
-		return responseWriter.toString();
+		return toMessage(response);
 	}
 	
-	private static String getRequestType(String requestMessage) throws Exception {
-		Matcher requestTypeMatcher = REQUEST_TYPE_PATTERN.matcher(requestMessage);
+	public static String toRequest(Request request) throws Exception {
+		return toMessage(request);
+	}
+	
+	public static Message createMessage(String messageStr) throws Exception {
+		String messageType = getMessageType(messageStr);			
+		Class<? extends Message> messageClass = getMessageClass(messageType);
 		
-		if (requestTypeMatcher.find()) {
-			return requestTypeMatcher.group(REQUEST_TYPE_PATTERN_GROUP);
+		Message message = serializer.read(messageClass, messageStr);
+		logger.log(Level.INFO, "Message created: " + message);
+		
+		return message;
+	}
+	
+	private static String toMessage(Message response) throws Exception {
+		StringWriter messageWriter = new StringWriter();
+		serializer.write(response, messageWriter);
+
+		return messageWriter.toString();
+	}
+	
+	private static String getMessageType(String message) throws Exception {
+		Matcher messageTypeMatcher = MESSAGE_TYPE_PATTERN.matcher(message);
+		
+		if (messageTypeMatcher.find()) {
+			return messageTypeMatcher.group(MESSAGE_TYPE_PATTERN_GROUP);
 		}
 		else {
-			throw new Exception("Cannot find request type of message. Invalid XML.");
+			throw new Exception("Cannot find type of message. Invalid XML: " + message);
 		}
 	}
 	
-	private static Class<? extends Request> getRequestClass(String requestType) throws Exception {
+	private static Class<? extends Message> getMessageClass(String requestType) throws Exception {
 		String thisPackage = MessageFactory.class.getPackage().getName();
-		String camelCaseRequestType = StringUtil.toCamelCase(requestType);
-		String fqRequestClassName = thisPackage + "." + camelCaseRequestType;
+		String camelCaseMessageType = StringUtil.toCamelCase(requestType);
+		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
 
 		// Try to load!
 		try {		
-			Class<? extends Request> requestClass = Class.forName(fqRequestClassName).asSubclass(Request.class);
-			return requestClass;
+			Class<? extends Message> MessageClass = Class.forName(fqMessageClassName).asSubclass(Message.class);
+			return MessageClass;
 		} 
 		catch (Exception e) {
-			logger.log(Level.INFO, "Could not find FQCN " + fqRequestClassName, e);
+			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
 			throw new Exception("Cannot read request class from request type: " + requestType, e);
 		}		
 	}

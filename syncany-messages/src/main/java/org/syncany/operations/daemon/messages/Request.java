@@ -23,31 +23,15 @@ import org.simpleframework.xml.Root;
 
 @Root(strict = false)
 @Namespace(reference = "http://syncany.org/ws/1")
-public abstract class Response {
+public abstract class Request extends Message {
 	@Element(required = true)
-	private int code;
-	
-	@Element(required = false)
-	private Integer requestId;
-	
-	@Element(required = false)
-	private String message;
+	private int id;	
 
-	public Response(int code, Integer requestId, String message) {
-		this.code = code;
-		this.requestId = requestId;
-		this.message = message;
+	public int getId() {
+		return id;
 	}
 
-	public int getCode() {
-		return code;
-	}
-
-	public Integer getRequestId() {
-		return requestId;
-	}
-	
-	public String getMessage() {
-		return message;
+	public void setId(int id) {
+		this.id = id;
 	}
 }
