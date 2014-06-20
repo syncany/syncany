@@ -5,8 +5,7 @@ Change Log
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
-  + Revamp: List and filter file tree with `sy ls`
-  + Revamp: Display database and file histories with `sy versions`
+  + Revamp: List and filter file tree and file histories with `sy ls`
   + Revamp: Restore old/deleted files with `sy restore`
   + Implemented man pages for all Syncany commands: `man (sy|sy-up|..)` #87
 - Bugfixes:

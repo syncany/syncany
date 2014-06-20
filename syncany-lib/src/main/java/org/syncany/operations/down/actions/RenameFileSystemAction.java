@@ -32,7 +32,7 @@ public class RenameFileSystemAction extends FileSystemAction {
 	}
 
 	@Override
-	public void execute() throws Exception {		
+	public FileSystemActionResult execute() throws Exception {		
 		File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getPath());
 		File targetFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());	
 		
@@ -87,6 +87,8 @@ public class RenameFileSystemAction extends FileSystemAction {
 		// Set attributes
 		setFileAttributes(fileVersion2, targetFileOnDisk); // TODO [low] check for fileAsExpected
 		setLastModified(fileVersion2, targetFileOnDisk);
+		
+		return new FileSystemActionResult();
 	}	
 	
 	@Override

@@ -37,7 +37,7 @@ public class RestoreFileSystemAction extends FileCreatingFileSystemAction {
 	}
 
 	@Override
-	public void execute() throws Exception {
+	public RestoreFileSystemActionResult execute() throws Exception {
 		if (fileVersion2.getType() == FileType.FOLDER) {
 			throw new Exception("Cannot restore folders.");
 		}
@@ -62,6 +62,8 @@ public class RestoreFileSystemAction extends FileCreatingFileSystemAction {
 			}
 			
 			FileUtils.moveFile(cacheFile, targetPath.toFile());
+			
+			return new RestoreFileSystemActionResult(targetPath.toFile());
 		}
 	}
 

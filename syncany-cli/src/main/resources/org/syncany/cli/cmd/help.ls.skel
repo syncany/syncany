@@ -21,8 +21,9 @@ DESCRIPTION
   select the file tree, e.g. `sy ls -D20m` to select the file tree 20 minutes
   ago or `sy ls -D2014-05-02` to select the file tree at May 2.
   
-  Contrary to the `sy versions` command, this command only displays a full or
-  partial snapshot of the file tree, and not the entire history of each file. 
+  Using the --versions flag, the command also displays the entire version 
+  history for the selected files. Using --group, the result can be grouped by
+  the file history identifier.  
   
 OPTIONS
   -V, --versions

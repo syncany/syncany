@@ -1,0 +1,48 @@
+NAME
+  sy-restore - restore old or deleted files
+   
+SYNOPSIS
+  sy restore [-r | --revision=<revision>] [-t | --target=<filename>]
+             <file-identifier>
+  
+DESCRIPTION 
+  This command restores old or deleted files from the remote storage.
+  
+  As long as a file is known to the local database and the corresponding
+  chunks are available on the remote storage, it can be restored using this
+  command. The command downloads the required chunks and assembles the file.
+  
+  If no target revision is given with -r, the last version is restored. To 
+  select a revision to restore, the `sy ls` command can be used.   
+  
+OPTIONS
+  -r, --revision=<revision>
+    Selects a certain revision/version to restore. If no revision is given,
+    the last revision is used.
+  
+  -t, --target=<file>            
+    Defines the target output filename to restore the file to. If this option 
+    is not given, the default filename is the filename of the restored file
+    version, appended with a "restored" suffix. All folders given in the
+    target filename will be created.
+    
+  <file-identifier>
+   Identifier of the file history as printed by the `sy ls` command. The 
+   file identifier and a revision/version number uniquely identify a single
+   version of a file at a certain point in time. The identifier can be 
+   abbreviated if it is unique in the database.   
+   
+EXAMPLES   
+  sy restore 3168ab663e
+    Restores the last version of the file with identifier 3168ab663e. If the
+    database knows three versions of this file, the second file will be
+    restored. Assuming that the original filename was 'folder/file.txt', the
+    target filename will be 'folder/file (restored).txt'. If 'folder' does not
+    exist, it will be created.
+    
+  sy restore --revision=1 --target=restored-file.txt 3168ab663e
+    Restores version 1 of the file with the identifier 3168ab663e to the 
+    target file 'restored-file.txt'. If this file exists, an error will be
+    thrown.
+    
+%RESOURCE:incl/footer.skel%

@@ -122,6 +122,35 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
+	public FileHistoryId expandFileHistoryId(FileHistoryId fileHistoryIdPrefix) {
+		String fileHistoryIdPrefixLikeQuery = fileHistoryIdPrefix.toString() + "%";
+
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.expandFileHistoryId.sql")) {
+			preparedStatement.setString(1, fileHistoryIdPrefixLikeQuery);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					FileHistoryId fullFileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					
+					boolean nonUniqueResult = resultSet.next();
+					
+					if (nonUniqueResult) {
+						return null;
+					}
+					else {
+						return fullFileHistoryId;
+					}
+				}
+				else {
+					return null;
+				}				
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public Map<FileHistoryId, PartialFileHistory> getFileHistories(List<FileHistoryId> fileHistoryIds) {
 		String[] fileHistoryIdsStr = createFileHistoryIdsArray(fileHistoryIds);
 		
