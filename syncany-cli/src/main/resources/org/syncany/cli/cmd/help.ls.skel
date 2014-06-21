@@ -35,7 +35,7 @@ OPTIONS
     directories, and 's' for symlinks). Types can be combined, e.g. 
     `sy ls -tfs` selects files and symlinks. Default setting is 'tds'. 
      
-  -D, --date<relative-date|absolute-date>
+  -D, --date=<relative-date|absolute-date>
     Selects the file tree at a certain date. The date can be given as a 
     relative date to the current time, or an absolute date in form of a 
     timestamp.

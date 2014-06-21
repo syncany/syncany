@@ -22,7 +22,7 @@ import org.syncany.operations.OperationOptions;
 
 public class RestoreOperationOptions implements OperationOptions {
 	private FileHistoryId fileHistoryId;
-	private Integer fileVersionNumber;
+	private Integer fileVersion;
 	private String relativeTargetPath;
 
 	public FileHistoryId getFileHistoryId() {
@@ -33,12 +33,12 @@ public class RestoreOperationOptions implements OperationOptions {
 		this.fileHistoryId = fileHistory;
 	}
 
-	public Integer getFileVersionNumber() {
-		return fileVersionNumber;
+	public Integer getFileVersion() {
+		return fileVersion;
 	}
 
-	public void setFileVersionNumber(Integer fileVersionNumber) {
-		this.fileVersionNumber = fileVersionNumber;
+	public void setFileVersion(Integer fileVersion) {
+		this.fileVersion = fileVersion;
 	}
 
 	public String getRelativeTargetPath() {

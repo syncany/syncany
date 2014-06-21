@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.logging.Level;
 
+import org.apache.commons.io.IOUtils;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
@@ -33,7 +34,6 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.util.FileUtil;
 import org.syncany.util.NormalizedPath;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
@@ -121,8 +121,8 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
 
 				// TODO [medium] Calculate checksum while writing file, to verify correct content
-				FileUtil.appendToOutputStream(chunkInputStream, reconstructedFileOutputStream);
-
+				IOUtils.copy(chunkInputStream, reconstructedFileOutputStream);
+				
 				chunkInputStream.close();
 				multiChunk.close();
 			}

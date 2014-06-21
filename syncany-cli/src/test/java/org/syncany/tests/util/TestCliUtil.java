@@ -125,7 +125,7 @@ public class TestCliUtil {
 	}
 	
 	public static String[] toStringArray(ByteArrayOutputStream bos) {		
-		return toString(bos).split("[\\r\\n]+|[\\n\\r]+|[\\n]+");
+		return toString(bos).split("[\\r\\n]|[\\n\\r]|[\\n]");
 	}
 	
 	public static boolean setCurrentDirectory(File newDirectory) {

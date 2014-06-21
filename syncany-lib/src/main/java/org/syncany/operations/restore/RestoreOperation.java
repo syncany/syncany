@@ -93,8 +93,8 @@ public class RestoreOperation extends AbstractTransferOperation {
 	}
 
 	private FileVersion findRestoreFileVersion(FileHistoryId restoreFileHistoryId) {
-		if (options.getFileVersionNumber() != null) {
-			return localDatabase.getFileVersion(restoreFileHistoryId, options.getFileVersionNumber());
+		if (options.getFileVersion() != null) {
+			return localDatabase.getFileVersion(restoreFileHistoryId, options.getFileVersion());
 		}
 		else {
 			List<FileVersion> fileHistory = localDatabase.getFileHistory(restoreFileHistoryId);

@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -32,6 +30,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import org.junit.Test;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
+import org.syncany.util.StringUtil;
 
 public class FileUtilTest {	
 	@Test
@@ -75,13 +74,85 @@ public class FileUtilTest {
 		Files.createSymbolicLink(new File(tempDir, "link-to-file1").toPath(), new File(tempDir, "file1").toPath());
 		Files.createSymbolicLink(new File(tempDir, "non-existing-target").toPath(), Paths.get("/does/not/exist"));
 
+		String linkTargetToFile1 = FileUtil.readSymlinkTarget(new File(tempDir, "link-to-file1"));
+		String nonExistingSymlinkTarget = FileUtil.readSymlinkTarget(new File(tempDir, "non-existing-target"));
+		
+		assertEquals(new File(tempDir, "file1").getAbsolutePath(), linkTargetToFile1);
+		assertEquals("/does/not/exist", nonExistingSymlinkTarget);		
 		assertTrue(FileUtil.exists(new File(tempDir, "link-to-file1")));
 		assertTrue(FileUtil.exists(new File(tempDir, "non-existing-target")));
 		assertFalse(FileUtil.exists(new File(tempDir, "actually-non-existing-file-or-link")));
 		
 		TestFileUtil.deleteDirectory(tempDir);		
 	}
+	
+	@Test
+	public void testCreateSymlink() throws Exception {
+		if (!EnvironmentUtil.symlinksSupported()) {
+			return;
+		}
+		
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		TestFileUtil.createRandomFile(new File(tempDir, "file1"), 1234);
 
+		FileUtil.createSymlink("/some/target", new File(tempDir, "link-to-non-existing-target"));
+		FileUtil.createSymlink(new File(tempDir, "file1").getAbsolutePath(), new File(tempDir, "link-to-file1"));;
+
+		String linkTargetToFile1 = FileUtil.readSymlinkTarget(new File(tempDir, "link-to-file1"));
+		String nonExistingSymlinkTarget = FileUtil.readSymlinkTarget(new File(tempDir, "link-to-non-existing-target"));
+		
+		assertEquals(new File(tempDir, "file1").getAbsolutePath(), linkTargetToFile1);
+		assertEquals("/some/target", nonExistingSymlinkTarget);		
+		
+		TestFileUtil.deleteDirectory(tempDir);		
+	}
+
+	@Test
+	public void testGetCanonicalFile() throws Exception {
+		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
+			assertEquals(new File("/a"), FileUtil.getCanonicalFile(new File("/tmp/../a")));
+		}
+		else {
+			assertEquals(new File("C:\\a"), FileUtil.getCanonicalFile(new File("C:\\Windows\\..\\a")));
+		}
+	}
+	
+	@Test
+	public void testCreateChecksum() throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		TestFileUtil.createFileWithContent(new File(tempDir, "file"), "000");
+		
+		byte[] sha1sum = FileUtil.createChecksum(new File(tempDir, "file"), "SHA1");
+		byte[] md5sum = FileUtil.createChecksum(new File(tempDir, "file"), "MD5");
+		
+		assertNotNull(sha1sum);
+		assertNotNull(md5sum);
+		assertEquals("8aefb06c426e07a0a671a1e2488b4858d694a730", StringUtil.toHex(sha1sum));
+		assertEquals("c6f057b86584942e415435ffb1fa93d4", StringUtil.toHex(md5sum));
+		
+		TestFileUtil.deleteDirectory(tempDir);
+	}
+
+	@Test
+	public void testIsDirectory() throws Exception {
+		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		
+		new File(tempDir, "folder").mkdir();
+		new File(tempDir, "file").createNewFile();
+		assertTrue(FileUtil.isDirectory(new File(tempDir, "folder")));
+		assertFalse(FileUtil.isDirectory(new File(tempDir, "file")));
+		
+		if (EnvironmentUtil.symlinksSupported()) {
+			FileUtil.createSymlink(new File(tempDir, "folder").getAbsolutePath(), new File(tempDir, "symlink-to-folder"));
+			assertFalse(FileUtil.isDirectory(new File(tempDir, "symlink-to-folder")));
+		}
+		
+		TestFileUtil.deleteDirectory(tempDir);
+		
+	}
+	
 	@Test
 	public void testFileLocked() throws Exception {
 		// Setup

@@ -39,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
@@ -333,7 +334,7 @@ public class PluginOperation extends Operation {
 		FileOutputStream tempPluginFileOutputStream = new FileOutputStream(tempPluginFile);
 		InputStream remoteJarFileInputStream = urlConnection.getInputStream();
 
-		FileUtil.appendToOutputStream(remoteJarFileInputStream, tempPluginFileOutputStream);
+		IOUtils.copy(remoteJarFileInputStream, tempPluginFileOutputStream);
 
 		remoteJarFileInputStream.close();
 		tempPluginFileOutputStream.close();

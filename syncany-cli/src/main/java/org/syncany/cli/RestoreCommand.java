@@ -56,7 +56,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		
 		// --revision=<n>
 		if (options.has(optionRevision)) {
-			operationOptions.setFileVersionNumber(options.valueOf(optionRevision));
+			operationOptions.setFileVersion(options.valueOf(optionRevision));
 		}
 		
 		// --target=<file>
