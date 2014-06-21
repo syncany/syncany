@@ -18,6 +18,8 @@
 package org.syncany.tests.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
@@ -101,7 +103,6 @@ public class NormalizedPathTest {
 		NormalizedPath normalizedPathFile = new NormalizedPath(null, alreadyNormalizedRelativePathFileStr);
 		
 		assertEquals("Pictures/A black\\white telephone ☎.jpg", normalizedPathFile.toString());
-		assertEquals("A black\\white telephone ☎.jpg", normalizedPathFile.getName().toString());
 		assertEquals("Pictures", normalizedPathFile.getParent().toString());
 
 		// Test 2: For directory called 'black\\white telephones ☎' 		
@@ -109,7 +110,6 @@ public class NormalizedPathTest {
 		NormalizedPath normalizedPathDir = new NormalizedPath(null, alreadyNormalizedRelativePathDirStr);
 		
 		assertEquals("Pictures/black\\white telephones ☎", normalizedPathDir.toString());
-		assertEquals("black\\white telephones ☎", normalizedPathDir.getName().toString());
 		assertEquals("Pictures", normalizedPathDir.getParent().toString());
 		
 		// Test 3: For directory called 'black\\white telephones ☎' 		
@@ -117,7 +117,6 @@ public class NormalizedPathTest {
 		NormalizedPath normalizedPathWithBackslashesDir = new NormalizedPath(null, alreadyNormalizedRelativePathFileWithBackslashesDirStr);
 		
 		assertEquals("Pictures/Black\\White Pictures/Mostly\\Black Pictures/blacky.jpg", normalizedPathWithBackslashesDir.toString());
-		assertEquals("blacky.jpg", normalizedPathWithBackslashesDir.getName().toString());
 		assertEquals("Pictures/Black\\White Pictures/Mostly\\Black Pictures", normalizedPathWithBackslashesDir.getParent().toString());		
 	}
 	
@@ -125,7 +124,6 @@ public class NormalizedPathTest {
 	public void testNameAndParentPathForNormalizedPathsMoreTests() {		
 		// Does not depend on OS
 		
-		assertEquals("Philipp", new NormalizedPath(null, "Philipp").getName().toString());
 		assertEquals("", new NormalizedPath(null, "Philipp").getParent().toString()); 		
 	}
 	
@@ -167,5 +165,20 @@ public class NormalizedPathTest {
 		assertEquals("/home/philipp/file:with:colons", NormalizedPath.get(null, "/home/philipp/file:with:colons").toString());
 		assertEquals("/home/philipp/file\\with\\backslashes.txt", NormalizedPath.get(null, "/home/philipp/file\\with\\backslashes.txt").toString());
 		assertEquals("/home/philipp/folder\\with\\backslashes", NormalizedPath.get(null, "/home/philipp/folder\\with\\backslashes/").toString());		
+	}	
+	
+	@Test
+	public void testNormalizationHasIllegalChars() {
+		EnvironmentUtil.setOperatingSystem(OperatingSystem.UNIX_LIKE);
+
+		assertFalse(NormalizedPath.get(null, "/home/philipp/").hasIllegalChars());
+		assertFalse(NormalizedPath.get(null, "/home/black\\white telephones ☎.txt").hasIllegalChars());
+		assertTrue(NormalizedPath.get(null, "/home/philipp/\0.txt").hasIllegalChars());
+		
+		EnvironmentUtil.setOperatingSystem(OperatingSystem.WINDOWS);
+
+		assertFalse(NormalizedPath.get(null, "C:\\home\\philipp\\").hasIllegalChars());
+		assertFalse(NormalizedPath.get(null, "C:\\home\\black-white telephones ☎.txt").hasIllegalChars());
+		assertTrue(NormalizedPath.get(null, "C:\\home\\\0.txt").hasIllegalChars());
 	}	
 }

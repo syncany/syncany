@@ -17,13 +17,14 @@
  */
 package org.syncany.tests.util;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileTime;
 
 import org.junit.Test;
 import org.syncany.util.FileUtil;
+import org.syncany.util.LimitedDosFileAttributes;
 
 public class LimitedDosFileAttributesTest {		
 	@Test
@@ -72,6 +73,27 @@ public class LimitedDosFileAttributesTest {
 		
 		// Can't do all ...
 	}
+
+	@Test
+	public void testFileDosAttrsToString() throws Exception {
+		assertEquals("rhas", LimitedDosFileAttributes.toString(FileUtil.dosAttrsFromString("rhas")));
+		assertEquals("rh--", LimitedDosFileAttributes.toString(new DosFileAttributes() {			
+			public long size() { return 0; }
+			public FileTime lastModifiedTime() { return null; }
+			public FileTime lastAccessTime() { return null; }
+			public boolean isSymbolicLink() { return false; }
+			public boolean isRegularFile() { return false; }
+			public boolean isOther() { return false; }
+			public boolean isDirectory() { return false; }
+			public Object fileKey() { return null; }
+			public FileTime creationTime() { return null; }
+			
+			public boolean isReadOnly() { return true; } // r
+			public boolean isHidden() { return true; }   // h
+			public boolean isArchive() { return false; } // -
+			public boolean isSystem() { return false; }  // -
+		}));		
+	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testFileDosAttrsInvalid1() throws Exception {
@@ -82,4 +104,44 @@ public class LimitedDosFileAttributesTest {
 	public void testFileDosAttrsInvalid2() throws Exception {
 		FileUtil.dosAttrsFromString(null);
 	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalSize() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").size();
+	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalLastModified() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").lastModifiedTime();
+	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalLastAccess() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").lastAccessTime();
+	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalIsSymlink() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").isSymbolicLink();
+	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalIsRegular() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").isRegularFile();
+	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalIsDirectory() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").isDirectory();
+	}
+	
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalFileKey() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").fileKey();
+	}	
+
+	@Test(expected = RuntimeException.class)
+	public void testFileDosAttrsIllegalCreationTime() throws Exception {
+		FileUtil.dosAttrsFromString("rhas").creationTime();
+	}	
 }
