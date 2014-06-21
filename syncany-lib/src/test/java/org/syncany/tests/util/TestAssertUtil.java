@@ -404,4 +404,16 @@ public class TestAssertUtil {
 		e.printStackTrace();
 		fail("Stack trace expected to contain " + expectedContains);
 	}
+	
+	public static void assertRegexInLines(String expectedLinePattern, String[] lines) {
+		Pattern expectedPattern = Pattern.compile(expectedLinePattern);
+		
+		for (String line : lines) {
+			if (expectedPattern.matcher(line).find()) {
+				return;
+			}
+		}
+		
+		fail("Output does not contain "+ expectedLinePattern);
+	}
 }

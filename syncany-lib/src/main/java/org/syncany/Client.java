@@ -78,7 +78,8 @@ import org.syncany.operations.watch.WatchOperationOptions;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
-	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
+	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!
+	private static final String APPLICATION_PROPERTIES_TEST_RESOURCE = "/org/syncany/application.test.properties";
 	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
 	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
 	private static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
@@ -235,9 +236,26 @@ public class Client {
 		try {
 			applicationProperties = new Properties();
 			applicationProperties.load(globalPropertiesInputStream);
-		}
+			
+			initTestApplicationProperties();			
+		}  
 		catch (Exception e) {
 			throw new RuntimeException("Cannot load application properties.", e);
+		}
+	}
+
+	private static void initTestApplicationProperties() {
+		InputStream testApplicationProperties = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_TEST_RESOURCE);
+		boolean isTestEnvironment = testApplicationProperties != null;
+		
+		if (isTestEnvironment) {
+			try {
+				applicationProperties.clear();
+				applicationProperties.load(testApplicationProperties);
+			}
+			catch (Exception e) {
+				throw new RuntimeException("Cannot load TEST-ONLY application properties.", e);
+			}
 		}
 	}
 }
