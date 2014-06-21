@@ -27,12 +27,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.connection.plugins.MultiChunkRemoteFile;
 import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.util.FileUtil;
 
 /**
  * @author pheckel
@@ -71,8 +71,8 @@ public class Downloader {
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
 
 			// TODO [medium] Calculate checksum while writing file, to verify correct content
-			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
-
+			IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
+			
 			decryptedMultiChunkOutputStream.close();
 			multiChunkInputStream.close();
 

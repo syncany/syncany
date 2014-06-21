@@ -20,8 +20,6 @@ package org.syncany.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
@@ -77,25 +75,6 @@ public class FileUtil {
 		catch (IOException ex) {
 			return file;
 		}
-	}
-
-	public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream, boolean closeOutputStream) throws IOException {
-		appendToOutputStream(inputStream, outputStream);
-		
-		if (closeOutputStream) {
-			outputStream.close();
-		}
-	}
-
-	public static void appendToOutputStream(InputStream inputStream, OutputStream outputStream) throws IOException {
-		byte[] buf = new byte[4096];
-
-		int len;
-		while ((len = inputStream.read(buf)) > 0) {
-			outputStream.write(buf, 0, len);
-		}
-
-		inputStream.close();
 	}
 
 	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {

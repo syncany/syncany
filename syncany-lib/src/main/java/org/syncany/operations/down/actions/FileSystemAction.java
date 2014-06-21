@@ -204,7 +204,6 @@ public abstract class FileSystemAction {
 		}
 		else if (!FileUtil.isDirectory(targetDir.toFile())) {
 			logger.log(Level.INFO, "     - Expected a folder at " + targetDir.toFile() + " ...");
-			//throw new FileExistsException("Cannot create target parent directory: "+targetDir);
 			moveToConflictFile(targetDir);
 		}
 	}

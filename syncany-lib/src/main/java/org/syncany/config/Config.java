@@ -110,10 +110,10 @@ public class Config {
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
 		localDir = FileUtil.getCanonicalFile(aLocalDir);		
-		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DIR_APPLICATION));
-		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_CACHE));
-		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_DATABASE));
-		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_LOG));
+		appDir = FileUtil.getCanonicalFile(new File(localDir, DIR_APPLICATION));
+		cacheDir = FileUtil.getCanonicalFile(new File(appDir, DIR_CACHE));
+		databaseDir = FileUtil.getCanonicalFile(new File(appDir, DIR_DATABASE));
+		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
 	}
 	
 	private void initCache() {

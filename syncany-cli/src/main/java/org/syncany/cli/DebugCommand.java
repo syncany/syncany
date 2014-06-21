@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.operations.ls.LsOperation;
-import org.syncany.util.FileUtil;
 
 /**
  * Intentionally undocumented command to help debugging the application. Implements various
@@ -85,7 +85,7 @@ public class DebugCommand extends Command {
 		Config config = client.getConfig();
 		InputStream fileInputStream = config.getTransformer().createInputStream(new FileInputStream(decryptFile));
 		
-		FileUtil.appendToOutputStream(fileInputStream, System.out);		
+		IOUtils.copy(fileInputStream, System.out);		
 		System.exit(0);
 	}
 	
