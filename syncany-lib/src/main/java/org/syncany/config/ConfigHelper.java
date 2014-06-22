@@ -40,6 +40,21 @@ import org.syncany.crypto.SaltedSecretKey;
 public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	
+	/**
+	 * Loads a {@link Config} object from the given local directory.
+	 * 
+	 * <p>If the config file (.syncany/config.xml) does not exist, <tt>null</tt>
+	 * is returned. If it does, the method tries to do the following:
+	 * <ul>
+	 *  <li>Load the .syncany/config.xml file and load the plugin given by the config file</li>
+	 *  <li>Read .syncany/repo, decrypt it using the master key (if necessary) and load it</li>
+	 *  <li>Instantiate a {@link Config} object with the transfer objects</li>
+	 * </ul>
+	 * 
+	 * @return Returns an instantiated {@link Config} object, or <tt>null</tt> if
+	 *         the config file does not exist
+	 * @throws Throws an exception if the config is invalid 
+	 */
 	public static Config loadConfig(File localDir) throws ConfigException {
 		if (localDir == null) {
 			throw new ConfigException("Argument localDir cannot be null.");
@@ -70,6 +85,9 @@ public class ConfigHelper {
 		}
 	}
 	
+	/**
+	 * Returns true if the config.xml file exists, given a local directory.
+	 */
 	public static boolean configExists(File localDir) {
 		File appDir = new File(localDir, Config.DIR_APPLICATION);
 		File configFile = new File(appDir, Config.FILE_CONFIG);
@@ -77,6 +95,10 @@ public class ConfigHelper {
 		return configFile.exists();
 	}
 	
+	/**
+	 * Loads the config transfer object from the local directory
+	 * or throws an exception if the file does not exist.
+	 */
     public static ConfigTO loadConfigTO(File localDir) throws ConfigException {
     	File appDir = new File(localDir, Config.DIR_APPLICATION);
 		File configFile = new File(appDir, Config.FILE_CONFIG);
@@ -88,6 +110,9 @@ public class ConfigHelper {
 		return ConfigTO.load(configFile);		
 	}
     
+    /**
+     * Loads the repository transfer object from the local directory.
+     */
     public static RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws ConfigException {
     	File appDir = new File(localDir, Config.DIR_APPLICATION);
 		File repoFile = new File(appDir, Config.FILE_REPO);
@@ -108,24 +133,6 @@ public class ConfigHelper {
 			throw new ConfigException("Cannot load repo file: "+e.getMessage(), e);
 		}
 	}
-    
-    private static RepoTO loadEncryptedRepoTO(File repoFile, ConfigTO configTO) throws Exception {
-    	logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
-
-		SaltedSecretKey masterKey = configTO.getMasterKey();
-		
-		if (masterKey == null) {
-			throw new ConfigException("Repo file is encrypted, but master key not set in config file.");
-		}
-		
-		String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
-		return new Persister().read(RepoTO.class, repoFileStr);
-    }
-    
-    private static RepoTO loadPlaintextRepoTO(File repoFile, ConfigTO configTO) throws Exception {
-    	logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
-		return new Persister().read(RepoTO.class, repoFile);
-    }
     
     /**
      * Helper method to find the local sync directory, starting from a path equal
@@ -170,4 +177,21 @@ public class ConfigHelper {
     	}
 	}
 
+    private static RepoTO loadPlaintextRepoTO(File repoFile, ConfigTO configTO) throws Exception {
+    	logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
+		return new Persister().read(RepoTO.class, repoFile);
+    }
+    
+    private static RepoTO loadEncryptedRepoTO(File repoFile, ConfigTO configTO) throws Exception {
+    	logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
+
+		SaltedSecretKey masterKey = configTO.getMasterKey();
+		
+		if (masterKey == null) {
+			throw new ConfigException("Repo file is encrypted, but master key not set in config file.");
+		}
+		
+		String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
+		return new Persister().read(RepoTO.class, repoFileStr);
+    }
 }

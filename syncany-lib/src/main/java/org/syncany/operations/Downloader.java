@@ -70,7 +70,6 @@ public class Downloader {
 			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
 			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
 
-			// TODO [medium] Calculate checksum while writing file, to verify correct content
 			IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
 			
 			decryptedMultiChunkOutputStream.close();
