@@ -45,12 +45,12 @@ import org.syncany.tests.operations.PluginOperationTest;
 import org.syncany.tests.operations.RecursiveWatcherTest;
 import org.syncany.tests.operations.StatusOperationTest;
 import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.util.FileUtilTest;
+import org.syncany.tests.util.SqlRunnerTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
 	// Util
-	FileUtilTest.class,
+	SqlRunnerTest.class,
 	
 	// Crypto	
 	CipherSpecsTest.class,

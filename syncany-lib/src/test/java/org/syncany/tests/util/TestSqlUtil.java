@@ -17,17 +17,18 @@
  */
 package org.syncany.tests.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.util.SqlRunner;
 
-public class TestSqlDatabaseUtil {
+public class TestSqlUtil {
 	public static void runSqlFromResource(Connection connection, String resourceSqlScript) throws SQLException, IOException {
 		String fullPathResource = String.format(DatabaseConnectionFactory.DATABASE_RESOURCE_PATTERN, resourceSqlScript);
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullPathResource);
@@ -36,9 +37,39 @@ public class TestSqlDatabaseUtil {
 			throw new RuntimeException("Unable to find script: " + fullPathResource);
 		}
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-		new SqlRunner(connection).runScript(reader);
+		SqlRunner.runScript(connection, inputStream);
 		connection.commit();
+	}
+
+	public static String runSqlSelect(String sqlQuery, Connection databaseConnection) throws SQLException {
+		StringBuilder queryResult = new StringBuilder();
+		
+		try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(sqlQuery)) {
+			try (ResultSet actualResultSet = preparedStatement.executeQuery()) {
+				ResultSetMetaData metaData = actualResultSet.getMetaData();
+		
+				boolean isFirstRow = true;
+				int columnsCount = metaData.getColumnCount();
+				
+				while (actualResultSet.next()) {					
+					if (!isFirstRow) {
+						queryResult.append("\n");						
+					}
+					else {
+						isFirstRow = false;
+					}
+					
+					for (int i=1; i<=columnsCount; i++) {
+						queryResult.append(actualResultSet.getString(i));
+						
+						if (i != columnsCount) {
+							queryResult.append(",");
+						}
+					}
+				}
+			}
+		}
+		
+		return queryResult.toString();
 	}
 }

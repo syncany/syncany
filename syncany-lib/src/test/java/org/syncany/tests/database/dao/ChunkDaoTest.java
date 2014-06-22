@@ -31,7 +31,7 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.dao.ChunkSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class ChunkDaoTest {
 	@Test
@@ -41,7 +41,7 @@ public class ChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		
@@ -72,7 +72,7 @@ public class ChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		

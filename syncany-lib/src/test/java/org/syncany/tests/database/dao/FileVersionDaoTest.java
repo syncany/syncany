@@ -34,7 +34,7 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 /**
  * Tests the {@link FileVersionSqlDao}
@@ -50,7 +50,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set2.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set2.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		Map<String, FileVersion> currentFileTree = fileVersionDao.getCurrentFileTree();
@@ -74,7 +74,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
@@ -147,7 +147,7 @@ public class FileVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);				
 		
