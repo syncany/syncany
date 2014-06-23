@@ -18,27 +18,25 @@
 package org.syncany.operations.down.actions;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.Collection;
 import java.util.logging.Level;
 
-import org.apache.commons.io.IOUtils;
-import org.syncany.chunk.MultiChunk;
-import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
-import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
-import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.Assembler;
 import org.syncany.util.NormalizedPath;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
+	private SqlDatabase localDatabase;
+	private Assembler assembler;
+	
 	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
 		super(config, winningDatabase, file1, file2);		
+		
+		this.localDatabase = new SqlDatabase(config);
+		this.assembler = new Assembler(config, localDatabase, winningDatabase);
 	}
 
 	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
@@ -84,53 +82,8 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
-		SqlDatabase localDatabase = new SqlDatabase(config);
-
-		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
-		logger.log(Level.INFO, "     - Creating file " + reconstructedFileVersion.getPath() + " to " + reconstructedFileInCache + " ...");
-
-		FileContent fileContent = localDatabase.getFileContent(reconstructedFileVersion.getChecksum(), true);
-
-		if (fileContent == null) {
-			fileContent = winningDatabase.getContent(reconstructedFileVersion.getChecksum());
-		}
-		
-		// Check consistency!
-		if (fileContent == null && reconstructedFileVersion.getChecksum() != null) {
-			throw new Exception("Cannot determine file content for checksum "+reconstructedFileVersion.getChecksum());
-		}
-
-		// Create file
-		// TODO [low] Create an assembler/reconstructor class to package re-assembly in the chunk-package
-		MultiChunker multiChunker = config.getMultiChunker();
-		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
-
-		if (fileContent != null) { // File can be empty!
-			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
-
-			for (ChunkChecksum chunkChecksum : fileChunks) {
-				MultiChunkId multiChunkIdForChunk = localDatabase.getMultiChunkId(chunkChecksum);
-
-				if (multiChunkIdForChunk == null) {
-					multiChunkIdForChunk = winningDatabase.getMultiChunkIdForChunk(chunkChecksum);
-				}
-
-				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkIdForChunk);
-
-				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
-				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
-
-				// TODO [medium] Calculate checksum while writing file, to verify correct content
-				IOUtils.copy(chunkInputStream, reconstructedFileOutputStream);
-				
-				chunkInputStream.close();
-				multiChunk.close();
-			}
-		}
-
-		reconstructedFileOutputStream.close();
-		
-		// Set attributes & timestamp
+		File reconstructedFileInCache = assembler.assembleToCache(reconstructedFileVersion);
+		 
 		setFileAttributes(reconstructedFileVersion, reconstructedFileInCache);
 		setLastModified(reconstructedFileVersion, reconstructedFileInCache);
 		
