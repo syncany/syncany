@@ -20,6 +20,7 @@ package org.syncany.config.to;
 import java.io.File;
 import java.util.ArrayList;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -29,8 +30,11 @@ import org.syncany.config.ConfigException;
 @Root(name="daemon")
 @Namespace(reference="http://syncany.org/daemon/1")
 public class DaemonConfigTO {
-	@ElementList(name="folders", entry="folder", required=true)
-	private ArrayList<FolderTO> folders;
+	@Element(name = "webServer", required = false)
+	private WebServerTO webServer = new WebServerTO();
+	
+	@ElementList(name = "folders", entry = "folder", required = true)
+	private ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
 
 	public static DaemonConfigTO load(File file) throws ConfigException {
 		try {
@@ -56,5 +60,13 @@ public class DaemonConfigTO {
 	
 	public void setFolders(ArrayList<FolderTO> folders) {
 		this.folders = folders;
+	}
+
+	public WebServerTO getWebServer() {
+		return webServer;
+	}
+
+	public void setWebServer(WebServerTO webServer) {
+		this.webServer = webServer;
 	}
 }

@@ -15,9 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.config.to;
 
+import org.simpleframework.xml.Element;
 
-public class ListWatchesRequest extends Request {
+public class WebServerTO {
+	@Element(required = false)
+	private boolean enabled = true;
 	
+	@Element(required = false)
+	private int port = 8080;
+	
+	@Element(required = false)
+	private String host = "localhost";
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public String getHost() {
+		return host;
+	}
 }

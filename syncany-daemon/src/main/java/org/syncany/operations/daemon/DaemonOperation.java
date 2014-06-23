@@ -69,7 +69,7 @@ public class DaemonOperation extends Operation {
 	private File pidFile;
 	private File daemonConfigFile;
 	
-	private DaemonWebServer webSocketServer;
+	private DaemonWebServer webServer;
 	private DaemonWatchServer watchServer;
 	private DaemonControlServer controlServer;
 	private DaemonEventBus eventBus;
@@ -100,7 +100,7 @@ public class DaemonOperation extends Operation {
 		initEventBus();		
 		loadOrCreateConfig();
 		
-		startWebSocketServer();
+		startWebServer();
 		startWatchServer();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
@@ -132,8 +132,13 @@ public class DaemonOperation extends Operation {
 	}
 
 	private void stopWebSocketServer() {
-		logger.log(Level.INFO, "Stopping websocket server ...");
-		webSocketServer.stop();
+		if (webServer != null) {
+			logger.log(Level.INFO, "Stopping web server ...");
+			webServer.stop();
+		}
+		else {
+			logger.log(Level.INFO, "Not stopping web server (not running)");			
+		}
 	}
 
 	private void stopWatchServer() {
@@ -141,15 +146,20 @@ public class DaemonOperation extends Operation {
 		watchServer.stop();
 	}
 
-	private void startWebSocketServer() throws ServiceAlreadyStartedException {
-		logger.log(Level.INFO, "Starting websocket server ...");
+	private void startWebServer() throws ServiceAlreadyStartedException {
+		if (daemonConfig.getWebServer().isEnabled()) {
+			logger.log(Level.INFO, "Starting web server ...");
 
-		webSocketServer = new DaemonWebServer();
-		webSocketServer.start();
+			webServer = new DaemonWebServer(daemonConfig);
+			webServer.start();
+		}
+		else {
+			logger.log(Level.INFO, "Not starting web server (disabled in confi)");
+		}
 	}
 
 	private void startWatchServer() throws ConfigException {
-		logger.log(Level.INFO, "Starting websocket server ...");
+		logger.log(Level.INFO, "Starting watch server ...");
 
 		watchServer = new DaemonWatchServer();
 		watchServer.start(daemonConfig);
@@ -178,7 +188,9 @@ public class DaemonOperation extends Operation {
 	
 	private void reloadOperation() {
 		loadOrCreateConfig();
+		
 		watchServer.reload(daemonConfig);
+		// webServer.reload(daemonConfig); << Implement this
 	}
 
 	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {

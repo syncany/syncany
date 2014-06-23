@@ -34,7 +34,6 @@ import org.syncany.cli.Command;
 import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
-import org.syncany.config.ConfigHelper;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
@@ -44,6 +43,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.Assembler;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.CliRequest;
@@ -90,8 +90,8 @@ public class WatchOperationThread implements WatchOperationListener {
 	
 	private SqlDatabase localDatabase;
 
-	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions) throws ConfigException {
-		this.config = ConfigHelper.loadConfig(localDir);
+	public WatchOperationThread(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
+		this.config = config;
 		this.portFile = new File(config.getAppDir(), "port");
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		

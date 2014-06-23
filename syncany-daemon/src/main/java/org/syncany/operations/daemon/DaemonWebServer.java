@@ -38,8 +38,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileResponseInternal;
@@ -55,9 +57,7 @@ import com.google.common.eventbus.Subscribe;
 
 public class DaemonWebServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebServer.class.getSimpleName());
-
-	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
-	private static final int DEFAULT_PORT = 8080;
+	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
 
 	private Undertow webServer;
 	private DaemonEventBus eventBus;
@@ -68,12 +68,12 @@ public class DaemonWebServer {
 	
 	private List<WebSocketChannel> clientChannels;
 
-	public DaemonWebServer() {
+	public DaemonWebServer(DaemonConfigTO daemonConfig) {
 		this.clientChannels = new ArrayList<WebSocketChannel>();
 
 		initCaches();
 		initEventBus();
-		initServer();
+		initServer(daemonConfig.getWebServer().getHost(), daemonConfig.getWebServer().getPort());
 	}
 
 	public void start() throws ServiceAlreadyStartedException {
@@ -105,10 +105,10 @@ public class DaemonWebServer {
 		eventBus.register(this);
 	}
 
-	private void initServer() {
+	private void initServer(String host, int port) {
 		webServer = Undertow
 			.builder()
-			.addHttpListener(DEFAULT_PORT, "localhost")
+			.addHttpListener(port, host)
 			.setHandler(path()
 				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
 				.addPrefixPath("/api/rs", new InternalRestHandler())
@@ -233,32 +233,42 @@ public class DaemonWebServer {
 	private class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		@Override
 		public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-			channel.getReceiveSetter().set(new AbstractReceiveListener() {
-				@Override
-				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
-					handleWebSocketRequest(clientChannel, message.getData());
-				}
-
-				@Override
-				protected void onError(WebSocketChannel webSocketChannel, Throwable error) {
-					logger.log(Level.INFO, "Server error : " + error.toString());
-				}
-
-				@Override
-				protected void onClose(WebSocketChannel clientChannel, StreamSourceFrameChannel streamSourceChannel) throws IOException {
-					logger.log(Level.INFO, clientChannel.toString() + " disconnected");
-
-					synchronized (clientChannels) {
-						clientChannels.remove(clientChannel);
-					}
-				}
-			});
-
-			synchronized (clientChannels) {
-				clientChannels.add(channel);
+			// Validate origin header (security!)
+			String originHeader = exchange.getRequestHeader("Origin");
+			boolean allowedOriginHeader = originHeader == null || WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches();
+			
+			if (!allowedOriginHeader) {
+				logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
+				exchange.close();
 			}
-
-			channel.resumeReceives();
+			else {
+				channel.getReceiveSetter().set(new AbstractReceiveListener() {
+					@Override
+					protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
+						handleWebSocketRequest(clientChannel, message.getData());
+					}
+	
+					@Override
+					protected void onError(WebSocketChannel webSocketChannel, Throwable error) {
+						logger.log(Level.INFO, "Server error : " + error.toString());
+					}
+	
+					@Override
+					protected void onClose(WebSocketChannel clientChannel, StreamSourceFrameChannel streamSourceChannel) throws IOException {
+						logger.log(Level.INFO, clientChannel.toString() + " disconnected");
+	
+						synchronized (clientChannels) {
+							clientChannels.remove(clientChannel);
+						}
+					}
+				});
+	
+				synchronized (clientChannels) {
+					clientChannels.add(channel);
+				}
+	
+				channel.resumeReceives();
+			}
 		}
 	}
 

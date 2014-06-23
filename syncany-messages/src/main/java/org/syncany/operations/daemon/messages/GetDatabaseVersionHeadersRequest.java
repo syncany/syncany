@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.daemon.messages;
 
+
 /**
  * @author pheckel
  *

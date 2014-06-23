@@ -25,7 +25,9 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
@@ -101,12 +103,19 @@ public class DaemonWatchServer {
 			WatchOperationOptions watchOperationOptions = folderEntry.getValue().getWatchOptions();
 
 			try {	
-				logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
+				Config watchConfig = ConfigHelper.loadConfig(localDir);
 				
-				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, watchOperationOptions);	
-				watchOperationThread.start();
-
-				watchOperations.put(localDir, watchOperationThread);
+				if (watchConfig != null) {
+					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
+					
+					WatchOperationThread watchOperationThread = new WatchOperationThread(watchConfig, watchOperationOptions);	
+					watchOperationThread.start();
+	
+					watchOperations.put(localDir, watchOperationThread);
+				}
+				else {
+					logger.log(Level.INFO, "- CANNOT start watch, because no config found at " + localDir + " ...");										
+				}
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "  + Cannot start watch operation at " + localDir + ". IGNORING.", e);
