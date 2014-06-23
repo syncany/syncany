@@ -30,6 +30,8 @@ import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
 import io.undertow.websockets.spi.WebSocketHttpExchange;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,8 @@ import org.reflections.Reflections;
 import org.syncany.connection.plugins.Plugin;
 import org.syncany.connection.plugins.WebInterfacePlugin;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.GetFileResponse;
+import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
@@ -65,6 +69,7 @@ public class DaemonWebServer {
 
 	private Cache<Integer, WebSocketChannel> requestIdWebSocketCache;
 	private Cache<Integer, HttpServerExchange> requestIdRestSocketCache;
+	private Cache<String, File> fileTokenTempFileCache;
 	
 	private List<WebSocketChannel> clientChannels;
 
@@ -94,6 +99,9 @@ public class DaemonWebServer {
 				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
 		
 		requestIdRestSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
+				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+		
+		fileTokenTempFileCache = CacheBuilder.newBuilder().maximumSize(10000)
 				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
 	}
 
@@ -132,23 +140,37 @@ public class DaemonWebServer {
 	}
 	
 	private void handleRestRequest(HttpServerExchange exchange) throws IOException {
+		logger.log(Level.INFO, "HTTP request received:" + exchange.getRelativePath());
+
 		exchange.startBlocking();			
 
-		String message = IOUtils.toString(exchange.getInputStream());
-		logger.log(Level.INFO, "REST message received: " + message);
-
-		try {
-			Request request = MessageFactory.createRequest(message);
-
-			synchronized (requestIdRestSocketCache) {
-				requestIdRestSocketCache.put(request.getId(), exchange);	
-			}
+		if (exchange.getRelativePath().startsWith("/file/")) {	
+			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
+			File tempFile = fileTokenTempFileCache.asMap().get(tempFileToken);
 			
-			eventBus.post(request);
+			logger.log(Level.INFO, "- Temp file: " + tempFileToken);
+			
+			IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
+			
+			exchange.endExchange();
 		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+		else {	
+			String message = IOUtils.toString(exchange.getInputStream());
+			logger.log(Level.INFO, "REST message received: " + message);
+	
+			try {
+				Request request = MessageFactory.createRequest(message);
+	
+				synchronized (requestIdRestSocketCache) {
+					requestIdRestSocketCache.put(request.getId(), exchange);	
+				}
+				
+				eventBus.post(request);
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+			}
 		}
 	}
 
@@ -170,6 +192,15 @@ public class DaemonWebServer {
 		
 		serverExchange.getResponseSender().send(message);
 		serverExchange.endExchange();
+	}
+
+	@Subscribe
+	public void onGetFileResponseInternal(GetFileResponseInternal fileResponseInternal) {
+		File tempFile = fileResponseInternal.getTempFile();
+		GetFileResponse fileResponse = fileResponseInternal.getFileResponse();
+		
+		fileTokenTempFileCache.asMap().put(fileResponse.getTempToken(), tempFile);
+		eventBus.post(fileResponse);
 	}
 
 	@Subscribe

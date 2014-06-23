@@ -14,7 +14,6 @@ var rootSelect;
 var dateSelect;
 var dateSelected;
 
-var downloader;
 var tree;
 var status;
 var table;
@@ -42,7 +41,6 @@ $(document).ready(function() {
 	status = new Status($('#status'));
 	tree = new Tree($('#tree'), onFileClick);
 	table = new Table($('#table'), onContextFileInfoClick, onContextPreviousVersionsClick);
-	downloader = new Downloader(status);
 	dateSelect = new DateSelect($('#dateslider'), $('#datetext'), onDatabaseVersionHeaderChange);
 
 	setGuiConnected(false);
@@ -83,19 +81,6 @@ function onClose(evt) {
 }
 
 function onMessage(evt) {
-	if (evt.data instanceof Blob) {
-		processBlobMessage(evt);
-	} 
-	else {
-		processXmlMessage(evt);
-	}
-}
-
-function processBlobMessage(evt) {
-	downloader.processBlobMessage(evt.data);
-}
-
-function processXmlMessage(evt) {
 	console.log(evt);
 	
 	var xml = $(evt.data.toString());
@@ -155,12 +140,8 @@ function processFileTreeResponse(xml) {
 }
 
 function processFileResponse(xml) {
-	downloader.setMetaData(
-		xml.find('name').text(), 
-		xml.find('length').text(), 
-		xml.find('mimeType').text(),
-		xml.find('frames').text()
-	);
+	var tempFileToken = xml.find('tempFileToken').text();
+	window.open("http://localhost:8080/api/rs/file/" + tempFileToken);
 }
 
 function processFileHistoryResponse(xml) {
@@ -384,11 +365,8 @@ function sendRestoreRequest(file) {
 	sendMessage("<restoreRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <fileHistoryId>" + file.fileHistoryId + "</fileHistoryId>\n  <version>" + file.version + "</version>\n</restoreRequest>");
 }
 
-function retrieveFile(file) {
-	window.location.assign("http://localhost:8080/api/rs/getFileRequest?id=" + nextRequestId() + "&root=" + root + "&fileHistoryId=" + file.fileHistoryId + "&version=" + file.version);
-
-	//sendMessage.value = "<getFileRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <file>" + fullpath + "</file>\n</getFileRequest>";
-	//sendMessage();
+function sendGetFileRequest(file) {
+	sendMessage("<getFileRequest>\n  <id>" + nextRequestId() + "</id>\n  <root>" + root + "</root>\n  <fileHistoryId>" + file.fileHistoryId + "</fileHistoryId>\n  <version>" + file.version + "</version>\n</getFileRequest>");
 }
 
 function setGuiConnected(isConnected) {

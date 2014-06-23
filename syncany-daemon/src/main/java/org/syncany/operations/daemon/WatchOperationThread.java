@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -34,11 +35,17 @@ import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
+import org.syncany.connection.plugins.TransferManager;
+import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.Downloader;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
@@ -46,6 +53,9 @@ import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
 import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
+import org.syncany.operations.daemon.messages.GetFileRequest;
+import org.syncany.operations.daemon.messages.GetFileResponse;
+import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
 import org.syncany.operations.daemon.messages.RestoreRequest;
@@ -58,6 +68,7 @@ import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.util.StringUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -80,13 +91,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	private SqlDatabase localDatabase;
 
 	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions) throws ConfigException {
-		File configFile = ConfigHelper.findLocalDirInPath(localDir);
-		
-		if (configFile == null) {
-			throw new ConfigException("Config file in folder " + localDir + " not found.");
-		}
-		
-		this.config = ConfigHelper.loadConfig(configFile);
+		this.config = ConfigHelper.loadConfig(localDir);
 		this.portFile = new File(config.getAppDir(), "port");
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
@@ -140,6 +145,9 @@ public class WatchOperationThread implements WatchOperationListener {
 			else if (watchRequest instanceof GetFileHistoryRequest) {
 				handleGetFileHistoryRequest((GetFileHistoryRequest) watchRequest);			
 			}
+			else if (watchRequest instanceof GetFileRequest) {
+				handleGetFileRequest((GetFileRequest) watchRequest);
+			}
 			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
 				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
 			}
@@ -155,11 +163,40 @@ public class WatchOperationThread implements WatchOperationListener {
 		}		
 	}
 
+	private void handleGetFileRequest(GetFileRequest fileRequest) {
+		try {
+			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileRequest.getFileHistoryId());
+			long version = fileRequest.getVersion();
+			
+			FileVersion fileVersion = localDatabase.getFileVersion(fileHistoryId, version);			
+			FileContent fileContent = localDatabase.getFileContent(fileVersion.getChecksum(), true);
+			Map<ChunkChecksum, MultiChunkId> multiChunks = localDatabase.getMultiChunkIdsByChecksums(fileContent.getChunks());
+						
+			TransferManager transferManager = config.getPlugin().createTransferManager(config.getConnection());			
+			Downloader downloader = new Downloader(config, transferManager);
+			Assembler assembler = new Assembler(config, localDatabase);
+			
+			downloader.downloadAndDecryptMultiChunks(new HashSet<MultiChunkId>(multiChunks.values()));
+			
+			File tempFile = assembler.assembleToCache(fileVersion);			
+			String tempFileToken = StringUtil.toHex(ObjectId.secureRandomBytes(40));
+			
+			GetFileResponse fileResponse = new GetFileResponse(fileRequest.getId(), fileRequest.getRoot(), tempFileToken);
+			GetFileResponseInternal fileResponseInternal = new GetFileResponseInternal(fileResponse, tempFile);
+
+			eventBus.post(fileResponseInternal);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot reassemble file.", e);
+			eventBus.post(new BadRequestResponse(fileRequest.getId(), "Cannot reassemble file."));
+		}		
+	}
+
 	private void handleRestoreRequest(RestoreRequest restoreRequest) {
 		RestoreOperationOptions restoreOptions = new RestoreOperationOptions();
 		
 		restoreOptions.setFileHistoryId(FileHistoryId.parseFileId(restoreRequest.getFileHistoryId()));
-		restoreOptions.setFileVersionNumber(restoreRequest.getVersion());
+		restoreOptions.setFileVersion(restoreRequest.getVersion());
 		
 		try {
 			RestoreOperationResult restoreResult = new RestoreOperation(config, restoreOptions).execute();

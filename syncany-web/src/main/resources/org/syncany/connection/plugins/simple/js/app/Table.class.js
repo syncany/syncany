@@ -91,7 +91,7 @@ function Table(tableElements, onContextFileInfoClick, onContextPreviousVersionsC
 				}
 		
 				// Download
-				retrieveFile(file);
+				sendGetFileRequest(file);
 			}
 			else {
 				sendFileTreeRequest(file.path+"/");
