@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins.web;
 
 import io.undertow.server.HttpHandler;
 
-import org.syncany.connection.plugins.Plugin;
+import org.syncany.plugins.Plugin;
 
 /**
  * @author pheckel

@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.simple;
+package org.syncany.plugins.simple;
 
 import static io.undertow.Handlers.resource;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
 
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.WebInterfacePlugin;
+import org.syncany.plugins.web.WebInterfacePlugin;
 
 /**
  * @author pheckel
@@ -44,15 +42,5 @@ public class SimpleWebInterfacePlugin extends WebInterfacePlugin {
 	@Override
 	public void start() {
 		// Nothing	
-	}
-
-	@Override
-	public Connection createConnection() {
-		return null;
-	}
-
-	@Override
-	public TransferManager createTransferManager(Connection connection) {
-		return null;
 	}
 }

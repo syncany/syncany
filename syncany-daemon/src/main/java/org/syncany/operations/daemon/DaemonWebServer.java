@@ -41,15 +41,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
-import org.reflections.Reflections;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.WebInterfacePlugin;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.web.WebInterfacePlugin;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -58,11 +57,8 @@ import com.google.common.eventbus.Subscribe;
 public class DaemonWebServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebServer.class.getSimpleName());
 
-	public static final String PLUGIN_FQCN_PREFIX = Plugin.class.getPackage().getName(); // TODO [high] Duplicate code, combine with plugins
 	private static final String WEBSOCKET_ALLOWED_ORIGIN_HEADER = "localhost";
 	private static final int DEFAULT_PORT = 8080;
-
-	private static final Reflections reflections = new Reflections(PLUGIN_FQCN_PREFIX);
 
 	private Undertow webServer;
 	private DaemonEventBus eventBus;
@@ -275,23 +271,21 @@ public class DaemonWebServer {
 	}
 	
 	public class InternalWebInterfaceHandler implements HttpHandler {
-		private Set<Class<? extends WebInterfacePlugin>> webInterfacePluginClasses;
+		private Set<WebInterfacePlugin> webInterfacePlugins;
 		private WebInterfacePlugin webInterfacePlugin;
 		private HttpHandler requestHandler;
 		
 		public InternalWebInterfaceHandler() {
-			webInterfacePluginClasses = reflections.getSubTypesOf(WebInterfacePlugin.class);
+			webInterfacePlugins = Plugins.list(WebInterfacePlugin.class);
 			
-			if (webInterfacePluginClasses.size() == 1) {
+			if (webInterfacePlugins.size() == 1) {
 				initWebInterfacePlugin();
 			}
 		}
 
 		private void initWebInterfacePlugin() {
-			try {
-				Class<? extends WebInterfacePlugin> webInterfacePluginClass = webInterfacePluginClasses.iterator().next();
-				
-				webInterfacePlugin = (WebInterfacePlugin) webInterfacePluginClass.newInstance();
+			try {				
+				webInterfacePlugin = webInterfacePlugins.iterator().next();
 				requestHandler = webInterfacePlugin.createRequestHandler();
 				
 				webInterfacePlugin.start();
@@ -316,7 +310,7 @@ public class DaemonWebServer {
 		}
 
 		private void handleRequestNoHandler(HttpServerExchange exchange) {
-			if (webInterfacePluginClasses.size() == 0) {
+			if (webInterfacePlugins.size() == 0) {
 				exchange.getResponseSender().send("No web interface configured.");
 			}
 			else {

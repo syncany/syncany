@@ -35,7 +35,6 @@ import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
@@ -68,6 +67,7 @@ import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
 
 import com.google.common.eventbus.Subscribe;
@@ -172,7 +172,7 @@ public class WatchOperationThread implements WatchOperationListener {
 			FileContent fileContent = localDatabase.getFileContent(fileVersion.getChecksum(), true);
 			Map<ChunkChecksum, MultiChunkId> multiChunks = localDatabase.getMultiChunkIdsByChecksums(fileContent.getChunks());
 						
-			TransferManager transferManager = config.getPlugin().createTransferManager(config.getConnection());			
+			TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection());			
 			Downloader downloader = new Downloader(config, transferManager);
 			Assembler assembler = new Assembler(config, localDatabase);
 			
