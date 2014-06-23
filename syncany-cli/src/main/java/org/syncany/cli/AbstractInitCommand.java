@@ -18,7 +18,6 @@
 package org.syncany.cli;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -30,16 +29,15 @@ import joptsimple.OptionSpec;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.operations.init.GenlinkOperationResult;
-import org.syncany.plugins.Plugin;
 import org.syncany.plugins.PluginOptionSpec;
+import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -271,10 +269,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	protected TransferPlugin askPlugin() {
 		TransferPlugin plugin = null;
 
-		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
+		List<TransferPlugin> plugins = Plugins.list(TransferPlugin.class);
+		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<TransferPlugin>() {
 			@Override
-			public String getString(Plugin plugin) {
+			public String getString(TransferPlugin plugin) {
 				return plugin.getId();
 			}
 		});
