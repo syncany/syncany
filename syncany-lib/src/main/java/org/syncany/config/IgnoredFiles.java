@@ -38,9 +38,10 @@ public class IgnoredFiles {
 	private File ignoreFile;
 	
 	public IgnoredFiles(File ignoreFile) {
-		ignorePatterns = new HashSet<String>();
-		ignorePaths = new HashSet<String>();
 		this.ignoreFile = ignoreFile;
+		this.ignorePatterns = new HashSet<String>();
+		this.ignorePaths = new HashSet<String>();
+
 		loadPatterns();
 	}
 	

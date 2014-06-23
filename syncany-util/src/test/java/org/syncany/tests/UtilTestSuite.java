@@ -24,6 +24,7 @@ import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTest;
 import org.syncany.tests.util.LimitedDosFileAttributesTest;
 import org.syncany.tests.util.NormalizedPathTest;
+import org.syncany.tests.util.PidFileUtilTest;
 import org.syncany.tests.util.StringUtilTest;
 
 @RunWith(Suite.class)
@@ -32,6 +33,7 @@ import org.syncany.tests.util.StringUtilTest;
 	FileUtilTest.class,
 	LimitedDosFileAttributesTest.class,
 	NormalizedPathTest.class,
+	PidFileUtilTest.class,
 	StringUtilTest.class	
 })
 public class UtilTestSuite {

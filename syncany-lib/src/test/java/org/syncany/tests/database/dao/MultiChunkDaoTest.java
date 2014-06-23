@@ -36,7 +36,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 import org.syncany.util.CollectionUtil;
 
 public class MultiChunkDaoTest {
@@ -47,7 +47,7 @@ public class MultiChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		
@@ -81,7 +81,7 @@ public class MultiChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		List<ChunkChecksum> checksums = new ArrayList<ChunkChecksum>();
@@ -123,7 +123,7 @@ public class MultiChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		
@@ -180,7 +180,7 @@ public class MultiChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		
@@ -217,7 +217,7 @@ public class MultiChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		
@@ -257,7 +257,7 @@ public class MultiChunkDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
 		List<MultiChunkId> dirtyMultiChunkIds = multiChunkDao.getDirtyMultiChunkIds();

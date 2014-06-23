@@ -153,11 +153,10 @@ public class DatabaseConnectionFactory {
 		
 		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, DATABASE_RESOURCE_CREATE_ALL);
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
-		BufferedReader resourceReader = new BufferedReader(new InputStreamReader(inputStream));
 		
 		connection.setAutoCommit(true);
 		
-		new SqlRunner(connection).runScript(resourceReader);
+		SqlRunner.runScript(connection, inputStream);
 		 
 		connection.setAutoCommit(false);
 	}

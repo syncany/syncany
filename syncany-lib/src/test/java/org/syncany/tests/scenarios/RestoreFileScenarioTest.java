@@ -30,10 +30,10 @@ import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.restore.RestoreOperationOptions;
-import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.tests.util.TestSqlUtil;
 import org.syncany.util.StringUtil;
 
 public class RestoreFileScenarioTest {
@@ -49,7 +49,7 @@ public class RestoreFileScenarioTest {
 		clientA.createNewFile("A-original");		
 		clientA.upWithForceChecksum();
 		
-		String originalFileHistoryStr = TestAssertUtil.runSqlQuery("select filehistory_id from fileversion", databaseConnectionA);
+		String originalFileHistoryStr = TestSqlUtil.runSqlSelect("select filehistory_id from fileversion", databaseConnectionA);
 		assertNotNull(originalFileHistoryStr);
 		
 		FileHistoryId originalFileHistoryId = FileHistoryId.parseFileId(originalFileHistoryStr);
@@ -92,7 +92,7 @@ public class RestoreFileScenarioTest {
 		clientA.createNewFile("A-original");		
 		clientA.upWithForceChecksum();
 		
-		String originalFileHistoryStr = TestAssertUtil.runSqlQuery("select filehistory_id from fileversion", databaseConnectionA);
+		String originalFileHistoryStr = TestSqlUtil.runSqlSelect("select filehistory_id from fileversion", databaseConnectionA);
 		assertNotNull(originalFileHistoryStr);
 		
 		FileHistoryId originalFileHistoryId = FileHistoryId.parseFileId(originalFileHistoryStr);
@@ -137,7 +137,7 @@ public class RestoreFileScenarioTest {
 		clientA.createNewFile("folder/subfolder/A-original");		
 		clientA.upWithForceChecksum();
 		
-		String originalFileHistoryStr = TestAssertUtil.runSqlQuery("select filehistory_id from fileversion where path='folder/subfolder/A-original'", databaseConnectionA);
+		String originalFileHistoryStr = TestSqlUtil.runSqlSelect("select filehistory_id from fileversion where path='folder/subfolder/A-original'", databaseConnectionA);
 		assertNotNull(originalFileHistoryStr);
 		
 		FileHistoryId originalFileHistoryId = FileHistoryId.parseFileId(originalFileHistoryStr);

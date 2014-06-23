@@ -63,17 +63,6 @@ public class NormalizedPath {
 		return normalizedPath;
 	}
 	
-	public NormalizedPath getName() {
-		int lastIndexOfSlash = normalizedPath.lastIndexOf("/");
-		
-		if (lastIndexOfSlash == -1) {
-			return this;
-		}
-		else {
-			return new NormalizedPath(root, normalizedPath.substring(lastIndexOfSlash+1));
-		}
-	}
-	
 	public NormalizedPath getParent() {
 		int lastIndexOfSlash = normalizedPath.lastIndexOf("/");
 		
@@ -85,7 +74,7 @@ public class NormalizedPath {
 		}
 	}	
 
-	public List<String> getParts() {
+	private List<String> getParts() {
 		return Arrays.asList(normalizedPath.split("[/]"));
 	}		
 	
@@ -115,7 +104,7 @@ public class NormalizedPath {
 		return hasIllegalChars(normalizedPath);
 	}
 	
-	public String getExtension(boolean includeDot) {
+	private String getExtension(boolean includeDot) {
 		return getExtension(normalizedPath, includeDot);
 	}
 	
@@ -131,11 +120,7 @@ public class NormalizedPath {
 		return (includeDot) ? "." + extension : extension;
 	}
 	
-	public String getBasename() {
-		return getBasename(normalizedPath);
-	}
-	
-	private String getBasename(String filename) {
+	private String getPathWithoutExtension(String filename) {
 		String extension = getExtension(true); // .txt
 		
 		if ("".equals(extension)) {
@@ -176,7 +161,7 @@ public class NormalizedPath {
 		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
 
 		if (originalFileHasExtension) {
-			String conflictFileBasename = getBasename(pathPart);
+			String conflictFileBasename = getPathWithoutExtension(pathPart);
 			return String.format("%s (%s).%s", conflictFileBasename, filenameSuffix, conflictFileExtension);						
 		}
 		else {

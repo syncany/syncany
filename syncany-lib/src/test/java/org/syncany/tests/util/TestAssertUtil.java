@@ -30,7 +30,6 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -276,38 +275,6 @@ public class TestAssertUtil {
 				}								
 			}		
 		}
-	}
-	
-	public static String runSqlQuery(String sqlQuery, Connection databaseConnection) throws SQLException {
-		StringBuilder queryResult = new StringBuilder();
-		
-		try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(sqlQuery)) {
-			try (ResultSet actualResultSet = preparedStatement.executeQuery()) {
-				ResultSetMetaData metaData = actualResultSet.getMetaData();
-		
-				boolean isFirstRow = true;
-				int columnsCount = metaData.getColumnCount();
-				
-				while (actualResultSet.next()) {					
-					if (!isFirstRow) {
-						queryResult.append("\n");						
-					}
-					else {
-						isFirstRow = false;
-					}
-					
-					for (int i=1; i<=columnsCount; i++) {
-						queryResult.append(actualResultSet.getString(i));
-						
-						if (i != columnsCount) {
-							queryResult.append(",");
-						}
-					}
-				}
-			}
-		}
-		
-		return queryResult.toString();
 	}
 	
 	private static String getFormattedColumn(ResultSet resultSet) throws SQLException {

@@ -32,7 +32,7 @@ import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class FileHistoryDaoTest {	
 	@Test
@@ -42,7 +42,7 @@ public class FileHistoryDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 				
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql"); 
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql"); 
 
 		FileVersionSqlDao fileVersionDao = new FileVersionSqlDao(databaseConnection);
 		FileHistorySqlDao fileHistoryDao = new FileHistorySqlDao(databaseConnection, fileVersionDao);
