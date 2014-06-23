@@ -49,16 +49,27 @@ public class Plugins {
 	}
 	
 	/**
-	 * Loads and returns a list of all available {@link Plugin}s.
-	 * 
-	 * <p>Note: This method might take a few milliseconds longer when it is
-	 * first called, because it loads and opens all JARs in the classpath
-	 * to look for matching name patterns.
-	 * 
-	 * @return Returns a collection of all loaded plugins 
+	 * Loads and returns a list of all available
+	 * {@link Plugin}s. 
 	 */
 	public static List<Plugin> list() {
 		return new ArrayList<Plugin>(plugins.values());
+	}
+	
+	/**
+	 * Loads and returns a list of all {@link Plugin}s
+	 * matching the given subclass.
+	 */
+	public static <T extends Plugin> List<T> list(Class<T> pluginClass) {
+		List<T> matchingPlugins = new ArrayList<T>();
+		
+		for (Plugin plugin : plugins.values()) {
+			if (pluginClass.isInstance(plugin)) {
+				matchingPlugins.add(pluginClass.cast(plugin));
+			}
+		}
+		
+		return matchingPlugins;
 	}
 
 	/**
