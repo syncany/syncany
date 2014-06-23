@@ -38,8 +38,6 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
@@ -48,6 +46,8 @@ import org.syncany.plugins.Plugins;
 import org.syncany.plugins.local.LocalConnection;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.util.StringUtil;
 
 import com.google.common.collect.Lists;
