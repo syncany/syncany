@@ -35,7 +35,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -271,7 +270,7 @@ public class DaemonWebServer {
 	}
 	
 	public class InternalWebInterfaceHandler implements HttpHandler {
-		private Set<WebInterfacePlugin> webInterfacePlugins;
+		private List<WebInterfacePlugin> webInterfacePlugins;
 		private WebInterfacePlugin webInterfacePlugin;
 		private HttpHandler requestHandler;
 		
