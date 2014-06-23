@@ -15,18 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.reflections.Reflections;
-import org.syncany.util.StringUtil;
 
 /**
  * This class loads and manages all the {@link Plugin}s loaded in the classpath.
@@ -41,16 +40,14 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Plugins {
-	public static final String PLUGIN_FQCN_PREFIX = Plugin.class.getPackage().getName();
-	public static final String PLUGIN_FQCN_SUFFIX = Plugin.class.getSimpleName();
-	public static final String PLUGIN_FQCN_FORMAT = PLUGIN_FQCN_PREFIX + ".%s.%s" + PLUGIN_FQCN_SUFFIX;
-	public static final Pattern PLUGIN_FQCN_REGEX = Pattern.compile(PLUGIN_FQCN_PREFIX + "\\.([^.]+)\\.[\\w\\d]+" + PLUGIN_FQCN_SUFFIX);
-
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
-	private static final Reflections reflections = new Reflections(PLUGIN_FQCN_PREFIX);
+	private static final Reflections reflections = new Reflections(Plugin.class.getPackage().getName());
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
-	private static boolean loaded = false;
 
+	static {
+		loadPlugins();
+	}
+	
 	/**
 	 * Loads and returns a list of all available {@link Plugin}s.
 	 * 
@@ -61,7 +58,6 @@ public class Plugins {
 	 * @return Returns a collection of all loaded plugins 
 	 */
 	public static List<Plugin> list() {
-		load();
 		return new ArrayList<Plugin>(plugins.values());
 	}
 
@@ -79,61 +75,38 @@ public class Plugins {
 			return null;
 		}
 		
-		// If already loaded, get from list
 		if (plugins.containsKey(pluginId)) {
 			return plugins.get(pluginId);
 		}
-
-		// Try to load via name
-		loadPlugin(pluginId);
-
-		if (plugins.containsKey(pluginId)) {
-			return plugins.get(pluginId);
-		}
-
-		// Not found!
-		return null;
-	}
-
-	private static void load() {
-		if (loaded) {
-			return;
-		}
-
-		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
-			loadPlugin(pluginClass);			
-		}
-		
-		loaded = true;
-	}
-
-	private static void loadPlugin(String pluginId) {
-		String className = String.format(PLUGIN_FQCN_FORMAT, pluginId, StringUtil.toCamelCase(pluginId));
-		loadPlugin(pluginId, className);
-	}
-
-	private static void loadPlugin(String pluginId, String className) {
-		// Already loaded
-		if (plugins.containsKey(pluginId)) {
-			return;
-		}
-
-		// Try to load!
-		try {
-			loadPlugin(Class.forName(className));		
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Could not load plugin (1): " + className, e);
+		else {
+			return null;
 		}
 	}
 	
-	private static void loadPlugin(Class<?> pluginClass) {		
-		try {
-			Plugin plugin = (Plugin) pluginClass.newInstance();			
-			plugins.put(plugin.getId(), plugin);
+	public static <T extends Plugin> T get(String pluginId, Class<T> pluginClass) {
+		Plugin plugin = get(pluginId);
+		
+		if (pluginId == null || !pluginClass.isInstance(plugin)) {
+			return null;
 		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
+		else {
+			return pluginClass.cast(plugin);
+		}
+	}
+
+	private static void loadPlugins() {
+		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
+			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
+			
+			if (canInstantiate) {
+				try {
+					Plugin plugin = (Plugin) pluginClass.newInstance();			
+					plugins.put(plugin.getId(), plugin);
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
+				}
+			}
 		}
 	}
 }

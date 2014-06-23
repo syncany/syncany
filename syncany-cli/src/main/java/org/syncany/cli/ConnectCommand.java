@@ -28,11 +28,11 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
-import org.syncany.connection.plugins.StorageTestResult;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
+import org.syncany.plugins.StorageTestResult;
 
 public class ConnectCommand extends AbstractInitCommand {	
 	public ConnectCommand() {

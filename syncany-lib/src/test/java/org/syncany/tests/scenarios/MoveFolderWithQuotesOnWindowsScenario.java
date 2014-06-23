@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.EnvironmentUtil;

@@ -24,14 +24,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * The list remote operation queries the transfer manager for any unknown 
@@ -67,7 +67,7 @@ public class LsRemoteOperation extends Operation {
 		
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
-				: config.getPlugin().createTransferManager(config.getConnection());
+				: config.getTransferPlugin().createTransferManager(config.getConnection());
 		
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		

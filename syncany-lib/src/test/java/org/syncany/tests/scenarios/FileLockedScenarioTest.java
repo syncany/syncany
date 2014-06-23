@@ -37,11 +37,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
+import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
 import org.syncany.tests.scenarios.framework.Executable;
@@ -57,7 +57,7 @@ public class FileLockedScenarioTest {
 	@Test
 	public void testFileLocked() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		
 		// Run! 
@@ -81,7 +81,7 @@ public class FileLockedScenarioTest {
 		}
 		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		
 		// Run
@@ -103,7 +103,7 @@ public class FileLockedScenarioTest {
 	@Test
 	public void testPermissionDeniedNotWritable() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		
 		// Run
@@ -116,7 +116,7 @@ public class FileLockedScenarioTest {
 		clientA.deleteTestData();
 	}	
 	
-	private void runUpAndTestForConsistentDatabase(Connection connection, TestClient client) throws Exception {
+	private void runUpAndTestForConsistentDatabase(TransferSettings connection, TestClient client) throws Exception {
 		UpOperationResult upResult = client.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
@@ -133,7 +133,7 @@ public class FileLockedScenarioTest {
 		assertEquals("Repository should contain any files.", 3, repoPath.list().length);			
 	}
 	
-	private void runUpAndTestForEmptyDatabase(Connection connection, TestClient client) throws Exception {
+	private void runUpAndTestForEmptyDatabase(TransferSettings connection, TestClient client) throws Exception {
 		UpOperationResult upResult = client.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		
@@ -162,7 +162,7 @@ public class FileLockedScenarioTest {
 	
 	@Test
 	public void testLockUnlockFile() throws Exception {		
-		final Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 						

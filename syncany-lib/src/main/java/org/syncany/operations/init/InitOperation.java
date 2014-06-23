@@ -27,18 +27,18 @@ import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.MasterRemoteFile;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RepoRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.StorageTestResult;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.files.MasterRemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
 /**
  * The init operation initializes a new repository at a given remote storage
@@ -63,7 +63,7 @@ public class InitOperation extends AbstractInitOperation {
     private InitOperationOptions options;
     private InitOperationResult result;
     
-    private Plugin plugin;
+    private TransferPlugin plugin;
     private TransferManager transferManager;
     
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
@@ -80,9 +80,9 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "--------------------------------------------");                      
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
+		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
 		
-		Connection connection = plugin.createConnection();
+		TransferSettings connection = plugin.createSettings();
 		
 		connection.init(options.getConfigTO().getConnectionTO().getSettings());
 		connection.setUserInteractionListener(listener);

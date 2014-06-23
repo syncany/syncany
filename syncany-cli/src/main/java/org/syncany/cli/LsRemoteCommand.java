@@ -19,9 +19,9 @@ package org.syncany.cli;
 
 import java.util.List;
 
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.RemoteFile;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 public class LsRemoteCommand extends Command {
 	@Override

@@ -15,32 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.unreliable_local;
+package org.syncany.plugins;
 
-import org.syncany.plugins.local.LocalPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
 
 /**
- * The unreliable local plugin can be used for test purposes to
- * test connection issues with the backend storage. Each operation of the
- * plugin (e.g upload, download, ...) can be failed on purpose through
- * regular expressions on the operation signature. 
- *
+ * Exception thrown when any of the methods of the {@link TransferManager}
+ * fail. Usually caused by broken sockets or a not available Internet connection.
+ *  
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class UnreliableLocalPlugin extends LocalPlugin {
-    public UnreliableLocalPlugin() {
-    	super("unreliable_local");
+public class StorageException extends Exception {
+	private static final long serialVersionUID = -311986990752074527L;
+
+	public StorageException(Throwable cause) {
+        super(cause);
     }
 
-    @Override
-    public TransferSettings createSettings() {
-        return new UnreliableLocalConnection();
+    public StorageException(String message, Throwable cause) {
+        super(message, cause);
     }
-    
-    @Override
-    public TransferManager createTransferManager(TransferSettings connection) {
-        return new UnreliableLocalTransferManager((UnreliableLocalConnection) connection);
+
+    public StorageException(String message) {
+        super(message);
     }
 }

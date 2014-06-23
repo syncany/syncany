@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins;
+
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * Represents the return structure of the tests performed by by {@link TransferManager#test(boolean)}

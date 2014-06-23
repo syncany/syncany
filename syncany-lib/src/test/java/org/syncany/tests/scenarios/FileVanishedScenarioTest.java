@@ -28,8 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.SqlDatabase;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -41,7 +41,7 @@ public class FileVanishedScenarioTest {
 	@Test
 	public void testCallUpWhileDeletingFiles() throws Exception {
 		// Setup 
-		final Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 		final int numFiles = 100;
@@ -131,7 +131,7 @@ public class FileVanishedScenarioTest {
 	@Test
 	public void testFolderVanishesWhenSyncingDown() throws Exception {		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 

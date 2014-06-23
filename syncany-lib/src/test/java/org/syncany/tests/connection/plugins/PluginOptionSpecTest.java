@@ -20,9 +20,9 @@ package org.syncany.tests.connection.plugins;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.PluginOptionSpec;
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
+import org.syncany.plugins.PluginOptionSpec;
+import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.plugins.PluginOptionSpec.ValueType;
 
 /**
  * Tests the PluginOptionSpec class on integrity.

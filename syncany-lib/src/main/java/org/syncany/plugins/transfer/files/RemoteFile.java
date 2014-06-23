@@ -15,7 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins.transfer.files;
+
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to

@@ -15,17 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins;
 
 import java.io.InputStream;
 import java.util.Properties;
+
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * A plugin can be used to store Syncany's repository files on any remote location. 
  * Implementations of the <tt>Plugin</tt> class identify a storage/connection plugin.
  * 
  * <p>Using the 'id' attribute, plugins can be loaded by the {@link Plugins} class. 
- * Once a plugin is loaded, a corresponding {@link Connection} object must be created and 
+ * Once a plugin is loaded, a corresponding {@link TransferSettings} object must be created and 
  * initialized. From the connection object, a {@link TransferManager} can then be used to
  * upload/download files to the repository.
  * 
@@ -71,13 +74,6 @@ public abstract class Plugin {
 	public String getVersion() {
 		return pluginProperties.getProperty(PLUGIN_PROPERTIES_VERSION_KEY);
 	}
-	
-	/**
-	 * Creates a plugin-specific {@link Connection}
-	 */
-	public abstract Connection createConnection();
-	
-	public abstract TransferManager createTransferManager(Connection connection);
 
 	/**
 	 * Loads the plugin properties (ID, name, version)

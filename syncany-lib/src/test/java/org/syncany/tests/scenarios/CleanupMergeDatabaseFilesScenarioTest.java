@@ -24,11 +24,11 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;

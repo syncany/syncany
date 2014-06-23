@@ -26,10 +26,10 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.restore.RestoreOperationOptions;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -41,7 +41,7 @@ public class RestoreFileScenarioTest {
 	public void testRestoreDeletedFile() throws Exception {
 		// Setup 
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
 				
@@ -84,7 +84,7 @@ public class RestoreFileScenarioTest {
 	public void testRestoreDeletedFileWithTargetFile() throws Exception {
 		// Setup 
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
 				
@@ -128,7 +128,7 @@ public class RestoreFileScenarioTest {
 	public void testRestoreDeletedWithSubfolders() throws Exception {
 		// Setup 
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
 				

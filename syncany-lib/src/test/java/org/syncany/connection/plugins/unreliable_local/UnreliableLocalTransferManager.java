@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.local.LocalTransferManager;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.local.LocalTransferManager;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  *

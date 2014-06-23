@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
 
 /**
  * @author pheckel

@@ -15,9 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins.transfer;
 
 import java.util.Map;
+
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.PluginOptionSpecs;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.UserInteractionListener;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -31,7 +36,7 @@ import java.util.Map;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public abstract class Connection {
+public abstract class TransferSettings {
 	protected UserInteractionListener userInteractionListener;
 
 	public UserInteractionListener getUserInteractionListener() {

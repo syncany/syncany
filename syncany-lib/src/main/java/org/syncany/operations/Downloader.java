@@ -29,10 +29,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
 
 /**
  * @author pheckel

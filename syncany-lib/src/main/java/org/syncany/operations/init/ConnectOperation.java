@@ -34,21 +34,21 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.MasterRemoteFile;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.RepoRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.StorageTestResult;
-import org.syncany.connection.plugins.TransferManager;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.files.MasterRemoteFile;
+import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -82,7 +82,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	private ConnectOperationResult result;
 	private UserInteractionListener listener;
 	
-	private Plugin plugin;
+	private TransferPlugin plugin;
     private TransferManager transferManager;
 	
 	public ConnectOperation(ConnectOperationOptions options, UserInteractionListener listener) {
@@ -110,9 +110,9 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType());
+		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
 		
-		Connection connection = plugin.createConnection();
+		TransferSettings connection = plugin.createSettings();
 		
 		connection.init(options.getConfigTO().getConnectionTO().getSettings());
 		connection.setUserInteractionListener(listener);
@@ -289,7 +289,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			Serializer serializer = new Persister();
 			ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);		
 			
-			Plugin plugin = Plugins.get(connectionTO.getType());
+			TransferPlugin plugin = Plugins.get(connectionTO.getType(), TransferPlugin.class);
 			
 			if (plugin == null) {
 				throw new StorageException("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");

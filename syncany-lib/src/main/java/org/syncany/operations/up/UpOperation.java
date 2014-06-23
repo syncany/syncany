@@ -30,10 +30,6 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
@@ -55,6 +51,10 @@ import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResul
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
