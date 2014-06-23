@@ -15,16 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.local;
+package org.syncany.plugins.local;
 
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.PluginOptionSpec;
-import org.syncany.connection.plugins.PluginOptionSpec.ValueType;
-import org.syncany.connection.plugins.PluginOptionSpecs;
-import org.syncany.connection.plugins.StorageException;
+import org.syncany.plugins.PluginOptionSpec;
+import org.syncany.plugins.PluginOptionSpecs;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.PluginOptionSpec.ValueType;
+import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * The local connection represents the settings required to create to a
@@ -34,7 +34,7 @@ import org.syncany.connection.plugins.StorageException;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection extends Connection {
+public class LocalConnection extends TransferSettings {
 	protected File repositoryPath;
 
 	public File getRepositoryPath() {

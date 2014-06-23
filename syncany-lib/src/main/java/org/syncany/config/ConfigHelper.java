@@ -26,10 +26,10 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
  * The config helper provides convenience functions to load the configuration from
@@ -69,7 +69,7 @@ public class ConfigHelper {
 			RepoTO repoTO = ConfigHelper.loadRepoTO(localDir, configTO);
 			
 			String pluginId = (configTO.getConnectionTO() != null) ? configTO.getConnectionTO().getType() : null;
-			Plugin plugin = Plugins.get(pluginId);
+			TransferPlugin plugin = Plugins.get(pluginId, TransferPlugin.class);
 			
 			if (plugin == null) {
 				logger.log(Level.WARNING, "Not loading config! Plugin with id '{0}' does not exist.", pluginId);

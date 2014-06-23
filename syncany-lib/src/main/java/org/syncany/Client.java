@@ -26,7 +26,6 @@ import java.util.Properties;
 
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
@@ -67,6 +66,7 @@ import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.plugins.UserInteractionListener;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s

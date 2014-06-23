@@ -33,12 +33,12 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.EnvironmentUtil;
@@ -47,7 +47,7 @@ public class ChangedAttributesScenarioTest {
 	@Test
 	public void testChangeAttributes() throws Exception {		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -114,7 +114,7 @@ public class ChangedAttributesScenarioTest {
 	@Test
 	public void testNewFileWithDifferingAttributes() throws Exception {		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 

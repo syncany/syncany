@@ -26,8 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.StorageException;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

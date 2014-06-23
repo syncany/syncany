@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.dao.ApplicationSqlDao;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestSqlUtil;
 import org.syncany.util.CollectionUtil;

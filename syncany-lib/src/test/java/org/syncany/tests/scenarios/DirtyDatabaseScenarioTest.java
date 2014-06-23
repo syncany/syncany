@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.PartialFileHistory;
@@ -43,6 +42,7 @@ import org.syncany.operations.ChangeSet;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestCollectionUtil;
@@ -53,7 +53,7 @@ public class DirtyDatabaseScenarioTest {
 	@Test
 	public void testDirtyDatabase() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -120,7 +120,7 @@ public class DirtyDatabaseScenarioTest {
 	@Test
 	public void testDirtyCleanupDirty() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

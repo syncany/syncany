@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion.FileType;
@@ -41,6 +40,7 @@ import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.down.DatabaseBranch;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * Represents the single entry point for all SQL database queries.

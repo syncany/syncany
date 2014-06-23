@@ -15,12 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * The retriable transfer manager implements a simple try-sleep-retry mechanism

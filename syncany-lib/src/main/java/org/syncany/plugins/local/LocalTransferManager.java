@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.local;
+package org.syncany.plugins.local;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,14 +29,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.syncany.connection.plugins.AbstractTransferManager;
-import org.syncany.connection.plugins.ActionRemoteFile;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.RepoRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.AbstractTransferManager;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.ActionRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the

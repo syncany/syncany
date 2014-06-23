@@ -15,10 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins.transfer.files;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.syncany.plugins.StorageException;
 
 /**
  * The database file represents a delta database.
