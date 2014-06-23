@@ -23,10 +23,10 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.connection.plugins.ActionRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
 /**
  * The action handler manages the {@link ActionRemoteFile}s written during an {@link Operation}.

@@ -28,10 +28,10 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
+import org.syncany.plugins.StorageException;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 

@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
 
 public class CliPluginsTest {
 	@Test

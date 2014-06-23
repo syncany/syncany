@@ -15,26 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins;
+package org.syncany.plugins.transfer;
 
-/**
- * Exception thrown when any of the methods of the {@link TransferManager}
- * fail. Usually caused by broken sockets or a not available Internet connection.
- *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
-public class StorageException extends Exception {
-	private static final long serialVersionUID = -311986990752074527L;
+import org.syncany.plugins.Plugin;
 
-	public StorageException(Throwable cause) {
-        super(cause);
-    }
+public abstract class TransferPlugin extends Plugin {
+	public TransferPlugin(String pluginId) {
+		super(pluginId);
+	}
 
-    public StorageException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public StorageException(String message) {
-        super(message);
-    }
+	/**
+	 * Creates a plugin-specific {@link TransferSettings}
+	 */
+	public abstract TransferSettings createSettings();
+	
+	public abstract TransferManager createTransferManager(TransferSettings connection);
 }

@@ -28,16 +28,17 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.MasterRemoteFile;
-import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.RemoteFile;
-import org.syncany.connection.plugins.RepoRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.MasterRemoteFile;
+import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
@@ -78,11 +79,11 @@ public abstract class AbstractTransferManagerTest {
 
 	@Test(expected = StorageException.class)
 	public void testConnectWithInvalidSettings() throws StorageException {
-		Plugin plugin = Plugins.get(getPluginId());
+		TransferPlugin plugin = Plugins.get(getPluginId(), TransferPlugin.class);
 
 		Map<String, String> invalidEmptyPluginSettings = new HashMap<String, String>();
 
-		Connection connection = plugin.createConnection();
+		TransferSettings connection = plugin.createSettings();
 		connection.init(invalidEmptyPluginSettings);
 
 		TransferManager transferManager = plugin.createTransferManager(connection);
@@ -189,9 +190,9 @@ public abstract class AbstractTransferManagerTest {
 	}	
 
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
-		Plugin pluginInfo = Plugins.get(getPluginId());
+		TransferPlugin pluginInfo = Plugins.get(getPluginId(), TransferPlugin.class);
 
-		Connection connection = pluginInfo.createConnection();
+		TransferSettings connection = pluginInfo.createSettings();
 		connection.init(createPluginSettings());
 
 		return pluginInfo.createTransferManager(connection);

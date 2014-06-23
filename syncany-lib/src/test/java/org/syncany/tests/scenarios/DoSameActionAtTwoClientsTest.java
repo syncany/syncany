@@ -25,12 +25,12 @@ import java.nio.file.attribute.PosixFilePermissions;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

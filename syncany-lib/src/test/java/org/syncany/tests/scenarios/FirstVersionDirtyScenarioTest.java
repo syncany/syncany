@@ -20,9 +20,9 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -33,7 +33,7 @@ public class FirstVersionDirtyScenarioTest {
 	@Test
 	public void testFirstVersionDirty() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

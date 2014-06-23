@@ -26,7 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -38,6 +37,7 @@ import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * Applies a given winners database to the local directory.

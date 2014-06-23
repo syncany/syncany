@@ -15,11 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.local;
+package org.syncany.plugins.local;
 
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.TransferManager;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
  * Identifies the local storage {@link Plugin} for Syncany.
@@ -34,7 +35,7 @@ import org.syncany.connection.plugins.TransferManager;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class LocalPlugin extends Plugin {
+public class LocalPlugin extends TransferPlugin {
 	public LocalPlugin() {
 		super("local");
 	}
@@ -44,12 +45,12 @@ public class LocalPlugin extends Plugin {
 	}
 
     @Override
-    public Connection createConnection() {
+    public TransferSettings createSettings() {
         return new LocalConnection();
     }
     
 	@Override
-	public TransferManager createTransferManager(Connection connection) {
+	public TransferManager createTransferManager(TransferSettings connection) {
 		return new LocalTransferManager((LocalConnection) connection);
 	}
 }

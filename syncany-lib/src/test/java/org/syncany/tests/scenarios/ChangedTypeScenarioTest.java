@@ -21,7 +21,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.scenarios.framework.AbstractClientAction;
 import org.syncany.tests.scenarios.framework.ChangeTypeFileToFolder;
 import org.syncany.tests.scenarios.framework.ClientActions;
@@ -33,7 +33,7 @@ import org.syncany.tests.util.TestConfigUtil;
 public class ChangedTypeScenarioTest {
 	@Test
 	public void testChangeTypeToFolder() throws Exception {		
-		final Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 		
