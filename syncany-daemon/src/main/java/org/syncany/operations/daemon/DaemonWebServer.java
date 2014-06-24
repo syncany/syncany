@@ -20,6 +20,14 @@ package org.syncany.operations.daemon;
 import static io.undertow.Handlers.path;
 import static io.undertow.Handlers.websocket;
 import io.undertow.Undertow;
+import io.undertow.security.api.AuthenticationMechanism;
+import io.undertow.security.api.AuthenticationMode;
+import io.undertow.security.handlers.AuthenticationCallHandler;
+import io.undertow.security.handlers.AuthenticationConstraintHandler;
+import io.undertow.security.handlers.AuthenticationMechanismsHandler;
+import io.undertow.security.handlers.SecurityInitialHandler;
+import io.undertow.security.idm.IdentityManager;
+import io.undertow.security.impl.BasicAuthenticationMechanism;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.websockets.WebSocketConnectionCallback;
@@ -33,15 +41,27 @@ import io.undertow.websockets.spi.WebSocketHttpExchange;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+
 import org.apache.commons.io.IOUtils;
+import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileResponseInternal;
@@ -68,7 +88,7 @@ public class DaemonWebServer {
 	
 	private List<WebSocketChannel> clientChannels;
 
-	public DaemonWebServer(DaemonConfigTO daemonConfig) {
+	public DaemonWebServer(DaemonConfigTO daemonConfig) throws Exception {
 		this.clientChannels = new ArrayList<WebSocketChannel>();
 
 		initCaches();
@@ -105,16 +125,90 @@ public class DaemonWebServer {
 		eventBus.register(this);
 	}
 
-	private void initServer(String host, int port) {
+	private void initServer(String host, int port) throws Exception {
+
+        final Map<String, char[]> users = new HashMap<>(2);
+        users.put("userOne", "passwordOne".toCharArray());
+        users.put("userTwo", "passwordTwo".toCharArray());
+
+        final IdentityManager identityManager = new MapIdentityManager(users);
+        
+        HttpHandler pathHttpHandler = path()
+			.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
+			.addPrefixPath("/api/rs", new InternalRestHandler())
+			.addPrefixPath("/", new InternalWebInterfaceHandler());
+        
+        HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
+        
+        KeyStore userTrustStore = UserConfig.getUserTrustStore();
+        KeyStore userKeyStore = getKeyStore();
+        SSLContext sslContext = createSSLContext(userKeyStore, userTrustStore);
+        
 		webServer = Undertow
 			.builder()
-			.addHttpListener(port, host)
-			.setHandler(path()
-				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
-				.addPrefixPath("/api/rs", new InternalRestHandler())
-				.addPrefixPath("/", new InternalWebInterfaceHandler())
-			).build();
+			.addHttpsListener(port, host, sslContext)
+			.setHandler(securityPathHttpHandler)
+			.build();
 	}
+	
+	private KeyStore getKeyStore() {
+		try {				
+			File userTrustStoreFile = new File(UserConfig.getUserConfigDir(), "keystore.jks");
+			KeyStore userKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+								
+			if (userTrustStoreFile.exists()) {
+				FileInputStream trustStoreInputStream = new FileInputStream(userTrustStoreFile); 		 		
+				userKeyStore.load(trustStoreInputStream, new char[0]);
+				
+				trustStoreInputStream.close();
+			}	
+			else {
+				userKeyStore.load(null, new char[0]); // Initialize empty store						
+			}
+			
+			return userKeyStore;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static HttpHandler addSecurity(final HttpHandler toWrap, final IdentityManager identityManager) {
+		HttpHandler handler = toWrap;
+		handler = new AuthenticationCallHandler(handler);
+		handler = new AuthenticationConstraintHandler(handler);
+		final List<AuthenticationMechanism> mechanisms = Collections.<AuthenticationMechanism> singletonList(new BasicAuthenticationMechanism(
+				"My Realm"));
+		handler = new AuthenticationMechanismsHandler(handler, mechanisms);
+		handler = new SecurityInitialHandler(AuthenticationMode.PRO_ACTIVE, identityManager, handler);
+		return handler;
+	}
+	
+	private static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws Exception {
+		try {
+			// Server key and certificate
+			KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			keyManagerFactory.init(keyStore, new char[0]);
+
+			KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+
+			// Trusted certificates
+			TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			trustManagerFactory.init(trustStore);
+			
+			TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+			// Create SSL context
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(keyManagers, trustManagers, null);
+
+			return sslContext;
+		}
+		catch (Exception e) {
+			throw new Exception("Unable to initialize SSL context", e);
+		}
+	}
+
 
 	private void handleWebSocketRequest(WebSocketChannel clientSocket, String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);

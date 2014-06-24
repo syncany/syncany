@@ -90,7 +90,7 @@ public class DaemonOperation extends Operation {
 		return null;
 	}
 
-	private void startOperation() throws ServiceAlreadyStartedException, ConfigException, IOException {
+	private void startOperation() throws Exception {
 		if (PidFileUtil.isProcessRunning(pidFile)) {
 			throw new ServiceAlreadyStartedException("Syncany daemon already running.");
 		}
@@ -146,7 +146,7 @@ public class DaemonOperation extends Operation {
 		watchServer.stop();
 	}
 
-	private void startWebServer() throws ServiceAlreadyStartedException {
+	private void startWebServer() throws Exception {
 		if (daemonConfig.getWebServer().isEnabled()) {
 			logger.log(Level.INFO, "Starting web server ...");
 
