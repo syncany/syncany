@@ -1,9 +1,0 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-
-dependencies {
-	compile			project(':syncany-daemon')
-	compile			project(':syncany-lib')
-	compile			project(':syncany-util')
-	compile			project(':syncany-cli')	
-}
