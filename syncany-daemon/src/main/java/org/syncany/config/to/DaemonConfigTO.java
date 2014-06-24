@@ -27,8 +27,8 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 
-@Root(name="daemon")
-@Namespace(reference="http://syncany.org/daemon/1")
+@Root(name = "daemon", strict = false)
+@Namespace(reference = "http://syncany.org/daemon/1")
 public class DaemonConfigTO {
 	@Element(name = "webServer", required = false)
 	private WebServerTO webServer = new WebServerTO();
