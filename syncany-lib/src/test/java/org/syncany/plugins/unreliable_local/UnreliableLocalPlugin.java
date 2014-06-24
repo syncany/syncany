@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.connection.plugins.unreliable_local;
+package org.syncany.plugins.unreliable_local;
 
 import org.syncany.plugins.local.LocalPlugin;
 import org.syncany.plugins.transfer.TransferSettings;

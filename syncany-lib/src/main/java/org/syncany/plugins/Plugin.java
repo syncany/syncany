@@ -25,7 +25,7 @@ import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * A plugin can be used to store Syncany's repository files on any remote location. 
- * Implementations of the <tt>Plugin</tt> class identify a storage/connection plugin.
+ * Implementations of the <tt>Plugin</tt> class identify a storage/transfer plugin.
  * 
  * <p>Using the 'id' attribute, plugins can be loaded by the {@link Plugins} class. 
  * Once a plugin is loaded, a corresponding {@link TransferSettings} object must be created and 
@@ -33,7 +33,7 @@ import org.syncany.plugins.transfer.TransferManager;
  * upload/download files to the repository.
  * 
  * <p>Per <b>naming convention</b>, plugins must end by the name <b>Plugin</b> and extend this class. 
- * Furthermore, all plugin classes must reside in a package <b>org.syncany.connection.plugins.<i>plugin-id</i></b>,
+ * Furthermore, all plugin classes must reside in a package <b>org.syncany.plugins.<i>plugin-id</i></b>,
  * where <i>plugin-id</i> is the identifier specified by {@link #getId()}. 
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>

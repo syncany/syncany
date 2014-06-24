@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.connection.plugins.unreliable_local;
+package org.syncany.tests.plugins.unreliable_local;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,8 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

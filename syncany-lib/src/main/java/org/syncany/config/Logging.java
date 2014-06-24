@@ -47,7 +47,7 @@ import org.reflections.Reflections;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Logging {
-	private static final String LOG_PROPERTIES_JAR_RESOURCE = Logging.class.getPackage().getName().replace(".", "/") + "/logging.properties";	
+	private static final String LOG_PROPERTIES_JAR_RESOURCE = "/" + Logging.class.getPackage().getName().replace(".", "/") + "/logging.properties";	
 	private static AtomicBoolean loggingInitialized = new AtomicBoolean(false);
 	
 	public synchronized static void init() {
