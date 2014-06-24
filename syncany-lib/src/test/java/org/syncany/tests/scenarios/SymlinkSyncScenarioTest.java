@@ -117,18 +117,7 @@ public class SymlinkSyncScenarioTest {
 		clientA.up();
 
 		// B down
-		clientB.down(); // TODO [medium] This test fails non-deterministically
-		/*
-			org.syncany.connection.plugins.StorageException: No such file in local repository: /tmp/syncany-140111020110031-109-repo/multichunks/multichunk-74dbca0d3a4f7f952b4d811d1f5907898d22e2cd
-			at org.syncany.connection.plugins.local.LocalTransferManager.download(LocalTransferManager.java:106)
-			at org.syncany.operations.DownOperation.downloadAndDecryptMultiChunks(DownOperation.java:376)
-			at org.syncany.operations.DownOperation.applyWinnersBranch(DownOperation.java:183)
-			at org.syncany.operations.DownOperation.execute(DownOperation.java:156)
-			at org.syncany.Client.down(Client.java:130)
-			at org.syncany.Client.down(Client.java:126)
-			at org.syncany.tests.scenarios.SymlinkSyncScenarioTest.testSymlinkMultipleUpsAndDowns(SymlinkSyncScenarioTest.java:119)
-			at ...
-		 */
+		clientB.down(); 
 		
 		assertEquals("Local folder should contain two files (symlink and target!)", 2, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		

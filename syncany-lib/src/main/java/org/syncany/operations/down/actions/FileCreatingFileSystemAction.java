@@ -29,14 +29,8 @@ import org.syncany.operations.Assembler;
 import org.syncany.util.NormalizedPath;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
-	private SqlDatabase localDatabase;
-	private Assembler assembler;
-	
 	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
-		super(config, winningDatabase, file1, file2);		
-		
-		this.localDatabase = new SqlDatabase(config);
-		this.assembler = new Assembler(config, localDatabase, winningDatabase);
+		super(config, winningDatabase, file1, file2);				
 	}
 
 	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
@@ -82,6 +76,9 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
+		SqlDatabase localDatabase = new SqlDatabase(config);
+		Assembler assembler = new Assembler(config, localDatabase, winningDatabase);
+
 		File reconstructedFileInCache = assembler.assembleToCache(reconstructedFileVersion);
 		 
 		setFileAttributes(reconstructedFileVersion, reconstructedFileInCache);
