@@ -18,12 +18,14 @@ include 'syncany-lib'
 include 'syncany-cli'
 include 'syncany-util'
 include 'syncany-daemon'
+include 'syncany-messages'
 
 project(':syncany').projectDir = file('../../../core')
 project(':syncany-lib').projectDir = file('../../../core/syncany-lib')
 project(':syncany-cli').projectDir = file('../../../core/syncany-cli')
 project(':syncany-util').projectDir = file('../../../core/syncany-util')
 project(':syncany-daemon').projectDir = file('../../../core/syncany-daemon')
+project(':syncany-messages').projectDir = file('../../../core/syncany-messages')
 
 // Include this plugin as subproject!
 
