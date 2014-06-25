@@ -39,17 +39,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -333,7 +334,7 @@ public class PluginOperation extends Operation {
 		FileOutputStream tempPluginFileOutputStream = new FileOutputStream(tempPluginFile);
 		InputStream remoteJarFileInputStream = urlConnection.getInputStream();
 
-		FileUtil.appendToOutputStream(remoteJarFileInputStream, tempPluginFileOutputStream);
+		IOUtils.copy(remoteJarFileInputStream, tempPluginFileOutputStream);
 
 		remoteJarFileInputStream.close();
 		tempPluginFileOutputStream.close();

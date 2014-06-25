@@ -127,7 +127,7 @@ public class DatabaseConnectionFactory {
 			
 			return connection;
 		}
-		catch (SQLException e) {
+		catch (Exception e) {
 			throw new RuntimeException("Cannot create new connection; database down?", e);
 		}
 	} 
@@ -148,15 +148,15 @@ public class DatabaseConnectionFactory {
 		}
 	}
 	
-	private static void createTables(Connection connection) throws SQLException {
+	private static void createTables(Connection connection) throws SQLException, IOException {
 		logger.log(Level.INFO, "Database has no tables. Creating tables from "+DATABASE_RESOURCE_CREATE_ALL);
 		
 		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, DATABASE_RESOURCE_CREATE_ALL);
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
-		BufferedReader resourceReader = new BufferedReader(new InputStreamReader(inputStream));
 		
 		connection.setAutoCommit(true);
-		new SqlRunner(connection).runScript(resourceReader);
+		
+		SqlRunner.runScript(connection, inputStream);
 		 
 		connection.setAutoCommit(false);
 	}

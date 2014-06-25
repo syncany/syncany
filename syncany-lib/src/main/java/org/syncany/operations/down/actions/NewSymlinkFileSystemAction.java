@@ -30,7 +30,7 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 	}
 	
 	@Override
-	public void execute() throws Exception {
+	public FileSystemActionResult execute() throws Exception {
 		if (fileExists(fileVersion2)) {
 			FileVersionComparison fileComparison = fileChanges(fileVersion2);
 			
@@ -49,6 +49,8 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 		else {
 			createSymlink(fileVersion2);
 		}			
+		
+		return new FileSystemActionResult();
 	}
 
 	@Override

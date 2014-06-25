@@ -17,7 +17,7 @@ if [ "$SYNCANY_FTP_HOST" == "" -o "$SYNCANY_FTP_USER" == "" -o "$SYNCANY_FTP_PAS
 fi
 
 # Reset tempdir
-PLUGINID=$(basename $(ls -d build/resources/main/org/syncany/connection/plugins/*))
+PLUGINID=$(basename $(ls -d build/resources/main/org/syncany/plugins/*))
 
 rm -rf "$TEMPDIR"
 mkdir -p $TEMPDIR
@@ -31,7 +31,7 @@ echo "----------------------------"
 echo "PLUGIN ID is $PLUGINID"
 
 cp $REPODIR/build/libs/*.jar $TEMPDISTDIR
-cp $REPODIR/build/resources/main/org/syncany/connection/plugins/$PLUGINID/plugin.properties $TEMPDISTDIR
+cp $REPODIR/build/resources/main/org/syncany/plugins/$PLUGINID/plugin.properties $TEMPDISTDIR
 
 PWD=`pwd`
 cd $TEMPDISTDIR

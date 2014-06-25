@@ -30,13 +30,13 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.VectorClock;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -73,8 +73,8 @@ public class Config {
 	private SaltedSecretKey masterKey;
 
 	private Cache cache;	
-	private Plugin plugin;
-	private Connection connection;
+	private TransferPlugin plugin;
+	private TransferSettings connection;
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
@@ -110,10 +110,10 @@ public class Config {
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
 		localDir = FileUtil.getCanonicalFile(aLocalDir);		
-		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DIR_APPLICATION));
-		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_CACHE));
-		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_DATABASE));
-		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_LOG));
+		appDir = FileUtil.getCanonicalFile(new File(localDir, DIR_APPLICATION));
+		cacheDir = FileUtil.getCanonicalFile(new File(appDir, DIR_CACHE));
+		databaseDir = FileUtil.getCanonicalFile(new File(appDir, DIR_DATABASE));
+		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
 	}
 	
 	private void initCache() {
@@ -200,14 +200,14 @@ public class Config {
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
 		if (configTO.getConnectionTO() != null) {
-			plugin = Plugins.get(configTO.getConnectionTO().getType());
+			plugin = Plugins.get(configTO.getConnectionTO().getType(), TransferPlugin.class);
 	    	
 	    	if (plugin == null) {
 	    		throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
 	    	}
 	    	
 	    	try {
-		    	connection = plugin.createConnection();
+		    	connection = plugin.createSettings();
 		    	connection.init(configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {
@@ -248,15 +248,15 @@ public class Config {
 		this.displayName = displayName;
 	}
 		
-	public Plugin getPlugin() {
+	public TransferPlugin getTransferPlugin() {
 		return plugin;
 	}
 	
-	public Connection getConnection() {
+	public TransferSettings getConnection() {
         return connection;
     }
 
-    public void setConnection(Connection connection) {
+    public void setConnection(TransferSettings connection) {
         this.connection = connection;
     }
 

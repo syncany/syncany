@@ -28,8 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.SqlDatabase;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -41,7 +41,7 @@ public class FileVanishedScenarioTest {
 	@Test
 	public void testCallUpWhileDeletingFiles() throws Exception {
 		// Setup 
-		final Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
 		final int numFiles = 100;
@@ -98,8 +98,6 @@ public class FileVanishedScenarioTest {
 		// --> This will hopefully lead to a couple of 'vanished' files
 		logger.log(Level.INFO, "Starting 'up' thread ...");		
 		runUpThread.start();
-		
-		
 
 		logger.log(Level.INFO, "Starting 'delete' thread ...");
 		deleteFilesThread.start();		
@@ -114,7 +112,9 @@ public class FileVanishedScenarioTest {
 		assertTrue("There should be more (or equal size) file histories than files there are.", databaseClientA.getFileHistoriesWithFileVersions().size() >= numFilesRemaining);
 		
 		// Test 2: Now up the rest, there should be exactly 50 files in the database
-		clientA.up();		
+		clientA.up();
+		clientA.cleanup();
+		
 		databaseClientA = clientA.loadLocalDatabase();
 		assertEquals("There should be EXACTLY "+numFilesRemaining+" file histories in the database.", numFilesRemaining, databaseClientA.getFileHistoriesWithFileVersions().size());
 		
@@ -131,7 +131,7 @@ public class FileVanishedScenarioTest {
 	@Test
 	public void testFolderVanishesWhenSyncingDown() throws Exception {		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 

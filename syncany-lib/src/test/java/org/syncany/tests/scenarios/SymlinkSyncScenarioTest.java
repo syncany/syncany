@@ -29,11 +29,11 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
+import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.EnvironmentUtil;
@@ -47,7 +47,7 @@ public class SymlinkSyncScenarioTest {
 		}
 		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -102,7 +102,7 @@ public class SymlinkSyncScenarioTest {
 		}
 
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -117,18 +117,7 @@ public class SymlinkSyncScenarioTest {
 		clientA.up();
 
 		// B down
-		clientB.down(); // TODO [medium] This test fails non-deterministically
-		/*
-			org.syncany.connection.plugins.StorageException: No such file in local repository: /tmp/syncany-140111020110031-109-repo/multichunks/multichunk-74dbca0d3a4f7f952b4d811d1f5907898d22e2cd
-			at org.syncany.connection.plugins.local.LocalTransferManager.download(LocalTransferManager.java:106)
-			at org.syncany.operations.DownOperation.downloadAndDecryptMultiChunks(DownOperation.java:376)
-			at org.syncany.operations.DownOperation.applyWinnersBranch(DownOperation.java:183)
-			at org.syncany.operations.DownOperation.execute(DownOperation.java:156)
-			at org.syncany.Client.down(Client.java:130)
-			at org.syncany.Client.down(Client.java:126)
-			at org.syncany.tests.scenarios.SymlinkSyncScenarioTest.testSymlinkMultipleUpsAndDowns(SymlinkSyncScenarioTest.java:119)
-			at ...
-		 */
+		clientB.down(); 
 		
 		assertEquals("Local folder should contain two files (symlink and target!)", 2, clientB.getLocalFilesExcludeLockedAndNoRead().size());
 		
@@ -150,7 +139,7 @@ public class SymlinkSyncScenarioTest {
 		}
 
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 

@@ -1,0 +1,15 @@
+NAME
+  sy-ls-remote - list changes on remote repository
+     
+SYNOPSIS
+  sy ls-remote 
+  
+DESCRIPTION 
+  This command compares the list of locally known remote databases with the 
+  remotely available client databases and prints new/unknown files to the 
+  console.
+    
+  This command is used by the 'down' command to detect which remote databases
+  to download and compare.
+  
+%RESOURCE:incl/footer.skel%    

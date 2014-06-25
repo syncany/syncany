@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.syncany.connection.plugins.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * The application data access object (DAO) writes and queries the SQL database for 

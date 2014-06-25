@@ -63,17 +63,6 @@ public class NormalizedPath {
 		return normalizedPath;
 	}
 	
-	public NormalizedPath getName() {
-		int lastIndexOfSlash = normalizedPath.lastIndexOf("/");
-		
-		if (lastIndexOfSlash == -1) {
-			return this;
-		}
-		else {
-			return new NormalizedPath(root, normalizedPath.substring(lastIndexOfSlash+1));
-		}
-	}
-	
 	public NormalizedPath getParent() {
 		int lastIndexOfSlash = normalizedPath.lastIndexOf("/");
 		
@@ -85,32 +74,13 @@ public class NormalizedPath {
 		}
 	}	
 
-	public List<String> getParts() {
+	private List<String> getParts() {
 		return Arrays.asList(normalizedPath.split("[/]"));
-	}		
-	
-	public List<NormalizedPath> getParents() {
-		List<NormalizedPath> parents = new ArrayList<NormalizedPath>();
-		List<String> parts = Arrays.asList(normalizedPath.split("[/]"));
-		
-		if (parts.size() > 0) {
-			NormalizedPath previousNormalizedParent = null;
-			
-			for (int i=0; i<parts.size(); i++) {
-				String normalizedParentPath = (previousNormalizedParent != null) ? previousNormalizedParent.toString() + "/" + parts.get(i) : parts.get(i);
-				NormalizedPath parent = new NormalizedPath(root, normalizedParentPath);
-				
-				parents.add(parent);
-				previousNormalizedParent = parent;
-			}			
-		}
-		
-		return parents;
 	}		
 	
 	public File toFile() {
 		if (root != null) {
-			return new File(root+File.separator+normalizedPath);
+			return new File(root, normalizedPath);
 		}
 		else {
 			return new File(normalizedPath);
@@ -134,7 +104,7 @@ public class NormalizedPath {
 		return hasIllegalChars(normalizedPath);
 	}
 	
-	public String getExtension(boolean includeDot) {
+	private String getExtension(boolean includeDot) {
 		return getExtension(normalizedPath, includeDot);
 	}
 	
@@ -150,11 +120,7 @@ public class NormalizedPath {
 		return (includeDot) ? "." + extension : extension;
 	}
 	
-	public String getBasename() {
-		return getBasename(normalizedPath);
-	}
-	
-	private String getBasename(String filename) {
+	private String getPathWithoutExtension(String filename) {
 		String extension = getExtension(true); // .txt
 		
 		if ("".equals(extension)) {
@@ -195,7 +161,7 @@ public class NormalizedPath {
 		boolean originalFileHasExtension = conflictFileExtension != null && !"".equals(conflictFileExtension);
 
 		if (originalFileHasExtension) {
-			String conflictFileBasename = getBasename(pathPart);
+			String conflictFileBasename = getPathWithoutExtension(pathPart);
 			return String.format("%s (%s).%s", conflictFileBasename, filenameSuffix, conflictFileExtension);						
 		}
 		else {
@@ -255,9 +221,11 @@ public class NormalizedPath {
 				if (!exists) {
 					return creatableNormalizedPath;
 				}
+				
+				logger.log(Level.WARNING, " - File exists, trying new file: " + creatableNormalizedPath.toFile());
 			} while (attempt++ < 10);
 			
-			throw new Exception("Cannot create creatable path; "+attempt+" attempts: "+creatableNormalizedPath);
+			throw new Exception("Cannot create creatable path; "+creatableNormalizedPath+" attempts: "+attempt);
 		}
 	}
 	

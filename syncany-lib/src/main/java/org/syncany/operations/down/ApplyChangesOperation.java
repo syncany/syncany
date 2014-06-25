@@ -17,12 +17,6 @@
  */
 package org.syncany.operations.down;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -32,21 +26,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.MultiChunkRemoteFile;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.Downloader;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.down.actions.FileSystemAction;
-import org.syncany.operations.down.actions.FileSystemAction.InconsistentFileSystemException;
-import org.syncany.util.FileUtil;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * Applies a given winners database to the local directory.
@@ -68,7 +59,8 @@ public class ApplyChangesOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 
 	private SqlDatabase localDatabase;
-	private TransferManager transferManager;
+	private Downloader downloader;
+
 	private MemoryDatabase winnersDatabase;
 	private DownOperationResult result;
 
@@ -76,7 +68,7 @@ public class ApplyChangesOperation extends Operation {
 		super(config);
 		
 		this.localDatabase = localDatabase;
-		this.transferManager = transferManager;
+		this.downloader = new Downloader(config, transferManager);
 		this.winnersDatabase = winnersDatabase;
 		this.result = result;
 	}
@@ -89,7 +81,9 @@ public class ApplyChangesOperation extends Operation {
 		List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
 
 		Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
-		downloadAndDecryptMultiChunks(unknownMultiChunks);
+		
+		downloader.downloadAndDecryptMultiChunks(unknownMultiChunks);
+		result.getDownloadedMultiChunks().addAll(unknownMultiChunks);
 
 		applyFileSystemActions(actions);
 		
@@ -159,41 +153,6 @@ public class ApplyChangesOperation extends Operation {
 		return multiChunksToDownload;
 	}
 	
-	/** 
-	 * Downloads the given multichunks from the remote storage and decrypts them
-	 * to the local cache folder. 
-	 */
-	private void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
-		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
-
-		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
-
-		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
-			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
-			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
-
-			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
-			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-			result.getDownloadedMultiChunks().add(multiChunkId);
-
-			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
-			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
-			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
-
-			// TODO [medium] Calculate checksum while writing file, to verify correct content
-			FileUtil.appendToOutputStream(multiChunkInputStream, decryptedMultiChunkOutputStream);
-
-			decryptedMultiChunkOutputStream.close();
-			multiChunkInputStream.close();
-
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
-			localEncryptedMultiChunkFile.delete();
-		}
-
-		transferManager.disconnect();
-	}
-	
 	/**
 	 * Applies the given file system actions in a sensible order. To do that, 
 	 * the given actions are first sorted using the {@link FileSystemActionComparator} and
@@ -215,7 +174,7 @@ public class ApplyChangesOperation extends Operation {
 			try {
 				action.execute();
 			}
-			catch (InconsistentFileSystemException e) {
+			catch (Exception e) {
 				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
 			}
 		}

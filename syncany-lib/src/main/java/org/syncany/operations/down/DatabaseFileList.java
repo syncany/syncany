@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.syncany.connection.plugins.DatabaseRemoteFile;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * Helper class to help map a database version header to its corresponding

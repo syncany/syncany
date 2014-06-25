@@ -24,15 +24,15 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

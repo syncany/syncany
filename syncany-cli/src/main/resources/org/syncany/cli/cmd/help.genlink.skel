@@ -1,0 +1,22 @@
+NAME
+  sy-genlink - generate Syncany link for initialized local directory
+    
+SYNOPSIS
+  sy genlink [-s | --short] 
+  
+DESCRIPTION 
+  This command creates a Syncany link (syncany://..) from an existing local
+  folder. The link can then be sent to someone else to connect to the
+  repository.
+  
+  Syncany links contain the connection information of the storage backend, 
+  so in case of an FTP backend, host/user/pass/etc. would be contained in 
+  a link. If the link is shared, be aware that you are giving this information
+  to the other users. 
+    
+OPTIONS
+  -S, --short
+    Only prints the link and leaves out any explanatory text. Useful if the
+    link is used in a script.
+    
+%RESOURCE:incl/footer.skel%

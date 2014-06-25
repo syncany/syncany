@@ -27,10 +27,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.dao.ApplicationSqlDao;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 import org.syncany.util.CollectionUtil;
 
 public class ApplicationDaoTest {
@@ -41,7 +41,7 @@ public class ApplicationDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
 		List<DatabaseRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();

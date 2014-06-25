@@ -24,6 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
+import org.syncany.util.FileUtil;
 
 public class RenameFileSystemAction extends FileSystemAction {
 	public RenameFileSystemAction(Config config, FileVersion from, FileVersion to, MemoryDatabase winningDatabase) {
@@ -31,36 +32,36 @@ public class RenameFileSystemAction extends FileSystemAction {
 	}
 
 	@Override
-	public void execute() throws Exception {		
+	public FileSystemActionResult execute() throws Exception {		
 		File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getPath());
-		File toFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());			
+		File targetFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());	
 		
-		boolean fromFileExists = fromFileOnDisk.exists();
-		boolean toFileExists = toFileOnDisk.exists();
+		boolean fromFileExists = FileUtil.exists(fromFileOnDisk);
+		boolean targetFileExists = FileUtil.exists(targetFileOnDisk);
 		
-		boolean fileRenamed = !toFileOnDisk.equals(fromFileOnDisk);
+		boolean fileRenamed = !targetFileOnDisk.equals(fromFileOnDisk);
 				
 		if (fileRenamed) {
-			if (fromFileExists && !toFileExists) { 
+			if (fromFileExists && !targetFileExists) { 
 				if (fileAsExpected(fileVersion1)) { // << Expected case!
-					logger.log(Level.INFO, "     - (1) Renaming file "+fromFileOnDisk+" to "+toFileOnDisk+" ...");				
-					FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);
+					logger.log(Level.INFO, "     - (1) Renaming file "+fromFileOnDisk+" to "+targetFileOnDisk+" ...");				
+					targetFileOnDisk = moveFileToFinalLocation(fromFileOnDisk, fileVersion2);
 				}
 				else {
 					logger.log(Level.INFO, "     - (2) Source file differs from what we expected.");
 					throw new Exception("Source file differs from what we expected.");
 				}
 			}
-			else if (fromFileExists && toFileExists) {
+			else if (fromFileExists && targetFileExists) {
 				if (fileAsExpected(fileVersion1)) {
 					if (fileAsExpected(fileVersion2)) {
-						logger.log(Level.INFO, "     - (3) File at destination is what was expected. Nothing to do for "+toFileOnDisk+" ...");
+						logger.log(Level.INFO, "     - (3) File at destination is what was expected. Nothing to do for "+targetFileOnDisk+" ...");
 					}
 					else {
-						logger.log(Level.INFO, "     - (4) File at destination differs, creating conflict file for "+toFileOnDisk+" ...");
+						logger.log(Level.INFO, "     - (4) File at destination differs, creating conflict file for "+targetFileOnDisk+" ...");
 						
 						moveToConflictFile(fileVersion2);
-						FileUtils.moveFile(fromFileOnDisk, toFileOnDisk);
+						FileUtils.moveFile(fromFileOnDisk, targetFileOnDisk);
 					}
 				}
 				else {
@@ -68,13 +69,13 @@ public class RenameFileSystemAction extends FileSystemAction {
 					throw new Exception("Cannot rename because orig. file does not exist");
 				}			
 			}		
-			else if (!fromFileExists && !toFileExists) {
+			else if (!fromFileExists && !targetFileExists) {
 				logger.log(Level.INFO, "     - (6) Cannot rename because orig. file does not exist.");
 				throw new Exception("Cannot rename because orig. file does not exist");
 			}
-			else if (!fromFileExists && toFileExists) {
+			else if (!fromFileExists && targetFileExists) {
 				if (fileAsExpected(fileVersion2)) {
-					logger.log(Level.INFO, "     - (7) File at destination is what was expected. Nothing to do for "+toFileOnDisk+" ...");
+					logger.log(Level.INFO, "     - (7) File at destination is what was expected. Nothing to do for "+targetFileOnDisk+" ...");
 				}
 				else {
 					logger.log(Level.INFO, "     - (8) Cannot rename because orig. file does not exist.");
@@ -84,8 +85,10 @@ public class RenameFileSystemAction extends FileSystemAction {
 		}
 		
 		// Set attributes
-		setFileAttributes(fileVersion2); // TODO [low] check for fileAsExpected
-		setLastModified(fileVersion2);
+		setFileAttributes(fileVersion2, targetFileOnDisk); // TODO [low] check for fileAsExpected
+		setLastModified(fileVersion2, targetFileOnDisk);
+		
+		return new FileSystemActionResult();
 	}	
 	
 	@Override

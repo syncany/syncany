@@ -32,12 +32,12 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
+import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.EnvironmentUtil;
 
 /**

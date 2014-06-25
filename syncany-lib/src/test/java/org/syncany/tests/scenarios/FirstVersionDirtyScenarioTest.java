@@ -20,19 +20,20 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class FirstVersionDirtyScenarioTest {
 	@Test
 	public void testFirstVersionDirty() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -59,15 +60,15 @@ public class FirstVersionDirtyScenarioTest {
 			"chunk", "multichunk", "filecontent", "filecontent_chunk"
 		});
 		
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionA));
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionB));		
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionB));		
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
 		
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from filehistory", databaseConnectionA));
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from filehistory", databaseConnectionB));		
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from filehistory", databaseConnectionA));
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from filehistory", databaseConnectionB));		
 		
-		assertEquals("1", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));		
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionB));		
 
 		// The table "multichunk_chunk" has 4 entries in B, but only 2 in A (!)
 		// This is because the same file (= same chunks) are uploaded twice. 
@@ -75,8 +76,8 @@ public class FirstVersionDirtyScenarioTest {
 		// TODO [medium] The cleanup operation does not clean multichunks with redundant chunks, or does it?!
 				
 		assertEquals(
-				2*Integer.parseInt(TestAssertUtil.runSqlQuery("select count(*) from multichunk_chunk", databaseConnectionA)),
-				Integer.parseInt(TestAssertUtil.runSqlQuery("select count(*) from multichunk_chunk", databaseConnectionB)));		
+				2*Integer.parseInt(TestSqlUtil.runSqlSelect("select count(*) from multichunk_chunk", databaseConnectionA)),
+				Integer.parseInt(TestSqlUtil.runSqlSelect("select count(*) from multichunk_chunk", databaseConnectionB)));		
 		
 		// Tear down
 		clientA.deleteTestData();

@@ -25,14 +25,14 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.syncany.Client;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.plugins.transfer.TransferSettings;
 
 public class TestClient extends Client {
-	public TestClient(String machineName, Connection connection) throws Exception {
+	public TestClient(String machineName, TransferSettings connection) throws Exception {
 		Config testConfig = TestConfigUtil.createTestLocalConfig(machineName, connection);
 		testConfig.setMachineName(machineName);
 		testConfig.setDisplayName(machineName);

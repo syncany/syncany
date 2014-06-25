@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+### Syncany 0.1.6-alpha (Date: 25 Jun 2014)
+
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Revamp: List and filter file tree and file histories with `sy ls` #86
+  + Revamp: Restore old/deleted files with `sy restore` #87
+  + Implemented man pages for all Syncany commands: `man (sy|sy-up|..)` #87
+  + Change plugin structure to allow arbitrary plugin (e.g. web inteface)
+- Bugfixes:
+  + Fixed issue with renaming to folder with quotes on Windows #124 
+  + Fix uploading large files, i.e. action file handler using same connection
+    as upload; #140
+
 ### Syncany 0.1.5-alpha (Date: 12 Jun 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

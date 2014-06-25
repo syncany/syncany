@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.syncany.util.FileUtil;
 
 /**
@@ -329,11 +330,6 @@ public class TestFileUtil {
 
 		return fileMap;
 	}
-	
-	public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
-		FileUtil.appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
-	}
-	
 
 	/**
 	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
@@ -353,7 +349,10 @@ public class TestFileUtil {
 	}	
 	
 	public static void writeToFile(byte[] bytes, File file) throws IOException {
-		FileUtil.appendToOutputStream(new ByteArrayInputStream(bytes), new FileOutputStream(file), true);
+		FileOutputStream outputStream = new FileOutputStream(file);
+		
+		IOUtils.copy(new ByteArrayInputStream(bytes), outputStream);
+		outputStream.close();
 	}
 	
 	public static String getBasename(String filename) {

@@ -18,7 +18,6 @@
 package org.syncany.cli;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -29,16 +28,16 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginOptionSpec;
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.connection.plugins.PluginOptionSpecs;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.StorageTestResult;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.operations.init.GenlinkOperationResult;
+import org.syncany.plugins.PluginOptionSpec;
+import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.plugins.PluginOptionSpecs;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -69,7 +68,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	protected ConnectionTO createConnectionTOFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts,
 			OptionSpec<Void> optionNonInteractive) throws Exception {
 		
-		Plugin plugin = null;
+		TransferPlugin plugin = null;
 		Map<String, String> pluginSettings = null;
 
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
@@ -116,8 +115,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return pluginOptionValues;
 	}
 	
-	protected Plugin initPlugin(String pluginStr) throws Exception {
-		Plugin plugin = Plugins.get(pluginStr);
+	protected TransferPlugin initPlugin(String pluginStr) throws Exception {
+		TransferPlugin plugin = Plugins.get(pluginStr, TransferPlugin.class);
 
 		if (plugin == null) {
 			throw new Exception("ERROR: Plugin '" + pluginStr + "' does not exist.");
@@ -126,8 +125,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
-		Connection connection = plugin.createConnection();
+	protected Map<String, String> askPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
+		TransferSettings connection = plugin.createSettings();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
 		Map<String, String> pluginOptionValues = new HashMap<String, String>();
@@ -159,12 +158,12 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return pluginOptionValues;
 	}
 	
-	protected Map<String, String> initPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
+	protected Map<String, String> initPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
 		if (knownPluginOptionValues == null) {
 			knownPluginOptionValues = new HashMap<String, String>();
 		}
 		
-		Connection connection = plugin.createConnection();
+		TransferSettings connection = plugin.createSettings();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();		
 
 		pluginOptionSpecs.validate(knownPluginOptionValues); // throws error if invalid
@@ -267,13 +266,13 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return value;
 	}
 
-	protected Plugin askPlugin() {
-		Plugin plugin = null;
+	protected TransferPlugin askPlugin() {
+		TransferPlugin plugin = null;
 
-		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
+		List<TransferPlugin> plugins = Plugins.list(TransferPlugin.class);
+		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<TransferPlugin>() {
 			@Override
-			public String getString(Plugin plugin) {
+			public String getString(TransferPlugin plugin) {
 				return plugin.getId();
 			}
 		});
@@ -283,7 +282,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			out.print("Plugin: ");
 			String pluginStr = console.readLine();
 			
-			plugin = Plugins.get(pluginStr);
+			plugin = Plugins.get(pluginStr, TransferPlugin.class);
 
 			if (plugin == null) {
 				out.println("ERROR: Plugin does not exist.");
@@ -307,7 +306,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
-		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType()), connectionTO.getSettings(), true);
+		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType(), TransferPlugin.class), connectionTO.getSettings(), true);
 		connectionTO.setSettings(newPluginSettings);
 	}
 	

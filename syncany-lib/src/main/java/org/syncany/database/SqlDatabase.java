@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
+import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.dao.ApplicationSqlDao;
@@ -40,6 +40,7 @@ import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.down.DatabaseBranch;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * Represents the single entry point for all SQL database queries.
@@ -128,6 +129,10 @@ public class SqlDatabase {
 	public DatabaseBranch getLocalDatabaseBranch() {
 		return databaseVersionDao.getLocalDatabaseBranch();
 	}
+	
+	public List<DatabaseVersionHeader> getNonEmptyDatabaseVersionHeaders() {
+		return databaseVersionDao.getNonEmptyDatabaseVersionHeaders();
+	}
 
 	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
 		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
@@ -152,21 +157,25 @@ public class SqlDatabase {
 	// File History
 
 	@Deprecated	
-	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
+	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions() {
 		// TODO [medium] Note: This returns the full database. Don't use this!
 		return fileHistoryDao.getFileHistoriesWithFileVersions();
+	}
+
+	public Map<FileHistoryId, PartialFileHistory> getFileHistories(List<FileHistoryId> fileHistoryIds) {
+		return fileHistoryDao.getFileHistories(fileHistoryIds);
 	}
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
 	}
-
-	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
-		return fileHistoryDao.getFileHistoriesWithLastVersionByChecksum(fileContentChecksum);
-	}
 	
 	private void removeUnreferencedFileHistories() throws SQLException {
 		fileHistoryDao.removeUnreferencedFileHistories();
+	}
+
+	public FileHistoryId expandFileHistoryId(FileHistoryId fileHistoryId) {
+		return fileHistoryDao.expandFileHistoryId(fileHistoryId);
 	}
 
 	// File Version
@@ -184,16 +193,29 @@ public class SqlDatabase {
 		return fileVersionDao.getFileVersionByPath(path);
 	}
 
+	@Deprecated
 	public Map<String, FileVersion> getFileTreeAtDate(Date date) {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
 
+	public Map<String, FileVersion> getFileTree(String filter, Date date, boolean recursive, FileType... fileTypes) {
+		return fileVersionDao.getFileTree(filter, date, recursive, fileTypes);
+	}
+	
+	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {
+		return fileVersionDao.getFileHistory(fileHistoryId);
+	}
+	
 	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
 		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
 	}	
 
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		return fileVersionDao.getDeletedFileVersions();
+	}
+	
+	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
+		return fileVersionDao.getFileVersion(fileHistoryId, version);
 	}
 
 	// Multi Chunk

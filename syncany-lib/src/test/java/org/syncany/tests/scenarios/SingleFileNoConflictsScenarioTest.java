@@ -22,7 +22,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -30,7 +30,7 @@ public class SingleFileNoConflictsScenarioTest {
 	@Test
 	public void testSingleClientLocalBackupAndRestoreNoConflicts() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA1 = new TestClient("A", testConnection);
 		TestClient clientA2 = new TestClient("A", testConnection); // same client!
 
@@ -50,7 +50,7 @@ public class SingleFileNoConflictsScenarioTest {
 	@Test
 	public void testSingleFileNewNoConflicts() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection); 
 
@@ -69,7 +69,7 @@ public class SingleFileNoConflictsScenarioTest {
 	@Test
 	public void testSingleFileMoveNoConflicts() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection); 
 
@@ -96,7 +96,7 @@ public class SingleFileNoConflictsScenarioTest {
 	@Test
 	public void testSingleFileDeleteNoConflicts() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection); 
 
@@ -122,7 +122,7 @@ public class SingleFileNoConflictsScenarioTest {
 	@Test
 	public void testSingleFileChangeNoConflicts() throws Exception {		
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection); 		
 
@@ -148,7 +148,7 @@ public class SingleFileNoConflictsScenarioTest {
 	@Test
 	public void testComplexNoConflicts() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

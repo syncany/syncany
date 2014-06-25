@@ -30,10 +30,6 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.AbstractSqlDao;
 
-/**
- * @author pheckel
- *
- */
 public class TestSqlDatabase extends SqlDatabase {
 	private TestSqlDao testDao;
 	

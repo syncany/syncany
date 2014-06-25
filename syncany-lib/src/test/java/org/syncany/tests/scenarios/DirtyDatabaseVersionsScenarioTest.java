@@ -25,13 +25,13 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -39,7 +39,7 @@ public class DirtyDatabaseVersionsScenarioTest {
 	@Test
 	public void testThreeClientsOneLoser() throws Exception {		
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 		TestClient clientC = new TestClient("C", testConnection);

@@ -74,4 +74,11 @@ public class StringUtilTest {
 		assertEquals("HelloWorld", StringUtil.toCamelCase("hello-world"));
 		assertEquals("HelloWorld", StringUtil.toCamelCase("hello-World"));
 	}
+	
+	@Test
+	public void testSubstrCount() {
+		assertEquals(1, StringUtil.substrCount("some/path", "/"));
+		assertEquals(2, StringUtil.substrCount("some/path/", "/"));
+		assertEquals(1, StringUtil.substrCount("annanna", "anna"));
+	}
 }

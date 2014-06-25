@@ -26,10 +26,10 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 
-@Root(name="daemon")
-@Namespace(reference="http://syncany.org/daemon/1")
+@Root(name = "daemon", strict = false)
+@Namespace(reference = "http://syncany.org/daemon/1")
 public class DaemonConfigTO {
-	@ElementList(name="folders", entry="folder", required=true)
+	@ElementList(name = "folders", entry = "folder", required = true)
 	private ArrayList<FolderTO> folders;
 
 	public static DaemonConfigTO load(File file) throws ConfigException {

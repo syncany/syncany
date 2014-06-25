@@ -24,10 +24,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.ActionRemoteFile;
-import org.syncany.connection.plugins.RetriableTransferManager;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.RetriableTransferManager;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
 /**
  * Represents and is inherited by a transfer operation. Transfer operations are operations 
@@ -57,10 +57,16 @@ public abstract class AbstractTransferOperation extends Operation {
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
 
-		this.transferManager = new RetriableTransferManager(config.getPlugin().createTransferManager(config.getConnection()));
-		this.actionHandler = new ActionFileHandler(transferManager, operationName, config.getMachineName());
+		// Do NOT reuse TransferManager for action file renewal; see #140
+		
+		this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
+		this.transferManager = createReliableTransferManager(config);
 	}
 	
+	private TransferManager createReliableTransferManager(Config config) {
+		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection()));
+	}
+
 	protected void startOperation() throws Exception {
 		actionHandler.start();
 	}

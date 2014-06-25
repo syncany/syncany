@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.down.DatabaseBranch;
@@ -156,11 +158,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
 			preparedStatement.setString(3, databaseVersionHeader.getClient());
 			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
-	
-			// TODO [high] The vector clock serialize pattern (<client><clock>,<client><clock>,..) is ambiguous if the <client> contains numbers!
-			//             In productive code, this serialized value is never re-created to a VectorClock object.
-			//             However, in tests this is done in TestDatabaseUtil; and it is VERY DANGEROUS to leave it like
-			//             this. Maybe introduce an unambiguous pattern: (<client>=<clock>,<client>=<clock>,..)			
 			
 			int affectedRows = preparedStatement.executeUpdate();
 			
@@ -249,6 +246,24 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public List<DatabaseVersionHeader> getNonEmptyDatabaseVersionHeaders() {
+		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<>();
+		
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getNonEmptyDatabaseVersionHeaders.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
+					databaseVersionHeaders.add(databaseVersionHeader);
+				}
+			}
+
+			return databaseVersionHeaders;
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	public Iterator<DatabaseVersion> getDirtyDatabaseVersions() {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.dirty.getDirtyDatabaseVersions.sql")) {
@@ -322,7 +337,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
 		Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
 		Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
-		List<PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
+		Map<FileHistoryId, PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
 
 		for (ChunkEntry chunk : chunks.values()) {
 			databaseVersion.addChunk(chunk);
@@ -336,7 +351,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			databaseVersion.addFileContent(fileContent);
 		}
 
-		for (PartialFileHistory fileHistory : fileHistories) {
+		for (PartialFileHistory fileHistory : fileHistories.values()) {
 			databaseVersion.addFileHistory(fileHistory);
 		}
 

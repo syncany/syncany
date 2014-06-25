@@ -38,16 +38,16 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationOptions;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.util.StringUtil;
 
 import com.google.common.collect.Lists;
@@ -167,7 +167,7 @@ public class TestConfigUtil {
 		return new Config(new File("/dummy"), configTO, repoTO);
 	}
 
-	public static Config createTestLocalConfig(String machineName, Connection connection) throws Exception {
+	public static Config createTestLocalConfig(String machineName, TransferSettings connection) throws Exception {
 		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-" + machineName, connection));
 		tempLocalDir.mkdirs();
 
@@ -265,9 +265,9 @@ public class TestConfigUtil {
 		return initOperationOptions;
 	}
 
-	public static Connection createTestLocalConnection() throws Exception {
-		Plugin plugin = Plugins.get("local");
-		Connection conn = plugin.createConnection();
+	public static TransferSettings createTestLocalConnection() throws Exception {
+		TransferPlugin plugin = Plugins.get("local", TransferPlugin.class);
+		TransferSettings conn = plugin.createSettings();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", conn));
 
@@ -291,7 +291,7 @@ public class TestConfigUtil {
 	}
 	
 	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin, List<String> failingOperationPatterns) throws Exception {		
-		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createConnection();
+		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createSettings();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 

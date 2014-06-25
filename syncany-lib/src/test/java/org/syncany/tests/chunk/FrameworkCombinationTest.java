@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 import javax.crypto.NoSuchPaddingException;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
@@ -286,7 +287,7 @@ public class FrameworkCombinationTest {
 				File extractedChunkFile = extractedChunkIDToChunkFile.get(chunkID);
 
 				logger.log(Level.INFO, "  + Appending "+chunkID+" (file: "+extractedChunkFile+") to "+outputFile+" ...");				
-				TestFileUtil.appendToOutputStream(extractedChunkFile, outputFileOutputStream);
+				IOUtils.copy(new FileInputStream(extractedChunkFile), outputFileOutputStream);
 			}
 			
 			inputFileToOutputFile.put(inputFile, outputFile);

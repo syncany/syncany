@@ -26,7 +26,6 @@ import java.util.Properties;
 
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.connection.plugins.UserInteractionListener;
 import org.syncany.crypto.CipherException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
@@ -46,17 +45,17 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
-import org.syncany.operations.log.LogOperation;
-import org.syncany.operations.log.LogOperation.LogOperationOptions;
-import org.syncany.operations.log.LogOperation.LogOperationResult;
+import org.syncany.operations.ls.LsOperation;
+import org.syncany.operations.ls.LsOperationOptions;
+import org.syncany.operations.ls.LsOperationResult;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.restore.RestoreOperation;
-import org.syncany.operations.restore.RestoreOperation.RestoreOperationOptions;
-import org.syncany.operations.restore.RestoreOperation.RestoreOperationResult;
+import org.syncany.operations.restore.RestoreOperationOptions;
+import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
@@ -67,6 +66,7 @@ import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.plugins.UserInteractionListener;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -78,7 +78,8 @@ import org.syncany.operations.watch.WatchOperationOptions;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
-	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties";
+	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!
+	private static final String APPLICATION_PROPERTIES_TEST_RESOURCE = "/org/syncany/application.test.properties";
 	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
 	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
 	private static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
@@ -147,8 +148,8 @@ public class Client {
 		return new RestoreOperation(config, options).execute();
 	}
 
-	public LogOperationResult log(LogOperationOptions options) throws Exception {
-		return new LogOperation(config, options).execute();
+	public LsOperationResult ls(LsOperationOptions options) throws Exception {
+		return new LsOperation(config, options).execute();
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
@@ -235,9 +236,26 @@ public class Client {
 		try {
 			applicationProperties = new Properties();
 			applicationProperties.load(globalPropertiesInputStream);
-		}
+			
+			initTestApplicationProperties();			
+		}  
 		catch (Exception e) {
 			throw new RuntimeException("Cannot load application properties.", e);
 		}
-	}	
+	}
+
+	private static void initTestApplicationProperties() {
+		InputStream testApplicationProperties = Client.class.getResourceAsStream(APPLICATION_PROPERTIES_TEST_RESOURCE);
+		boolean isTestEnvironment = testApplicationProperties != null;
+		
+		if (isTestEnvironment) {
+			try {
+				applicationProperties.clear();
+				applicationProperties.load(testApplicationProperties);
+			}
+			catch (Exception e) {
+				throw new RuntimeException("Cannot load TEST-ONLY application properties.", e);
+			}
+		}
+	}
 }

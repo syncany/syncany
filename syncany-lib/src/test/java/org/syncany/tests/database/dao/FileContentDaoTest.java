@@ -31,7 +31,7 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class FileContentDaoTest {
 	@Test
@@ -41,7 +41,7 @@ public class FileContentDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 
@@ -103,7 +103,7 @@ public class FileContentDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 
 		FileContentSqlDao fileContentDao = new FileContentSqlDao(databaseConnection);
 

@@ -28,7 +28,7 @@ public class NewFileSystemAction extends FileCreatingFileSystemAction {
 	}
 	
 	@Override
-	public void execute() throws Exception {
+	public FileSystemActionResult execute() throws Exception {
 		if (fileExists(fileVersion2)) {
 			if (fileAsExpected(fileVersion2)) {
 				// Nothing to do
@@ -40,7 +40,9 @@ public class NewFileSystemAction extends FileCreatingFileSystemAction {
 		}
 		else {
 			createFileFolderOrSymlink(fileVersion2);
-		}		
+		}	
+		
+		return new FileSystemActionResult();
 	}
 
 	@Override

@@ -24,8 +24,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
-import org.syncany.connection.plugins.local.LocalConnection;
-import org.syncany.connection.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
@@ -36,9 +34,12 @@ import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class CleanupOperationTest {
 	static {
@@ -83,21 +84,21 @@ public class CleanupOperationTest {
 		clientA.upWithForceChecksum();			
 		
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());		
-		assertEquals("12", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
-		assertEquals("11", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionA));
-		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from multichunk", databaseConnectionA));
-		assertEquals("11", TestAssertUtil.runSqlQuery("select count(*) from filecontent", databaseConnectionA));
-		assertEquals("4", TestAssertUtil.runSqlQuery("select count(distinct id) from filehistory", databaseConnectionA));
+		assertEquals("12", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionA));
+		assertEquals("10", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from filecontent", databaseConnectionA));
+		assertEquals("4", TestSqlUtil.runSqlSelect("select count(distinct id) from filehistory", databaseConnectionA));
 
 		// B: Sync down by other client
 		clientB.down();
 		
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());		
-		assertEquals("12", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionB));
-		assertEquals("11", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionB));
-		assertEquals("10", TestAssertUtil.runSqlQuery("select count(*) from multichunk", databaseConnectionB));
-		assertEquals("11", TestAssertUtil.runSqlQuery("select count(*) from filecontent", databaseConnectionB));
-		assertEquals("4", TestAssertUtil.runSqlQuery("select count(distinct id) from filehistory", databaseConnectionB));
+		assertEquals("12", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionB));
+		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionB));
+		assertEquals("10", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionB));
+		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from filecontent", databaseConnectionB));
+		assertEquals("4", TestSqlUtil.runSqlSelect("select count(distinct id) from filehistory", databaseConnectionB));
 		
 		// A: Cleanup this mess (except for two)     <<<< This is the interesting part!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);		
@@ -107,18 +108,18 @@ public class CleanupOperationTest {
 		assertEquals(3, cleanupOperationResult.getRemovedOldVersionsCount());
 		
 		// 2 versions for "file.jpg", 2 versions for "otherfile.txt" and one version for "someotherfile.jpg"
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from fileversion", databaseConnectionA));
-		assertEquals("7", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='file.jpg'", databaseConnectionA)); // 3+4
-		assertEquals("5", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='otherfile.txt'", databaseConnectionA)); // 2+3
-		assertEquals("1", TestAssertUtil.runSqlQuery("select sum(version) from fileversion where path='someotherfile.jpg'", databaseConnectionA));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("7", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='file.jpg'", databaseConnectionA)); // 3+4
+		assertEquals("5", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='otherfile.txt'", databaseConnectionA)); // 2+3
+		assertEquals("1", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='someotherfile.jpg'", databaseConnectionA));
 				
 		// 5 chunks remain; one was obsolete so we removed it!
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from chunk", databaseConnectionA));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionA));
 		
 		// 6 chunks in 5 multichunks
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from multichunk", databaseConnectionA));
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from filecontent", databaseConnectionA));
-		assertEquals("3", TestAssertUtil.runSqlQuery("select count(distinct id) from filehistory", databaseConnectionA));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from filecontent", databaseConnectionA));
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(distinct id) from filehistory", databaseConnectionA));
 		
 		// Test the repo
 		assertEquals(5, new File(testConnection.getRepositoryPath()+"/multichunks/").list().length);
@@ -364,7 +365,7 @@ public class CleanupOperationTest {
 			// List of failing operations (regex)
 			// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-			"rel=3.+upload.+multichunk"				
+			"rel=[345].+upload.+multichunk" // << 3 retries!				
 		}));
 
 		TestClient clientA = new TestClient("A", testConnection);

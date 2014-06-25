@@ -31,11 +31,11 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
+import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -45,7 +45,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 	@Test
 	public void testUpWhileWritingFile() throws Exception {
 		// Setup 
-		final Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);

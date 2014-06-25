@@ -23,15 +23,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
-import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  * The file history DAO queries and modifies the <i>filehistory</i> in
@@ -105,7 +109,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	/**
 	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
 	 */
-	public List<PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
+	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql")) {
 			preparedStatement.setString(1, databaseVersionVectorClock.toString());
 
@@ -118,7 +122,59 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public List<PartialFileHistory> getFileHistoriesWithFileVersions() {
+	public FileHistoryId expandFileHistoryId(FileHistoryId fileHistoryIdPrefix) {
+		String fileHistoryIdPrefixLikeQuery = fileHistoryIdPrefix.toString() + "%";
+
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.expandFileHistoryId.sql")) {
+			preparedStatement.setString(1, fileHistoryIdPrefixLikeQuery);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					FileHistoryId fullFileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					
+					boolean nonUniqueResult = resultSet.next();
+					
+					if (nonUniqueResult) {
+						return null;
+					}
+					else {
+						return fullFileHistoryId;
+					}
+				}
+				else {
+					return null;
+				}				
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Map<FileHistoryId, PartialFileHistory> getFileHistories(List<FileHistoryId> fileHistoryIds) {
+		String[] fileHistoryIdsStr = createFileHistoryIdsArray(fileHistoryIds);
+		
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesByIds.sql")) {
+			preparedStatement.setArray(1, connection.createArrayOf("varchar", fileHistoryIdsStr));
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createFileHistoriesFromResult(resultSet);
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private String[] createFileHistoryIdsArray(List<FileHistoryId> fileHistoryIds) {
+		return Lists.transform(fileHistoryIds, new Function<FileHistoryId, String>() {
+			public String apply(FileHistoryId fileHistoryId) {
+				return fileHistoryId.toString();
+			}			
+		}).toArray(new String[0]);
+	}
+
+	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions() {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithFileVersions.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileHistoriesFromResult(resultSet);
@@ -129,14 +185,14 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
-	protected List<PartialFileHistory> createFileHistoriesFromResult(ResultSet resultSet) throws SQLException {
-		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();;
+	protected Map<FileHistoryId, PartialFileHistory> createFileHistoriesFromResult(ResultSet resultSet) throws SQLException {
+		Map<FileHistoryId, PartialFileHistory> fileHistories = new HashMap<FileHistoryId, PartialFileHistory>();;
 		PartialFileHistory fileHistory = null;
 
 		while (resultSet.next()) {
 			FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-
+			
 			// Old history (= same filehistory identifier)
 			if (fileHistory != null && fileHistory.getFileHistoryId().equals(fileHistoryId)) { // Same history!
 				fileHistory.addFileVersion(lastFileVersion);
@@ -146,7 +202,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			else { 
 				// Add the old history
 				if (fileHistory != null) { 
-					fileHistories.add(fileHistory);
+					fileHistories.put(fileHistory.getFileHistoryId(), fileHistory);
 				}
 				
 				// Create a new one
@@ -157,7 +213,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		
 		// Add the last history
 		if (fileHistory != null) { 
-			fileHistories.add(fileHistory);
+			fileHistories.put(fileHistory.getFileHistoryId(), fileHistory);
 		}
 
 		return fileHistories;
@@ -185,29 +241,4 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-
-	public List<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(FileChecksum fileContentChecksum) {
-		List<PartialFileHistory> currentFileTree = new ArrayList<PartialFileHistory>();
-
-		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
-			preparedStatement.setString(1, fileContentChecksum.toString());
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				while (resultSet.next()) {
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-	
-					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
-					fileHistory.addFileVersion(lastFileVersion);
-	
-					currentFileTree.add(fileHistory);
-				}	
-			}
-
-			return currentFileTree;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}	
 }
