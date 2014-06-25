@@ -7,7 +7,7 @@ apply from: 'gradle/gradle/helpers.gradle'
 // Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
-	applicationVersion = "0.1.6-alpha"
+	applicationVersion = "0.1.7-alpha"
 	applicationVersionDebian = "1";
 	
 	applicationRelease = isApplicationRelease()
