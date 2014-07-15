@@ -1,4 +1,4 @@
-Syncany [![Build Status](https://travis-ci.org/syncany/syncany.png?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/badge/coverage.php)](https://syncany.org/reports/coverage/) [![Test Status](https://api.syncany.org/badge/tests.php)](https://syncany.org/reports/tests/) [![Lines of Code](https://api.syncany.org/badge/lines.php)](https://syncany.org/reports/cloc.xml)
+Syncany [![Build Status](https://travis-ci.org/syncany/syncany.svg?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/badge/coverage.php)](https://syncany.org/reports/coverage/) [![Test Status](https://api.syncany.org/badge/tests.php)](https://syncany.org/reports/tests/) [![Lines of Code](https://api.syncany.org/badge/lines.php)](https://syncany.org/reports/cloc.xml)
 =======
 > **Important:** Please be aware that this is still **ALPHA code**! Do not use it
                  for important files.
