@@ -35,8 +35,10 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
 
 /**
- * @author pheckel
- *
+ * The downloader uses a {@link TransferManager} to download a given set of multichunks,
+ * decrypt them and store them in the local cache folder. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Downloader {
 	private static final Logger logger = Logger.getLogger(Downloader.class.getSimpleName());
