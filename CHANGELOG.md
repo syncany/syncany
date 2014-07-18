@@ -1,7 +1,13 @@
 Change Log
 ==========
 
-### Syncany 0.1.6-alpha (Date: tbd.)
+### Syncany 0.1.7-alpha (Date: tbd.)
+
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Bugfixes:
+  + Fixed with XML restricted chars in filenames #145
+  
+### Syncany 0.1.6-alpha (Date: 25 Jun 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
