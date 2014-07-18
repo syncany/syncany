@@ -48,6 +48,7 @@ import org.syncany.tests.scenarios.RenameFileWithDiffModifiedDateScenarioTest;
 import org.syncany.tests.scenarios.RenameNoDownloadMultiChunksScenarioTest;
 import org.syncany.tests.scenarios.RenameToExistingFileScenarioTest;
 import org.syncany.tests.scenarios.RestoreFileScenarioTest;
+import org.syncany.tests.scenarios.RestrictedXmlCharInFilenameScenarioTest;
 import org.syncany.tests.scenarios.SingleFileNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SingleFolderNoConflictsScenarioTest;
 import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
@@ -82,6 +83,7 @@ import org.syncany.tests.scenarios.DirtyDatabaseVersionsScenarioTest;
 	RenameToExistingFileScenarioTest.class,
 	RenameNoDownloadMultiChunksScenarioTest.class,
 	RenameDeleteScenarioTest.class,
+	RestrictedXmlCharInFilenameScenarioTest.class,
 	RestoreFileScenarioTest.class,
 	SingleFileNoConflictsScenarioTest.class,
 	SingleFolderNoConflictsScenarioTest.class,
