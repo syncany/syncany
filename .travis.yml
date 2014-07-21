@@ -70,8 +70,8 @@ after_success:
  
   # Upload to PPA
   - ./gradlew debianPreparePrecise ppa
-  - ./gradlew debianPrepareSaucy ppa
   - ./gradlew debianPrepareTrusty ppa
+  - ./gradlew debianPrepareUtopic ppa
   
   # Create distributables and JavaDoc
   - ./gradlew installApp distTar distZip debianPrepareUnstable debian exe 

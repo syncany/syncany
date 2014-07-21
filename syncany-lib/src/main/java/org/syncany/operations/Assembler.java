@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
+import org.syncany.chunk.Deduper;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.config.Config;
@@ -35,6 +36,16 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
 
+/**
+ * The assembler re-assembles files broken down through the deduplication
+ * mechanisms of the {@link Deduper} and its corresponding classes (chunker,
+ * multichunker, etc.).
+ * 
+ * <p>It uses the local {@link SqlDatabase} and an optional {@link MemoryDatabase}
+ * to perform file checksum and chunk checksum lookups.   
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class Assembler {
 	private static final Logger logger = Logger.getLogger(Assembler.class.getSimpleName());
 	
@@ -52,6 +63,10 @@ public class Assembler {
 		this.memoryDatabase = memoryDatabase;
 	}
 
+	/**
+	 * Assembles the given file version to the local cache and returns a reference
+	 * to the cached file after successfully assembling the file. 
+	 */
 	public File assembleToCache(FileVersion fileVersion) throws Exception {
 		File reconstructedFileInCache = config.getCache().createTempFile("reconstructedFileVersion");
 		logger.log(Level.INFO, "     - Creating file " + fileVersion.getPath() + " to " + reconstructedFileInCache + " ...");

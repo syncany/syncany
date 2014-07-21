@@ -1,4 +1,4 @@
-Syncany [![Build Status](https://travis-ci.org/syncany/syncany.png?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/badge/coverage.php)](https://syncany.org/reports/coverage/) [![Test Status](https://api.syncany.org/badge/tests.php)](https://syncany.org/reports/tests/) [![Lines of Code](https://api.syncany.org/badge/lines.php)](https://syncany.org/reports/cloc.xml)
+Syncany [![Build Status](https://travis-ci.org/syncany/syncany.svg?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/badge/coverage.php)](https://syncany.org/reports/coverage/) [![Test Status](https://api.syncany.org/badge/tests.php)](https://syncany.org/reports/tests/) [![Lines of Code](https://api.syncany.org/badge/lines.php)](https://syncany.org/reports/cloc.xml) [![tip for next commit](http://tip4commit.com/projects/822.svg)](http://tip4commit.com/github/syncany/syncany)
 =======
 > **Important:** Please be aware that this is still **ALPHA code**! Do not use it
                  for important files.
@@ -31,7 +31,8 @@ Download and install Syncany
 You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
-Syncany 0.1.5-alpha, 12 May 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.5-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.5-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.5.alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.5-alpha.exe)
+Syncany 0.1.6-alpha, 25 June 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.6-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.6-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.6.alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.6-alpha.exe)   
+For Ubuntu: Check out the [PPA for releases](https://launchpad.net/~syncany/+archive/release) and the [PPA for snapshots](https://launchpad.net/~syncany/+archive/snapshot).
 
 Quick [install and usage instructions](https://github.com/syncany/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
 If you like it a bit more detailed, [there's lots more you can explore](https://github.com/syncany/syncany/wiki).
