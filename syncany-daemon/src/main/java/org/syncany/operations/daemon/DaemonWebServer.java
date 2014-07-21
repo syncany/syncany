@@ -127,28 +127,27 @@ public class DaemonWebServer {
 
 	private void initServer(String host, int port) throws Exception {
 
-        final Map<String, char[]> users = new HashMap<>(2);
-        users.put("userOne", "passwordOne".toCharArray());
-        users.put("userTwo", "passwordTwo".toCharArray());
+		final Map<String, char[]> users = new HashMap<>(2);
+		users.put("userOne", "passwordOne".toCharArray());
+		users.put("userTwo", "passwordTwo".toCharArray());
 
-        final IdentityManager identityManager = new MapIdentityManager(users);
-        
-        HttpHandler pathHttpHandler = path()
+		final IdentityManager identityManager = new MapIdentityManager(users);
+
+		HttpHandler pathHttpHandler = path()
 			.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
 			.addPrefixPath("/api/rs", new InternalRestHandler())
 			.addPrefixPath("/", new InternalWebInterfaceHandler());
-        
-        HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
-        
-        KeyStore userTrustStore = UserConfig.getUserTrustStore();
-        KeyStore userKeyStore = getKeyStore();
-        SSLContext sslContext = createSSLContext(userKeyStore, userTrustStore);
-        
-		webServer = Undertow
-			.builder()
+
+		HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
+
+		KeyStore userTrustStore = UserConfig.getUserTrustStore();
+		KeyStore userKeyStore = getKeyStore();
+		SSLContext sslContext = createSSLContext(userKeyStore, userTrustStore);
+
+		webServer = Undertow.builder()
 			.addHttpsListener(port, host, sslContext)
 			.setHandler(securityPathHttpHandler)
-			.build();
+		.build();
 	}
 	
 	private KeyStore getKeyStore() {
