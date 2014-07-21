@@ -17,11 +17,13 @@
  */
 package org.syncany.database.dao;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.binary.Base64;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
@@ -159,6 +161,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
 				String path = attributes.getValue("path");
+				String pathEncoded = attributes.getValue("pathEncoded");
 				String sizeStr = attributes.getValue("size");
 				String typeStr = attributes.getValue("type");
 				String statusStr = attributes.getValue("status");
@@ -169,8 +172,8 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				String dosAttributes = attributes.getValue("dosattrs");
 				String posixPermissions = attributes.getValue("posixperms");
 
-				if (fileVersionStr == null || path == null || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, path, type, status, size and last modified are mandatory");
+				if (fileVersionStr == null || (path == null && pathEncoded == null) || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, path/pathEncoded, type, status, size and last modified are mandatory");
 				}
 
 				// Filter it if it was purged somewhere in the future, see #58
@@ -182,7 +185,19 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 					FileVersion fileVersion = new FileVersion();
 	
 					fileVersion.setVersion(fileVersionNum);
-					fileVersion.setPath(path);
+					
+					if (path != null) {
+						fileVersion.setPath(path);
+					}
+					else {
+						try {
+							fileVersion.setPath(new String(Base64.decodeBase64(pathEncoded), "UTF-8"));
+						}
+						catch (UnsupportedEncodingException e) {
+							throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
+						}
+					}
+					
 					fileVersion.setType(FileType.valueOf(typeStr));
 					fileVersion.setStatus(FileStatus.valueOf(statusStr));
 					fileVersion.setSize(Long.parseLong(sizeStr));

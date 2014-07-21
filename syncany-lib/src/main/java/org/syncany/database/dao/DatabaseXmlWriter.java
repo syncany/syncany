@@ -25,11 +25,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.commons.codec.binary.Base64;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.database.ChunkEntry;
@@ -43,6 +45,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.util.StringUtil;
 
 /**
  * This class uses an {@link XMLStreamWriter} to output the given {@link DatabaseVersion}s
@@ -58,6 +61,8 @@ import org.syncany.database.VectorClock;
  */
 public class DatabaseXmlWriter {
 	private static final Logger logger = Logger.getLogger(DatabaseXmlWriter.class.getSimpleName());
+	
+	private static final Pattern XML_RESTRICTED_CHARS_PATTERN = Pattern.compile("[\u0001-\u0008]|[\u000B-\u000C]|[\u000E-\u001F]|[\u007F-\u0084]|[\u0086-\u009F]");
 	private static final int XML_FORMAT_VERSION = 1;
 	
 	private Iterator<DatabaseVersion> databaseVersions;
@@ -229,7 +234,14 @@ public class DatabaseXmlWriter {
 				xmlOut.writeAttribute("version", fileVersion.getVersion());
 				xmlOut.writeAttribute("type", fileVersion.getType().toString());
 				xmlOut.writeAttribute("status", fileVersion.getStatus().toString());
-				xmlOut.writeAttribute("path", fileVersion.getPath());
+				
+				if (containsXmlRestrictedChars(fileVersion.getPath())) {
+					xmlOut.writeAttribute("pathEncoded", encodeXmlRestrictedChars(fileVersion.getPath()));
+				}
+				else {
+					xmlOut.writeAttribute("path", fileVersion.getPath());	
+				}
+				
 				xmlOut.writeAttribute("size", fileVersion.getSize());
 				xmlOut.writeAttribute("lastModified", fileVersion.getLastModified().getTime());						
 				
@@ -261,6 +273,18 @@ public class DatabaseXmlWriter {
 		xmlOut.writeEndElement(); // </fileHistories>		
 	}
 	
+	private String encodeXmlRestrictedChars(String str) {
+		return Base64.encodeBase64String(StringUtil.toBytesUTF8(str));
+	}
+
+	/**
+	 * Detects disallowed characters as per the XML 1.1 definition
+	 * at http://www.w3.org/TR/xml11/#charsets
+	 */
+	private boolean containsXmlRestrictedChars(String str) {
+		return XML_RESTRICTED_CHARS_PATTERN.matcher(str).find();
+	}
+
 	/**
 	 * Wraps an {@link XMLStreamWriter} class to write XML data to
 	 * the given {@link Writer}. 
