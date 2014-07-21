@@ -23,6 +23,10 @@ public class CliResponse extends Response {
 	@Element(required = true)
 	private String output;	
 	
+	public CliResponse() {
+		// Required default constructor!
+	}
+	
 	public CliResponse(int requestId, String output) {
 		super(200, requestId, null);
 		this.output = output;
