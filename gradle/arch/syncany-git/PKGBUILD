@@ -5,7 +5,7 @@ pkgrel=1
 pkgdesc="An open-source cloud storage and filesharing application (a Dropbox work-alike with more flexibility in terms of storage type and provider)"
 arch=(any)
 url=https://www.syncany.org/
-license=(GPL2)
+license=(GPL3)
 depends=('java-runtime>=7')
 makedepends=(git)
 source=("${pkgname}"::'git+http://github.com/syncany/syncany')
