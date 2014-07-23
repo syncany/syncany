@@ -474,7 +474,10 @@ public class Indexer {
 					
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!
-						// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
+						// We choose the best fileHistory to base on as follows:
+						// 1. Ensure that it was modified at the same time and is the same size
+						// 2. Check the fileHistory was deleted and the file does not actually exists
+						// 3. Choose the one with the longest matching tail of the path to the new path
 						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
 							FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
 							
@@ -485,10 +488,30 @@ public class Indexer {
 							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getPath());
 							
 							if (lastVersion.getStatus() != FileStatus.DELETED && !FileUtil.exists(lastVersionOnLocalDisk)) {
-								lastFileHistory = fileHistoryWithSameChecksum;
-								break;
+								if (lastFileHistory == null) {
+									lastFileHistory = fileHistoryWithSameChecksum;
+								}
+								else {
+									String filePath = fileProperties.getRelativePath();
+									String currentPreviousPath = lastFileHistory.getLastVersion().getPath();
+									String candidatePreviousPath = fileHistoryWithSameChecksum.getLastVersion().getPath();
+									for (int i = 0; i < filePath.length(); i++) {
+										if (!filePath.regionMatches(filePath.length()-i, candidatePreviousPath, candidatePreviousPath.length()-i, i)) {
+											// The candidate no longer matches, take the current path.
+											break;
+										}
+										if (!filePath.regionMatches(filePath.length()-i, currentPreviousPath, currentPreviousPath.length()-i, i)) {
+											// The current previous path no longer matches, take the new candidate
+											lastFileHistory = fileHistoryWithSameChecksum;
+											break;
+										}
+									}
+								}
+								
 							}
 						}
+						// Remove the lastFileHistory we are basing this one on from the cache, so no other history will be
+						fileChecksumCache.get(fileProperties.getChecksum()).remove(lastFileHistory);
 					}
 				}
 				

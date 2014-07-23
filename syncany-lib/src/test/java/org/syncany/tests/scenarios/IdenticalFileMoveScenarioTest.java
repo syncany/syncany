@@ -18,8 +18,13 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import org.syncany.database.PartialFileHistory;
+import org.syncany.operations.ls.LsOperationOptions;
+import org.syncany.operations.ls.LsOperationResult;
+import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -56,6 +61,21 @@ public class IdenticalFileMoveScenarioTest {
 		
 		// A just upped, so there should not be changes.
 		assertFalse(clientA.status().getChangeSet().hasChanges());
+		
+		// Check if the file histories were based on the correct originals
+		LsOperationOptions options = new LsOperationOptions();
+		options.setFetchHistories(true);
+		options.setPathExpression("moved_folder/subfolder1/");
+		LsOperationResult lsOperationResult = clientA.ls(options);
+		for (PartialFileHistory fileHistory : lsOperationResult.getFileVersions().values()) {
+			assertTrue(fileHistory.getFileVersion(2).getPath().endsWith(fileHistory.getFileVersion(1).getPath()));
+		}
+		
+		options.setPathExpression("moved_folder/subfolder2/");
+		lsOperationResult = clientA.ls(options);
+		for (PartialFileHistory fileHistory : lsOperationResult.getFileVersions().values()) {
+			assertTrue(fileHistory.getFileVersion(2).getPath().endsWith(fileHistory.getFileVersion(1).getPath()));
+		}
 
 		// Tear down
 		clientA.deleteTestData();
