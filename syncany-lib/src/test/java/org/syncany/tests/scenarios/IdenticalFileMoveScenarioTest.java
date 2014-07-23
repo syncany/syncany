@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationResult;
-import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
