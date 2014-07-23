@@ -4,8 +4,10 @@ Change Log
 ### Syncany 0.1.7-alpha (Date: tbd.)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
-- Bugfixes:
+- Bugfixes and other things:
   + Fixed with XML restricted chars in filenames #145
+  + Updated wrong licenses to GPLv3 #147
+  + Add gradle scripts to plugins #146
   
 ### Syncany 0.1.6-alpha (Date: 25 Jun 2014)
 
