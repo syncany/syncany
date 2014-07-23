@@ -34,7 +34,6 @@ import org.syncany.tests.util.TestConfigUtil;
  * at the same time.
  * 
  * @author Pim Otte
- *
  */
 public class IdenticalFileMoveScenarioTest {
 	@Test
@@ -66,13 +65,17 @@ public class IdenticalFileMoveScenarioTest {
 		LsOperationOptions options = new LsOperationOptions();
 		options.setFetchHistories(true);
 		options.setPathExpression("moved_folder/subfolder1/");
+		
 		LsOperationResult lsOperationResult = clientA.ls(options);
+		
 		for (PartialFileHistory fileHistory : lsOperationResult.getFileVersions().values()) {
 			assertTrue(fileHistory.getFileVersion(2).getPath().endsWith(fileHistory.getFileVersion(1).getPath()));
 		}
 		
 		options.setPathExpression("moved_folder/subfolder2/");
+		
 		lsOperationResult = clientA.ls(options);
+		
 		for (PartialFileHistory fileHistory : lsOperationResult.getFileVersions().values()) {
 			assertTrue(fileHistory.getFileVersion(2).getPath().endsWith(fileHistory.getFileVersion(1).getPath()));
 		}

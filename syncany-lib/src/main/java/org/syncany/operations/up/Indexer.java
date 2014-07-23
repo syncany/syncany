@@ -190,7 +190,8 @@ public class Indexer {
 	}
 	
 	private PartialFileHistory getFileHistoryByPathFromDatabaseVersion(DatabaseVersion databaseVersion, String path) {
-		// TODO [high] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
+		// TODO [medium] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
+		
 		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
 			FileVersion lastVersion = fileHistory.getLastVersion();
 				
@@ -475,9 +476,11 @@ public class Indexer {
 					if (fileHistoriesWithSameChecksum != null) {
 						// check if they do not exist anymore --> assume it has moved!
 						// We choose the best fileHistory to base on as follows:
+						
 						// 1. Ensure that it was modified at the same time and is the same size
 						// 2. Check the fileHistory was deleted and the file does not actually exists
 						// 3. Choose the one with the longest matching tail of the path to the new path
+						
 						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
 							FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
 							
@@ -510,6 +513,7 @@ public class Indexer {
 								
 							}
 						}
+						
 						// Remove the lastFileHistory we are basing this one on from the cache, so no other history will be
 						fileChecksumCache.get(fileProperties.getChecksum()).remove(lastFileHistory);
 					}
