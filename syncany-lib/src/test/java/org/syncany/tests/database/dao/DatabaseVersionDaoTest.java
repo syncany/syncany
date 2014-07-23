@@ -422,8 +422,6 @@ public class DatabaseVersionDaoTest {
 		assertNotNull(chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef")));
 		assertNotNull(multiChunkDao.getDirtyMultiChunkIds());
 		assertEquals(1, multiChunkDao.getDirtyMultiChunkIds().size());
-
-		// TODO [high] Test file version and history
 		
 		// b. Add new database version with DIRTY multichunk; remove DIRTY version		
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
