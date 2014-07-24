@@ -9,6 +9,7 @@ Change Log
   + Fixed issue with identical files during indexing #142
   + Updated wrong licenses to GPLv3 #147
   + Add gradle scripts to plugins #146
+  + WebDAV plugin: Remove use of deprecated SSL code
 
 ### Syncany 0.1.6-alpha (Date: 25 Jun 2014)
 
