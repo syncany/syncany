@@ -7,6 +7,7 @@ Change Log
 - Bugfixes and other things:
   + Fixed with XML restricted chars in filenames #145
   + Fixed issue with identical files during indexing #142
+  + Fixed syd.bat classpath issue on Windows for plugins #156
   + Updated wrong licenses to GPLv3 #147
   + Add gradle scripts to plugins #146
   + WebDAV plugin: Remove use of deprecated SSL code
