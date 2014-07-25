@@ -32,5 +32,6 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 		attributes("Plugin-Date": "${pluginDate}")		
 		attributes("Plugin-App-Min-Version": "${pluginAppMinVersion}")		
 		attributes("Plugin-Release": "${pluginRelease}")		
+        attributes("Conflicts-With": "${conflictsWith}")
 	}						
 }

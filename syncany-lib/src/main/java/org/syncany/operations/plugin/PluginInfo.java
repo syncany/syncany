@@ -17,8 +17,15 @@
  */
 package org.syncany.operations.plugin;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.syncany.config.to.RepoTO.TransformerTO;
+import org.syncany.util.StringUtil;
 
 @Root(name="pluginInfo")
 public class PluginInfo {
@@ -45,6 +52,10 @@ public class PluginInfo {
 
 	@Element(name="downloadUrl", required=false)
 	private String downloadUrl;
+	
+	// Comma-seperated string of conflicting plugin ids
+	@Element(name="conflictsWith", required=false)
+	private String conflictingPluginIds;
 	
 	public PluginInfo() {
 		// Nothing.
@@ -113,4 +124,17 @@ public class PluginInfo {
 	public void setDownloadUrl(String downloadUrl) {
 		this.downloadUrl = downloadUrl;
 	}				
+	
+	public List<String> getConflictingPluginIds() {
+		if (conflictingPluginIds != null) {
+			return Arrays.asList(conflictingPluginIds.split(","));
+		}
+		else {
+			return new ArrayList<String>();
+		}
+	}
+	
+	public void setConflictingPluginIds(List<String> conflictingPluginIds) {
+		this.conflictingPluginIds = (conflictingPluginIds != null) ? StringUtil.join(conflictingPluginIds, ",") : null;
+	}
 }
