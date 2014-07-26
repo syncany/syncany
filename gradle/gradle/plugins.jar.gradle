@@ -22,7 +22,10 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 	from files(sourceSets.main.output.classesDir)
 	from files(sourceSets.main.output.resourcesDir)
 	from { configurations.pluginjar.collect { zipTree(it) } }
-	exclude "META-INF/*.RSA", "META-INF/*.SF","META-INF/*.DSA"
+	exclude "META-INF/*.RSA", "META-INF/*.SF","META-INF/*.DSA" 
+	
+	// The exclude statement ignores detached signatures from other
+	// dependencies (JARs) and leaves them out when combining to one JAR
 
 	baseName = "syncany-plugin-${pluginId}"
 	version  = "${pluginVersionFull}"
