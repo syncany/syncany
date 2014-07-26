@@ -35,14 +35,14 @@ import org.syncany.operations.watch.WatchOperationOptions;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class WatchOperationThread {
-	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
+public class WatchOperationRunner {
+	private static final Logger logger = Logger.getLogger(WatchOperationRunner.class.getSimpleName());
 
 	private Config config;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 
-	public WatchOperationThread(File localDir, WatchOperationOptions watchOperationOptions, WatchOperationListener listener) throws ConfigException {
+	public WatchOperationRunner(File localDir, WatchOperationOptions watchOperationOptions, WatchOperationListener listener) throws ConfigException {
 		File configFile = ConfigHelper.findLocalDirInPath(localDir);
 		
 		if (configFile == null) {
@@ -68,7 +68,7 @@ public class WatchOperationThread {
 					logger.log(Level.SEVERE, "ERROR while running watch at " + config.getLocalDir(), e);
 				}
 			}
-		});
+		}, "WatchOpT/" + config.getLocalDir().getName());
 		
 		watchThread.start();
 	}
