@@ -129,14 +129,7 @@ public class Plugins {
 	}
 
 	private static void loadPlugins() {
-		try {
-			System.out.println(Class.forName("org.syncany.plugins.s3.S3Plugin"));
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
 		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
-			System.out.println(pluginClass);
 			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
 			String pluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "").toLowerCase();
 			
