@@ -22,6 +22,7 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 	from files(sourceSets.main.output.classesDir)
 	from files(sourceSets.main.output.resourcesDir)
 	from { configurations.pluginjar.collect { zipTree(it) } }
+	exclude "META-INF/*.RSA", "META-INF/*.SF","META-INF/*.DSA"
 
 	baseName = "syncany-plugin-${pluginId}"
 	version  = "${pluginVersionFull}"
