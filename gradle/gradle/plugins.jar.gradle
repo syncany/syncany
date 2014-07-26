@@ -15,6 +15,7 @@ processResources {
 	filter{ String line -> line.replaceAll('%pluginDate%', "${pluginDate}") }    	
 	filter{ String line -> line.replaceAll('%pluginAppMinVersion%', "${pluginAppMinVersion}") }    	
 	filter{ String line -> line.replaceAll('%pluginRelease%', "${pluginRelease}") }    	
+	filter{ String line -> line.replaceAll('%pluginConflictsWith%', "${pluginConflictsWith}") }    	
 }		
 
 task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
@@ -32,6 +33,6 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 		attributes("Plugin-Date": "${pluginDate}")		
 		attributes("Plugin-App-Min-Version": "${pluginAppMinVersion}")		
 		attributes("Plugin-Release": "${pluginRelease}")		
-        attributes("Conflicts-With": "${conflictsWith}")
+		attributes("Plugin-Conflicts-With": "${pluginConflictsWith}")
 	}						
 }

@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.reflections.Reflections;
+import org.syncany.util.StringUtil;
 
 /**
  * This class loads and manages all the {@link Plugin}s loaded in the classpath.
@@ -110,9 +111,12 @@ public class Plugins {
 		if (plugins.containsKey(pluginId)) {
 			return;
 		}
+		
+		// TODO [low] Duplicate code with loadPlugins()
+		
 		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
 			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
-			String candidatePluginId = pluginClass.getSimpleName().replace("Plugin", "").toLowerCase();
+			String candidatePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "").toLowerCase();
 			
 			if (canInstantiate && candidatePluginId.equals(pluginId)) {
 				try {
@@ -129,7 +133,7 @@ public class Plugins {
 	private static void loadPlugins() {
 		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
 			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
-			String pluginId = pluginClass.getSimpleName().replace("Plugin", "").toLowerCase();
+			String pluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "").toLowerCase();
 			
 			if (canInstantiate && !plugins.containsKey(pluginId)) {
 				try {

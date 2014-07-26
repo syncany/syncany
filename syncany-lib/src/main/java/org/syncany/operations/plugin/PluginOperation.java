@@ -227,21 +227,24 @@ public class PluginOperation extends Operation {
 		}
 		
 		// Verify if any conflicting plugins are installed
-		
 		logger.log(Level.INFO, "Checking for conflicting plugins.");
 		
 		List<String> conflictingIds = pluginInfo.getConflictingPluginIds();
 		List<String> conflictingInstalledIds = new ArrayList<String>();
+		
 		if (conflictingIds != null) {
 			for (String pluginId : conflictingIds) {
 				Plugin plugin = Plugins.get(pluginId);
+				
 				if (plugin != null) {
-					logger.log(Level.INFO, "Conflicting plugin " + pluginId + " found.");
+					logger.log(Level.INFO, "- Conflicting plugin " + pluginId + " found.");
 					conflictingInstalledIds.add(pluginId);
 				}
-				logger.log(Level.FINE, "Conflicting plugin " + pluginId + " not installed");
+				
+				logger.log(Level.FINE, "- Conflicting plugin " + pluginId + " not installed");
 			}
 		}
+		
 		result.setConflictingPlugins(conflictingInstalledIds);
 	}
 
@@ -310,15 +313,18 @@ public class PluginOperation extends Operation {
 			}
 			
 			PluginInfo pluginInfo = new PluginInfo();
+			
 			pluginInfo.setPluginId(pluginId);
 			pluginInfo.setPluginName(jarManifest.getMainAttributes().getValue("Plugin-Name"));
 			pluginInfo.setPluginVersion(jarManifest.getMainAttributes().getValue("Plugin-Version"));
 			pluginInfo.setPluginDate(jarManifest.getMainAttributes().getValue("Plugin-Date"));
 			pluginInfo.setPluginAppMinVersion(jarManifest.getMainAttributes().getValue("Plugin-App-Min-Version"));
 			pluginInfo.setPluginRelease(Boolean.parseBoolean(jarManifest.getMainAttributes().getValue("Plugin-Release")));
-			if (jarManifest.getMainAttributes().getValue("Conflicts-With") != null) {
-				pluginInfo.setConflictingPluginIds(Arrays.asList(jarManifest.getMainAttributes().getValue("Conflicts-With")));
+			
+			if (jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With") != null) {
+				pluginInfo.setConflictingPluginIds(Arrays.asList(jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With")));
 			}
+			
 			return pluginInfo;
 		}		
 	}
