@@ -26,7 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.reflections.Reflections;
-import org.syncany.util.StringUtil;
 
 /**
  * This class loads and manages all the {@link Plugin}s loaded in the classpath.
