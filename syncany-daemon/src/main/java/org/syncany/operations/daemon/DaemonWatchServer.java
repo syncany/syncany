@@ -48,10 +48,10 @@ public class DaemonWatchServer implements WatchOperationListener {
 	private static final String DAEMON_FILE = "daemon.xml";
 	private static final String DEFAULT_FOLDER = "Syncany";
 	
-	private Map<File, WatchOperationThread> watchOperations;
+	private Map<File, WatchOperationRunner> watchOperations;
 	
 	public DaemonWatchServer() {
-		this.watchOperations = new TreeMap<File, WatchOperationThread>();
+		this.watchOperations = new TreeMap<File, WatchOperationRunner>();
 	}
 	
 	public void start() throws ConfigException {
@@ -77,11 +77,11 @@ public class DaemonWatchServer implements WatchOperationListener {
 
 	public void stop() {
 		logger.log(Level.INFO, "Stopping watch server ...  ");		
-		Map<File, WatchOperationThread> copyOfWatchOperations = Maps.newHashMap(watchOperations);
+		Map<File, WatchOperationRunner> copyOfWatchOperations = Maps.newHashMap(watchOperations);
 		
-		for (Map.Entry<File, WatchOperationThread> folderEntry : copyOfWatchOperations.entrySet()) {
+		for (Map.Entry<File, WatchOperationRunner> folderEntry : copyOfWatchOperations.entrySet()) {
 			File localDir = folderEntry.getKey();
-			WatchOperationThread watchOperationThread = folderEntry.getValue();
+			WatchOperationRunner watchOperationThread = folderEntry.getValue();
 					
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();
@@ -98,10 +98,10 @@ public class DaemonWatchServer implements WatchOperationListener {
 			try {	
 				logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
 				
-				WatchOperationThread watchOperationThread = new WatchOperationThread(localDir, watchOperationOptions, this);	
-				watchOperationThread.start();
+				WatchOperationRunner watchOperationRunner = new WatchOperationRunner(localDir, watchOperationOptions, this);	
+				watchOperationRunner.start();
 
-				watchOperations.put(localDir, watchOperationThread);
+				watchOperations.put(localDir, watchOperationRunner);
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "  + Cannot start watch operation at " + localDir + ". IGNORING.", e);
@@ -111,7 +111,7 @@ public class DaemonWatchServer implements WatchOperationListener {
 	
 	private void stopWatchOperations(List<File> removedWatchedFolderIds) {
 		for (File localDir : removedWatchedFolderIds) {
-			WatchOperationThread watchOperationThread = watchOperations.get(localDir);
+			WatchOperationRunner watchOperationThread = watchOperations.get(localDir);
 
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();

@@ -345,7 +345,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 
 	private void scheduleForceKill() {
-		new Timer().schedule(new TimerTask() {
+		String killTimerName = "KillTim/" + config.getLocalDir().getName();
+		
+		new Timer(killTimerName).schedule(new TimerTask() {
 			@Override
 			public void run() {
 				try {
