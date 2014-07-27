@@ -74,7 +74,7 @@ public class StringUtil {
 		StringBuilder sb = new StringBuilder();
 
         for (char c : str.toCharArray()) {   
-        	if (Character.isLetter(c)) {
+        	if (Character.isLetter(c) || Character.isDigit(c)) {
         		if (Character.isUpperCase(c)) {
             		if (sb.length() > 0) {
             			sb.append("_");

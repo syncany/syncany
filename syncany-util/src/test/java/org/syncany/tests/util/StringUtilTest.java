@@ -81,6 +81,7 @@ public class StringUtilTest {
 		assertEquals("hello_world", StringUtil.toSnakeCase("HelloWorld"));
 		assertEquals("hello_world", StringUtil.toSnakeCase("helloWorld"));
 		assertEquals("hello_world", StringUtil.toSnakeCase("hello_world"));
+		assertEquals("s3", StringUtil.toSnakeCase("s3"));		
 	}
 	
 	@Test

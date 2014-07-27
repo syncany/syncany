@@ -118,7 +118,7 @@ public class Plugins {
 			
 			String camelCaseCandidatePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "");
 			String candidatePluginId = StringUtil.toSnakeCase(camelCaseCandidatePluginId);
-			
+			System.out.println(candidatePluginId  + " != " + pluginId);
 			if (canInstantiate && candidatePluginId.equals(pluginId)) {
 				try {
 					Plugin plugin = (Plugin) pluginClass.newInstance();			
