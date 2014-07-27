@@ -190,8 +190,8 @@ public class PluginCommand extends Command {
 			out.println(" If you'd like to use these plugins in the daemon, it is VERY likely");
 			out.println(" that parts of the application WILL CRASH. Data corruption might occur!");
 			out.println();
-			out.println(" Using the plugins outside of the daemon (sy <command> ...) is not an");
-			out.println(" issue and can be done safely. Details about this in issue #154.");
+			out.println(" Using the plugins outside of the daemon (sy <command> ...) might also");
+			out.println(" be an issue. Details about this in issue #154.");
 			out.println("---------------------------------------------------------------------------");
 			out.println();
 		}
