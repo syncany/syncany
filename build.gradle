@@ -7,7 +7,7 @@ apply from: 'gradle/gradle/helpers.gradle'
 // Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
-	applicationVersion = "0.1.6-alpha"
+	applicationVersion = "0.1.7-alpha"
 	applicationVersionDebian = "1";
 	
 	applicationRelease = isApplicationRelease()
@@ -45,7 +45,7 @@ dependencies {
 	compile			project(":syncany-cli")
 	compile			project(":syncany-util")
 	compile			project(":syncany-daemon")
-      	
+	
 	testCompile		project(path: ":syncany-lib", configuration: "tests")
 	testCompile		project(path: ":syncany-cli", configuration: "tests")
 	testCompile		project(path: ":syncany-util", configuration: "tests")  	      

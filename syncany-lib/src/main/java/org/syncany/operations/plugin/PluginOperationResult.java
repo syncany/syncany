@@ -31,6 +31,7 @@ public class PluginOperationResult implements OperationResult {
 	private String sourcePluginPath;
 	private String targetPluginPath;
 	private PluginInfo affectedPluginInfo;
+	private List<String> conflictingPluginIds;
 
 	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
@@ -70,5 +71,13 @@ public class PluginOperationResult implements OperationResult {
 
 	public void setTargetPluginPath(String targetPluginPath) {
 		this.targetPluginPath = targetPluginPath;
+	}
+	
+	public List<String> getConflictingPluginIds() {
+		return conflictingPluginIds;
+	}
+	
+	public void setConflictingPlugins(List<String> conflictingPluginIds) {
+		this.conflictingPluginIds = conflictingPluginIds;
 	}
 }

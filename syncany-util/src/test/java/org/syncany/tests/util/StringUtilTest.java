@@ -76,6 +76,15 @@ public class StringUtilTest {
 	}
 	
 	@Test
+	public void testToSnakeCase() {
+		assertEquals("hello_world", StringUtil.toSnakeCase("hello world"));
+		assertEquals("hello_world", StringUtil.toSnakeCase("HelloWorld"));
+		assertEquals("hello_world", StringUtil.toSnakeCase("helloWorld"));
+		assertEquals("hello_world", StringUtil.toSnakeCase("hello_world"));
+		assertEquals("s3", StringUtil.toSnakeCase("s3"));		
+	}
+	
+	@Test
 	public void testSubstrCount() {
 		assertEquals(1, StringUtil.substrCount("some/path", "/"));
 		assertEquals(2, StringUtil.substrCount("some/path/", "/"));

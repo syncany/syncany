@@ -118,7 +118,7 @@ public class RecursiveWatcher {
 					}
 				}
 			}
-		}, "Watcher");
+		}, "Watcher/" + root.toFile().getName());
 		
 		watchThread.start();
 	}
@@ -144,7 +144,7 @@ public class RecursiveWatcher {
 			timer = null;
 		}
 
-		timer = new Timer("WatchTimer");
+		timer = new Timer("FsSettleTim/" + root.toFile().getName());
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {

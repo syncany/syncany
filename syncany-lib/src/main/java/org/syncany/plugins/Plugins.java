@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.reflections.Reflections;
+import org.syncany.util.StringUtil;
 
 /**
  * This class loads and manages all the {@link Plugin}s loaded in the classpath.
@@ -44,15 +45,12 @@ public class Plugins {
 	private static final Reflections reflections = new Reflections(Plugin.class.getPackage().getName());
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 
-	static {
-		loadPlugins();
-	}
-	
 	/**
 	 * Loads and returns a list of all available
 	 * {@link Plugin}s. 
 	 */
 	public static List<Plugin> list() {
+		loadPlugins();
 		return new ArrayList<Plugin>(plugins.values());
 	}
 	
@@ -61,6 +59,7 @@ public class Plugins {
 	 * matching the given subclass.
 	 */
 	public static <T extends Plugin> List<T> list(Class<T> pluginClass) {
+		loadPlugins();
 		List<T> matchingPlugins = new ArrayList<T>();
 		
 		for (Plugin plugin : plugins.values()) {
@@ -86,6 +85,8 @@ public class Plugins {
 			return null;
 		}
 		
+		loadPlugin(pluginId);
+		
 		if (plugins.containsKey(pluginId)) {
 			return plugins.get(pluginId);
 		}
@@ -104,12 +105,40 @@ public class Plugins {
 			return pluginClass.cast(plugin);
 		}
 	}
+	
+	private static void loadPlugin(String pluginId) {
+		if (plugins.containsKey(pluginId)) {
+			return;
+		}
+		
+		// TODO [low] Duplicate code with loadPlugins()
+		
+		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
+			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
+			
+			String camelCaseCandidatePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "");
+			String candidatePluginId = StringUtil.toSnakeCase(camelCaseCandidatePluginId);
+			
+			if (canInstantiate && candidatePluginId.equals(pluginId)) {
+				try {
+					Plugin plugin = (Plugin) pluginClass.newInstance();			
+					plugins.put(plugin.getId(), plugin);
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
+				}
+			}
+		}
+	}
 
 	private static void loadPlugins() {
 		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
 			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
 			
-			if (canInstantiate) {
+			String camelCasePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "");
+			String pluginId = StringUtil.toSnakeCase(camelCasePluginId);
+			
+			if (canInstantiate && !plugins.containsKey(pluginId)) {
 				try {
 					Plugin plugin = (Plugin) pluginClass.newInstance();			
 					plugins.put(plugin.getId(), plugin);

@@ -60,11 +60,15 @@ public class ActionFileHandler {
 		try {
 			this.transferManager = transferManager;
 			this.actionFile = new ActionRemoteFile(operationName, machineName, System.currentTimeMillis());
-			this.actionRenewalTimer = new Timer();			
+			this.actionRenewalTimer = createNewActionRenewalTimer();			
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}		
+	}
+
+	private Timer createNewActionRenewalTimer() {
+		return new Timer("ActRenewTim");
 	}
 
 	public void start() throws Exception {
@@ -110,7 +114,7 @@ public class ActionFileHandler {
 
 	private void cancelActionRenewalTask() {
 		actionRenewalTimer.cancel();
-		actionRenewalTimer = new Timer();
+		actionRenewalTimer = createNewActionRenewalTimer();
 	}
 	
 	private synchronized void renewActionFile() {

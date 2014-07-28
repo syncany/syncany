@@ -33,14 +33,14 @@ import org.syncany.plugins.StorageTestResult;
  */
 public abstract class AbstractTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
-	private TransferSettings connection;
+	private TransferSettings settings;
 
-	public AbstractTransferManager(TransferSettings connection) {
-		this.connection = connection;
+	public AbstractTransferManager(TransferSettings settings) {
+		this.settings = settings;
 	}
 
 	public TransferSettings getConnection() {
-		return connection;
+		return settings;
 	}
 
 	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder

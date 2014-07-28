@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -224,6 +225,27 @@ public class PluginOperation extends Operation {
 			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
 					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
 		}
+		
+		// Verify if any conflicting plugins are installed
+		logger.log(Level.INFO, "Checking for conflicting plugins.");
+		
+		List<String> conflictingIds = pluginInfo.getConflictingPluginIds();
+		List<String> conflictingInstalledIds = new ArrayList<String>();
+		
+		if (conflictingIds != null) {
+			for (String pluginId : conflictingIds) {
+				Plugin plugin = Plugins.get(pluginId);
+				
+				if (plugin != null) {
+					logger.log(Level.INFO, "- Conflicting plugin " + pluginId + " found.");
+					conflictingInstalledIds.add(pluginId);
+				}
+				
+				logger.log(Level.FINE, "- Conflicting plugin " + pluginId + " not installed");
+			}
+		}
+		
+		result.setConflictingPlugins(conflictingInstalledIds);
 	}
 
 	private String calculateChecksum(File tempPluginJarFile) throws Exception {
@@ -291,13 +313,18 @@ public class PluginOperation extends Operation {
 			}
 			
 			PluginInfo pluginInfo = new PluginInfo();
+			
 			pluginInfo.setPluginId(pluginId);
 			pluginInfo.setPluginName(jarManifest.getMainAttributes().getValue("Plugin-Name"));
 			pluginInfo.setPluginVersion(jarManifest.getMainAttributes().getValue("Plugin-Version"));
 			pluginInfo.setPluginDate(jarManifest.getMainAttributes().getValue("Plugin-Date"));
 			pluginInfo.setPluginAppMinVersion(jarManifest.getMainAttributes().getValue("Plugin-App-Min-Version"));
 			pluginInfo.setPluginRelease(Boolean.parseBoolean(jarManifest.getMainAttributes().getValue("Plugin-Release")));
-
+			
+			if (jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With") != null) {
+				pluginInfo.setConflictingPluginIds(Arrays.asList(jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With")));
+			}
+			
 			return pluginInfo;
 		}		
 	}

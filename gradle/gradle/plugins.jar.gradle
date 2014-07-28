@@ -15,12 +15,17 @@ processResources {
 	filter{ String line -> line.replaceAll('%pluginDate%', "${pluginDate}") }    	
 	filter{ String line -> line.replaceAll('%pluginAppMinVersion%', "${pluginAppMinVersion}") }    	
 	filter{ String line -> line.replaceAll('%pluginRelease%', "${pluginRelease}") }    	
+	filter{ String line -> line.replaceAll('%pluginConflictsWith%', "${pluginConflictsWith}") }    	
 }		
 
 task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 	from files(sourceSets.main.output.classesDir)
 	from files(sourceSets.main.output.resourcesDir)
 	from { configurations.pluginjar.collect { zipTree(it) } }
+	exclude "META-INF/*.RSA", "META-INF/*.SF","META-INF/*.DSA" 
+	
+	// The exclude statement ignores detached signatures from other
+	// dependencies (JARs) and leaves them out when combining to one JAR
 
 	baseName = "syncany-plugin-${pluginId}"
 	version  = "${pluginVersionFull}"
@@ -32,5 +37,6 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 		attributes("Plugin-Date": "${pluginDate}")		
 		attributes("Plugin-App-Min-Version": "${pluginAppMinVersion}")		
 		attributes("Plugin-Release": "${pluginRelease}")		
+		attributes("Plugin-Conflicts-With": "${pluginConflictsWith}")
 	}						
 }

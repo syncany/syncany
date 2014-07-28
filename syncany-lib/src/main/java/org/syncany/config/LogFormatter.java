@@ -80,11 +80,11 @@ public class LogFormatter extends Formatter {
 	}
 
 	private String formatThreadName(String threadName) {
-		if (threadName.length() > 10) {
-			threadName = threadName.substring(0, 10);
+		if (threadName.length() > 14) {
+			threadName = threadName.substring(0, 14);
 		}
 
-		return String.format("%-10s", threadName);
+		return String.format("%-14s", threadName);
 	}
 
 	private String formatShortLogLevel(Level level) {

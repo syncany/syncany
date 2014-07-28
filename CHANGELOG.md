@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+### Syncany 0.1.7-alpha (Date: 28 Jul 2014)
+
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Bugfixes and other things:
+  + Fixed with XML restricted chars in filenames #145
+  + Fixed issue with identical files during indexing #142
+  + Fixed syd.bat classpath issue on Windows for plugins #156
+  + Added 'conflicts-with' metadata to plugins, and warnings
+    to the `sy plugin install <pluginid>` command #154
+  + Updated wrong licenses to GPLv3 #147
+  + Add gradle scripts to plugins #146
+  + WebDAV plugin: Remove use of deprecated SSL code
+
 ### Syncany 0.1.6-alpha (Date: 25 Jun 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

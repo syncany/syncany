@@ -27,6 +27,16 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 
+/**
+ * The user config transfer object is a helper data structure that allows storing
+ * a user's global system settings such as system properties.
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name="userConfig")
 @Namespace(reference="http://syncany.org/userconfig/1")
 public class UserConfigTO {
