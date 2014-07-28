@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.1.7-alpha (Date: tbd.)
+### Syncany 0.1.7-alpha (Date: 28 Jul 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Bugfixes and other things:
