@@ -4,7 +4,8 @@ Change Log
 ### Syncany 0.1.8-alpha (Date: tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Bugfixes and other things:
-  + Fixed cross dependency issue with plugins #1162
+  + Fixed cross dependency issue with plugins #162
+  + Altered API backend to include 'conflicts-with' metadata #165
 
 ### Syncany 0.1.7-alpha (Date: 28 Jul 2014)
 
