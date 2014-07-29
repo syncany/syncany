@@ -177,12 +177,15 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			// Retrieve value
 			if (optionSpec.isSensitive()) {
+				// The option is sensitive. Could be either mandatory or optional
 				value = askPluginOptionSensitive(optionSpec, knownOptionValue);				
 			}
 			else if (!optionSpec.isMandatory()) {
+				// The option is optional
 				value = askPluginOptionOptional(optionSpec, knownOptionValue);	
 			}
 			else {
+				// The option is mandatory, but not sensitive
 				value = askPluginOptionNormal(optionSpec, knownOptionValue);
 			}
 
@@ -249,13 +252,14 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	private String askPluginOptionSensitive(PluginOptionSpec optionSpec, String knownOptionValue) {
 		String value = knownOptionValue;
+		String optionalIndicator = optionSpec.isMandatory() ? "" : ", optional"; 
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (not displayed): ", optionSpec.getDescription());
+			out.printf("- %s (not displayed%s): ", optionSpec.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 		}
 		else {
-			out.printf("- %s (***, not displayed): ", optionSpec.getDescription());
+			out.printf("- %s (***, not displayed%s): ", optionSpec.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 			
 			if ("".equals(value)) {
