@@ -42,7 +42,8 @@ public class UserConfig {
 	 */
 	
 	private static final File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
-	private static final File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
+	// This field is not final to enable a PluginOperationTest
+	private static File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
 	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
 	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
