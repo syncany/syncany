@@ -119,7 +119,7 @@ if %RUNNING% == 1 (
   goto mainEnd
 ) 
 
-set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\*
+set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\lib\*
 
 echo | set /p=Starting daemon: .
 start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany --log=%APP_LOG_FILE% daemon

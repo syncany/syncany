@@ -1,12 +1,28 @@
 Change Log
 ==========
 
-### Syncany 0.1.7-alpha (Date: tbd.)
+### Syncany 0.1.8-alpha (Date: tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Public key authentication for the SFTP plugin #134
+- Bugfixes and other things:
+  + Fixed cross dependency issue with plugins #162
+  + Altered API backend to include 'conflicts-with' metadata #165
+  + Fixed daemon script such that it can be symlinked
+
+### Syncany 0.1.7-alpha (Date: 28 Jul 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
-- Bugfixes:
+- Bugfixes and other things:
   + Fixed with XML restricted chars in filenames #145
-  
+  + Fixed issue with identical files during indexing #142
+  + Fixed syd.bat classpath issue on Windows for plugins #156
+  + Added 'conflicts-with' metadata to plugins, and warnings
+    to the `sy plugin install <pluginid>` command #154
+  + Updated wrong licenses to GPLv3 #147
+  + Add gradle scripts to plugins #146
+  + WebDAV plugin: Remove use of deprecated SSL code
+
 ### Syncany 0.1.6-alpha (Date: 25 Jun 2014)
 
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

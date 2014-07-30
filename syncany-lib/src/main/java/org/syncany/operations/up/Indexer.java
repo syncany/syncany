@@ -74,6 +74,8 @@ import org.syncany.util.StringUtil;
  */
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
+	private static final String DEFAULT_POSIX_PERMISSIONS = "rw-rw-r--";
+	private static final String DEFAULT_DOS_ATTRIBUTES = "--a-";
 	
 	private Config config;
 	private Deduper deduper;
@@ -190,7 +192,8 @@ public class Indexer {
 	}
 	
 	private PartialFileHistory getFileHistoryByPathFromDatabaseVersion(DatabaseVersion databaseVersion, String path) {
-		// TODO [high] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
+		// TODO [medium] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
+		
 		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
 			FileVersion lastVersion = fileHistory.getLastVersion();
 				
@@ -390,9 +393,11 @@ public class Indexer {
 			// Permissions
 			if (EnvironmentUtil.isWindows()) {
 				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
+				fileVersion.setPosixPermissions(DEFAULT_POSIX_PERMISSIONS);
 			}
 			else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
+				fileVersion.setDosAttributes(DEFAULT_DOS_ATTRIBUTES);
 			}
 			
 			// Status
@@ -461,33 +466,36 @@ public class Indexer {
 			}
 		}
 		
+		/**
+		 * Tries to guess a matching file history, first by path and then by matching checksum.
+		 * 
+		 * <p>If the path matches the path of an existing file in the database, the file history 
+		 * from the database is used, and a new file version is appended. If there is no file 
+		 * in the database with that path, checksums are compared.
+		 * 
+		 * <p>If there are more than one file with the same checksum (potential matches), the file
+		 * with the closest path is chosen.
+		 */
 		private PartialFileHistory guessLastFileHistoryForFile(FileProperties fileProperties) {
 			PartialFileHistory lastFileHistory = null;
 			
-			// 1a. by path
+			// a) Try finding a file history for which the last version has the same path
 			lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
 
+			// b) If that fails, try finding files with a matching checksum
 			if (lastFileHistory == null) {
-				// 1b. by checksum
 				if (fileProperties.getChecksum() != null) {
 					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileProperties.getChecksum()); 
 					
-					if (fileHistoriesWithSameChecksum != null) {
-						// check if they do not exist anymore --> assume it has moved!
-						// TODO [low] choose a more appropriate file history, this takes the first best version with the same checksum
-						for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
-							FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
-							
-							if (fileProperties.getLastModified() != lastVersion.getLastModified().getTime() || fileProperties.getSize() != lastVersion.getSize()) {
-								continue;
-							}
-							
-							File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getPath());
-							
-							if (lastVersion.getStatus() != FileStatus.DELETED && !FileUtil.exists(lastVersionOnLocalDisk)) {
-								lastFileHistory = fileHistoryWithSameChecksum;
-								break;
-							}
+					if (fileHistoriesWithSameChecksum != null && fileHistoriesWithSameChecksum.size() > 0) {
+						lastFileHistory = guessLastFileHistoryForFileWithMatchingChecksum(fileProperties, fileHistoriesWithSameChecksum);
+						
+						// Remove the lastFileHistory we are basing this one on from the
+						// cache, so no other history will be
+						fileHistoriesWithSameChecksum.remove(lastFileHistory);
+						
+						if (fileHistoriesWithSameChecksum.isEmpty()) {
+							fileChecksumCache.remove(fileProperties.getChecksum());
 						}
 					}
 				}
@@ -513,6 +521,52 @@ public class Indexer {
 			}			
 		}
 		
+		private PartialFileHistory guessLastFileHistoryForFileWithMatchingChecksum(FileProperties fileProperties, Collection<PartialFileHistory> fileHistoriesWithSameChecksum) {
+			PartialFileHistory lastFileHistory = null;
+		
+			// Check if they do not exist anymore --> assume it has moved!
+			// We choose the best fileHistory to base on as follows:
+			
+			// 1. Ensure that it was modified at the same time and is the same size
+			// 2. Check the fileHistory was deleted and the file does not actually exists
+			// 3. Choose the one with the longest matching tail of the path to the new path
+			
+			for (PartialFileHistory fileHistoryWithSameChecksum : fileHistoriesWithSameChecksum) {
+				FileVersion lastVersion = fileHistoryWithSameChecksum.getLastVersion();
+				
+				if (fileProperties.getLastModified() != lastVersion.getLastModified().getTime() || fileProperties.getSize() != lastVersion.getSize()) {
+					continue;
+				}
+				
+				File lastVersionOnLocalDisk = new File(config.getLocalDir()+File.separator+lastVersion.getPath());
+				
+				if (lastVersion.getStatus() != FileStatus.DELETED && !FileUtil.exists(lastVersionOnLocalDisk)) {
+					if (lastFileHistory == null) {
+						lastFileHistory = fileHistoryWithSameChecksum;
+					}
+					else {
+						String filePath = fileProperties.getRelativePath();
+						String currentPreviousPath = lastFileHistory.getLastVersion().getPath();
+						String candidatePreviousPath = fileHistoryWithSameChecksum.getLastVersion().getPath();
+						
+						for (int i = 0; i < filePath.length(); i++) {
+							if (!filePath.regionMatches(filePath.length()-i, candidatePreviousPath, candidatePreviousPath.length()-i, i)) {
+								// The candidate no longer matches, take the current path.
+								break;
+							}
+							if (!filePath.regionMatches(filePath.length()-i, currentPreviousPath, currentPreviousPath.length()-i, i)) {
+								// The current previous path no longer matches, take the new candidate
+								lastFileHistory = fileHistoryWithSameChecksum;
+								break;
+							}
+						}
+					}
+				}
+			}
+			
+			return lastFileHistory;
+		}
+
 		@Override
 		public void onMultiChunkOpen(MultiChunk multiChunk) {
 			logger.log(Level.FINER, "- +MultiChunk {0}", multiChunk.getId());

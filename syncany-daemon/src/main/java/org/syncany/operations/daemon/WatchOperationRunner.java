@@ -79,8 +79,8 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class WatchOperationThread implements WatchOperationListener {
-	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
+public class WatchOperationRunner implements WatchOperationListener {
+	private static final Logger logger = Logger.getLogger(WatchOperationRunner.class.getSimpleName());
 	
 	private Config config;
 	private File portFile;
@@ -90,7 +90,7 @@ public class WatchOperationThread implements WatchOperationListener {
 	
 	private SqlDatabase localDatabase;
 
-	public WatchOperationThread(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
+	public WatchOperationRunner(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
 		this.config = config;
 		this.portFile = new File(config.getAppDir(), "port");
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
@@ -119,7 +119,7 @@ public class WatchOperationThread implements WatchOperationListener {
 					logger.log(Level.SEVERE, "ERROR while running watch at " + config.getLocalDir(), e);
 				}
 			}
-		});
+		}, "WatchOpT/" + config.getLocalDir().getName());
 		
 		watchThread.start();
 	}

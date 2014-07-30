@@ -38,13 +38,6 @@ public class PluginOptionSpec {
 	private String defaultValue;
 
 	public PluginOptionSpec(String id, String description, ValueType type, boolean mandatory, boolean sensitive, String defaultValue) {
-		if (!mandatory && sensitive) {
-			throw new IllegalArgumentException("An optional PluginOption cannot be sensitive.");
-		}
-		
-		if (!mandatory && defaultValue == null) {
-			throw new IllegalArgumentException("An optional PluginOption should have a default value.");
-		}
 		
 		this.id = id;
 		this.description = description;
