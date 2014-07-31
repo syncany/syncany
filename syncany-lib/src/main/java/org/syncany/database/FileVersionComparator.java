@@ -290,12 +290,17 @@ public class FileVersionComparator {
 	}
 
 	private void compareModifiedDate(FileVersionComparison fileComparison) {
-		if (fileComparison.expectedFileProperties.getLastModified() != fileComparison.actualFileProperties.getLastModified()) {
+		long timeDifferenceMillis = Math.abs(fileComparison.expectedFileProperties.getLastModified() - fileComparison.actualFileProperties.getLastModified());
+		
+		// Fuzziness on last modified dates is necessary, see issue #166
+		
+		if (timeDifferenceMillis > 1000) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_LAST_MOD_DATE);
 
 			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
-					+ ": Local file DIFFERS from file version, expected MOD. DATE = {0}, but actual MOD. DATE = {1}, for file {2}", new Object[] {
-					new Date(fileComparison.expectedFileProperties.getLastModified()), new Date(fileComparison.actualFileProperties.getLastModified()),
+					+ ": Local file DIFFERS from file version, expected MOD. DATE = {0} ({1}), but actual MOD. DATE = {2} ({3}), for file {4}", new Object[] {
+					new Date(fileComparison.expectedFileProperties.getLastModified()), fileComparison.expectedFileProperties.getLastModified(),
+					new Date(fileComparison.actualFileProperties.getLastModified()), fileComparison.actualFileProperties.getLastModified(),
 					fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
