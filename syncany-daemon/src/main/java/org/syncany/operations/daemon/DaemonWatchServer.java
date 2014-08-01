@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,11 +72,9 @@ public class DaemonWatchServer {
 
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
-			Map<File, FolderTO> newWatchedFolderTOs = determineNewWatchedFolderTOs(watchedFolders);
-			List<File> removedWatchedFolderIds = determineRemovedWatchedFolderIds(watchedFolders);
 			
-			startWatchOperations(newWatchedFolderTOs);
-			stopWatchOperations(removedWatchedFolderIds);			
+			startWatchOperations(watchedFolders);
+			stopWatchOperations(watchedFolders.keySet());			
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
@@ -123,7 +122,7 @@ public class DaemonWatchServer {
 		}
 	}
 	
-	private void stopWatchOperations(List<File> removedWatchedFolderIds) {
+	private void stopWatchOperations(Set<File> removedWatchedFolderIds) {
 		for (File localDir : removedWatchedFolderIds) {
 			WatchOperationRunner watchOperationThread = watchOperations.get(localDir);
 
