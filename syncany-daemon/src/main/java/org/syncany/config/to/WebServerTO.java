@@ -24,7 +24,7 @@ public class WebServerTO {
 	private boolean enabled = true;
 	
 	@Element(required = false)
-	private int port = 8080;
+	private int port = 8443;
 	
 	@Element(required = false)
 	private String host = "localhost";

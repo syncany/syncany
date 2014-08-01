@@ -20,34 +20,30 @@ package org.syncany.operations.daemon;
 import static io.undertow.Handlers.path;
 import static io.undertow.Handlers.websocket;
 import io.undertow.Undertow;
-import io.undertow.server.HttpHandler;
+import io.undertow.security.idm.IdentityManager;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
 import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
-import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
-import org.syncany.plugins.Plugins;
-import org.syncany.plugins.web.WebInterfacePlugin;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -108,6 +104,13 @@ public class DaemonWebServer {
 	}
 
 	private void initServer(String host, int port) {
+		final Map<String, char[]> users = new HashMap<>(2);
+		users.put("userOne", "passwordOne".toCharArray());
+		users.put("userTwo", "passwordTwo".toCharArray());
+		
+		final IdentityManager identityManager = new MapIdentityManager(users);
+
+		
 		webServer = Undertow
 			.builder()
 			.addHttpListener(port, host)
