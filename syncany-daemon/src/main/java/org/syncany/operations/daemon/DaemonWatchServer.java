@@ -73,8 +73,8 @@ public class DaemonWatchServer {
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
 			
+			stopWatchOperations(watchedFolders.keySet());
 			startWatchOperations(watchedFolders);
-			stopWatchOperations(watchedFolders.keySet());			
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
@@ -125,9 +125,10 @@ public class DaemonWatchServer {
 	private void stopWatchOperations(Set<File> removedWatchedFolderIds) {
 		for (File localDir : removedWatchedFolderIds) {
 			WatchOperationRunner watchOperationThread = watchOperations.get(localDir);
-
-			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
-			watchOperationThread.stop();
+			if (watchOperationThread != null) {
+				logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
+				watchOperationThread.stop();
+			}
 			
 			watchOperations.remove(localDir);
 		}

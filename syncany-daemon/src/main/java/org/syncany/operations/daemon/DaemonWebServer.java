@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.UserTO;
 import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
@@ -73,10 +74,11 @@ public class DaemonWebServer {
 
 	public DaemonWebServer(DaemonConfigTO daemonConfig) {
 		this.clientChannels = new ArrayList<WebSocketChannel>();
-
+		
 		initCaches();
 		initEventBus();
-		initServer(daemonConfig.getWebServer().getHost(), daemonConfig.getWebServer().getPort());
+		initServer(daemonConfig.getWebServer().getHost(), daemonConfig.getWebServer().getPort(),
+				daemonConfig.getUsers());
 	}
 
 	public void start() throws ServiceAlreadyStartedException {
@@ -85,6 +87,7 @@ public class DaemonWebServer {
 
 	public void stop() {
 		try {
+			logger.log(Level.INFO, "Shutting down websocket server.");
 			webServer.stop();
 		}
 		catch (Exception e) {
@@ -112,15 +115,8 @@ public class DaemonWebServer {
 		eventBus.register(this);
 	}
 
-	private void initServer(String host, int port) {
-		final Map<String, char[]> users = new HashMap<>(2);
-		users.put("userOne", "passwordOne".toCharArray());
-		users.put("userTwo", "passwordTwo".toCharArray());
-		
+	private void initServer(String host, int port, List<UserTO> users) {
 		final IdentityManager identityManager = new MapIdentityManager(users);
-
-		
-		
 		
 		HttpHandler pathHttpHandler = path()
 		.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this)))
@@ -133,6 +129,7 @@ public class DaemonWebServer {
 				.addHttpListener(port, host)
 				.setHandler(securityPathHttpHandler)
 				.build();
+		logger.log(Level.INFO, "Initialized websocket server.");
 	}
 	
 	private static HttpHandler addSecurity(final HttpHandler toWrap, final IdentityManager identityManager) {
