@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
@@ -111,16 +112,10 @@ public class DaemonWebServer {
 			.addHttpListener(port, host)
 			.setHandler(path()
 				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this)))
-				.addPrefixPath("/api/rs", new InternalRestHandler())
+				.addPrefixPath("/api/rs", new InternalRestHandler(this))
 				.addPrefixPath("/", new InternalWebInterfaceHandler())
 			).build();
 	}
-	
-	/**
-	 * Request handlers
-	 */
-
-
 	
 
 
@@ -204,54 +199,24 @@ public class DaemonWebServer {
 	 * Cache access methods
 	 */
 	
+	public void cacheRestRequest(int id, HttpServerExchange exchange) {
+		synchronized (requestIdRestSocketCache) {
+			requestIdRestSocketCache.put(id, exchange);	
+		}
+	}
+	
 	public void cacheWebSocketRequest(int id, WebSocketChannel clientSocket) {
 		synchronized (requestIdWebSocketCache) {
 			requestIdWebSocketCache.put(id, clientSocket);	
 		}
 	}
-
-
-	private class InternalRestHandler implements HttpHandler {
-		@Override
-		public void handleRequest(final HttpServerExchange exchange) throws Exception {
-			handleRestRequest(exchange);
-		}
-		
-		private void handleRestRequest(HttpServerExchange exchange) throws IOException {
-			logger.log(Level.INFO, "HTTP request received:" + exchange.getRelativePath());
-
-			exchange.startBlocking();			
-
-			if (exchange.getRelativePath().startsWith("/file/")) {	
-				String tempFileToken = exchange.getRelativePath().substring("/file/".length());
-				File tempFile = fileTokenTempFileCache.asMap().get(tempFileToken);
-				
-				logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-				
-				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
-				
-				exchange.endExchange();
-			}
-			else {	
-				String message = IOUtils.toString(exchange.getInputStream());
-				logger.log(Level.INFO, "REST message received: " + message);
-		
-				try {
-					Request request = MessageFactory.createRequest(message);
-		
-					synchronized (requestIdRestSocketCache) {
-						requestIdRestSocketCache.put(request.getId(), exchange);	
-					}
-					
-					eventBus.post(request);
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-					eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-				}
-			}
-		}
+	
+	public File fileTokenTempFileCacheGet(String fileToken) {
+		 return fileTokenTempFileCache.asMap().get(fileToken);
 	}
+
+
+	
 	
 	public class InternalWebInterfaceHandler implements HttpHandler {
 		private List<WebInterfacePlugin> webInterfacePlugins;

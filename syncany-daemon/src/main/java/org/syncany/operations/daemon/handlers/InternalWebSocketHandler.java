@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.operations.daemon.DaemonEventBus;
 import org.syncany.operations.daemon.DaemonWebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
@@ -42,10 +43,11 @@ import com.google.common.eventbus.EventBus;
 public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());
 	private DaemonWebServer daemonWebServer;
-	private EventBus eventBus;
+	private DaemonEventBus eventBus;
 	
 	public InternalWebSocketHandler(DaemonWebServer daemonWebServer) {
 		this.daemonWebServer = daemonWebServer;
+		eventBus = DaemonEventBus.getInstance();
 	}
 	
 	@Override
