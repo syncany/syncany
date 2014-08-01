@@ -100,7 +100,7 @@ public class DaemonOperation extends Operation {
 		initEventBus();		
 		loadOrCreateConfig();
 		
-		startWebServer();
+		startWebSocketServer();
 		startWatchServer();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
@@ -121,48 +121,13 @@ public class DaemonOperation extends Operation {
 		}
 	}
 	
+	/**
+	 * General initialization functions. These create the EventBus and control loop.
+	 */
+	
 	private void initEventBus() {
 		eventBus = DaemonEventBus.getInstance();
 		eventBus.register(this);
-	}
-
-	private void stopOperation() {
-		stopWebSocketServer();
-		stopWatchServer();
-	}
-
-	private void stopWebSocketServer() {
-		if (webServer != null) {
-			logger.log(Level.INFO, "Stopping web server ...");
-			webServer.stop();
-		}
-		else {
-			logger.log(Level.INFO, "Not stopping web server (not running)");			
-		}
-	}
-
-	private void stopWatchServer() {
-		logger.log(Level.INFO, "Stopping watch server ...");
-		watchServer.stop();
-	}
-
-	private void startWebServer() throws ServiceAlreadyStartedException {
-		if (daemonConfig.getWebServer().isEnabled()) {
-			logger.log(Level.INFO, "Starting web server ...");
-
-			webServer = new DaemonWebServer(daemonConfig);
-			webServer.start();
-		}
-		else {
-			logger.log(Level.INFO, "Not starting web server (disabled in confi)");
-		}
-	}
-
-	private void startWatchServer() throws ConfigException {
-		logger.log(Level.INFO, "Starting watch server ...");
-
-		watchServer = new DaemonWatchServer();
-		watchServer.start(daemonConfig);
 	}
 
 	private void enterControlLoop() throws IOException, ServiceAlreadyStartedException {
@@ -171,6 +136,28 @@ public class DaemonOperation extends Operation {
 		controlServer = new DaemonControlServer();
 		controlServer.enterLoop(); // This blocks! 
 	}
+	
+
+
+	/**
+	 * General stopping and reloading functions
+	 */
+
+	private void stopOperation() {
+		stopWebSocketServer();
+		stopWatchServer();
+	}
+	
+	private void reloadOperation() {
+		loadOrCreateConfig();
+		
+		watchServer.reload(daemonConfig);
+		// webServer.reload(daemonConfig); << Implement this
+	}
+	
+	/**
+	 * Config related functions. Used on starting and reloading.
+	 */
 	
 	private void loadOrCreateConfig() {
 		try {
@@ -186,12 +173,6 @@ public class DaemonOperation extends Operation {
 		}
 	}
 	
-	private void reloadOperation() {
-		loadOrCreateConfig();
-		
-		watchServer.reload(daemonConfig);
-		// webServer.reload(daemonConfig); << Implement this
-	}
 
 	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
 		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
@@ -214,4 +195,50 @@ public class DaemonOperation extends Operation {
 		
 		return defaultDaemonConfigTO;
 	}
+
+	/**
+	 * WebSocket starting and stopping functions
+	 */
+	private void startWebSocketServer() throws ServiceAlreadyStartedException {
+		if (daemonConfig.getWebServer().isEnabled()) {
+			logger.log(Level.INFO, "Starting web server ...");
+
+			webServer = new DaemonWebServer(daemonConfig);
+			webServer.start();
+		}
+		else {
+			logger.log(Level.INFO, "Not starting web server (disabled in confi)");
+		}
+	}
+	
+	private void stopWebSocketServer() {
+		if (webServer != null) {
+			logger.log(Level.INFO, "Stopping web server ...");
+			webServer.stop();
+		}
+		else {
+			logger.log(Level.INFO, "Not stopping web server (not running)");			
+		}
+	}
+	
+	/**
+	 * WatchServer starting and stopping functions
+	 */
+	private void startWatchServer() throws ConfigException {
+		logger.log(Level.INFO, "Starting watch server ...");
+
+		watchServer = new DaemonWatchServer();
+		watchServer.start(daemonConfig);
+	}
+
+	private void stopWatchServer() {
+		logger.log(Level.INFO, "Stopping watch server ...");
+		watchServer.stop();
+	}
+
+
+
+
+
+
 }
