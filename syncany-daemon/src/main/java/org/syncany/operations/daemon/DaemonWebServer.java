@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
+import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
 import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
@@ -218,52 +219,5 @@ public class DaemonWebServer {
 
 	
 	
-	public class InternalWebInterfaceHandler implements HttpHandler {
-		private List<WebInterfacePlugin> webInterfacePlugins;
-		private WebInterfacePlugin webInterfacePlugin;
-		private HttpHandler requestHandler;
-		
-		public InternalWebInterfaceHandler() {
-			webInterfacePlugins = Plugins.list(WebInterfacePlugin.class);
-			
-			if (webInterfacePlugins.size() == 1) {
-				initWebInterfacePlugin();
-			}
-		}
 
-		private void initWebInterfacePlugin() {
-			try {				
-				webInterfacePlugin = webInterfacePlugins.iterator().next();
-				requestHandler = webInterfacePlugin.createRequestHandler();
-				
-				webInterfacePlugin.start();
-			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		@Override
-		public void handleRequest(HttpServerExchange exchange) throws Exception {
-			if (requestHandler != null) {
-				handleRequestWithResourceHandler(exchange);
-			}
-			else {
-				handleRequestNoHandler(exchange);
-			}
-		}
-
-		private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws Exception {
-			requestHandler.handleRequest(exchange);
-		}
-
-		private void handleRequestNoHandler(HttpServerExchange exchange) {
-			if (webInterfacePlugins.size() == 0) {
-				exchange.getResponseSender().send("No web interface configured.");
-			}
-			else {
-				exchange.getResponseSender().send("Only one web interface can be loaded.");
-			}
-		}
-	}
 }
