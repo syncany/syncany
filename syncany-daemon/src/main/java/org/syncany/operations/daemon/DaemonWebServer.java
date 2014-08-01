@@ -20,13 +20,22 @@ package org.syncany.operations.daemon;
 import static io.undertow.Handlers.path;
 import static io.undertow.Handlers.websocket;
 import io.undertow.Undertow;
+import io.undertow.security.api.AuthenticationMechanism;
+import io.undertow.security.api.AuthenticationMode;
+import io.undertow.security.handlers.AuthenticationCallHandler;
+import io.undertow.security.handlers.AuthenticationConstraintHandler;
+import io.undertow.security.handlers.AuthenticationMechanismsHandler;
+import io.undertow.security.handlers.SecurityInitialHandler;
 import io.undertow.security.idm.IdentityManager;
+import io.undertow.security.impl.BasicAuthenticationMechanism;
+import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,15 +120,32 @@ public class DaemonWebServer {
 		final IdentityManager identityManager = new MapIdentityManager(users);
 
 		
+		
+		
+		HttpHandler pathHttpHandler = path()
+		.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this)))
+		.addPrefixPath("/api/rs", new InternalRestHandler(this))
+		.addPrefixPath("/", new InternalWebInterfaceHandler());
+		
+		HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
 		webServer = Undertow
-			.builder()
-			.addHttpListener(port, host)
-			.setHandler(path()
-				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this)))
-				.addPrefixPath("/api/rs", new InternalRestHandler(this))
-				.addPrefixPath("/", new InternalWebInterfaceHandler())
-			).build();
+				.builder()
+				.addHttpListener(port, host)
+				.setHandler(securityPathHttpHandler)
+				.build();
 	}
+	
+	private static HttpHandler addSecurity(final HttpHandler toWrap, final IdentityManager identityManager) {
+		HttpHandler handler = toWrap;
+		handler = new AuthenticationCallHandler(handler);
+		handler = new AuthenticationConstraintHandler(handler);
+		final List<AuthenticationMechanism> mechanisms = Collections.<AuthenticationMechanism> singletonList(new BasicAuthenticationMechanism(
+		"My Realm"));
+		handler = new AuthenticationMechanismsHandler(handler, mechanisms);
+		handler = new SecurityInitialHandler(AuthenticationMode.PRO_ACTIVE, identityManager, handler);
+		return handler;
+	}
+
 	
 
 

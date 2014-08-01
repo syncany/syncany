@@ -25,8 +25,12 @@ import io.undertow.security.idm.PasswordCredential;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.syncany.config.to.UserTO;
 
 public class MapIdentityManager implements IdentityManager {
 
@@ -34,6 +38,14 @@ public class MapIdentityManager implements IdentityManager {
 
     public MapIdentityManager(final Map<String, char[]> users) {
         this.users = users;
+    }
+    
+    public MapIdentityManager(List<UserTO> users) {
+    	this.users = new HashMap<String, char[]>();
+    	
+    	for (UserTO user : users) {
+    		this.users.put(user.getUsername(), user.getPassword().toCharArray());
+    	}
     }
 
     @Override

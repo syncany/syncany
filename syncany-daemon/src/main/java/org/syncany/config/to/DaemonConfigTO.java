@@ -36,6 +36,9 @@ public class DaemonConfigTO {
 	@ElementList(name = "folders", entry = "folder", required = true)
 	private ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
 
+	@ElementList(name = "users", entry = "user", required = true)
+	private ArrayList<UserTO> users = new ArrayList<UserTO>();
+
 	public static DaemonConfigTO load(File file) throws ConfigException {
 		try {
 			return new Persister().read(DaemonConfigTO.class, file);
@@ -56,6 +59,10 @@ public class DaemonConfigTO {
 	
 	public ArrayList<FolderTO> getFolders() {
 		return folders;
+	}
+	
+	public ArrayList<UserTO> getUsers() {
+		return users;
 	}
 	
 	public void setFolders(ArrayList<FolderTO> folders) {
