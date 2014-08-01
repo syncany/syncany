@@ -73,6 +73,9 @@ public class DaemonControlServer implements TailerListener {
 		controlFileTailer.run(); // This blocks!
 	}	
 
+	/**
+	 * Functions that handle tailing the control file.
+	 */
 	@Override
 	public void fileNotFound() {
 		logger.log(Level.SEVERE, "Control file not found. FATAL. EXITING.");

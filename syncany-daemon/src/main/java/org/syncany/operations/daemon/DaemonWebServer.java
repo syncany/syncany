@@ -22,13 +22,8 @@ import static io.undertow.Handlers.websocket;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.websockets.WebSocketConnectionCallback;
-import io.undertow.websockets.core.AbstractReceiveListener;
-import io.undertow.websockets.core.BufferedTextMessage;
-import io.undertow.websockets.core.StreamSourceFrameChannel;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
-import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +37,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileResponseInternal;
@@ -57,7 +53,7 @@ import com.google.common.eventbus.Subscribe;
 
 public class DaemonWebServer {
 	private static final Logger logger = Logger.getLogger(DaemonWebServer.class.getSimpleName());
-	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
+	public static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
 
 	private Undertow webServer;
 	private DaemonEventBus eventBus;
@@ -88,6 +84,10 @@ public class DaemonWebServer {
 			logger.log(Level.SEVERE, "Could not stop websocket server.", e);
 		}
 	}
+	
+	/**
+	 * Initialization functions
+	 */
 
 	private void initCaches() {
 		requestIdWebSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
@@ -110,64 +110,19 @@ public class DaemonWebServer {
 			.builder()
 			.addHttpListener(port, host)
 			.setHandler(path()
-				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
+				.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this)))
 				.addPrefixPath("/api/rs", new InternalRestHandler())
 				.addPrefixPath("/", new InternalWebInterfaceHandler())
 			).build();
 	}
-
-	private void handleWebSocketRequest(WebSocketChannel clientSocket, String message) {
-		logger.log(Level.INFO, "Web socket message received: " + message);
-
-		try {
-			Request request = MessageFactory.createRequest(message);
-
-			synchronized (requestIdWebSocketCache) {
-				requestIdWebSocketCache.put(request.getId(), clientSocket);	
-			}
-			
-			eventBus.post(request);
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-		}
-	}
 	
-	private void handleRestRequest(HttpServerExchange exchange) throws IOException {
-		logger.log(Level.INFO, "HTTP request received:" + exchange.getRelativePath());
+	/**
+	 * Request handlers
+	 */
 
-		exchange.startBlocking();			
 
-		if (exchange.getRelativePath().startsWith("/file/")) {	
-			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
-			File tempFile = fileTokenTempFileCache.asMap().get(tempFileToken);
-			
-			logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-			
-			IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
-			
-			exchange.endExchange();
-		}
-		else {	
-			String message = IOUtils.toString(exchange.getInputStream());
-			logger.log(Level.INFO, "REST message received: " + message);
 	
-			try {
-				Request request = MessageFactory.createRequest(message);
-	
-				synchronized (requestIdRestSocketCache) {
-					requestIdRestSocketCache.put(request.getId(), exchange);	
-				}
-				
-				eventBus.post(request);
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-			}
-		}
-	}
+
 
 	private void sendBroadcast(String message) {
 		synchronized (clientChannels) {
@@ -230,52 +185,71 @@ public class DaemonWebServer {
 		}
 	}
 
-	private class InternalWebSocketHandler implements WebSocketConnectionCallback {
-		@Override
-		public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-			// Validate origin header (security!)
-			String originHeader = exchange.getRequestHeader("Origin");
-			boolean allowedOriginHeader = originHeader == null || WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches();
-			
-			if (!allowedOriginHeader) {
-				logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
-				exchange.close();
-			}
-			else {
-				channel.getReceiveSetter().set(new AbstractReceiveListener() {
-					@Override
-					protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
-						handleWebSocketRequest(clientChannel, message.getData());
-					}
-	
-					@Override
-					protected void onError(WebSocketChannel webSocketChannel, Throwable error) {
-						logger.log(Level.INFO, "Server error : " + error.toString());
-					}
-	
-					@Override
-					protected void onClose(WebSocketChannel clientChannel, StreamSourceFrameChannel streamSourceChannel) throws IOException {
-						logger.log(Level.INFO, clientChannel.toString() + " disconnected");
-	
-						synchronized (clientChannels) {
-							clientChannels.remove(clientChannel);
-						}
-					}
-				});
-	
-				synchronized (clientChannels) {
-					clientChannels.add(channel);
-				}
-	
-				channel.resumeReceives();
-			}
+	/**
+	 * ClientChannel access methods
+	 */
+	public void addClientChannel(WebSocketChannel clientChannel) {
+		synchronized (clientChannels) {
+			clientChannels.add(clientChannel);
 		}
 	}
+	
+	public void removeClientChannel(WebSocketChannel clientChannel) {
+		synchronized (clientChannels) {
+			clientChannels.remove(clientChannel);
+		}
+	}
+	
+	/**
+	 * Cache access methods
+	 */
+	
+	public void cacheWebSocketRequest(int id, WebSocketChannel clientSocket) {
+		synchronized (requestIdWebSocketCache) {
+			requestIdWebSocketCache.put(id, clientSocket);	
+		}
+	}
+
 
 	private class InternalRestHandler implements HttpHandler {
 		@Override
 		public void handleRequest(final HttpServerExchange exchange) throws Exception {
 			handleRestRequest(exchange);
+		}
+		
+		private void handleRestRequest(HttpServerExchange exchange) throws IOException {
+			logger.log(Level.INFO, "HTTP request received:" + exchange.getRelativePath());
+
+			exchange.startBlocking();			
+
+			if (exchange.getRelativePath().startsWith("/file/")) {	
+				String tempFileToken = exchange.getRelativePath().substring("/file/".length());
+				File tempFile = fileTokenTempFileCache.asMap().get(tempFileToken);
+				
+				logger.log(Level.INFO, "- Temp file: " + tempFileToken);
+				
+				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
+				
+				exchange.endExchange();
+			}
+			else {	
+				String message = IOUtils.toString(exchange.getInputStream());
+				logger.log(Level.INFO, "REST message received: " + message);
+		
+				try {
+					Request request = MessageFactory.createRequest(message);
+		
+					synchronized (requestIdRestSocketCache) {
+						requestIdRestSocketCache.put(request.getId(), exchange);	
+					}
+					
+					eventBus.post(request);
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+					eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+				}
+			}
 		}
 	}
 	
