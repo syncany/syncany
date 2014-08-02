@@ -21,6 +21,8 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.web.WebInterfacePlugin;
@@ -30,6 +32,7 @@ import org.syncany.plugins.web.WebInterfacePlugin;
  *
  */
 public class InternalWebInterfaceHandler implements HttpHandler {
+	private static final Logger logger = Logger.getLogger(InternalWebInterfaceHandler.class.getSimpleName());
 	private List<WebInterfacePlugin> webInterfacePlugins;
 	private WebInterfacePlugin webInterfacePlugin;
 	private HttpHandler requestHandler;
@@ -47,6 +50,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 			webInterfacePlugin = webInterfacePlugins.iterator().next();
 			requestHandler = webInterfacePlugin.createRequestHandler();
 			
+			logger.log(Level.INFO, "Starting webInterfacePlugin: " + webInterfacePlugin.getId());
 			webInterfacePlugin.start();
 		}
 		catch (Exception e) {
@@ -65,6 +69,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 	}
 
 	private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws Exception {
+		logger.log(Level.FINE, "Sending request to webInterfacePlugin handler: " + exchange.toString());
 		requestHandler.handleRequest(exchange);
 	}
 

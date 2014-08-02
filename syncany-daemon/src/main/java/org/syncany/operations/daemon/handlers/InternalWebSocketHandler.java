@@ -48,10 +48,12 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	public InternalWebSocketHandler(DaemonWebServer daemonWebServer) {
 		this.daemonWebServer = daemonWebServer;
 		eventBus = DaemonEventBus.getInstance();
+		eventBus.register(this);
 	}
 	
 	@Override
 	public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
+		logger.log(Level.INFO, "Connecting to websocket server.");
 		// Validate origin header (security!)
 		String originHeader = exchange.getRequestHeader("Origin");
 		boolean allowedOriginHeader = (originHeader == null || 
@@ -62,6 +64,8 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 			exchange.close();
 		}
 		else {
+			logger.log(Level.INFO, "Valid origin header, setting up connection.");
+			
 			channel.getReceiveSetter().set(new AbstractReceiveListener() {
 				@Override
 				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
