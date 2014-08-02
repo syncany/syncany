@@ -28,6 +28,7 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
+import org.syncany.config.to.UserTO;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.DaemonControlServer.ControlCommand;
@@ -180,11 +181,19 @@ public class DaemonOperation extends Operation {
 		FolderTO defaultFolderTO = new FolderTO();
 		defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
 		
-		ArrayList<FolderTO> folders = new ArrayList<>();
+		ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
 		folders.add(defaultFolderTO);
 		
+		UserTO defaultUserTO = new UserTO();
+		defaultUserTO.setUsername("admin");
+		defaultUserTO.setPassword("admin");
+		
+		ArrayList<UserTO> users = new ArrayList<UserTO>();
+		users.add(defaultUserTO);
+		
 		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
-		defaultDaemonConfigTO.setFolders(folders);
+		defaultDaemonConfigTO.setFolders(folders);	
+		defaultDaemonConfigTO.setUsers(users);
 		
 		try {
 			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);

@@ -116,6 +116,11 @@ public class DaemonWebServer {
 	}
 
 	private void initServer(String host, int port, List<UserTO> users) {
+		if (users == null) {
+			users = new ArrayList<UserTO>();
+			logger.log(Level.WARNING, "Webserver is starting without any users. No access possible.");
+		}
+		
 		final IdentityManager identityManager = new MapIdentityManager(users);
 		
 		HttpHandler pathHttpHandler = path()

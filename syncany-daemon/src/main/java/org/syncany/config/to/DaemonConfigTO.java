@@ -36,7 +36,7 @@ public class DaemonConfigTO {
 	@ElementList(name = "folders", entry = "folder", required = true)
 	private ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
 
-	@ElementList(name = "users", entry = "user", required = true)
+	@ElementList(name = "users", entry = "user", required = false)
 	private ArrayList<UserTO> users = new ArrayList<UserTO>();
 
 	public static DaemonConfigTO load(File file) throws ConfigException {
@@ -61,12 +61,16 @@ public class DaemonConfigTO {
 		return folders;
 	}
 	
+	public void setFolders(ArrayList<FolderTO> folders) {
+		this.folders = folders;
+	}
+	
 	public ArrayList<UserTO> getUsers() {
 		return users;
 	}
 	
-	public void setFolders(ArrayList<FolderTO> folders) {
-		this.folders = folders;
+	public void setUsers(ArrayList<UserTO> users) {
+		this.users = users;
 	}
 
 	public WebServerTO getWebServer() {
