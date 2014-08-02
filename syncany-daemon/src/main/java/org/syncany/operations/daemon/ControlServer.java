@@ -41,8 +41,8 @@ import org.syncany.config.UserConfig;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DaemonControlServer implements TailerListener {	
-	private static final Logger logger = Logger.getLogger(DaemonControlServer.class.getSimpleName());
+public class ControlServer implements TailerListener {	
+	private static final Logger logger = Logger.getLogger(ControlServer.class.getSimpleName());
 	private static final String CONTROL_FILE = "daemon.ctrl";
 
 	public enum ControlCommand {
@@ -51,12 +51,12 @@ public class DaemonControlServer implements TailerListener {
 	
 	private File controlFile;
 	private Tailer controlFileTailer;
-	private DaemonEventBus eventBus;
+	private LocalEventBus eventBus;
 
-	public DaemonControlServer() {
+	public ControlServer() {
 		this.controlFile = new File(UserConfig.getUserConfigDir(), CONTROL_FILE);
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
-		this.eventBus = DaemonEventBus.getInstance();		
+		this.eventBus = LocalEventBus.getInstance();		
 	}
 
 	public void enterLoop() throws IOException, ServiceAlreadyStartedException {

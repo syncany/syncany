@@ -17,6 +17,14 @@
  */
 package org.syncany.operations.daemon.messages;
 
+/**
+ * A message is either a request or a response sent to 
+ * or from the daemon. All messages must inherit from this
+ * class. Messages can be serialized/deserialized using the
+ * {@link MessageFactory}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class Message {
-	// Nothing
+	// Nothing here.
 }

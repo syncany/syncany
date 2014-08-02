@@ -27,25 +27,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
-import org.syncany.operations.daemon.DaemonEventBus;
-import org.syncany.operations.daemon.DaemonWebServer;
+import org.syncany.operations.daemon.LocalEventBus;
+import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Request;
 
 /**
  * InteralRestHandler handles the REST requests sent to the daemon.
- *
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InternalRestHandler implements HttpHandler {
 	private static final Logger logger = Logger.getLogger(InternalRestHandler.class.getSimpleName());
-	private DaemonWebServer daemonWebServer;
-	private DaemonEventBus eventBus;
+	private WebServer daemonWebServer;
+	private LocalEventBus eventBus;
 	
-	public InternalRestHandler(DaemonWebServer daemonWebServer) {
+	public InternalRestHandler(WebServer daemonWebServer) {
 		this.daemonWebServer = daemonWebServer;
-		eventBus = DaemonEventBus.getInstance();
+		eventBus = LocalEventBus.getInstance();
 	}
+	
 	@Override
 	public void handleRequest(final HttpServerExchange exchange) throws Exception {
 		handleRestRequest(exchange);
@@ -58,13 +60,18 @@ public class InternalRestHandler implements HttpHandler {
 
 		if (exchange.getRelativePath().startsWith("/file/")) {	
 			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
-			File tempFile = daemonWebServer.fileTokenTempFileCacheGet(tempFileToken);
+			File tempFile = daemonWebServer.getFileTokenTempFileFromCache(tempFileToken);
 			
-			logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-			
-			IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
-			
-			exchange.endExchange();
+			if (tempFile != null) {
+				logger.log(Level.INFO, "- Temp file: " + tempFileToken);
+				
+				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());				
+				exchange.endExchange();
+			}
+			else {
+				logger.log(Level.WARNING, "Invalid request received; Cannot find file token " + tempFileToken);
+				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+			}
 		}
 		else {	
 			String message = IOUtils.toString(exchange.getInputStream());
@@ -73,8 +80,7 @@ public class InternalRestHandler implements HttpHandler {
 			try {
 				Request request = MessageFactory.createRequest(message);
 	
-				daemonWebServer.cacheRestRequest(request.getId(), exchange);
-				
+				daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
 				eventBus.post(request);
 			}
 			catch (Exception e) {

@@ -28,11 +28,14 @@ import org.syncany.plugins.Plugins;
 import org.syncany.plugins.web.WebInterfacePlugin;
 
 /**
- * InternalWebInterfaceHandler is responsible for handling requests to the webinterface.
+ * InternalWebInterfaceHandler is responsible for handling requests 
+ * to the web interface.
  *
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InternalWebInterfaceHandler implements HttpHandler {
 	private static final Logger logger = Logger.getLogger(InternalWebInterfaceHandler.class.getSimpleName());
+	
 	private List<WebInterfacePlugin> webInterfacePlugins;
 	private WebInterfacePlugin webInterfacePlugin;
 	private HttpHandler requestHandler;
@@ -78,7 +81,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 			exchange.getResponseSender().send("No web interface configured.");
 		}
 		else {
-			exchange.getResponseSender().send("Only one web interface can be loaded.");
+			exchange.getResponseSender().send("Only one web interface can be installed, but " + webInterfacePlugins.size() + " plugins found.");
 		}
 	}
 }

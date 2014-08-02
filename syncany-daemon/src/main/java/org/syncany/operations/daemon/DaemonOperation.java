@@ -29,9 +29,10 @@ import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.UserTO;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.DaemonControlServer.ControlCommand;
+import org.syncany.operations.daemon.ControlServer.ControlCommand;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.util.PidFileUtil;
 
@@ -47,19 +48,20 @@ import com.google.common.eventbus.Subscribe;
  * components:
  * 
  * <ul>
- *  <li>The {@link DaemonWatchServer} starts a {@link WatchOperation} for every 
+ *  <li>The {@link WatchServer} starts a {@link WatchOperation} for every 
  *      folder registered in the <tt>daemon.xml</tt> file. It can be reloaded via
  *      the <tt>syd reload</tt> command.</li>
- *  <li>The {@link DaemonWebServer} starts a websocket and allows clients 
+ *  <li>The {@link WebServer} starts a websocket and allows clients 
  *      (e.g. GUI, Web) to control the daemon (if authenticated). 
  *      TODO [medium] This is not yet implemented!</li>
- *  <li>The {@link DaemonControlServer} creates and watches the daemon control file
+ *  <li>The {@link ControlServer} creates and watches the daemon control file
  *      which allows the <tt>syd</tt> shell/batch script to write reload/shutdown
  *      commands.</li>  
  * </ul>
  * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Pim Otte 
  */
 public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
@@ -70,10 +72,10 @@ public class DaemonOperation extends Operation {
 	private File pidFile;
 	private File daemonConfigFile;
 	
-	private DaemonWebServer webServer;
-	private DaemonWatchServer watchServer;
-	private DaemonControlServer controlServer;
-	private DaemonEventBus eventBus;
+	private WebServer webServer;
+	private WatchServer watchServer;
+	private ControlServer controlServer;
+	private LocalEventBus eventBus;
 	private DaemonConfigTO daemonConfig;
 
 	public DaemonOperation(Config config) {
@@ -122,27 +124,21 @@ public class DaemonOperation extends Operation {
 		}
 	}
 	
-	/**
-	 * General initialization functions. These create the EventBus and control loop.
-	 */
+	// General initialization functions. These create the EventBus and control loop.	
 	
 	private void initEventBus() {
-		eventBus = DaemonEventBus.getInstance();
+		eventBus = LocalEventBus.getInstance();
 		eventBus.register(this);
 	}
 
 	private void enterControlLoop() throws IOException, ServiceAlreadyStartedException {
 		logger.log(Level.INFO, "Starting daemon control server ...");
 
-		controlServer = new DaemonControlServer();
+		controlServer = new ControlServer();
 		controlServer.enterLoop(); // This blocks! 
 	}
-	
 
-
-	/**
-	 * General stopping and reloading functions
-	 */
+	// General stopping and reloading functions
 
 	private void stopOperation() {
 		stopWebSocketServer();
@@ -150,15 +146,11 @@ public class DaemonOperation extends Operation {
 	}
 	
 	private void reloadOperation() {
-		loadOrCreateConfig();
-		
+		loadOrCreateConfig();		
 		watchServer.reload(daemonConfig);
-		// webServer.reload(daemonConfig); << Implement this
 	}
 	
-	/**
-	 * Config related functions. Used on starting and reloading.
-	 */
+	// Config related functions. Used on starting and reloading.
 	
 	private void loadOrCreateConfig() {
 		try {
@@ -172,8 +164,7 @@ public class DaemonOperation extends Operation {
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
 		}
-	}
-	
+	}	
 
 	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
 		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
@@ -186,7 +177,7 @@ public class DaemonOperation extends Operation {
 		
 		UserTO defaultUserTO = new UserTO();
 		defaultUserTO.setUsername("admin");
-		defaultUserTO.setPassword("admin");
+		defaultUserTO.setPassword(CipherUtil.createRandomAlphanumericString(12));
 		
 		ArrayList<UserTO> users = new ArrayList<UserTO>();
 		users.add(defaultUserTO);
@@ -205,14 +196,13 @@ public class DaemonOperation extends Operation {
 		return defaultDaemonConfigTO;
 	}
 
-	/**
-	 * WebSocket starting and stopping functions
-	 */
+	// Web server starting and stopping functions
+	
 	private void startWebSocketServer() throws ServiceAlreadyStartedException {
 		if (daemonConfig.getWebServer().isEnabled()) {
 			logger.log(Level.INFO, "Starting web server ...");
 
-			webServer = new DaemonWebServer(daemonConfig);
+			webServer = new WebServer(daemonConfig);
 			webServer.start();
 		}
 		else {
@@ -230,13 +220,12 @@ public class DaemonOperation extends Operation {
 		}
 	}
 	
-	/**
-	 * WatchServer starting and stopping functions
-	 */
+	// Watch server starting and stopping functions
+	
 	private void startWatchServer() throws ConfigException {
 		logger.log(Level.INFO, "Starting watch server ...");
 
-		watchServer = new DaemonWatchServer();
+		watchServer = new WatchServer();
 		watchServer.start(daemonConfig);
 	}
 
@@ -244,10 +233,4 @@ public class DaemonOperation extends Operation {
 		logger.log(Level.INFO, "Stopping watch server ...");
 		watchServer.stop();
 	}
-
-
-
-
-
-
 }

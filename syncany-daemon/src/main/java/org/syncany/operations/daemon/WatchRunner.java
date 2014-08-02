@@ -79,25 +79,25 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class WatchOperationRunner implements WatchOperationListener {
-	private static final Logger logger = Logger.getLogger(WatchOperationRunner.class.getSimpleName());
+public class WatchRunner implements WatchOperationListener {
+	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());
 	
 	private Config config;
 	private File portFile;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
-	private DaemonEventBus eventBus;
+	private LocalEventBus eventBus;
 	
 	private SqlDatabase localDatabase;
 
-	public WatchOperationRunner(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
+	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
 		this.config = config;
-		this.portFile = new File(config.getAppDir(), "port");
+		this.portFile = new File(config.getAppDir(), "port"); // TODO actually use this file properly, see #171
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.localDatabase = new SqlDatabase(config);
 		
-		this.eventBus = DaemonEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 	}
 	
@@ -108,7 +108,7 @@ public class WatchOperationRunner implements WatchOperationListener {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
 					
-					portFile.createNewFile();
+					portFile.createNewFile(); // TODO actually use this file properly, see #171
 					portFile.deleteOnExit();
 					
 					watchOperation.execute();
@@ -234,8 +234,7 @@ public class WatchOperationRunner implements WatchOperationListener {
 		}
 		catch (Exception e) {
 			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
-		}
-		
+		}		
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {

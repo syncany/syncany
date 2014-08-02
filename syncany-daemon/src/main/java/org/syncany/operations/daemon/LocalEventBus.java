@@ -22,22 +22,29 @@ import java.util.logging.Logger;
 
 import com.google.common.eventbus.EventBus;
 
-public class DaemonEventBus {
-	private static final Logger logger = Logger.getLogger(DaemonEventBus.class.getSimpleName());
-	private static DaemonEventBus instance;
+/**
+ * The event bus wraps the Google EventBus service for the
+ * daemon. It provides a publish/subscribe mechanism within a
+ * single JVM.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+public class LocalEventBus {
+	private static final Logger logger = Logger.getLogger(LocalEventBus.class.getSimpleName());
+	private static LocalEventBus instance;
 	
 	private EventBus eventBus;
 	
-	public static DaemonEventBus getInstance() {
+	public static LocalEventBus getInstance() {
 		if (instance != null) {
 			return instance;
 		}
 		
-		instance = new DaemonEventBus();
+		instance = new LocalEventBus();
 		return instance;
 	}
 	
-	private DaemonEventBus() {
+	private LocalEventBus() {
 		this.eventBus = new EventBus();
 	}
 	

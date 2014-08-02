@@ -63,8 +63,9 @@ import org.bouncycastle.crypto.params.HKDFParameters;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CipherUtil {
-	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
-
+	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());	
+	private static final String ALPHANUMERIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	
 	private static AtomicBoolean initialized = new AtomicBoolean(false);
 	private static AtomicBoolean unlimitedStrengthEnabled = new AtomicBoolean(false);
 	private static SecureRandom secureRandom = new SecureRandom();
@@ -156,6 +157,20 @@ public class CipherUtil {
 		secureRandom.nextBytes(randomByteArray);
 
 		return randomByteArray;
+	}
+	
+    /**
+     * Generates a random string the given length. Only uses characters 
+     * A-Z/a-z (in order to always create valid serialized vector clock representations).
+     */
+	public static String createRandomAlphanumericString(int size) {
+		StringBuilder sb = new StringBuilder(size);
+		
+		for (int i = 0; i < size; i++) {
+			sb.append(ALPHANUMERIC_CHARS.charAt(secureRandom.nextInt(ALPHANUMERIC_CHARS.length())));
+		}
+		
+		return sb.toString();
 	}
 
 	/**
@@ -296,5 +311,5 @@ public class CipherUtil {
 		catch (IOException e) {
 			throw new CipherException(e);
 		}
-	}		
+	}			
 }

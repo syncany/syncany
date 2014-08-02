@@ -17,11 +17,6 @@
  */
 package org.syncany.operations.daemon.messages;
 
-
-/**
- * @author pheckel
- *
- */
 public class GetDatabaseVersionHeadersRequest extends WatchRequest {
-	// Nothing
+	// Nothing here
 }

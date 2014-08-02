@@ -28,36 +28,38 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.operations.daemon.DaemonEventBus;
-import org.syncany.operations.daemon.DaemonWebServer;
+import org.syncany.operations.daemon.LocalEventBus;
+import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Request;
 
-import com.google.common.eventbus.EventBus;
-
 /**
- * InternalWebSocketHandler handles the websocket requests sent to the daemon.
+ * InternalWebSocketHandler handles the web socket requests 
+ * sent to the daemon.
  *
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());
-	private DaemonWebServer daemonWebServer;
-	private DaemonEventBus eventBus;
+	private WebServer daemonWebServer;
+	private LocalEventBus eventBus;
 	
-	public InternalWebSocketHandler(DaemonWebServer daemonWebServer) {
+	public InternalWebSocketHandler(WebServer daemonWebServer) {
 		this.daemonWebServer = daemonWebServer;
-		eventBus = DaemonEventBus.getInstance();
-		eventBus.register(this);
+		this.eventBus = LocalEventBus.getInstance();
+		
+		this.eventBus.register(this);
 	}
 	
 	@Override
 	public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
 		logger.log(Level.INFO, "Connecting to websocket server.");
+		
 		// Validate origin header (security!)
 		String originHeader = exchange.getRequestHeader("Origin");
 		boolean allowedOriginHeader = (originHeader == null || 
-				DaemonWebServer.WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches());
+				WebServer.WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches());
 		
 		if (!allowedOriginHeader) {
 			logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
@@ -96,7 +98,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		try {
 			Request request = MessageFactory.createRequest(message);
 
-			daemonWebServer.cacheWebSocketRequest(request.getId(), clientSocket);
+			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);
 			
 			eventBus.post(request);
 		}
