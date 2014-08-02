@@ -9,6 +9,7 @@ Change Log
 - Bugfixes and other things:
   + Fixed cross dependency issue with plugins #162
   + Altered API backend to include 'conflicts-with' metadata #165
+  + Fixed Windows/Linux attribute bingo #166
   + Fixed daemon script such that it can be symlinked
 
 ### Syncany 0.1.7-alpha (Date: 28 Jul 2014)
