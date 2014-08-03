@@ -67,6 +67,7 @@ import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.operations.watch.WatchOperationResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
 
@@ -86,6 +87,7 @@ public class WatchRunner implements WatchOperationListener {
 	private File portFile;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
+	private WatchOperationResult watchOperationResult;
 	private LocalEventBus eventBus;
 	
 	private SqlDatabase localDatabase;
@@ -107,11 +109,11 @@ public class WatchRunner implements WatchOperationListener {
 			public void run() {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
-					
+					watchOperationResult = null;
 					portFile.createNewFile(); // TODO actually use this file properly, see #171
 					portFile.deleteOnExit();
 					
-					watchOperation.execute();
+					watchOperationResult = watchOperation.execute();
 					
 					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());
 				}
@@ -129,6 +131,10 @@ public class WatchRunner implements WatchOperationListener {
 		portFile.delete();
 
 		watchThread = null;
+	}
+	
+	public boolean hasStopped() {
+		return (watchOperationResult != null);
 	}
 	
 	@Subscribe

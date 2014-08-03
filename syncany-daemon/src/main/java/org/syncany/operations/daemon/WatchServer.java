@@ -73,7 +73,9 @@ public class WatchServer {
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
 			
-			stopWatchOperations(watchedFolders.keySet());
+			// Stop all currently running operations
+			stopAllWatchOperations();
+			// Start all operations that are present in the config.
 			startWatchOperations(watchedFolders);
 		}
 		catch (Exception e) {
@@ -122,16 +124,27 @@ public class WatchServer {
 		}
 	}
 	
-	private void stopWatchOperations(Set<File> removedWatchedFolderIds) {
-		for (File localDir : removedWatchedFolderIds) {
+	/**
+	 * stopAllWatchOperations stops all watchOperations and verifies if they actually have stopped.
+	 * 
+	 */
+	private void stopAllWatchOperations() {
+		for (File localDir : watchOperations.keySet()) {
 			WatchRunner watchOperationThread = watchOperations.get(localDir);
-			
-			if (watchOperationThread != null) {
-				logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
-				watchOperationThread.stop();
+
+			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
+			watchOperationThread.stop();
+		}
+		// Check if watch operations actually have stopped.
+		while (watchOperations.keySet().size() > 0) {
+			Map<File, WatchRunner> watchOperationsCopy = new TreeMap<File, WatchRunner>(watchOperations);
+			for (File localDir : watchOperationsCopy.keySet()) {
+				WatchRunner watchOperationThread = watchOperationsCopy.get(localDir);
+				if (watchOperationThread.hasStopped()) {
+					logger.log(Level.INFO, "- Watch operation at " + localDir + " has stopped");
+					watchOperations.remove(localDir);
+				}
 			}
-			
-			watchOperations.remove(localDir);
 		}
 	}
 	
@@ -147,34 +160,6 @@ public class WatchServer {
 		return watchedFolderTOs;
 	}
 	
-	private Map<File, FolderTO> determineNewWatchedFolderTOs(Map<File, FolderTO> watchedFolders) {
-		Map<File, FolderTO> newWatchedFolderTOs = new TreeMap<File, FolderTO>();
-		
-		for (Map.Entry<File, FolderTO> folderEntry : watchedFolders.entrySet()) {
-			File localDir = folderEntry.getKey();
-			boolean isManaged = watchOperations.containsKey(localDir);
-			
-			if (!isManaged) {
-				newWatchedFolderTOs.put(folderEntry.getKey(), folderEntry.getValue());
-			}
-		}
-		
-		return newWatchedFolderTOs;
-	}
-
-	private List<File> determineRemovedWatchedFolderIds(Map<File, FolderTO> watchedFolders) {
-		List<File> removedWatchedFolderIds = new ArrayList<File>();
-		
-		for (File localDir : watchOperations.keySet()) {
-			boolean isInConfig = watchedFolders.containsKey(localDir);
-			
-			if (!isInConfig) {
-				removedWatchedFolderIds.add(localDir);
-			}
-		}
-		
-		return removedWatchedFolderIds;
-	}
 	
 	@Subscribe
 	public void onRequestReceived(Request request) {
