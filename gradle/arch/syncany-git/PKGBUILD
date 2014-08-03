@@ -1,8 +1,8 @@
 # Maintainer: Armin Fisslthaler <armin@fisslthaler.net>
 pkgname=syncany-git
-pkgver=0.1.5.alpha.g19b3572
+pkgver=0.1.8.alpha.g95a5172
 pkgrel=1
-pkgdesc="An open-source cloud storage and filesharing application (a Dropbox work-alike with more flexibility in terms of storage type and provider)"
+pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
 url=https://www.syncany.org/
 license=(GPL3)
