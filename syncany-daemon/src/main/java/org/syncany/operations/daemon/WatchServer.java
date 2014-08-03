@@ -55,6 +55,7 @@ public class WatchServer {
 	
 	private Map<File, WatchRunner> watchOperations;
 	private LocalEventBus eventBus;
+	private int port;
 	
 	public WatchServer() {
 		this.watchOperations = new TreeMap<File, WatchRunner>();
@@ -69,7 +70,11 @@ public class WatchServer {
 	
 	public void reload(DaemonConfigTO daemonConfigTO) {
 		logger.log(Level.INFO, "Starting/reloading watch server ... ");
-
+		
+		// Update port number
+		port = daemonConfigTO.getWebServer().getPort();
+		
+		// Restart threads
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
 			
@@ -109,7 +114,7 @@ public class WatchServer {
 				if (watchConfig != null) {
 					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
 					
-					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions);	
+					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions, port);	
 					watchOperationThread.start();
 	
 					watchOperations.put(localDir, watchOperationThread);

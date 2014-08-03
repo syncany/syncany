@@ -19,6 +19,7 @@ package org.syncany.operations.daemon;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -85,6 +86,7 @@ public class WatchRunner implements WatchOperationListener {
 	
 	private Config config;
 	private File portFile;
+	private int port;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 	private WatchOperationResult watchOperationResult;
@@ -92,9 +94,10 @@ public class WatchRunner implements WatchOperationListener {
 	
 	private SqlDatabase localDatabase;
 
-	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
+	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, int port) throws ConfigException {
 		this.config = config;
-		this.portFile = new File(config.getAppDir(), "port"); // TODO actually use this file properly, see #171
+		this.portFile = new File(config.getAppDir(), Config.FILE_PORT);
+		this.port = port;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.localDatabase = new SqlDatabase(config);
@@ -110,9 +113,20 @@ public class WatchRunner implements WatchOperationListener {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
 					watchOperationResult = null;
-					portFile.createNewFile(); // TODO actually use this file properly, see #171
+					
+					// Write port to portFile
+					portFile.createNewFile();
+					try (FileWriter portFileWriter = new FileWriter(portFile)) {
+						String portStr = Integer.toString(port);
+						
+						logger.log(Level.INFO, "Writing Port file (for Port " + portStr + ") to " + portFile + " ...");
+						
+						portFileWriter.write(portStr);
+						portFileWriter.close();
+					}
 					portFile.deleteOnExit();
 					
+					// Start operation
 					watchOperationResult = watchOperation.execute();
 					
 					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());

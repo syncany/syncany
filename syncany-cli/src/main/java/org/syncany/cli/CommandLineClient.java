@@ -19,7 +19,9 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,6 +44,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -49,6 +52,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.syncany.Client;
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
@@ -58,6 +62,7 @@ import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Response;
 import org.syncany.util.EnvironmentUtil;
+import org.syncany.util.FileUtil;
 
 /**
  * The command line client implements a typical CLI. It represents the first entry
@@ -69,7 +74,10 @@ import org.syncany.util.EnvironmentUtil;
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
-	private static final String SERVER_URI = "http://localhost:8080/api/rs";
+	private static final String SERVER_PROTOCOL = "http://";
+	private static final String SERVER_HOSTNAME = "localhost";
+	private static int SERVER_PORT = 8080;
+	private static final String SERVER_REST_API = "/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
 	private static final int LOG_FILE_COUNT = 4;
@@ -299,7 +307,7 @@ public class CommandLineClient extends Client {
 		File portFile = null;
 		
 		if (config != null) {
-			portFile = new File(config.getAppDir(), "port"); // TODO
+			portFile = new File(config.getAppDir(), Config.FILE_PORT);
 		}
 		
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
@@ -307,6 +315,13 @@ public class CommandLineClient extends Client {
 		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
 		if (sendToRest) {
+			try (BufferedReader portFileReader = new BufferedReader(new FileReader(portFile))) {
+				SERVER_PORT = Integer.parseInt(portFileReader.readLine());		
+			}
+			catch (Exception e) {
+				logger.log(Level.SEVERE, "Cannot read REST server port from: " + portFile + ", because: " + e.getMessage());
+				SERVER_PORT = 8080;
+			}
 			return sendToRest(command, commandName, commandArgs);
 		}
 		else {
@@ -332,9 +347,12 @@ public class CommandLineClient extends Client {
 	private int sendToRest(Command command, String commandName, String[] commandArgs) {
 		CloseableHttpClient client = HttpClients.createDefault();
 		
+		String SERVER_URI = SERVER_PROTOCOL + SERVER_HOSTNAME + ":" + SERVER_PORT + SERVER_REST_API;
 		HttpPost post = new HttpPost(SERVER_URI);
 		
 		try {
+			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
+			
 			// Create and send HTTP/REST request
 			CliRequest cliRequest = new CliRequest();
 			
@@ -347,7 +365,11 @@ public class CommandLineClient extends Client {
 			
 			// Handle response
 			HttpResponse httpResponse = client.execute(post);
+			logger.log(Level.FINE, "Received HttpResponse: " + httpResponse);
+			
 			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());
+			
+			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 			
 			Response response = MessageFactory.createResponse(responseStr);
 			
