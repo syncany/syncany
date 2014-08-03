@@ -5,7 +5,7 @@ Syncany [![Build Status](https://travis-ci.org/syncany/syncany.svg?branch=master
 
 Syncany is an open-source cloud storage and filesharing application. It allows
 users to backup and share certain folders of their workstations using any kind
-of storage, e.g. FTP, SFTP, WebDAV and Amazon S3.
+of storage, e.g. FTP, SFTP, WebDAV, Amazon S3 and Samba.
 
 While the basic idea is similar to Dropbox, Syncany is
 open-source and additionally provides data encryption and more flexibility in
@@ -52,7 +52,7 @@ Usage is pretty similar to a version control system. If you have used Git or
 SVN, it should feel a lot alike.
 
 **1. Choose and install a storage plugin**   
-First choose the storage backend you'd like to use by doing `sy plugin list` and then `sy plugin install`. As of today, we've implemented plugins for [FTP](https://github.com/syncany/syncany-plugin-ftp), [SFTP](https://github.com/syncany/syncany-plugin-sftp), [WebDAV](https://github.com/syncany/syncany-plugin-webdav) and [Amazon S3](https://github.com/syncany/syncany-plugin-s3). For this example, we'll install the FTP plugin:
+First choose the storage backend you'd like to use by doing `sy plugin list` and then `sy plugin install`. As of today, we've implemented plugins for [FTP](https://github.com/syncany/syncany-plugin-ftp), [SFTP](https://github.com/syncany/syncany-plugin-sftp), [WebDAV](https://github.com/syncany/syncany-plugin-webdav), [Amazon S3](https://github.com/syncany/syncany-plugin-s3) and [Samba](https://github.com/syncany/syncany-plugin-samba). For this example, we'll install the FTP plugin:
 ```
 $ sy plugin install ftp
 ```
