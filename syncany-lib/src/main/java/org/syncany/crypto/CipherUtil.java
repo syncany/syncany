@@ -64,7 +64,13 @@ import org.bouncycastle.crypto.params.HKDFParameters;
  */
 public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());	
-	// This is not alphanumeric to prevent breaking of the VectorClock format.
+	
+	/**
+	 * Chars from A-Z / a-z to be used in randomly generated passwords. 
+	 * 
+	 * <p><b>Note:</b> This string cannot contain numbers, to prevent breaking
+	 * of the vector clock format.
+	 */
 	private static final String ALPHABETIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	
 	private static AtomicBoolean initialized = new AtomicBoolean(false);
@@ -164,7 +170,7 @@ public class CipherUtil {
      * Generates a random string the given length. Only uses characters 
      * A-Z/a-z (in order to always create valid serialized vector clock representations).
      */
-	public static String createRandomAlphanumericString(int size) {
+	public static String createRandomAlphabeticString(int size) {
 		StringBuilder sb = new StringBuilder(size);
 		
 		for (int i = 0; i < size; i++) {

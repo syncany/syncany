@@ -163,15 +163,18 @@ public class DaemonOperation extends Operation {
 				daemonConfig = createAndWriteDefaultConfig(daemonConfigFile);
 			}
 			
+			// Add user and password for access from the CLI
 			if (portTO == null) {
-				// Add user and password for access from the CLI
-				String accessToken = CipherUtil.createRandomAlphanumericString(20);
+				String accessToken = CipherUtil.createRandomAlphabeticString(20);
+				
 				UserTO cliUser = new UserTO();
 				cliUser.setUsername("CLI");
 				cliUser.setPassword(accessToken);
+				
 				portTO = new PortTO();
 				portTO.setPort(daemonConfig.getWebServer().getPort());
 				portTO.setUser(cliUser);
+				
 				daemonConfig.setPortTO(portTO);
 			}
 		}
@@ -191,7 +194,7 @@ public class DaemonOperation extends Operation {
 		
 		UserTO defaultUserTO = new UserTO();
 		defaultUserTO.setUsername("admin");
-		defaultUserTO.setPassword(CipherUtil.createRandomAlphanumericString(12));
+		defaultUserTO.setPassword(CipherUtil.createRandomAlphabeticString(12));
 		
 		ArrayList<UserTO> users = new ArrayList<UserTO>();
 		users.add(defaultUserTO);

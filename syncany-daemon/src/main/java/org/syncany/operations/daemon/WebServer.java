@@ -44,7 +44,6 @@ import java.util.regex.Pattern;
 
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.UserTO;
-import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
@@ -130,8 +129,6 @@ public class WebServer {
 			// Add CLI credentials
 			users.add(daemonConfigTO.getPortTO().getUser());
 		}
-		
-		
 		
 		IdentityManager identityManager = new MapIdentityManager(users);
 		

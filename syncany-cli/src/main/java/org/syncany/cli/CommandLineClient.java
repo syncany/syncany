@@ -78,7 +78,6 @@ public class CommandLineClient extends Client {
 	
 	private static final String SERVER_PROTOCOL = "http://";
 	private static final String SERVER_HOSTNAME = "localhost";
-	private static PortTO portTO;
 	private static final String SERVER_REST_API = "/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
@@ -317,13 +316,7 @@ public class CommandLineClient extends Client {
 		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
 		if (sendToRest) {
-			try {
-				portTO = new Persister().read(PortTO.class, portFile);
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "ERROR: Could not read portFile to connect to daemon.", e);
-			}
-			return sendToRest(command, commandName, commandArgs);
+			return sendToRest(command, commandName, commandArgs, portFile);
 		}
 		else {
 			return runLocally(command, commandArgs);
@@ -345,26 +338,22 @@ public class CommandLineClient extends Client {
 		}	
 	}
 
-	private int sendToRest(Command command, String commandName, String[] commandArgs) {
-		if (portTO == null) {
-			logger.log(Level.SEVERE, "No port information available");
-			return showErrorAndExit("Cannot connect to daemon.");
-		}
-		
+	private int sendToRest(Command command, String commandName, String[] commandArgs, File portFile) {
+		// Read port config (for daemon) from port file
+		PortTO portConfig = readPortConfig(portFile);
 		
 		// Create authentication details
-	    CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(SERVER_HOSTNAME, portTO.getPort()),
-                new UsernamePasswordCredentials(portTO.getUser().getUsername(), portTO.getUser().getPassword()));
+	    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(
+            new AuthScope(SERVER_HOSTNAME, portConfig.getPort()),
+            new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
         
         // Create client with authentication details
         CloseableHttpClient client = HttpClients.custom()
-                .setDefaultCredentialsProvider(credsProvider)
-                .build();
+            .setDefaultCredentialsProvider(credentialsProvider)
+            .build();
 		
-		
-		String SERVER_URI = SERVER_PROTOCOL + SERVER_HOSTNAME + ":" + portTO.getPort() + SERVER_REST_API;
+		String SERVER_URI = SERVER_PROTOCOL + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 		HttpPost post = new HttpPost(SERVER_URI);
 		
 		try {
@@ -384,8 +373,7 @@ public class CommandLineClient extends Client {
 			HttpResponse httpResponse = client.execute(post);
 			logger.log(Level.FINE, "Received HttpResponse: " + httpResponse);
 			
-			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());
-			
+			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
 			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 			
 			Response response = MessageFactory.createResponse(responseStr);
@@ -403,6 +391,18 @@ public class CommandLineClient extends Client {
 			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
 		}		
+	}
+
+	private PortTO readPortConfig(File portFile) {
+		try {
+			return new Persister().read(PortTO.class, portFile);
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "ERROR: Could not read portFile to connect to daemon.", e);
+
+			showErrorAndExit("Cannot connect to daemon.");			
+			return null; // Never reached!
+		}
 	}
 
 	private void showShortVersionAndExit() throws IOException {

@@ -40,7 +40,7 @@ public class DaemonConfigTO {
 	private ArrayList<UserTO> users = new ArrayList<UserTO>();
 
 	// This is not in xml on purpose. It is generated dynamically by the daemon.
-	private PortTO portTO;
+	private PortTO portTO; // TODO what is this?
 	
 	public static DaemonConfigTO load(File file) throws ConfigException {
 		try {

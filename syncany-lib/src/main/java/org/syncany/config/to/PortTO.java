@@ -21,14 +21,13 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * PortTO is the access object to the xml file written by the daemon in the client folder.
+ * PortTO is the access object to the XML file written by the daemon in the client folder.
  * PortTO is used in the CLI to get access to the port information and a user-password
  * pair that can be used to authenticate with the REST-server.
  * 
  * @author Pim Otte
- *
  */
-@Root(name="port")
+@Root(name="port", strict=false)
 public class PortTO {
 	@Element(name="port", required = true)
 	private int port;

@@ -299,7 +299,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected String getRandomMachineName() {
-		return CipherUtil.createRandomAlphanumericString(20);
+		return CipherUtil.createRandomAlphabeticString(20);
 	}
 
 	protected String getDefaultDisplayName() throws UnknownHostException {
