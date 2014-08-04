@@ -64,7 +64,8 @@ import org.bouncycastle.crypto.params.HKDFParameters;
  */
 public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());	
-	private static final String ALPHANUMERIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
+	// This is not alphanumeric to prevent breaking of the VectorClock format.
+	private static final String ALPHABETHIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	
 	private static AtomicBoolean initialized = new AtomicBoolean(false);
 	private static AtomicBoolean unlimitedStrengthEnabled = new AtomicBoolean(false);
@@ -167,7 +168,7 @@ public class CipherUtil {
 		StringBuilder sb = new StringBuilder(size);
 		
 		for (int i = 0; i < size; i++) {
-			sb.append(ALPHANUMERIC_CHARS.charAt(secureRandom.nextInt(ALPHANUMERIC_CHARS.length())));
+			sb.append(ALPHABETHIC_CHARS.charAt(secureRandom.nextInt(ALPHABETHIC_CHARS.length())));
 		}
 		
 		return sb.toString();
