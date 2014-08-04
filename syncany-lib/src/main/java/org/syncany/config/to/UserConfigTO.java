@@ -37,7 +37,7 @@ import org.syncany.config.ConfigException;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="userConfig")
+@Root(name="userConfig", strict=false)
 @Namespace(reference="http://syncany.org/userconfig/1")
 public class UserConfigTO {
 	@ElementMap(name="systemProperties", entry="property", key="name", required=false, attribute=true)

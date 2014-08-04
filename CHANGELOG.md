@@ -4,6 +4,7 @@ Change Log
 ### Syncany 0.1.8-alpha (Date: tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
+  + New Samba / Windows share plugin #172
   + Public key authentication for the SFTP plugin #134
   + Websocket/Rest-like daemon with user-password authentication.
 - Bugfixes and other things:
