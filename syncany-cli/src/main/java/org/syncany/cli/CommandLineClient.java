@@ -19,9 +19,7 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -44,25 +42,29 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Response;
 import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.FileUtil;
 
 /**
  * The command line client implements a typical CLI. It represents the first entry
@@ -76,7 +78,7 @@ public class CommandLineClient extends Client {
 	
 	private static final String SERVER_PROTOCOL = "http://";
 	private static final String SERVER_HOSTNAME = "localhost";
-	private static int SERVER_PORT = 8080;
+	private static PortTO portTO;
 	private static final String SERVER_REST_API = "/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
@@ -315,12 +317,11 @@ public class CommandLineClient extends Client {
 		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
 		if (sendToRest) {
-			try (BufferedReader portFileReader = new BufferedReader(new FileReader(portFile))) {
-				SERVER_PORT = Integer.parseInt(portFileReader.readLine());		
+			try {
+				portTO = new Persister().read(PortTO.class, portFile);
 			}
 			catch (Exception e) {
-				logger.log(Level.SEVERE, "Cannot read REST server port from: " + portFile + ", because: " + e.getMessage());
-				SERVER_PORT = 8080;
+				logger.log(Level.SEVERE, "ERROR: Could not read portFile to connect to daemon.", e);
 			}
 			return sendToRest(command, commandName, commandArgs);
 		}
@@ -345,9 +346,25 @@ public class CommandLineClient extends Client {
 	}
 
 	private int sendToRest(Command command, String commandName, String[] commandArgs) {
-		CloseableHttpClient client = HttpClients.createDefault();
+		if (portTO == null) {
+			logger.log(Level.SEVERE, "No port information available");
+			return showErrorAndExit("Cannot connect to daemon.");
+		}
 		
-		String SERVER_URI = SERVER_PROTOCOL + SERVER_HOSTNAME + ":" + SERVER_PORT + SERVER_REST_API;
+		
+		// Create authentication details
+	    CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+                new AuthScope(SERVER_HOSTNAME, portTO.getPort()),
+                new UsernamePasswordCredentials(portTO.getUser().getUsername(), portTO.getUser().getPassword()));
+        
+        // Create client with authentication details
+        CloseableHttpClient client = HttpClients.custom()
+                .setDefaultCredentialsProvider(credsProvider)
+                .build();
+		
+		
+		String SERVER_URI = SERVER_PROTOCOL + SERVER_HOSTNAME + ":" + portTO.getPort() + SERVER_REST_API;
 		HttpPost post = new HttpPost(SERVER_URI);
 		
 		try {

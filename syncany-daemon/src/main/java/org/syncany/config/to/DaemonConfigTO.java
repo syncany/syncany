@@ -39,6 +39,9 @@ public class DaemonConfigTO {
 	@ElementList(name = "users", entry = "user", required = false)
 	private ArrayList<UserTO> users = new ArrayList<UserTO>();
 
+	// This is not in xml on purpose. It is generated dynamically by the daemon.
+	private PortTO portTO;
+	
 	public static DaemonConfigTO load(File file) throws ConfigException {
 		try {
 			return new Persister().read(DaemonConfigTO.class, file);
@@ -79,5 +82,13 @@ public class DaemonConfigTO {
 
 	public void setWebServer(WebServerTO webServer) {
 		this.webServer = webServer;
+	}
+	
+	public PortTO getPortTO() {
+		return portTO;
+	}
+	
+	public void setPortTO(PortTO portTO) {
+		this.portTO = portTO;
 	}
 }

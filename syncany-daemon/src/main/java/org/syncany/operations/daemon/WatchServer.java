@@ -21,7 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,6 +30,7 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
+import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.ListWatchesRequest;
 import org.syncany.operations.daemon.messages.ListWatchesResponse;
@@ -55,7 +55,7 @@ public class WatchServer {
 	
 	private Map<File, WatchRunner> watchOperations;
 	private LocalEventBus eventBus;
-	private int port;
+	private PortTO portTO;
 	
 	public WatchServer() {
 		this.watchOperations = new TreeMap<File, WatchRunner>();
@@ -72,7 +72,7 @@ public class WatchServer {
 		logger.log(Level.INFO, "Starting/reloading watch server ... ");
 		
 		// Update port number
-		port = daemonConfigTO.getWebServer().getPort();
+		portTO = daemonConfigTO.getPortTO();
 		
 		// Restart threads
 		try {
@@ -114,7 +114,7 @@ public class WatchServer {
 				if (watchConfig != null) {
 					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
 					
-					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions, port);	
+					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions, portTO);	
 					watchOperationThread.start();
 	
 					watchOperations.put(localDir, watchOperationThread);

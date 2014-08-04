@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.UserTO;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
@@ -83,7 +84,7 @@ public class WebServer {
 		
 		initCaches();
 		initEventBus();
-		initServer(daemonConfig.getWebServer().getHost(), daemonConfig.getWebServer().getPort(), daemonConfig.getUsers());
+		initServer(daemonConfig);
 	}
 
 	public void start() throws ServiceAlreadyStartedException {
@@ -116,11 +117,21 @@ public class WebServer {
 		eventBus.register(this);
 	}
 
-	private void initServer(String host, int port, List<UserTO> users) {
+	private void initServer(DaemonConfigTO daemonConfigTO) {
+		String host = daemonConfigTO.getWebServer().getHost();
+		int port = daemonConfigTO.getWebServer().getPort();
+		List<UserTO> users = daemonConfigTO.getUsers();
+		
 		if (users == null) {
 			users = new ArrayList<UserTO>();
-			logger.log(Level.WARNING, "Webserver is starting without any users. No access possible.");
 		}
+		
+		if (daemonConfigTO.getPortTO() != null) {
+			// Add CLI credentials
+			users.add(daemonConfigTO.getPortTO().getUser());
+		}
+		
+		
 		
 		IdentityManager identityManager = new MapIdentityManager(users);
 		

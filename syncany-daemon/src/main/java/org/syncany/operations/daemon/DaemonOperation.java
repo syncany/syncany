@@ -28,6 +28,7 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
+import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
@@ -77,6 +78,7 @@ public class DaemonOperation extends Operation {
 	private ControlServer controlServer;
 	private LocalEventBus eventBus;
 	private DaemonConfigTO daemonConfig;
+	private PortTO portTO;
 
 	public DaemonOperation(Config config) {
 		super(config);
@@ -159,6 +161,18 @@ public class DaemonOperation extends Operation {
 			}
 			else {
 				daemonConfig = createAndWriteDefaultConfig(daemonConfigFile);
+			}
+			
+			if (portTO == null) {
+				// Add user and password for access from the CLI
+				String accessToken = CipherUtil.createRandomAlphanumericString(20);
+				UserTO cliUser = new UserTO();
+				cliUser.setUsername("CLI");
+				cliUser.setPassword(accessToken);
+				portTO = new PortTO();
+				portTO.setPort(daemonConfig.getWebServer().getPort());
+				portTO.setUser(cliUser);
+				daemonConfig.setPortTO(portTO);
 			}
 		}
 		catch (Exception e) {

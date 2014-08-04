@@ -30,11 +30,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.cli.Command;
 import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.to.PortTO;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
@@ -86,7 +88,7 @@ public class WatchRunner implements WatchOperationListener {
 	
 	private Config config;
 	private File portFile;
-	private int port;
+	private PortTO portTO;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 	private WatchOperationResult watchOperationResult;
@@ -94,10 +96,10 @@ public class WatchRunner implements WatchOperationListener {
 	
 	private SqlDatabase localDatabase;
 
-	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, int port) throws ConfigException {
+	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
 		this.portFile = new File(config.getAppDir(), Config.FILE_PORT);
-		this.port = port;
+		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.localDatabase = new SqlDatabase(config);
@@ -116,14 +118,7 @@ public class WatchRunner implements WatchOperationListener {
 					
 					// Write port to portFile
 					portFile.createNewFile();
-					try (FileWriter portFileWriter = new FileWriter(portFile)) {
-						String portStr = Integer.toString(port);
-						
-						logger.log(Level.INFO, "Writing Port file (for Port " + portStr + ") to " + portFile + " ...");
-						
-						portFileWriter.write(portStr);
-						portFileWriter.close();
-					}
+					new Persister().write(portTO, portFile);
 					portFile.deleteOnExit();
 					
 					// Start operation
