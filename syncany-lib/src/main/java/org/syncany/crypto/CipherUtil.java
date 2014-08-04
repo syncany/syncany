@@ -64,7 +64,7 @@ import org.bouncycastle.crypto.params.HKDFParameters;
  */
 public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());	
-	private static final String ALPHANUMERIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	private static final String ALPHANUMERIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
 	
 	private static AtomicBoolean initialized = new AtomicBoolean(false);
 	private static AtomicBoolean unlimitedStrengthEnabled = new AtomicBoolean(false);
