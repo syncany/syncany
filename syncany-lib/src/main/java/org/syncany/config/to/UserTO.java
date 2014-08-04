@@ -18,7 +18,13 @@
 package org.syncany.config.to;
 
 import org.simpleframework.xml.Element;
-
+/**
+ * UserTO is the access object to user-password pairs in xml.
+ * UserTO is used as parts of DaemonConfigTO and PortTO.
+ * 
+ * @author Pim Otte
+ *
+ */
 public class UserTO {
 	@Element(required = true)
 	private String username;
