@@ -123,7 +123,7 @@ Buy us a coffee
 ---------------
 If you like what you see and you want to support us, you can buy us a coffee or a beer. There are maaanny ways to do so.
 
-Break some hashes for us and [donate some Bitcoins](https://blockchain.info/address/1626wjrw3uWk9adyjCfYwafw4sQWujyjn8); or be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany). If that's not for you, why not give us some change [with PayPal](http://www.syncany.org/donate.html)? Any contributions are much appreciated! 
+Break some hashes for us by [donating some Bitcoins](https://blockchain.info/address/1626wjrw3uWk9adyjCfYwafw4sQWujyjn8) (also via [tip4commit](http://tip4commit.com/github/syncany/syncany)); or be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany). If that's not for you, why not give us some change [with PayPal](http://www.syncany.org/donate.html)? Any contributions are much appreciated! 
 
  
 Licensing, website and contact

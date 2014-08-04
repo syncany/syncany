@@ -1,11 +1,23 @@
 Authors
 =======
+Many people have contributed to Syncany. This is an attempt to list them all.
 
-Point of Contact and Lead Development:
-- Philipp C. Heckel (philipp.heckel@gmail.com) 
+Active Team Members:
+- Philipp C. Heckel (binwiederhier, philipp.heckel@gmail.com) 
+- Pim Otte (pimotte, otte.pim@gmail.com)
+- Steffen Dangmann (guitarlum, steffen.dangmann@googlemail.com)
 
-Team / Contributors:
-- Fabrice Rossi (fabrice.rossi@apiacoa.org)
-- Steffen Dangmann (steffen.dangmann@googlemail.com)
-- Pim Otte (otte.pim@gmail.com)
-- Vincent Wiencek (vwiencek@gmail.com)
+Contributors / Former Team Members:
+- Alexandre Viau (ReAzem)
+- Anthony Miyaguchi (acmiyaguchi)
+- Armin Fisslthaler (afics)
+- Christian Roth (cr0)
+- Christof Schulze (christf)
+- Fabrice Rossi (fabrice-rossi)
+- Florian Spiegel
+- Gregor Trefs (gtrefs)
+- kt3k
+- MatMaul
+- spikeh
+- Vadim Panin (vadimpanin)
+- Vincent Wiencek (vwiencek)
