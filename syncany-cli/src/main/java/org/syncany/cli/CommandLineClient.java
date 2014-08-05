@@ -76,7 +76,7 @@ import org.syncany.util.EnvironmentUtil;
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
-	private static final String SERVER_PROTOCOL = "http://";
+	private static final String SERVER_SCHEMA = "http://";
 	private static final String SERVER_HOSTNAME = "localhost";
 	private static final String SERVER_REST_API = "/api/rs";
 	
@@ -341,21 +341,22 @@ public class CommandLineClient extends Client {
 	private int sendToRest(Command command, String commandName, String[] commandArgs, File portFile) {
 		// Read port config (for daemon) from port file
 		PortTO portConfig = readPortConfig(portFile);
-		
+
 		// Create authentication details
-	    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(
-            new AuthScope(SERVER_HOSTNAME, portConfig.getPort()),
-            new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
-        
-        // Create client with authentication details
-        CloseableHttpClient client = HttpClients.custom()
-            .setDefaultCredentialsProvider(credentialsProvider)
-            .build();
-		
-		String SERVER_URI = SERVER_PROTOCOL + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
+		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(
+			new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
+			new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
+
+		// Create client with authentication details
+		CloseableHttpClient client = HttpClients
+			.custom()
+			.setDefaultCredentialsProvider(credentialsProvider)
+			.build();
+
+		String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 		HttpPost post = new HttpPost(SERVER_URI);
-		
+
 		try {
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			

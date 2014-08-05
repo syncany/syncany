@@ -50,6 +50,4 @@ public class PortTO {
 	public void setUser(UserTO user) {
 		this.user = user;
 	}
-
-	
 }
