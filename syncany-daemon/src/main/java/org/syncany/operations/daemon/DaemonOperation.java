@@ -164,7 +164,8 @@ public class DaemonOperation extends Operation {
 			}
 			
 			// Add user and password for access from the CLI
-			if (portTO == null) {
+			if (daemonConfig.getPortTO() == null && portTO == null) {
+				// Access info has not been created yet, generate new user-password pair
 				String accessToken = CipherUtil.createRandomAlphabeticString(20);
 				
 				UserTO cliUser = new UserTO();
@@ -175,6 +176,12 @@ public class DaemonOperation extends Operation {
 				portTO.setPort(daemonConfig.getWebServer().getPort());
 				portTO.setUser(cliUser);
 				
+				daemonConfig.setPortTO(portTO);
+			}
+			else if (daemonConfig.getPortTO() == null) {
+				// Access info is not included in the daemonConfig, but exists. (Happens when reloading)
+				// We reload the information about the port, but keep the accesstoken the same.
+				portTO.setPort(daemonConfig.getWebServer().getPort());
 				daemonConfig.setPortTO(portTO);
 			}
 		}
