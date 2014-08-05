@@ -6,6 +6,7 @@ Change Log
 - Features and significant changes:
   + New Samba / Windows share plugin #172
   + Public key authentication for the SFTP plugin #134
+  + Websocket/Rest-like daemon with user-password authentication.
 - Bugfixes and other things:
   + Fixed cross dependency issue with plugins #162
   + Altered API backend to include 'conflicts-with' metadata #165

@@ -20,7 +20,6 @@ package org.syncany.util;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -30,11 +29,6 @@ import javax.xml.bind.DatatypeConverter;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StringUtil {   
-	private static final String MACHINE_NAME_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	private static final int MACHINE_NAME_LENGTH = 20;
-	
-	private static Random random = new Random();
-
 	/**
 	 * Transforms a string to a camel case representation, including the
 	 * first character.
@@ -43,6 +37,9 @@ public class StringUtil {
 	 * <ul>
 	 *  <li><tt>toCamelCase("hello world") -&gt; "HelloWorld"</tt></li>
 	 *  <li><tt>toCamelCase("hello_world") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("hello_World") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("helloWorld") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("HelloWorld") -&gt; "HelloWorld"</tt></li>
 	 * </ul>
 	 */
     public static String toCamelCase(String str) {
@@ -53,7 +50,7 @@ public class StringUtil {
 	            sb.append(Character.toUpperCase(s.charAt(0)));
 	
 	            if (s.length() > 1) {
-	                sb.append(s.substring(1, s.length()).toLowerCase());
+	                sb.append(s.substring(1, s.length()));
 	            }
         	}
         }
@@ -148,20 +145,6 @@ public class StringUtil {
     	
 		return count;
     }
-    
-    /**
-     * Generates a random machine name of length 20. Only uses characters 
-     * A-Z/a-z (in order to always create valid serialized vector clock representations)  
-     */
-	public static String createRandomMachineName() {
-		StringBuilder sb = new StringBuilder(MACHINE_NAME_LENGTH);
-		
-		for (int i = 0; i < MACHINE_NAME_LENGTH; i++) {
-			sb.append(MACHINE_NAME_CHARS.charAt(random.nextInt(MACHINE_NAME_CHARS.length())));
-		}
-		
-		return sb.toString();
-	}
 	
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
 		StringBuilder objectsStr = new StringBuilder();

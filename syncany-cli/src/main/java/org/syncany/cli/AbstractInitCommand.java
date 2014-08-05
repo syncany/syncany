@@ -28,6 +28,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.PluginOptionSpec;
 import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
@@ -298,7 +299,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected String getRandomMachineName() {
-		return StringUtil.createRandomMachineName();
+		return CipherUtil.createRandomAlphabeticString(20);
 	}
 
 	protected String getDefaultDisplayName() throws UnknownHostException {

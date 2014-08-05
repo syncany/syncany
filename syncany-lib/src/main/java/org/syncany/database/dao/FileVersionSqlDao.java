@@ -149,6 +149,20 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
+
+	public Map<String, FileVersion> getCurrentFileTree(String prefix) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTreeWithPrefix.sql")) {
+			preparedStatement.setString(1, prefix);
+			preparedStatement.setString(2, prefix);
+			preparedStatement.setString(3, prefix);
+			
+			return getFileTree(preparedStatement);				
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	/**
 	 * Queries the database for the {@link FileVersion}s active at the given date and
 	 * returns it as a map.

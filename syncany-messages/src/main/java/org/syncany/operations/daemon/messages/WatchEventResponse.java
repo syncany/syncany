@@ -15,13 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon;
+package org.syncany.operations.daemon.messages;
 
-/**
- * @author pheckel
- *
- */
-public interface DaemonControlListener {
-	public void onDaemonShutdown();
-	public void onDaemonReload();
+import org.simpleframework.xml.Element;
+
+public class WatchEventResponse extends Response {
+	@Element(required = true)
+	private String root;
+	
+	@Element(required = true)
+	private String action;
+	
+	@Element(required = false)
+	private String subject;
+	
+	public WatchEventResponse(String root, String action) {
+		this(root, action, null);
+	}	
+	
+	public WatchEventResponse(String root, String action, String subject) {
+		super(200, null, null);
+		
+		this.root = root;
+		this.action = action;
+		this.subject = subject;
+	}	
 }

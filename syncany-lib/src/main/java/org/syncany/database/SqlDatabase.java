@@ -82,6 +82,10 @@ public class SqlDatabase {
 
 	// General
 	
+	public Connection getConnection() {
+		return connection; // TODO [low] Exposes internal state!
+	}
+	
 	public void commit() throws SQLException {
 		connection.commit();
 	}
@@ -182,6 +186,10 @@ public class SqlDatabase {
 
 	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
+	}
+	
+	public Map<String, FileVersion> getCurrentFileTree(String prefix) {
+		return fileVersionDao.getCurrentFileTree(prefix);
 	}
 	
 	public void removeSmallerOrEqualFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {

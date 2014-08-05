@@ -41,22 +41,22 @@ import org.syncany.config.UserConfig;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DaemonControlServer implements TailerListener {	
-	private static final Logger logger = Logger.getLogger(DaemonControlServer.class.getSimpleName());
+public class ControlServer implements TailerListener {	
+	private static final Logger logger = Logger.getLogger(ControlServer.class.getSimpleName());
 	private static final String CONTROL_FILE = "daemon.ctrl";
-	
-	private enum ControlCommand {
+
+	public enum ControlCommand {
 		SHUTDOWN, RELOAD
 	}
 	
 	private File controlFile;
 	private Tailer controlFileTailer;
-	private DaemonControlListener controlListener;
+	private LocalEventBus eventBus;
 
-	public DaemonControlServer(DaemonControlListener controlListener) {
+	public ControlServer() {
 		this.controlFile = new File(UserConfig.getUserConfigDir(), CONTROL_FILE);
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
-		this.controlListener = controlListener;
+		this.eventBus = LocalEventBus.getInstance();		
 	}
 
 	public void enterLoop() throws IOException, ServiceAlreadyStartedException {
@@ -70,9 +70,12 @@ public class DaemonControlServer implements TailerListener {
 		logger.log(Level.INFO, "Monitoring control file for commands at " + controlFile + " ...");
 		logger.log(Level.INFO, "   (Note: This is a blocking operation. The 'main' thread is now blocked until '" + ControlCommand.SHUTDOWN + "' is received.)");
 		
-		controlFileTailer.run(); 
+		controlFileTailer.run(); // This blocks!
 	}	
 
+	/**
+	 * Functions that handle tailing the control file.
+	 */
 	@Override
 	public void fileNotFound() {
 		logger.log(Level.SEVERE, "Control file not found. FATAL. EXITING.");
@@ -88,13 +91,14 @@ public class DaemonControlServer implements TailerListener {
 			case SHUTDOWN:
 				logger.log(Level.INFO, "Control file: Received shutdown command. Shutting down.");
 
-				controlListener.onDaemonShutdown();
+				eventBus.post(controlCommand);
 				controlFileTailer.stop();
 				break;
 				
 			case RELOAD:
 				logger.log(Level.INFO, "Control file: Received reload command. Reloading config ...");
-				controlListener.onDaemonReload();
+
+				eventBus.post(controlCommand);
 				break;
 				
 			default:
