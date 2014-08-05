@@ -9,7 +9,7 @@ PIDFILE=$APPDIR/daemon.pid
 LOGDIR=$APPDIR/logs
 LOGFILE=$LOGDIR/daemon.log
 
-DAEMON=$(cd "$(dirname "$0")"; pwd)/syncany
+DAEMON=$(dirname $(readlink -f "$0"))/syncany
 DAEMON_OPTS="--log=$LOGFILE daemon"
  
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
