@@ -6,12 +6,15 @@ Change Log
 - Features and significant changes:
   + New Samba / Windows share plugin #172
   + Public key authentication for the SFTP plugin #134
-  + Websocket/Rest-like daemon with user-password authentication.
+  + Websocket/Rest-like daemon with user-password authentication. #171
 - Bugfixes and other things:
   + Fixed cross dependency issue with plugins #162
+  + Fixed signed plugin JAR dependency error #161
   + Altered API backend to include 'conflicts-with' metadata #165
   + Fixed Windows/Linux attribute bingo #166
-  + Fixed daemon script such that it can be symlinked
+  + Fixed daemon script such that it can be symlinked #183
+  + Update Arch Linux AUR package #179
+  + Tests: Implement plugin install test #170
 
 ### Syncany 0.1.7-alpha (Date: 28 Jul 2014)
 
