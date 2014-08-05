@@ -117,10 +117,11 @@ public class WatchRunner implements WatchOperationListener {
 					
 					// Write port to portFile
 					portFile.createNewFile();
-					new Persister().write(portTO, portFile);
 					portFile.deleteOnExit();
+
+					new Persister().write(portTO, portFile);
 					
-					// Start operation
+					// Start operation (blocks!)
 					watchOperationResult = watchOperation.execute();
 					
 					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());

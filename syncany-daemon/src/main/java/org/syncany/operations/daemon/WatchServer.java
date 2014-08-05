@@ -78,9 +78,7 @@ public class WatchServer {
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
 			
-			// Stop all currently running operations
 			stopAllWatchOperations();
-			// Start all operations that are present in the config.
 			startWatchOperations(watchedFolders);
 		}
 		catch (Exception e) {
@@ -130,8 +128,8 @@ public class WatchServer {
 	}
 	
 	/**
-	 * stopAllWatchOperations stops all watchOperations and verifies if they actually have stopped.
-	 * 
+	 * Stops all watchOperations and verifies if
+	 * they actually have stopped.
 	 */
 	private void stopAllWatchOperations() {
 		for (File localDir : watchOperations.keySet()) {
@@ -140,11 +138,14 @@ public class WatchServer {
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();
 		}
+		
 		// Check if watch operations actually have stopped.
 		while (watchOperations.keySet().size() > 0) {
 			Map<File, WatchRunner> watchOperationsCopy = new TreeMap<File, WatchRunner>(watchOperations);
+			
 			for (File localDir : watchOperationsCopy.keySet()) {
 				WatchRunner watchOperationThread = watchOperationsCopy.get(localDir);
+				
 				if (watchOperationThread.hasStopped()) {
 					logger.log(Level.INFO, "- Watch operation at " + localDir + " has stopped");
 					watchOperations.remove(localDir);
@@ -164,7 +165,6 @@ public class WatchServer {
 		
 		return watchedFolderTOs;
 	}
-	
 	
 	@Subscribe
 	public void onRequestReceived(Request request) {
