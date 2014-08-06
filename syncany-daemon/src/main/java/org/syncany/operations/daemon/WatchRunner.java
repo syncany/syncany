@@ -130,15 +130,6 @@ public class WatchRunner implements WatchOperationListener {
 					logger.log(Level.SEVERE, "ERROR while running watch at " + config.getLocalDir(), e);
 				}
 			}
-			
-			public void acquireLock(Object locker) {
-				try {
-					locker.wait();
-				}
-				catch (InterruptedException e) {
-					logger.log(Level.SEVERE, "WatchThread was interrupted while locked: " + config.getLocalDir(), e);
-				}
-			}
 		}, "WatchOpT/" + config.getLocalDir().getName());
 		
 		watchThread.start();
