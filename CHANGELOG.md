@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.1.8-alpha (Date: tbd.)
+### Syncany 0.1.8-alpha (Date: 10 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + New Samba / Windows share plugin #172
