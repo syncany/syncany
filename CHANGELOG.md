@@ -13,6 +13,7 @@ Change Log
   + Fixed Windows/Linux attribute bingo #166
   + Fixed Windows batch script; start/stop PID file issue #163
   + Fixed Linux daemon script such that it can be symlinked #183
+  + Fixed running CLI commands while sync is running #182
   + Altered API backend to include 'conflicts-with' metadata #165
   + Update Arch Linux AUR package #179
   + Tests: Implement plugin install test #170

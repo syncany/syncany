@@ -347,6 +347,14 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Stop requested AGAIN, but was requested before. IGNORING.");
 		}
 	}
+	
+	public boolean isSyncRunning() {
+		return syncRunning.get();
+	}
+
+	public boolean isSyncRequested() {
+		return syncRequested.get();
+	}
 
 	private void scheduleForceKill() {
 		String killTimerName = "KillTim/" + config.getLocalDir().getName();

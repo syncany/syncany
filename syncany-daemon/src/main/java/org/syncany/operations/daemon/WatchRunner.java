@@ -224,7 +224,21 @@ public class WatchRunner implements WatchOperationListener {
 		}
 	}
 
-	private void handleCliRequest(CliRequest cliRequest) {		
+	private void handleCliRequest(CliRequest cliRequest) {
+		if (watchOperation.isSyncRunning() || watchOperation.isSyncRequested()) {
+			handleCliRequestSyncRunning(cliRequest);
+		}
+		else {
+			handleCliRequestNoSyncRunning(cliRequest);
+		}
+	}
+
+	private void handleCliRequestSyncRunning(CliRequest cliRequest) {
+		CliResponse cliResponse = new CliResponse(cliRequest.getId(), "Cannot run CLI commands while sync is running or requested.\n");
+		eventBus.post(cliResponse);
+	}
+
+	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
 		try {
 			Command command = CommandFactory.getInstance(cliRequest.getCommand());			
 			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]); 

@@ -105,7 +105,7 @@ public class DaemonOperation extends Operation {
 		initEventBus();		
 		loadOrCreateConfig();
 		
-		startWebSocketServer();
+		startWebServer();
 		startWatchServer();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
@@ -143,7 +143,7 @@ public class DaemonOperation extends Operation {
 	// General stopping and reloading functions
 
 	private void stopOperation() {
-		stopWebSocketServer();
+		stopWebServer();
 		stopWatchServer();
 	}
 	
@@ -222,7 +222,7 @@ public class DaemonOperation extends Operation {
 
 	// Web server starting and stopping functions
 	
-	private void startWebSocketServer() throws ServiceAlreadyStartedException {
+	private void startWebServer() throws ServiceAlreadyStartedException {
 		if (daemonConfig.getWebServer().isEnabled()) {
 			logger.log(Level.INFO, "Starting web server ...");
 
@@ -234,7 +234,7 @@ public class DaemonOperation extends Operation {
 		}
 	}
 	
-	private void stopWebSocketServer() {
+	private void stopWebServer() {
 		if (webServer != null) {
 			logger.log(Level.INFO, "Stopping web server ...");
 			webServer.stop();
