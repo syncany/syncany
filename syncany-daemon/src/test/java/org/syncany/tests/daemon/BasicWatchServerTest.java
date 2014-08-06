@@ -17,22 +17,29 @@
  */
 package org.syncany.tests.daemon;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.syncany.config.to.DaemonConfigTO;
-import org.syncany.config.to.PortTO;
-import org.syncany.config.to.UserTO;
-import org.syncany.crypto.CipherUtil;
+import org.syncany.database.FileVersion;
+import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
+import org.syncany.operations.daemon.messages.GetFileTreeRequest;
+import org.syncany.operations.daemon.messages.GetFileTreeResponse;
+import org.syncany.operations.daemon.messages.Response;
+import org.syncany.plugins.local.LocalConnection;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestDaemonUtil;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * The BasicWatchServerTest tests the WatchServer as a seperate entity. It
@@ -42,7 +49,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *
  */
 public class BasicWatchServerTest {
-	private static final String DAEMON_RESOURCE_PATTERN = "/org/syncany/config/to/%s";
+	public static final Map<Integer, Response> responses = new HashMap<Integer, Response>();
 
 	@Test
 	public void AddSingleFileTest() throws Exception {
@@ -50,54 +57,125 @@ public class BasicWatchServerTest {
 		final TestClient clientA = new TestClient("ClientA", testConnection);
 		final TestClient clientB = new TestClient("ClientB", testConnection);
 		
-		// Load config from resource
-		String fullPathResource = String.format(DAEMON_RESOURCE_PATTERN, "daemonTwoFoldersNoWebServer.xml");
-		InputStream inputStream = DaemonConfigTO.class.getResourceAsStream(fullPathResource);
-		File tempConfigFile = File.createTempFile("syncanyTemp-", "");
-		tempConfigFile.deleteOnExit();
+
+		// Load config template
+		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
 		
-		try (FileOutputStream outputStream = new FileOutputStream(tempConfigFile)) {
-	        IOUtils.copy(inputStream, outputStream);
-	    }
-		
-		DaemonConfigTO daemonConfig = DaemonConfigTO.load(tempConfigFile);
 		// Dynamically insert paths
 		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
 		daemonConfig.getFolders().get(1).setPath(clientB.getConfig().getLocalDir().getAbsolutePath());
 		
 		// Create access token (not needed in this test, but prevents errors in daemon)
-		String accessToken = CipherUtil.createRandomAlphabeticString(20);
-		
-		UserTO cliUser = new UserTO();
-		cliUser.setUsername("CLI");
-		cliUser.setPassword(accessToken);
-		
-		PortTO portTO = new PortTO();
-		portTO.setPort(daemonConfig.getWebServer().getPort());
-		portTO.setUser(cliUser);
-		
-		
+		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(daemonConfig.getWebServer().getPort()));
+			
 		// Create watchServer
 		WatchServer watchServer = new WatchServer();
 		
 		clientA.createNewFile("file-1");
 		watchServer.start(daemonConfig);
 		
-		
-		
 		for (int i = 0; i < 20; i++) {
-			if(clientB.getLocalFile("file-1") != null) {
+			if(clientB.getLocalFile("file-1").exists()) {
 				break;
 			}
 			Thread.sleep(1000);
 		}
 		
-		assertTrue("File has not synced to clientB", clientB.getLocalFile("file-1") != null);
+		assertTrue("File has not synced to clientB", clientB.getLocalFile("file-1").exists());
+		assertEquals(clientA.getLocalFile("file-1").length(), clientB.getLocalFile("file-1").length());
 		
 		watchServer.stop();
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 		
+	}
+	
+	@Test
+	public void getFileTreeRequestTest() throws Exception {
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();	
+		final TestClient clientA = new TestClient("ClientA", testConnection);
+		
+
+		// Load config template
+		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
+		
+		// Dynamically insert paths
+		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
+		daemonConfig.getFolders().get(1).setEnabled(false);
+		
+		// Create access token (not needed in this test, but prevents errors in daemon)
+		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(daemonConfig.getWebServer().getPort()));
+			
+		// Create watchServer
+		WatchServer watchServer = new WatchServer();
+		
+		clientA.createNewFile("file-1");
+		clientA.createNewFolder("folder");
+		clientA.createNewFile("folder/file-2");
+		watchServer.start(daemonConfig);
+		
+		
+		Thread.sleep(6000);
+		// Repeat request until 3 files are found.
+		List<FileVersion> files = new ArrayList<FileVersion>();
+		for(int i = 0; i < 20; i++) {
+			GetFileTreeRequest request = new GetFileTreeRequest();
+			request.setId(i);
+			request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
+			LocalEventBus eventBus = LocalEventBus.getInstance();
+			
+			eventBus.register(this);
+			
+			eventBus.post(request);
+			
+			Response response = waitForResponse(i);
+			
+			assertTrue(response instanceof GetFileTreeResponse);
+			GetFileTreeResponse treeResponse = (GetFileTreeResponse) response;
+			
+			files = treeResponse.getFiles();
+			
+			if (files.size() == 2) {
+				break;
+			}
+			
+			if (i == 19) {
+				assertEquals(2, files.size());
+			}
+			else {
+				Thread.sleep(1000);
+			}
+		}
+
+		// Check if information is correct
+		for (FileVersion fileVersion : files) {
+			if (fileVersion.getName().equals("file-1")) {
+				assertEquals(clientA.getLocalFile("file-1").length(), (long)fileVersion.getSize());
+			}			
+			else if (fileVersion.getName().equals("folder")) {
+				assertTrue(clientA.getLocalFile("folder").isDirectory());
+				assertEquals(fileVersion.getType(), FileVersion.FileType.FOLDER);
+			}
+			else {
+				assertTrue("fileVersion should not exist", false);
+			}
+			
+		}
+		
+		watchServer.stop();
+		clientA.deleteTestData();
+	}
+	
+	@Subscribe
+	public void onResponseReceived(Response response) {	
+		responses.put(response.getRequestId(), response);
+	}
+	
+	private Response waitForResponse(int id) throws Exception {
+		while (responses.containsKey(id) == false) {
+			Thread.sleep(100);
+		}
+		return responses.get(id);
 	}
 
 }
