@@ -4,25 +4,52 @@ set APP_NAME=syncanyd
 set APP_USER_DIR=%AppData%\Syncany
 set APP_DAEMON_CONTROL=%APP_USER_DIR%\daemon.ctrl
 set APP_DAEMON_PIDFILE=%APP_USER_DIR%\daemon.pid
+set APP_DAEMON_PIDFILE_TMP=%APP_USER_DIR%\daemon.pid.tmp
 set APP_LOG_DIR=%APP_USER_DIR%\logs
 set APP_LOG_FILE=%APP_LOG_DIR%\daemon.log
 
-if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%"
+if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%" 
 if not exist "%APP_LOG_DIR%" mkdir "%APP_LOG_DIR%"
 
+rem  Checks if the process is already running using a PID file
+rem
+rem     Please note that even though this code is incredibly ugly, it took me nearly
+rem     five hours to get it right. Unless you are a batch file professional, 
+rem
+rem                   DO NOT TOUCH THIS CODE!
+rem
+rem  Steps
+rem    1. Read PID file to APID (if file exists)
+rem    2. If PID was read successfully (not -1), check if PID is running
+rem       by writing error output of wmic command to temp error output file, standard output to NUL
+rem    3. Determine size of temp error output file
+rem    4. If size of temp error output file is zero (no error), the process is running
+
+set RUNNING=0
+set APID=-1
+
+rem 1. Read PID file to APID (if file exists)
 if exist %APP_DAEMON_PIDFILE% (
-  set /P PID= < "%APP_DAEMON_PIDFILE%"
+  set /P APID=<%APP_DAEMON_PIDFILE%
+) 
+
+rem 2. If PID was read successfully (not -1), check if PID is running
+if not "%APID%" == "-1" (  
+  wmic process where "ProcessID = %APID%" get processid 2> %APP_DAEMON_PIDFILE_TMP% > NUL
+  set /P STDERR=<%APP_DAEMON_PIDFILE_TMP%
   
-  tasklist /FI "PID eq %PID%" 2>NUL | find /I /N "%PID%" > NUL
-  if "%ERRORLEVEL%"=="0" ( 
-    set RUNNING=1
-  ) else (
-    set RUNNING=0
-  )
-) else (
-  set PID=-1
-  set RUNNING=0
+  rem 3. Determine size of temp error output file
+  for /f %%i in ("%APP_DAEMON_PIDFILE_TMP%") do set size=%%~zi
+  if not defined size set size=0
+  del %APP_DAEMON_PIDFILE_TMP%
 )
+
+rem 4. If size of temp error output file is zero (no error), the process is running
+if not "%APID%" == "-1" (  
+  if "%size%" == "0" set RUNNING=1
+)
+
+rem END OF PID FILE STUFF
 
 @if "%1" == "start" goto start
 @if "%1" == "stop" goto stop
@@ -66,7 +93,7 @@ goto mainEnd
 
 :status
 if %RUNNING% == 1 (
-  echo Checking daemon: %APP_NAME% running with pid %PID%
+  echo Checking daemon: %APP_NAME% running with pid %APID%
 ) else (
   echo Checking daemon: %APP_NAME% not running
 )
@@ -115,11 +142,11 @@ exit /b 1
 
 :init
 if %RUNNING% == 1 (
-  echo Starting daemon: %APP_NAME% already running with pid %PID%
+  echo Starting daemon: %APP_NAME% already running with pid %APID%
   goto mainEnd
 ) 
 
-set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\*
+set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\lib\*
 
 echo | set /p=Starting daemon: .
 start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany --log=%APP_LOG_FILE% daemon

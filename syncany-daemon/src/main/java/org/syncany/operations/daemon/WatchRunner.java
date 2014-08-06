@@ -29,11 +29,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.cli.Command;
 import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.to.PortTO;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
@@ -67,6 +69,7 @@ import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.operations.watch.WatchOperationResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
 
@@ -79,25 +82,28 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class WatchOperationThread implements WatchOperationListener {
-	private static final Logger logger = Logger.getLogger(WatchOperationThread.class.getSimpleName());
+public class WatchRunner implements WatchOperationListener {
+	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());
 	
 	private Config config;
 	private File portFile;
+	private PortTO portTO;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
-	private DaemonEventBus eventBus;
+	private WatchOperationResult watchOperationResult;
+	private LocalEventBus eventBus;
 	
 	private SqlDatabase localDatabase;
 
-	public WatchOperationThread(Config config, WatchOperationOptions watchOperationOptions) throws ConfigException {
+	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
-		this.portFile = new File(config.getAppDir(), "port");
+		this.portFile = new File(config.getAppDir(), Config.FILE_PORT);
+		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
 		this.localDatabase = new SqlDatabase(config);
 		
-		this.eventBus = DaemonEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 	}
 	
@@ -107,11 +113,16 @@ public class WatchOperationThread implements WatchOperationListener {
 			public void run() {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
+					watchOperationResult = null;
 					
+					// Write port to portFile
 					portFile.createNewFile();
 					portFile.deleteOnExit();
+
+					new Persister().write(portTO, portFile);
 					
-					watchOperation.execute();
+					// Start operation (blocks!)
+					watchOperationResult = watchOperation.execute();
 					
 					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());
 				}
@@ -119,7 +130,7 @@ public class WatchOperationThread implements WatchOperationListener {
 					logger.log(Level.SEVERE, "ERROR while running watch at " + config.getLocalDir(), e);
 				}
 			}
-		});
+		}, "WatchOpT/" + config.getLocalDir().getName());
 		
 		watchThread.start();
 	}
@@ -129,6 +140,10 @@ public class WatchOperationThread implements WatchOperationListener {
 		portFile.delete();
 
 		watchThread = null;
+	}
+	
+	public boolean hasStopped() {
+		return (watchOperationResult != null);
 	}
 	
 	@Subscribe
@@ -234,8 +249,7 @@ public class WatchOperationThread implements WatchOperationListener {
 		}
 		catch (Exception e) {
 			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
-		}
-		
+		}		
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {

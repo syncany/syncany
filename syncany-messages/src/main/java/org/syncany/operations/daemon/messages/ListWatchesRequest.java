@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.daemon.messages;
 
-
 public class ListWatchesRequest extends Request {
-	
+	// Nothing here.
 }

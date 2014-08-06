@@ -44,15 +44,22 @@ import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
@@ -69,7 +76,9 @@ import org.syncany.util.EnvironmentUtil;
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
-	private static final String SERVER_URI = "http://localhost:8080/api/rs";
+	private static final String SERVER_SCHEMA = "http://";
+	private static final String SERVER_HOSTNAME = "localhost";
+	private static final String SERVER_REST_API = "/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
 	private static final int LOG_FILE_COUNT = 4;
@@ -299,7 +308,7 @@ public class CommandLineClient extends Client {
 		File portFile = null;
 		
 		if (config != null) {
-			portFile = new File(config.getAppDir(), "port"); // TODO
+			portFile = new File(config.getAppDir(), Config.FILE_PORT);
 		}
 		
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
@@ -307,7 +316,7 @@ public class CommandLineClient extends Client {
 		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
 		if (sendToRest) {
-			return sendToRest(command, commandName, commandArgs);
+			return sendToRest(command, commandName, commandArgs, portFile);
 		}
 		else {
 			return runLocally(command, commandArgs);
@@ -329,12 +338,28 @@ public class CommandLineClient extends Client {
 		}	
 	}
 
-	private int sendToRest(Command command, String commandName, String[] commandArgs) {
-		CloseableHttpClient client = HttpClients.createDefault();
-		
+	private int sendToRest(Command command, String commandName, String[] commandArgs, File portFile) {
+		// Read port config (for daemon) from port file
+		PortTO portConfig = readPortConfig(portFile);
+
+		// Create authentication details
+		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(
+			new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
+			new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
+
+		// Create client with authentication details
+		CloseableHttpClient client = HttpClients
+			.custom()
+			.setDefaultCredentialsProvider(credentialsProvider)
+			.build();
+
+		String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 		HttpPost post = new HttpPost(SERVER_URI);
-		
+
 		try {
+			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
+			
 			// Create and send HTTP/REST request
 			CliRequest cliRequest = new CliRequest();
 			
@@ -347,7 +372,10 @@ public class CommandLineClient extends Client {
 			
 			// Handle response
 			HttpResponse httpResponse = client.execute(post);
-			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());
+			logger.log(Level.FINE, "Received HttpResponse: " + httpResponse);
+			
+			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
+			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 			
 			Response response = MessageFactory.createResponse(responseStr);
 			
@@ -364,6 +392,18 @@ public class CommandLineClient extends Client {
 			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
 		}		
+	}
+
+	private PortTO readPortConfig(File portFile) {
+		try {
+			return new Persister().read(PortTO.class, portFile);
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "ERROR: Could not read portFile to connect to daemon.", e);
+
+			showErrorAndExit("Cannot connect to daemon.");			
+			return null; // Never reached!
+		}
 	}
 
 	private void showShortVersionAndExit() throws IOException {

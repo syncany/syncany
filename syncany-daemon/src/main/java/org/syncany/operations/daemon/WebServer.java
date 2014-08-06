@@ -30,23 +30,15 @@ import io.undertow.security.idm.IdentityManager;
 import io.undertow.security.impl.BasicAuthenticationMechanism;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.websockets.WebSocketConnectionCallback;
-import io.undertow.websockets.core.AbstractReceiveListener;
-import io.undertow.websockets.core.BufferedTextMessage;
-import io.undertow.websockets.core.StreamSourceFrameChannel;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
-import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,29 +50,36 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.commons.io.IOUtils;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.UserTO;
 import org.syncany.operations.daemon.auth.MapIdentityManager;
-import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.handlers.InternalRestHandler;
+import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
+import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
 import org.syncany.operations.daemon.messages.GetFileResponse;
 import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
-import org.syncany.plugins.Plugins;
 import org.syncany.plugins.web.WebInterfacePlugin;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.Subscribe;
 
-public class DaemonWebServer {
-	private static final Logger logger = Logger.getLogger(DaemonWebServer.class.getSimpleName());
-	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
+/**
+ * The web server provides a HTTP/REST and WebSocket API to thin clients, 
+ * as well as a mechanism to run a web interface by implementing a 
+ * {@link WebInterfacePlugin}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+public class WebServer {
+	private static final Logger logger = Logger.getLogger(WebServer.class.getSimpleName());
+	public static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
 
 	private Undertow webServer;
-	private DaemonEventBus eventBus;
+	private LocalEventBus eventBus;
 
 	private Cache<Integer, WebSocketChannel> requestIdWebSocketCache;
 	private Cache<Integer, HttpServerExchange> requestIdRestSocketCache;
@@ -88,12 +87,12 @@ public class DaemonWebServer {
 	
 	private List<WebSocketChannel> clientChannels;
 
-	public DaemonWebServer(DaemonConfigTO daemonConfig) throws Exception {
+	public WebServer(DaemonConfigTO daemonConfig) throws Exception {
 		this.clientChannels = new ArrayList<WebSocketChannel>();
-
+		
 		initCaches();
 		initEventBus();
-		initServer(daemonConfig.getWebServer().getHost(), daemonConfig.getWebServer().getPort());
+		initServer(daemonConfig);
 	}
 
 	public void start() throws ServiceAlreadyStartedException {
@@ -102,13 +101,14 @@ public class DaemonWebServer {
 
 	public void stop() {
 		try {
+			logger.log(Level.INFO, "Shutting down websocket server.");
 			webServer.stop();
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Could not stop websocket server.", e);
 		}
 	}
-
+	
 	private void initCaches() {
 		requestIdWebSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
 				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
@@ -121,35 +121,60 @@ public class DaemonWebServer {
 	}
 
 	private void initEventBus() {
-		eventBus = DaemonEventBus.getInstance();
+		eventBus = LocalEventBus.getInstance();
 		eventBus.register(this);
 	}
 
-	private void initServer(String host, int port) throws Exception {
-
-		final Map<String, char[]> users = new HashMap<>(2);
-		users.put("userOne", "passwordOne".toCharArray());
-		users.put("userTwo", "passwordTwo".toCharArray());
-
-		final IdentityManager identityManager = new MapIdentityManager(users);
-
+	private void initServer(DaemonConfigTO daemonConfigTO) throws Exception {
+		String host = daemonConfigTO.getWebServer().getHost();
+		int port = daemonConfigTO.getWebServer().getPort();
+		List<UserTO> users = daemonConfigTO.getUsers();
+		
+		if (users == null) {
+			users = new ArrayList<UserTO>();
+		}
+		
+		if (daemonConfigTO.getPortTO() != null) {
+			// Add CLI credentials
+			users.add(daemonConfigTO.getPortTO().getUser());
+		}
+		
+		IdentityManager identityManager = new MapIdentityManager(users);
+		
 		HttpHandler pathHttpHandler = path()
-			.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler()))
-			.addPrefixPath("/api/rs", new InternalRestHandler())
+			.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this)))
+			.addPrefixPath("/api/rs", new InternalRestHandler(this))
 			.addPrefixPath("/", new InternalWebInterfaceHandler());
-
+			
 		HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
-
+		
 		KeyStore userTrustStore = UserConfig.getUserTrustStore();
 		KeyStore userKeyStore = getKeyStore();
 		SSLContext sslContext = createSSLContext(userKeyStore, userTrustStore);
-
-		webServer = Undertow.builder()
+		
+		webServer = Undertow
+			.builder()
 			.addHttpsListener(port, host, sslContext)
 			.setHandler(securityPathHttpHandler)
-		.build();
+			.build();
+		
+		logger.log(Level.INFO, "Initialized websocket server.");
 	}
 	
+	private static HttpHandler addSecurity(final HttpHandler toWrap, IdentityManager identityManager) {		
+		List<AuthenticationMechanism> mechanisms = 
+				Collections.<AuthenticationMechanism> singletonList(new BasicAuthenticationMechanism("Syncany"));
+
+		HttpHandler handler = toWrap;
+
+		handler = new AuthenticationCallHandler(handler);
+		handler = new AuthenticationConstraintHandler(handler);		
+		handler = new AuthenticationMechanismsHandler(handler, mechanisms);
+		handler = new SecurityInitialHandler(AuthenticationMode.PRO_ACTIVE, identityManager, handler);
+		
+		return handler;
+	}	
+
 	private KeyStore getKeyStore() {
 		try {				
 			File userTrustStoreFile = new File(UserConfig.getUserConfigDir(), "keystore.jks");
@@ -170,17 +195,6 @@ public class DaemonWebServer {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	private static HttpHandler addSecurity(final HttpHandler toWrap, final IdentityManager identityManager) {
-		HttpHandler handler = toWrap;
-		handler = new AuthenticationCallHandler(handler);
-		handler = new AuthenticationConstraintHandler(handler);
-		final List<AuthenticationMechanism> mechanisms = Collections.<AuthenticationMechanism> singletonList(new BasicAuthenticationMechanism(
-				"My Realm"));
-		handler = new AuthenticationMechanismsHandler(handler, mechanisms);
-		handler = new SecurityInitialHandler(AuthenticationMode.PRO_ACTIVE, identityManager, handler);
-		return handler;
 	}
 	
 	private static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws Exception {
@@ -208,59 +222,6 @@ public class DaemonWebServer {
 		}
 	}
 
-
-	private void handleWebSocketRequest(WebSocketChannel clientSocket, String message) {
-		logger.log(Level.INFO, "Web socket message received: " + message);
-
-		try {
-			Request request = MessageFactory.createRequest(message);
-
-			synchronized (requestIdWebSocketCache) {
-				requestIdWebSocketCache.put(request.getId(), clientSocket);	
-			}
-			
-			eventBus.post(request);
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-		}
-	}
-	
-	private void handleRestRequest(HttpServerExchange exchange) throws IOException {
-		logger.log(Level.INFO, "HTTP request received:" + exchange.getRelativePath());
-
-		exchange.startBlocking();			
-
-		if (exchange.getRelativePath().startsWith("/file/")) {	
-			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
-			File tempFile = fileTokenTempFileCache.asMap().get(tempFileToken);
-			
-			logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-			
-			IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
-			
-			exchange.endExchange();
-		}
-		else {	
-			String message = IOUtils.toString(exchange.getInputStream());
-			logger.log(Level.INFO, "REST message received: " + message);
-	
-			try {
-				Request request = MessageFactory.createRequest(message);
-	
-				synchronized (requestIdRestSocketCache) {
-					requestIdRestSocketCache.put(request.getId(), exchange);	
-				}
-				
-				eventBus.post(request);
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-			}
-		}
-	}
 
 	private void sendBroadcast(String message) {
 		synchronized (clientChannels) {
@@ -323,101 +284,35 @@ public class DaemonWebServer {
 		}
 	}
 
-	private class InternalWebSocketHandler implements WebSocketConnectionCallback {
-		@Override
-		public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
-			// Validate origin header (security!)
-			String originHeader = exchange.getRequestHeader("Origin");
-			boolean allowedOriginHeader = originHeader == null || WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches();
-			
-			if (!allowedOriginHeader) {
-				logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
-				exchange.close();
-			}
-			else {
-				channel.getReceiveSetter().set(new AbstractReceiveListener() {
-					@Override
-					protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
-						handleWebSocketRequest(clientChannel, message.getData());
-					}
+	// Client channel access methods
 	
-					@Override
-					protected void onError(WebSocketChannel webSocketChannel, Throwable error) {
-						logger.log(Level.INFO, "Server error : " + error.toString());
-					}
-	
-					@Override
-					protected void onClose(WebSocketChannel clientChannel, StreamSourceFrameChannel streamSourceChannel) throws IOException {
-						logger.log(Level.INFO, clientChannel.toString() + " disconnected");
-	
-						synchronized (clientChannels) {
-							clientChannels.remove(clientChannel);
-						}
-					}
-				});
-	
-				synchronized (clientChannels) {
-					clientChannels.add(channel);
-				}
-	
-				channel.resumeReceives();
-			}
-		}
-	}
-
-	private class InternalRestHandler implements HttpHandler {
-		@Override
-		public void handleRequest(final HttpServerExchange exchange) throws Exception {
-			handleRestRequest(exchange);
+	public void addClientChannel(WebSocketChannel clientChannel) {
+		synchronized (clientChannels) {
+			clientChannels.add(clientChannel);
 		}
 	}
 	
-	public class InternalWebInterfaceHandler implements HttpHandler {
-		private List<WebInterfacePlugin> webInterfacePlugins;
-		private WebInterfacePlugin webInterfacePlugin;
-		private HttpHandler requestHandler;
-		
-		public InternalWebInterfaceHandler() {
-			webInterfacePlugins = Plugins.list(WebInterfacePlugin.class);
-			
-			if (webInterfacePlugins.size() == 1) {
-				initWebInterfacePlugin();
-			}
+	public void removeClientChannel(WebSocketChannel clientChannel) {
+		synchronized (clientChannels) {
+			clientChannels.remove(clientChannel);
 		}
-
-		private void initWebInterfacePlugin() {
-			try {				
-				webInterfacePlugin = webInterfacePlugins.iterator().next();
-				requestHandler = webInterfacePlugin.createRequestHandler();
-				
-				webInterfacePlugin.start();
-			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+	}
+	
+	// Cache access methods
+	
+	public void putCacheRestRequest(int id, HttpServerExchange exchange) {
+		synchronized (requestIdRestSocketCache) {
+			requestIdRestSocketCache.put(id, exchange);	
 		}
-
-		@Override
-		public void handleRequest(HttpServerExchange exchange) throws Exception {
-			if (requestHandler != null) {
-				handleRequestWithResourceHandler(exchange);
-			}
-			else {
-				handleRequestNoHandler(exchange);
-			}
+	}
+	
+	public void putCacheWebSocketRequest(int id, WebSocketChannel clientSocket) {
+		synchronized (requestIdWebSocketCache) {
+			requestIdWebSocketCache.put(id, clientSocket);	
 		}
-
-		private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws Exception {
-			requestHandler.handleRequest(exchange);
-		}
-
-		private void handleRequestNoHandler(HttpServerExchange exchange) {
-			if (webInterfacePlugins.size() == 0) {
-				exchange.getResponseSender().send("No web interface configured.");
-			}
-			else {
-				exchange.getResponseSender().send("Only one web interface can be loaded.");
-			}
-		}
+	}
+	
+	public File getFileTokenTempFileFromCache(String fileToken) {
+		 return fileTokenTempFileCache.asMap().get(fileToken);
 	}
 }

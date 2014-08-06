@@ -164,15 +164,35 @@ public class PluginCommand extends Command {
 	}
 
 	private void printResultInstall(PluginOperationResult operationResult) {
+		// Print regular result
 		if (operationResult.getResultCode() == PluginResultCode.OK) {
 			out.printf("Plugin successfully installed from %s\n", operationResult.getSourcePluginPath());
 			out.printf("Install location: %s\n", operationResult.getTargetPluginPath());
 			out.println();
 
 			printPluginDetails(operationResult.getAffectedPluginInfo());
+			printPluginConflictWarning(operationResult);
 		}
 		else {
 			out.println("Plugin installation failed. Try -d to get more details.");
+			out.println();
+		}
+	}
+
+	private void printPluginConflictWarning(PluginOperationResult operationResult) {
+		List<String> conflictingPluginIds = operationResult.getConflictingPluginIds();
+		
+		if (conflictingPluginIds != null && conflictingPluginIds.size() > 0) {
+			out.println("---------------------------------------------------------------------------");
+			out.printf(" WARNING: The installed plugin '%s' conflicts with other installed:\n", operationResult.getAffectedPluginInfo().getPluginId());
+			out.printf("          plugin(s): %s\n", StringUtil.join(conflictingPluginIds, ", "));
+			out.println();
+			out.println(" If you'd like to use these plugins in the daemon, it is VERY likely");
+			out.println(" that parts of the application WILL CRASH. Data corruption might occur!");
+			out.println();
+			out.println(" Using the plugins outside of the daemon (sy <command> ...) might also");
+			out.println(" be an issue. Details about this in issue #154.");
+			out.println("---------------------------------------------------------------------------");
 			out.println();
 		}
 	}

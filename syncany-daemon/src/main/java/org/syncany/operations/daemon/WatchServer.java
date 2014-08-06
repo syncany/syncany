@@ -30,6 +30,7 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
+import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.ListWatchesRequest;
 import org.syncany.operations.daemon.messages.ListWatchesResponse;
@@ -49,16 +50,17 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DaemonWatchServer {	
-	private static final Logger logger = Logger.getLogger(DaemonWatchServer.class.getSimpleName());
+public class WatchServer {	
+	private static final Logger logger = Logger.getLogger(WatchServer.class.getSimpleName());
 	
-	private Map<File, WatchOperationThread> watchOperations;
-	private DaemonEventBus eventBus;
+	private Map<File, WatchRunner> watchOperations;
+	private LocalEventBus eventBus;
+	private PortTO portTO;
 	
-	public DaemonWatchServer() {
-		this.watchOperations = new TreeMap<File, WatchOperationThread>();
+	public WatchServer() {
+		this.watchOperations = new TreeMap<File, WatchRunner>();
 		
-		this.eventBus = DaemonEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 	}
 	
@@ -68,14 +70,16 @@ public class DaemonWatchServer {
 	
 	public void reload(DaemonConfigTO daemonConfigTO) {
 		logger.log(Level.INFO, "Starting/reloading watch server ... ");
-
+		
+		// Update port number
+		portTO = daemonConfigTO.getPortTO();
+		
+		// Restart threads
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
-			Map<File, FolderTO> newWatchedFolderTOs = determineNewWatchedFolderTOs(watchedFolders);
-			List<File> removedWatchedFolderIds = determineRemovedWatchedFolderIds(watchedFolders);
 			
-			startWatchOperations(newWatchedFolderTOs);
-			stopWatchOperations(removedWatchedFolderIds);			
+			stopAllWatchOperations();
+			startWatchOperations(watchedFolders);
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
@@ -84,11 +88,11 @@ public class DaemonWatchServer {
 
 	public void stop() {
 		logger.log(Level.INFO, "Stopping watch server ...  ");		
-		Map<File, WatchOperationThread> copyOfWatchOperations = Maps.newHashMap(watchOperations);
+		Map<File, WatchRunner> copyOfWatchOperations = Maps.newHashMap(watchOperations);
 		
-		for (Map.Entry<File, WatchOperationThread> folderEntry : copyOfWatchOperations.entrySet()) {
+		for (Map.Entry<File, WatchRunner> folderEntry : copyOfWatchOperations.entrySet()) {
 			File localDir = folderEntry.getKey();
-			WatchOperationThread watchOperationThread = folderEntry.getValue();
+			WatchRunner watchOperationThread = folderEntry.getValue();
 					
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();
@@ -108,7 +112,7 @@ public class DaemonWatchServer {
 				if (watchConfig != null) {
 					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
 					
-					WatchOperationThread watchOperationThread = new WatchOperationThread(watchConfig, watchOperationOptions);	
+					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions, portTO);	
 					watchOperationThread.start();
 	
 					watchOperations.put(localDir, watchOperationThread);
@@ -123,14 +127,30 @@ public class DaemonWatchServer {
 		}
 	}
 	
-	private void stopWatchOperations(List<File> removedWatchedFolderIds) {
-		for (File localDir : removedWatchedFolderIds) {
-			WatchOperationThread watchOperationThread = watchOperations.get(localDir);
+	/**
+	 * Stops all watchOperations and verifies if
+	 * they actually have stopped.
+	 */
+	private void stopAllWatchOperations() {
+		for (File localDir : watchOperations.keySet()) {
+			WatchRunner watchOperationThread = watchOperations.get(localDir);
 
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();
+		}
+		
+		// Check if watch operations actually have stopped.
+		while (watchOperations.keySet().size() > 0) {
+			Map<File, WatchRunner> watchOperationsCopy = new TreeMap<File, WatchRunner>(watchOperations);
 			
-			watchOperations.remove(localDir);
+			for (File localDir : watchOperationsCopy.keySet()) {
+				WatchRunner watchOperationThread = watchOperationsCopy.get(localDir);
+				
+				if (watchOperationThread.hasStopped()) {
+					logger.log(Level.INFO, "- Watch operation at " + localDir + " has stopped");
+					watchOperations.remove(localDir);
+				}
+			}
 		}
 	}
 	
@@ -144,35 +164,6 @@ public class DaemonWatchServer {
 		}
 		
 		return watchedFolderTOs;
-	}
-	
-	private Map<File, FolderTO> determineNewWatchedFolderTOs(Map<File, FolderTO> watchedFolders) {
-		Map<File, FolderTO> newWatchedFolderTOs = new TreeMap<File, FolderTO>();
-		
-		for (Map.Entry<File, FolderTO> folderEntry : watchedFolders.entrySet()) {
-			File localDir = folderEntry.getKey();
-			boolean isManaged = watchOperations.containsKey(localDir);
-			
-			if (!isManaged) {
-				newWatchedFolderTOs.put(folderEntry.getKey(), folderEntry.getValue());
-			}
-		}
-		
-		return newWatchedFolderTOs;
-	}
-
-	private List<File> determineRemovedWatchedFolderIds(Map<File, FolderTO> watchedFolders) {
-		List<File> removedWatchedFolderIds = new ArrayList<File>();
-		
-		for (File localDir : watchOperations.keySet()) {
-			boolean isInConfig = watchedFolders.containsKey(localDir);
-			
-			if (!isInConfig) {
-				removedWatchedFolderIds.add(localDir);
-			}
-		}
-		
-		return removedWatchedFolderIds;
 	}
 	
 	@Subscribe

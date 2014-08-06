@@ -15,23 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.web;
+package org.syncany.config.to;
 
-import io.undertow.server.HttpHandler;
-
-import org.syncany.plugins.Plugin;
-
+import org.simpleframework.xml.Element;
 /**
- * Web interface plugins implement a web frontend by implementing this
- * class. 
+ * This class is the access object to user-password pairs in XML.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Pim Otte
  */
-public abstract class WebInterfacePlugin extends Plugin {
-	public WebInterfacePlugin(String pluginId) {
-		super(pluginId);
+public class UserTO {
+	@Element(required = true)
+	private String username;
+	
+	@Element(required = true)
+	private String password;
+	
+	public String getUsername() {
+		return username;
 	}
 	
-	public abstract void start();
-	public abstract HttpHandler createRequestHandler();
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	
+	public String getPassword() {
+		return password;
+	}
+	
+	public void setPassword(String password) {
+		this.password = password;
+	}
 }

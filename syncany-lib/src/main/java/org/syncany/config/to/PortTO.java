@@ -15,23 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.web;
+package org.syncany.config.to;
 
-import io.undertow.server.HttpHandler;
-
-import org.syncany.plugins.Plugin;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
- * Web interface plugins implement a web frontend by implementing this
- * class. 
+ * PortTO is the access object to the XML file written by the daemon in the client folder.
+ * PortTO is used in the CLI to get access to the port information and a user-password
+ * pair that can be used to authenticate with the REST-server.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Pim Otte
  */
-public abstract class WebInterfacePlugin extends Plugin {
-	public WebInterfacePlugin(String pluginId) {
-		super(pluginId);
+@Root(name="port", strict=false)
+public class PortTO {
+	@Element(name="port", required = true)
+	private int port;
+	
+	@Element(name="user", required = true)
+	private UserTO user;
+	
+	public int getPort() {
+		return port;
 	}
 	
-	public abstract void start();
-	public abstract HttpHandler createRequestHandler();
+	public void setPort(int port) {
+		this.port = port;
+	}
+	
+	public UserTO getUser() {
+		return user;
+	}
+	
+	public void setUser(UserTO user) {
+		this.user = user;
+	}
 }

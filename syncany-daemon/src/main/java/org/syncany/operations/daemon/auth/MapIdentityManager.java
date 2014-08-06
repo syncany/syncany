@@ -25,74 +25,89 @@ import io.undertow.security.idm.PasswordCredential;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.syncany.config.to.UserTO;
+
+/**
+ * A simple {@link IdentityManager} implementation, that just takes a map of users to their
+ * password.
+ * 
+ * @see https://github.com/undertow-io/undertow/blob/d160f7c44951c25186595e4755c45659396d057c/examples/src/main/java/io/undertow/examples/security/basic/MapIdentityManager.java
+ * @author Stuart Douglas
+ */
 public class MapIdentityManager implements IdentityManager {
 
-    private final Map<String, char[]> users;
+	private final Map<String, char[]> users;
 
-    public MapIdentityManager(final Map<String, char[]> users) {
-        this.users = users;
-    }
+	public MapIdentityManager(final Map<String, char[]> users) {
+		this.users = users;
+	}
 
-    @Override
-    public Account verify(Account account) {
-        // An existing account so for testing assume still valid.
-        return account;
-    }
+	public MapIdentityManager(List<UserTO> users) {
+		this.users = new HashMap<String, char[]>();
 
-    @Override
-    public Account verify(String id, Credential credential) {
-        Account account = getAccount(id);
-        if (account != null && verifyCredential(account, credential)) {
-            return account;
-        }
+		for (UserTO user : users) {
+			this.users.put(user.getUsername(), user.getPassword().toCharArray());
+		}
+	}
 
-        return null;
-    }
+	@Override
+	public Account verify(Account account) {
+		// An existing account so for testing assume still valid.
+		return account;
+	}
 
-    @Override
-    public Account verify(Credential credential) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public Account verify(String id, Credential credential) {
+		Account account = getAccount(id);
+		if (account != null && verifyCredential(account, credential)) {
+			return account;
+		}
 
-    private boolean verifyCredential(Account account, Credential credential) {
-        if (credential instanceof PasswordCredential) {
-            char[] password = ((PasswordCredential) credential).getPassword();
-            char[] expectedPassword = users.get(account.getPrincipal().getName());
+		return null;
+	}
 
-            return Arrays.equals(password, expectedPassword);
-        }
-        return false;
-    }
+	@Override
+	public Account verify(Credential credential) {
+		throw new RuntimeException("Not implemented.");
+	}
 
-    private Account getAccount(final String id) {
-        if (users.containsKey(id)) {
-            return new Account() {
+	private boolean verifyCredential(Account account, Credential credential) {
+		if (credential instanceof PasswordCredential) {
+			char[] password = ((PasswordCredential) credential).getPassword();
+			char[] expectedPassword = users.get(account.getPrincipal().getName());
 
-                private final Principal principal = new Principal() {
+			return Arrays.equals(password, expectedPassword);
+		}
+		return false;
+	}
 
-                    @Override
-                    public String getName() {
-                        return id;
-                    }
-                };
+	private Account getAccount(final String id) {
+		if (users.containsKey(id)) {
+			return new Account() {
+				private final Principal principal = new Principal() {
+					@Override
+					public String getName() {
+						return id;
+					}
+				};
 
-                @Override
-                public Principal getPrincipal() {
-                    return principal;
-                }
+				@Override
+				public Principal getPrincipal() {
+					return principal;
+				}
 
-                @Override
-                public Set<String> getRoles() {
-                    return Collections.emptySet();
-                }
-
-            };
-        }
-        return null;
-    }
-
+				@Override
+				public Set<String> getRoles() {
+					return Collections.emptySet();
+				}
+			};
+		}
+		
+		return null;
+	}
 }

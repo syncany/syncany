@@ -74,6 +74,8 @@ import org.syncany.util.StringUtil;
  */
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
+	private static final String DEFAULT_POSIX_PERMISSIONS = "rw-rw-r--";
+	private static final String DEFAULT_DOS_ATTRIBUTES = "--a-";
 	
 	private Config config;
 	private Deduper deduper;
@@ -391,9 +393,11 @@ public class Indexer {
 			// Permissions
 			if (EnvironmentUtil.isWindows()) {
 				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
+				fileVersion.setPosixPermissions(DEFAULT_POSIX_PERMISSIONS);
 			}
 			else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				fileVersion.setPosixPermissions(fileProperties.getPosixPermissions());
+				fileVersion.setDosAttributes(DEFAULT_DOS_ATTRIBUTES);
 			}
 			
 			// Status

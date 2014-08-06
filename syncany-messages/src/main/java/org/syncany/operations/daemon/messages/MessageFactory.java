@@ -34,6 +34,12 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.StringUtil;
 
+/**
+ * The message factory serializes and deserializes messages sent to
+ * or from the daemon via the REST/WS API.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class MessageFactory {
 	private static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
 	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");

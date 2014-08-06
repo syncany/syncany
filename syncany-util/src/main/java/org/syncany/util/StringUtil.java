@@ -20,7 +20,6 @@ package org.syncany.util;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -30,11 +29,6 @@ import javax.xml.bind.DatatypeConverter;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StringUtil {   
-	private static final String MACHINE_NAME_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	private static final int MACHINE_NAME_LENGTH = 20;
-	
-	private static Random random = new Random();
-
 	/**
 	 * Transforms a string to a camel case representation, including the
 	 * first character.
@@ -65,6 +59,39 @@ public class StringUtil {
     }
     
     /**
+     * Transforms a string to underscore-delimited representation.
+     * 
+	 * <p>Examples:
+	 * <ul>
+	 *  <li><tt>toUnderScoreDelimited("HelloWorld") -&gt; "hello_world"</tt></li>
+	 *  <li><tt>toUnderScoreDelimited("helloWorld") -&gt; "hello_world"</tt></li>
+	 * </ul>
+     */
+    public static String toSnakeCase(String str) {
+		StringBuilder sb = new StringBuilder();
+
+        for (char c : str.toCharArray()) {   
+        	if (Character.isLetter(c) || Character.isDigit(c)) {
+        		if (Character.isUpperCase(c)) {
+            		if (sb.length() > 0) {
+            			sb.append("_");
+            		}
+            		
+            		sb.append(Character.toLowerCase(c));
+            	}
+            	else {
+            		sb.append(c);
+            	}
+        	}
+        	else {
+        		sb.append("_");
+        	}
+        }
+
+        return sb.toString();
+	}
+    
+    /**
      * Converts a byte array to a lower case hex representation.
      * If the given byte array is <tt>null</tt>, an empty string is returned.
      */
@@ -84,6 +111,11 @@ public class StringUtil {
     	return DatatypeConverter.parseHexBinary(s); // fast!    	
     }
     
+    /**
+     * Creates a byte array from a given string, using the UTF-8
+     * encoding. This calls {@link String#getBytes(java.nio.charset.Charset)} 
+     * internally with "UTF-8" as charset.
+     */
     public static byte[] toBytesUTF8(String s) {
     	try {
 			return s.getBytes("UTF-8");
@@ -113,20 +145,6 @@ public class StringUtil {
     	
 		return count;
     }
-    
-    /**
-     * Generates a random machine name of length 20. Only uses characters 
-     * A-Z/a-z (in order to always create valid serialized vector clock representations)  
-     */
-	public static String createRandomMachineName() {
-		StringBuilder sb = new StringBuilder(MACHINE_NAME_LENGTH);
-		
-		for (int i = 0; i < MACHINE_NAME_LENGTH; i++) {
-			sb.append(MACHINE_NAME_CHARS.charAt(random.nextInt(MACHINE_NAME_CHARS.length())));
-		}
-		
-		return sb.toString();
-	}
 	
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
 		StringBuilder objectsStr = new StringBuilder();
@@ -161,5 +179,5 @@ public class StringUtil {
 	
 	public static interface StringJoinListener<T> {
 		public String getString(T object);
-	}	
+	}
 }

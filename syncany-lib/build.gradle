@@ -17,7 +17,7 @@ dependencies {
 	compile			"org.simpleframework:simple-xml:2.7.1"
 	compile			"com.google.guava:guava:15.0"
 	compile			"commons-codec:commons-codec:1.8"            
-	compile			"org.reflections:reflections:0.9.8"
+	compile			'org.reflections:reflections:0.9.8'
 	compile			"org.slf4j:slf4j-api:1.6.0" // for reflections
 	compile			"org.hsqldb:hsqldb:2.3.1"
 	compile			"com.github.zafarkhaja:java-semver:0.7.2"
