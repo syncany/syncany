@@ -131,14 +131,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		}
 
 		syncLoop: while (!stopRequested.get()) {
-			while (pauseRequested.get()) {
-				try {
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException e) {
-					logger.log(Level.INFO, "Sleep INTERRUPTED during PAUSE. STOPPING.", e);
-					break syncLoop;
-				}
+			try {
+				waitWhilePaused();
+			}
+			catch (InterruptedException e) {
+				logger.log(Level.INFO, "Sleep INTERRUPTED during PAUSE. STOPPING.", e);
+				break syncLoop;
 			}
 
 			try {
@@ -243,6 +241,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 			logger.log(Level.INFO, "RUNNING SYNC ...");
 
+			
 			try {
 				boolean notifyChanges = false;
 				
@@ -298,6 +297,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	public void pushNotificationReceived(String channel, String message) {
 		if (channel.equals(notificationChannel) && !message.equals(notificationInstanceId)) {
 			try {
+				waitWhilePaused();
 				runSync();
 			}
 			catch (Exception e) {
@@ -309,6 +309,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	@Override
 	public void watchEventsOccurred() {
 		try {
+			waitWhilePaused();
 			runSync();
 		}
 		catch (Exception e) {
@@ -354,6 +355,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	public boolean isSyncRequested() {
 		return syncRequested.get();
+	}
+	
+	private void waitWhilePaused() throws InterruptedException {
+		while (pauseRequested.get()) {
+			Thread.sleep(1000);
+		}
 	}
 
 	private void scheduleForceKill() {
