@@ -229,7 +229,9 @@ public class WatchRunner implements WatchOperationListener {
 			handleCliRequestSyncRunning(cliRequest);
 		}
 		else {
+			watchOperation.pause();
 			handleCliRequestNoSyncRunning(cliRequest);
+			watchOperation.resume();
 		}
 	}
 
