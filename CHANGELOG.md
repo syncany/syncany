@@ -3,6 +3,7 @@ Change Log
 
 ### Syncany 0.1.9-alpha (Date: tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Breaks compatiblity to 0.1.8-alpha repositories!
 - Bugfixes and other things:
   + Added 'type' attribute to database header (DEFAULT/PURGE) #181
 
