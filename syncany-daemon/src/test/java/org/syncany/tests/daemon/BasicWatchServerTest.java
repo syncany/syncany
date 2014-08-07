@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,10 +31,13 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
+import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
+import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
+import org.syncany.operations.daemon.messages.GetFileRequest;
+import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
 import org.syncany.operations.daemon.messages.Response;
-import org.syncany.plugins.local.LocalConnection;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -50,6 +54,8 @@ import com.google.common.eventbus.Subscribe;
  */
 public class BasicWatchServerTest {
 	public static final Map<Integer, Response> responses = new HashMap<Integer, Response>();
+	
+	private GetFileResponseInternal internalResponse;
 
 	@Test
 	public void AddSingleFileTest() throws Exception {
@@ -91,7 +97,7 @@ public class BasicWatchServerTest {
 	}
 	
 	@Test
-	public void getFileTreeRequestTest() throws Exception {
+	public void getFileRequestsTest() throws Exception {
 		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();	
 		final TestClient clientA = new TestClient("ClientA", testConnection);
 		
@@ -114,17 +120,17 @@ public class BasicWatchServerTest {
 		clientA.createNewFile("folder/file-2");
 		watchServer.start(daemonConfig);
 		
+		LocalEventBus eventBus = LocalEventBus.getInstance();
 		
-		Thread.sleep(6000);
+		eventBus.register(this);
+		
 		// Repeat request until 3 files are found.
 		List<FileVersion> files = new ArrayList<FileVersion>();
 		for(int i = 0; i < 20; i++) {
 			GetFileTreeRequest request = new GetFileTreeRequest();
 			request.setId(i);
 			request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-			LocalEventBus eventBus = LocalEventBus.getInstance();
 			
-			eventBus.register(this);
 			
 			eventBus.post(request);
 			
@@ -146,21 +152,49 @@ public class BasicWatchServerTest {
 				Thread.sleep(1000);
 			}
 		}
-
-		// Check if information is correct
-		for (FileVersion fileVersion : files) {
-			if (fileVersion.getName().equals("file-1")) {
-				assertEquals(clientA.getLocalFile("file-1").length(), (long)fileVersion.getSize());
-			}			
-			else if (fileVersion.getName().equals("folder")) {
-				assertTrue(clientA.getLocalFile("folder").isDirectory());
-				assertEquals(fileVersion.getType(), FileVersion.FileType.FOLDER);
-			}
-			else {
-				assertTrue("fileVersion should not exist", false);
-			}
-			
+		
+		if (files.get(0).getName().equals("folder")) {
+			files = Arrays.asList(new FileVersion[]{files.get(1), files.get(0)});
 		}
+
+		assertEquals(clientA.getLocalFile("file-1").getName(), files.get(0).getName());
+		assertEquals(clientA.getLocalFile("file-1").length(), (long) files.get(0).getSize());
+
+		assertEquals(clientA.getLocalFile("folder").getName(), files.get(1).getName());
+		assertTrue(clientA.getLocalFile("folder").isDirectory());
+		assertEquals(files.get(1).getType(), FileVersion.FileType.FOLDER);
+
+		
+		// Create GetFileHistoryRequest for the first returned file
+		GetFileHistoryRequest request = new GetFileHistoryRequest();
+		request.setId(21);
+		request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
+		request.setFileHistoryId(files.get(0).getFileHistoryId().toString());
+		
+				
+		eventBus.post(request);
+		
+		Response response = waitForResponse(21);
+		assertTrue(response instanceof GetFileHistoryResponse);
+		GetFileHistoryResponse fileHistoryResponse = (GetFileHistoryResponse) response;
+		assertEquals(1, fileHistoryResponse.getFiles().size());
+		assertEquals(files.get(0), fileHistoryResponse.getFiles().get(0));
+		
+		// Create GetFileRequest for the first returned file
+		GetFileRequest getFileRequest = new GetFileRequest();
+		getFileRequest.setId(22);
+		getFileRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
+		getFileRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
+		getFileRequest.setVersion(1);
+		
+				
+		eventBus.post(getFileRequest);
+		
+		while (internalResponse == null) {
+			Thread.sleep(100);
+		}
+		
+		assertEquals((long)files.get(0).getSize(), internalResponse.getTempFile().length());
 		
 		watchServer.stop();
 		clientA.deleteTestData();
@@ -169,6 +203,11 @@ public class BasicWatchServerTest {
 	@Subscribe
 	public void onResponseReceived(Response response) {	
 		responses.put(response.getRequestId(), response);
+	}
+	
+	@Subscribe
+	public void onGetFileResponseInternal(GetFileResponseInternal internalResponse) {
+		this.internalResponse = internalResponse;
 	}
 	
 	private Response waitForResponse(int id) throws Exception {

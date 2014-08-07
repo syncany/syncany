@@ -37,4 +37,8 @@ public class GetFileHistoryResponse extends Response {
 		this.root = root;
 		this.files = new ArrayList<FileVersion>(files);
 	}	
+	
+	public List<FileVersion> getFiles() {
+		return files;
+	}
 }

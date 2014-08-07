@@ -26,4 +26,8 @@ public class GetFileHistoryRequest extends WatchRequest {
 	public String getFileHistoryId() {
 		return fileHistoryId;
 	}
+	
+	public void setFileHistoryId(String fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
+	}
 }
