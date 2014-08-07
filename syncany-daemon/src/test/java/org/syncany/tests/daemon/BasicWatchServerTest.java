@@ -31,6 +31,9 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
+import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.CliRequest;
+import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
 import org.syncany.operations.daemon.messages.GetFileRequest;
@@ -198,6 +201,65 @@ public class BasicWatchServerTest {
 		
 		watchServer.stop();
 		clientA.deleteTestData();
+	}
+	
+	@Test
+	public void getOperationRequestsTest() throws Exception {
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();	
+		final TestClient clientA = new TestClient("ClientA", testConnection);
+		
+
+		// Load config template
+		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
+		
+		// Dynamically insert paths
+		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
+		daemonConfig.getFolders().get(1).setEnabled(false);
+		
+		// Create access token (not needed in this test, but prevents errors in daemon)
+		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(daemonConfig.getWebServer().getPort()));
+			
+		
+		LocalEventBus eventBus = LocalEventBus.getInstance();
+		
+		eventBus.register(this);
+		
+		// Create watchServer
+		WatchServer watchServer = new WatchServer();
+		
+		clientA.createNewFile("file-1");
+		clientA.createNewFolder("folder");
+		clientA.createNewFile("folder/file-2");
+		clientA.copyFile("file-1", "file-1.bak");
+		watchServer.start(daemonConfig);
+		
+		
+		
+		// CLI request while running.
+		
+		CliRequest cliRequest = new CliRequest();
+		cliRequest.setId(30);
+		cliRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
+		cliRequest.setCommand("up");
+		cliRequest.setCommandArgs(new ArrayList<String>());
+		// Small delay to ensure 2 triggers
+		clientA.changeFile("file-1");
+		Thread.sleep(1);
+		clientA.changeFile("file-1");
+		eventBus.post(cliRequest);
+		
+		Response response = waitForResponse(30);
+		
+		assertTrue(response instanceof CliResponse);
+		CliResponse cliResponse = (CliResponse) response;
+		
+		assertEquals("Cannot run CLI commands while sync is running or requested.\n", cliResponse.getOutput());
+		
+		
+		
+		
+		
+
 	}
 	
 	@Subscribe
