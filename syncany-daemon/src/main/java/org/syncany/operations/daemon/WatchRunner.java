@@ -220,6 +220,7 @@ public class WatchRunner implements WatchOperationListener {
 			eventBus.post(restoreResponse);								
 		}
 		catch (Exception e) {
+			logger.log(Level.WARNING, "BadRequestResponse: Cannot restore file.");
 			eventBus.post(new BadRequestResponse(restoreRequest.getId(), "Cannot restore file."));
 		}
 	}

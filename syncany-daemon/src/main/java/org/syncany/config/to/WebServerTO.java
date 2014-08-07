@@ -40,4 +40,8 @@ public class WebServerTO {
 	public String getHost() {
 		return host;
 	}
+	
+	public void setPort(int port) {
+		this.port = port;
+	}
 }

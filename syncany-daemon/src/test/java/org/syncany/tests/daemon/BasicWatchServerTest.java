@@ -56,12 +56,18 @@ import com.google.common.eventbus.Subscribe;
  *
  */
 public class BasicWatchServerTest {
-	public static final Map<Integer, Response> responses = new HashMap<Integer, Response>();
+	private Map<Integer, Response> responses = new HashMap<Integer, Response>();
 	
 	private GetFileResponseInternal internalResponse;
+	
+	private LocalEventBus eventBus;
 
+	/**
+	 * The WatchServerTest tests all things WatchServer.
+	 * This is one single test to prevent issues with parallelism. (Occupied ports, EventBus mixups etc.)
+	 */
 	@Test
-	public void AddSingleFileTest() throws Exception {
+	public void WatchServerTest() throws Exception {
 		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("ClientA", testConnection);
 		final TestClient clientB = new TestClient("ClientB", testConnection);
@@ -93,39 +99,18 @@ public class BasicWatchServerTest {
 		assertTrue("File has not synced to clientB", clientB.getLocalFile("file-1").exists());
 		assertEquals(clientA.getLocalFile("file-1").length(), clientB.getLocalFile("file-1").length());
 		
-		watchServer.stop();
-		clientA.deleteTestData();
-		clientB.deleteTestData();
 		
-	}
-	
-	@Test
-	public void getFileRequestsTest() throws Exception {
-		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();	
-		final TestClient clientA = new TestClient("ClientA", testConnection);
-		
-
-		// Load config template
-		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
-		
-		// Dynamically insert paths
-		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
-		daemonConfig.getFolders().get(1).setEnabled(false);
-		
-		// Create access token (not needed in this test, but prevents errors in daemon)
-		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(daemonConfig.getWebServer().getPort()));
 			
-		// Create watchServer
-		WatchServer watchServer = new WatchServer();
+		registerWithBus();
 		
-		clientA.createNewFile("file-1");
+		// Create watchServer
+		
+		
 		clientA.createNewFolder("folder");
 		clientA.createNewFile("folder/file-2");
-		watchServer.start(daemonConfig);
 		
-		LocalEventBus eventBus = LocalEventBus.getInstance();
-		
-		eventBus.register(this);
+		// Allow server to settle
+		Thread.sleep(100);
 		
 		// Repeat request until 3 files are found.
 		List<FileVersion> files = new ArrayList<FileVersion>();
@@ -192,74 +177,65 @@ public class BasicWatchServerTest {
 		
 				
 		eventBus.post(getFileRequest);
-		
-		while (internalResponse == null) {
+		int i = 0;
+		while (internalResponse == null && i < 40) {
 			Thread.sleep(100);
+			i++;
 		}
 		
 		assertEquals((long)files.get(0).getSize(), internalResponse.getTempFile().length());
 		
-		watchServer.stop();
-		clientA.deleteTestData();
-	}
-	
-	@Test
-	public void getOperationRequestsTest() throws Exception {
-		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();	
-		final TestClient clientA = new TestClient("ClientA", testConnection);
+		// Cli Requests
 		
-
-		// Load config template
-		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
-		
-		// Dynamically insert paths
-		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
-		daemonConfig.getFolders().get(1).setEnabled(false);
-		
-		// Create access token (not needed in this test, but prevents errors in daemon)
-		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(daemonConfig.getWebServer().getPort()));
-			
-		
-		LocalEventBus eventBus = LocalEventBus.getInstance();
-		
-		eventBus.register(this);
-		
-		// Create watchServer
-		WatchServer watchServer = new WatchServer();
-		
-		clientA.createNewFile("file-1");
-		clientA.createNewFolder("folder");
-		clientA.createNewFile("folder/file-2");
 		clientA.copyFile("file-1", "file-1.bak");
-		watchServer.start(daemonConfig);
-		
-		
 		
 		// CLI request while running.
 		
 		CliRequest cliRequest = new CliRequest();
 		cliRequest.setId(30);
 		cliRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-		cliRequest.setCommand("up");
+		cliRequest.setCommand("status");
 		cliRequest.setCommandArgs(new ArrayList<String>());
-		// Small delay to ensure 2 triggers
-		clientA.changeFile("file-1");
-		Thread.sleep(1);
-		clientA.changeFile("file-1");
+		
+		// Create big file to trigger sync
+		clientA.createNewFile("bigfileforlongsync", 10000);
+		// Wait to allow sync to start
+		Thread.sleep(1000);
+		
 		eventBus.post(cliRequest);
 		
-		Response response = waitForResponse(30);
+		response = waitForResponse(30);
 		
 		assertTrue(response instanceof CliResponse);
 		CliResponse cliResponse = (CliResponse) response;
 		
 		assertEquals("Cannot run CLI commands while sync is running or requested.\n", cliResponse.getOutput());
+		Thread.sleep(4000);
+		for (i = 31; i < 50; i++) {
+			cliRequest.setId(i);
+			eventBus.post(cliRequest);
+			
+			response = waitForResponse(i);
+			cliResponse = (CliResponse) response;
+			
+			if (!"Cannot run CLI commands while sync is running or requested.\n".equals(cliResponse.getOutput())) {
+				break;
+			}
+			Thread.sleep(1000);
+		}
+		System.out.println(cliResponse.getOutput());
 		
 		
-		
-		
-		
-
+		watchServer.stop();
+		clientA.deleteTestData();
+	}
+	
+	
+	private void registerWithBus() {
+		if (eventBus == null) {
+			eventBus = LocalEventBus.getInstance();
+			eventBus.register(this);
+		}
 	}
 	
 	@Subscribe
@@ -273,8 +249,10 @@ public class BasicWatchServerTest {
 	}
 	
 	private Response waitForResponse(int id) throws Exception {
-		while (responses.containsKey(id) == false) {
+		int i = 0;
+		while (responses.containsKey(id) == false && i < 100) {
 			Thread.sleep(100);
+			i++;
 		}
 		return responses.get(id);
 	}
