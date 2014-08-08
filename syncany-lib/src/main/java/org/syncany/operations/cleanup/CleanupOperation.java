@@ -361,7 +361,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			}
 	
 			for (DatabaseRemoteFile clientDatabaseFile : clientDatabaseFiles) {
-				if (toDeleteDatabaseFiles.size() < numOfDatabaseFilesToDelete) {
+				if (toDeleteDatabaseFiles.size() <= numOfDatabaseFilesToDelete) {
 					toDeleteDatabaseFiles.add(clientDatabaseFile);
 				}
 			}
