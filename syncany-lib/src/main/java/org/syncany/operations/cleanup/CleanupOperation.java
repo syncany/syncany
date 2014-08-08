@@ -80,8 +80,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	
 	public static final String ACTION_ID = "cleanup";
-	// Minimal number of database versions per client
-	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
+	
 	// Maximal number of database versions per client
 	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
@@ -351,7 +350,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
-			int numOfDatabaseFilesToDelete = Math.max(clientDatabaseFiles.size() - MIN_KEEP_DATABASE_VERSIONS, 0);
+			int numOfDatabaseFilesToDelete = clientDatabaseFiles.size() - 1, 0;
 			
 			// This client needs no merging
 			if (numOfDatabaseFilesToDelete == 0) {
