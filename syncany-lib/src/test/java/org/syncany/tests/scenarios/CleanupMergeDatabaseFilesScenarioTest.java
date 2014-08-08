@@ -93,7 +93,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000001").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000005").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000010").exists());
-		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000011").exists());
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000014").exists());
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());
 		
 		// Run
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading 

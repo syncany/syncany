@@ -20,6 +20,7 @@ package org.syncany.operations.cleanup;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -327,7 +328,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
-		// Retrieve and sort machine's database versions
+		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 		
 		List<DatabaseRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
@@ -343,6 +344,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 		
 		for (String client : allDatabaseFilesMap.keySet()) {
 			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
+			Collections.sort(clientDatabaseFiles);
+			logger.log(Level.INFO, "Databases: " + clientDatabaseFiles);
 			
 			// Now do the merge!
 			logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
@@ -350,7 +353,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
-			int numOfDatabaseFilesToDelete = clientDatabaseFiles.size() - 1, 0;
+			int numOfDatabaseFilesToDelete = clientDatabaseFiles.size() - 1;
 			
 			// This client needs no merging
 			if (numOfDatabaseFilesToDelete == 0) {
