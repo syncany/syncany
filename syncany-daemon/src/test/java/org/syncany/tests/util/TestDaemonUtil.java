@@ -31,7 +31,6 @@ import org.syncany.crypto.CipherUtil;
  * This class contains various helper methods for daemon related tests.
  * 
  * @author Pim Otte
- *
  */
 public class TestDaemonUtil {
 	private static final String DAEMON_RESOURCE_PATTERN = "/org/syncany/config/to/%s";
