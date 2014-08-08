@@ -71,17 +71,22 @@ public class BasicWatchServerTest {
 		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("ClientA", testConnection);
 		final TestClient clientB = new TestClient("ClientB", testConnection);
+		int port = 58443;
 		
 
 		// Load config template
 		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
+		
+		
+		// Set port to prevent conflicts with default daemons
+		daemonConfig.getWebServer().setPort(port);
 		
 		// Dynamically insert paths
 		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
 		daemonConfig.getFolders().get(1).setPath(clientB.getConfig().getLocalDir().getAbsolutePath());
 		
 		// Create access token (not needed in this test, but prevents errors in daemon)
-		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(daemonConfig.getWebServer().getPort()));
+		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(port));
 			
 		// Create watchServer
 		WatchServer watchServer = new WatchServer();
@@ -200,7 +205,7 @@ public class BasicWatchServerTest {
 		// Create big file to trigger sync
 		clientA.createNewFile("bigfileforlongsync", 10000);
 		// Wait to allow sync to start
-		Thread.sleep(1000);
+		Thread.sleep(100);
 		
 		eventBus.post(cliRequest);
 		
@@ -210,7 +215,9 @@ public class BasicWatchServerTest {
 		CliResponse cliResponse = (CliResponse) response;
 		
 		assertEquals("Cannot run CLI commands while sync is running or requested.\n", cliResponse.getOutput());
-		Thread.sleep(4000);
+		
+		// Allow daemon to sync
+		Thread.sleep(10000);
 		for (i = 31; i < 50; i++) {
 			cliRequest.setId(i);
 			eventBus.post(cliRequest);
@@ -223,11 +230,14 @@ public class BasicWatchServerTest {
 			}
 			Thread.sleep(1000);
 		}
-		System.out.println(cliResponse.getOutput());
 		
+		
+		assertEquals("No local changes.\n", cliResponse.getOutput());
+				
 		
 		watchServer.stop();
 		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 	
 	
@@ -250,8 +260,8 @@ public class BasicWatchServerTest {
 	
 	private Response waitForResponse(int id) throws Exception {
 		int i = 0;
-		while (responses.containsKey(id) == false && i < 100) {
-			Thread.sleep(100);
+		while (responses.containsKey(id) == false && i < 1000) {
+			Thread.sleep(10);
 			i++;
 		}
 		return responses.get(id);
