@@ -76,7 +76,6 @@ public class DaemonOperation extends Operation {
 	private WebServer webServer;
 	private WatchServer watchServer;
 	private ControlServer controlServer;
-	private StandbyPreventor standbyPreventor;
 	private LocalEventBus eventBus;
 	private DaemonConfigTO daemonConfig;
 	private PortTO portTO;
@@ -86,7 +85,6 @@ public class DaemonOperation extends Operation {
 		
 		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);
 		this.daemonConfigFile = new File(UserConfig.getUserConfigDir(), DAEMON_FILE);
-		this.standbyPreventor = new StandbyPreventor();
 	}
 
 	@Override
@@ -109,7 +107,6 @@ public class DaemonOperation extends Operation {
 		
 		startWebServer();
 		startWatchServer();
-		startStandbyPreventor();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
 	}
@@ -148,7 +145,6 @@ public class DaemonOperation extends Operation {
 	private void stopOperation() {
 		stopWebServer();
 		stopWatchServer();
-		stopStandbyPreventor();
 	}
 	
 	private void reloadOperation() {
@@ -260,17 +256,5 @@ public class DaemonOperation extends Operation {
 	private void stopWatchServer() {
 		logger.log(Level.INFO, "Stopping watch server ...");
 		watchServer.stop();
-	}
-	
-	// Standby preventor
-	
-	private void startStandbyPreventor() {
-		logger.log(Level.INFO, "Starting standby preventor...");
-		new Thread(standbyPreventor).start();
-	}
-	
-	private void stopStandbyPreventor() {
-		logger.log(Level.INFO, "Stopping standby preventor ...");
-		standbyPreventor.stop();
 	}
 }
