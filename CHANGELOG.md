@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Bugfixes and other things:
   + Added 'type' attribute to database header (DEFAULT/PURGE) #181
+  + Prevent standby/hibernate if uploading/downloading #164
 
 ### Syncany 0.1.8-alpha (Date: 10 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

@@ -145,17 +145,23 @@ public class ActionFileHandler {
 	private void preventStandby() {
 		try {
 			Robot robot = new Robot();
-			
-    		Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();
-    		Point tempMousePosition = (currentMousePosition.x > 0) ? new Point(currentMousePosition.x-10, currentMousePosition.y) : new Point(currentMousePosition.x+10, currentMousePosition.y);
-    		
-    		logger.log(Level.INFO, "Standby prevention: Moving mouse 1px (and back): " + currentMousePosition);
-    		
-    		robot.mouseMove(tempMousePosition.x, tempMousePosition.y);
-    		robot.mouseMove(currentMousePosition.x, currentMousePosition.y);    	
-		}
+
+			Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();
+			Point tempMousePosition = (currentMousePosition.x > 0) ? new Point(currentMousePosition.x - 10, currentMousePosition.y) : new Point(
+					currentMousePosition.x + 10, currentMousePosition.y);
+
+			logger.log(Level.INFO, "Standby prevention: Moving mouse 1px (and back): " + currentMousePosition);
+
+			robot.mouseMove(tempMousePosition.x, tempMousePosition.y);
+			robot.mouseMove(currentMousePosition.x, currentMousePosition.y);
+		}		
 		catch (Exception e) {
-			logger.log(Level.WARNING, "Standby prevention failed (headless mode?).", e);
+			if (e.getMessage() != null && e.getMessage().contains("headless")) {
+				logger.log(Level.INFO, "Cannot prevent standby, because headless mode is enabled (no GUI environment)");
+			}
+			else {
+				logger.log(Level.WARNING, "Standby prevention failed (headless mode?).", e);	
+			}			
 		}
 	}
 }
