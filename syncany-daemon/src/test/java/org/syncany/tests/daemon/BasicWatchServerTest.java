@@ -60,8 +60,7 @@ import com.google.common.eventbus.Subscribe;
 public class BasicWatchServerTest {
 	private Map<Integer, Response> responses = new HashMap<Integer, Response>();
 	
-	private GetFileResponseInternal internalResponse;
-	
+	private GetFileResponseInternal internalResponse;	
 	private LocalEventBus eventBus;
 
 	/**
@@ -69,13 +68,12 @@ public class BasicWatchServerTest {
 	 * This is one single test to prevent issues with parallelism. (Occupied ports, EventBus mixups etc.)
 	 */
 	@Test
-	public void WatchServerTest() throws Exception {
+	public void testWatchServer() throws Exception {
 		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("ClientA", testConnection);
 		final TestClient clientB = new TestClient("ClientB", testConnection);
 		int port = 58443;
 		
-
 		// Load config template
 		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
 		
@@ -174,8 +172,7 @@ public class BasicWatchServerTest {
 		getFileRequest.setId(22);
 		getFileRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 		getFileRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
-		getFileRequest.setVersion(1);
-		
+		getFileRequest.setVersion(1);		
 				
 		eventBus.post(getFileRequest);
 		
@@ -225,8 +222,7 @@ public class BasicWatchServerTest {
 			}
 			
 			Thread.sleep(1000);
-		}
-		
+		}		
 		
 		assertEquals("No local changes.\n", cliResponse.getOutput());
 		
