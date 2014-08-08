@@ -18,6 +18,7 @@
 package org.syncany.tests.daemon;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -31,7 +32,6 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
-import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
@@ -41,10 +41,13 @@ import org.syncany.operations.daemon.messages.GetFileResponseInternal;
 import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
 import org.syncany.operations.daemon.messages.Response;
+import org.syncany.operations.daemon.messages.RestoreRequest;
+import org.syncany.operations.daemon.messages.RestoreResponse;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDaemonUtil;
+import org.syncany.util.FileUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -203,7 +206,7 @@ public class BasicWatchServerTest {
 		cliRequest.setCommandArgs(new ArrayList<String>());
 		
 		// Create big file to trigger sync
-		clientA.createNewFile("bigfileforlongsync", 10000);
+		clientA.createNewFile("bigfileforlongsync", 5000);
 		// Wait to allow sync to start
 		Thread.sleep(100);
 		
@@ -233,8 +236,26 @@ public class BasicWatchServerTest {
 		
 		
 		assertEquals("No local changes.\n", cliResponse.getOutput());
-				
 		
+		// Restore file test
+		
+		RestoreRequest restoreRequest = new RestoreRequest();
+		restoreRequest.setId(70);
+		restoreRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
+		restoreRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
+		restoreRequest.setVersion(1);
+		
+		eventBus.post(restoreRequest);
+		
+		response = waitForResponse(70);
+		
+		assertTrue(response instanceof RestoreResponse);
+		RestoreResponse restoreResponse = (RestoreResponse) response;
+		
+		byte[] copyChecksum = FileUtil.createChecksum(clientA.getLocalFile("file-1.bak"), "SHA1");
+		byte[] restoreChecksum = FileUtil.createChecksum(restoreResponse.getRestoredFile(), "SHA1");
+		
+		assertArrayEquals(copyChecksum, restoreChecksum);
 		watchServer.stop();
 		clientA.deleteTestData();
 		clientB.deleteTestData();
