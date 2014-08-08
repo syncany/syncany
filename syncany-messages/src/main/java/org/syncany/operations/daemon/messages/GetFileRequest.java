@@ -33,4 +33,12 @@ public class GetFileRequest extends WatchRequest {
 	public int getVersion() {
 		return version;
 	}
+	
+	public void setFileHistoryId(String fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
+	}
+	
+	public void setVersion(int version) {
+		this.version = version;
+	}
 }

@@ -220,6 +220,7 @@ public class WatchRunner implements WatchOperationListener {
 			eventBus.post(restoreResponse);								
 		}
 		catch (Exception e) {
+			logger.log(Level.WARNING, "BadRequestResponse: Cannot restore file.");
 			eventBus.post(new BadRequestResponse(restoreRequest.getId(), "Cannot restore file."));
 		}
 	}
@@ -264,6 +265,8 @@ public class WatchRunner implements WatchOperationListener {
 			cliOutputStream.close();
 		}
 		catch (Exception e) {
+			logger.log(Level.WARNING, "Exception thrown when running CLI command through daemon: " + e);
+			e.printStackTrace();
 			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
 		}		
 	}
