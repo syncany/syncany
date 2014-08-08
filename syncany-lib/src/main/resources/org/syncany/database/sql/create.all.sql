@@ -2,6 +2,7 @@
 
 CREATE CACHED TABLE databaseversion (
   id int NOT NULL IDENTITY,
+  type varchar(45) NOT NULL,
   status varchar(45) NOT NULL,
   localtime datetime NOT NULL,
   client varchar(45) NOT NULL,
