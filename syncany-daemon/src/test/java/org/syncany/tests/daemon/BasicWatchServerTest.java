@@ -56,7 +56,6 @@ import com.google.common.eventbus.Subscribe;
  * should test if all basic functionality works as expected.
  * 
  * @author Pim Otte
- *
  */
 public class BasicWatchServerTest {
 	private Map<Integer, Response> responses = new HashMap<Integer, Response>();
@@ -80,7 +79,6 @@ public class BasicWatchServerTest {
 		// Load config template
 		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
 		
-		
 		// Set port to prevent conflicts with default daemons
 		daemonConfig.getWebServer().setPort(port);
 		
@@ -98,22 +96,19 @@ public class BasicWatchServerTest {
 		watchServer.start(daemonConfig);
 		
 		for (int i = 0; i < 20; i++) {
-			if(clientB.getLocalFile("file-1").exists()) {
+			if (clientB.getLocalFile("file-1").exists()) {
 				break;
 			}
+			
 			Thread.sleep(1000);
 		}
 		
 		assertTrue("File has not synced to clientB", clientB.getLocalFile("file-1").exists());
 		assertEquals(clientA.getLocalFile("file-1").length(), clientB.getLocalFile("file-1").length());
-		
-		
 			
 		registerWithBus();
 		
 		// Create watchServer
-		
-		
 		clientA.createNewFolder("folder");
 		clientA.createNewFile("folder/file-2");
 		
@@ -122,12 +117,12 @@ public class BasicWatchServerTest {
 		
 		// Repeat request until 3 files are found.
 		List<FileVersion> files = new ArrayList<FileVersion>();
-		for(int i = 0; i < 20; i++) {
+		
+		for (int i = 0; i < 20; i++) {
 			GetFileTreeRequest request = new GetFileTreeRequest();
 			request.setId(i);
 			request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-			
-			
+				
 			eventBus.post(request);
 			
 			Response response = waitForResponse(i);
@@ -160,14 +155,12 @@ public class BasicWatchServerTest {
 		assertTrue(clientA.getLocalFile("folder").isDirectory());
 		assertEquals(files.get(1).getType(), FileVersion.FileType.FOLDER);
 
-		
 		// Create GetFileHistoryRequest for the first returned file
 		GetFileHistoryRequest request = new GetFileHistoryRequest();
 		request.setId(21);
 		request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 		request.setFileHistoryId(files.get(0).getFileHistoryId().toString());
-		
-				
+						
 		eventBus.post(request);
 		
 		Response response = waitForResponse(21);
@@ -185,6 +178,7 @@ public class BasicWatchServerTest {
 		
 				
 		eventBus.post(getFileRequest);
+		
 		int i = 0;
 		while (internalResponse == null && i < 40) {
 			Thread.sleep(100);
@@ -194,11 +188,9 @@ public class BasicWatchServerTest {
 		assertEquals((long)files.get(0).getSize(), internalResponse.getTempFile().length());
 		
 		// Cli Requests
-		
 		clientA.copyFile("file-1", "file-1.bak");
 		
 		// CLI request while running.
-		
 		CliRequest cliRequest = new CliRequest();
 		cliRequest.setId(30);
 		cliRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
@@ -231,6 +223,7 @@ public class BasicWatchServerTest {
 			if (!"Cannot run CLI commands while sync is running or requested.\n".equals(cliResponse.getOutput())) {
 				break;
 			}
+			
 			Thread.sleep(1000);
 		}
 		
@@ -285,6 +278,7 @@ public class BasicWatchServerTest {
 			Thread.sleep(10);
 			i++;
 		}
+		
 		return responses.get(id);
 	}
 

@@ -6,6 +6,7 @@ Change Log
 - Breaks compatiblity to 0.1.8-alpha repositories!
 - Bugfixes and other things:
   + Added 'type' attribute to database header (DEFAULT/PURGE) #181
+  + Tests: WatchServer for daemon #185
 
 ### Syncany 0.1.8-alpha (Date: 10 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
