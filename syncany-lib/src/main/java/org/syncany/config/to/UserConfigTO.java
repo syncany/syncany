@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -43,12 +44,20 @@ public class UserConfigTO {
 	@ElementMap(name="systemProperties", entry="property", key="name", required=false, attribute=true)
 	private TreeMap<String, String> systemProperties;
 	
+	@Element(name="preventStandby", required=false)
+	private boolean preventStandby;
+	
 	public UserConfigTO() {
 		this.systemProperties = new TreeMap<String, String>();
+		this.preventStandby = false;
 	}
 	
 	public Map<String, String> getSystemProperties() {
 		return systemProperties;
+	}
+	
+	public boolean preventStandbyEnabled() {
+		return preventStandby;
 	}
 	
 	public static UserConfigTO load(File file) throws ConfigException {

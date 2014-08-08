@@ -6,14 +6,15 @@ Change Log
 - Breaks compatiblity to 0.1.8-alpha repositories!
 - Bugfixes and other things:
   + Added 'type' attribute to database header (DEFAULT/PURGE) #181
-  + Tests: WatchServer for daemon #185
+  + Added watch server tests for daemon #185
+  + Prevent standby/hibernate if uploading/downloading #164
 
 ### Syncany 0.1.8-alpha (Date: 10 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + New Samba / Windows share plugin #172
   + Public key authentication for the SFTP plugin #134
-  + Websocket/REST-like daemon with user-password authentication. #171
+  + WebSocket/REST-like daemon with user-password authentication. #171
 - Bugfixes and other things:
   + Fixed cross dependency issue with plugins #162
   + Fixed signed plugin JAR dependency error #161
