@@ -20,6 +20,7 @@ package org.syncany.config.to;
 import java.io.File;
 import java.util.ArrayList;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -29,9 +30,17 @@ import org.syncany.config.ConfigException;
 @Root(name = "daemon", strict = false)
 @Namespace(reference = "http://syncany.org/daemon/1")
 public class DaemonConfigTO {
+	@Element(name = "webServer", required = false)
+	private WebServerTO webServer = new WebServerTO();
+	
 	@ElementList(name = "folders", entry = "folder", required = true)
-	private ArrayList<FolderTO> folders;
+	private ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
 
+	@ElementList(name = "users", entry = "user", required = false)
+	private ArrayList<UserTO> users = new ArrayList<UserTO>();
+
+	private PortTO portTO; // This is generated dynamically by the daemon. It should't be in the XML.
+	
 	public static DaemonConfigTO load(File file) throws ConfigException {
 		try {
 			return new Persister().read(DaemonConfigTO.class, file);
@@ -56,5 +65,29 @@ public class DaemonConfigTO {
 	
 	public void setFolders(ArrayList<FolderTO> folders) {
 		this.folders = folders;
+	}
+	
+	public ArrayList<UserTO> getUsers() {
+		return users;
+	}
+	
+	public void setUsers(ArrayList<UserTO> users) {
+		this.users = users;
+	}
+
+	public WebServerTO getWebServer() {
+		return webServer;
+	}
+
+	public void setWebServer(WebServerTO webServer) {
+		this.webServer = webServer;
+	}
+	
+	public PortTO getPortTO() {
+		return portTO;
+	}
+	
+	public void setPortTO(PortTO portTO) {
+		this.portTO = portTO;
 	}
 }

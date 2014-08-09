@@ -37,6 +37,7 @@ import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
@@ -154,10 +155,11 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				DatabaseConnectionFactory.getStatement("databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 	
-			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
-			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
-			preparedStatement.setString(3, databaseVersionHeader.getClient());
-			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
+			preparedStatement.setString(1, databaseVersionHeader.getType().toString());
+			preparedStatement.setString(2, DatabaseVersionStatus.MASTER.toString());
+			preparedStatement.setTimestamp(3, new Timestamp(databaseVersionHeader.getDate().getTime()));
+			preparedStatement.setString(4, databaseVersionHeader.getClient());
+			preparedStatement.setString(5, databaseVersionHeader.getVectorClock().toString());
 			
 			int affectedRows = preparedStatement.executeUpdate();
 			
@@ -379,6 +381,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	private DatabaseVersionHeader createDatabaseVersionHeaderFromRow(ResultSet resultSet) throws SQLException {
 		DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
 
+		databaseVersionHeader.setType(DatabaseVersionType.valueOf(resultSet.getString("type")));
 		databaseVersionHeader.setClient(resultSet.getString("client"));
 		databaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
 		databaseVersionHeader.setVectorClock(getVectorClockByDatabaseVersionId(resultSet.getInt("id")));
@@ -406,6 +409,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	
 						// Make a new database version header
 						currentDatabaseVersionHeader = new DatabaseVersionHeader();
+						currentDatabaseVersionHeader.setType(DatabaseVersionType.valueOf(resultSet.getString("type")));
 						currentDatabaseVersionHeader.setClient(resultSet.getString("client"));
 						currentDatabaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
 	

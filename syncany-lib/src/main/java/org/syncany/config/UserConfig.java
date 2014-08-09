@@ -41,8 +41,10 @@ public class UserConfig {
 	 *    
 	 */
 	
-	private static final File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
-	private static final File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
+	// These fields are not final to enable a PluginOperationTest
+	private static File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
+	private static File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
+	
 	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
 	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
@@ -53,6 +55,8 @@ public class UserConfig {
 	private static File userConfigFile;
 	private static File userTrustStoreFile;
 	private static KeyStore userTrustStore;	
+	
+	private static boolean preventStandby;
 	
 	static {
 		init();
@@ -125,6 +129,10 @@ public class UserConfig {
 		}		
 	}
 	
+	public static boolean preventStandbyEnabled() {
+		return preventStandby;
+	}
+	
 	private static void initUserAppDirs() {
 		userConfigDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
 		userConfigDir.mkdirs();
@@ -148,9 +156,13 @@ public class UserConfig {
 		try {
 			UserConfigTO userConfigTO = UserConfigTO.load(userConfigFile);
 			
+			// System properties
 			for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
 				System.setProperty(systemProperty.getKey(), systemProperty.getValue());
 			}
+			
+			// Other options
+			preventStandby = userConfigTO.preventStandbyEnabled();
 		}
 		catch (ConfigException e) {
 			System.err.println("ERROR: " + e.getMessage());

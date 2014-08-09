@@ -15,13 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon;
+package org.syncany.operations.daemon.messages;
 
-/**
- * @author pheckel
- *
- */
-public interface DaemonControlListener {
-	public void onDaemonShutdown();
-	public void onDaemonReload();
+import java.util.ArrayList;
+import java.util.List;
+
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.syncany.database.FileVersion;
+
+public class GetFileHistoryResponse extends Response {
+	@Element(required = true)
+	private String root;
+
+	@ElementList(required = true, entry="file")
+	private ArrayList<FileVersion> files;	
+	
+	public GetFileHistoryResponse(int requestId, String root, List<FileVersion> files) {
+		super(200, requestId, null);
+		
+		this.root = root;
+		this.files = new ArrayList<FileVersion>(files);
+	}	
+	
+	public List<FileVersion> getFiles() {
+		return files;
+	}
 }

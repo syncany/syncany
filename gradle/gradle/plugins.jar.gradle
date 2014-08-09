@@ -9,13 +9,16 @@ repositories {
 }
 
 processResources {	
-	filter{ String line -> line.replaceAll('%pluginId%', "${pluginId}") }        	            
-	filter{ String line -> line.replaceAll('%pluginName%', "${pluginName}") }        	            
-	filter{ String line -> line.replaceAll('%pluginVersion%', "${pluginVersionFull}") }      	            
-	filter{ String line -> line.replaceAll('%pluginDate%', "${pluginDate}") }    	
-	filter{ String line -> line.replaceAll('%pluginAppMinVersion%', "${pluginAppMinVersion}") }    	
-	filter{ String line -> line.replaceAll('%pluginRelease%', "${pluginRelease}") }    	
-	filter{ String line -> line.replaceAll('%pluginConflictsWith%', "${pluginConflictsWith}") }    	
+	from(source) {
+		include "**/*.properties", "**/*.xml"
+		filter{ String line -> line.replaceAll('%pluginId%', "${pluginId}") }        	            
+		filter{ String line -> line.replaceAll('%pluginName%', "${pluginName}") }        	            
+		filter{ String line -> line.replaceAll('%pluginVersion%', "${pluginVersionFull}") }      	            
+		filter{ String line -> line.replaceAll('%pluginDate%', "${pluginDate}") }    	
+		filter{ String line -> line.replaceAll('%pluginAppMinVersion%', "${pluginAppMinVersion}") }    	
+		filter{ String line -> line.replaceAll('%pluginRelease%', "${pluginRelease}") }    	
+		filter{ String line -> line.replaceAll('%pluginConflictsWith%', "${pluginConflictsWith}") }    	
+	}
 }		
 
 task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {

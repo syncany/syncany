@@ -175,15 +175,16 @@ public class TestConfigUtil {
 		
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
-		configTO.setMachineName(machineName + StringUtil.createRandomMachineName());
+		configTO.setMachineName(machineName + CipherUtil.createRandomAlphabeticString(20));
 
 		// Get Masterkey
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
+		LocalConnection localConnection = (LocalConnection) connection;
 		// Create connection TO
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
-		localConnectionSettings.put("path", tempLocalDir.getAbsolutePath());
+		localConnectionSettings.put("path", localConnection.getRepositoryPath().getAbsolutePath());
 		
 		ConnectionTO connectionTO = new ConnectionTO();
 		

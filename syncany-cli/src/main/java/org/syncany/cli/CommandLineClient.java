@@ -25,9 +25,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Random;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -41,11 +43,27 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.config.to.PortTO;
+import org.syncany.operations.daemon.messages.CliRequest;
+import org.syncany.operations.daemon.messages.CliResponse;
+import org.syncany.operations.daemon.messages.MessageFactory;
+import org.syncany.operations.daemon.messages.Response;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -57,6 +75,10 @@ import org.syncany.util.EnvironmentUtil;
  */
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
+	
+	private static final String SERVER_SCHEMA = "http://";
+	private static final String SERVER_HOSTNAME = "localhost";
+	private static final String SERVER_REST_API = "/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
 	private static final int LOG_FILE_COUNT = 4;
@@ -138,9 +160,9 @@ public class CommandLineClient extends Client {
 			initLocalDir(options, optionLocalDir);
 			initConfigIfRequired(command.getRequiredCommandScope(), localDir);
 			initLogOption(options, optionLog, optionLogLevel, optionLogPrint, optionDebug);
-
+			
 			// Init command
-			return runCommand(command, commandArgs);
+			return runCommand(command, commandName, commandArgs);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Exception while initializing or running command.", e);
@@ -282,7 +304,26 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private int runCommand(Command command, String[] commandArgs) {
+	private int runCommand(Command command, String commandName, String[] commandArgs) {
+		File portFile = null;
+		
+		if (config != null) {
+			portFile = new File(config.getAppDir(), Config.FILE_PORT);
+		}
+		
+		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
+		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
+		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
+		
+		if (sendToRest) {
+			return sendToRest(command, commandName, commandArgs, portFile);
+		}
+		else {
+			return runLocally(command, commandArgs);
+		}
+	}
+	
+	private int runLocally(Command command, String[] commandArgs) {
 		command.setClient(this);
 		command.setOut(out);
 		command.setLocalDir(localDir);
@@ -296,7 +337,75 @@ public class CommandLineClient extends Client {
 			return showErrorAndExit(e.getMessage());
 		}	
 	}
-	
+
+	private int sendToRest(Command command, String commandName, String[] commandArgs, File portFile) {
+		// Read port config (for daemon) from port file
+		PortTO portConfig = readPortConfig(portFile);
+
+		// Create authentication details
+		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(
+			new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
+			new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
+
+		// Create client with authentication details
+		CloseableHttpClient client = HttpClients
+			.custom()
+			.setDefaultCredentialsProvider(credentialsProvider)
+			.build();
+
+		String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
+		HttpPost post = new HttpPost(SERVER_URI);
+
+		try {
+			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
+			
+			// Create and send HTTP/REST request
+			CliRequest cliRequest = new CliRequest();
+			
+			cliRequest.setId(Math.abs(new Random().nextInt()));
+			cliRequest.setRoot(config.getLocalDir().getAbsolutePath());
+			cliRequest.setCommand(commandName);
+			cliRequest.setCommandArgs(Arrays.asList(commandArgs));
+			
+			post.setEntity(new StringEntity(MessageFactory.toRequest(cliRequest)));
+			
+			// Handle response
+			HttpResponse httpResponse = client.execute(post);
+			logger.log(Level.FINE, "Received HttpResponse: " + httpResponse);
+			
+			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
+			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
+			
+			Response response = MessageFactory.createResponse(responseStr);
+			
+			if (response instanceof CliResponse) {
+				out.print(((CliResponse) response).getOutput());	
+			}
+			else {
+				out.println(response.getMessage());
+			}
+			
+			return 0;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
+			return showErrorAndExit(e.getMessage());
+		}		
+	}
+
+	private PortTO readPortConfig(File portFile) {
+		try {
+			return new Persister().read(PortTO.class, portFile);
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "ERROR: Could not read portFile to connect to daemon.", e);
+
+			showErrorAndExit("Cannot connect to daemon.");			
+			return null; // Never reached!
+		}
+	}
+
 	private void showShortVersionAndExit() throws IOException {
 		printHelpTextAndExit(HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE);
 	}

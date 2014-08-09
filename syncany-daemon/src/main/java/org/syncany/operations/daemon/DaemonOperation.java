@@ -19,16 +19,25 @@ package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
+import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.FolderTO;
+import org.syncany.config.to.PortTO;
+import org.syncany.config.to.UserTO;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.ControlServer.ControlCommand;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.util.PidFileUtil;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * This operation is the central part of the daemon. It can manage many different
@@ -40,32 +49,42 @@ import org.syncany.util.PidFileUtil;
  * components:
  * 
  * <ul>
- *  <li>The {@link DaemonWatchServer} starts a {@link WatchOperation} for every 
+ *  <li>The {@link WatchServer} starts a {@link WatchOperation} for every 
  *      folder registered in the <tt>daemon.xml</tt> file. It can be reloaded via
  *      the <tt>syd reload</tt> command.</li>
- *  <li>The {@link DaemonWebSocketServer} starts a websocket and allows clients 
+ *  <li>The {@link WebServer} starts a websocket and allows clients 
  *      (e.g. GUI, Web) to control the daemon (if authenticated). 
  *      TODO [medium] This is not yet implemented!</li>
- *  <li>The {@link DaemonControlServer} creates and watches the daemon control file
+ *  <li>The {@link ControlServer} creates and watches the daemon control file
  *      which allows the <tt>syd</tt> shell/batch script to write reload/shutdown
  *      commands.</li>  
  * </ul>
  * 
  * @author Vincent Wiencek <vwiencek@gmail.com>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Pim Otte 
  */
-public class DaemonOperation extends Operation implements DaemonControlListener {	
+public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
 	private static final String PID_FILE = "daemon.pid";
+	private static final String DAEMON_FILE = "daemon.xml";
+	private static final String DEFAULT_FOLDER = "Syncany";
 
 	private File pidFile;
-	private DaemonWebSocketServer webSocketServer;
-	private DaemonWatchServer watchServer;
-	private DaemonControlServer controlServer;
+	private File daemonConfigFile;
+	
+	private WebServer webServer;
+	private WatchServer watchServer;
+	private ControlServer controlServer;
+	private LocalEventBus eventBus;
+	private DaemonConfigTO daemonConfig;
+	private PortTO portTO;
 
 	public DaemonOperation(Config config) {
 		super(config);
+		
 		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);
+		this.daemonConfigFile = new File(UserConfig.getUserConfigDir(), DAEMON_FILE);
 	}
 
 	@Override
@@ -83,57 +102,159 @@ public class DaemonOperation extends Operation implements DaemonControlListener 
 		
 		PidFileUtil.createPidFile(pidFile);
 		
-		// startWebSocketServer();
+		initEventBus();		
+		loadOrCreateConfig();
+		
+		startWebServer();
 		startWatchServer();
 		
-		startDaemonControlLoop(); // This blocks until SHUTDOWN is received!
-	}
-	
-	private void stopOperation() {
-		// stopWebSocketServer();
-		stopWatchServer();
+		enterControlLoop(); // This blocks until SHUTDOWN is received!
 	}
 
-	private void stopWebSocketServer() {
-		logger.log(Level.INFO, "Stopping websocket server ...");
-		webSocketServer.stop();
+	@Subscribe
+	public void onControlCommand(ControlCommand controlCommand) {
+		switch (controlCommand) {
+		case SHUTDOWN:
+			logger.log(Level.INFO, "SHUTDOWN requested.");
+			stopOperation();
+			break;
+			
+		case RELOAD:
+			logger.log(Level.INFO, "RELOAD requested.");
+			reloadOperation();
+			break;
+		}
+	}
+	
+	// General initialization functions. These create the EventBus and control loop.	
+	
+	private void initEventBus() {
+		eventBus = LocalEventBus.getInstance();
+		eventBus.register(this);
+	}
+
+	private void enterControlLoop() throws IOException, ServiceAlreadyStartedException {
+		logger.log(Level.INFO, "Starting daemon control server ...");
+
+		controlServer = new ControlServer();
+		controlServer.enterLoop(); // This blocks! 
+	}
+
+	// General stopping and reloading functions
+
+	private void stopOperation() {
+		stopWebServer();
+		stopWatchServer();
+	}
+	
+	private void reloadOperation() {
+		loadOrCreateConfig();		
+		watchServer.reload(daemonConfig);
+	}
+	
+	// Config related functions. Used on starting and reloading.
+	
+	private void loadOrCreateConfig() {
+		try {
+			if (daemonConfigFile.exists()) {
+				daemonConfig = DaemonConfigTO.load(daemonConfigFile);
+			}
+			else {
+				daemonConfig = createAndWriteDefaultConfig(daemonConfigFile);
+			}
+			
+			// Add user and password for access from the CLI
+			if (daemonConfig.getPortTO() == null && portTO == null) {
+				// Access info has not been created yet, generate new user-password pair
+				String accessToken = CipherUtil.createRandomAlphabeticString(20);
+				
+				UserTO cliUser = new UserTO();
+				cliUser.setUsername("CLI");
+				cliUser.setPassword(accessToken);
+				
+				portTO = new PortTO();
+				portTO.setPort(daemonConfig.getWebServer().getPort());
+				portTO.setUser(cliUser);
+				
+				daemonConfig.setPortTO(portTO);
+			}
+			else if (daemonConfig.getPortTO() == null) {
+				// Access info is not included in the daemonConfig, but exists. (Happens when reloading)
+				// We reload the information about the port, but keep the accesstoken the same.
+				portTO.setPort(daemonConfig.getWebServer().getPort());
+				daemonConfig.setPortTO(portTO);
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
+		}
+	}	
+
+	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
+		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
+		
+		FolderTO defaultFolderTO = new FolderTO();
+		defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
+		
+		ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
+		folders.add(defaultFolderTO);
+		
+		UserTO defaultUserTO = new UserTO();
+		defaultUserTO.setUsername("admin");
+		defaultUserTO.setPassword(CipherUtil.createRandomAlphabeticString(12));
+		
+		ArrayList<UserTO> users = new ArrayList<UserTO>();
+		users.add(defaultUserTO);
+		
+		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
+		defaultDaemonConfigTO.setFolders(folders);	
+		defaultDaemonConfigTO.setUsers(users);
+		
+		try {
+			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);
+		}
+		catch (Exception e) {
+			// Don't care!
+		}
+		
+		return defaultDaemonConfigTO;
+	}
+
+	// Web server starting and stopping functions
+	
+	private void startWebServer() throws ServiceAlreadyStartedException {
+		if (daemonConfig.getWebServer().isEnabled()) {
+			logger.log(Level.INFO, "Starting web server ...");
+
+			webServer = new WebServer(daemonConfig);
+			webServer.start();
+		}
+		else {
+			logger.log(Level.INFO, "Not starting web server (disabled in confi)");
+		}
+	}
+	
+	private void stopWebServer() {
+		if (webServer != null) {
+			logger.log(Level.INFO, "Stopping web server ...");
+			webServer.stop();
+		}
+		else {
+			logger.log(Level.INFO, "Not stopping web server (not running)");			
+		}
+	}
+	
+	// Watch server starting and stopping functions
+	
+	private void startWatchServer() throws ConfigException {
+		logger.log(Level.INFO, "Starting watch server ...");
+
+		watchServer = new WatchServer();
+		watchServer.start(daemonConfig);
 	}
 
 	private void stopWatchServer() {
 		logger.log(Level.INFO, "Stopping watch server ...");
 		watchServer.stop();
-	}
-
-	private void startWebSocketServer() throws ServiceAlreadyStartedException {
-		logger.log(Level.INFO, "Starting websocket server ...");
-
-		webSocketServer = new DaemonWebSocketServer();
-		webSocketServer.start();
-	}
-
-	private void startWatchServer() throws ConfigException {
-		logger.log(Level.INFO, "Starting websocket server ...");
-
-		watchServer = new DaemonWatchServer();
-		watchServer.start();
-	}
-
-	private void startDaemonControlLoop() throws IOException, ServiceAlreadyStartedException {
-		logger.log(Level.INFO, "Starting daemon control server ...");
-
-		controlServer = new DaemonControlServer(this);
-		controlServer.enterLoop(); // This blocks! 
-	}
-
-	@Override
-	public void onDaemonShutdown() {
-		logger.log(Level.INFO, "SHUTDOWN requested.");
-		stopOperation();
-	}
-
-	@Override
-	public void onDaemonReload() {
-		logger.log(Level.INFO, "RELOAD requested.");
-		watchServer.reload();
 	}
 }

@@ -128,6 +128,11 @@ public class DatabaseConnectionFactory {
 			return connection;
 		}
 		catch (Exception e) {
+			if (e.getCause() != null) {
+				if (e.getCause().getMessage().contains("Database lock acquisition failure")) {
+					throw new RuntimeException("Another process is using the database.", e);
+				}
+			}
 			throw new RuntimeException("Cannot create new connection; database down?", e);
 		}
 	} 

@@ -5,7 +5,7 @@ Syncany [![Build Status](https://travis-ci.org/syncany/syncany.svg?branch=master
 
 Syncany is an open-source cloud storage and filesharing application. It allows
 users to backup and share certain folders of their workstations using any kind
-of storage, e.g. FTP, SFTP, WebDAV and Amazon S3.
+of storage, e.g. FTP, SFTP, WebDAV, Amazon S3 and Samba.
 
 While the basic idea is similar to Dropbox, Syncany is
 open-source and additionally provides data encryption and more flexibility in
@@ -31,8 +31,15 @@ Download and install Syncany
 You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
-Syncany 0.1.7-alpha, 28 July 2014, [[tar.gz]](https://syncany.org/dist/releases/syncany-0.1.7-alpha.tar.gz) [[zip]](https://syncany.org/dist/releases/syncany-0.1.7-alpha.zip) [[deb]](https://syncany.org/dist/releases/syncany_0.1.7.alpha_all.deb) [[exe]](https://syncany.org/dist/releases/syncany-0.1.7-alpha.exe)   
-For Ubuntu: Check out the [PPA for releases](https://launchpad.net/~syncany/+archive/release) and the [PPA for snapshots](https://launchpad.net/~syncany/+archive/snapshot).
+Syncany 0.1.8-alpha, 9 Aug 2014
+
+**Downloads:**   
+- Windows: [Installer (.exe)](https://syncany.org/dist/releases/syncany-0.1.8-alpha.exe)
+- Debian/Ubuntu: [Package (.deb)](https://syncany.org/dist/releases/syncany_0.1.8.alpha_all.deb), or via [Launchpad PPA](https://launchpad.net/~syncany/+archive/release)
+- Arch Linux: [Package (AUR)](https://aur.archlinux.org/packages/syncany/)
+- other operating systems: [ZIP archive](https://syncany.org/dist/releases/syncany-0.1.8-alpha.zip), or [Tarball (tar.gz)](https://syncany.org/dist/releases/syncany-0.1.8-alpha.tar.gz)
+
+You can also check out the [snapshot releases](https://www.syncany.org/dist/snapshots/), the [PPA for snapshots](https://launchpad.net/~syncany/+archive/snapshot), and the [snapshot AUR package](https://aur.archlinux.org/packages/syncany-git/).
 
 Quick [install and usage instructions](https://github.com/syncany/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
 If you like it a bit more detailed, [there's lots more you can explore](https://github.com/syncany/syncany/wiki).
@@ -45,7 +52,7 @@ Usage is pretty similar to a version control system. If you have used Git or
 SVN, it should feel a lot alike.
 
 **1. Choose and install a storage plugin**   
-First choose the storage backend you'd like to use by doing `sy plugin list` and then `sy plugin install`. As of today, we've implemented plugins for [FTP](https://github.com/syncany/syncany-plugin-ftp), [SFTP](https://github.com/syncany/syncany-plugin-sftp), [WebDAV](https://github.com/syncany/syncany-plugin-webdav) and [Amazon S3](https://github.com/syncany/syncany-plugin-s3). For this example, we'll install the FTP plugin:
+First choose the storage backend you'd like to use by doing `sy plugin list` and then `sy plugin install`. As of today, we've implemented plugins for [FTP](https://github.com/syncany/syncany-plugin-ftp), [SFTP](https://github.com/syncany/syncany-plugin-sftp), [WebDAV](https://github.com/syncany/syncany-plugin-webdav), [Amazon S3](https://github.com/syncany/syncany-plugin-s3) and [Samba](https://github.com/syncany/syncany-plugin-samba). For this example, we'll install the FTP plugin:
 ```
 $ sy plugin install ftp
 ```
@@ -116,7 +123,7 @@ Buy us a coffee
 ---------------
 If you like what you see and you want to support us, you can buy us a coffee or a beer. There are maaanny ways to do so.
 
-Break some hashes for us and [donate some Bitcoins](https://blockchain.info/address/1626wjrw3uWk9adyjCfYwafw4sQWujyjn8); or be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany). If that's not for you, why not give us some change [with PayPal](http://www.syncany.org/donate.html)? Any contributions are much appreciated! 
+Break some hashes for us by [donating some Bitcoins](https://blockchain.info/address/1626wjrw3uWk9adyjCfYwafw4sQWujyjn8) (also via [tip4commit](http://tip4commit.com/github/syncany/syncany)); or be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany). If that's not for you, why not give us some change [with PayPal](http://www.syncany.org/donate.html)? Any contributions are much appreciated! 
 
  
 Licensing, website and contact

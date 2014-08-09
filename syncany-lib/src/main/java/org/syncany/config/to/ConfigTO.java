@@ -45,7 +45,7 @@ import org.syncany.util.StringUtil;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="config")
+@Root(name="config", strict=false)
 @Namespace(reference="http://syncany.org/config/1")
 public class ConfigTO {
 	@Element(name="machinename", required=true)

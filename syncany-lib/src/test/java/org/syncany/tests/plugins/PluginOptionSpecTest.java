@@ -31,16 +31,6 @@ import org.syncany.plugins.PluginOptionSpec.ValueType;
  */
 public class PluginOptionSpecTest {
 	
-	@Test(expected=IllegalArgumentException.class) 
-	public void optionalSensitiveTest() {
-		new PluginOptionSpec("id", "desc", ValueType.STRING, false, true, null);		
-	}
-	
-	@Test(expected=IllegalArgumentException.class) 
-	public void optionalNoDefaultTest() {
-		new PluginOptionSpec("id", "desc", ValueType.STRING, false, false, null);		
-	}
-	
 	@Test
 	public void nonSetMandatoryTest() {
 		PluginOptionSpec pluginOptionSpec = new PluginOptionSpec("id", "desc", ValueType.STRING, true, true, null);
