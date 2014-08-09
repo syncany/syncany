@@ -181,9 +181,10 @@ public class TestConfigUtil {
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
+		LocalConnection localConnection = (LocalConnection) connection;
 		// Create connection TO
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
-		localConnectionSettings.put("path", tempLocalDir.getAbsolutePath());
+		localConnectionSettings.put("path", localConnection.getRepositoryPath().getAbsolutePath());
 		
 		ConnectionTO connectionTO = new ConnectionTO();
 		

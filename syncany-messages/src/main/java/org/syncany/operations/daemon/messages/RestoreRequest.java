@@ -33,4 +33,12 @@ public class RestoreRequest extends WatchRequest {
 	public int getVersion() {
 		return version;
 	}
+	
+	public void setFileHistoryId(String fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
+	}
+	
+	public void setVersion(int version) {
+		this.version = version;
+	}
 }

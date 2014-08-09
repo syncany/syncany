@@ -57,28 +57,31 @@ public class Downloader {
 	 */
 	public void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
 		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
-		
-		// TODO [medium] Check existing files by checksum and do NOT download them if they exist locally, or copy them
 
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
 			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
 
-			logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
-			transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
+			if (localDecryptedMultiChunkFile.exists()) {
+				logger.log(Level.INFO, "  + Decrypted multichunk exists locally " + multiChunkId + ". No need to download it!");				
+			}
+			else {
+				logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
+				transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
+	
+				logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
+				InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
+				OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
+	
+				IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
+				
+				decryptedMultiChunkOutputStream.close();
+				multiChunkInputStream.close();
 
-			logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
-			InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
-			OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
-
-			IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
-			
-			decryptedMultiChunkOutputStream.close();
-			multiChunkInputStream.close();
-
-			logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
-			localEncryptedMultiChunkFile.delete();
+				logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
+				localEncryptedMultiChunkFile.delete();
+			}
 		}
 
 		transferManager.disconnect();
