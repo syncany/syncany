@@ -110,7 +110,7 @@ public class DaemonOperation extends Operation {
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
 	}
-	
+
 	@Subscribe
 	public void onControlCommand(ControlCommand controlCommand) {
 		switch (controlCommand) {

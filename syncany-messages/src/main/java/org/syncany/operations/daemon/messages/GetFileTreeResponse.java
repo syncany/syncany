@@ -41,4 +41,8 @@ public class GetFileTreeResponse extends Response {
 		this.prefix = prefix;
 		this.files = new ArrayList<FileVersion>(files);
 	}	
+	
+	public List<FileVersion> getFiles() {
+		return files;
+	}
 }
