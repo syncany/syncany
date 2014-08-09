@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Syncany 0.1.9-alpha (Date: tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Bugfixes and other things:
+  + Implement full cleanup to fix #187/#193; fixes #143 and #178
+
 ### Syncany 0.1.8-alpha (Date: 9 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Breaks compatiblity to 0.1.7-alpha repositories!
