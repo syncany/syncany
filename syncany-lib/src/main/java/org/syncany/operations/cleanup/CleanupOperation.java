@@ -352,19 +352,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 					new Object[] { clientDatabaseFiles.size(), MAX_KEEP_DATABASE_VERSIONS });
 	
 			// 1. Determine files to delete remotely
-			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
-			int numOfDatabaseFilesToDelete = clientDatabaseFiles.size() - 1;
-			
-			// This client needs no merging
-			if (numOfDatabaseFilesToDelete == 0) {
-				continue;
-			}
-	
-			for (DatabaseRemoteFile clientDatabaseFile : clientDatabaseFiles) {
-				if (toDeleteDatabaseFiles.size() <= numOfDatabaseFilesToDelete) {
-					toDeleteDatabaseFiles.add(clientDatabaseFile);
-				}
-			}
+			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
+
 			
 			// 2. Write merge file
 			DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
