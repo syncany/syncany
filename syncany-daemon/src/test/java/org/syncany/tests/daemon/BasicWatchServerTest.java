@@ -271,7 +271,7 @@ public class BasicWatchServerTest {
 	private Response waitForResponse(int id) throws Exception {
 		int i = 0;
 		while (responses.containsKey(id) == false && i < 1000) {
-			Thread.sleep(10);
+			Thread.sleep(100);
 			i++;
 		}
 		
