@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Bugfixes and other things:
   + Implement full cleanup to fix #187/#193; fixes #143 and #178
+  + Add LRU cache for local files; no re-download of exist. multichunks #169
 
 ### Syncany 0.1.8-alpha (Date: 9 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
