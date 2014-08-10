@@ -506,7 +506,7 @@ public class CommandLineClient extends Client {
 		out.println();
 		
 		out.close();	
-		System.exit(0);
+		System.exit(1);
 		
 		return -1; // Never reached
 	}
