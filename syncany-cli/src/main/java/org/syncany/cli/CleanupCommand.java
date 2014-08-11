@@ -18,6 +18,10 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -49,12 +53,12 @@ public class CleanupCommand extends Command {
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 		
-		OptionSpec<Void> optionForce = parser.acceptsAll(asList("F", "force"));
+		OptionSpec<Void> optionForce = parser.accepts("force");
 		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
-		OptionSpec<Long> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg().ofType(Long.class);
-		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("d", "max-database-files")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<String> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg().ofType(String.class);
+		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files")).withRequiredArg().ofType(Integer.class);
 
 		OptionSet options = parser.parse(operationArgs);
 		
@@ -80,7 +84,7 @@ public class CleanupCommand extends Command {
 		
 		// -t=<count>, --time-between-cleanups=<count>		
 		if (options.has(optionSecondsBetweenCleanups)) {
-			long secondsBetweenCleanups = options.valueOf(optionSecondsBetweenCleanups);
+			long secondsBetweenCleanups = parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
 			
 			if (secondsBetweenCleanups < 0) {
 				throw new Exception("Invalid value for --time-between-cleanups="+secondsBetweenCleanups+"; must be >= 0");
@@ -167,5 +171,31 @@ public class CleanupCommand extends Command {
 		default:
 			throw new RuntimeException("Invalid result code: " + operationResult.getResultCode().toString());
 		}	
+	}
+	
+	private long parseTimePeriod(String period) {
+		Pattern relativeDatePattern = Pattern.compile("(\\d+(?:[.,]\\d+)?)(mo|[smhdwy])");		
+		Matcher relativeDateMatcher = relativeDatePattern.matcher(period);		
+		
+		relativeDateMatcher.reset();
+		long periodSeconds = 0;
+		
+		while (relativeDateMatcher.find()) {
+			double time = Double.parseDouble(relativeDateMatcher.group(1));
+			String unitStr = relativeDateMatcher.group(2).toLowerCase();
+			int unitMultiplier = 0;
+			
+			if (unitStr.startsWith("mo")) { unitMultiplier = 30*24*60*60; } // must be before "m"
+			else if (unitStr.startsWith("s")) { unitMultiplier = 1; }
+			else if (unitStr.startsWith("m")) { unitMultiplier = 60; }
+			else if (unitStr.startsWith("h")) { unitMultiplier = 60*60; }
+			else if (unitStr.startsWith("d")) { unitMultiplier = 24*60*60; }
+			else if (unitStr.startsWith("w")) { unitMultiplier = 7*24*60*60; }
+			else if (unitStr.startsWith("y")) { unitMultiplier = 365*24*60*60; }
+			
+			periodSeconds += (long) ((double)time*unitMultiplier);
+		}
+		
+		return periodSeconds;
 	}
 }

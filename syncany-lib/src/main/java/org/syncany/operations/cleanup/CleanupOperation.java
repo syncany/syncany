@@ -329,7 +329,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
-		if (options.isForce() || getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000) {
+		boolean cleanedRecently = getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000;
+		if (!options.isForce() && cleanedRecently) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary, has been done recently");
 
 			return;
@@ -347,7 +348,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 		
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
-		if (options.isForce() || numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size()) {
+		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size();
+		if (!options.isForce() && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
 					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
 			return;
