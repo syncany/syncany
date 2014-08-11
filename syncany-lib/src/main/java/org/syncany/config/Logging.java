@@ -53,7 +53,7 @@ public class Logging {
 			return;
 		}
 
-		// Turn off INFO message of Reflections library (dirty, but the only way!) 
+		// Turn off unwanted loggers (evil libraries and such) 
 		disableUnwantedLoggers();		
 				
 		// Load logging.properties
