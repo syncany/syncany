@@ -64,7 +64,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 				// This simplified sequence also crashes/crashed
 				// 16x "1", merge happens after 15!
-				1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1
+				1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 		};
 
 		for (int i=0; i<clientUpSequence.length; i++) {
@@ -93,8 +94,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000001").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000005").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000010").exists());
-		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());
-		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000016").exists());
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000030").exists());
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000031").exists());
 		
 		// Run
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading 

@@ -334,10 +334,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 		List<DatabaseRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
 		Map<File, DatabaseRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DatabaseRemoteFile>();
 		
-		// A client will merge databases if their own machine exceeds the maximum number of database version to be kept
-		if (allDatabaseFilesMap.get(config.getMachineName()).size() <= MAX_KEEP_DATABASE_VERSIONS) {
-			logger.log(Level.INFO, "- Merge remote files: Not necessary for client {2} ({0} database files, max. {1})", new Object[] {
-					allDatabaseFilesMap.get(config.getMachineName()).size(), MAX_KEEP_DATABASE_VERSIONS });
+		int numberOfDatabaseFiles = 0;
+		for (String client : allDatabaseFilesMap.keySet()) {
+			numberOfDatabaseFiles += allDatabaseFilesMap.get(client).size();
+		}
+		
+		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
+		if (numberOfDatabaseFiles <= MAX_KEEP_DATABASE_VERSIONS*allDatabaseFilesMap.keySet().size()) {
+			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
+					numberOfDatabaseFiles, MAX_KEEP_DATABASE_VERSIONS*allDatabaseFilesMap.keySet().size() });
 
 			return;
 		}
