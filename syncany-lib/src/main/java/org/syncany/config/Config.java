@@ -94,7 +94,7 @@ public class Config {
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
-		initCache();
+		initCache(configTO);
 		initIgnoredFile();
 		initRepo(repoTO);
     	initConnection(configTO);  	
@@ -117,8 +117,12 @@ public class Config {
 		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
 	}
 	
-	private void initCache() {
+	private void initCache(ConfigTO configTO) {
 		cache = new Cache(cacheDir);
+		
+		if (configTO.getCacheKeepBytes() != null && configTO.getCacheKeepBytes() >= 0) {
+			cache.setKeepBytes(configTO.getCacheKeepBytes());
+		}
 	}	
 	
 	private void initIgnoredFile() throws ConfigException {
