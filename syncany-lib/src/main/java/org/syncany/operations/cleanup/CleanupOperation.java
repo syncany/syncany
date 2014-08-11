@@ -335,7 +335,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return;
 		}
 		
-		
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 		
@@ -351,7 +350,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (options.isForce() || numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size()) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
 					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
-
 			return;
 		}
 		
@@ -367,7 +365,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
 
-			
 			// 2. Write merge file
 			DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
 			File lastLocalMergeDatabaseFile = config.getCache().getDatabaseFile(lastRemoteMergeDatabaseFile.getName());
