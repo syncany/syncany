@@ -65,7 +65,6 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private VectorClock versionTo;
 	private DatabaseReadType readType;
 	private DatabaseVersionType filterType;
-	private Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -84,7 +83,6 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 		this.versionTo = toVersion;
 		this.readType = readType;
 		this.filterType = filterType;
-		this.ignoredMostRecentFileVersions = ignoredMostRecentFileVersions;
 	}
 
 	@Override
