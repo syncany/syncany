@@ -144,6 +144,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		removeLostMultiChunks();
 
+		setLastTimeCleaned(System.currentTimeMillis()/1000);
 		finishOperation();
 		return updateResultCode(result);
 	}
@@ -328,7 +329,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
-		if (getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000) {
+		if (options.isForce() || getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary, has been done recently");
 
 			return;
@@ -347,7 +348,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 		
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
-		if (numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size()) {
+		if (options.isForce() || numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size()) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
 					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
 
@@ -416,7 +417,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Update stats
 		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
-		setLastTimeCleaned(System.currentTimeMillis()/1000);
+		
 		
 
 	}
@@ -455,6 +456,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		CleanupTO cleanupTO = new CleanupTO();
 		cleanupTO.setLastTimeCleaned(lastTimeCleaned);
 		try {
+			logger.log(Level.INFO, "Writing cleanup.xml");
 			(new Persister()).write(cleanupTO, config.getCleanupFile());
 		}
 		catch (Exception e) {

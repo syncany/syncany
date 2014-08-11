@@ -49,11 +49,17 @@ public class CleanupCommand extends Command {
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 		
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("F", "force"));
 		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Long> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg().ofType(Long.class);
+		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("d", "max-database-files")).withRequiredArg().ofType(Integer.class);
 
 		OptionSet options = parser.parse(operationArgs);
+		
+		// -F, --force
+		operationOptions.setForce(options.has(optionForce));
 		
 		// -M, --no-database-merge
 		operationOptions.setMergeRemoteFiles(!options.has(optionNoDatabaseMerge));
@@ -70,6 +76,28 @@ public class CleanupCommand extends Command {
 			}
 			
 			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));			
+		}
+		
+		// -t=<count>, --time-between-cleanups=<count>		
+		if (options.has(optionSecondsBetweenCleanups)) {
+			long secondsBetweenCleanups = options.valueOf(optionSecondsBetweenCleanups);
+			
+			if (secondsBetweenCleanups < 0) {
+				throw new Exception("Invalid value for --time-between-cleanups="+secondsBetweenCleanups+"; must be >= 0");
+			}
+			
+			operationOptions.setMinSecondsBetweenCleanups(secondsBetweenCleanups);		
+		}
+		
+		// -d=<count>, --max-database-files=<count>
+		if (options.has(optionMaxDatabaseFiles)) {
+			int maxDatabaseFiles = options.valueOf(optionMaxDatabaseFiles);
+			
+			if (maxDatabaseFiles < 1) {
+				throw new Exception("Invalid value for --max-database-files="+maxDatabaseFiles+"; must be >= 1");
+			}
+			
+			operationOptions.setMaxDatabaseFiles(maxDatabaseFiles);		
 		}
 		
 		// Parse 'status' options
