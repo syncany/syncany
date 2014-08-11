@@ -260,20 +260,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 					notifyChanges = true;
 				}
 				
-				// Run cleanup
-				boolean lastCleanupExpired = cleanupLastRun.get() + options.getCleanupInterval() < System.currentTimeMillis();
-				boolean enoughUpsForCleanup = upCount.get() > CleanupOperation.MAX_KEEP_DATABASE_VERSIONS;
+
+				CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
 				
-				if (lastCleanupExpired || enoughUpsForCleanup) {
-					CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
-					
-					if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
-						notifyChanges = true;
-						
-						cleanupLastRun.set(System.currentTimeMillis());
-						upCount.set(0);
-					}
+				if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
+					notifyChanges = true;
 				}
+
 				
 				// Fire change event if up and/or cleanup  
 				if (notifyChanges) {

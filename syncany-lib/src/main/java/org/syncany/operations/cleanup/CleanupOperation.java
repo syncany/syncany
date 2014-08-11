@@ -31,9 +31,11 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
+import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
@@ -326,7 +328,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
-		
+		if (getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000) {
+			logger.log(Level.INFO, "- Merge remote files: Not necessary, has been done recently");
+
+			return;
+		}
 		
 		
 		// Retrieve all database versions
@@ -410,7 +416,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Update stats
 		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
-
+		setLastTimeCleaned(System.currentTimeMillis()/1000);
 		
 
 	}
@@ -432,5 +438,29 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		return allDatabaseRemoteFilesMap;
+	}
+
+	private long getLastTimeCleaned() {
+		try {
+			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
+			return cleanupTO.getLastTimeCleaned();
+		}
+		catch (Exception e) {
+			logger.log(Level.INFO, "Something went wrong with reading cleanup.xml, assuming never cleaned." + e.getMessage());
+			return 0;
+		}
+	}
+	
+	private void setLastTimeCleaned(long lastTimeCleaned) {
+		CleanupTO cleanupTO = new CleanupTO();
+		cleanupTO.setLastTimeCleaned(lastTimeCleaned);
+		try {
+			(new Persister()).write(cleanupTO, config.getCleanupFile());
+		}
+		catch (Exception e) {
+			// Not doing anything else, because the worst that could happen is that cleanup is run an extra time
+			logger.log(Level.INFO, "Something went wrong with writing cleanup.xml." + e.getMessage());
+		}
+		
 	}
 }
