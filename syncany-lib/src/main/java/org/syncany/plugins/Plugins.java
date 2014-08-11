@@ -25,8 +25,11 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.reflections.Reflections;
 import org.syncany.util.StringUtil;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.ClassPath;
+import com.google.common.reflect.ClassPath.ClassInfo;
 
 /**
  * This class loads and manages all the {@link Plugin}s loaded in the classpath.
@@ -42,7 +45,10 @@ import org.syncany.util.StringUtil;
  */
 public class Plugins {
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
-	private static final Reflections reflections = new Reflections(Plugin.class.getPackage().getName());
+	
+	private static final String PLUGIN_PACKAGE_NAME = Plugin.class.getPackage().getName();
+	private static final String PLUGIN_CLASS_SUFFIX = Plugin.class.getSimpleName();
+	
 	private static final Map<String, Plugin> plugins = new TreeMap<String, Plugin>();
 
 	/**
@@ -111,42 +117,59 @@ public class Plugins {
 			return;
 		}
 		
-		// TODO [low] Duplicate code with loadPlugins()
+		loadPlugins();
 		
-		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
-			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
-			
-			String camelCaseCandidatePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "");
-			String candidatePluginId = StringUtil.toSnakeCase(camelCaseCandidatePluginId);
-			
-			if (canInstantiate && candidatePluginId.equals(pluginId)) {
-				try {
-					Plugin plugin = (Plugin) pluginClass.newInstance();			
-					plugins.put(plugin.getId(), plugin);
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
-				}
-			}
+		if (plugins.containsKey(pluginId)) {
+			return;
+		}
+		else {
+			logger.log(Level.WARNING, "Could not load plugin (1): " + pluginId + " (not found or issues with loading)");
 		}
 	}
 
+	/**
+	 * Loads all plugins in the classpath. 
+	 * 
+	 * <p>First loads all classes in the 'org.syncany.plugins' package.
+	 * For all classes ending with the 'Plugin' suffix, it tries to load
+	 * them, checks whether they inherit from {@link Plugin} and whether
+	 * they can be instantiated.
+	 */
 	private static void loadPlugins() {
-		for (Class<? extends Plugin> pluginClass : reflections.getSubTypesOf(Plugin.class)) {
-			boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
-			
-			String camelCasePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "");
-			String pluginId = StringUtil.toSnakeCase(camelCasePluginId);
-			
-			if (canInstantiate && !plugins.containsKey(pluginId)) {
-				try {
-					Plugin plugin = (Plugin) pluginClass.newInstance();			
-					plugins.put(plugin.getId(), plugin);
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
+		try {
+			ImmutableSet<ClassInfo> pluginPackageSubclasses = ClassPath
+				.from(Thread.currentThread().getContextClassLoader())
+				.getTopLevelClassesRecursive(PLUGIN_PACKAGE_NAME);
+				
+			for (ClassInfo classInfo : pluginPackageSubclasses) {
+				boolean classNameEndWithPluginSuffix = classInfo.getName().endsWith(PLUGIN_CLASS_SUFFIX);
+				
+				if (classNameEndWithPluginSuffix) {
+					Class<?> pluginClass = classInfo.load();
+					
+					String camelCasePluginId = pluginClass.getSimpleName().replace(Plugin.class.getSimpleName(), "");
+					String pluginId = StringUtil.toSnakeCase(camelCasePluginId);
+
+					boolean isSubclassOfPlugin = Plugin.class.isAssignableFrom(pluginClass);
+					boolean canInstantiate = !Modifier.isAbstract(pluginClass.getModifiers());
+					boolean pluginAlreadyLoaded = plugins.containsKey(pluginId);
+
+					if (isSubclassOfPlugin && canInstantiate && !pluginAlreadyLoaded) {
+						logger.log(Level.INFO, "- " + pluginClass.getName());
+
+						try {
+							Plugin plugin = (Plugin) pluginClass.newInstance();			
+							plugins.put(plugin.getId(), plugin);
+						}
+						catch (Exception e) {
+							logger.log(Level.WARNING, "Could not load plugin (2): " + pluginClass.getName(), e);
+						}
+					}
 				}
 			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Unable to load plugins.", e);
 		}
 	}
 }
