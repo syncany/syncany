@@ -110,7 +110,7 @@ public class CleanupCommand extends Command {
 
 		case OK:
 			if (operationResult.getMergedDatabaseFilesCount() > 0) {
-				out.println(operationResult.getMergedDatabaseFilesCount() + " database files merged into one.");
+				out.println(operationResult.getMergedDatabaseFilesCount() + " database files merged.");
 			}
 			
 			if (operationResult.getRemovedMultiChunks().size() > 0) {

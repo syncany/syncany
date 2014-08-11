@@ -10,4 +10,9 @@ dependencies {
 	compile			"io.undertow:undertow-servlet:1.0.15.Final"
 	compile			"io.undertow:undertow-websockets-jsr:1.0.15.Final"
 	compile 		"commons-io:commons-io:2.4"	
+
+      	
+	testCompile		project(path: ":syncany-lib", configuration: "tests")
+	testCompile		project(path: ":syncany-util", configuration: "tests")
+	testCompile		"junit:junit:4.9"   	 
 }

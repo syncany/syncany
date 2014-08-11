@@ -34,7 +34,6 @@ import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -134,8 +133,8 @@ public class WebServer {
 			users = new ArrayList<UserTO>();
 		}
 		
+		// Add CLI credentials
 		if (daemonConfigTO.getPortTO() != null) {
-			// Add CLI credentials
 			users.add(daemonConfigTO.getPortTO().getUser());
 		}
 		
@@ -149,7 +148,7 @@ public class WebServer {
 		HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
 		
 		KeyStore userTrustStore = UserConfig.getUserTrustStore();
-		KeyStore userKeyStore = getKeyStore();
+		KeyStore userKeyStore = UserConfig.getUserKeyStore();
 		SSLContext sslContext = createSSLContext(userKeyStore, userTrustStore);
 		
 		webServer = Undertow
@@ -175,28 +174,6 @@ public class WebServer {
 		return handler;
 	}	
 
-	private KeyStore getKeyStore() {
-		try {				
-			File userTrustStoreFile = new File(UserConfig.getUserConfigDir(), "keystore.jks");
-			KeyStore userKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-								
-			if (userTrustStoreFile.exists()) {
-				FileInputStream trustStoreInputStream = new FileInputStream(userTrustStoreFile); 		 		
-				userKeyStore.load(trustStoreInputStream, new char[0]);
-				
-				trustStoreInputStream.close();
-			}	
-			else {
-				userKeyStore.load(null, new char[0]); // Initialize empty store						
-			}
-			
-			return userKeyStore;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
 	private static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws Exception {
 		try {
 			// Server key and certificate
@@ -221,7 +198,6 @@ public class WebServer {
 			throw new Exception("Unable to initialize SSL context", e);
 		}
 	}
-
 
 	private void sendBroadcast(String message) {
 		synchronized (clientChannels) {

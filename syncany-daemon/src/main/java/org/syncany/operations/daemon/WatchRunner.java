@@ -220,11 +220,28 @@ public class WatchRunner implements WatchOperationListener {
 			eventBus.post(restoreResponse);								
 		}
 		catch (Exception e) {
+			logger.log(Level.WARNING, "BadRequestResponse: Cannot restore file.");
 			eventBus.post(new BadRequestResponse(restoreRequest.getId(), "Cannot restore file."));
 		}
 	}
 
-	private void handleCliRequest(CliRequest cliRequest) {		
+	private void handleCliRequest(CliRequest cliRequest) {
+		if (watchOperation.isSyncRunning() || watchOperation.isSyncRequested()) {
+			handleCliRequestSyncRunning(cliRequest);
+		}
+		else {
+			watchOperation.pause();
+			handleCliRequestNoSyncRunning(cliRequest);
+			watchOperation.resume();
+		}
+	}
+
+	private void handleCliRequestSyncRunning(CliRequest cliRequest) {
+		CliResponse cliResponse = new CliResponse(cliRequest.getId(), "Cannot run CLI commands while sync is running or requested.\n");
+		eventBus.post(cliResponse);
+	}
+
+	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
 		try {
 			Command command = CommandFactory.getInstance(cliRequest.getCommand());			
 			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]); 
@@ -248,6 +265,7 @@ public class WatchRunner implements WatchOperationListener {
 			cliOutputStream.close();
 		}
 		catch (Exception e) {
+			logger.log(Level.WARNING, "Exception thrown when running CLI command through daemon: " + e, e);
 			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
 		}		
 	}

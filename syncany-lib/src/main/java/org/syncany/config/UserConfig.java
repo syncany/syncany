@@ -41,19 +41,27 @@ public class UserConfig {
 	 *    
 	 */
 	
-	private static final File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
-	// This field is not final to enable a PluginOperationTest
+	// These fields are not final to enable a PluginOperationTest
+	private static File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
 	private static File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
+	
 	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
 	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
 	private static final String USER_TRUSTSTORE_FILE = "truststore.jks";
+	private static final String USER_KEYSTORE_FILE = "keystore.jks";	
 	
 	private static File userConfigDir;
 	private static File userPluginLibDir;
 	private static File userConfigFile;
+	
 	private static File userTrustStoreFile;
 	private static KeyStore userTrustStore;	
+	
+	private static File userKeyStoreFile;
+	private static KeyStore userKeyStore;	
+
+	private static boolean preventStandby;
 	
 	static {
 		init();
@@ -64,26 +72,7 @@ public class UserConfig {
 			initUserAppDirs();	
 			initUserConfig();
 			initUserTrustStore();
-		}
-	}
-
-	private static void initUserTrustStore() {
-		try {				
-			userTrustStoreFile = new File(userConfigDir, USER_TRUSTSTORE_FILE);
-			userTrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-								
-			if (userTrustStoreFile.exists()) {
-				FileInputStream trustStoreInputStream = new FileInputStream(userTrustStoreFile); 		 		
-				userTrustStore.load(trustStoreInputStream, new char[0]);
-				
-				trustStoreInputStream.close();
-			}	
-			else {
-				userTrustStore.load(null, new char[0]); // Initialize empty store						
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+			initUserKeyStore();
 		}
 	}
 
@@ -104,27 +93,29 @@ public class UserConfig {
 	
 	public static File getUserConfigFile() {
 		return userConfigFile;
-	}
-	
-	public static File getUserTrustStoreFile() {
-		return userTrustStoreFile;
+	}	
+
+	public static boolean preventStandbyEnabled() {
+		return preventStandby;
 	}
 	
 	public static KeyStore getUserTrustStore() {
 		return userTrustStore;
 	}
 	
-	public static void storeTrustStore() {
-		try {
-			FileOutputStream trustStoreOutputStream = new FileOutputStream(userTrustStoreFile);
-			userTrustStore.store(trustStoreOutputStream, new char[0]);
-			
-			trustStoreOutputStream.close();
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot store truststore to file " + userTrustStoreFile, e);
-		}		
+	public static KeyStore getUserKeyStore() {
+		return userKeyStore;
 	}
+	
+	public static void storeTrustStore() {
+		storeKeyStore(userTrustStore, userTrustStoreFile);
+	}
+	
+	public static void storeUserKeyStore() {
+		storeKeyStore(userKeyStore, userKeyStoreFile);
+	}
+	
+	// General initialization methods
 	
 	private static void initUserAppDirs() {
 		userConfigDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
@@ -149,9 +140,13 @@ public class UserConfig {
 		try {
 			UserConfigTO userConfigTO = UserConfigTO.load(userConfigFile);
 			
+			// System properties
 			for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
 				System.setProperty(systemProperty.getKey(), systemProperty.getValue());
 			}
+			
+			// Other options
+			preventStandby = userConfigTO.preventStandbyEnabled();
 		}
 		catch (ConfigException e) {
 			System.err.println("ERROR: " + e.getMessage());
@@ -172,5 +167,50 @@ public class UserConfig {
 		catch (Exception e) {
 			// Don't care!
 		}
+	}
+	
+	// Key store / Trust store methods
+	
+	private static void initUserTrustStore() {
+		userTrustStoreFile = new File(userConfigDir, USER_TRUSTSTORE_FILE);
+		userTrustStore = initKeyStore(userTrustStoreFile);
+	}
+	
+	private static void initUserKeyStore() {
+		userKeyStoreFile = new File(userConfigDir, USER_KEYSTORE_FILE);
+		userKeyStore = initKeyStore(userKeyStoreFile);
+	}
+	
+	private static KeyStore initKeyStore(File keyStoreFile) {
+		try {				
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+								
+			if (keyStoreFile.exists()) {
+				FileInputStream trustStoreInputStream = new FileInputStream(keyStoreFile); 		 		
+				keyStore.load(trustStoreInputStream, new char[0]);
+				
+				trustStoreInputStream.close();
+			}	
+			else {
+				keyStore.load(null, new char[0]); // Initialize empty store						
+			}
+			
+			return keyStore;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static void storeKeyStore(KeyStore keyStore, File keyStoreFile) {
+		try {
+			FileOutputStream trustStoreOutputStream = new FileOutputStream(keyStoreFile);
+			keyStore.store(trustStoreOutputStream, new char[0]);
+			
+			trustStoreOutputStream.close();
+		}
+		catch (Exception e) {
+			throw new RuntimeException("Cannot store key/truststore to file " + keyStoreFile, e);
+		}		
 	}
 }

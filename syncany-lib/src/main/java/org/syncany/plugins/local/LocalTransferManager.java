@@ -183,6 +183,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File[] files = remoteFilePath.listFiles();
 
 		if (files == null) {
+			logger.log(Level.FINE, remoteFilePath.getAbsolutePath());
 			throw new StorageException("Unable to read local respository " + repoPath);
 		}
 

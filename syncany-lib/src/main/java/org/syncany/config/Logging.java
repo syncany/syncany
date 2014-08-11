@@ -56,9 +56,8 @@ public class Logging {
 		}
 
 		// Turn off INFO message of Reflections library (dirty, but the only way!) 
-		Reflections.log = null;
-		System.setProperty("hsqldb.reconfig_logging", "false");
-		
+		disableUnwantedLoggers();		
+				
 		// Load logging.properties
     	try {
     		// Use file if exists, else use file embedded in JAR
@@ -78,6 +77,15 @@ public class Logging {
     	}		
 	}	
 	
+	private static void disableUnwantedLoggers() {
+		Reflections.log = null;
+		System.setProperty("hsqldb.reconfig_logging", "false");
+		
+		if (Logger.getLogger("sun.awt.X11.timeoutTask.XToolkit") != null) {
+			Logger.getLogger("sun.awt.X11.timeoutTask.XToolkit").setLevel(Level.OFF);
+		}
+	}
+
 	public static void setGlobalLogLevel(Level targetLogLevel) {
 		for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
             String loggerName = loggerNames.nextElement();
@@ -93,6 +101,9 @@ public class Logging {
 		}
 		
 		Logger.getLogger("").setLevel(targetLogLevel);		
+		
+		// Make sure the unwanted loggers stay quiet
+		disableUnwantedLoggers();
 	}
 	
 	public static void addGlobalHandler(Handler targetHandler) {

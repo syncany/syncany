@@ -24,6 +24,7 @@ import org.syncany.tests.chunk.FixedOffsetChunkerTest;
 import org.syncany.tests.chunk.FrameworkCombinationTest;
 import org.syncany.tests.chunk.MultiChunkerTest;
 import org.syncany.tests.chunk.TTTDChunkerTest;
+import org.syncany.tests.config.CacheTest;
 import org.syncany.tests.config.ConfigHelperTest;
 import org.syncany.tests.config.ConfigTest;
 import org.syncany.tests.crypto.CipherSpecsTest;
@@ -84,6 +85,7 @@ import org.syncany.tests.util.SqlRunnerTest;
 	SyncUpOperationTest.class,
 	
 	// Config
+	CacheTest.class,
 	ConfigHelperTest.class,
 	ConfigTest.class
 })

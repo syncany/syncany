@@ -1,2 +1,2 @@
-insert into databaseversion (status, localtime, client, vectorclock_serialized)
-values (?, ?, ?, ?)
+insert into databaseversion (type, status, localtime, client, vectorclock_serialized)
+values (?, ?, ?, ?, ?)
