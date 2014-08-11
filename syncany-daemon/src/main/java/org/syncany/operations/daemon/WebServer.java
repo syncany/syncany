@@ -34,7 +34,6 @@ import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
 
 import java.io.File;
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,11 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
@@ -146,10 +141,7 @@ public class WebServer {
 			.addPrefixPath("/", new InternalWebInterfaceHandler());
 			
 		HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
-		
-		KeyStore userTrustStore = UserConfig.getUserTrustStore();
-		KeyStore userKeyStore = UserConfig.getUserKeyStore();
-		SSLContext sslContext = createSSLContext(userKeyStore, userTrustStore);
+		SSLContext sslContext = UserConfig.createUserSSLContext();
 		
 		webServer = Undertow
 			.builder()
@@ -173,31 +165,6 @@ public class WebServer {
 		
 		return handler;
 	}	
-
-	private static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws Exception {
-		try {
-			// Server key and certificate
-			KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			keyManagerFactory.init(keyStore, new char[0]);
-
-			KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-
-			// Trusted certificates
-			TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			trustManagerFactory.init(trustStore);
-			
-			TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
-
-			// Create SSL context
-			SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(keyManagers, trustManagers, null);
-
-			return sslContext;
-		}
-		catch (Exception e) {
-			throw new Exception("Unable to initialize SSL context", e);
-		}
-	}
 
 	private void sendBroadcast(String message) {
 		synchronized (clientChannels) {

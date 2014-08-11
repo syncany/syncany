@@ -21,7 +21,7 @@ import org.simpleframework.xml.Element;
 
 public class WebServerTO {
 	@Element(required = false)
-	private boolean enabled = false;
+	private boolean enabled = true;
 	
 	@Element(required = false)
 	private int port = 8443;

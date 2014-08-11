@@ -27,6 +27,8 @@ import org.syncany.tests.chunk.TTTDChunkerTest;
 import org.syncany.tests.config.CacheTest;
 import org.syncany.tests.config.ConfigHelperTest;
 import org.syncany.tests.config.ConfigTest;
+import org.syncany.tests.crypto.AesGcmWithBcInputStreamTest;
+import org.syncany.tests.crypto.CipherSessionTest;
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
@@ -57,6 +59,8 @@ import org.syncany.tests.util.SqlRunnerTest;
 	CipherSpecsTest.class,
 	CipherUtilTest.class,
 	MultiCipherStreamsTest.class,
+	CipherSessionTest.class,
+	AesGcmWithBcInputStreamTest.class,
 	
 	// Chunking Framework
 	MultiChunkerTest.class,
