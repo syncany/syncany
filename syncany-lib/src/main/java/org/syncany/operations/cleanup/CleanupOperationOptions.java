@@ -34,6 +34,12 @@ public class CleanupOperationOptions implements OperationOptions {
 	@Element(required = false)
 	private int keepVersionsCount = 5;
 	
+	@Element(required = false)
+	private int maxDatabaseFiles = 15;
+	
+	@Element(required = false)
+	private int minSecondsBetweenCleanups = 10800;
+	
 	// TODO [medium] Implement multichunk repackaging
 	
 	// private boolean repackageMultiChunks = true; 
@@ -69,5 +75,21 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public void setKeepVersionsCount(int keepVersionsCount) {
 		this.keepVersionsCount = keepVersionsCount;
+	}
+	
+	public void setMaxDatabaseFiles(int maxDatabaseFiles) {
+		this.maxDatabaseFiles = maxDatabaseFiles;
+	}
+	
+	public int getMaxDatabaseFiles() {
+		return maxDatabaseFiles;
+	}
+	
+	public void setMinSecondsBetweenCleanups(int minSecondsBetweenCleanups) {
+		this.minSecondsBetweenCleanups = minSecondsBetweenCleanups;
+	}
+	
+	public int getMinSecondsBetweenCleanups() {
+		return minSecondsBetweenCleanups;
 	}
 }

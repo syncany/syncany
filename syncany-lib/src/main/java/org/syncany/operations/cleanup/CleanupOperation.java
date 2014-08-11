@@ -82,8 +82,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 	
 	public static final String ACTION_ID = "cleanup";
 	
-	// Maximal number of database versions per client
-	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
 	
 	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
 	
@@ -328,6 +326,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
+		
+		
+		
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 		
@@ -340,9 +341,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 		
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
-		if (numberOfDatabaseFiles <= MAX_KEEP_DATABASE_VERSIONS*allDatabaseFilesMap.keySet().size()) {
+		if (numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size()) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
-					numberOfDatabaseFiles, MAX_KEEP_DATABASE_VERSIONS*allDatabaseFilesMap.keySet().size() });
+					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
 
 			return;
 		}
@@ -354,7 +355,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			
 			// Now do the merge!
 			logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
-					new Object[] { clientDatabaseFiles.size(), MAX_KEEP_DATABASE_VERSIONS });
+					new Object[] { clientDatabaseFiles.size(), options.getMaxDatabaseFiles() });
 	
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);

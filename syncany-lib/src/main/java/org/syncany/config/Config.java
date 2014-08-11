@@ -60,7 +60,9 @@ public class Config {
 	public static final String FILE_MASTER = "master";
 	public static final String FILE_IGNORE = ".syignore";
 	public static final String FILE_DATABASE = "local.db";
-	public static final String FILE_PORT = "port";
+	public static final String DIR_STATE = "state";
+	public static final String FILE_PORT = "port.xml";
+	public static final String FILE_CLEANUP = "cleanup.xml";
 		
 	private byte[] repoId;
 	private String machineName;
@@ -70,6 +72,7 @@ public class Config {
 	private File cacheDir;
 	private File databaseDir;
 	private File logDir;
+	private File stateDir;
 	
 	private SaltedSecretKey masterKey;
 
@@ -115,6 +118,7 @@ public class Config {
 		cacheDir = FileUtil.getCanonicalFile(new File(appDir, DIR_CACHE));
 		databaseDir = FileUtil.getCanonicalFile(new File(appDir, DIR_DATABASE));
 		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
+		stateDir = FileUtil.getCanonicalFile(new File(appDir, DIR_STATE));
 	}
 	
 	private void initCache() {
@@ -304,6 +308,14 @@ public class Config {
 	public File getDatabaseFile() {
 		return new File(databaseDir, FILE_DATABASE);	
 	}	
+	
+	public File getPortFile() {
+		return new File(stateDir, FILE_PORT);
+	}
+	
+	public File getCleanupFile() {
+		return new File(stateDir, FILE_CLEANUP);
+	}
 
 	public File getLogDir() {
 		return logDir;

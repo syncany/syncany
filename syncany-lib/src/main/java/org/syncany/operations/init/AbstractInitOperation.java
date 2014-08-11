@@ -64,11 +64,13 @@ public abstract class AbstractInitOperation extends Operation {
 		File logDir = new File(appDir, Config.DIR_LOG);
 		File cacheDir = new File(appDir, Config.DIR_CACHE);
 		File databaseDir = new File(appDir, Config.DIR_DATABASE);
+		File stateDir = new File(appDir, Config.DIR_STATE);
 
 		appDir.mkdir();
 		logDir.mkdir();
 		cacheDir.mkdir();
 		databaseDir.mkdir();
+		stateDir.mkdir();
 
 		if (EnvironmentUtil.isWindows()) {
 			Files.setAttribute(Paths.get(appDir.getAbsolutePath()), "dos:hidden", true);
