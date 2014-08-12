@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +39,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
@@ -193,6 +196,15 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
 		connect();
 
+		Set<RemoteFile> filesToIgnore;
+		if (remoteFileClass.equals(TransactionRemoteFile.class)) {
+			// If we are listing transaction files, we don't want to ignore any
+			filesToIgnore = new HashSet<RemoteFile>();
+		}
+		else {
+			filesToIgnore = getFilesInTransactions();
+		}
+		
 		// List folder
 		File remoteFilePath = getRemoteFilePath(remoteFileClass);
 		File[] files = remoteFilePath.listFiles();

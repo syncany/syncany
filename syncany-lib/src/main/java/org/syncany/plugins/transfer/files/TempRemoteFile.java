@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.crypto.CipherUtil;
 import org.syncany.plugins.StorageException;
 
 /**
@@ -52,7 +53,7 @@ public class TempRemoteFile extends RemoteFile {
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public TempRemoteFile(File localFile) throws StorageException {
-		super(String.format(NAME_FORMAT, Integer.toHexString(localFile.hashCode()))); // TODO [low] This should be a random string or the actual file name, right?
+		super(String.format(NAME_FORMAT, Integer.toHexString(CipherUtil.createRandomAlphabeticString(20).hashCode()))); 
 	}
 
 	@Override

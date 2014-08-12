@@ -19,11 +19,21 @@ package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.transfer.files.TempRemoteFile;
+import org.syncany.plugins.transfer.files.TransactionRemoteFile;
+import org.syncany.plugins.transfer.files.TransactionTO;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -91,5 +101,44 @@ public abstract class AbstractTransferManager implements TransferManager {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Returns a Set of all files that are not temporary, but are listed in a 
+	 * transaction file. These belong to an unfinished transaction and should be
+	 * ignored.
+	 */
+	protected Set<RemoteFile> getFilesInTransactions() throws StorageException {
+		Set<RemoteFile> filesInTransaction = new HashSet<RemoteFile>();
+		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
+		
+		for (TransactionRemoteFile transaction : transactionFiles.values()) {
+			Map<TempRemoteFile, RemoteFile> tempFileToTargetFileMap = null;
+			
+			try {
+				File transactionFile = createTempFile("transaction");
+				
+				// Download transaction file
+				download(transaction, transactionFile);
+				String transactionFileStr = FileUtils.readFileToString(transactionFile);
+				
+				// Deserialize it
+				Serializer serializer = new Persister();
+				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
+				
+				// Extract final locations
+				tempFileToTargetFileMap = transactionTO.getTempToTargetFileMap();
+				transactionFile.delete();
+			}
+			catch (Exception e) {
+				throw new StorageException("Failed to read transactionFile", e);
+			}
+
+			if (tempFileToTargetFileMap != null) {
+				filesInTransaction.addAll(tempFileToTargetFileMap.values());
+			}
+		}
+		
+		return filesInTransaction;
 	}
 }
