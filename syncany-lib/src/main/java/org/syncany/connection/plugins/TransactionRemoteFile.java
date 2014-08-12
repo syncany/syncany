@@ -20,6 +20,9 @@ package org.syncany.connection.plugins;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.files.RemoteFile;
+
 /**
  * The transaction file represents a manifest of a transaction on the remote storage. 
  * 

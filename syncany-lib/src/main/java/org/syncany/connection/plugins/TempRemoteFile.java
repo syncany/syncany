@@ -21,6 +21,9 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.files.RemoteFile;
+
 /**
  * The temp file represents a temporary file on the remote storage. 
  * 

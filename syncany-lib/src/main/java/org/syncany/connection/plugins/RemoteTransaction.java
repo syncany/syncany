@@ -29,6 +29,9 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * This class represents a transaction in a remote system. It will keep track of

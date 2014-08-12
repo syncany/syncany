@@ -28,6 +28,8 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * The Transaction transfer object exists to serialize a transaction,

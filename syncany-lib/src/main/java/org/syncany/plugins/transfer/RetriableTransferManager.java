@@ -95,6 +95,17 @@ public class RetriableTransferManager implements TransferManager {
 			}
 		});
 	}
+	
+	@Override
+	public void move(final RemoteFile sourceFile, final RemoteFile targetFile) throws StorageException {
+		retryMethod(new RetriableMethod() {
+			@Override
+			public Object execute() throws StorageException {
+				underlyingTransferManager.move(sourceFile, targetFile);
+				return null;
+			}
+		});
+	}
 
 	@Override
 	public void upload(final File localFile, final RemoteFile remoteFile) throws StorageException {
