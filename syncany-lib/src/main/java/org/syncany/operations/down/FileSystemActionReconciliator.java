@@ -131,9 +131,9 @@ public class FileSystemActionReconciliator {
 	private SqlDatabase localDatabase;
 	private FileVersionComparator fileVersionComparator;
 	
-	public FileSystemActionReconciliator(Config config, DownOperationResult result) {
+	public FileSystemActionReconciliator(Config config, ChangeSet changeSet) {
 		this.config = config; 
-		this.changeSet = result.getChangeSet();
+		this.changeSet = changeSet;
 		this.localDatabase = new SqlDatabase(config);
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 	}
@@ -199,7 +199,7 @@ public class FileSystemActionReconciliator {
 		
 		if (winningFileToVersionComparison.equals()) {
 			logger.log(Level.INFO, "     -> (1) Equals: Nothing to do, winning version equals winning file: "+winningLastVersion+" AND "+winningLastFile);	
-}
+		}
 		else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.DELETED)) {					
 			FileSystemAction action = new NewFileSystemAction(config, winningLastVersion, winnersDatabase);
 			outFileSystemActions.add(action);

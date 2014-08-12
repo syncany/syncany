@@ -162,6 +162,52 @@ public abstract class FileSystemAction {
 		} 		
 	}
 	
+	protected File moveFileToFinalLocation(File reconstructedFileInCache, FileVersion targetFileVersion) throws IOException {
+		NormalizedPath originalPath = new NormalizedPath(config.getLocalDir(), targetFileVersion.getPath());
+		NormalizedPath targetPath = originalPath;
+				
+		try {
+			// Clean filename
+			if (targetPath.hasIllegalChars()) {
+				targetPath = targetPath.toCreatable("filename conflict", true);
+			}
+
+			// Try creating folder
+			createFolder(targetPath.getParent());
+		}
+		catch (Exception e) {
+			throw new RuntimeException("What to do here?!");
+		}
+		
+		// Try moving file to final destination 
+		try {
+			FileUtils.moveFile(reconstructedFileInCache, targetPath.toFile());
+		}
+		catch (FileExistsException e) {
+			moveToConflictFile(targetPath);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("What to do here?!");
+		}		
+		
+		return targetPath.toFile();
+	}
+
+	protected void createFolder(NormalizedPath targetDir) throws Exception {		
+		if (!FileUtil.exists(targetDir.toFile())) {
+			logger.log(Level.INFO, "     - Creating folder at " + targetDir.toFile() + " ...");
+			boolean targetDirCreated = targetDir.toFile().mkdirs();
+			
+			if (!targetDirCreated) {
+				throw new Exception("Cannot create target dir: "+targetDir);
+			}
+		}
+		else if (!FileUtil.isDirectory(targetDir.toFile())) {
+			logger.log(Level.INFO, "     - Expected a folder at " + targetDir.toFile() + " ...");
+			moveToConflictFile(targetDir);
+		}
+	}
+	
 	private NormalizedPath findConflictFilename(NormalizedPath conflictingPath) throws Exception {
 		String conflictUserName = (config.getDisplayName() != null) ? config.getDisplayName() : config.getMachineName();
 		boolean conflictUserNameEndsWithS = conflictUserName.endsWith("s");
@@ -257,28 +303,8 @@ public abstract class FileSystemAction {
 	}
 	
 	protected File getAbsolutePathFile(String relativePath) {
-		return new File(config.getLocalDir()+File.separator+relativePath);
+		return new File(config.getLocalDir(), relativePath);
 	}	
 	
-	public abstract void execute() throws InconsistentFileSystemException, Exception;
-	
-	public static class InconsistentFileSystemException extends Exception {
-		private static final long serialVersionUID = 14239478881237L;
-
-		public InconsistentFileSystemException() {
-			super();
-		}
-
-		public InconsistentFileSystemException(String message, Throwable cause) {
-			super(message, cause);
-		}
-
-		public InconsistentFileSystemException(String message) {
-			super(message);
-		}
-
-		public InconsistentFileSystemException(Throwable cause) {
-			super(cause);
-		}
-	}
+	public abstract FileSystemActionResult execute() throws Exception;
 }

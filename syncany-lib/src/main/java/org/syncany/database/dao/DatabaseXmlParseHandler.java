@@ -17,10 +17,13 @@
  */
 package org.syncany.database.dao;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.binary.Base64;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
@@ -37,6 +40,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 import org.syncany.database.VectorClock.VectorClockComparison;
+import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -59,8 +63,9 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MemoryDatabase database;
 	private VectorClock versionFrom;
 	private VectorClock versionTo;
-	private boolean headersOnly;
+	private DatabaseReadType readType;
 	private DatabaseVersionType filterType;
+	private Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -70,14 +75,16 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MultiChunkEntry multiChunk;
 	private PartialFileHistory fileHistory;
 
-	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, boolean headersOnly,
-			DatabaseVersionType filterType) {
+	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
+			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions) {
+		
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
 		this.versionTo = toVersion;
-		this.headersOnly = headersOnly;
+		this.readType = readType;
 		this.filterType = filterType;
+		this.ignoredMostRecentFileVersions = ignoredMostRecentFileVersions;
 	}
 
 	@Override
@@ -108,7 +115,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 
 			vectorClock.setClock(clientName, clientValue);
 		}
-		else if (!headersOnly) {
+		else if (readType == DatabaseReadType.FULL) {
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/chunks/chunk")) {
 				String chunkChecksumStr = attributes.getValue("checksum");
 				ChunkChecksum chunkChecksum = ChunkChecksum.parseChunkChecksum(chunkChecksumStr);
@@ -154,6 +161,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory/fileVersions/fileVersion")) {
 				String fileVersionStr = attributes.getValue("version");
 				String path = attributes.getValue("path");
+				String pathEncoded = attributes.getValue("pathEncoded");
 				String sizeStr = attributes.getValue("size");
 				String typeStr = attributes.getValue("type");
 				String statusStr = attributes.getValue("status");
@@ -164,14 +172,30 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				String dosAttributes = attributes.getValue("dosattrs");
 				String posixPermissions = attributes.getValue("posixperms");
 
-				if (fileVersionStr == null || path == null || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, path, type, status, size and last modified are mandatory");
+				if (fileVersionStr == null || (path == null && pathEncoded == null) || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
+					throw new SAXException("FileVersion: Attributes missing: version, path/pathEncoded, type, status, size and last modified are mandatory");
 				}
 
+				// Filter it if it was purged somewhere in the future, see #58
+				Long fileVersionNum = Long.parseLong(fileVersionStr);
+				
+				// Go add it!
 				FileVersion fileVersion = new FileVersion();
 
-				fileVersion.setVersion(Long.parseLong(fileVersionStr));
-				fileVersion.setPath(path);
+				fileVersion.setVersion(fileVersionNum);
+				
+				if (path != null) {
+					fileVersion.setPath(path);
+				}
+				else {
+					try {
+						fileVersion.setPath(new String(Base64.decodeBase64(pathEncoded), "UTF-8"));
+					}
+					catch (UnsupportedEncodingException e) {
+						throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
+					}
+				}
+				
 				fileVersion.setType(FileType.valueOf(typeStr));
 				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				fileVersion.setSize(Long.parseLong(sizeStr));
@@ -198,9 +222,11 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				}
 
 				fileHistory.addFileVersion(fileVersion);
+			
 			}
 		}
 	}
+
 
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
@@ -213,8 +239,8 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				logger.log(Level.INFO, "   + Added database version " + databaseVersion.getHeader());
 			}
 			else {
-				logger.log(Level.INFO, "   + IGNORING database version " + databaseVersion.getHeader() + " (not in load range " + versionFrom + " - "
-						+ versionTo + " OR type filter mismatch: " + filterType + " =?= " + databaseVersion.getHeader().getType());
+				//logger.log(Level.FINEST, "   + IGNORING database version " + databaseVersion.getHeader() + " (not in load range " + versionFrom + " - "
+				//		+ versionTo + " OR type filter mismatch: " + filterType + " =?= " + databaseVersion.getHeader().getType());
 			}
 
 			databaseVersion = null;
@@ -226,7 +252,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 			databaseVersion.setVectorClock(vectorClock);
 			vectorClock = null;
 		}
-		else if (!headersOnly) {
+		else if (readType == DatabaseReadType.FULL) {
 			if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileContents/fileContent")) {
 				databaseVersion.addFileContent(fileContent);
 				fileContent = null;
@@ -236,7 +262,11 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				multiChunk = null;
 			}
 			else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/fileHistories/fileHistory")) {
-				databaseVersion.addFileHistory(fileHistory);
+				// File history might be empty if file versions are ignored!
+				if (fileHistory.getFileVersions().size() > 0) {
+					databaseVersion.addFileHistory(fileHistory);
+				}
+				
 				fileHistory = null;
 			}
 			else {

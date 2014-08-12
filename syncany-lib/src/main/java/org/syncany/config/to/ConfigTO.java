@@ -28,7 +28,7 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
@@ -45,7 +45,7 @@ import org.syncany.util.StringUtil;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="config")
+@Root(name="config", strict=false)
 @Namespace(reference="http://syncany.org/config/1")
 public class ConfigTO {
 	@Element(name="machinename", required=true)

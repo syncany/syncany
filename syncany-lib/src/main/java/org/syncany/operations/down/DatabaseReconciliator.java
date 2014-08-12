@@ -123,10 +123,9 @@ public class DatabaseReconciliator {
 	 * @param unknownRemoteBranches Newly downloaded unknown remote branches (incomplete branches; will be stitched)
 	 * @return Returns the branch of the winning client
 	 */
-	public DatabaseBranch findWinnerBranch(String localMachineName, DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches)
+	public Map.Entry<String, DatabaseBranch> findWinnerBranch(String localMachineName, DatabaseBranch localBranch, DatabaseBranches allStitchedBranches)
 			throws Exception {
 		
-		DatabaseBranches allStitchedBranches = stitchBranches(unknownRemoteBranches, localMachineName, localBranch);
 		DatabaseVersionHeader lastCommonHeader = findLastCommonDatabaseVersionHeader(localBranch, allStitchedBranches);
 		TreeMap<String, DatabaseVersionHeader> firstConflictHeaders = findFirstConflictingDatabaseVersionHeader(lastCommonHeader, allStitchedBranches);
 		TreeMap<String, DatabaseVersionHeader> winningFirstConflictHeaders = findWinningFirstConflictingDatabaseVersionHeaders(firstConflictHeaders);
@@ -139,7 +138,6 @@ public class DatabaseReconciliator {
 			// TODO [low] Format this output nicer; This produces very, very, very long lines after a while
 			logger.log(Level.FINEST, "- Database reconciliation results:");
 			logger.log(Level.FINEST, "  + localBranch: " + localBranch);
-			logger.log(Level.FINEST, "  + unknownRemoteBranches: " + unknownRemoteBranches);
 			logger.log(Level.FINEST, "  + lastCommonHeader: " + lastCommonHeader);
 			logger.log(Level.FINEST, "  + firstConflictingHeaders: " + firstConflictHeaders);
 			logger.log(Level.FINEST, "  + winningFirstConflictingHeaders: " + winningFirstConflictHeaders);
@@ -154,7 +152,7 @@ public class DatabaseReconciliator {
 			}
 		}
 
-		return winnersBranch;
+		return new AbstractMap.SimpleEntry<String, DatabaseBranch>(winnersName, winnersBranch);
 	}
 
 	/**
@@ -263,9 +261,9 @@ public class DatabaseReconciliator {
 		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders = new TreeMap<String, DatabaseVersionHeader>();
 
 		nextClient: for (String remoteMachineName : allDatabaseBranches.getClients()) {
-			DatabaseBranch branch = allDatabaseBranches.getBranch(remoteMachineName);
+			DatabaseBranch remoteMachineBranch = allDatabaseBranches.getBranch(remoteMachineName);
 
-			for (Iterator<DatabaseVersionHeader> i = branch.iteratorFirst(); i.hasNext();) {
+			for (Iterator<DatabaseVersionHeader> i = remoteMachineBranch.iteratorFirst(); i.hasNext();) {
 				DatabaseVersionHeader thisDatabaseVersionHeader = i.next();
 
 				if (thisDatabaseVersionHeader.equals(lastCommonHeader)) {
@@ -282,8 +280,8 @@ public class DatabaseReconciliator {
 			}
 
 			// Last common header not found; Add first as conflict
-			if (branch.size() > 0) {
-				DatabaseVersionHeader firstConflictingInBranch = branch.get(0);
+			if (remoteMachineBranch.size() > 0) {
+				DatabaseVersionHeader firstConflictingInBranch = remoteMachineBranch.get(0);
 				firstConflictingDatabaseVersionHeaders.put(remoteMachineName, firstConflictingInBranch);
 			}
 		}

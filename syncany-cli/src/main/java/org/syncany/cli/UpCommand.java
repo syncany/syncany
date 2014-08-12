@@ -23,8 +23,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
@@ -52,7 +51,6 @@ public class UpCommand extends Command {
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 
-		OptionSpec<Void> optionNoCleanup = parser.acceptsAll(asList("c", "no-cleanup"));
 		OptionSpec<Void> optionForceUpload = parser.acceptsAll(asList("F", "force-upload"));
 
 		OptionSet options = parser.parse(operationArgs);
@@ -60,23 +58,10 @@ public class UpCommand extends Command {
 		// status [<args>]
 		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
 
-		// --no-cleanup
-		boolean cleanupEnabled = !options.has(optionNoCleanup);
-		operationOptions.setCleanupEnabled(cleanupEnabled);
-		
-		if (cleanupEnabled) {
-			operationOptions.setCleanupOptions(parseCleanupOptions(operationArgs));
-		}
-
 		// --force
 		operationOptions.setForceUploadEnabled(options.has(optionForceUpload));
 
 		return operationOptions;
-	}
-
-	private CleanupOperationOptions parseCleanupOptions(String[] operationArgs) throws Exception {
-		CleanupCommand cleanupCommand = new CleanupCommand();
-		return cleanupCommand.parseOptions(operationArgs);
 	}
 
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
@@ -88,7 +73,7 @@ public class UpCommand extends Command {
 		if (operationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
 			out.println("Sync up skipped, because there are remote changes.");
 		}
-		else if (operationResult.getResultCode() == UpResultCode.OK_APPLIED_CHANGES) {
+		else if (operationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
 			ChangeSet changeSet = operationResult.getChangeSet();
 
 			for (String newFile : changeSet.getNewFiles()) {

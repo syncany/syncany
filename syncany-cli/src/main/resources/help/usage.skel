@@ -1,3 +1,0 @@
-Usage: sy [-l|--localdir=<path>] [--log=<path>]
-          [--loglevel=OFF|SEVERE|..] [--print]
-          [-d|--debug] [-h|--help] <command> [<args>]

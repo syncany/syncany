@@ -1,0 +1,51 @@
+// CLI-specific Tasks //////////////////////////////////////////////////////////
+
+String osName = System.getProperty("os.name").toLowerCase();
+
+task fakeinstall(dependsOn: ["fakeuninstall"]) << {
+	description = "Must be run as root: Makes syncany/sy command available everywhere (symlink to syncany-cli/build/..)"
+	
+	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
+	// running fakeinstall as "root"; manually calling installApp required
+	
+	if (osName.startsWith("windows")) {
+		copy {
+			from "gradle/windows/syncany.bat"
+			into System.getenv()["windir"]
+			rename("syncany.bat", "sy.bat")
+			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncany.bat")
+		}
+
+		copy {
+			from "gradle/windows/syncany.bat"
+			into System.getenv()["windir"]
+			rename("syncany.bat", "syd.bat")
+			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncanyd.bat")
+		}
+	}
+	else{
+    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/syncany")
+    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/sy")
+    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/syncanyd", link: "/usr/local/bin/syncanyd")
+    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/syncanyd", link: "/usr/local/bin/syd")
+
+	}
+}
+
+task fakeuninstall << {
+	description = "Must be run as root: Removes symlink for syncany/sy command (complement to fakeinstall)"
+
+	if (osName.startsWith("windows")) {
+		new File(System.getenv()["windir"] + "/syncany.bat").delete()
+		new File(System.getenv()["windir"] + "/sy.bat").delete()
+		new File(System.getenv()["windir"] + "/syncanyd.bat").delete()
+		new File(System.getenv()["windir"] + "/syd.bat").delete()
+	}
+	else {
+		new File("/usr/local/bin/syncany").delete()
+		new File("/usr/local/bin/sy").delete()
+		new File("/usr/local/bin/syncanyd").delete()
+		new File("/usr/local/bin/syd").delete()
+	}
+}
+

@@ -1,0 +1,35 @@
+// Windows Installer ///////////////////////////////////////////////////////////
+
+task exe(dependsOn: ["installApp"]) << {
+	def innoSetupDir = new File("${buildDir}/innosetup")
+
+	delete innoSetupDir	
+	innoSetupDir.mkdir();	
+	
+	copy {
+		from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
+		from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
+		from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")		
+		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")		
+		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")		
+		from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
+		into(innoSetupDir)
+	}
+
+	copy {
+		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
+		rename("setup.iss.skel", "setup.iss")
+		expand([
+			applicationVersion: "${applicationVersion}",
+			applicationVersionFull: "${applicationVersionFull}",			
+		])
+		into(innoSetupDir)
+	}
+
+	exec {
+		workingDir rootProject.projectDir
+		commandLine "iscc ${innoSetupDir}/setup.iss".split()
+	}
+}
+
+

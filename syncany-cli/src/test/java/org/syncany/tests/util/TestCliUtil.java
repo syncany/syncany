@@ -28,7 +28,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.config.Config;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.util.StringUtil;
 
@@ -125,7 +125,7 @@ public class TestCliUtil {
 	}
 	
 	public static String[] toStringArray(ByteArrayOutputStream bos) {		
-		return toString(bos).split("[\\r\\n]+|[\\n\\r]+|[\\n]+");
+		return toString(bos).split("[\\r\\n]|[\\n\\r]|[\\n]");
 	}
 	
 	public static boolean setCurrentDirectory(File newDirectory) {

@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
-import org.syncany.operations.LogOperation;
-import org.syncany.util.FileUtil;
+import org.syncany.operations.ls.LsOperation;
 
 /**
  * Intentionally undocumented command to help debugging the application. Implements various
@@ -38,11 +38,11 @@ import org.syncany.util.FileUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DebugCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());
 
 	@Override
 	public CommandScope getRequiredCommandScope() {	
-		return CommandScope.ANY;
+		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 
 	@Override
@@ -85,7 +85,7 @@ public class DebugCommand extends Command {
 		Config config = client.getConfig();
 		InputStream fileInputStream = config.getTransformer().createInputStream(new FileInputStream(decryptFile));
 		
-		FileUtil.appendToOutputStream(fileInputStream, System.out);		
+		IOUtils.copy(fileInputStream, System.out);		
 		System.exit(0);
 	}
 	

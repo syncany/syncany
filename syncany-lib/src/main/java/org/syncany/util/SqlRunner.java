@@ -17,11 +17,11 @@
  */
 package org.syncany.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.Reader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
@@ -33,113 +33,60 @@ import java.util.regex.Pattern;
  * Helper class to execute SQL scripts on a given connection. The script honors SQL comments and 
  * separately executes commands one after another.
  * 
- * @see Originally taken from <a href="http://allstarnix.blogspot.de/2013/03/how-to-execute-sql-script-file-using.html">allstarnix.blogspot.de</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-// TODO [low] Needs polishing/stripping of useless stuff.
 public class SqlRunner {
 	private static final Logger logger = Logger.getLogger(SqlRunner.class.getSimpleName());
 
-	public static final String DELIMITER_LINE_REGEX = "(?i)DELIMITER.+";
-	public static final String DELIMITER_LINE_SPLIT_REGEX = "(?i)DELIMITER";
-	public static final String DELIMITER = ";";
-	
-	private final Connection connection;
-	private String delimiter = SqlRunner.DELIMITER;
+	private static final String DEFAULT_DELIMITER = ";";	
+	private static final Pattern NEW_DELIMITER_PATTERN = Pattern.compile("(?:--|\\/\\/|\\#)?!DELIMITER=(.+)");
+	private static final Pattern COMMENT_PATTERN = Pattern.compile("^(?:--|\\/\\/|\\#).+");
 
-	public SqlRunner(Connection connection) {
-		this.connection = connection;
-	}
-
-	public void runScript(Reader reader) throws SQLException {
-		StringBuffer command = null;
-		
-		try {
-			LineNumberReader lineReader = new LineNumberReader(reader);
+	public static void runScript(Connection connection, InputStream scriptInputStream) throws SQLException, IOException {
+		try (BufferedReader scriptReader = new BufferedReader(new InputStreamReader(scriptInputStream))) {
+			StringBuffer command = null;
+			String delimiter = DEFAULT_DELIMITER;
 			String line = null;
 			
-			while ((line = lineReader.readLine()) != null) {
+			while ((line = scriptReader.readLine()) != null) {
 				if (command == null) {
 					command = new StringBuffer();
 				}
 				
 				String trimmedLine = line.trim();
-
-				// a) Comment line
-				if (trimmedLine.startsWith("--") || trimmedLine.startsWith("//") || trimmedLine.startsWith("#")) {
+	
+				Matcher delimiterMatcher = NEW_DELIMITER_PATTERN.matcher(trimmedLine);
+				Matcher commentMatcher = COMMENT_PATTERN.matcher(trimmedLine);
+				
+				// a) Delimiter change
+				if (delimiterMatcher.find()) {
+					delimiter = delimiterMatcher.group(1);					
+					logger.log(Level.INFO, "SQL (new delimiter): " + delimiter);
+				}
+				
+				// b) Comment
+				else if (commentMatcher.find()) {
 					logger.log(Level.INFO, "SQL (comment): " + trimmedLine);
 				}
 				
-				// b) End of statement (ends with ";")
-				else if (trimmedLine.endsWith(DELIMITER)) {
-					// Support new delimiter
-					final Pattern pattern = Pattern.compile(SqlRunner.DELIMITER_LINE_REGEX);
-					final Matcher matcher = pattern.matcher(trimmedLine);
-					if (matcher.matches()) {
-						delimiter = trimmedLine.split(SqlRunner.DELIMITER_LINE_SPLIT_REGEX)[1].trim();
-
-						// New delimiter is processed, continue on next
-						// statement
-						line = lineReader.readLine();
-						if (line == null) {
-							break;
-						}
-						trimmedLine = line.trim();
-					}
-
-					// Append
-					command.append(line.substring(0, line.lastIndexOf(this.delimiter)));
+				// c) Statement
+				else {
+					command.append(trimmedLine);
 					command.append(" ");
-
-					Statement stmt = null;
-					ResultSet rs = null;
-					try {
-						stmt = connection.createStatement();
+	
+					// End of statement
+					if (trimmedLine.endsWith(delimiter)) {
 						logger.log(Level.INFO, "SQL: " + command);
-
-						stmt.execute(command.toString());
-
-						rs = stmt.getResultSet();
-
+	
+						Statement statement = connection.createStatement();
+						
+						statement.execute(command.toString());
+						statement.close();
+						
 						command = null;
 					}
-					finally {
-						if (rs != null)
-							try {
-								rs.close();
-							}
-							catch (final Exception e) {
-								logger.log(Level.SEVERE, "SQL ERROR: " + e.getMessage(), e);
-							}
-						if (stmt != null)
-							try {
-								stmt.close();
-							}
-							catch (final Exception e) {
-								logger.log(Level.SEVERE, "SQL ERROR: " + e.getMessage(), e);
-							}
-					}
-				}
-				
-				// c) Not the end of a statement
-				else {
-					final Pattern pattern = Pattern.compile(SqlRunner.DELIMITER_LINE_REGEX);
-					final Matcher matcher = pattern.matcher(trimmedLine);
-					if (matcher.matches()) {
-						delimiter = trimmedLine.split(SqlRunner.DELIMITER_LINE_SPLIT_REGEX)[1].trim();
-						line = lineReader.readLine();
-						if (line == null) {
-							break;
-						}
-						trimmedLine = line.trim();
-					}
-					command.append(line);
-					command.append(" ");
 				}
 			}
-		}
-		catch (final IOException e) {
-			logger.log(Level.SEVERE, "SQL ERROR: " + e.getMessage(), e);
 		}
 	}
 }

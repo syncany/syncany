@@ -1,0 +1,36 @@
+// Generic gradle script for plugin settings ///////////////////////////////////
+// This script MUST be embedded by plugins; do not embed in root project! //////
+
+// Can be embedded in settings.gradle using 
+//    apply from: 'core/gradle/gradle/plugins.settings.gradle'
+
+// Note: For this gradle file to work, the following conditions MUST hold:
+//   1. It MUST be embedded in a plugin config, the root project must be at  ../../../core
+//   2. The folder MUST be named like the  
+
+// Redefines the paths of the original root project (via 'git subtree' in 
+// folder 'core'), and all the subprojects of the root project.
+
+rootProject.projectDir = file('../../../core')
+
+include 'syncany'
+include 'syncany-lib'
+include 'syncany-cli'
+include 'syncany-util'
+include 'syncany-daemon'
+include 'syncany-messages'
+
+project(':syncany').projectDir = file('../../../core')
+project(':syncany-lib').projectDir = file('../../../core/syncany-lib')
+project(':syncany-cli').projectDir = file('../../../core/syncany-cli')
+project(':syncany-util').projectDir = file('../../../core/syncany-util')
+project(':syncany-daemon').projectDir = file('../../../core/syncany-daemon')
+project(':syncany-messages').projectDir = file('../../../core/syncany-messages')
+
+// Include this plugin as subproject!
+
+File pluginDir = file('../../../')
+String pluginName = pluginDir.getParentFile().name
+
+include pluginName
+project(':' + pluginName).projectDir = pluginDir

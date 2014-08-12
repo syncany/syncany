@@ -29,7 +29,7 @@ public class SetAttributesFileSystemAction extends FileSystemAction {
 	}
 	
 	@Override
-	public void execute() throws Exception {
+	public FileSystemActionResult execute() throws Exception {
 		if (fileExists(fileVersion2) 
 				&& fileAsExpected(fileVersion2, FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE)) {
 			
@@ -39,6 +39,8 @@ public class SetAttributesFileSystemAction extends FileSystemAction {
 		else {		
 			throw new Exception("Inconsistent file system, file not as expected: "+ fileVersion2);
 		}
+		
+		return new FileSystemActionResult();
 	}
 
 	@Override

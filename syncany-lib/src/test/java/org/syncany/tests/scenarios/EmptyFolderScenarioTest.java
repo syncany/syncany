@@ -25,9 +25,9 @@ import java.io.File;
 import java.util.Map;
 
 import org.junit.Test;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -35,7 +35,7 @@ public class EmptyFolderScenarioTest {
 	@Test
 	public void testEmptyFolderCreateAndSync() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

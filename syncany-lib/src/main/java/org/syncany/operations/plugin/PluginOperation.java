@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -39,17 +40,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -64,7 +66,7 @@ import com.github.zafarkhaja.semver.Version;
  * 
  * <ul>
  *   <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
- *       as specified by {@link Client#getUserPluginDir()}. A plugin can be installed 
+ *       as specified by {@link Client#getUserPluginLibDir()}. A plugin can be installed 
  *       from a local JAR file, a URL (the operation downloads a JAR file), or the 
  *       API host (the operation find the plugin using the 'list' action and downloads
  *       the JAR file).</li>
@@ -126,7 +128,7 @@ public class PluginOperation extends Operation {
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
 
-		File globalUserPluginDir = UserConfig.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
 
 		int indexStartAfterSchema = "jar:file:".length();
 		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
@@ -143,7 +145,7 @@ public class PluginOperation extends Operation {
 
 			// JAR files are locked on Windows, adding JAR filename to a list for delayed deletion (by batch file)
 			if (EnvironmentUtil.isWindows()) {
-				File purgefilePath = new File(UserConfig.getUserAppDir(), PURGEFILE_FILENAME);
+				File purgefilePath = new File(UserConfig.getUserConfigDir(), PURGEFILE_FILENAME);
 				
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgefilePath, true)))) {
 					out.println(pluginJarFile.getAbsolutePath());
@@ -223,6 +225,27 @@ public class PluginOperation extends Operation {
 			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
 					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
 		}
+		
+		// Verify if any conflicting plugins are installed
+		logger.log(Level.INFO, "Checking for conflicting plugins.");
+		
+		List<String> conflictingIds = pluginInfo.getConflictingPluginIds();
+		List<String> conflictingInstalledIds = new ArrayList<String>();
+		
+		if (conflictingIds != null) {
+			for (String pluginId : conflictingIds) {
+				Plugin plugin = Plugins.get(pluginId);
+				
+				if (plugin != null) {
+					logger.log(Level.INFO, "- Conflicting plugin " + pluginId + " found.");
+					conflictingInstalledIds.add(pluginId);
+				}
+				
+				logger.log(Level.FINE, "- Conflicting plugin " + pluginId + " not installed");
+			}
+		}
+		
+		result.setConflictingPlugins(conflictingInstalledIds);
 	}
 
 	private String calculateChecksum(File tempPluginJarFile) throws Exception {
@@ -290,19 +313,24 @@ public class PluginOperation extends Operation {
 			}
 			
 			PluginInfo pluginInfo = new PluginInfo();
+			
 			pluginInfo.setPluginId(pluginId);
 			pluginInfo.setPluginName(jarManifest.getMainAttributes().getValue("Plugin-Name"));
 			pluginInfo.setPluginVersion(jarManifest.getMainAttributes().getValue("Plugin-Version"));
 			pluginInfo.setPluginDate(jarManifest.getMainAttributes().getValue("Plugin-Date"));
 			pluginInfo.setPluginAppMinVersion(jarManifest.getMainAttributes().getValue("Plugin-App-Min-Version"));
 			pluginInfo.setPluginRelease(Boolean.parseBoolean(jarManifest.getMainAttributes().getValue("Plugin-Release")));
-
+			
+			if (jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With") != null) {
+				pluginInfo.setConflictingPluginIds(Arrays.asList(jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With")));
+			}
+			
 			return pluginInfo;
 		}		
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
-		File globalUserPluginDir = UserConfig.getUserPluginDir();
+		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
@@ -333,7 +361,7 @@ public class PluginOperation extends Operation {
 		FileOutputStream tempPluginFileOutputStream = new FileOutputStream(tempPluginFile);
 		InputStream remoteJarFileInputStream = urlConnection.getInputStream();
 
-		FileUtil.appendToOutputStream(remoteJarFileInputStream, tempPluginFileOutputStream);
+		IOUtils.copy(remoteJarFileInputStream, tempPluginFileOutputStream);
 
 		remoteJarFileInputStream.close();
 		tempPluginFileOutputStream.close();

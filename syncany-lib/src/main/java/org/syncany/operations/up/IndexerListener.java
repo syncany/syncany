@@ -20,4 +20,5 @@ package org.syncany.operations.up;
 public interface IndexerListener {
 	public void onIndexStart(int fileCount);
 	public void onIndexFile(String fileName, int fileNumber);
+	public void onIndexEnd();
 }

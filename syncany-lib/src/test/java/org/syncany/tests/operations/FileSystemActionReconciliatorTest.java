@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -33,6 +32,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.FileSystemActionReconciliator;
 import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
@@ -42,7 +42,7 @@ public class FileSystemActionReconciliatorTest {
 	@Test
 	public void testFileSystemActionReconDeleteNonExistingFolder() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		Config testConfigA = clientA.getConfig();
@@ -73,7 +73,7 @@ public class FileSystemActionReconciliatorTest {
 		
 		// Run! Finally!
 		DownOperationResult outDownOperationResult = new DownOperationResult();
-		FileSystemActionReconciliator fileSystemActionReconciliator = new FileSystemActionReconciliator(testConfigA, outDownOperationResult);
+		FileSystemActionReconciliator fileSystemActionReconciliator = new FileSystemActionReconciliator(testConfigA, outDownOperationResult.getChangeSet());
 		List<FileSystemAction> fileSystemActions = fileSystemActionReconciliator.determineFileSystemActions(winnersDatabase);
 		
 		assertNotNull(fileSystemActions);

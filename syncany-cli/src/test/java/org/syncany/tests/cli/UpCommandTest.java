@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.cli;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEqualsExcludeLockedAndNoRead;
 
 import java.io.File;
@@ -27,7 +26,7 @@ import java.util.Map;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.connection.plugins.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -40,8 +39,7 @@ public class UpCommandTest {
 
 		new CommandLineClient(new String[] { 
 			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--no-cleanup" 
+			 "up"
 		}).start();
 
 		for (int i=1; i<=20; i++) {
@@ -49,8 +47,7 @@ public class UpCommandTest {
 
 			new CommandLineClient(new String[] { 
 				"--localdir", clientA.get("localdir"),
-				"up",
-				"--no-cleanup"
+				"up"
 			}).start();
 		}
 		
@@ -68,6 +65,7 @@ public class UpCommandTest {
 	public void testCliSyncUpWithCleanup() throws Exception {
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+		Map<String, String> clientB = TestCliUtil.createLocalTestEnvAndConnect("B", connectionSettings);
 
 		new CommandLineClient(new String[] { 
 			 "--localdir", clientA.get("localdir"),
@@ -83,21 +81,54 @@ public class UpCommandTest {
 			}).start();
 		}
 		
+		// Delete something so that cleanup actually does something
+		new File(clientA.get("localdir")+"/somefolder1").delete();
+		
+		new CommandLineClient(new String[] { 
+			 "--localdir", clientA.get("localdir"),
+			 "up" 
+		}).start();
 
-		for (int i=1; i<=10; i++) {
+		// Apply all changes at B
+		new CommandLineClient(new String[] { 
+			 "--localdir", clientB.get("localdir"),
+			 "down" 
+		}).start();
+		
+		// Now cleanup
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
+			 "--localdir", clientA.get("localdir"),
+			 "cleanup" 
+		}));
+		
+		assertEquals(3, cliOut.length);
+		assertTrue(cliOut[0].contains("22 database files merged"));
+		assertTrue(cliOut[1].contains("1 file histories shortened"));
+		assertTrue(cliOut[2].contains("Cleanup successful"));
+
+		for (int i=1; i<=21; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertFalse("Database file SHOULD NOT exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}
 		
-		for (int i=11; i<=20; i++) {
+		for (int i=22; i<=22; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertTrue("Database file SHOULD exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}
-				
+		
+		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
+			"--localdir", clientB.get("localdir"),
+			"down"
+		}));
+		
+		assertEquals(2, cliOut.length);
+		assertTrue(cliOut[0].contains("1 database file(s) processed"));
+		assertTrue(cliOut[1].contains("Sync down finished"));
+		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 	}	
 	

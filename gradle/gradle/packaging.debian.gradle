@@ -1,0 +1,81 @@
+// Packaging ///////////////////////////////////////////////////////////////////
+
+task debianClean(type: Delete) {
+	delete 'build/debian'	
+}
+
+task debianManpages(dependsOn: installApp) {
+	doLast {
+		rootProject.file("build/debian/syncany/debian").mkdirs()
+	
+		exec {
+			workingDir rootProject.file("gradle/debian")
+			commandLine "./makemanpages.pl"
+		}
+	}
+}
+
+task debianBasic(dependsOn: [debianClean, installApp, debianManpages]) {
+	// Nothing
+}
+
+tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
+	if (taskName.startsWith("debianPrepare")) {
+		task(taskName, dependsOn: debianBasic){
+			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
+			String debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa${applicationVersionDebian}" : ""
+			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianPpaVersion
+	
+			doLast {
+				copy {
+					from rootProject.files("build/install/syncany") 
+					into rootProject.file("build/debian/syncany")
+					exclude("**/*.bat")
+				}
+	
+				copy {
+					from rootProject.files("build/install/syncany/LICENSE.md") 
+					into rootProject.file("build/debian/syncany/debian")
+					rename("LICENSE.md", "copyright")
+				}
+
+				copy {
+					from rootProject.files("gradle/debian/debian") 
+					into rootProject.file("build/debian/syncany/debian")
+				}
+	
+				exec {
+					workingDir rootProject.file("gradle/debian")
+					commandLine "./makechangelog.pl", "${debianDistribution}", "${debianApplicationVersionFull}"
+				}
+			}
+		}
+	}
+}
+
+task ppaBuild { // depends on debianPrepare*
+	doLast {
+		exec {
+			workingDir rootProject.file("gradle/debian")
+			commandLine "./debuild-signed.sh"
+		}
+	}
+}
+
+task ppa(dependsOn: ppaBuild) {
+	doLast {
+		exec {
+			workingDir rootProject.file("gradle/debian")
+			commandLine "./dput-ppa.sh"
+		}
+	}
+}
+
+task debian { // depends on debianPrepare*
+	doLast {
+		exec {
+			workingDir rootProject.file("build/debian/syncany")
+			commandLine "debuild -i -us -uc -b".split()
+		}
+	}
+}

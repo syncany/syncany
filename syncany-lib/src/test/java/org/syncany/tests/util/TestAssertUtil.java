@@ -30,7 +30,6 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -200,10 +199,10 @@ public class TestAssertUtil {
 	public static void assertSqlDatabaseEquals(File expectedDatabaseFile, File actualDatabaseFile) throws IOException, SQLException {
 		// Compare tables + ignore columns
 		String[][] compareTablesAndIgnoreColumns = new String[][] { 
-			new String[] { "chunk" },
+			new String[] { "chunk", "DATABASEVERSION_ID" },
 			new String[] { "databaseversion", "ID" }, 
 			new String[] { "databaseversion_vectorclock", "DATABASEVERSION_ID" },
-			new String[] { "filecontent" },
+			new String[] { "filecontent", "DATABASEVERSION_ID"},
 			new String[] { "filecontent_chunk" },
 			new String[] { "filehistory", "DATABASEVERSION_ID" },
 			new String[] { "fileversion", "DATABASEVERSION_ID" },
@@ -276,38 +275,6 @@ public class TestAssertUtil {
 				}								
 			}		
 		}
-	}
-	
-	public static String runSqlQuery(String sqlQuery, Connection databaseConnection) throws SQLException {
-		StringBuilder queryResult = new StringBuilder();
-		
-		try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(sqlQuery)) {
-			try (ResultSet actualResultSet = preparedStatement.executeQuery()) {
-				ResultSetMetaData metaData = actualResultSet.getMetaData();
-		
-				boolean isFirstRow = true;
-				int columnsCount = metaData.getColumnCount();
-				
-				while (actualResultSet.next()) {					
-					if (!isFirstRow) {
-						queryResult.append("\n");						
-					}
-					else {
-						isFirstRow = false;
-					}
-					
-					for (int i=1; i<=columnsCount; i++) {
-						queryResult.append(actualResultSet.getString(i));
-						
-						if (i != columnsCount) {
-							queryResult.append(",");
-						}
-					}
-				}
-			}
-		}
-		
-		return queryResult.toString();
 	}
 	
 	private static String getFormattedColumn(ResultSet resultSet) throws SQLException {
@@ -403,5 +370,17 @@ public class TestAssertUtil {
 		
 		e.printStackTrace();
 		fail("Stack trace expected to contain " + expectedContains);
+	}
+	
+	public static void assertRegexInLines(String expectedLinePattern, String[] lines) {
+		Pattern expectedPattern = Pattern.compile(expectedLinePattern);
+		
+		for (String line : lines) {
+			if (expectedPattern.matcher(line).find()) {
+				return;
+			}
+		}
+		
+		fail("Output does not contain "+ expectedLinePattern);
 	}
 }

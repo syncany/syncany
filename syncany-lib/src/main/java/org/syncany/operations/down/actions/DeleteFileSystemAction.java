@@ -27,7 +27,7 @@ public class DeleteFileSystemAction extends FileSystemAction {
 	}
 	
 	@Override
-	public void execute() throws InconsistentFileSystemException, Exception {
+	public FileSystemActionResult execute() throws Exception {
 		// Special case: locally unknown file to be deleted (= nothing to do!)
 		if (fileVersion1 == null) {
 			if (fileExists(fileVersion2)) {
@@ -45,6 +45,7 @@ public class DeleteFileSystemAction extends FileSystemAction {
 		}
 			
 		deleteFile(fileVersion2);
+		return new FileSystemActionResult();
 	}
 
 	@Override

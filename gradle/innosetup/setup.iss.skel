@@ -8,7 +8,7 @@
 ; 2. All VARIABLES with a dollar sign and curly brackets are replaced
 ;    by Gradle, e.g. "applicationVersion" below
 ;
-; 3. The script is COPIED to syncany-cli/build/innosetup before its run,
+; 3. The script is COPIED to build/innosetup before its run,
 ;    so all relative paths refer to this path!
 ;
 ; 4. All BACKSLASHES must be escaped 
@@ -42,7 +42,7 @@ InfoAfterFile=..\\..\\innosetup\\setup-info-after.rtf
 
 [Files]
 Source: "*"; DestDir: "{app}"
-Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany"
+Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany,syncanyd,sy,syd"
 Source: "lib\\*"; DestDir: "{app}\\lib"
 
 [Tasks]

@@ -102,7 +102,7 @@ public class GenlinkCommandTest {
 		}));
 		
 		assertEquals("Different number of output lines expected.", 4, cliOutB.length);
-		assertEquals("Repository connected, and local folder initialized.", cliOutB[2]);
+		assertEquals("Repository connected, and local folder initialized.", cliOutB[1]);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(clientLocalDirB);	

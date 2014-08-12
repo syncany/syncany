@@ -25,12 +25,12 @@ import java.nio.file.attribute.PosixFilePermissions;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.syncany.connection.plugins.local.LocalConnection;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.plugins.local.LocalConnection;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -64,11 +64,11 @@ public class DoSameActionAtTwoClientsTest {
 	
 		// Now, both upload that
 		UpOperationResult upResultA = clientA.upWithForceChecksum(); // (A1)
-		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultA.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResultA.getResultCode());
 		assertEquals(8, upResultA.getChangeSet().getNewFiles().size());
 		
 		UpOperationResult upResultB = clientB.up(upOperationOptionsWithForce); // (B1)
-		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultB.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResultB.getResultCode());
 		assertEquals(8, upResultB.getChangeSet().getNewFiles().size());
 		
 		DownOperationResult downResultA = clientA.down(); 
@@ -90,7 +90,7 @@ public class DoSameActionAtTwoClientsTest {
 		
 		Files.setPosixFilePermissions(clientB.getLocalFile("sphinxbase-0.8").toPath(), PosixFilePermissions.fromString("rwxrwxrwx"));
 		UpOperationResult upResultB2 = clientB.up(); // (B2)
-		assertEquals(UpResultCode.OK_APPLIED_CHANGES, upResultB2.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResultB2.getResultCode());
 		assertEquals(1, upResultB2.getChangeSet().getChangedFiles().size());
 		
 		// For peaking (does NOT affect the test)

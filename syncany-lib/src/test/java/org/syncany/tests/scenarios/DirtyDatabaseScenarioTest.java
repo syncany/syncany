@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.PartialFileHistory;
@@ -40,20 +39,21 @@ import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.ChangeSet;
-import org.syncany.operations.CleanupOperation.CleanupOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationOptions;
-import org.syncany.operations.StatusOperation.StatusOperationResult;
+import org.syncany.operations.status.StatusOperationOptions;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationOptions;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestCollectionUtil;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class DirtyDatabaseScenarioTest {
 	@Test
 	public void testDirtyDatabase() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -120,21 +120,17 @@ public class DirtyDatabaseScenarioTest {
 	@Test
 	public void testDirtyCleanupDirty() throws Exception {
 		// Setup 
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 		TestClient clientC = new TestClient("C", testConnection);
 		TestClient clientD = new TestClient("D", testConnection);
-		
-		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setMergeRemoteFiles(true);
-		
+	
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
 		
 		UpOperationOptions upOptionsForceEnabled = new UpOperationOptions();
-		upOptionsForceEnabled.setCleanupOptions(cleanupOptions);
 		upOptionsForceEnabled.setStatusOptions(statusOptions);
 		upOptionsForceEnabled.setForceUploadEnabled(true);
 
@@ -166,14 +162,14 @@ public class DirtyDatabaseScenarioTest {
 		clientA.down(); // resolve conflict (wins, no DIRTY)
 		
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
-		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
 		
 		clientB.down(); // resolve conflict (loses, creates DIRTY version)
 		
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
-		assertEquals("2", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
-		assertEquals("(A1,B2)\n(A1,B3)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion where status='DIRTY' order by id", databaseConnectionB));
-		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion where status<>'DIRTY' order by id", databaseConnectionB));
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
+		assertEquals("(A1,B2)\n(A1,B3)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion where status='DIRTY' order by id", databaseConnectionB));
+		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion where status<>'DIRTY' order by id", databaseConnectionB));
 		
 		StatusOperationResult statusResultBAfterDirty = clientB.status();
 		assertNotNull(statusResultBAfterDirty);
@@ -183,13 +179,13 @@ public class DirtyDatabaseScenarioTest {
 		TestAssertUtil.assertConflictingFileExists("A-file1.jpg", clientB.getLocalFiles());
 		
 		clientB.up(upOptionsForceEnabled); // (A3,B2)
-		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
 		
-		assertEquals("4", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionA)); // (A1), (A1,B1), (A2,B1), (A3,B1)
-		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion order by id", databaseConnectionA));
+		assertEquals("4", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA)); // (A1), (A1,B1), (A2,B1), (A3,B1)
+		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion order by id", databaseConnectionA));
 		
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionB));
-		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)\n(A3,B4)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion order by id", databaseConnectionB));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionB));
+		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)\n(A3,B4)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion order by id", databaseConnectionB));
 
 		
 		//// 2. NOW THAT CLIENT B RESOLVED IT, A GETS DIRTY
@@ -222,17 +218,17 @@ public class DirtyDatabaseScenarioTest {
 		clientA.createNewFile("dirty7");
 		clientA.up(upOptionsForceEnabled);
 		
-		assertEquals("11", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionA));
+		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
 		clientA.down();
-		assertEquals("12", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionA));
-		assertEquals("7", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
-		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)\n(A3,B4)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion where status<>'DIRTY' order by id", databaseConnectionA));
+		assertEquals("12", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		assertEquals("7", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
+		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)\n(A3,B4)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion where status<>'DIRTY' order by id", databaseConnectionA));
 		
 		clientB.down(); // Does nothing; A versions lose against (A3,B2) // same as above!
-		assertEquals("5", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionB));
-		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)\n(A3,B4)", TestAssertUtil.runSqlQuery("select vectorclock_serialized from databaseversion order by id", databaseConnectionB));
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionB));
+		assertEquals("(A1)\n(A1,B1)\n(A2,B1)\n(A3,B1)\n(A3,B4)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion order by id", databaseConnectionB));
 		
 
 		//// 3. NEW CLIENT JOINS
@@ -247,26 +243,33 @@ public class DirtyDatabaseScenarioTest {
 		clientA.deleteFile("dirty2");
 		
 		clientA.up(upOptionsForceEnabled); // upload DIRTY version
-		assertEquals("6", TestAssertUtil.runSqlQuery("select count(*) from databaseversion", databaseConnectionA));
-		assertEquals("0", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
-		assertEquals("6", TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
+		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
+		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
 		
 		clientA.createNewFile("A-file2.jpg");
+
+		int numberOfDatabaseVersions = 6;
+		int cleanupEveryXUps = 7; // For every X up's call 'cleanup' ("X" is larger than the max. length of file versions in a history)
 		
 		for (int i=1; i<=21; i++) {
 			clientA.changeFile("A-file2.jpg");
+			
 			clientA.up(upOptionsForceEnabled);
-			
-			// This is odd but correct: 
-			// After 5 file versions, for every "up", two database versions are added
-			
-			if (i < 5) {
-				assertEquals(""+(6+i), TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
+			numberOfDatabaseVersions++;
+					
+			if (i % cleanupEveryXUps == 0) {
+				clientA.cleanup();
+				numberOfDatabaseVersions++;
+
+				assertEquals(""+numberOfDatabaseVersions, TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
 			}
 			else {
-				assertEquals(""+(6+5+(i-5)*2), TestAssertUtil.runSqlQuery("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
+				assertEquals(""+numberOfDatabaseVersions, TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
 			}
 		}
+		
+		clientA.cleanup();
 		
 		clientB.down();
 		clientC.down();

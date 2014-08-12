@@ -52,16 +52,18 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
 	 * 
 	 * @param connection The connection used to execute the statements
+	 * @param databaseVersionId 
 	 * @param chunks List of {@link ChunkEntry}s to be inserted in the database
 	 * @throws SQLException If the SQL statement fails
 	 */
-	public void writeChunks(Connection connection, Collection<ChunkEntry> chunks) throws SQLException {
+	public void writeChunks(Connection connection, long databaseVersionId, Collection<ChunkEntry> chunks) throws SQLException {
 		if (chunks.size() > 0) {
-			PreparedStatement preparedStatement = getStatement(connection, "/sql/chunk.insert.all.writeChunks.sql");
+			PreparedStatement preparedStatement = getStatement(connection, "chunk.insert.all.writeChunks.sql");
 
 			for (ChunkEntry chunk : chunks) {
 				preparedStatement.setString(1, chunk.getChecksum().toString());
-				preparedStatement.setInt(2, chunk.getSize());
+				preparedStatement.setLong(2, databaseVersionId);
+				preparedStatement.setInt(3, chunk.getSize());
 
 				preparedStatement.addBatch();
 			}
@@ -81,7 +83,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query. 
 	 */
 	public void removeUnreferencedChunks() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.delete.all.removeUnreferencesChunks.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("chunk.delete.all.removeUnreferencesChunks.sql")) {
 			preparedStatement.execute();
 			preparedStatement.close();
 		}
@@ -134,10 +136,8 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	 * @return Returns all chunks that originally belong to a database version
 	 */
 	public Map<ChunkChecksum, ChunkEntry> getChunks(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.getChunksForDatabaseVersion.sql")) {
-
+		try (PreparedStatement preparedStatement = getStatement("chunk.select.all.getChunksForDatabaseVersion.sql")) {
 			preparedStatement.setString(1, vectorClock.toString());
-			preparedStatement.setString(2, vectorClock.toString());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createChunkEntries(resultSet);
@@ -165,7 +165,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 	
 	protected void loadChunkCache() {
-		try (PreparedStatement preparedStatement = getStatement("/sql/chunk.select.all.loadChunkCache.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("chunk.select.all.loadChunkCache.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				chunkCache = createChunkEntries(resultSet);
 			}
@@ -173,5 +173,18 @@ public class ChunkSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	/**
+	 * no commit
+	 */
+	public void updateDirtyChunksNewDatabaseId(long newDatabaseVersionId) {
+		try (PreparedStatement preparedStatement = getStatement("chunk.update.dirty.updateDirtyChunksNewDatabaseId.sql")) {
+			preparedStatement.setLong(1, newDatabaseVersionId);
+			preparedStatement.executeUpdate();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}		
 	}
 }

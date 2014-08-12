@@ -30,12 +30,13 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
+import org.syncany.database.VectorClock;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
@@ -58,6 +59,8 @@ public class Config {
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
 	public static final String FILE_IGNORE = ".syignore";
+	public static final String FILE_DATABASE = "local.db";
+	public static final String FILE_PORT = "port";
 		
 	private byte[] repoId;
 	private String machineName;
@@ -71,13 +74,15 @@ public class Config {
 	private SaltedSecretKey masterKey;
 
 	private Cache cache;	
-	private Connection connection;
+	private TransferPlugin plugin;
+	private TransferSettings connection;
     private Chunker chunker;
     private MultiChunker multiChunker;
     private Transformer transformer;
     private IgnoredFiles ignoredFiles;
       
-    static {    	    	
+    static {    	    
+    	UserConfig.init();
     	Logging.init();
     }
     
@@ -94,14 +99,10 @@ public class Config {
 		initRepo(repoTO);
     	initConnection(configTO);  	
 	}		
-	
-	private void initNames(ConfigTO configTO) throws ConfigException {
-		if (configTO.getMachineName() == null || !configTO.getMachineName().matches("[a-zA-Z0-9]+")) {
-			throw new ConfigException("Machine name cannot be empty and must be only characters and numbers (A-Z, 0-9).");
-		}
-		
-		machineName = configTO.getMachineName();
-		displayName = configTO.getDisplayName();
+
+	private void initNames(ConfigTO configTO) throws ConfigException {		
+		setMachineName(configTO.getMachineName());
+		setDisplayName(configTO.getDisplayName());
 	}
 	
 	private void initMasterKey(ConfigTO configTO) {
@@ -110,10 +111,10 @@ public class Config {
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
 		localDir = FileUtil.getCanonicalFile(aLocalDir);		
-		appDir = FileUtil.getCanonicalFile(new File(localDir+File.separator+DIR_APPLICATION));
-		cacheDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_CACHE));
-		databaseDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_DATABASE));
-		logDir = FileUtil.getCanonicalFile(new File(appDir+File.separator+DIR_LOG));
+		appDir = FileUtil.getCanonicalFile(new File(localDir, DIR_APPLICATION));
+		cacheDir = FileUtil.getCanonicalFile(new File(appDir, DIR_CACHE));
+		databaseDir = FileUtil.getCanonicalFile(new File(appDir, DIR_DATABASE));
+		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
 	}
 	
 	private void initCache() {
@@ -142,29 +143,10 @@ public class Config {
 	}
 
 	private void initChunker(RepoTO repoTO) throws Exception {
-		// TODO [feature request] make chunking options configurable, something like this:
-		//  chunker = Chunker.getInstance(repoTO.getChunker().getType());
-		//  chunker.init(repoTO.getChunker().getSettings());
+		// TODO [feature request] make chunking options configurable, something like described in #29
+		// See: https://github.com/syncany/syncany/issues/29#issuecomment-43425647
 		
 		chunker = new FixedChunker(512*1024, "SHA1");
-		
-		/*new MimeTypeChunker(
-			new FixedChunker(64*1024, "SHA1"),
-			new FixedChunker(2*1024*1024, "SHA1"),
-			Arrays.asList(new String[] {
-				"application/x-gzip",
-				"application/x-compressed.*",
-				"application/zip",		
-				"application/x-java-archive",	
-				"application/octet-stream",
-				"application/x-sharedlib",
-				"application/x-executable",
-				"application/x-iso9660-image",
-				"image/.+",
-				"audio/.+",
-				"video/.+",				
-			})
-		);*/
 	}
 
 	private void initMultiChunker(RepoTO repoTO) throws ConfigException {
@@ -219,15 +201,15 @@ public class Config {
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
 		if (configTO.getConnectionTO() != null) {
-			Plugin plugin = Plugins.get(configTO.getConnectionTO().getType());
+			plugin = Plugins.get(configTO.getConnectionTO().getType(), TransferPlugin.class);
 	    	
 	    	if (plugin == null) {
 	    		throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
 	    	}
 	    	
 	    	try {
-		    	connection = plugin.createConnection();
-		    	connection.init(this, configTO.getConnectionTO().getSettings());
+		    	connection = plugin.createSettings();
+		    	connection.init(configTO.getConnectionTO().getSettings());
 	    	}
 	    	catch (StorageException e) {
 	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);
@@ -251,7 +233,11 @@ public class Config {
 		return machineName;
 	}
 
-	public void setMachineName(String machineName) {
+	public void setMachineName(String machineName) throws ConfigException {
+		if (machineName == null || !VectorClock.MACHINE_PATTERN.matcher(machineName).matches()) {
+			throw new ConfigException("Machine name cannot be empty and must be only characters (A-Z).");
+		}
+		
 		this.machineName = machineName;
 	}			
 
@@ -262,12 +248,16 @@ public class Config {
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
-
-	public Connection getConnection() {
+		
+	public TransferPlugin getTransferPlugin() {
+		return plugin;
+	}
+	
+	public TransferSettings getConnection() {
         return connection;
     }
 
-    public void setConnection(Connection connection) {
+    public void setConnection(TransferSettings connection) {
         this.connection = connection;
     }
 
@@ -312,22 +302,10 @@ public class Config {
 	}
 
 	public File getDatabaseFile() {
-		return new File(databaseDir+File.separator+"local.db");	
+		return new File(databaseDir, FILE_DATABASE);	
 	}	
 
 	public File getLogDir() {
 		return logDir;
-	}
-	
-	public static class ConfigException extends Exception {
-		private static final long serialVersionUID = 4414807565457521855L;
-
-	    public ConfigException(String message, Throwable cause) {
-	        super(message, cause);
-	    }
-
-	    public ConfigException(String message) {
-	        super(message);
-	    }
 	}
 }

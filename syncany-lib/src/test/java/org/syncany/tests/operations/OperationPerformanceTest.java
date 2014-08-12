@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.connection.plugins.Connection;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.up.UpOperation;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -36,7 +36,7 @@ public class OperationPerformanceTest {
 	@Test
 	public void testOperationPerformance() throws Exception {
 		// Setup
-		Connection testConnection = TestConfigUtil.createTestLocalConnection();
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 		
 		Config configA = TestConfigUtil.createTestLocalConfig("A", testConnection);
 		Config configB = TestConfigUtil.createTestLocalConfig("B", testConnection);

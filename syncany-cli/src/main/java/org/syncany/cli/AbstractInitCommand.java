@@ -17,10 +17,8 @@
  */
 package org.syncany.cli;
 
-import java.math.BigInteger;
 import java.net.UnknownHostException;
-import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,19 +28,26 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginOptionSpec;
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.connection.plugins.PluginOptionSpecs;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.StorageTestResult;
+import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
+import org.syncany.plugins.PluginOptionSpec;
+import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.plugins.PluginOptionSpecs;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
-public abstract class AbstractInitCommand extends Command {
+import com.google.common.base.Strings;
+
+public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
+	public static final int PASSWORD_MIN_LENGTH = 10;
+	public static final int PASSWORD_WARN_LENGTH = 12;
+	
 	protected InitConsole console;
 	protected boolean isInteractive;	
 
@@ -64,7 +69,7 @@ public abstract class AbstractInitCommand extends Command {
 	protected ConnectionTO createConnectionTOFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts,
 			OptionSpec<Void> optionNonInteractive) throws Exception {
 		
-		Plugin plugin = null;
+		TransferPlugin plugin = null;
 		Map<String, String> pluginSettings = null;
 
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
@@ -111,8 +116,8 @@ public abstract class AbstractInitCommand extends Command {
 		return pluginOptionValues;
 	}
 	
-	protected Plugin initPlugin(String pluginStr) throws Exception {
-		Plugin plugin = Plugins.get(pluginStr);
+	protected TransferPlugin initPlugin(String pluginStr) throws Exception {
+		TransferPlugin plugin = Plugins.get(pluginStr, TransferPlugin.class);
 
 		if (plugin == null) {
 			throw new Exception("ERROR: Plugin '" + pluginStr + "' does not exist.");
@@ -121,8 +126,8 @@ public abstract class AbstractInitCommand extends Command {
 		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
-		Connection connection = plugin.createConnection();
+	protected Map<String, String> askPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
+		TransferSettings connection = plugin.createSettings();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 		
 		Map<String, String> pluginOptionValues = new HashMap<String, String>();
@@ -154,12 +159,12 @@ public abstract class AbstractInitCommand extends Command {
 		return pluginOptionValues;
 	}
 	
-	protected Map<String, String> initPluginSettings(Plugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
+	protected Map<String, String> initPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
 		if (knownPluginOptionValues == null) {
 			knownPluginOptionValues = new HashMap<String, String>();
 		}
 		
-		Connection connection = plugin.createConnection();
+		TransferSettings connection = plugin.createSettings();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();		
 
 		pluginOptionSpecs.validate(knownPluginOptionValues); // throws error if invalid
@@ -173,12 +178,15 @@ public abstract class AbstractInitCommand extends Command {
 
 			// Retrieve value
 			if (optionSpec.isSensitive()) {
+				// The option is sensitive. Could be either mandatory or optional
 				value = askPluginOptionSensitive(optionSpec, knownOptionValue);				
 			}
 			else if (!optionSpec.isMandatory()) {
+				// The option is optional
 				value = askPluginOptionOptional(optionSpec, knownOptionValue);	
 			}
 			else {
+				// The option is mandatory, but not sensitive
 				value = askPluginOptionNormal(optionSpec, knownOptionValue);
 			}
 
@@ -245,13 +253,14 @@ public abstract class AbstractInitCommand extends Command {
 
 	private String askPluginOptionSensitive(PluginOptionSpec optionSpec, String knownOptionValue) {
 		String value = knownOptionValue;
+		String optionalIndicator = optionSpec.isMandatory() ? "" : ", optional"; 
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (not displayed): ", optionSpec.getDescription());
+			out.printf("- %s (not displayed%s): ", optionSpec.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 		}
 		else {
-			out.printf("- %s (***, not displayed): ", optionSpec.getDescription());
+			out.printf("- %s (***, not displayed%s): ", optionSpec.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 			
 			if ("".equals(value)) {
@@ -262,13 +271,13 @@ public abstract class AbstractInitCommand extends Command {
 		return value;
 	}
 
-	protected Plugin askPlugin() {
-		Plugin plugin = null;
+	protected TransferPlugin askPlugin() {
+		TransferPlugin plugin = null;
 
-		List<Plugin> plugins = new ArrayList<Plugin>(Plugins.list());
-		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<Plugin>() {
+		List<TransferPlugin> plugins = Plugins.list(TransferPlugin.class);
+		String pluginsList = StringUtil.join(plugins, ", ", new StringJoinListener<TransferPlugin>() {
 			@Override
-			public String getString(Plugin plugin) {
+			public String getString(TransferPlugin plugin) {
 				return plugin.getId();
 			}
 		});
@@ -278,7 +287,7 @@ public abstract class AbstractInitCommand extends Command {
 			out.print("Plugin: ");
 			String pluginStr = console.readLine();
 			
-			plugin = Plugins.get(pluginStr);
+			plugin = Plugins.get(pluginStr, TransferPlugin.class);
 
 			if (plugin == null) {
 				out.println("ERROR: Plugin does not exist.");
@@ -290,8 +299,7 @@ public abstract class AbstractInitCommand extends Command {
 	}
 
 	protected String getRandomMachineName() {
-		String randomStr = new BigInteger(128, new SecureRandom()).toString(32);
-		return (randomStr.length() > 16) ? randomStr.substring(0, 16) : randomStr;
+		return CipherUtil.createRandomAlphabeticString(20);
 	}
 
 	protected String getDefaultDisplayName() throws UnknownHostException {
@@ -299,12 +307,11 @@ public abstract class AbstractInitCommand extends Command {
 	}
 
 	protected boolean askRetryConnection() {
-		String yesno = console.readLine("Would you change the settings and retry the connection (y/n)? ");				
-		return yesno.toLowerCase().startsWith("y") || yesno.trim().equals("");
+		return onUserConfirm(null, "Connection failure", "Would you change the settings and retry the connection");		
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
-		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType()), connectionTO.getSettings(), true);
+		Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType(), TransferPlugin.class), connectionTO.getSettings(), true);
 		connectionTO.setSettings(newPluginSettings);
 	}
 	
@@ -349,5 +356,93 @@ public abstract class AbstractInitCommand extends Command {
 			out.println("Error message (see log file for details):");
 			out.println("  " + testResult.getException().getMessage());
 		}
+	}
+
+	@Override
+	public boolean onUserConfirm(String header, String message, String question) {
+		if (header != null) {
+			out.println();
+			out.println(header);
+			out.println(Strings.repeat("-", header.length()));
+		}
+		
+		out.println(message);
+		out.println();
+		
+		String yesno = console.readLine(question + " (y/n)? ");
+		
+		if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+	@Override
+	public void onShowMessage(String message) {
+		out.println(message);
+	}
+
+	@Override
+	public String onUserPassword(String header, String message) {
+		out.println();
+
+		if (header != null) {
+			out.println(header);
+			out.println(Strings.repeat("-", header.length()));
+		}
+		
+		if (!message.trim().endsWith(":")) {
+			message += ": ";
+		}
+		
+		char[] passwordChars = console.readPassword(message);
+		return String.copyValueOf(passwordChars);
+	}
+	
+	@Override
+	public String onUserNewPassword() {
+		out.println();
+		out.println("The password is used to encrypt data on the remote storage.");
+		out.println("Choose wisely!");
+		out.println();
+		
+		String password = null;
+		
+		while (password == null) {
+			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
+			
+			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
+				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
+				out.println();
+				
+				continue;
+			}
+			
+			char[] confirmPasswordChars = console.readPassword("Confirm: ");
+			
+			if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
+				out.println("ERROR: Passwords do not match.");
+				out.println();
+				
+				continue;
+			} 
+			
+			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
+				out.println();
+				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
+				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
+				
+				if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {
+					out.println();
+					continue;
+				}
+			}
+			
+			password = new String(passwordChars);			
+		}	
+		
+		return password;
 	}
 } 

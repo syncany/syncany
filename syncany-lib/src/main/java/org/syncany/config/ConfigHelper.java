@@ -24,13 +24,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
  * The config helper provides convenience functions to load the configuration from
@@ -41,6 +40,21 @@ import org.syncany.crypto.SaltedSecretKey;
 public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
 	
+	/**
+	 * Loads a {@link Config} object from the given local directory.
+	 * 
+	 * <p>If the config file (.syncany/config.xml) does not exist, <tt>null</tt>
+	 * is returned. If it does, the method tries to do the following:
+	 * <ul>
+	 *  <li>Load the .syncany/config.xml file and load the plugin given by the config file</li>
+	 *  <li>Read .syncany/repo, decrypt it using the master key (if necessary) and load it</li>
+	 *  <li>Instantiate a {@link Config} object with the transfer objects</li>
+	 * </ul>
+	 * 
+	 * @return Returns an instantiated {@link Config} object, or <tt>null</tt> if
+	 *         the config file does not exist
+	 * @throws Throws an exception if the config is invalid 
+	 */
 	public static Config loadConfig(File localDir) throws ConfigException {
 		if (localDir == null) {
 			throw new ConfigException("Argument localDir cannot be null.");
@@ -55,16 +69,15 @@ public class ConfigHelper {
 			RepoTO repoTO = ConfigHelper.loadRepoTO(localDir, configTO);
 			
 			String pluginId = (configTO.getConnectionTO() != null) ? configTO.getConnectionTO().getType() : null;
-			Plugin plugin = Plugins.get(pluginId);
+			TransferPlugin plugin = Plugins.get(pluginId, TransferPlugin.class);
 			
 			if (plugin == null) {
 				logger.log(Level.WARNING, "Not loading config! Plugin with id '{0}' does not exist.", pluginId);
-				return null;
+				throw new ConfigException("Plugin with id '" + pluginId + "' does not exist. Try 'sy plugin install " + pluginId + "'.");
 			}
-			else {
-				logger.log(Level.INFO, "Initializing Config instance ...");
-				return new Config(localDir, configTO, repoTO);
-			}
+
+			logger.log(Level.INFO, "Initializing Config instance ...");
+			return new Config(localDir, configTO, repoTO);
 		}		
 		else {
 			logger.log(Level.INFO, "Not loading config, app dir does not exist: {0}", appDir);
@@ -72,8 +85,23 @@ public class ConfigHelper {
 		}
 	}
 	
+	/**
+	 * Returns true if the config.xml file exists, given a local directory.
+	 */
+	public static boolean configExists(File localDir) {
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File configFile = new File(appDir, Config.FILE_CONFIG);
+		
+		return configFile.exists();
+	}
+	
+	/**
+	 * Loads the config transfer object from the local directory
+	 * or throws an exception if the file does not exist.
+	 */
     public static ConfigTO loadConfigTO(File localDir) throws ConfigException {
-		File configFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_CONFIG);
+    	File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File configFile = new File(appDir, Config.FILE_CONFIG);
 		
 		if (!configFile.exists()) {
 			throw new ConfigException("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
@@ -82,8 +110,12 @@ public class ConfigHelper {
 		return ConfigTO.load(configFile);		
 	}
     
+    /**
+     * Loads the repository transfer object from the local directory.
+     */
     public static RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws ConfigException {
-		File repoFile = new File(localDir+"/"+Config.DIR_APPLICATION+"/"+Config.FILE_REPO);
+    	File appDir = new File(localDir, Config.DIR_APPLICATION);
+		File repoFile = new File(appDir, Config.FILE_REPO);
 		
 		if (!repoFile.exists()) {
 			throw new ConfigException("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
@@ -101,24 +133,6 @@ public class ConfigHelper {
 			throw new ConfigException("Cannot load repo file: "+e.getMessage(), e);
 		}
 	}
-    
-    private static RepoTO loadEncryptedRepoTO(File repoFile, ConfigTO configTO) throws Exception {
-    	logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
-
-		SaltedSecretKey masterKey = configTO.getMasterKey();
-		
-		if (masterKey == null) {
-			throw new ConfigException("Repo file is encrypted, but master key not set in config file.");
-		}
-		
-		String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
-		return new Persister().read(RepoTO.class, repoFileStr);
-    }
-    
-    private static RepoTO loadPlaintextRepoTO(File repoFile, ConfigTO configTO) throws Exception {
-    	logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
-		return new Persister().read(RepoTO.class, repoFile);
-    }
     
     /**
      * Helper method to find the local sync directory, starting from a path equal
@@ -146,8 +160,8 @@ public class ConfigHelper {
 			File currentSearchFolder = startingPath.getCanonicalFile();
 			
 			while (currentSearchFolder != null) {
-				File possibleAppDir = new File(currentSearchFolder+"/"+Config.DIR_APPLICATION);
-				File possibleConfigFile = new File(possibleAppDir+"/"+Config.FILE_CONFIG);
+				File possibleAppDir = new File(currentSearchFolder, Config.DIR_APPLICATION);
+				File possibleConfigFile = new File(possibleAppDir, Config.FILE_CONFIG);
 					
 				if (possibleAppDir.exists() && possibleConfigFile.exists()) {
 					return possibleAppDir.getParentFile().getCanonicalFile();
@@ -162,4 +176,22 @@ public class ConfigHelper {
     		throw new RuntimeException("Unable to determine local directory starting from: "+startingPath, e);
     	}
 	}
+
+    private static RepoTO loadPlaintextRepoTO(File repoFile, ConfigTO configTO) throws Exception {
+    	logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
+		return new Persister().read(RepoTO.class, repoFile);
+    }
+    
+    private static RepoTO loadEncryptedRepoTO(File repoFile, ConfigTO configTO) throws Exception {
+    	logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);				
+
+		SaltedSecretKey masterKey = configTO.getMasterKey();
+		
+		if (masterKey == null) {
+			throw new ConfigException("Repo file is encrypted, but master key not set in config file.");
+		}
+		
+		String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
+		return new Persister().read(RepoTO.class, repoFileStr);
+    }
 }

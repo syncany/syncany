@@ -21,24 +21,43 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 
-@Root(name="userConfig")
+/**
+ * The user config transfer object is a helper data structure that allows storing
+ * a user's global system settings such as system properties.
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+@Root(name="userConfig", strict=false)
 @Namespace(reference="http://syncany.org/userconfig/1")
 public class UserConfigTO {
 	@ElementMap(name="systemProperties", entry="property", key="name", required=false, attribute=true)
 	private TreeMap<String, String> systemProperties;
 	
+	@Element(name="preventStandby", required=false)
+	private boolean preventStandby;
+	
 	public UserConfigTO() {
 		this.systemProperties = new TreeMap<String, String>();
+		this.preventStandby = false;
 	}
 	
 	public Map<String, String> getSystemProperties() {
 		return systemProperties;
+	}
+	
+	public boolean preventStandbyEnabled() {
+		return preventStandby;
 	}
 	
 	public static UserConfigTO load(File file) throws ConfigException {

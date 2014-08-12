@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.syncany.util.FileUtil;
 
 /**
@@ -75,16 +76,26 @@ public class TestFileUtil {
 		return createTempDirectoryInSystemTemp("syncanytest");
 	}
 
+	public static File getAppTempDir() {
+		String tempDirStr = System.getProperty("org.syncany.test.tmpdir");
+		
+		if (tempDirStr == null) {
+			tempDirStr = System.getProperty("java.io.tmpdir");
+		}
+		
+		return new File(tempDirStr, "syncanytest");
+	}
+	
 	public static File createTempDirectoryInSystemTemp(String prefix) throws Exception {
-		File tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir") + "/" + prefix);
+		File tempDirectoryInSystemTemp = new File(getAppTempDir() + "/" + prefix);
 
 		int i = 1;
 		while (tempDirectoryInSystemTemp.exists()) {
-			tempDirectoryInSystemTemp = new File(System.getProperty("java.io.tmpdir") + "/" + prefix + "-" + i);
+			tempDirectoryInSystemTemp = new File(getAppTempDir() + "/" + prefix + "-" + i);
 			i++;
 		}
 
-		if (!tempDirectoryInSystemTemp.mkdir()) {
+		if (!tempDirectoryInSystemTemp.mkdirs()) {
 			throw new Exception("Cannot create temp. directory " + tempDirectoryInSystemTemp);
 		}
 
@@ -319,11 +330,6 @@ public class TestFileUtil {
 
 		return fileMap;
 	}
-	
-	public static void appendToOutputStream(File fileToAppend, OutputStream outputStream) throws IOException {
-		FileUtil.appendToOutputStream(new FileInputStream(fileToAppend), outputStream);
-	}
-	
 
 	/**
 	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
@@ -343,7 +349,10 @@ public class TestFileUtil {
 	}	
 	
 	public static void writeToFile(byte[] bytes, File file) throws IOException {
-		FileUtil.appendToOutputStream(new ByteArrayInputStream(bytes), new FileOutputStream(file), true);
+		FileOutputStream outputStream = new FileOutputStream(file);
+		
+		IOUtils.copy(new ByteArrayInputStream(bytes), outputStream);
+		outputStream.close();
 	}
 	
 	public static String getBasename(String filename) {

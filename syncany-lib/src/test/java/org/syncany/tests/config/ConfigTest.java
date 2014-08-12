@@ -30,7 +30,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.config.Config.ConfigException;
+import org.syncany.config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.TransformerTO;

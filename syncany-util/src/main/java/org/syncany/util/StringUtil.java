@@ -24,10 +24,11 @@ import java.util.List;
 import javax.xml.bind.DatatypeConverter;
 
 /**
- *
+ * Utility class for common application string functions.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class StringUtil {    
+public class StringUtil {   
 	/**
 	 * Transforms a string to a camel case representation, including the
 	 * first character.
@@ -36,6 +37,9 @@ public class StringUtil {
 	 * <ul>
 	 *  <li><tt>toCamelCase("hello world") -&gt; "HelloWorld"</tt></li>
 	 *  <li><tt>toCamelCase("hello_world") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("hello_World") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("helloWorld") -&gt; "HelloWorld"</tt></li>
+	 *  <li><tt>toCamelCase("HelloWorld") -&gt; "HelloWorld"</tt></li>
 	 * </ul>
 	 */
     public static String toCamelCase(String str) {
@@ -46,7 +50,7 @@ public class StringUtil {
 	            sb.append(Character.toUpperCase(s.charAt(0)));
 	
 	            if (s.length() > 1) {
-	                sb.append(s.substring(1, s.length()).toLowerCase());
+	                sb.append(s.substring(1, s.length()));
 	            }
         	}
         }
@@ -54,6 +58,43 @@ public class StringUtil {
         return sb.toString();
     }
     
+    /**
+     * Transforms a string to underscore-delimited representation.
+     * 
+	 * <p>Examples:
+	 * <ul>
+	 *  <li><tt>toUnderScoreDelimited("HelloWorld") -&gt; "hello_world"</tt></li>
+	 *  <li><tt>toUnderScoreDelimited("helloWorld") -&gt; "hello_world"</tt></li>
+	 * </ul>
+     */
+    public static String toSnakeCase(String str) {
+		StringBuilder sb = new StringBuilder();
+
+        for (char c : str.toCharArray()) {   
+        	if (Character.isLetter(c) || Character.isDigit(c)) {
+        		if (Character.isUpperCase(c)) {
+            		if (sb.length() > 0) {
+            			sb.append("_");
+            		}
+            		
+            		sb.append(Character.toLowerCase(c));
+            	}
+            	else {
+            		sb.append(c);
+            	}
+        	}
+        	else {
+        		sb.append("_");
+        	}
+        }
+
+        return sb.toString();
+	}
+    
+    /**
+     * Converts a byte array to a lower case hex representation.
+     * If the given byte array is <tt>null</tt>, an empty string is returned.
+     */
     public static String toHex(byte[] bytes) {
     	if (bytes == null) {
     		return "";
@@ -63,10 +104,18 @@ public class StringUtil {
     	}
     }
     
+    /**
+     * Creates byte array from a hex represented string.
+     */
     public static byte[] fromHex(String s) {
     	return DatatypeConverter.parseHexBinary(s); // fast!    	
     }
     
+    /**
+     * Creates a byte array from a given string, using the UTF-8
+     * encoding. This calls {@link String#getBytes(java.nio.charset.Charset)} 
+     * internally with "UTF-8" as charset.
+     */
     public static byte[] toBytesUTF8(String s) {
     	try {
 			return s.getBytes("UTF-8");
@@ -74,6 +123,27 @@ public class StringUtil {
     	catch (UnsupportedEncodingException e) {
 			throw new RuntimeException("JVM does not support UTF-8 encoding.", e);
 		}
+    }
+    
+    /**
+     * Returns the count of the substring 
+     */
+    public static int substrCount(String haystack, String needle) {
+    	int lastIndex = 0;
+    	int count = 0;
+
+    	if (needle != null && haystack != null) {
+			while (lastIndex != -1) {
+				lastIndex = haystack.indexOf(needle, lastIndex);
+	
+				if (lastIndex != -1) {
+					count++;
+					lastIndex += needle.length();
+				}
+	    	}
+    	}
+    	
+		return count;
     }
 	
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
@@ -109,5 +179,5 @@ public class StringUtil {
 	
 	public static interface StringJoinListener<T> {
 		public String getString(T object);
-	}	
+	}
 }

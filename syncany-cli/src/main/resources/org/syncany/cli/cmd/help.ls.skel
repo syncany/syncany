@@ -1,0 +1,86 @@
+NAME
+  sy-ls - lists and filters the current and past file tree
+   
+SYNOPSIS
+  sy ls [-V | --versions] [-t | --types=<types>] [-D | --date=<date>]
+        [-r | --recursive] [-f | --full-checksums] [-g | --group]
+        [<path-expression>]
+  
+DESCRIPTION 
+  This command lists and filters the file tree based on the local database. 
+  The file tree selection can be performed using the following selection
+  criteria: 
+  
+  (1) Using the <path-expression>, one can select a file pattern (such as
+  `*.txt`) or sub tree (such as `subfolder/`, only with -r). (2) Using -r,
+  the command does not only list the folder relative to the 
+  <path-expression>, but to all sub trees of it. (3)  The -t option limits
+  the result set to a certain file type ('f' for files, 'd' for directories,
+  and 's' for symlinks). Types can be combined, e.g. `sy ls -tfs` selects
+  files and symlinks. (4) The -D option selects the date/time at which to
+  select the file tree, e.g. `sy ls -D20m` to select the file tree 20 minutes
+  ago or `sy ls -D2014-05-02` to select the file tree at May 2.
+  
+  Using the --versions flag, the command also displays the entire version 
+  history for the selected files. Using --group, the result can be grouped by
+  the file history identifier.  
+  
+OPTIONS
+  -V, --versions
+    Select and display the entire history of the matching files instead of only
+    the last version. Useful with --group.
+  
+  -t, --types=<t|d|s>            
+    Limits the result set to a certain file type ('f' for files, 'd' for
+    directories, and 's' for symlinks). Types can be combined, e.g. 
+    `sy ls -tfs` selects files and symlinks. Default setting is 'tds'. 
+     
+  -D, --date=<relative-date|absolute-date>
+    Selects the file tree at a certain date. The date can be given as a 
+    relative date to the current time, or an absolute date in form of a 
+    timestamp.
+    
+    Absolute date format: <yy-MM-dd HH:mm:ss>
+
+    Relative date format: <value><unit>, for which <value> may be any 
+    floating point number and <unit> may be any of the following: s(econds),
+    m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
+    shortened if they are unique. Examples: 5h30m or 1y1mo2d
+    
+  -r, --recursive
+    Not only selects the folder relative to the <path-expression>, but to all
+    sub trees of it.
+    
+  -g, --group
+    Only works with --versions. Displays the file versions grouped by file
+    history.
+  
+  -f, --full-checksums
+    Displays full/long checksums instead of shortened checksums.    
+    
+  <path-expression>
+    Selects a file pattern or sub tree of the database using substring and 
+    wildcard mechanisms. The expression is applied to the relative slash-
+    separated path. The only possible wildcard is * (equivalent: ^).
+    
+    If <path-expression> does not contain a wildcard, it is interpreted as
+    prefix and extended to `<path-expression>*`. If a wildcard is present, no
+    wildcard is appended.
+    
+    Note: The Linux shell expands the * wildcard if a matching file is
+    present. Either use single quotes (e.g. '*.txt') or use ^ instead.
+    
+EXAMPLES   
+  sy ls -r subfolder/
+    Selects all file entries of the current file tree in the folder
+    'subfolder/', including for instance 'subfolder/some/other/file.txt'.
+    
+  sy ls --recursive --types=fs --date=1h30m '*.txt'
+    Selects all files and symlinks in the entire file tree that end with .txt
+    and existed one and 30 minutes hour ago. 
+    
+  sy ls --versions --group --recursive
+    Selects and displays all file versions and their file histories. 
+    This selects the entire database. Use with caution.
+    
+%RESOURCE:incl/footer.skel%

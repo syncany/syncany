@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.database.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.sql.Connection;
 import java.util.Date;
@@ -50,7 +52,7 @@ import org.syncany.operations.down.DatabaseBranch;
 import org.syncany.tests.util.TestCollectionUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
-import org.syncany.tests.util.TestSqlDatabaseUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class DatabaseVersionDaoTest {
 	@Test
@@ -60,7 +62,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -96,7 +98,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -142,7 +144,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -170,7 +172,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -260,7 +262,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set3.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -304,7 +306,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -342,7 +344,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -371,7 +373,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set2.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set2.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -405,7 +407,7 @@ public class DatabaseVersionDaoTest {
 		Connection databaseConnection = testConfig.createDatabaseConnection();
 
 		// Run
-		TestSqlDatabaseUtil.runSqlFromResource(databaseConnection, "/sql/test.insert.set1.sql");
+		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set1.sql");
 		
 		ChunkSqlDao chunkDao = new ChunkSqlDao(databaseConnection);
 		MultiChunkSqlDao multiChunkDao = new MultiChunkSqlDao(databaseConnection);
@@ -420,8 +422,6 @@ public class DatabaseVersionDaoTest {
 		assertNotNull(chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef")));
 		assertNotNull(multiChunkDao.getDirtyMultiChunkIds());
 		assertEquals(1, multiChunkDao.getDirtyMultiChunkIds().size());
-
-		// TODO [high] Test file version and history
 		
 		// b. Add new database version with DIRTY multichunk; remove DIRTY version		
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
