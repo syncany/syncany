@@ -18,14 +18,11 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.cli.util.CliUtil;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
@@ -84,7 +81,7 @@ public class CleanupCommand extends Command {
 		
 		// -t=<count>, --time-between-cleanups=<count>		
 		if (options.has(optionSecondsBetweenCleanups)) {
-			long secondsBetweenCleanups = parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
+			long secondsBetweenCleanups = CliUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
 			
 			if (secondsBetweenCleanups < 0) {
 				throw new Exception("Invalid value for --time-between-cleanups="+secondsBetweenCleanups+"; must be >= 0");
@@ -173,29 +170,5 @@ public class CleanupCommand extends Command {
 		}	
 	}
 	
-	private long parseTimePeriod(String period) {
-		Pattern relativeDatePattern = Pattern.compile("(\\d+(?:[.,]\\d+)?)(mo|[smhdwy])");		
-		Matcher relativeDateMatcher = relativeDatePattern.matcher(period);		
-		
-		relativeDateMatcher.reset();
-		long periodSeconds = 0;
-		
-		while (relativeDateMatcher.find()) {
-			double time = Double.parseDouble(relativeDateMatcher.group(1));
-			String unitStr = relativeDateMatcher.group(2).toLowerCase();
-			int unitMultiplier = 0;
-			
-			if (unitStr.startsWith("mo")) { unitMultiplier = 30*24*60*60; } // must be before "m"
-			else if (unitStr.startsWith("s")) { unitMultiplier = 1; }
-			else if (unitStr.startsWith("m")) { unitMultiplier = 60; }
-			else if (unitStr.startsWith("h")) { unitMultiplier = 60*60; }
-			else if (unitStr.startsWith("d")) { unitMultiplier = 24*60*60; }
-			else if (unitStr.startsWith("w")) { unitMultiplier = 7*24*60*60; }
-			else if (unitStr.startsWith("y")) { unitMultiplier = 365*24*60*60; }
-			
-			periodSeconds += (long) ((double)time*unitMultiplier);
-		}
-		
-		return periodSeconds;
-	}
+
 }

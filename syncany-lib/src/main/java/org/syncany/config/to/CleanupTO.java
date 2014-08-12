@@ -21,8 +21,11 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * @author pim-arch
- *
+ * CleanupTO represents an xml file containing a single long value:
+ * the timestamp of the moment at which a cleanup was last performed
+ * by the relevant client.
+ * 
+ * @author Pim Otte
  */
 @Root(name="cleanup", strict=false)
 public class CleanupTO {

@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.cli.util.CliUtil;
+
 public abstract class AbstractHistoryCommand extends Command {
 	protected static final Logger logger = Logger.getLogger(AbstractHistoryCommand.class.getSimpleName());
 	protected static final String dateFormatPattern = "yy-MM-dd HH:mm:ss";
@@ -35,24 +37,7 @@ public abstract class AbstractHistoryCommand extends Command {
 		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
 		
 		if (relativeDateMatcher.find()) {
-			relativeDateMatcher.reset();
-			long restoreDateMillies = 0;
-			
-			while (relativeDateMatcher.find()) {
-				double time = Double.parseDouble(relativeDateMatcher.group(1));
-				String unitStr = relativeDateMatcher.group(2).toLowerCase();
-				int unitMultiplier = 0;
-				
-				if (unitStr.startsWith("mo")) { unitMultiplier = 30*24*60*60; } // must be before "m"
-				else if (unitStr.startsWith("s")) { unitMultiplier = 1; }
-				else if (unitStr.startsWith("m")) { unitMultiplier = 60; }
-				else if (unitStr.startsWith("h")) { unitMultiplier = 60*60; }
-				else if (unitStr.startsWith("d")) { unitMultiplier = 24*60*60; }
-				else if (unitStr.startsWith("w")) { unitMultiplier = 7*24*60*60; }
-				else if (unitStr.startsWith("y")) { unitMultiplier = 365*24*60*60; }
-				
-				restoreDateMillies += (long) ((double)time*unitMultiplier)*1000;
-			}
+			long restoreDateMillies = CliUtil.parseTimePeriod(dateStr)*1000;
 			
 			Date restoreDate = new Date(System.currentTimeMillis()-restoreDateMillies);
 			
