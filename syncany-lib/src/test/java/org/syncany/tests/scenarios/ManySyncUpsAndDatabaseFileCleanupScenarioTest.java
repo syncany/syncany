@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 
 import org.junit.Test;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.plugins.local.LocalConnection;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestClient;
@@ -91,7 +92,11 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 		clientA.createNewFile("file31", 1);
 		clientA.up();		
 		
-		clientA.cleanup(); // Force cleanup 
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		
+		options.setForce(true);
+		
+		clientA.cleanup(options); // Force cleanup 
 
 		for (int i=1; i<=30; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
