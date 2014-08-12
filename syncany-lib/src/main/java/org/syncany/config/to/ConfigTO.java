@@ -60,6 +60,9 @@ public class ConfigTO {
 	
 	@Element(name="connection", required=true)
 	private ConnectionTO connectionTO;
+	
+	@Element(name="cacheKeepBytes", required=false)
+	private Long cacheKeepBytes;
 
 	public static ConfigTO load(File file) throws ConfigException {
 		try {
@@ -100,6 +103,14 @@ public class ConfigTO {
 
 	public void setMasterKey(SaltedSecretKey masterKey) {
 		this.masterKey = masterKey;
+	}	
+
+	public Long getCacheKeepBytes() {
+		return cacheKeepBytes;
+	}
+
+	public void setCacheKeepBytes(Long cacheKeepBytes) {
+		this.cacheKeepBytes = cacheKeepBytes;
 	}
 
 	@Persist

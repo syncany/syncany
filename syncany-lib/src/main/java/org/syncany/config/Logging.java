@@ -25,8 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import org.reflections.Reflections;
-
 /**
  * The logging class offers convenience functions to initialize and update the
  * application's log options. 
@@ -55,7 +53,7 @@ public class Logging {
 			return;
 		}
 
-		// Turn off INFO message of Reflections library (dirty, but the only way!) 
+		// Turn off unwanted loggers (evil libraries and such) 
 		disableUnwantedLoggers();		
 				
 		// Load logging.properties
@@ -78,7 +76,6 @@ public class Logging {
 	}	
 	
 	private static void disableUnwantedLoggers() {
-		Reflections.log = null;
 		System.setProperty("hsqldb.reconfig_logging", "false");
 		
 		if (Logger.getLogger("sun.awt.X11.timeoutTask.XToolkit") != null) {

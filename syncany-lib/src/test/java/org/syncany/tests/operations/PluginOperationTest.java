@@ -163,15 +163,13 @@ public class PluginOperationTest {
 		
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
-		// Only one file should be in here: the jar for ftp.
-		String[] test = (new File(configDir, "plugins/lib/")).list();
-		assertTrue((new File(configDir, "plugins/lib/")).list().length == 1);
 		
+		// Only one file should be in here: the jar for ftp.		
+		assertTrue((new File(configDir, "plugins/lib/")).list().length == 1);
 		
 		// Tear down
 		client.deleteTestData();	
 		TestFileUtil.deleteDirectory(configDir);
 		System.setProperty("user.home", "/tmp");
-	}
-	
+	}	
 }
