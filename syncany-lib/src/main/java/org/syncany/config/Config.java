@@ -55,12 +55,18 @@ public class Config {
 	public static final String DIR_CACHE = "cache";
 	public static final String DIR_DATABASE = "db";
 	public static final String DIR_LOG = "logs";
+	public static final String DIR_STATE = "state";
+	// Files in .syncany
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
+	// File in client root
 	public static final String FILE_IGNORE = ".syignore";
+	// File in .syncany/db
 	public static final String FILE_DATABASE = "local.db";
-	public static final String FILE_PORT = "port";
+	// Files in .syncany/state
+	public static final String FILE_PORT = "port.xml";
+	public static final String FILE_CLEANUP = "cleanup.xml";
 		
 	private byte[] repoId;
 	private String machineName;
@@ -70,6 +76,7 @@ public class Config {
 	private File cacheDir;
 	private File databaseDir;
 	private File logDir;
+	private File stateDir;
 	
 	private SaltedSecretKey masterKey;
 
@@ -115,6 +122,7 @@ public class Config {
 		cacheDir = FileUtil.getCanonicalFile(new File(appDir, DIR_CACHE));
 		databaseDir = FileUtil.getCanonicalFile(new File(appDir, DIR_DATABASE));
 		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
+		stateDir = FileUtil.getCanonicalFile(new File(appDir, DIR_STATE));
 	}
 	
 	private void initCache(ConfigTO configTO) {
@@ -300,6 +308,14 @@ public class Config {
 	public File getDatabaseDir() {
 		return databaseDir;
 	}	
+	
+	public File getLogDir() {
+		return logDir;
+	}
+
+	public File getStateDir() {
+		return stateDir;
+	}
 
 	public SaltedSecretKey getMasterKey() {
 		return masterKey;
@@ -308,8 +324,14 @@ public class Config {
 	public File getDatabaseFile() {
 		return new File(databaseDir, FILE_DATABASE);	
 	}	
-
-	public File getLogDir() {
-		return logDir;
+	
+	public File getPortFile() {
+		return new File(stateDir, FILE_PORT);
 	}
+	
+	public File getCleanupFile() {
+		return new File(stateDir, FILE_CLEANUP);
+	}
+
+
 }

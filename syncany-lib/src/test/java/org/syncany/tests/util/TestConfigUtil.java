@@ -212,6 +212,7 @@ public class TestConfigUtil {
 		config.getCacheDir().mkdirs();
 		config.getDatabaseDir().mkdirs();
 		config.getLogDir().mkdirs();
+		config.getStateDir().mkdirs();
 
 		// Write to config folder (required for some tests)
 		new Persister().write(configTO, new File(config.getAppDir()+"/"+Config.FILE_CONFIG));

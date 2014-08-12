@@ -314,7 +314,7 @@ public class CommandLineClient extends Client {
 		File portFile = null;
 		
 		if (config != null) {
-			portFile = new File(config.getAppDir(), Config.FILE_PORT);
+			portFile = config.getPortFile();
 		}
 		
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
