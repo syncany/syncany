@@ -304,6 +304,14 @@ public class Config {
 	public File getDatabaseDir() {
 		return databaseDir;
 	}	
+	
+	public File getLogDir() {
+		return logDir;
+	}
+
+	public File getStateDir() {
+		return stateDir;
+	}
 
 	public SaltedSecretKey getMasterKey() {
 		return masterKey;
@@ -321,7 +329,5 @@ public class Config {
 		return new File(stateDir, FILE_CLEANUP);
 	}
 
-	public File getLogDir() {
-		return logDir;
-	}
+
 }
