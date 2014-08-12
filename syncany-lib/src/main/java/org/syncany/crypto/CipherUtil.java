@@ -356,13 +356,13 @@ public class CipherUtil {
 	 * 
 	 * @see https://code.google.com/p/gitblit/source/browse/src/com/gitblit/MakeCertificate.java?r=88598bb2f779b73479512d818c675dea8fa72138
 	 */
-	public static X509Certificate generateSelfSignedCertificate(KeyPair keyPair) throws OperatorCreationException, CertificateException,
+	public static X509Certificate generateSelfSignedCertificate(String commonName, KeyPair keyPair) throws OperatorCreationException, CertificateException,
 			InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
 		
 		// Certificate CN, O and OU
 		X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
 		
-		builder.addRDN(BCStyle.CN, CipherParams.CERTIFICATE_HOSTNAME);
+		builder.addRDN(BCStyle.CN, commonName);
 		builder.addRDN(BCStyle.O, CipherParams.CERTIFICATE_ORGANIZATION);
 		builder.addRDN(BCStyle.OU, CipherParams.CERTIFICATE_ORGUNIT);
 

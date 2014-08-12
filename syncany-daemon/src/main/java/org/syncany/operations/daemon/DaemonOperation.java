@@ -173,7 +173,7 @@ public class DaemonOperation extends Operation {
 				cliUser.setPassword(accessToken);
 				
 				portTO = new PortTO();
-				portTO.setPort(daemonConfig.getWebServer().getPort());
+				portTO.setPort(daemonConfig.getWebServer().getBindPort());
 				portTO.setUser(cliUser);
 				
 				daemonConfig.setPortTO(portTO);
@@ -181,7 +181,7 @@ public class DaemonOperation extends Operation {
 			else if (daemonConfig.getPortTO() == null) {
 				// Access info is not included in the daemonConfig, but exists. (Happens when reloading)
 				// We reload the information about the port, but keep the accesstoken the same.
-				portTO.setPort(daemonConfig.getWebServer().getPort());
+				portTO.setPort(daemonConfig.getWebServer().getBindPort());
 				daemonConfig.setPortTO(portTO);
 			}
 		}

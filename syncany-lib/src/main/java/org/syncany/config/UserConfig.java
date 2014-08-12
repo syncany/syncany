@@ -20,16 +20,12 @@ package org.syncany.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.security.KeyPair;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
 import org.syncany.config.to.UserConfigTO;
-import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.util.EnvironmentUtil;
 
@@ -193,32 +189,9 @@ public class UserConfig {
 	
 	private static void initUserKeyStore() {
 		userKeyStoreFile = new File(userConfigDir, USER_KEYSTORE_FILE);
-		userKeyStore = initKeyStore(userKeyStoreFile);
-		
-		generateKeyPairAndCertificateIfNotExists();		
+		userKeyStore = initKeyStore(userKeyStoreFile);			
 	}
 	
-	private static void generateKeyPairAndCertificateIfNotExists() {
-		try {
-			if (userKeyStore.size() == 0) {
-				// Generate key pair and certificate
-				KeyPair keyPair = CipherUtil.generateRsaKeyPair();
-				X509Certificate certificate = CipherUtil.generateSelfSignedCertificate(keyPair);
-				
-				// Add key and certificate to key store
-				userKeyStore.setKeyEntry(CipherParams.CERTIFICATE_HOSTNAME, keyPair.getPrivate(), new char[0], new Certificate[] { certificate });
-				storeUserKeyStore();
-				
-				// Add certificate to trust store (for CLI->API connection)
-				userTrustStore.setCertificateEntry(CipherParams.CERTIFICATE_HOSTNAME, certificate);
-				storeTrustStore();
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Unable to read key store or generate self-signed certificate.", e);
-		}
-	}
-
 	private static KeyStore initKeyStore(File keyStoreFile) {
 		try {				
 			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());

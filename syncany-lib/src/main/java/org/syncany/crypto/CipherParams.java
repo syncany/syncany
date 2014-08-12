@@ -135,9 +135,9 @@ public abstract class CipherParams {
 	public static final int CERTIFICATE_KEYPAIR_SIZE = 2048;
 	
 	/**
-	 * Hostname (CN) set in the RDN of the self-signed certificate. 
+	 * Certificate alias used to identify server certificate in the key store. 
 	 */
-    public static final String CERTIFICATE_HOSTNAME = "*";	        
+    public static final String CERTIFICATE_IDENTIFIER = "SyMOTETIP"; 	        
 
 	/**
      * Organization (O) set in the RDN of the self-signed certificate.

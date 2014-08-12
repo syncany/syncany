@@ -78,7 +78,7 @@ public class BasicWatchServerTest {
 		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
 		
 		// Set port to prevent conflicts with default daemons
-		daemonConfig.getWebServer().setPort(port);
+		daemonConfig.getWebServer().setBindPort(port);
 		
 		// Dynamically insert paths
 		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
