@@ -45,6 +45,16 @@ OPTIONS
     shortened to <count> file versions. Metadata and file content of these old
     versions will be deleted, and cannot be restored! This option only works if
     -V is not set.
+
+  -t, --time-between-cleanups=<seconds>
+    Sets the minimal amount of time between two cleanups. If the last cleanup
+    from this client is less then <seconds> seconds ago, no database files
+    will be merged. Versions will still be removed.
+
+  -x, --max-database-files=<count>
+    Sets the number of database files per client. If the total number of 
+    databases exceeds <count> times the number of clients, all database
+    files will be merged to one per client.
     
 %RESOURCE:incl/footer.skel%
     
