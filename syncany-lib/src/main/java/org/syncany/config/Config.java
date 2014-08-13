@@ -19,15 +19,18 @@ package org.syncany.config;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.FixedChunker;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.SaltedSecretKey;
@@ -35,10 +38,14 @@ import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.VectorClock;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.StorageException;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.FileUtil;
+import org.syncany.util.InstantiationUtil;
 import org.syncany.util.StringUtil;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  * The config class is the central point to configure a Syncany instance. It is mainly
@@ -142,11 +149,34 @@ public class Config {
 		repoId = repoTO.getRepoId();
 	}
 
-	private void initChunker(RepoTO repoTO) throws Exception {
-		// TODO [feature request] make chunking options configurable, something like described in #29
-		// See: https://github.com/syncany/syncany/issues/29#issuecomment-43425647
-		
-		chunker = new FixedChunker(512*1024, "SHA1");
+	private void initChunker(RepoTO repoTO) {
+		ChunkerTO chunkerTO = repoTO.getChunkerTO();
+		Objects.requireNonNull(chunkerTO, "No chunker in repository config.");
+		chunker = instantiateChunker(chunkerTO);
+	}
+	
+	private Chunker instantiateChunker(ChunkerTO chunkerTO) {
+		Chunker chunker = InstantiationUtil.getInstance(Chunker.class, chunkerTO.getType());
+		Objects.requireNonNull(chunker, "Invalid chunker type: " + chunkerTO.getType());
+		chunker.init(chunkerTO.getSettings());
+		chunker.initNestedChunkers(instantiateNestedChunkers(chunkerTO.getNestedChunkers()));
+		return chunker;
+	}
+	
+	private List<Chunker> instantiateNestedChunkers(List<ChunkerTO> nestedChunkers) {
+		if(!chunkersAvailable(nestedChunkers)){
+			return Collections.emptyList();
+		}
+		return Lists.transform(nestedChunkers, new Function<ChunkerTO, Chunker>() {
+			@Override
+			public Chunker apply(ChunkerTO chunkerTO) {
+				return instantiateChunker(chunkerTO);
+			}
+		});
+	}
+
+	private boolean chunkersAvailable(List<ChunkerTO> nestedChunkers) {
+		return nestedChunkers != null && !nestedChunkers.isEmpty();
 	}
 
 	private void initMultiChunker(RepoTO repoTO) throws ConfigException {

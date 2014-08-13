@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.crypto.spec.SecretKeySpec;
+
 import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
@@ -165,6 +167,16 @@ public class TestConfigUtil {
 		repoTO.setMultiChunker(createZipMultiChunkerTO());
 
 		return new Config(new File("/dummy"), configTO, repoTO);
+	}
+
+	public static SaltedSecretKey createDummyMasterKey() {
+		return new SaltedSecretKey(
+			new SecretKeySpec(
+				StringUtil.fromHex("44fda24d53b29828b62c362529bd9df5c8a92c2736bcae3a28b3d7b44488e36e246106aa5334813028abb2048eeb5e177df1c702d93cf82aeb7b6d59a8534ff0"),
+				"AnyAlgorithm"
+			),
+			StringUtil.fromHex("157599349e0f1bc713afff442db9d4c3201324073d51cb33407600f305500aa3fdb31136cb1f37bd51a48f183844257d42010a36133b32b424dd02bc63b349bc")			
+		);
 	}
 
 	public static Config createTestLocalConfig(String machineName, TransferSettings connection) throws Exception {

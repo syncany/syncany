@@ -23,9 +23,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.Lists;
 
 /**
  * The mime type chunker uses the file mime type delegate the chunking to
@@ -43,11 +47,20 @@ import java.util.regex.Pattern;
 public class MimeTypeChunker extends Chunker {
     private static final Logger logger = Logger.getLogger(MimeTypeChunker.class.getSimpleName());   
 
+    public static final String TYPE = "mimeType";
+    public static final String PROPERTY_SPECIAL_CHUNKER_MIME_TYPES = "specialChunkerMimeTypes";
+    
 	private Chunker regularChunker;
 	private Chunker specialChunker;
 	private List<Pattern> specialChunkerMimeTypes;
 	
 	private Chunker delegatedChunker;
+	
+	/**
+	 * Creates a new mime type chunker without nested chunkers. 
+	 */
+	public MimeTypeChunker() {
+	}
 	
 	/**
 	 * Creates a new mime type chunker. 
@@ -88,6 +101,33 @@ public class MimeTypeChunker extends Chunker {
 		delegatedChunker = regularChunker;
 
 		return delegatedChunker.createChunks(file);
+	}
+	
+	@Override
+	public void init(Map<String, String> settings) {
+		super.init(settings);
+		Objects.requireNonNull(settings);
+		final String specialChunkerMimeTypes = settings.get(PROPERTY_SPECIAL_CHUNKER_MIME_TYPES);
+		Objects.requireNonNull(specialChunkerMimeTypes);
+		this.specialChunkerMimeTypes = resolveSpecialChunkerMimeTypesFromInitValue(specialChunkerMimeTypes);
+	}
+	
+	private List<Pattern> resolveSpecialChunkerMimeTypesFromInitValue(String specialChunkerMimeTypes) {
+		// Split by whitespace
+		final List<String> mimeTypePatternStrs = Lists.newArrayList(specialChunkerMimeTypes.split("\\s"));
+		return initMimeTypePatterns(mimeTypePatternStrs);
+	}
+
+	@Override
+	public void initNestedChunkers(List<Chunker> nestedChunkers) {
+		Objects.requireNonNull(nestedChunkers);
+		if(nestedChunkers.size() != 2){
+			throw new IllegalArgumentException(String.format("%s requires exactly two nested chunkers but there were %d.",
+					MimeTypeChunker.class.getSimpleName(), 
+					nestedChunkers.size()));
+		}
+		regularChunker = nestedChunkers.get(0);
+		specialChunker = nestedChunkers.get(1);
 	}
 
 	@Override
