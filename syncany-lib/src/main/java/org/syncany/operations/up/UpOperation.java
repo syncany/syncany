@@ -112,8 +112,6 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		// TODO [medium/high] Remove this and construct mechanism to resume uploads
-		transferManager.cleanTransactions(config.getMachineName());
 		
 		if (!checkPreconditions()) {
 			return result;
@@ -121,6 +119,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Upload action file (lock for cleanup)
 		startOperation();
+		
+		// TODO [medium/high] Remove this and construct mechanism to resume uploads
+		transferManager.cleanTransactions(config.getMachineName());
 
 		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
