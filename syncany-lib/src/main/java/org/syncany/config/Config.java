@@ -56,14 +56,18 @@ public class Config {
 	public static final String DIR_DATABASE = "db";
 	public static final String DIR_LOG = "logs";
 	public static final String DIR_STATE = "state";
+	
+	// File in managed folder root
+	public static final String FILE_IGNORE = ".syignore";
+
 	// Files in .syncany
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
-	// File in client root
-	public static final String FILE_IGNORE = ".syignore";
+	
 	// File in .syncany/db
 	public static final String FILE_DATABASE = "local.db";
+	
 	// Files in .syncany/state
 	public static final String FILE_PORT = "port.xml";
 	public static final String FILE_CLEANUP = "cleanup.xml";
@@ -332,6 +336,4 @@ public class Config {
 	public File getCleanupFile() {
 		return new File(stateDir, FILE_CLEANUP);
 	}
-
-
 }
