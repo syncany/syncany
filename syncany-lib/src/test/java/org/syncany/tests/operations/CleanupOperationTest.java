@@ -365,16 +365,11 @@ public class CleanupOperationTest {
 			// List of failing operations (regex)
 			// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-			"rel=[345].+upload.+multichunk" // << 3 retries!				
+			"rel=[456].+upload.+multichunk" // << 3 retries!				
 		}));
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
-		
-		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
-		removeOldCleanupOperationOptions.setMergeRemoteFiles(false);
-		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
-		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
 		
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
@@ -400,7 +395,8 @@ public class CleanupOperationTest {
 		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
 		
 		assertTrue(operationFailed);
-		assertEquals(1, repoMultiChunkDir.listFiles().length);
+		// Atomic operation, so multichunk is not yet present at location
+		assertEquals(0, repoMultiChunkDir.listFiles().length);
 		assertEquals(1, repoActionsDir.listFiles().length);
 		
 		// 2. Call A.cleanup(); this does not run, because there are local changes
@@ -417,18 +413,17 @@ public class CleanupOperationTest {
 		
 		// 5. Call 'up' again, this uploads previously crashed stuff, and then runs cleanup.
 		//    The cleanup then removes the old multichunk and the old action files.		
-		File oldMultiChunkFile = repoMultiChunkDir.listFiles()[0];
+		
 		
 		UpOperationResult secondUpResult = clientA.up();
 		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, secondUpResult.getResultCode());
-		assertEquals(3, repoMultiChunkDir.listFiles().length);
+		assertEquals(2, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
 		
-		// 6. Call 'cleanup' manually
+		// 6. Call 'cleanup' manually (Nothing happens, since transaction was cleaned on second up)
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup();
-		assertEquals(CleanupOperationResult.CleanupResultCode.OK, cleanupOperationResult.getResultCode());
-		assertEquals(1, cleanupOperationResult.getRemovedMultiChunks().size());
-		assertFalse(oldMultiChunkFile.exists());
+		assertEquals(CleanupOperationResult.CleanupResultCode.OK_NOTHING_DONE, cleanupOperationResult.getResultCode());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
 		assertEquals(0, repoActionsDir.listFiles().length);
 	
 		// Tear down
