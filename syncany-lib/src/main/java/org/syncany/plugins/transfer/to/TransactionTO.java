@@ -15,20 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer.files;
+package org.syncany.plugins.transfer.to;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
-import org.syncany.plugins.StorageException;
 
 /**
  * The Transaction transfer object exists to serialize a transaction,
@@ -49,48 +45,28 @@ public class TransactionTO {
 	@Element(name="machineName") 
 	private String machineName;
 	
-	@ElementMap(entry="file", key="tempLocation", value="finalLocation", attribute=false)
-	private Map<String, String> tempToTargetFileNamesMap;
+	@ElementList(entry="action")
+	private List<TransactionActionTO> transactionActionTOs;
 	
-	private Map<TempRemoteFile, RemoteFile> tempToTargetFileMap;
 	
 	public TransactionTO() {
 		// Nothing
 	}
 	
-	public TransactionTO(String machineName, Map<TempRemoteFile, RemoteFile> finalLocations) {
+	public TransactionTO(String machineName) {
 		this.machineName = machineName;
-		this.tempToTargetFileMap = finalLocations;
-	}
-	
-	@Persist
-	public void prepare() {
-		tempToTargetFileNamesMap = new HashMap<String, String>();
-		
-		for (TempRemoteFile tempFile : tempToTargetFileMap.keySet()) {
-			tempToTargetFileNamesMap.put(tempFile.getName(), tempToTargetFileMap.get(tempFile).getName());
-		}
-	}
-	
-	@Commit
-	public void commit() {
-		tempToTargetFileMap = new HashMap<TempRemoteFile, RemoteFile>();
-		
-		for (String tempFile : tempToTargetFileNamesMap.keySet()) {
-			try {
-				tempToTargetFileMap.put(new TempRemoteFile(tempFile), RemoteFile.createRemoteFile(tempToTargetFileNamesMap.get(tempFile)));
-			}
-			catch (StorageException e) {
-				logger.log(Level.INFO, "Invalid remote temporary filename: " + tempFile + " or " + tempToTargetFileNamesMap.get(tempFile));
-			}
-		}
-	}
-	
-	public Map<TempRemoteFile, RemoteFile> getTempToTargetFileMap() {
-		return tempToTargetFileMap;
+		transactionActionTOs = new ArrayList<TransactionActionTO>();
 	}
 	
 	public String getMachineName() {
 		return machineName;
+	}
+	
+	public List<TransactionActionTO> getTransactionActions() {
+		return transactionActionTOs;
+	}
+	
+	public void addTransactionAction(TransactionActionTO transactionAction) {
+		transactionActionTOs.add(transactionAction);
 	}
 }

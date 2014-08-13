@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,7 +31,8 @@ import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.transfer.files.TransactionTO;
+import org.syncany.plugins.transfer.to.TransactionActionTO;
+import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
  * This class represents a transaction in a remote system. It will keep track of
@@ -46,15 +45,13 @@ public class RemoteTransaction {
 	
 	private TransferManager transferManager;
 	private Config config;
-	private Map<File, TempRemoteFile> localToTempRemoteFileMap;
-	private Map<TempRemoteFile, RemoteFile> tempToTargetRemoteFileMap;
+	private TransactionTO transactionTO;
 	
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
-
-		this.localToTempRemoteFileMap = new HashMap<File, TempRemoteFile>();
-		this.tempToTargetRemoteFileMap = new HashMap<TempRemoteFile, RemoteFile>();
+		
+		this.transactionTO = new TransactionTO(config.getMachineName());
 	}
 	
 	/**
@@ -66,8 +63,12 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
 		logger.log(Level.INFO, " -> Temp. remote file: " + temporaryRemoteFile + ", final location: " + remoteFile);
 		
-		localToTempRemoteFileMap.put(localFile, temporaryRemoteFile);
-		tempToTargetRemoteFileMap.put(temporaryRemoteFile, remoteFile);
+		TransactionActionTO action = new TransactionActionTO();
+		action.setType(TransactionActionTO.TYPE_UPLOAD);
+		action.setLocalTempLocation(localFile);
+		action.setRemoteLocation(remoteFile);
+		action.setRemoteTempLocation(temporaryRemoteFile);
+		transactionTO.addTransactionAction(action);
 	}
 	
 	/**
@@ -82,14 +83,18 @@ public class RemoteTransaction {
 		
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
-		for (File localFile : localToTempRemoteFileMap.keySet()) {
-			logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, localToTempRemoteFileMap.get(localFile) });
-			transferManager.upload(localFile, localToTempRemoteFileMap.get(localFile));
+		for (TransactionActionTO action : transactionTO.getTransactionActions()) {
+			File localFile = action.getLocalTempLocation();
+			RemoteFile tempRemoteFile = action.getTempRemoteFile();
+			logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
+			transferManager.upload(localFile, tempRemoteFile);
 		}
 
-		for (RemoteFile temporaryFile : tempToTargetRemoteFileMap.keySet()) {
-			logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { temporaryFile, tempToTargetRemoteFileMap.get(temporaryFile) });
-			transferManager.move(temporaryFile, tempToTargetRemoteFileMap.get(temporaryFile));
+		for (TransactionActionTO action : transactionTO.getTransactionActions()) {
+			RemoteFile tempRemoteFile = action.getTempRemoteFile();
+			RemoteFile finalRemoteFile = action.getRemoteFile();
+			logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
+			transferManager.move(tempRemoteFile, finalRemoteFile);
 		}
 		
 		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
@@ -105,7 +110,7 @@ public class RemoteTransaction {
 		
 			try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(localTransactionFile), "UTF-8"))) {
 				Serializer serializer = new Persister();
-				serializer.write(new TransactionTO(config.getMachineName(), tempToTargetRemoteFileMap), out);
+				serializer.write(transactionTO, out);
 			}
 			
 			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);

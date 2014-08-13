@@ -20,6 +20,7 @@ package org.syncany.plugins.transfer;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -31,9 +32,9 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.transfer.files.TransactionTO;
+import org.syncany.plugins.transfer.to.TransactionActionTO;
+import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -113,7 +114,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
-			Map<TempRemoteFile, RemoteFile> tempFileToTargetFileMap = null;
+			List<TransactionActionTO> transactionActions = null;
 			
 			try {
 				File transactionFile = createTempFile("transaction");
@@ -127,15 +128,15 @@ public abstract class AbstractTransferManager implements TransferManager {
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
 				
 				// Extract final locations
-				tempFileToTargetFileMap = transactionTO.getTempToTargetFileMap();
+				transactionActions = transactionTO.getTransactionActions();
 				transactionFile.delete();
 			}
 			catch (Exception e) {
 				throw new StorageException("Failed to read transactionFile", e);
 			}
 
-			if (tempFileToTargetFileMap != null) {
-				filesInTransaction.addAll(tempFileToTargetFileMap.values());
+			for (TransactionActionTO transactionAction : transactionActions) {
+				filesInTransaction.add(transactionAction.getRemoteFile());
 			}
 		}
 		
