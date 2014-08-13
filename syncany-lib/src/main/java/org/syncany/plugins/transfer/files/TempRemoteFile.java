@@ -33,7 +33,7 @@ import org.syncany.plugins.StorageException;
  * @author Pim Otte
  */
 public class TempRemoteFile extends RemoteFile {
-	private static final Pattern NAME_PATTERN = Pattern.compile("temp-([a-f0-9]+)");
+	private static final Pattern NAME_PATTERN = Pattern.compile("temp-([A-Za-z]+)");
 	private static final String NAME_FORMAT = "temp-%s";
 
 	/**
@@ -47,13 +47,12 @@ public class TempRemoteFile extends RemoteFile {
 	}
 	
 	/**
-	 * Initializes a new temp file, given the local file which will be moved there. 
+	 * Initializes a new randomly named temp file.
 	 * 
-	 * @param localFile the local file that will be moved to this temporary location.
-	 * @throws StorageException If the name is not match the name pattern
+	 * @throws StorageException
 	 */
-	public TempRemoteFile(File localFile) throws StorageException {
-		super(String.format(NAME_FORMAT, Integer.toHexString(CipherUtil.createRandomAlphabeticString(20).hashCode()))); 
+	public TempRemoteFile() throws StorageException {
+		super("temp-" + CipherUtil.createRandomAlphabeticString(20));
 	}
 
 	@Override

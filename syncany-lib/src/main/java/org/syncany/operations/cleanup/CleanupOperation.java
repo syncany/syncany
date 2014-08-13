@@ -57,6 +57,7 @@ import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.RemoteTransaction;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -91,6 +92,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private CleanupOperationResult result;
 
 	private SqlDatabase localDatabase;
+	private RemoteTransaction remoteTransaction;
 
 	public CleanupOperation(Config config) {
 		this(config, new CleanupOperationOptions());
@@ -103,6 +105,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		this.result = new CleanupOperationResult();
 
 		this.localDatabase = new SqlDatabase(config);
+		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 	}
 
 	@Override
@@ -141,34 +144,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
 		}
-
-		removeLostMultiChunks();
+		
+		remoteTransaction.commit();
 
 		setLastTimeCleaned(System.currentTimeMillis()/1000);
 		finishOperation();
 		return updateResultCode(result);
 	}
 
-	private void removeLostMultiChunks() throws StorageException {
-		Map<String, MultiChunkRemoteFile> remoteMultiChunks = transferManager.list(MultiChunkRemoteFile.class);
-		
-		Map<MultiChunkId, MultiChunkEntry> locallyKnownMultiChunks = new HashMap<>();
-		
-		locallyKnownMultiChunks.putAll(localDatabase.getMultiChunks());
-		locallyKnownMultiChunks.putAll(localDatabase.getMuddyMultiChunks());
-		
-		for (MultiChunkRemoteFile remoteMultiChunk : remoteMultiChunks.values()) {
-			MultiChunkId remoteMultiChunkId = new MultiChunkId(remoteMultiChunk.getMultiChunkId());
-			boolean multiChunkExistsLocally = locallyKnownMultiChunks.containsKey(remoteMultiChunkId);
-
-			if (!multiChunkExistsLocally) {
-				logger.log(Level.WARNING, "- Deleting lost/unknown remote multichunk " + remoteMultiChunk + " ...");
-				transferManager.delete(remoteMultiChunk);
-
-				result.getRemovedMultiChunks().put(remoteMultiChunkId, new MultiChunkEntry(remoteMultiChunkId, -1));
-			}
-		}
-	}
 
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
 		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunks().size() > 0 || result.getRemovedOldVersionsCount() > 0) {
@@ -254,7 +237,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
 		File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
 
-		uploadPurgeFile(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
+		addPurgeFileToTransaction(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// Update stats
@@ -262,9 +245,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
-	private void uploadPurgeFile(File tempPurgeFile, DatabaseRemoteFile newPurgeRemoteFile) throws StorageException {
+	private void addPurgeFileToTransaction(File tempPurgeFile, DatabaseRemoteFile newPurgeRemoteFile) throws StorageException {
 		logger.log(Level.INFO, "- Uploading PURGE database file " + newPurgeRemoteFile + " ...");
-		transferManager.upload(tempPurgeFile, newPurgeRemoteFile);
+		remoteTransaction.add(tempPurgeFile, newPurgeRemoteFile);
 	}
 
 	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions) {
@@ -314,7 +297,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		for (MultiChunkEntry multiChunkEntry : unusedMultiChunks.values()) {
 			logger.log(Level.FINE, "  + Deleting remote multichunk " + multiChunkEntry + " ...");
-			transferManager.delete(new MultiChunkRemoteFile(multiChunkEntry.getId()));
+			remoteTransaction.delete(new MultiChunkRemoteFile(multiChunkEntry.getId()));
 		}
 	}
 
@@ -391,7 +374,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// And delete others
 		for (RemoteFile toDeleteRemoteFile : allToDeleteDatabaseFiles) {
 			logger.log(Level.INFO, "   + Deleting remote file " + toDeleteRemoteFile + " ...");
-			transferManager.delete(toDeleteRemoteFile);
+			remoteTransaction.delete(toDeleteRemoteFile);
 		}
 		
 		for (File lastLocalMergeDatabaseFile : allMergedDatabaseFiles.keySet()) {
@@ -403,15 +386,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
 					lastLocalMergeDatabaseFile });
 	
-			try {
-				// Make sure it's deleted
-				transferManager.delete(lastRemoteMergeDatabaseFile);
-			}
-			catch (StorageException e) {
-				// Don't care!
-			}
-	
-			transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+			remoteTransaction.add(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		}
 
 		// Update stats
