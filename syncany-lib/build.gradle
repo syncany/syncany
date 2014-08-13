@@ -23,5 +23,6 @@ dependencies {
 	compile			"com.github.zafarkhaja:java-semver:0.7.2"
 	
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
-	testCompile		"junit:junit:4.9"
+	testCompile		"junit:junit:4.11"
+	testCompile		"org.hamcrest:hamcrest-all:1.3"
 }

@@ -12,5 +12,5 @@ dependencies {
 	compile			"commons-io:commons-io:2.4"
 	compile			"org.hsqldb:hsqldb:2.3.1"
 	            	
-	testCompile		"junit:junit:4.9"   	      
+	testCompile		"junit:junit:4.11"   	      
 }
