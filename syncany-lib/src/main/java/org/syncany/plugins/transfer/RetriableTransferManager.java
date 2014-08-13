@@ -138,6 +138,17 @@ public class RetriableTransferManager implements TransferManager {
 			}
 		});
 	}
+	
+	@Override
+	public void cleanTransactions(final String machineName) throws StorageException {
+		retryMethod(new RetriableMethod() {
+			@Override
+			public Object execute() throws StorageException {
+				underlyingTransferManager.cleanTransactions(machineName);
+				return null;
+			}
+		});
+	}
 
 	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
@@ -218,4 +229,6 @@ public class RetriableTransferManager implements TransferManager {
 			}
 		}		
 	}
+
+
 }

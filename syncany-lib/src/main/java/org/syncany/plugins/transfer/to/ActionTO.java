@@ -36,8 +36,8 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 
 @Root(name="transactionAction")
 @Namespace(reference="http://syncany.org/transaction/action/1")
-public class TransactionActionTO {
-	private static final Logger logger = Logger.getLogger(TransactionActionTO.class.getSimpleName());
+public class ActionTO {
+	private static final Logger logger = Logger.getLogger(ActionTO.class.getSimpleName());
 	
 	public static final String TYPE_UPLOAD = "UPLOAD";
 	public static final String TYPE_DELETE = "DELETE";

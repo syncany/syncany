@@ -19,6 +19,7 @@ package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.transfer.to.TransactionActionTO;
+import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -104,6 +105,22 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return result;
 	}
 	
+	public void cleanTransactions(String machineName) throws StorageException {
+		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
+		for (TransactionTO transaction : transactions.keySet()) {
+			if (transaction.getMachineName().equals(machineName)) {
+				// Delete all permanent or temporary files in this transaction.
+				for (ActionTO action : transaction.getActions()) {
+					delete(action.getRemoteFile());
+					delete(action.getTempRemoteFile());
+				}
+				
+				// Get corresponding remote file of transaction and delete it.
+				delete(transactions.get(transaction));
+			}
+		}
+	}
+	
 	/**
 	 * Returns a Set of all files that are not temporary, but are listed in a 
 	 * transaction file. These belong to an unfinished transaction and should be
@@ -111,10 +128,21 @@ public abstract class AbstractTransferManager implements TransferManager {
 	 */
 	protected Set<RemoteFile> getFilesInTransactions() throws StorageException {
 		Set<RemoteFile> filesInTransaction = new HashSet<RemoteFile>();
-		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
+		Set<TransactionTO> transactions = getTransactionTOs().keySet();
+
+		for (TransactionTO transaction : transactions) {
+			for (ActionTO action : transaction.getActions()) {
+				filesInTransaction.add(action.getRemoteFile());
+			}
+		}
 		
+		return filesInTransaction;
+	}
+	
+	private Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException{
+		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
+		Map<TransactionTO, TransactionRemoteFile> transactions = new HashMap<TransactionTO, TransactionRemoteFile>();
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
-			List<TransactionActionTO> transactionActions = null;
 			
 			try {
 				File transactionFile = createTempFile("transaction");
@@ -128,18 +156,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
 				
 				// Extract final locations
-				transactionActions = transactionTO.getTransactionActions();
+				transactions.put(transactionTO, transaction);
 				transactionFile.delete();
 			}
 			catch (Exception e) {
 				throw new StorageException("Failed to read transactionFile", e);
 			}
-
-			for (TransactionActionTO transactionAction : transactionActions) {
-				filesInTransaction.add(transactionAction.getRemoteFile());
-			}
 		}
-		
-		return filesInTransaction;
+		return transactions;
 	}
 }

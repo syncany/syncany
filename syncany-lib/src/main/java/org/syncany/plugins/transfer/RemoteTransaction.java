@@ -31,7 +31,7 @@ import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.transfer.to.TransactionActionTO;
+import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -63,12 +63,12 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
 		logger.log(Level.INFO, " -> Temp. remote file: " + temporaryRemoteFile + ", final location: " + remoteFile);
 		
-		TransactionActionTO action = new TransactionActionTO();
-		action.setType(TransactionActionTO.TYPE_UPLOAD);
+		ActionTO action = new ActionTO();
+		action.setType(ActionTO.TYPE_UPLOAD);
 		action.setLocalTempLocation(localFile);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
-		transactionTO.addTransactionAction(action);
+		transactionTO.addAction(action);
 	}
 	
 	/**
@@ -83,14 +83,14 @@ public class RemoteTransaction {
 		
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
-		for (TransactionActionTO action : transactionTO.getTransactionActions()) {
+		for (ActionTO action : transactionTO.getActions()) {
 			File localFile = action.getLocalTempLocation();
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 			logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 			transferManager.upload(localFile, tempRemoteFile);
 		}
 
-		for (TransactionActionTO action : transactionTO.getTransactionActions()) {
+		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 			RemoteFile finalRemoteFile = action.getRemoteFile();
 			logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });

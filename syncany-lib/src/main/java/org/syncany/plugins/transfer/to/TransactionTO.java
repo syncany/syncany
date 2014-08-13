@@ -46,7 +46,7 @@ public class TransactionTO {
 	private String machineName;
 	
 	@ElementList(entry="action")
-	private List<TransactionActionTO> transactionActionTOs;
+	private List<ActionTO> actionTOs;
 	
 	
 	public TransactionTO() {
@@ -55,18 +55,18 @@ public class TransactionTO {
 	
 	public TransactionTO(String machineName) {
 		this.machineName = machineName;
-		transactionActionTOs = new ArrayList<TransactionActionTO>();
+		actionTOs = new ArrayList<ActionTO>();
 	}
 	
 	public String getMachineName() {
 		return machineName;
 	}
 	
-	public List<TransactionActionTO> getTransactionActions() {
-		return transactionActionTOs;
+	public List<ActionTO> getActions() {
+		return actionTOs;
 	}
 	
-	public void addTransactionAction(TransactionActionTO transactionAction) {
-		transactionActionTOs.add(transactionAction);
+	public void addAction(ActionTO transactionAction) {
+		actionTOs.add(transactionAction);
 	}
 }
