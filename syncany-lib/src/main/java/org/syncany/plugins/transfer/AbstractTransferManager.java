@@ -45,7 +45,7 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
+	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 	private TransferSettings settings;
 
 	public AbstractTransferManager(TransferSettings settings) {
@@ -63,13 +63,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
-		logger.log(Level.INFO, "Performing storage test TM.test() ...");							
+		logger.log(Level.INFO, "Performing storage test TM.test() ...");
 		StorageTestResult result = new StorageTestResult();
-		
+
 		try {
 			logger.log(Level.INFO, "- Running connect() ...");
 			connect();
-	
+
 			result.setTargetExists(testTargetExists());
 			result.setTargetCanWrite(testTargetCanWrite());
 			result.setRepoFileExists(testRepoFileExists());
@@ -85,13 +85,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 					result.setTargetCanCreate(false);
 				}
 			}
-			
+
 			result.setTargetCanConnect(true);
 		}
 		catch (StorageException e) {
 			result.setTargetCanConnect(false);
 			result.setException(e);
-			
+
 			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}
 		finally {
@@ -102,10 +102,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 				// Don't care
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	public void cleanTransactions(Config config) throws StorageException {
 		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
 		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
@@ -116,48 +116,63 @@ public abstract class AbstractTransferManager implements TransferManager {
 					remoteTransaction.delete(action.getRemoteFile());
 					remoteTransaction.delete(action.getTempRemoteFile());
 				}
-				
+
 				// Get corresponding remote file of transaction and delete it.
 				remoteTransaction.delete(transactions.get(transaction));
 			}
 		}
 		remoteTransaction.commit();
 	}
-	
+
 	/**
 	 * Returns a Set of all files that are not temporary, but are listed in a 
 	 * transaction file. These belong to an unfinished transaction and should be
 	 * ignored.
 	 */
-	protected Set<RemoteFile> getFilesInTransactions() throws StorageException {
+	protected Set<RemoteFile> getFilesInTransactions(Set<TransactionTO> transactions) throws StorageException {
 		Set<RemoteFile> filesInTransaction = new HashSet<RemoteFile>();
-		Set<TransactionTO> transactions = getTransactionTOs().keySet();
 
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				filesInTransaction.add(action.getRemoteFile());
+				if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+					filesInTransaction.add(action.getRemoteFile());
+				}
 			}
 		}
-		
+
 		return filesInTransaction;
 	}
-	
-	private Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException{
+
+	protected Set<RemoteFile> getDummyDeletedFiles(Set<TransactionTO> transactions) {
+		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
+
+		for (TransactionTO transaction : transactions) {
+			for (ActionTO action : transaction.getActions()) {
+				if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+					dummyDeletedFiles.add(action.getRemoteFile());
+				}
+			}
+		}
+
+		return dummyDeletedFiles;
+	}
+
+	protected Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		Map<TransactionTO, TransactionRemoteFile> transactions = new HashMap<TransactionTO, TransactionRemoteFile>();
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
-			
+
 			try {
 				File transactionFile = createTempFile("transaction");
-				
+
 				// Download transaction file
 				download(transaction, transactionFile);
 				String transactionFileStr = FileUtils.readFileToString(transactionFile);
-				
+
 				// Deserialize it
 				Serializer serializer = new Persister();
 				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
-				
+
 				// Extract final locations
 				transactions.put(transactionTO, transaction);
 				transactionFile.delete();

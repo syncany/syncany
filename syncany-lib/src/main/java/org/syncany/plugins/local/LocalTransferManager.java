@@ -40,7 +40,9 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
+import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
@@ -119,6 +121,10 @@ public class LocalTransferManager extends AbstractTransferManager {
 		connect();
 
 		File repoFile = getRemoteFile(remoteFile);
+		
+		if (!repoFile.exists()) {
+			repoFile = getRemoteFile(new TempRemoteFile(remoteFile.getName()));
+		}
 
 		if (!repoFile.exists()) {
 			throw new StorageException("No such file in local repository: " + repoFile);
@@ -197,13 +203,15 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
 		connect();
 
-		Set<RemoteFile> filesToIgnore;
-		if (remoteFileClass.equals(TransactionRemoteFile.class)) {
+		Set<TransactionTO> transactions = new HashSet<TransactionTO>();
+		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
+		Set<RemoteFile> filesToIgnore = new HashSet<RemoteFile>();
+		
+		if (!remoteFileClass.equals(TransactionRemoteFile.class)) {
 			// If we are listing transaction files, we don't want to ignore any
-			filesToIgnore = new HashSet<RemoteFile>();
-		}
-		else {
-			filesToIgnore = getFilesInTransactions();
+			transactions = getTransactionTOs().keySet();
+			filesToIgnore = getFilesInTransactions(transactions);
+			dummyDeletedFiles = getDummyDeletedFiles(transactions);
 		}
 		
 		// List folder
@@ -217,6 +225,13 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 		// Create RemoteFile objects
 		Map<String, T> remoteFiles = new HashMap<String, T>();
+		
+		for (RemoteFile deletedFile : dummyDeletedFiles) {
+			if (deletedFile.getClass().equals(remoteFileClass)) {
+				T deletedTFile = (T) deletedFile;
+				remoteFiles.put(deletedTFile.getName(), deletedTFile);
+			}
+		}
 
 		for (File file : files) {
 			try {
