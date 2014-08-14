@@ -28,6 +28,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -114,7 +115,12 @@ public class RemoteTransaction {
 			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile remoteFile = action.getRemoteFile();
 				logger.log(Level.INFO, "- Moving {0} to temp. file {1} ...", new Object[] { remoteFile, tempRemoteFile });
-				transferManager.move(remoteFile, tempRemoteFile);
+				try {
+					transferManager.move(remoteFile, tempRemoteFile);
+				}
+				catch (StorageMoveException e) {
+					logger.log(Level.INFO, "- Move to delete file failed because the remoteFile does not exist.", e);
+				}
 			}
 		}
 		
