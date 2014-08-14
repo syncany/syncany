@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
@@ -145,6 +146,10 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 		File sourceRemoteFile = getRemoteFile(sourceFile);
 		File targetRemoteFile = getRemoteFile(targetFile);
+		
+		if (!sourceRemoteFile.exists()) {
+			throw new StorageMoveException("Unable to move file " + sourceFile + " because it does not exist.");
+		}
 
 		try {
 			FileUtils.moveFile(sourceRemoteFile, targetRemoteFile);
