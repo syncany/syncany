@@ -352,9 +352,12 @@ public class CommandLineClient extends Client {
 			credentialsProvider.setCredentials(
 				new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
 				new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
+			
+			// Allow all hostnames in CN; this is okay as long as hostname is localhost/127.0.0.1!
+			// See: https://github.com/syncany/syncany/pull/196#issuecomment-52197017
+			X509HostnameVerifier hostnameVerifier = new AllowAllHostnameVerifier();			
 
 			// Fetch the SSL context (using the user key/trust store)
-			X509HostnameVerifier hostnameVerifier = new AllowAllHostnameVerifier();	// This is okay as long as hostname is 127.0.0.1!		
 			SSLContext sslContext = UserConfig.createUserSSLContext();
 			
 			// Create client with authentication details
