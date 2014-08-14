@@ -19,6 +19,7 @@ package org.syncany.operations.daemon.handlers;
 
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.Headers;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -26,6 +27,8 @@ import java.util.logging.Logger;
 
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.web.WebInterfacePlugin;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
 
 /**
  * InternalWebInterfaceHandler is responsible for handling requests 
@@ -77,11 +80,25 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 	}
 
 	private void handleRequestNoHandler(HttpServerExchange exchange) {
+		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+		
 		if (webInterfacePlugins.size() == 0) {
-			exchange.getResponseSender().send("No web interface configured.");
+			String responseMessage = "No web interface installed.<br />Use <tt>sy plugin install simpleweb --snapshot</tt> "
+					+ "to install a web interface, then restart the daemon.";
+			
+			exchange.getResponseSender().send(responseMessage);
 		}
 		else {
-			exchange.getResponseSender().send("Only one web interface can be installed, but " + webInterfacePlugins.size() + " plugins found.");
+			String webInterfacePluginsList = StringUtil.join(webInterfacePlugins, ", ", new StringJoinListener<WebInterfacePlugin>() {
+				public String getString(WebInterfacePlugin webInterfacePlugin) {
+					return webInterfacePlugin.getId();
+				}				
+			});
+			
+			String responseMessage = "Only one web interface can be installed, but " + webInterfacePlugins.size() + " plugins found: "
+					+ webInterfacePluginsList + "<br />Use <tt>sy plugin remove &lt;pluginId&gt;</tt> to remove plugins, then restart the daemon.";
+
+			exchange.getResponseSender().send(responseMessage);
 		}
 	}
 }

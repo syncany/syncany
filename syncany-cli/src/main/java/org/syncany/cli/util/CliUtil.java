@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
  * @author Pim Otte
  */
 public class CliUtil {
-
 	/**
 	 * Parses a string of type "1y2mo3w4d5h6m7s", where the units represent
 	 * years, months, weeks, days, hours, minutes and second respectively.

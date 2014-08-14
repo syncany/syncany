@@ -33,13 +33,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.SignatureException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -50,9 +59,23 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 /**
  * The cipher utility provides functions to create a master key using PBKDF2, 
@@ -93,8 +116,6 @@ public class CipherUtil {
 	 */
 	public static synchronized void init() {
 		if (!initialized.get()) {
-			logger.log(Level.INFO, "Initializing crypto settings and security provider ...");
-
 			// Bouncy Castle
 			if (Security.getProvider(CRYPTO_PROVIDER_ID) == null) {
 				Security.addProvider(CRYPTO_PROVIDER);
@@ -122,7 +143,7 @@ public class CipherUtil {
 	}
 
 	/**
-	 * Attempts to programatically enable the unlimited strength Java crypto extension
+	 * Attempts to programmatically enable the unlimited strength Java crypto extension
 	 * using the reflection API. 
 	 * 
 	 * <p>This class tries to set the property <tt>isRestricted</tt> of the class
@@ -318,5 +339,84 @@ public class CipherUtil {
 		catch (IOException e) {
 			throw new CipherException(e);
 		}
-	}			
+	}		
+	
+	/**
+	 * Generates a 2048-bit RSA key pair.
+	 */
+	public static KeyPair generateRsaKeyPair() throws NoSuchAlgorithmException, CipherException, NoSuchProviderException {
+		KeyPairGenerator keyGen = KeyPairGenerator.getInstance(CipherParams.CERTIFICATE_KEYPAIR_ALGORITHM, CipherParams.CRYPTO_PROVIDER_ID);
+		keyGen.initialize(CipherParams.CERTIFICATE_KEYPAIR_SIZE, secureRandom);
+		
+		return keyGen.generateKeyPair();		
+	}
+	
+	/**
+	 * Generates a self-signed certificate, given a public/private key pair.
+	 * 
+	 * @see https://code.google.com/p/gitblit/source/browse/src/com/gitblit/MakeCertificate.java?r=88598bb2f779b73479512d818c675dea8fa72138
+	 */
+	public static X509Certificate generateSelfSignedCertificate(String commonName, KeyPair keyPair) throws OperatorCreationException, CertificateException,
+			InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		
+		// Certificate CN, O and OU
+		X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+		
+		builder.addRDN(BCStyle.CN, commonName);
+		builder.addRDN(BCStyle.O, CipherParams.CERTIFICATE_ORGANIZATION);
+		builder.addRDN(BCStyle.OU, CipherParams.CERTIFICATE_ORGUNIT);
+
+		// Dates and serial
+		Date notBefore = new Date(System.currentTimeMillis() - 1*24*60*60*1000L);
+		Date notAfter = new Date(System.currentTimeMillis() + 5*365*24*60*60*1000L);
+		BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+
+		// Issuer and subject (identical, because self-signed)
+		X500Name issuer = builder.build();
+		X500Name subject = issuer;
+		
+		X509v3CertificateBuilder certificateGenerator = 
+			new JcaX509v3CertificateBuilder(issuer, serial, notBefore, notAfter, subject, keyPair.getPublic());
+		
+		ContentSigner signatureGenerator = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+			.setProvider(CipherParams.CRYPTO_PROVIDER)
+			.build(keyPair.getPrivate());
+		
+		X509Certificate certificate = new JcaX509CertificateConverter()
+			.setProvider(CipherParams.CRYPTO_PROVIDER)
+			.getCertificate(certificateGenerator.build(signatureGenerator));
+		
+		certificate.checkValidity(new Date());
+		certificate.verify(certificate.getPublicKey());
+
+		return certificate;			
+	}
+	
+	/**
+	 * Creates an SSL context, given a key store and a trust store.
+	 */
+	public static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws Exception {
+		try {
+			// Server key and certificate
+			KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			keyManagerFactory.init(keyStore, new char[0]);
+
+			KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+
+			// Trusted certificates
+			TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			trustManagerFactory.init(trustStore);
+			
+			TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+			// Create SSL context
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(keyManagers, trustManagers, null);
+
+			return sslContext;
+		}
+		catch (Exception e) {
+			throw new Exception("Unable to initialize SSL context", e);
+		}
+	}
 }

@@ -1,10 +1,11 @@
 <daemon xmlns="http://syncany.org/daemon/1">
    <webServer>
       <enabled>false</enabled>
-      <port>8443</port>
-      <host>localhost</host>
+      <bindAddress>127.0.0.1</bindAddress>
+      <bindPort>8443</bindPort>
+      <certificateAutoGenerate>true</certificateAutoGenerate>
+      <certificateCommonName>localhost</certificateCommonName>
    </webServer>
-
    <folders>
       <folder>
          <path>/dummyPathSetThis</path>

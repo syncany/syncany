@@ -112,8 +112,10 @@ public class WatchRunner implements WatchOperationListener {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
 					watchOperationResult = null;
-					File portFile = config.getPortFile();
+
 					// Write port to portFile
+					File portFile = config.getPortFile();
+					
 					portFile.createNewFile();
 					portFile.deleteOnExit();
 
