@@ -39,7 +39,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -51,7 +50,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.AbstractVerifier;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -59,7 +58,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
-import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
@@ -356,7 +354,7 @@ public class CommandLineClient extends Client {
 				new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
 
 			// Fetch the SSL context (using the user key/trust store)
-			X509HostnameVerifier hostnameVerifier = new WildcardAwareHostnameVerifier();			
+			X509HostnameVerifier hostnameVerifier = new AllowAllHostnameVerifier();	// This is okay as long as hostname is 127.0.0.1!		
 			SSLContext sslContext = UserConfig.createUserSSLContext();
 			
 			// Create client with authentication details
@@ -522,34 +520,4 @@ public class CommandLineClient extends Client {
 		
 		return -1; // Never reached
 	}
-	
-	/**
-	 * Verifies the CN presented by the API host's certificate, and 
-	 * allows wildcard-only CNs ("*").
-	 * 
-	 * The standard implementation of the {@link AbstractVerifier} 
-	 * supports wildcards, but only as part of the sub domain 
-	 * (e.g. "*.syncany.org"). This class also allows "CN=*". 
-	 */
-	private class WildcardAwareHostnameVerifier extends AbstractVerifier {
-		@Override
-		public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
-			// Check for "*" in CNs
-			boolean cnsContainsWildcard = cns != null && Arrays.asList(cns).contains("*");
-			
-			if (cnsContainsWildcard) {
-				return;
-			}
-			
-			// Check for "*" in alternate CNs
-			boolean subjectAltsContainsWildcard = subjectAlts != null && Arrays.asList(subjectAlts).contains("*");
-			
-			if (subjectAltsContainsWildcard) {
-				return;
-			}
-			
-			// Hand over to regular verify method
-			super.verify(host, cns, subjectAlts, false);
-		}	
-	};
 }

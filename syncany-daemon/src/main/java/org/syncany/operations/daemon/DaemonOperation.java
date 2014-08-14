@@ -173,6 +173,7 @@ public class DaemonOperation extends Operation {
 				cliUser.setPassword(accessToken);
 				
 				portTO = new PortTO();
+				
 				portTO.setPort(daemonConfig.getWebServer().getBindPort());
 				portTO.setUser(cliUser);
 				
