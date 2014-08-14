@@ -98,15 +98,5 @@ public class ActionTO {
 		return new File(localTempLocation);
 	}
 	
-	public void execute() {
-		if (TYPE_UPLOAD.equals(getType())) {
-			
-		}
-		else if (TYPE_DELETE.equals(getType())) {
-			throw new RuntimeException("NOT IMPLEMENTED YET");
-		}
-	}
-	
-	
 
 }

@@ -121,7 +121,7 @@ public class UpOperation extends AbstractTransferOperation {
 		startOperation();
 		
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
-		transferManager.cleanTransactions(config.getMachineName());
+		transferManager.cleanTransactions(config);
 
 		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);

@@ -104,17 +104,26 @@ public class RemoteTransaction {
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
 		for (ActionTO action : transactionTO.getActions()) {
+
+			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				File localFile = action.getLocalTempLocation();
-				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 				transferManager.upload(localFile, tempRemoteFile);
 			}
 			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile remoteFile = action.getRemoteFile();
-				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 				logger.log(Level.INFO, "- Moving {0} to temp. file {1} ...", new Object[] { remoteFile, tempRemoteFile });
 				transferManager.move(remoteFile, tempRemoteFile);
+			}
+		}
+		
+		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				RemoteFile tempRemoteFile = action.getTempRemoteFile();
+				RemoteFile finalRemoteFile = action.getRemoteFile();
+				logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
+				transferManager.move(tempRemoteFile, finalRemoteFile);
 			}
 		}
 		
@@ -123,13 +132,7 @@ public class RemoteTransaction {
 		transferManager.delete(remoteTransactionFile);
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
-				RemoteFile tempRemoteFile = action.getTempRemoteFile();
-				RemoteFile finalRemoteFile = action.getRemoteFile();
-				logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
-				transferManager.move(tempRemoteFile, finalRemoteFile);
-			}
-			else if (action.getType().equals(ActionTO.TYPE_DELETE)){
+			if (action.getType().equals(ActionTO.TYPE_DELETE)){
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 				logger.log(Level.INFO, "- Moving deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
 				transferManager.delete(tempRemoteFile);

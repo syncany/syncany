@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -105,20 +106,22 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return result;
 	}
 	
-	public void cleanTransactions(String machineName) throws StorageException {
+	public void cleanTransactions(Config config) throws StorageException {
 		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
+		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
 		for (TransactionTO transaction : transactions.keySet()) {
-			if (transaction.getMachineName().equals(machineName)) {
+			if (transaction.getMachineName().equals(config.getMachineName())) {
 				// Delete all permanent or temporary files in this transaction.
 				for (ActionTO action : transaction.getActions()) {
-					delete(action.getRemoteFile());
-					delete(action.getTempRemoteFile());
+					remoteTransaction.delete(action.getRemoteFile());
+					remoteTransaction.delete(action.getTempRemoteFile());
 				}
 				
 				// Get corresponding remote file of transaction and delete it.
-				delete(transactions.get(transaction));
+				remoteTransaction.delete(transactions.get(transaction));
 			}
 		}
+		remoteTransaction.commit();
 	}
 	
 	/**

@@ -221,7 +221,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 		for (File file : files) {
 			try {
 				T remoteFile = RemoteFile.createRemoteFile(file.getName(), remoteFileClass);
-				remoteFiles.put(file.getName(), remoteFile);
+				if (!filesToIgnore.contains(remoteFile)) {
+					remoteFiles.put(file.getName(), remoteFile);
+				}
 			}
 			catch (Exception e) {
 				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file

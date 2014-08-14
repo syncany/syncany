@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -140,11 +141,11 @@ public class RetriableTransferManager implements TransferManager {
 	}
 	
 	@Override
-	public void cleanTransactions(final String machineName) throws StorageException {
+	public void cleanTransactions(final Config config) throws StorageException {
 		retryMethod(new RetriableMethod() {
 			@Override
 			public Object execute() throws StorageException {
-				underlyingTransferManager.cleanTransactions(machineName);
+				underlyingTransferManager.cleanTransactions(config);
 				return null;
 			}
 		});

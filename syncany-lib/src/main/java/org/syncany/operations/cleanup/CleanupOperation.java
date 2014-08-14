@@ -123,7 +123,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		startOperation();
 		
-		transferManager.cleanTransactions(config.getMachineName());
+		transferManager.cleanTransactions(config);
 		
 		// Wait two seconds (conservative cleanup, see #104)
 		logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");
