@@ -23,7 +23,8 @@
 shopt -s progcomp
 _sy ()
 {
-	local cur cmds cmdIdx cmd cmdOpts fixedWords i globalOpts lastcmd
+	local plugins lastcmd
+	local cur cmds cmdIdx cmd cmdOpts fixedWords i globalOpts
 	local curOpt optEnums
 	local IFS=$' \n'
 
@@ -31,7 +32,8 @@ _sy ()
 	cur=${COMP_WORDS[COMP_CWORD]}
 
 	cmds='cleanup connect down genlink init ls ls-remote plugin restore status up watch'
-	globalOpts=( -l --localdir -d --debug -h --help -v -vv --print )
+	plugins=( local webdav sftp ftp samba s3 )
+	globalOpts=( -l --localdir= -d --debug -h --help -v -vv --print )
 
 	# do ordinary expansion if we are anywhere after a -- argument
 	for ((i = 1; i < COMP_CWORD; ++i)); do
@@ -49,7 +51,12 @@ _sy ()
 
 	# complete command name if we are not already past the command
 	if [[ $COMP_CWORD -le cmdIdx ]]; then
-		COMPREPLY=( $( compgen -W "$cmds ${globalOpts[*]}" -- $cur ) )
+		if [[ $cur == -* ]]; then
+			COMPREPLY=( $( compgen -W "${globalOpts[*]}" -- $cur ) )
+		else
+			COMPREPLY=( $( compgen -W "$cmds" -- $cur ) )
+		fi	
+		
 		return 0
 	fi
 
@@ -57,7 +64,7 @@ _sy ()
 	# almost the same as above, but don't break and can't be empty
 	lastcmd=
 	for ((cmdIdx = 1; cmdIdx < ${#COMP_WORDS[@]}; ++cmdIdx)); do
-		if [[ ${COMP_WORDS[cmdIdx]} != -* ]] && [[ -n ${COMP_WORDS[cmdIdx]} ]]; then
+		if [[ ${COMP_WORDS[cmdIdx]} != -* ]] && [[ -n ${COMP_WORDS[cmdIdx]} ]] && [[ ${COMP_WORDS[cmdIdx]} != $cur ]]; then
 			lastcmd=${COMP_WORDS[cmdIdx]}
 		fi
 	done
@@ -81,11 +88,16 @@ _sy ()
 	fixedWords=( )
 	case $cmd in
 	cleanup)
-		cmdOpts=( -M --no-database-merge -V --no-version-remove -k --keep-versions -f --force-checksum )
+		cmdOpts=( -M --no-database-merge -V --no-version-remove -k --keep-versions= -f --force-checksum )
 		;;
 	connect)
-		cmdOpts=( -P --plugin -o --plugin-option -I --no-interaction )
-		fixedWords=( syncany:// )
+		cmdOpts=( -P --plugin= -o --plugin-option= -I --no-interaction )
+
+		case $curOpt in
+			--plugin|-P) 
+				optEnums=( "${plugins[@]}" )
+				;;		
+		esac
 		;;
 	down)
 		cmdOpts=( -C --conflict-strategy=ask --conflict-strategy=rename -A --no-apply )
@@ -95,10 +107,16 @@ _sy ()
 		cmdOpts=( -s --short )
 		;;
 	init)
-		cmdOpts=( -P --plugin -o --plugin-option -E --no-encryption -G --no-compression -t --create-target -a --advanced -I --no-interaction )
+		cmdOpts=( -P --plugin= -o --plugin-option= -E --no-encryption -G --no-compression -t --create-target -a --advanced -I --no-interaction )
+
+		case $curOpt in
+			--plugin|-P) 
+				optEnums=( "${plugins[@]}" )
+				;;		
+		esac
 		;;
 	ls)
-		cmdOpts=( -V --versions -t --types= -D --date= -r --recursive -f --full-checksums -g --group )
+		cmdOpts=( -V --versions= -t --types= -D --date= -r --recursive -f --full-checksums -g --group )
 		;;
 	ls-remote)
 		cmdOpts=( )
@@ -110,9 +128,11 @@ _sy ()
 				;;
 			install) 
 				cmdOpts=( -s --snapshot )
+				fixedWords=( "${plugins[@]}" )
 				;;
 			remove) 
 				cmdOpts=( )
+				fixedWords=( "${plugins[@]}" )
 				;;
 			*) 
 				cmdOpts=( )
@@ -121,7 +141,7 @@ _sy ()
 		esac
 		;;
 	restore)
-		cmdOpts=( -r --revision -t --target )
+		cmdOpts=( -r --revision= -t --target= )
 		;;
 	status)
 		cmdOpts=( -f --force-checksum )
@@ -130,25 +150,28 @@ _sy ()
 		cmdOpts=( -f --force-checksum )
 		;;
 	watch)
-		cmdOpts=( -i --interval -s --delay -W --no-watcher -a --announce -N --no-announcements -f --force-checksum -C --conflict-strategy=ask --conflict-strategy=rename -A --no-apply )
+		cmdOpts=( -i --interval= -s --delay -W --no-watcher -a --announce= -N --no-announcements -f --force-checksum -C --conflict-strategy=ask --conflict-strategy=rename -A --no-apply )
 		;;
 	*)
-		cmdOpts=(--help -h)
+		cmdOpts=( --help -h )
 		;;
 	esac
 
 	IFS=$'\n'
 	if [[ ${#fixedWords[@]} -eq 0 ]] && [[ ${#optEnums[@]} -eq 0 ]] && [[ $cur != -* ]]; then
-		# suggest nothing; just files ...
+		# return nothing.
 		return 0
 	elif [[ $cur == = ]] && [[ ${#optEnums[@]} -gt 0 ]]; then
 		# complete directly after "--option=", list all enum values
 		COMPREPLY=( "${optEnums[@]}" )
 		return 0
-	else
+	elif [[ $cur == -* ]]; then
+		# return all short and long options
 		fixedWords=( "${cmdOpts[@]}"
-		             "${globalOpts[@]}"
-		             "${optEnums[@]}"
+		             "${globalOpts[@]}" )
+	else
+		# return all enums and fixed words
+		fixedWords=( "${optEnums[@]}"
 		             "${fixedWords[@]}" )
 	fi
 
@@ -159,5 +182,5 @@ _sy ()
 	return 0
 }
 
-complete -F _sy -o default sy
-complete -F _sy -o default syncany
+complete -F _sy sy
+complete -F _sy syncany
