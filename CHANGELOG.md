@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + HTTPS-only for WebSocket/REST-like API and web interface #185/#196
+  + Add bash-completion functionality (Debian/Ubuntu) #201
 - Bugfixes and other things:
   + Implement full cleanup to fix (big!) #187/#193 
   + Fixed database integrity issue (solved by #187)
