@@ -25,7 +25,6 @@ import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.syncany.crypto.BcFixedCipherInputStream;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 
@@ -53,6 +52,6 @@ public abstract class AesGcmCipherSpec extends CipherSpec {
 		AEADBlockCipher cipher = new GCMBlockCipher(new AESEngine()); 
 		cipher.init(false, new AEADParameters(new KeyParameter(secretKey), MAC_SIZE, iv));
 		
-		return new BcFixedCipherInputStream(underlyingInputStream, cipher);
+		return new org.bouncycastle.crypto.io.CipherInputStream(underlyingInputStream, cipher);
 	}
 }

@@ -3,8 +3,12 @@ Change Log
 
 ### Syncany 0.1.9-alpha (Date: tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + HTTPS-only for WebSocket/REST-like API and web interface #185/#196
 - Bugfixes and other things:
-  + Implement full cleanup to fix #187/#193; fixes #143 and #178
+  + Implement full cleanup to fix (big!) #187/#193 
+  + Fixed database integrity issue (solved by #187)
+  + Fixed winning branch race condition #178 (solved by #187)
   + Add LRU cache for local files; no re-download of exist. multichunks #169
 
 ### Syncany 0.1.8-alpha (Date: 9 Aug 2014)

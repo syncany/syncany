@@ -20,8 +20,6 @@ package org.syncany.plugins.transfer.files;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 
-import org.reflections.Reflections;
-
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
  * identify a file and allow {@link TransferManager}s to upload/download local files.

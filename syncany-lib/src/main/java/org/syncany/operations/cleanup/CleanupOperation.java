@@ -84,8 +84,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	
 	public static final String ACTION_ID = "cleanup";
-	
-	
 	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
 	
 	private CleanupOperationOptions options;
@@ -103,7 +101,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		this.options = options;
 		this.result = new CleanupOperationResult();
-
 		this.localDatabase = new SqlDatabase(config);
 		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 	}
@@ -320,6 +317,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		boolean cleanedRecently = getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000;
+
 		if (!options.isForce() && cleanedRecently) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary, has been done recently");
 
@@ -333,12 +331,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<File, DatabaseRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DatabaseRemoteFile>();
 		
 		int numberOfDatabaseFiles = 0;
+		
 		for (String client : allDatabaseFilesMap.keySet()) {
 			numberOfDatabaseFiles += allDatabaseFilesMap.get(client).size();
 		}
 		
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
 		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size();
+
 		if (!options.isForce() && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
 					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
@@ -386,8 +386,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 		
 		for (File lastLocalMergeDatabaseFile : allMergedDatabaseFiles.keySet()) {
 			// TODO [high] Issue #64: TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might
-			// happen often if
-			// new file is bigger!
+			// happen often if new file is bigger!
+			
 			RemoteFile lastRemoteMergeDatabaseFile = allMergedDatabaseFiles.get(lastLocalMergeDatabaseFile);
 	
 			logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
@@ -398,9 +398,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Update stats
 		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
-		
-		
-
 	}
 
 	/**
@@ -436,6 +433,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private void setLastTimeCleaned(long lastTimeCleaned) {
 		CleanupTO cleanupTO = new CleanupTO();
 		cleanupTO.setLastTimeCleaned(lastTimeCleaned);
+
 		try {
 			logger.log(Level.INFO, "Writing cleanup.xml");
 			(new Persister()).write(cleanupTO, config.getCleanupFile());
