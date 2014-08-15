@@ -141,7 +141,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
-		}
+		} 
+		
+		remoteTransaction.commit();
+		// Committing in two steps because a) at this point it is atomic b) such that
+		// the purge file can be accounted for when merging, if needed
+		remoteTransaction = new RemoteTransaction(config, transferManager);
 
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();

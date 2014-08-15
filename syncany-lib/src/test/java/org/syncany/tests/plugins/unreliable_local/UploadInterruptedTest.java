@@ -44,7 +44,7 @@ public class UploadInterruptedTest {
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 					
 				// 1st upload (= multichunk) fails	
-				"rel=[345] .+upload.+multichunk", // << 3 retries!!
+				"rel=[456] .+upload.+multichunk", // << 3 retries!!
 				
 				// Make fourth upload fail
 				"rel=(8|9|10) .+upload" // << 3 retries!! 
