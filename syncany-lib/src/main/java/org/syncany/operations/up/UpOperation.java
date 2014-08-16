@@ -54,8 +54,8 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.RemoteTransaction;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -190,7 +190,7 @@ public class UpOperation extends AbstractTransferOperation {
 		// Find remote changes (unless --force is enabled)
 		if (!options.forceUploadEnabled()) {
 			LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config, transferManager).execute();
-			List<DatabaseRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
+			List<DbRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
 
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
@@ -222,7 +222,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Save delta database locally
 		long newestLocalDatabaseVersion = deltaDatabaseVersion.getVectorClock().getClock(config.getMachineName());
-		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
+		DbRemoteFile remoteDeltaDatabaseFile = new DbRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
 		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
 		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] { deltaDatabaseVersion.getHeader(),
@@ -322,7 +322,7 @@ public class UpOperation extends AbstractTransferOperation {
 			}
 			else {
 				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
+				MultichunkRemoteFile remoteMultiChunkFile = new MultichunkRemoteFile(multiChunkEntry.getId());
 
 				logger.log(Level.INFO, "- Uploading multichunk {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
 						remoteMultiChunkFile });
@@ -340,7 +340,7 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 	}
 
-	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
+	private void uploadLocalDatabase(File localDatabaseFile, DbRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
 		if (listener != null) {
 			listener.onUploadFile(localDatabaseFile.getName(), -1);
 		}

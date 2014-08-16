@@ -31,11 +31,11 @@ import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
 
 /**
  * The list remote operation queries the transfer manager for any unknown 
- * {@link DatabaseRemoteFile}s. 
+ * {@link DbRemoteFile}s. 
  * 
  * <p>It first uses a {@link TransferManager} to list all remote databases and then
  * uses the local list of known databases to filter already processed files. The local
@@ -69,35 +69,35 @@ public class LsRemoteOperation extends Operation {
 				? loadedTransferManager
 				: config.getTransferPlugin().createTransferManager(config.getConnection());
 		
-		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
-		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
+		List<DbRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
+		List<DbRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
 		
 		transferManager.disconnect();
 
 		return new LsRemoteOperationResult(unknownRemoteDatabases);
 	}		
 
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases) throws StorageException {
+	private List<DbRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DbRemoteFile> knownDatabases) throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
 		
-		List<DatabaseRemoteFile> unknownRemoteDatabases = new ArrayList<DatabaseRemoteFile>();
+		List<DbRemoteFile> unknownRemoteDatabases = new ArrayList<DbRemoteFile>();
 
 		// List all remote database files
-		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
+		Map<String, DbRemoteFile> remoteDatabaseFiles = transferManager.list(DbRemoteFile.class);
 		
 		DatabaseVersionHeader lastLocalDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 		
 		// No local database yet
 		if (lastLocalDatabaseVersionHeader == null) {
 			logger.log(Level.INFO, "- Not local database versions yet. Assuming all {0} remote database files are unknown. ", remoteDatabaseFiles.size());
-			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
+			return new ArrayList<DbRemoteFile>(remoteDatabaseFiles.values());
 		}
 		
 		// At least one local database version exists
 		else {
 			VectorClock knownDatabaseVersions = lastLocalDatabaseVersionHeader.getVectorClock();
 			
-			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
+			for (DbRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 				String clientName = remoteDatabaseFile.getClientName();
 				Long knownClientVersion = knownDatabaseVersions.getClock(clientName);
 					
@@ -126,13 +126,13 @@ public class LsRemoteOperation extends Operation {
 	}
 	
 	public class LsRemoteOperationResult implements OperationResult {
-		private List<DatabaseRemoteFile> unknownRemoteDatabases;
+		private List<DbRemoteFile> unknownRemoteDatabases;
 		
-		public LsRemoteOperationResult(List<DatabaseRemoteFile> unknownRemoteDatabases) {
+		public LsRemoteOperationResult(List<DbRemoteFile> unknownRemoteDatabases) {
 			this.unknownRemoteDatabases = unknownRemoteDatabases;
 		}
 
-		public List<DatabaseRemoteFile> getUnknownRemoteDatabases() {
+		public List<DbRemoteFile> getUnknownRemoteDatabases() {
 			return unknownRemoteDatabases;
 		}
 	}

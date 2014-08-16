@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
 
 /**
  * The application data access object (DAO) writes and queries the SQL database for 
@@ -41,16 +41,16 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	}	
 	
 	/**
-	 * Writes a list of {@link DatabaseRemoteFile}s to the database using the given connection.
+	 * Writes a list of {@link DbRemoteFile}s to the database using the given connection.
 	 * <p><b>Note:</b> This method executes, but does not commit the query.
 	 * 
 	 * @param remoteDatabases List of remote databases to write to the database
 	 * @throws SQLException If the SQL statement fails
 	 */
-	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
+	public void writeKnownRemoteDatabases(List<DbRemoteFile> remoteDatabases) throws SQLException {
 		PreparedStatement preparedStatement = getStatement("application.insert.all.persistNewKnownRemoteDatabases.sql");
 
-		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
+		for (DbRemoteFile databaseRemoteFile : remoteDatabases) {
 			preparedStatement.setString(1, databaseRemoteFile.getName());
 			preparedStatement.addBatch();
 		}
@@ -61,18 +61,18 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	}
 	
 	/**
-	 * Queries the database for already known {@link DatabaseRemoteFile}s and returns a
+	 * Queries the database for already known {@link DbRemoteFile}s and returns a
 	 * list of all of them. 
 	 * 
 	 * @return Returns a list of all known/processed remote databases
 	 */
-	public List<DatabaseRemoteFile> getKnownDatabases() {
-		List<DatabaseRemoteFile> knownDatabases = new ArrayList<DatabaseRemoteFile>();
+	public List<DbRemoteFile> getKnownDatabases() {
+		List<DbRemoteFile> knownDatabases = new ArrayList<DbRemoteFile>();
 				
 		try (PreparedStatement preparedStatement = getStatement("application.select.all.getKnownDatabases.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {		
 				while (resultSet.next()) {
-					knownDatabases.add(new DatabaseRemoteFile(resultSet.getString("database_name")));
+					knownDatabases.add(new DbRemoteFile(resultSet.getString("database_name")));
 				}
 				
 				return knownDatabases;

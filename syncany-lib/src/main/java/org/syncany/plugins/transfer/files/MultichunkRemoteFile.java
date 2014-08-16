@@ -33,7 +33,7 @@ import org.syncany.util.StringUtil;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class MultiChunkRemoteFile extends RemoteFile {
+public class MultichunkRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("multichunk-([a-f0-9]+)");
 	private static final String NAME_FORMAT = "multichunk-%s";
 
@@ -50,7 +50,7 @@ public class MultiChunkRemoteFile extends RemoteFile {
 	 * @param name Multichunk file name; <b>must</b> always match the {@link #NAME_PATTERN} 
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public MultiChunkRemoteFile(String name) throws StorageException {
+	public MultichunkRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 
@@ -60,7 +60,7 @@ public class MultiChunkRemoteFile extends RemoteFile {
 	 * @param multiChunkId The identifier of the multichunk
 	 * @throws StorageException Never throws an exception
 	 */
-	public MultiChunkRemoteFile(MultiChunkId multiChunkId) throws StorageException {
+	public MultichunkRemoteFile(MultiChunkId multiChunkId) throws StorageException {
 		super(String.format(NAME_FORMAT, multiChunkId.toString()));
 	}
 

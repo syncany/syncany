@@ -143,7 +143,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return filesInTransaction;
 	}
 
-	protected Set<RemoteFile> getDummyDeletedFiles(Set<TransactionTO> transactions) {
+	protected Set<RemoteFile> getDummyDeletedFiles(Set<TransactionTO> transactions) throws StorageException {
 		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
 
 		for (TransactionTO transaction : transactions) {

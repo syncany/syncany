@@ -17,8 +17,12 @@
  */
 package org.syncany.plugins.transfer.files;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.util.StringUtil;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
@@ -35,6 +39,7 @@ import org.syncany.plugins.transfer.TransferManager;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RemoteFile {
+	private static final Logger logger = Logger.getLogger(RemoteFile.class.getSimpleName());
 	private String name;
 
 	/**
@@ -99,18 +104,27 @@ public abstract class RemoteFile {
 	public static <T extends RemoteFile> T createRemoteFile(String name) throws StorageException {
 		// TODO [medium] prevent this hack by using naming conventions somehow
 		// e.g. database-0001 -> DatabaseRemoteFile, multichunk-123 --> MultichunkRemoteFile
-		
-		Reflections reflections = new Reflections(RemoteFile.class.getPackage().getName());
-		
-		for (Class<? extends RemoteFile> remoteFileClass : reflections.getSubTypesOf(RemoteFile.class)) {
-			try {
-				return (T) createRemoteFile(name, remoteFileClass);
-			}
-			catch (StorageException e) {
-				// Invalid type, skip.
-			}
+		String prefix;
+		if (name.contains("-")) {
+			prefix = StringUtil.toCamelCase(name.substring(0, name.indexOf('-')));
+		}
+		else {
+			prefix = StringUtil.toCamelCase(name);
 		}
 		
+		try {
+			String filePackage = "org.syncany.plugins.transfer.files";
+			Class<? extends RemoteFile> remoteFileClass = (Class<? extends RemoteFile>) Class.forName(filePackage + "." + prefix + "RemoteFile");
+			logger.log(Level.SEVERE, remoteFileClass.getName());
+			T result =  (T) createRemoteFile(name, remoteFileClass);
+			logger.log(Level.SEVERE, result.toString());
+			return result;
+		}
+		catch (ClassNotFoundException| StorageException e) {
+			logger.log(Level.INFO, "Invalid filename for remote file " + name);
+		}
+		
+	
 		throw new StorageException("Attempted to make a remote file which does not follow any naming pattern.");
 	}
 

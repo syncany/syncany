@@ -40,7 +40,7 @@ import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.down.DatabaseBranch;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
 
 /**
  * Represents the single entry point for all SQL database queries.
@@ -104,11 +104,11 @@ public class SqlDatabase {
 	
 	// Application
 
-	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
+	public void writeKnownRemoteDatabases(List<DbRemoteFile> remoteDatabases) throws SQLException {
 		applicationDao.writeKnownRemoteDatabases(remoteDatabases);
 	}
 
-	public List<DatabaseRemoteFile> getKnownDatabases() {
+	public List<DbRemoteFile> getKnownDatabases() {
 		return applicationDao.getKnownDatabases();
 	}
 

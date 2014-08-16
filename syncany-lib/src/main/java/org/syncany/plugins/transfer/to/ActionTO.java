@@ -34,52 +34,46 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
  * @author Pim Otte
  */
 
-@Root(name="transactionAction")
-@Namespace(reference="http://syncany.org/transaction/action/1")
+@Root(name = "transactionAction")
+@Namespace(reference = "http://syncany.org/transaction/action/1")
 public class ActionTO {
 	private static final Logger logger = Logger.getLogger(ActionTO.class.getSimpleName());
-	
+
 	public static final String TYPE_UPLOAD = "UPLOAD";
 	public static final String TYPE_DELETE = "DELETE";
-	
-	@Element(name="type", required=true)
+
+	@Element(name = "type", required = true)
 	private String type;
-	
-	@Element(name="remoteLocation", required=true)
+
+	@Element(name = "remoteLocation", required = true)
 	private String remoteLocation;
-	
-	@Element(name="remoteTempLocation", required=true)
+
+	@Element(name = "remoteTempLocation", required = true)
 	private String remoteTempLocation;
-	
-	@Element(name="localTempLocation", required=false)
+
+	@Element(name = "localTempLocation", required = false)
 	private String localTempLocation;
-	
+
 	public String getType() {
 		return type;
 	}
-	
+
 	public void setType(String type) {
 		this.type = type;
 	}
-	
+
 	public void setRemoteLocation(RemoteFile remoteFile) {
 		remoteLocation = remoteFile.getName();
 	}
-	
-	public RemoteFile getRemoteFile() {
-		try {
-			return RemoteFile.createRemoteFile(remoteLocation);
-		}
-		catch (StorageException e) {
-			logger.log(Level.INFO, "Invalid remote temporary filename: " + remoteLocation);
-			return null;
-		}
+
+	public RemoteFile getRemoteFile() throws StorageException {
+		return RemoteFile.createRemoteFile(remoteLocation);
 	}
-	
+
 	public void setRemoteTempLocation(TempRemoteFile tempRemoteFile) {
 		remoteTempLocation = tempRemoteFile.getName();
 	}
-	
+
 	public TempRemoteFile getTempRemoteFile() {
 		try {
 			return RemoteFile.createRemoteFile(remoteTempLocation, TempRemoteFile.class);
@@ -89,14 +83,13 @@ public class ActionTO {
 			return null;
 		}
 	}
-	
+
 	public void setLocalTempLocation(File file) {
 		localTempLocation = file.getAbsolutePath();
 	}
-	
+
 	public File getLocalTempLocation() {
 		return new File(localTempLocation);
 	}
-	
 
 }

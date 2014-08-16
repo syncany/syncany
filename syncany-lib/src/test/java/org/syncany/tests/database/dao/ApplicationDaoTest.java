@@ -28,7 +28,7 @@ import java.util.List;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.dao.ApplicationSqlDao;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestSqlUtil;
 import org.syncany.util.CollectionUtil;
@@ -44,13 +44,13 @@ public class ApplicationDaoTest {
 		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
 		
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
-		List<DatabaseRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
+		List<DbRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
 		
 		// Test
-		assertTrue(CollectionUtil.containsExactly(Arrays.asList(new DatabaseRemoteFile[] { 
-			new DatabaseRemoteFile("db-B-0000000001"),
-			new DatabaseRemoteFile("db-B-0000000002"),
-			new DatabaseRemoteFile("db-B-0000000003")
+		assertTrue(CollectionUtil.containsExactly(Arrays.asList(new DbRemoteFile[] { 
+			new DbRemoteFile("db-B-0000000001"),
+			new DbRemoteFile("db-B-0000000002"),
+			new DbRemoteFile("db-B-0000000003")
 		}), actualKnownDatabases));
 
 		// Tear down
@@ -67,15 +67,15 @@ public class ApplicationDaoTest {
 		// Run
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
 		
-		List<DatabaseRemoteFile> expectedKnownDatabases = Arrays.asList(new DatabaseRemoteFile[] { 
-			new DatabaseRemoteFile("db-A-0000000001"),
-			new DatabaseRemoteFile("db-V-0000000001"),
-			new DatabaseRemoteFile("db-B-0000000001"),
-			new DatabaseRemoteFile("db-A-0000000002")
+		List<DbRemoteFile> expectedKnownDatabases = Arrays.asList(new DbRemoteFile[] { 
+			new DbRemoteFile("db-A-0000000001"),
+			new DbRemoteFile("db-V-0000000001"),
+			new DbRemoteFile("db-B-0000000001"),
+			new DbRemoteFile("db-A-0000000002")
 		});
 		
 		applicationDao.writeKnownRemoteDatabases(expectedKnownDatabases);
-		List<DatabaseRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
+		List<DbRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
 		
 		// Test
 		assertTrue(CollectionUtil.containsExactly(expectedKnownDatabases, actualKnownDatabases));
@@ -94,8 +94,8 @@ public class ApplicationDaoTest {
 		// Prepare
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
 		
-		List<DatabaseRemoteFile> expectedKnownDatabases = Arrays.asList(new DatabaseRemoteFile[] { 
-			new DatabaseRemoteFile("db-A-0000000001")
+		List<DbRemoteFile> expectedKnownDatabases = Arrays.asList(new DbRemoteFile[] { 
+			new DbRemoteFile("db-A-0000000001")
 		});
 		
 		applicationDao.writeKnownRemoteDatabases(expectedKnownDatabases);

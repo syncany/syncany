@@ -58,8 +58,8 @@ import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.RemoteTransaction;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 import com.google.common.collect.Lists;
@@ -244,7 +244,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		localDatabase.commit();
 
 		// Remote: serialize purge database version to file and upload
-		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
+		DbRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
 		File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
 
 		addPurgeFileToTransaction(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
@@ -255,7 +255,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
-	private void addPurgeFileToTransaction(File tempPurgeFile, DatabaseRemoteFile newPurgeRemoteFile) throws StorageException {
+	private void addPurgeFileToTransaction(File tempPurgeFile, DbRemoteFile newPurgeRemoteFile) throws StorageException {
 		logger.log(Level.INFO, "- Uploading PURGE database file " + newPurgeRemoteFile + " ...");
 		remoteTransaction.add(tempPurgeFile, newPurgeRemoteFile);
 	}
@@ -288,7 +288,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return purgeDatabaseVersion;
 	}
 
-	private File writePurgeFile(DatabaseVersion purgeDatabaseVersion, DatabaseRemoteFile newPurgeDatabaseFile) throws IOException {
+	private File writePurgeFile(DatabaseVersion purgeDatabaseVersion, DbRemoteFile newPurgeDatabaseFile) throws IOException {
 		File localPurgeDatabaseFile = config.getCache().getDatabaseFile(newPurgeDatabaseFile.getName());
 
 		DatabaseXmlSerializer xmlSerializer = new DatabaseXmlSerializer(config.getTransformer());
@@ -297,9 +297,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return localPurgeDatabaseFile;
 	}
 
-	private DatabaseRemoteFile findNewPurgeRemoteFile(DatabaseVersionHeader purgeDatabaseVersionHeader) throws StorageException {
+	private DbRemoteFile findNewPurgeRemoteFile(DatabaseVersionHeader purgeDatabaseVersionHeader) throws StorageException {
 		Long localMachineVersion = purgeDatabaseVersionHeader.getVectorClock().getClock(config.getMachineName());
-		return new DatabaseRemoteFile(config.getMachineName(), localMachineVersion);
+		return new DbRemoteFile(config.getMachineName(), localMachineVersion);
 	}
 
 	private void remoteDeleteUnusedMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
@@ -307,7 +307,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		for (MultiChunkEntry multiChunkEntry : unusedMultiChunks.values()) {
 			logger.log(Level.FINE, "  + Deleting remote multichunk " + multiChunkEntry + " ...");
-			remoteTransaction.delete(new MultiChunkRemoteFile(multiChunkEntry.getId()));
+			remoteTransaction.delete(new MultichunkRemoteFile(multiChunkEntry.getId()));
 		}
 	}
 
@@ -327,10 +327,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		// Retrieve all database versions
-		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
+		Map<String, List<DbRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 		
-		List<DatabaseRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
-		Map<File, DatabaseRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DatabaseRemoteFile>();
+		List<DbRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DbRemoteFile>();
+		Map<File, DbRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DbRemoteFile>();
 		
 		int numberOfDatabaseFiles = 0;
 		
@@ -348,7 +348,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 		
 		for (String client : allDatabaseFilesMap.keySet()) {
-			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
+			List<DbRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
 			Collections.sort(clientDatabaseFiles);
 			logger.log(Level.INFO, "Databases: " + clientDatabaseFiles);
 			
@@ -357,10 +357,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 					new Object[] { clientDatabaseFiles.size(), options.getMaxDatabaseFiles() });
 	
 			// 1. Determine files to delete remotely
-			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
+			List<DbRemoteFile> toDeleteDatabaseFiles = new ArrayList<DbRemoteFile>(clientDatabaseFiles);
 
 			// 2. Write merge file
-			DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
+			DbRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
 			File lastLocalMergeDatabaseFile = config.getCache().getDatabaseFile(lastRemoteMergeDatabaseFile.getName());
 
 			logger.log(Level.INFO, "   + Writing new merge file (from {0}, to {1}) to {2} ...", new Object[] {
@@ -406,14 +406,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * retrieveAllRemoteDatabaseFiles returns a Map with clientNames as keys and
 	 * lists of corresponding DatabaseRemoteFiles as values.
 	 */
-	private Map<String, List<DatabaseRemoteFile>> retrieveAllRemoteDatabaseFiles() throws StorageException {
-		TreeMap<String, List<DatabaseRemoteFile>> allDatabaseRemoteFilesMap = new TreeMap<String, List<DatabaseRemoteFile>>();
-		Map<String, DatabaseRemoteFile> allDatabaseRemoteFiles = transferManager.list(DatabaseRemoteFile.class);
+	private Map<String, List<DbRemoteFile>> retrieveAllRemoteDatabaseFiles() throws StorageException {
+		TreeMap<String, List<DbRemoteFile>> allDatabaseRemoteFilesMap = new TreeMap<String, List<DbRemoteFile>>();
+		Map<String, DbRemoteFile> allDatabaseRemoteFiles = transferManager.list(DbRemoteFile.class);
 
-		for (Map.Entry<String, DatabaseRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
+		for (Map.Entry<String, DbRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
 			String clientName = entry.getValue().getClientName();
 			if (allDatabaseRemoteFilesMap.get(clientName) == null) {
-				allDatabaseRemoteFilesMap.put(clientName, new ArrayList<DatabaseRemoteFile>());
+				allDatabaseRemoteFilesMap.put(clientName, new ArrayList<DbRemoteFile>());
 			}
 			allDatabaseRemoteFilesMap.get(clientName).add(entry.getValue());
 		}

@@ -30,14 +30,14 @@ import org.syncany.plugins.StorageException;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class RepoRemoteFile extends RemoteFile {
+public class SyncanyRemoteFile extends RemoteFile {
 	private static final String NAME_FORMAT = "syncany";
 	
 	/**
 	 * Initializes a new repo file with the name <b>syncany</b>.
 	 * @throws StorageException Never throws an exception.
 	 */
-	public RepoRemoteFile() throws StorageException {
+	public SyncanyRemoteFile() throws StorageException {
 		super(NAME_FORMAT);
 	}	
 	
@@ -49,7 +49,7 @@ public class RepoRemoteFile extends RemoteFile {
 	 * @param name Repo file name; <b>must</b> always be <b>syncany</b> 
 	 * @throws StorageException If the name is not <b>syncany</b>
 	 */
-	public RepoRemoteFile(String name) throws StorageException {
+	public SyncanyRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 

@@ -34,11 +34,11 @@ import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.plugins.transfer.files.DbRemoteFile;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
@@ -108,23 +108,23 @@ public abstract class AbstractTransferManagerTest {
 		cleanTestLocation(transferManager);
 
 		// Run!
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, RepoRemoteFile.class, new RepoRemoteFile[] { 
-			new RepoRemoteFile()
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, SyncanyRemoteFile.class, new SyncanyRemoteFile[] { 
+			new SyncanyRemoteFile()
 		});
 		
 		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] {  
 			new MasterRemoteFile()
 		});
 		
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, DatabaseRemoteFile.class, new DatabaseRemoteFile[] { 
-			new DatabaseRemoteFile("db-A-0001"), 
-			new DatabaseRemoteFile("db-B-0002") 
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, DbRemoteFile.class, new DbRemoteFile[] { 
+			new DbRemoteFile("db-A-0001"), 
+			new DbRemoteFile("db-B-0002") 
 		});
 
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MultiChunkRemoteFile.class, new MultiChunkRemoteFile[] { 
-			new MultiChunkRemoteFile("multichunk-84f7e2b31440aaef9b73de3cadcf4e449aeb55a1"), 
-			new MultiChunkRemoteFile("multichunk-beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), 
-			new MultiChunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") 
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MultichunkRemoteFile.class, new MultichunkRemoteFile[] { 
+			new MultichunkRemoteFile("multichunk-84f7e2b31440aaef9b73de3cadcf4e449aeb55a1"), 
+			new MultichunkRemoteFile("multichunk-beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"), 
+			new MultichunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") 
 		});
 
 		// Clear up previous test (if test location is reused)
@@ -164,8 +164,8 @@ public abstract class AbstractTransferManagerTest {
 	
 	private void cleanTestLocation(TransferManager transferManager) throws StorageException {
 		Map<String, RemoteFile> normalFiles = transferManager.list(RemoteFile.class);
-		Map<String, DatabaseRemoteFile> databaseFiles = transferManager.list(DatabaseRemoteFile.class);
-		Map<String, MultiChunkRemoteFile> multiChunkFiles = transferManager.list(MultiChunkRemoteFile.class);
+		Map<String, DbRemoteFile> databaseFiles = transferManager.list(DbRemoteFile.class);
+		Map<String, MultichunkRemoteFile> multiChunkFiles = transferManager.list(MultichunkRemoteFile.class);
 		
 		for (RemoteFile remoteFile : normalFiles.values()) {
 			transferManager.delete(remoteFile);
@@ -185,7 +185,7 @@ public abstract class AbstractTransferManagerTest {
 		TransferManager transferManager = loadPluginAndCreateTransferManager();
 		transferManager.connect();	
 		
-		boolean deleteSuccess = transferManager.delete(new MultiChunkRemoteFile("multichunk-dddddddddddddddddddddddddddddddddddddddd")); // does not exist
+		boolean deleteSuccess = transferManager.delete(new MultichunkRemoteFile("multichunk-dddddddddddddddddddddddddddddddddddddddd")); // does not exist
 		assertTrue(deleteSuccess);
 	}	
 
