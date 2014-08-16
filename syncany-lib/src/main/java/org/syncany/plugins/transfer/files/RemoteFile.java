@@ -105,28 +105,29 @@ public abstract class RemoteFile {
 		}
 	}
 	
+	/**
+	 * Creates a remote file based on a name and derives the class name using the 
+	 * file name.   
+	 * 
+	 * <p>The name must match the corresponding name pattern (nameprefix-...), and
+	 * the derived class can either be <tt>RemoteFile</tt>, or a sub-class thereof. 
+	 * 
+	 * @param name The name of the remote file  
+	 * @return Returns a new object of the given class
+	 */
+	@SuppressWarnings("unchecked")
 	public static <T extends RemoteFile> T createRemoteFile(String name) throws StorageException {
-		String prefix;
-		if (name.contains("-")) {
-			prefix = StringUtil.toCamelCase(name.substring(0, name.indexOf('-')));
-		}
-		else {
-			prefix = StringUtil.toCamelCase(name);
-		}
+		String prefix = name.contains("-") ? name.substring(0, name.indexOf('-')) : name;
+		String camelCasePrefix = StringUtil.toCamelCase(prefix);
 		
-		try {
-			Class<? extends RemoteFile> remoteFileClass = (Class<? extends RemoteFile>) Class.forName(REMOTE_FILE_PACKAGE + "." + prefix + REMOTE_FILE_SUFFIX);
-			logger.log(Level.SEVERE, remoteFileClass.getName());
-			T result =  (T) createRemoteFile(name, remoteFileClass);
-			logger.log(Level.SEVERE, result.toString());
-			return result;
+		try {		
+			Class<T> remoteFileClass = (Class<T>) Class.forName(REMOTE_FILE_PACKAGE + "." + camelCasePrefix + REMOTE_FILE_SUFFIX);
+			return createRemoteFile(name, remoteFileClass);
 		}
 		catch (ClassNotFoundException| StorageException e) {
 			logger.log(Level.INFO, "Invalid filename for remote file " + name);
-		}
-		
-	
-		throw new StorageException("Attempted to make a remote file which does not follow any naming pattern.");
+			throw new StorageException("Invalid filename for remote file " + name);
+		}		
 	}
 
 	@Override
