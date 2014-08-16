@@ -34,9 +34,9 @@ import org.syncany.plugins.StorageException;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class DbRemoteFile extends RemoteFile implements Comparable<DbRemoteFile> {
-	private static final Pattern NAME_PATTERN = Pattern.compile("db-([^-]+)-(\\d+)");
-	private static final String NAME_FORMAT = "db-%s-%010d";
+public class DatabaseRemoteFile extends RemoteFile implements Comparable<DatabaseRemoteFile> {
+	private static final Pattern NAME_PATTERN = Pattern.compile("database-([^-]+)-(\\d+)");
+	private static final String NAME_FORMAT = "database-%s-%010d";
 
 	private String clientName;
 	private long clientVersion;
@@ -52,7 +52,7 @@ public class DbRemoteFile extends RemoteFile implements Comparable<DbRemoteFile>
 	 * @param name Database file name; <b>must</b> always match the {@link #NAME_PATTERN} 
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public DbRemoteFile(String name) throws StorageException {
+	public DatabaseRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 
@@ -63,7 +63,7 @@ public class DbRemoteFile extends RemoteFile implements Comparable<DbRemoteFile>
 	 * @param version The client version for this delta database file
 	 * @throws StorageException Never throws an exception
 	 */
-	public DbRemoteFile(String clientName, long version) throws StorageException {
+	public DatabaseRemoteFile(String clientName, long version) throws StorageException {
 		super(String.format(NAME_FORMAT, clientName, version));
 	}
 
@@ -96,7 +96,7 @@ public class DbRemoteFile extends RemoteFile implements Comparable<DbRemoteFile>
 	}
 
 	@Override
-	public int compareTo(DbRemoteFile r2) {
+	public int compareTo(DatabaseRemoteFile r2) {
 		int clientNameCompare = this.getClientName().compareTo(r2.getClientName());
 
 		if (clientNameCompare != 0) {

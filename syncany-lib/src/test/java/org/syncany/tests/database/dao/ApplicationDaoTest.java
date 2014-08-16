@@ -28,7 +28,7 @@ import java.util.List;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.dao.ApplicationSqlDao;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestSqlUtil;
 import org.syncany.util.CollectionUtil;
@@ -42,22 +42,22 @@ public class ApplicationDaoTest {
 
 		// Run
 		TestSqlUtil.runSqlFromResource(databaseConnection, "test.insert.set3.sql");
-		
+
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
-		List<DbRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
-		
+		List<DatabaseRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
+
 		// Test
-		assertTrue(CollectionUtil.containsExactly(Arrays.asList(new DbRemoteFile[] { 
-			new DbRemoteFile("db-B-0000000001"),
-			new DbRemoteFile("db-B-0000000002"),
-			new DbRemoteFile("db-B-0000000003")
+		assertTrue(CollectionUtil.containsExactly(Arrays.asList(new DatabaseRemoteFile[] {
+				new DatabaseRemoteFile("database-B-0000000001"),
+				new DatabaseRemoteFile("database-B-0000000002"),
+				new DatabaseRemoteFile("database-B-0000000003")
 		}), actualKnownDatabases));
 
 		// Tear down
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}
-	
+
 	@Test
 	public void testPersistAndGetKnownDatabases() throws Exception {
 		// Setup
@@ -66,17 +66,17 @@ public class ApplicationDaoTest {
 
 		// Run
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
-		
-		List<DbRemoteFile> expectedKnownDatabases = Arrays.asList(new DbRemoteFile[] { 
-			new DbRemoteFile("db-A-0000000001"),
-			new DbRemoteFile("db-V-0000000001"),
-			new DbRemoteFile("db-B-0000000001"),
-			new DbRemoteFile("db-A-0000000002")
+
+		List<DatabaseRemoteFile> expectedKnownDatabases = Arrays.asList(new DatabaseRemoteFile[] {
+				new DatabaseRemoteFile("database-A-0000000001"),
+				new DatabaseRemoteFile("database-V-0000000001"),
+				new DatabaseRemoteFile("database-B-0000000001"),
+				new DatabaseRemoteFile("database-A-0000000002")
 		});
-		
+
 		applicationDao.writeKnownRemoteDatabases(expectedKnownDatabases);
-		List<DbRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
-		
+		List<DatabaseRemoteFile> actualKnownDatabases = applicationDao.getKnownDatabases();
+
 		// Test
 		assertTrue(CollectionUtil.containsExactly(expectedKnownDatabases, actualKnownDatabases));
 
@@ -84,7 +84,7 @@ public class ApplicationDaoTest {
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}
-	
+
 	@Test
 	public void testShutdown() throws Exception {
 		// Setup
@@ -93,17 +93,17 @@ public class ApplicationDaoTest {
 
 		// Prepare
 		ApplicationSqlDao applicationDao = new ApplicationSqlDao(databaseConnection);
-		
-		List<DbRemoteFile> expectedKnownDatabases = Arrays.asList(new DbRemoteFile[] { 
-			new DbRemoteFile("db-A-0000000001")
+
+		List<DatabaseRemoteFile> expectedKnownDatabases = Arrays.asList(new DatabaseRemoteFile[] {
+				new DatabaseRemoteFile("database-A-0000000001")
 		});
-		
+
 		applicationDao.writeKnownRemoteDatabases(expectedKnownDatabases);
 
 		// Run & Test
-		assertTrue(new File(testConfig.getDatabaseFile()+".lck").exists());
+		assertTrue(new File(testConfig.getDatabaseFile() + ".lck").exists());
 		applicationDao.shutdown();
-		assertFalse(new File(testConfig.getDatabaseFile()+".lck").exists());		
+		assertFalse(new File(testConfig.getDatabaseFile() + ".lck").exists());
 
 		// Tear down
 		databaseConnection.close();

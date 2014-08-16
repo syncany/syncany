@@ -24,7 +24,7 @@ import java.util.TreeMap;
 
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.plugins.StorageException;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * Helper class to help map a database version header to its corresponding
@@ -34,10 +34,10 @@ import org.syncany.plugins.transfer.files.DbRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseFileList {
-	private TreeMap<File, DbRemoteFile> newRemoteDatabases;
+	private TreeMap<File, DatabaseRemoteFile> newRemoteDatabases;
 	private Map<String, File> shortFilenameToFileMap;
 	
-	public DatabaseFileList(TreeMap<File, DbRemoteFile> newRemoteDatabases) {
+	public DatabaseFileList(TreeMap<File, DatabaseRemoteFile> newRemoteDatabases) {
 		this.newRemoteDatabases = newRemoteDatabases;
 		this.shortFilenameToFileMap = initLookupMap();
 	}
@@ -70,7 +70,7 @@ public class DatabaseFileList {
 		String clientName = databaseVersionHeader.getClient();
 		long clientFileClock = databaseVersionHeader.getVectorClock().getClock(clientName);
 		
-		DbRemoteFile potentialDatabaseRemoteFileForRange = new DbRemoteFile(clientName, clientFileClock);				
+		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);				
 		return shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
 	}
 
@@ -93,14 +93,14 @@ public class DatabaseFileList {
 		String clientName = databaseVersionHeader.getClient();
 		long clientFileClock = databaseVersionHeader.getVectorClock().getClock(clientName);
 		
-		DbRemoteFile potentialDatabaseRemoteFileForRange = null;
+		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = null;
 		File databaseFileForRange = null;
 		
 		int maxRounds = 100000; // TODO [medium] This is ugly and potentially dangerous. Can this lead to incorrect results?
 		boolean isLoadableDatabaseFile = false;
 		
 		while (!isLoadableDatabaseFile && maxRounds > 0) {
-			potentialDatabaseRemoteFileForRange = new DbRemoteFile(clientName, clientFileClock);
+			potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);
 			
 			databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
 			isLoadableDatabaseFile = databaseFileForRange != null;	

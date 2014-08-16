@@ -33,30 +33,30 @@ import org.syncany.tests.util.TestConfigUtil;
 
 public class UploadInterruptedTest {
 	private static final Logger logger = Logger.getLogger(UploadInterruptedTest.class.getSimpleName());
-	
+
 	// TODO [medium] Design and implement specific tests for scenarios where uploads fail
 	@Test
 	public void testUnreliableUpload() throws Exception {
-		// Setup 
+		// Setup
 		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
-			Arrays.asList(new String[] { 
-				// List of failing operations (regex)
-				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-					
-				// 1st upload (= multichunk) fails	
-				"rel=[456] .+upload.+multichunk", // << 3 retries!!
-				
-				// Make fourth upload fail
-				"rel=(8|9|10) .+upload" // << 3 retries!! 
-					
-			}
-		));
-		
+				Arrays.asList(new String[] {
+						// List of failing operations (regex)
+						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+
+						// 1st upload (= multichunk) fails
+						"rel=[456] .+upload.+multichunk", // << 3 retries!!
+
+						// Make fourth upload fail
+						"rel=(8|9|10) .+upload" // << 3 retries!!
+
+				}
+						));
+
 		TestClient clientA = new TestClient("A", testConnection);
-		
+
 		int i = 0;
 		while (i++ < 5) {
-			clientA.createNewFile("A-original-"+i, 50*1024);
+			clientA.createNewFile("A-original-" + i, 50 * 1024);
 			try {
 				Thread.sleep(100);
 				clientA.up();
@@ -66,14 +66,14 @@ public class UploadInterruptedTest {
 				logger.log(Level.INFO, e.getMessage());
 			}
 		}
-				
-		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000001").exists());
-		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000002").exists());
-		assertTrue(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000003").exists());
-		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000004").exists());
-		assertFalse(new File(testConnection.getRepositoryPath()+"/databases/db-A-0000000005").exists());
-		
+
+		assertTrue(new File(testConnection.getRepositoryPath() + "/databases/database-A-0000000001").exists());
+		assertTrue(new File(testConnection.getRepositoryPath() + "/databases/database-A-0000000002").exists());
+		assertTrue(new File(testConnection.getRepositoryPath() + "/databases/database-A-0000000003").exists());
+		assertFalse(new File(testConnection.getRepositoryPath() + "/databases/database-A-0000000004").exists());
+		assertFalse(new File(testConnection.getRepositoryPath() + "/databases/database-A-0000000005").exists());
+
 		// Tear down
 		clientA.deleteTestData();
-	}				
+	}
 }

@@ -37,10 +37,10 @@ import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
@@ -55,7 +55,7 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  * in special sub-folders:
  * 
  * <ul>
- *   <li>The <tt>databases</tt> folder keeps all the {@link DbRemoteFile}s</li>
+ *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
  *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultichunkRemoteFile}s</li>
  * </ul>
  * 
@@ -262,7 +262,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		if (remoteFile.equals(MultichunkRemoteFile.class)) {
 			return multichunksPath;
 		}
-		else if (remoteFile.equals(DbRemoteFile.class)) {
+		else if (remoteFile.equals(DatabaseRemoteFile.class)) {
 			return databasesPath;
 		}
 		else if (remoteFile.equals(ActionRemoteFile.class)) {
@@ -328,7 +328,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	@Override
 	public boolean testRepoFileExists() {
 		try {
-			File repoFile = getRemoteFile(new SyncanyRemoteFile());
+			File repoFile = getRemoteFile(new RepoRemoteFile());
 			
 			if (repoFile.exists()) {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");

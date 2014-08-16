@@ -48,7 +48,7 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -128,7 +128,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "- Connecting to the repo was successful; now downloading repo file ...");
 				
 		// Create local .syncany directory		
-		File tmpRepoFile = downloadFile(transferManager, new SyncanyRemoteFile());
+		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
 		
 		if (CipherUtil.isEncrypted(tmpRepoFile)) {	
 			logger.log(Level.INFO, "- Repo is ENCRYPTED. Decryption necessary.");

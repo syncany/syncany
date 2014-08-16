@@ -20,7 +20,7 @@ package org.syncany.cli;
 import java.util.List;
 
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 public class LsRemoteCommand extends Command {
@@ -31,7 +31,7 @@ public class LsRemoteCommand extends Command {
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		List<DbRemoteFile> remoteStatus = ((LsRemoteOperationResult) client.lsRemote()).getUnknownRemoteDatabases();
+		List<DatabaseRemoteFile> remoteStatus = ((LsRemoteOperationResult) client.lsRemote()).getUnknownRemoteDatabases();
 		
 		if (remoteStatus.size() > 0) {
 			for (RemoteFile unknownRemoteFile : remoteStatus) {

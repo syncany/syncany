@@ -23,10 +23,10 @@ import java.util.Map;
 import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
 /**
  * The transfer manager synchronously connects to the remote storage. It is
@@ -44,7 +44,7 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  * <p>A transfer manager may organize files according to their type or name as
  * it is optimal for the given storage. {@link RemoteFile}s can be classified
  * by their sub-type. For network-transfer optimization reasons, it might be
- * useful to place {@link MultichunkRemoteFile}s and {@link DbRemoteFile}s
+ * useful to place {@link MultichunkRemoteFile}s and {@link DatabaseRemoteFile}s
  * in a separate sub-folder on the remote storage.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -169,7 +169,7 @@ public interface TransferManager {
 	 * Tests whether the repository parameters are valid. In particular, the method tests
 	 * whether a target (folder, bucket, etc.) exists or, if not, whether it can be created.
 	 * It furthermore tests whether a repository at the target already exists by checking if the
-	 * {@link SyncanyRemoteFile} exists.
+	 * {@link RepoRemoteFile} exists.
 	 * 
 	 * <p>The relevant result is determined by the following methods:
 	 * 
@@ -232,7 +232,7 @@ public interface TransferManager {
 	public boolean testTargetCanCreate() throws StorageException; 
 
 	/**
-	 * Tests whether the <b>repository file exists</b> (see {@link SyncanyRemoteFile}). This method is called by the {@link #test()} method 
+	 * Tests whether the <b>repository file exists</b> (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
 	 * (only during repository initialization (or initial connection).
 	 * 
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 

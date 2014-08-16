@@ -26,7 +26,7 @@ import java.util.Map;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -52,7 +52,7 @@ public class UpCommandTest {
 		}
 		
 		for (int i=1; i<=20; i++) {
-			DbRemoteFile expectedDatabaseRemoteFile = new DbRemoteFile("A", i);
+			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 			
 			assertTrue("Database file SHOULD exist: "+databaseFileInRepo, databaseFileInRepo.exists());
@@ -107,14 +107,14 @@ public class UpCommandTest {
 		assertTrue(cliOut[2].contains("Cleanup successful"));
 
 		for (int i=1; i<=21; i++) {
-			DbRemoteFile expectedDatabaseRemoteFile = new DbRemoteFile("A", i);
+			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertFalse("Database file SHOULD NOT exist: "+databaseFileInRepo, databaseFileInRepo.exists());
 		}
 		
 		for (int i=22; i<=22; i++) {
-			DbRemoteFile expectedDatabaseRemoteFile = new DbRemoteFile("A", i);
+			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path")+"/databases/"+expectedDatabaseRemoteFile.getName());
 
 			assertTrue("Database file SHOULD exist: "+databaseFileInRepo, databaseFileInRepo.exists());

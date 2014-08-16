@@ -38,7 +38,7 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
-import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
 /**
  * The init operation initializes a new repository at a given remote storage
@@ -218,7 +218,7 @@ public class InitOperation extends AbstractInitOperation {
 
 	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
 		try {
-			Map<String, SyncanyRemoteFile> repoFileList = transferManager.list(SyncanyRemoteFile.class);			
+			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);			
 			return repoFileList.size() > 0;
 		}
 		catch (Exception e) {
@@ -231,6 +231,6 @@ public class InitOperation extends AbstractInitOperation {
 	}  
 	
 	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {    		
-		transferManager.upload(repoFile, new SyncanyRemoteFile());
+		transferManager.upload(repoFile, new RepoRemoteFile());
 	}    	
 }

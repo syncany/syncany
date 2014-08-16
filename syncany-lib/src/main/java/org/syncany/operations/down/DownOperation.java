@@ -52,7 +52,7 @@ import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResul
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.DbRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -141,9 +141,9 @@ public class DownOperation extends AbstractTransferOperation {
 		startOperation();
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
-		List<DbRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
+		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
-		TreeMap<File, DbRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
+		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		DatabaseFileList databaseFileList = new DatabaseFileList(unknownRemoteDatabasesInCache);
 		
@@ -215,21 +215,21 @@ public class DownOperation extends AbstractTransferOperation {
 	 * and returns a map with the local cache files mapped to the given remote database 
 	 * files. The method additionally fires events for every database it downloads.
 	 */
-	private TreeMap<File, DbRemoteFile> downloadUnknownRemoteDatabases(List<DbRemoteFile> unknownRemoteDatabases)
+	private TreeMap<File, DatabaseRemoteFile> downloadUnknownRemoteDatabases(List<DatabaseRemoteFile> unknownRemoteDatabases)
 			throws StorageException {
 		
 		logger.log(Level.INFO, "Downloading unknown databases.");
 
-		TreeMap<File, DbRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DbRemoteFile>();
+		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 		int downloadFileIndex = 0;
 
 		if (listener != null) {
 			listener.onDownloadStart(unknownRemoteDatabases.size());
 		}
 		
-		for (DbRemoteFile remoteFile : unknownRemoteDatabases) {
+		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
-			DbRemoteFile unknownDatabaseRemoteFile = new DbRemoteFile(remoteFile.getName());
+			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
 
@@ -254,17 +254,17 @@ public class DownOperation extends AbstractTransferOperation {
 	 * <p>The returned database branches contain only the per-client {@link DatabaseVersionHeader}s, and not
 	 * the entire stitched branches, i.e. A's database branch will only contain database version headers from A.
 	 */
-	private DatabaseBranches readUnknownDatabaseVersionHeaders(TreeMap<File, DbRemoteFile> remoteDatabases) throws IOException, StorageException {
+	private DatabaseBranches readUnknownDatabaseVersionHeaders(TreeMap<File, DatabaseRemoteFile> remoteDatabases) throws IOException, StorageException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 
 		// Read database files
 		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
 
-		for (Map.Entry<File, DbRemoteFile> remoteDatabaseFileEntry : remoteDatabases.entrySet()) {
+		for (Map.Entry<File, DatabaseRemoteFile> remoteDatabaseFileEntry : remoteDatabases.entrySet()) {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
 
 			File remoteDatabaseFileInCache = remoteDatabaseFileEntry.getKey();
-			DbRemoteFile remoteDatabaseFile = remoteDatabaseFileEntry.getValue();
+			DatabaseRemoteFile remoteDatabaseFile = remoteDatabaseFileEntry.getValue();
 			
 			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY, null, null); // only load headers!
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();
@@ -337,7 +337,7 @@ public class DownOperation extends AbstractTransferOperation {
 			
 				String remoteFileToPruneClientName = config.getMachineName();
 				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
-				DbRemoteFile remoteFileToPrune = new DbRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
+				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
 
 				logger.log(Level.INFO, "    * Deleting remote database file " + remoteFileToPrune + " ...");
 				transferManager.delete(remoteFileToPrune);		
