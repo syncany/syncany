@@ -20,6 +20,7 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -36,6 +37,9 @@ public class Issue143ScenarioTest {
 		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
 		
 		TestClient clientB = new TestClient("B", testConnection);
+		
+		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+		cleanupOptions.setMinSecondsBetweenCleanups(0);
 
 		// Scenario, see
 		// https://github.com/syncany/syncany/issues/143#issuecomment-50964685
@@ -53,7 +57,7 @@ public class Issue143ScenarioTest {
 		clientA.upWithForceChecksum();
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 		
-		clientA.cleanup(); // Creates PURGE database version with deleted file
+		clientA.cleanup(cleanupOptions); // Creates PURGE database version with deleted file
 		assertEquals("4", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
 		TestFileUtil.copyFile(clientA.getLocalFile("file1.jpg"), clientA.getLocalFile("file1 (copy).jpg"));
@@ -64,7 +68,7 @@ public class Issue143ScenarioTest {
 		clientA.upWithForceChecksum();
 		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 		
-		clientA.cleanup(); // Creates PURGE database version with deleted file
+		clientA.cleanup(cleanupOptions); // Creates PURGE database version with deleted file
 		assertEquals("7", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 				
 		clientB.down(); // <<<< This creates the exception in #143

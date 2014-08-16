@@ -26,7 +26,7 @@ import org.syncany.operations.OperationResult;
 
 public class CleanupOperationResult implements OperationResult {
 	public enum CleanupResultCode {
-		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR, NOK_OTHER_OPERATIONS_RUNNING
+		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_RECENTLY_CLEANED, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR, NOK_OTHER_OPERATIONS_RUNNING
 	}
 
 	private CleanupResultCode resultCode = CleanupResultCode.OK_NOTHING_DONE;

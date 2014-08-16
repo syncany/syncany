@@ -519,7 +519,7 @@ public class CleanupOperationTest {
 		
 		// Because of minimum timeout, this cleanup should not do anything
 		cleanupOperationResult = clientA.cleanup(options);
-		assertEquals(CleanupResultCode.OK_NOTHING_DONE, cleanupOperationResult.getResultCode());
+		assertEquals(CleanupResultCode.NOK_RECENTLY_CLEANED, cleanupOperationResult.getResultCode());
 		
 		// When force is on, the cleanup should go through
 		options.setForce(true);
