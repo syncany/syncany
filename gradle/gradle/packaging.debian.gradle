@@ -44,6 +44,11 @@ tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 					into rootProject.file("build/debian/syncany/debian")
 				}
 	
+				copy {
+					from rootProject.files("gradle/bash/syncany.bash-completion") 
+					into rootProject.file("build/debian/syncany/debian")
+				}
+
 				exec {
 					workingDir rootProject.file("gradle/debian")
 					commandLine "./makechangelog.pl", "${debianDistribution}", "${debianApplicationVersionFull}"
