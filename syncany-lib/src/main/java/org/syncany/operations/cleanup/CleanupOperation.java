@@ -182,6 +182,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (hasDirtyDatabaseVersions()) {
 			return CleanupResultCode.NOK_DIRTY_LOCAL;
 		}
+		
+		if (!options.isForce() && wasCleanedRecently()) {
+			return CleanupResultCode.NOK_RECENTLY_CLEANED;
+		}
 
 		if (hasLocalChanges()) {
 			return CleanupResultCode.NOK_LOCAL_CHANGES;
@@ -190,6 +194,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (hasRemoteChanges()) {
 			return CleanupResultCode.NOK_REMOTE_CHANGES;
 		}
+		
+		
 
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID, UpOperation.ACTION_ID, DownOperation.ACTION_ID)) {
 			return CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING;
@@ -324,15 +330,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config).execute();
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
 	}
+	
+	private boolean wasCleanedRecently() {
+		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000;
+	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
-		boolean cleanedRecently = getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000;
 		
-		if (!options.isForce() && cleanedRecently) {
-			logger.log(Level.INFO, "- Merge remote files: Not necessary, has been done recently");
 
-			return;
-		}
 		
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();

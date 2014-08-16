@@ -39,6 +39,7 @@ import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationOptions;
@@ -133,6 +134,9 @@ public class DirtyDatabaseScenarioTest {
 		UpOperationOptions upOptionsForceEnabled = new UpOperationOptions();
 		upOptionsForceEnabled.setStatusOptions(statusOptions);
 		upOptionsForceEnabled.setForceUploadEnabled(true);
+		
+		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+		cleanupOptions.setMinSecondsBetweenCleanups(0);
 
 		// Run 
 		
@@ -259,7 +263,7 @@ public class DirtyDatabaseScenarioTest {
 			numberOfDatabaseVersions++;
 					
 			if (i % cleanupEveryXUps == 0) {
-				clientA.cleanup();
+				clientA.cleanup(cleanupOptions);
 				numberOfDatabaseVersions++;
 
 				assertEquals(""+numberOfDatabaseVersions, TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status<>'DIRTY'", databaseConnectionA));
@@ -269,7 +273,7 @@ public class DirtyDatabaseScenarioTest {
 			}
 		}
 		
-		clientA.cleanup();
+		clientA.cleanup(cleanupOptions);
 		
 		clientB.down();
 		clientC.down();
