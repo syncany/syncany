@@ -314,7 +314,13 @@ public class FileSystemActionReconciliator {
 			FileVersionComparison localFileToVersionComparison) {
 
 		if (localFileToVersionComparison.getFileChanges().contains(FileChange.DELETED)) {	
-			logger.log(Level.INFO, "     -> (14) File deleted: Local file does not exist and SHOULD NOT: Nothing to do!");
+			FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
+			fileSystemActions.add(action);
+	
+			logger.log(Level.INFO, "     -> (14) Content changed: Local file does NOT exist, and winning version changed: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+			logger.log(Level.INFO, "     -> "+action);	
+			
+			changeSet.getChangedFiles().add(winningLastVersion.getPath());
 		}
 		else {
 			FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
