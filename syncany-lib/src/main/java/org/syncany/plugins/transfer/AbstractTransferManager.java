@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -109,6 +108,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 	public void cleanTransactions(Config config) throws StorageException {
 		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
 		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
+		
 		for (TransactionTO transaction : transactions.keySet()) {
 			if (transaction.getMachineName().equals(config.getMachineName())) {
 				// Delete all permanent or temporary files in this transaction.
@@ -160,8 +160,8 @@ public abstract class AbstractTransferManager implements TransferManager {
 	protected Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		Map<TransactionTO, TransactionRemoteFile> transactions = new HashMap<TransactionTO, TransactionRemoteFile>();
+		
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
-
 			try {
 				File transactionFile = createTempFile("transaction");
 
@@ -181,6 +181,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 				throw new StorageException("Failed to read transactionFile", e);
 			}
 		}
+		
 		return transactions;
 	}
 }

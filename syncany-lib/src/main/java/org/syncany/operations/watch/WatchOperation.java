@@ -27,7 +27,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,9 +82,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private AtomicBoolean syncRunning;
 	private AtomicBoolean syncRequested;
 	private AtomicBoolean stopRequested;
-	private AtomicBoolean pauseRequested;
-	
-	private AtomicLong cleanupLastRun;
+	private AtomicBoolean pauseRequested;	
 	private AtomicInteger upCount;
 
 	private RecursiveWatcher recursiveWatcher;
@@ -106,9 +103,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.syncRunning = new AtomicBoolean(false);
 		this.syncRequested = new AtomicBoolean(false);
 		this.stopRequested = new AtomicBoolean(false);
-		this.pauseRequested = new AtomicBoolean(false);
-		
-		this.cleanupLastRun = new AtomicLong(0);
+		this.pauseRequested = new AtomicBoolean(false);		
 		this.upCount = new AtomicInteger(0);
 
 		this.recursiveWatcher = null;

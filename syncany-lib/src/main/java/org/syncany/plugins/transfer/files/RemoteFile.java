@@ -40,6 +40,10 @@ import org.syncany.util.StringUtil;
  */
 public abstract class RemoteFile {
 	private static final Logger logger = Logger.getLogger(RemoteFile.class.getSimpleName());
+	
+	private static final String REMOTE_FILE_PACKAGE = RemoteFile.class.getPackage().getName();
+	private static final String REMOTE_FILE_SUFFIX = RemoteFile.class.getSimpleName();
+	
 	private String name;
 
 	/**
@@ -102,8 +106,6 @@ public abstract class RemoteFile {
 	}
 	
 	public static <T extends RemoteFile> T createRemoteFile(String name) throws StorageException {
-		// TODO [medium] prevent this hack by using naming conventions somehow
-		// e.g. database-0001 -> DatabaseRemoteFile, multichunk-123 --> MultichunkRemoteFile
 		String prefix;
 		if (name.contains("-")) {
 			prefix = StringUtil.toCamelCase(name.substring(0, name.indexOf('-')));
@@ -113,8 +115,7 @@ public abstract class RemoteFile {
 		}
 		
 		try {
-			String filePackage = "org.syncany.plugins.transfer.files";
-			Class<? extends RemoteFile> remoteFileClass = (Class<? extends RemoteFile>) Class.forName(filePackage + "." + prefix + "RemoteFile");
+			Class<? extends RemoteFile> remoteFileClass = (Class<? extends RemoteFile>) Class.forName(REMOTE_FILE_PACKAGE + "." + prefix + REMOTE_FILE_SUFFIX);
 			logger.log(Level.SEVERE, remoteFileClass.getName());
 			T result =  (T) createRemoteFile(name, remoteFileClass);
 			logger.log(Level.SEVERE, result.toString());
