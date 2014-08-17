@@ -10,6 +10,7 @@ Change Log
   + Implement full cleanup to fix (big!) #187/#193 
   + Fixed database integrity issue (solved by #187)
   + Fixed winning branch race condition #178 (solved by #187)
+  + Fixed file not recreated from winning branch #200/#203
   + Add LRU cache for local files; no re-download of exist. multichunks #169
 
 ### Syncany 0.1.8-alpha (Date: 9 Aug 2014)

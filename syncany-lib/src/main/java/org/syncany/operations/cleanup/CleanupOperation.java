@@ -141,6 +141,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		} 
 		
 		remoteTransaction.commit();
+		
 		// Committing in two steps because a) at this point it is atomic b) such that
 		// the purge file can be accounted for when merging, if needed
 		remoteTransaction = new RemoteTransaction(config, transferManager);
@@ -257,7 +258,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void addPurgeFileToTransaction(File tempPurgeFile, DatabaseRemoteFile newPurgeRemoteFile) throws StorageException {
 		logger.log(Level.INFO, "- Uploading PURGE database file " + newPurgeRemoteFile + " ...");
-		remoteTransaction.add(tempPurgeFile, newPurgeRemoteFile);
+		remoteTransaction.upload(tempPurgeFile, newPurgeRemoteFile);
 	}
 
 	private DatabaseVersion createPurgeDatabaseVersion(Map<FileHistoryId, FileVersion> mostRecentPurgeFileVersions) {
@@ -387,15 +388,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 		
 		for (File lastLocalMergeDatabaseFile : allMergedDatabaseFiles.keySet()) {
-			// TODO [high] Issue #64: TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might
-			// happen often if new file is bigger!
-			
 			RemoteFile lastRemoteMergeDatabaseFile = allMergedDatabaseFiles.get(lastLocalMergeDatabaseFile);
 	
 			logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
 					lastLocalMergeDatabaseFile });
 	
-			remoteTransaction.add(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+			remoteTransaction.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		}
 
 		// Update stats

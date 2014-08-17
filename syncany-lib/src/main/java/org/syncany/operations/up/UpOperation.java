@@ -327,7 +327,7 @@ public class UpOperation extends AbstractTransferOperation {
 				logger.log(Level.INFO, "- Uploading multichunk {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
 						remoteMultiChunkFile });
 
-				remoteTransaction.add(localMultiChunkFile, remoteMultiChunkFile);
+				remoteTransaction.upload(localMultiChunkFile, remoteMultiChunkFile);
 
 				if (listener != null) {
 					listener.onUploadFile(remoteMultiChunkFile.getName(), multiChunkIndex);
@@ -346,7 +346,7 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 		
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
-		remoteTransaction.add(localDatabaseFile, remoteDatabaseFile);
+		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
 		
 		if (listener != null) {
 			listener.onUploadEnd();

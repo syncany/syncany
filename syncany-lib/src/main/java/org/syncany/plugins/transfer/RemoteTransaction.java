@@ -58,7 +58,7 @@ public class RemoteTransaction {
 	/**
 	 * Adds a file to this transaction. Generates a temporary file to store it.
 	 */
-	public void add(File localFile, RemoteFile remoteFile) throws StorageException {
+	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
 		TempRemoteFile temporaryRemoteFile = new TempRemoteFile();
 
 		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
