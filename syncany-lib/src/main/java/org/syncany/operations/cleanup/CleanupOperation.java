@@ -185,8 +185,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (hasRemoteChanges()) {
 			return CleanupResultCode.NOK_REMOTE_CHANGES;
 		}
-		
-		
 
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID, UpOperation.ACTION_ID, DownOperation.ACTION_ID)) {
 			return CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING;

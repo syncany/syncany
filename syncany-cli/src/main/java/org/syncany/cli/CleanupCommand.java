@@ -126,8 +126,9 @@ public class CleanupCommand extends Command {
 			break;
 			
 		case NOK_RECENTLY_CLEANED:
-			out.println("Cleanup has been done recently, so it is not necessary. If you are sure it is necessary, override with --force.");
-
+			out.println("Cleanup has been done recently, so it is not necessary. To override use --force.");
+			break;
+			
 		case NOK_LOCAL_CHANGES:
 			out.println("Local changes detected. Please call 'up' first'.");
 			break;
