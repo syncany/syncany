@@ -19,7 +19,6 @@ package org.syncany.plugins.transfer.to;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -40,22 +39,19 @@ import org.simpleframework.xml.Root;
 @Root(name="transaction")
 @Namespace(reference="http://syncany.org/transaction/1")
 public class TransactionTO {
-	private static final Logger logger = Logger.getLogger(TransactionTO.class.getSimpleName()); 
-	
 	@Element(name="machineName") 
 	private String machineName;
 	
 	@ElementList(entry="action")
 	private List<ActionTO> actionTOs;
-	
-	
+		
 	public TransactionTO() {
 		// Nothing
 	}
 	
 	public TransactionTO(String machineName) {
 		this.machineName = machineName;
-		actionTOs = new ArrayList<ActionTO>();
+		this.actionTOs = new ArrayList<ActionTO>();
 	}
 	
 	public String getMachineName() {

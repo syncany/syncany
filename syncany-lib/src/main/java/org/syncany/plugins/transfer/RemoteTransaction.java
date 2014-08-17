@@ -50,8 +50,7 @@ public class RemoteTransaction {
 	
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.config = config;
-		this.transferManager = transferManager;
-		
+		this.transferManager = transferManager;		
 		this.transactionTO = new TransactionTO(config.getMachineName());
 	}
 	
@@ -69,6 +68,7 @@ public class RemoteTransaction {
 		action.setLocalTempLocation(localFile);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
+		
 		transactionTO.addAction(action);
 	}
 	
@@ -86,12 +86,10 @@ public class RemoteTransaction {
 		action.setType(ActionTO.TYPE_DELETE);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
-		transactionTO.addAction(action);
 		
+		transactionTO.addAction(action);		
 	}
-	
-	
-	
+			
 	/**
 	 * Moves all files to the temporary remote location. If
 	 * no errors occur, all files are moved to their final location.
@@ -102,20 +100,23 @@ public class RemoteTransaction {
 		File localTransactionFile = writeLocalTransactionFile();
 		RemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 		
+		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 		
 		for (ActionTO action : transactionTO.getActions()) {
-
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
+			
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				File localFile = action.getLocalTempLocation();
+				
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 				transferManager.upload(localFile, tempRemoteFile);
 			}
 			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile remoteFile = action.getRemoteFile();
-				logger.log(Level.INFO, "- Moving {0} to temp. file {1} ...", new Object[] { remoteFile, tempRemoteFile });
+				
 				try {
+					logger.log(Level.INFO, "- Moving {0} to temp. file {1} ...", new Object[] { remoteFile, tempRemoteFile });
 					transferManager.move(remoteFile, tempRemoteFile);
 				}
 				catch (StorageMoveException e) {
@@ -128,6 +129,7 @@ public class RemoteTransaction {
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 				RemoteFile finalRemoteFile = action.getRemoteFile();
+				
 				logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
 				transferManager.move(tempRemoteFile, finalRemoteFile);
 			}
@@ -140,14 +142,13 @@ public class RemoteTransaction {
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_DELETE)){
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
+				
 				logger.log(Level.INFO, "- Moving deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
 				transferManager.delete(tempRemoteFile);
 			}
-		}
+		}		
 		
-		
-		localTransactionFile.delete();
-		
+		localTransactionFile.delete();		
 		logger.log(Level.INFO, "Succesfully committed transaction.");
 	}
 	
