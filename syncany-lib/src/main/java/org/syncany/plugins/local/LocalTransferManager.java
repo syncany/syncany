@@ -18,11 +18,7 @@
 package org.syncany.plugins.local;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -134,7 +130,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 			File tempLocalFile = createTempFile("local-tm-download");
 			tempLocalFile.deleteOnExit();
 
-			copyLocalFile(repoFile, tempLocalFile);
+			FileUtils.copyFile(repoFile, tempLocalFile);
 
 			localFile.delete();
 			FileUtils.moveFile(tempLocalFile, localFile);
@@ -182,7 +178,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 
 		try {
-			copyLocalFile(localFile, tempRepoFile);
+			FileUtils.copyFile(localFile, tempRepoFile);
 			FileUtils.moveFile(tempRepoFile, repoFile);
 		}
 		catch (IOException ex) {
@@ -231,8 +227,8 @@ public class LocalTransferManager extends AbstractTransferManager {
 		Map<String, T> remoteFiles = new HashMap<String, T>();
 		
 		for (RemoteFile deletedFile : dummyDeletedFiles) {
-			if (deletedFile.getClass().equals(remoteFileClass)) {
-				T deletedTFile = (T) deletedFile;
+			if (deletedFile.getClass().equals(remoteFileClass)) {				
+				T deletedTFile = remoteFileClass.cast(deletedFile);
 				remoteFiles.put(deletedTFile.getName(), deletedTFile);
 			}
 		}
@@ -254,7 +250,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	private File getRemoteFile(RemoteFile remoteFile) {
-		return new File(getRemoteFilePath(remoteFile.getClass()) + File.separator + remoteFile.getName());
+		return new File(getRemoteFilePath(remoteFile.getClass()), remoteFile.getName());
 	}
 
 	private File getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
@@ -270,21 +266,6 @@ public class LocalTransferManager extends AbstractTransferManager {
 		else {
 			return repoPath;
 		}
-	}
-
-	public void copyLocalFile(File src, File dst) throws IOException {
-		InputStream in = new FileInputStream(src);
-		OutputStream out = new FileOutputStream(dst);
-
-		byte[] buf = new byte[4096];
-
-		int len;
-		while ((len = in.read(buf)) > 0) {
-			out.write(buf, 0, len);
-		}
-
-		in.close();
-		out.close();
 	}
 
 	public String getAbsoluteParentDirectory(File file) {

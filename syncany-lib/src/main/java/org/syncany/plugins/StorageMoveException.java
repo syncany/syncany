@@ -18,8 +18,11 @@
 package org.syncany.plugins;
 
 /**
- * @author pim-arch
- *
+ * The storage move exception is thrown if moving a file on 
+ * the remote storage fails. This usually happens if the original file
+ * does not exist.
+ *  
+ * @author Pim Otte
  */
 public class StorageMoveException extends StorageException {
 	private static final long serialVersionUID = 8929643336708862710L;
