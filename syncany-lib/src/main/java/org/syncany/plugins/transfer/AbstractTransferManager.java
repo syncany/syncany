@@ -108,7 +108,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 	public void cleanTransactions(Config config) throws StorageException {
 		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
 		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
-		
+
 		for (TransactionTO transaction : transactions.keySet()) {
 			if (transaction.getMachineName().equals(config.getMachineName())) {
 				// Delete all permanent or temporary files in this transaction.
@@ -143,7 +143,38 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return filesInTransaction;
 	}
 
-	protected Set<RemoteFile> getDummyDeletedFiles(Set<TransactionTO> transactions) throws StorageException {
+	protected <T extends RemoteFile> Map<String, T> addAndFilterFilesInTransaction(Class<T> remoteFileClass, Map<String, T> remoteFiles)
+			throws StorageException {
+		Map<String, T> filteredFiles = new HashMap<String, T>();
+
+		Set<TransactionTO> transactions = new HashSet<TransactionTO>();
+		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
+		Set<RemoteFile> filesToIgnore = new HashSet<RemoteFile>();
+
+		if (!remoteFileClass.equals(TransactionRemoteFile.class)) {
+			// If we are listing transaction files, we don't want to ignore any
+			transactions = getTransactionTOs().keySet();
+			filesToIgnore = getFilesInTransactions(transactions);
+			dummyDeletedFiles = getDummyDeletedFiles(transactions);
+		}
+
+		for (RemoteFile deletedFile : dummyDeletedFiles) {
+			if (deletedFile.getClass().equals(remoteFileClass)) {
+				T deletedTFile = remoteFileClass.cast(deletedFile);
+				filteredFiles.put(deletedTFile.getName(), deletedTFile);
+			}
+		}
+
+		for (String fileName : remoteFiles.keySet()) {
+			if (!filesToIgnore.contains(remoteFiles.get(fileName))) {
+				filteredFiles.put(fileName, remoteFiles.get(fileName));
+			}
+		}
+
+		return filteredFiles;
+	}
+
+	private Set<RemoteFile> getDummyDeletedFiles(Set<TransactionTO> transactions) throws StorageException {
 		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
 
 		for (TransactionTO transaction : transactions) {
@@ -157,10 +188,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return dummyDeletedFiles;
 	}
 
-	protected Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException {
+	private Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		Map<TransactionTO, TransactionRemoteFile> transactions = new HashMap<TransactionTO, TransactionRemoteFile>();
-		
+
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
 			try {
 				File transactionFile = createTempFile("transaction");
@@ -181,7 +212,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 				throw new StorageException("Failed to read transactionFile", e);
 			}
 		}
-		
+
 		return transactions;
 	}
 }

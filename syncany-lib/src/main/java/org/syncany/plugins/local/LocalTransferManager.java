@@ -20,9 +20,7 @@ package org.syncany.plugins.local;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,8 +35,6 @@ import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RepoRemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
-import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
@@ -106,7 +102,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		if (!databasesPath.mkdir()) {
 			throw new StorageException("Cannot create databases directory: " + databasesPath);
 		}
-		
+
 		if (!actionsPath.mkdir()) {
 			throw new StorageException("Cannot create actions directory: " + databasesPath);
 		}
@@ -117,7 +113,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		connect();
 
 		File repoFile = getRemoteFile(remoteFile);
-		
+
 		if (!repoFile.exists()) {
 			repoFile = getRemoteFile(new TempRemoteFile(remoteFile.getName()));
 		}
@@ -140,14 +136,14 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to copy file " + repoFile + " from local repository to " + localFile, ex);
 		}
 	}
-	
+
 	@Override
 	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException {
 		connect();
 
 		File sourceRemoteFile = getRemoteFile(sourceFile);
 		File targetRemoteFile = getRemoteFile(targetFile);
-		
+
 		if (!sourceRemoteFile.exists()) {
 			throw new StorageMoveException("Unable to move file " + sourceFile + " because it does not exist.");
 		}
@@ -159,7 +155,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 			throw new StorageException("Unable to move file " + sourceRemoteFile + " to destination " + targetRemoteFile, ex);
 		}
 	}
-	
+
 	@Override
 	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
 		connect();
@@ -203,17 +199,6 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
 		connect();
 
-		Set<TransactionTO> transactions = new HashSet<TransactionTO>();
-		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
-		Set<RemoteFile> filesToIgnore = new HashSet<RemoteFile>();
-		
-		if (!remoteFileClass.equals(TransactionRemoteFile.class)) {
-			// If we are listing transaction files, we don't want to ignore any
-			transactions = getTransactionTOs().keySet();
-			filesToIgnore = getFilesInTransactions(transactions);
-			dummyDeletedFiles = getDummyDeletedFiles(transactions);
-		}
-		
 		// List folder
 		File remoteFilePath = getRemoteFilePath(remoteFileClass);
 		File[] files = remoteFilePath.listFiles();
@@ -225,20 +210,11 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 		// Create RemoteFile objects
 		Map<String, T> remoteFiles = new HashMap<String, T>();
-		
-		for (RemoteFile deletedFile : dummyDeletedFiles) {
-			if (deletedFile.getClass().equals(remoteFileClass)) {				
-				T deletedTFile = remoteFileClass.cast(deletedFile);
-				remoteFiles.put(deletedTFile.getName(), deletedTFile);
-			}
-		}
 
 		for (File file : files) {
 			try {
 				T remoteFile = RemoteFile.createRemoteFile(file.getName(), remoteFileClass);
-				if (!filesToIgnore.contains(remoteFile)) {
-					remoteFiles.put(file.getName(), remoteFile);
-				}
+				remoteFiles.put(file.getName(), remoteFile);
 			}
 			catch (Exception e) {
 				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file
@@ -246,7 +222,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 			}
 		}
 
-		return remoteFiles;
+		return addAndFilterFilesInTransaction(remoteFileClass, remoteFiles);
 	}
 
 	private File getRemoteFile(RemoteFile remoteFile) {
@@ -309,7 +285,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public boolean testRepoFileExists() {
 		try {
 			File repoFile = getRemoteFile(new RepoRemoteFile());
-			
+
 			if (repoFile.exists()) {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");
 				return true;
@@ -321,7 +297,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist. Exception occurred.", e);
-			return false;			
+			return false;
 		}
 	}
 
