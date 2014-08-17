@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -40,19 +39,19 @@ public class RetriableTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(RetriableTransferManager.class.getSimpleName());
 	private static final int RETRY_MAX_COUNT = 3;
 	private static final int RETRY_SLEEP = 3000;
-	
+
 	private interface RetriableMethod {
-		public Object execute() throws StorageException; 
+		public Object execute() throws StorageException;
 	}
-	
+
 	private TransferManager underlyingTransferManager;
 	private int tryCount;
-	
+
 	public RetriableTransferManager(TransferManager underlyingTransferManager) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.tryCount = 0;
 	}
-	
+
 	@Override
 	public void connect() throws StorageException {
 		retryMethod(new RetriableMethod() {
@@ -96,7 +95,7 @@ public class RetriableTransferManager implements TransferManager {
 			}
 		});
 	}
-	
+
 	@Override
 	public void move(final RemoteFile sourceFile, final RemoteFile targetFile) throws StorageException {
 		retryMethod(new RetriableMethod() {
@@ -139,13 +138,13 @@ public class RetriableTransferManager implements TransferManager {
 			}
 		});
 	}
-	
+
 	@Override
-	public void cleanTransactions(final Config config) throws StorageException {
+	public void cleanTransactions() throws StorageException {
 		retryMethod(new RetriableMethod() {
 			@Override
 			public Object execute() throws StorageException {
-				underlyingTransferManager.cleanTransactions(config);
+				underlyingTransferManager.cleanTransactions();
 				return null;
 			}
 		});
@@ -198,38 +197,38 @@ public class RetriableTransferManager implements TransferManager {
 
 	private Object retryMethod(RetriableMethod retryableMethod) throws StorageException {
 		tryCount = 0;
-		
+
 		while (true) {
 			try {
 				if (tryCount > 0) {
 					logger.log(Level.WARNING, "Retrying method: " + tryCount + "/" + RETRY_MAX_COUNT + " ...");
 				}
-				
+
 				Object result = retryableMethod.execute();
-				
+
 				tryCount = 0;
 				return result;
 			}
 			catch (StorageException e) {
 				tryCount++;
-				
+
 				if (tryCount >= RETRY_MAX_COUNT) {
 					logger.log(Level.WARNING, "Transfer method failed. No retries left. Throwing exception.", e);
 					throw e;
 				}
 				else {
-					logger.log(Level.WARNING, "Transfer method failed. " + tryCount + "/" + RETRY_MAX_COUNT + " retries. Sleeping " + RETRY_SLEEP + "ms ...", e);
-					
+					logger.log(Level.WARNING, "Transfer method failed. " + tryCount + "/" + RETRY_MAX_COUNT + " retries. Sleeping " + RETRY_SLEEP
+							+ "ms ...", e);
+
 					try {
 						Thread.sleep(RETRY_SLEEP);
 					}
 					catch (Exception e1) {
 						throw new StorageException(e1);
 					}
-				}				
+				}
 			}
-		}		
+		}
 	}
-
 
 }

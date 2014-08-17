@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.AbstractTransferManager;
@@ -64,8 +65,8 @@ public class LocalTransferManager extends AbstractTransferManager {
 	private File databasesPath;
 	private File actionsPath;
 
-	public LocalTransferManager(LocalConnection connection) {
-		super(connection);
+	public LocalTransferManager(LocalConnection connection, Config config) {
+		super(connection, config);
 
 		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
 		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");

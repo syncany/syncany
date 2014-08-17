@@ -82,10 +82,10 @@ import com.google.common.collect.Lists;
  */
 public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
-	
+
 	public static final String ACTION_ID = "cleanup";
 	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
-	
+
 	private CleanupOperationOptions options;
 	private CleanupOperationResult result;
 
@@ -119,13 +119,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		startOperation();
-		
-		transferManager.cleanTransactions(config);
-		
+
+		transferManager.cleanTransactions();
+
 		// Wait two seconds (conservative cleanup, see #104)
 		logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");
 		Thread.sleep(BEFORE_DOUBLE_CHECK_TIME);
-		
+
 		// Check again
 		preconditionResult = checkPreconditions();
 
@@ -133,15 +133,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 			finishOperation();
 			return new CleanupOperationResult(preconditionResult);
 		}
-		
+
 		// Now do the actual work!
-		
+
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
-		} 
-		
+		}
+
 		remoteTransaction.commit();
-		
+
 		// Committing in two steps because a) at this point it is atomic b) such that
 		// the purge file can be accounted for when merging, if needed
 		remoteTransaction = new RemoteTransaction(config, transferManager);
@@ -149,14 +149,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
 		}
-		
+
 		remoteTransaction.commit();
 
-		setLastTimeCleaned(System.currentTimeMillis()/1000);
+		setLastTimeCleaned(System.currentTimeMillis() / 1000);
 		finishOperation();
 		return updateResultCode(result);
 	}
-
 
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
 		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunks().size() > 0 || result.getRemovedOldVersionsCount() > 0) {
@@ -173,7 +172,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (hasDirtyDatabaseVersions()) {
 			return CleanupResultCode.NOK_DIRTY_LOCAL;
 		}
-		
+
 		if (!options.isForce() && wasCleanedRecently()) {
 			return CleanupResultCode.NOK_RECENTLY_CLEANED;
 		}
@@ -215,10 +214,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 */
 	private void removeOldVersions() throws Exception {
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
-		
+
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount()));
 		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
-		
+
 		boolean purgeDatabaseVersionNecessary = purgeFileVersions.size() > 0;
 
 		if (!purgeDatabaseVersionNecessary) {
@@ -319,42 +318,42 @@ public class CleanupOperation extends AbstractTransferOperation {
 		LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config).execute();
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
 	}
-	
+
 	private boolean wasCleanedRecently() {
-		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000;
+		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
-		
+
 		List<DatabaseRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
 		Map<File, DatabaseRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DatabaseRemoteFile>();
-		
+
 		int numberOfDatabaseFiles = 0;
-		
+
 		for (String client : allDatabaseFilesMap.keySet()) {
 			numberOfDatabaseFiles += allDatabaseFilesMap.get(client).size();
 		}
-		
+
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
-		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size();
+		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
 
 		if (!options.isForce() && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
-					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
+					numberOfDatabaseFiles, options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size() });
 			return;
 		}
-		
+
 		for (String client : allDatabaseFilesMap.keySet()) {
 			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
 			Collections.sort(clientDatabaseFiles);
 			logger.log(Level.INFO, "Databases: " + clientDatabaseFiles);
-			
+
 			// Now do the merge!
 			logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
 					new Object[] { clientDatabaseFiles.size(), options.getMaxDatabaseFiles() });
-	
+
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
 
@@ -370,13 +369,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
 			databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
-			
+
 			// Queue files for uploading and deletion
 			allToDeleteDatabaseFiles.addAll(toDeleteDatabaseFiles);
 			allMergedDatabaseFiles.put(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 
 		}
-		
+
 		// 3. Uploading merge file
 
 		// And delete others
@@ -384,13 +383,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "   + Deleting remote file " + toDeleteRemoteFile + " ...");
 			remoteTransaction.delete(toDeleteRemoteFile);
 		}
-		
+
 		for (File lastLocalMergeDatabaseFile : allMergedDatabaseFiles.keySet()) {
 			RemoteFile lastRemoteMergeDatabaseFile = allMergedDatabaseFiles.get(lastLocalMergeDatabaseFile);
-	
+
 			logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
 					lastLocalMergeDatabaseFile });
-	
+
 			remoteTransaction.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		}
 
@@ -427,7 +426,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return 0;
 		}
 	}
-	
+
 	private void setLastTimeCleaned(long lastTimeCleaned) {
 		CleanupTO cleanupTO = new CleanupTO();
 		cleanupTO.setLastTimeCleaned(lastTimeCleaned);
@@ -440,6 +439,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			// Not doing anything else, because the worst that could happen is that cleanup is run an extra time
 			logger.log(Level.INFO, "Something went wrong with writing cleanup.xml." + e.getMessage());
 		}
-		
+
 	}
 }

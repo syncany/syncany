@@ -20,7 +20,6 @@ package org.syncany.plugins.transfer;
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -165,7 +164,7 @@ public interface TransferManager {
 	 * @throws StorageException If the connection fails due to no Internet connection,
 	 *         authentication errors, etc
 	 */
-	public void cleanTransactions(Config config) throws StorageException;
+	public void cleanTransactions() throws StorageException;
 
 	/**
 	 * Tests whether the repository parameters are valid. In particular, the method tests

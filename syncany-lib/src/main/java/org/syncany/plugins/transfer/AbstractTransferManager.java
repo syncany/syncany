@@ -26,9 +26,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
+import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageMoveException;
@@ -47,9 +45,11 @@ import org.syncany.plugins.transfer.to.TransactionTO;
 public abstract class AbstractTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 	private TransferSettings settings;
+	private Config config;
 
-	public AbstractTransferManager(TransferSettings settings) {
+	public AbstractTransferManager(TransferSettings settings, Config config) {
 		this.settings = settings;
+		this.config = config;
 	}
 
 	public TransferSettings getConnection() {
@@ -106,7 +106,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return result;
 	}
 
-	public void cleanTransactions(Config config) throws StorageException {
+	public void cleanTransactions() throws StorageException {
+		if (config == null) {
+			throw new StorageException("Cannot clean transactions if config is null.");
+		}
 		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
 		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
 
@@ -211,11 +214,9 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 				// Download transaction file
 				download(transaction, transactionFile);
-				String transactionFileStr = FileUtils.readFileToString(transactionFile);
 
-				// Deserialize it
-				Serializer serializer = new Persister();
-				TransactionTO transactionTO = serializer.read(TransactionTO.class, transactionFileStr);
+				Transformer transformer = config == null ? null : config.getTransformer();
+				TransactionTO transactionTO = TransactionTO.load(config.getTransformer(), transactionFile);
 
 				// Extract final locations
 				transactions.put(transactionTO, transaction);

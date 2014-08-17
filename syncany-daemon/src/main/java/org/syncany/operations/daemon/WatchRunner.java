@@ -84,27 +84,27 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WatchRunner implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());
-	
+
 	private Config config;
 	private PortTO portTO;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 	private WatchOperationResult watchOperationResult;
 	private LocalEventBus eventBus;
-	
+
 	private SqlDatabase localDatabase;
 
 	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
 		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
-		
+
 		this.localDatabase = new SqlDatabase(config);
-		
+
 		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 	}
-	
+
 	public void start() {
 		watchThread = new Thread(new Runnable() {
 			@Override
@@ -115,15 +115,15 @@ public class WatchRunner implements WatchOperationListener {
 
 					// Write port to portFile
 					File portFile = config.getPortFile();
-					
+
 					portFile.createNewFile();
 					portFile.deleteOnExit();
 
 					new Persister().write(portTO, portFile);
-					
+
 					// Start operation (blocks!)
 					watchOperationResult = watchOperation.execute();
-					
+
 					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());
 				}
 				catch (Exception e) {
@@ -131,7 +131,7 @@ public class WatchRunner implements WatchOperationListener {
 				}
 			}
 		}, "WatchOpT/" + config.getLocalDir().getName());
-		
+
 		watchThread.start();
 	}
 
@@ -141,33 +141,33 @@ public class WatchRunner implements WatchOperationListener {
 
 		watchThread = null;
 	}
-	
+
 	public boolean hasStopped() {
 		return (watchOperationResult != null);
 	}
-	
+
 	@Subscribe
-	public void onRequestReceived(WatchRequest watchRequest) {		
+	public void onRequestReceived(WatchRequest watchRequest) {
 		File requestRootFolder = new File(watchRequest.getRoot());
 		boolean localDirMatches = requestRootFolder.equals(config.getLocalDir());
-		
+
 		if (localDirMatches) {
 			logger.log(Level.INFO, "Received " + watchRequest);
-			
+
 			if (watchRequest instanceof GetFileTreeRequest) {
-				handleGetFileTreeRequest((GetFileTreeRequest) watchRequest);			
+				handleGetFileTreeRequest((GetFileTreeRequest) watchRequest);
 			}
 			else if (watchRequest instanceof GetFileHistoryRequest) {
-				handleGetFileHistoryRequest((GetFileHistoryRequest) watchRequest);			
+				handleGetFileHistoryRequest((GetFileHistoryRequest) watchRequest);
 			}
 			else if (watchRequest instanceof GetFileRequest) {
 				handleGetFileRequest((GetFileRequest) watchRequest);
 			}
 			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
-				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
+				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);
 			}
 			else if (watchRequest instanceof RestoreRequest) {
-				handleRestoreRequest((RestoreRequest) watchRequest);			
+				handleRestoreRequest((RestoreRequest) watchRequest);
 			}
 			else if (watchRequest instanceof CliRequest) {
 				handleCliRequest((CliRequest) watchRequest);
@@ -175,27 +175,27 @@ public class WatchRunner implements WatchOperationListener {
 			else {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
-		}		
+		}
 	}
 
 	private void handleGetFileRequest(GetFileRequest fileRequest) {
 		try {
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileRequest.getFileHistoryId());
 			long version = fileRequest.getVersion();
-			
-			FileVersion fileVersion = localDatabase.getFileVersion(fileHistoryId, version);			
+
+			FileVersion fileVersion = localDatabase.getFileVersion(fileHistoryId, version);
 			FileContent fileContent = localDatabase.getFileContent(fileVersion.getChecksum(), true);
 			Map<ChunkChecksum, MultiChunkId> multiChunks = localDatabase.getMultiChunkIdsByChecksums(fileContent.getChunks());
-						
-			TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection());			
+
+			TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
 			Downloader downloader = new Downloader(config, transferManager);
 			Assembler assembler = new Assembler(config, localDatabase);
-			
+
 			downloader.downloadAndDecryptMultiChunks(new HashSet<MultiChunkId>(multiChunks.values()));
-			
-			File tempFile = assembler.assembleToCache(fileVersion);			
+
+			File tempFile = assembler.assembleToCache(fileVersion);
 			String tempFileToken = StringUtil.toHex(ObjectId.secureRandomBytes(40));
-			
+
 			GetFileResponse fileResponse = new GetFileResponse(fileRequest.getId(), fileRequest.getRoot(), tempFileToken);
 			GetFileResponseInternal fileResponseInternal = new GetFileResponseInternal(fileResponse, tempFile);
 
@@ -204,20 +204,20 @@ public class WatchRunner implements WatchOperationListener {
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot reassemble file.", e);
 			eventBus.post(new BadRequestResponse(fileRequest.getId(), "Cannot reassemble file."));
-		}		
+		}
 	}
 
 	private void handleRestoreRequest(RestoreRequest restoreRequest) {
 		RestoreOperationOptions restoreOptions = new RestoreOperationOptions();
-		
+
 		restoreOptions.setFileHistoryId(FileHistoryId.parseFileId(restoreRequest.getFileHistoryId()));
 		restoreOptions.setFileVersion(restoreRequest.getVersion());
-		
+
 		try {
 			RestoreOperationResult restoreResult = new RestoreOperation(config, restoreOptions).execute();
-			
+
 			RestoreResponse restoreResponse = new RestoreResponse(restoreRequest.getId(), restoreResult.getTargetFile());
-			eventBus.post(restoreResponse);								
+			eventBus.post(restoreResponse);
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "BadRequestResponse: Cannot restore file.");
@@ -243,60 +243,63 @@ public class WatchRunner implements WatchOperationListener {
 
 	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
 		try {
-			Command command = CommandFactory.getInstance(cliRequest.getCommand());			
-			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]); 
-			
+			Command command = CommandFactory.getInstance(cliRequest.getCommand());
+			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]);
+
 			ByteArrayOutputStream cliOutputStream = new ByteArrayOutputStream();
-			
+
 			Client client = new Client();
 			client.setConfig(config);
-			
+
 			command.setOut(new PrintStream(cliOutputStream));
 			command.setClient(client);
 			command.setLocalDir(config.getLocalDir());
-			
+
 			command.execute(commandArgs);
-			
+
 			String cliOutput = cliOutputStream.toString();
-			
+
 			CliResponse cliResponse = new CliResponse(cliRequest.getId(), cliOutput);
 			eventBus.post(cliResponse);
-			
+
 			cliOutputStream.close();
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Exception thrown when running CLI command through daemon: " + e, e);
 			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
-		}		
+		}
 	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
 		try {
 			String prefixLikeQuery = fileTreeRequest.getPrefix() + "%";
-			Date date = (fileTreeRequest.getDate() != null) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(fileTreeRequest.getDate()) : null;
-			
+			Date date = (fileTreeRequest.getDate() != null) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(fileTreeRequest.getDate())
+					: null;
+
 			Map<String, FileVersion> fileTree = localDatabase.getFileTree(prefixLikeQuery, date, false, (FileType[]) null);
-			GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
-			
-			eventBus.post(fileTreeResponse);	
+			GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(),
+					fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
+
+			eventBus.post(fileTreeResponse);
 		}
 		catch (Exception e) {
 			eventBus.post(new BadRequestResponse(fileTreeRequest.getId(), "Invalid request: " + e.getMessage()));
-		}	
+		}
 	}
-	
+
 	private void handleGetFileHistoryRequest(GetFileHistoryRequest fileHistoryRequest) {
 		FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileHistoryRequest.getFileHistoryId());
 		List<FileVersion> fileHistory = localDatabase.getFileHistory(fileHistoryId);
 		GetFileHistoryResponse fileHistoryRespose = new GetFileHistoryResponse(fileHistoryRequest.getId(), fileHistoryRequest.getRoot(), fileHistory);
-		
+
 		eventBus.post(fileHistoryRespose);
 	}
-	
+
 	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersRequest headersRequest) {
-		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getNonEmptyDatabaseVersionHeaders(); 
-		GetDatabaseVersionHeadersResponse headersResponse = new GetDatabaseVersionHeadersResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
-		
+		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getNonEmptyDatabaseVersionHeaders();
+		GetDatabaseVersionHeadersResponse headersResponse = new GetDatabaseVersionHeadersResponse(headersRequest.getId(), headersRequest.getRoot(),
+				databaseVersionHeaders);
+
 		eventBus.post(headersResponse);
 	}
 
@@ -304,7 +307,7 @@ public class WatchRunner implements WatchOperationListener {
 	public void onUploadStart(int fileCount) {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "UPLOAD_START";
-		
+
 		eventBus.post(new WatchEventResponse(root, action));
 	}
 
@@ -313,7 +316,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "UPLOAD_FILE";
 		String subject = fileName;
-		
+
 		eventBus.post(new WatchEventResponse(root, action, subject));
 	}
 
@@ -321,7 +324,7 @@ public class WatchRunner implements WatchOperationListener {
 	public void onUploadEnd() {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "UPLOAD_END";
-		
+
 		eventBus.post(new WatchEventResponse(root, action));
 	}
 
@@ -329,7 +332,7 @@ public class WatchRunner implements WatchOperationListener {
 	public void onIndexStart(int fileCount) {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "INDEX_START";
-		
+
 		eventBus.post(new WatchEventResponse(root, action));
 	}
 
@@ -338,15 +341,15 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "INDEX_FILE";
 		String subject = fileName;
-		
+
 		eventBus.post(new WatchEventResponse(root, action, subject));
 	}
-	
+
 	@Override
 	public void onIndexEnd() {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "INDEX_END";
-		
+
 		eventBus.post(new WatchEventResponse(root, action));
 	}
 
@@ -354,7 +357,7 @@ public class WatchRunner implements WatchOperationListener {
 	public void onDownloadStart(int fileCount) {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "DOWNLOAD_START";
-		
+
 		eventBus.post(new WatchEventResponse(root, action));
 	}
 
@@ -363,7 +366,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "DOWNLOAD_FILE";
 		String subject = fileName;
-		
+
 		eventBus.post(new WatchEventResponse(root, action, subject));
 	}
 }

@@ -78,7 +78,7 @@ import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
  */
 public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
-	
+
 	public static final String ACTION_ID = "up";
 
 	private UpOperationOptions options;
@@ -112,16 +112,15 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		
 		if (!checkPreconditions()) {
 			return result;
 		}
 
 		// Upload action file (lock for cleanup)
 		startOperation();
-		
+
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
-		transferManager.cleanTransactions(config);
+		transferManager.cleanTransactions();
 
 		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
@@ -139,13 +138,14 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
-		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());;
+		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
+		;
 
 		// Create delta database
 		writeAndAddDeltaDatabase(newDatabaseVersion);
 
 		remoteTransaction.commit();
-		
+
 		// Save local database
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
 		long newDatabaseVersionId = localDatabase.persistDatabaseVersion(newDatabaseVersion);
@@ -205,7 +205,7 @@ public class UpOperation extends AbstractTransferOperation {
 		else {
 			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
 		}
-		
+
 		return true;
 	}
 
@@ -334,7 +334,7 @@ public class UpOperation extends AbstractTransferOperation {
 				}
 			}
 		}
-		
+
 		if (listener != null) {
 			listener.onUploadEnd();
 		}
@@ -344,10 +344,10 @@ public class UpOperation extends AbstractTransferOperation {
 		if (listener != null) {
 			listener.onUploadFile(localDatabaseFile.getName(), -1);
 		}
-		
+
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
-		
+
 		if (listener != null) {
 			listener.onUploadEnd();
 		}
