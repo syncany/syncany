@@ -88,6 +88,9 @@ public interface TransferManager {
 	 *
 	 * <p>Implementations must make sure that if a file matches the specified name
 	 * schema, it must be complete and consistent.
+	 * 
+	 * <p>If remoteFile does not exist, an attempt should be made to download the
+	 * fallback temporary file instead.
 	 *
 	 * @param remoteFile Existing source file on the remote storage.
 	 *        The only required property of the remote file is the name.
@@ -127,7 +130,7 @@ public interface TransferManager {
 	 *         authentication errors, etc.
 	 */
 	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException;
-	
+
 	/**
 	 * Deletes an existing file from the remote storage permanently.
 	 *
@@ -154,7 +157,6 @@ public interface TransferManager {
 	 */
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException;
 
-	
 	/**
 	 * Deletes all files that are related to transactions by the given machineName.
 	 *  
@@ -164,7 +166,7 @@ public interface TransferManager {
 	 *         authentication errors, etc
 	 */
 	public void cleanTransactions(Config config) throws StorageException;
-	
+
 	/**
 	 * Tests whether the repository parameters are valid. In particular, the method tests
 	 * whether a target (folder, bucket, etc.) exists or, if not, whether it can be created.
@@ -200,7 +202,7 @@ public interface TransferManager {
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
 	public boolean testTargetExists() throws StorageException;
-	
+
 	/**
 	 * Tests whether the target path/folder is <b>writable</b> by the application. This method may either
 	 * check the write permissions of the target or actually write a test file to check write access. If the
@@ -229,7 +231,7 @@ public interface TransferManager {
 	 * @return Returns <tt>true</tt> if the target can be created or already exists, <tt>false</tt> otherwise 
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
-	public boolean testTargetCanCreate() throws StorageException; 
+	public boolean testTargetCanCreate() throws StorageException;
 
 	/**
 	 * Tests whether the <b>repository file exists</b> (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 

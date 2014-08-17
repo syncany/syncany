@@ -31,6 +31,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -113,8 +114,20 @@ public abstract class AbstractTransferManager implements TransferManager {
 			if (transaction.getMachineName().equals(config.getMachineName())) {
 				// Delete all permanent or temporary files in this transaction.
 				for (ActionTO action : transaction.getActions()) {
-					remoteTransaction.delete(action.getRemoteFile());
-					remoteTransaction.delete(action.getTempRemoteFile());
+					if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+						remoteTransaction.delete(action.getRemoteFile());
+						remoteTransaction.delete(action.getTempRemoteFile());
+					}
+					else {
+						try {
+							move(action.getTempRemoteFile(), action.getRemoteFile());
+						}
+						catch (StorageMoveException e) {
+							logger.log(Level.WARNING,
+									"Restoring deleted file failed. This might be a problem if the original: " + action.getRemoteFile()
+											+ " also does not exist.");
+						}
+					}
 				}
 
 				// Get corresponding remote file of transaction and delete it.
