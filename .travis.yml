@@ -29,7 +29,7 @@ before_install:
   - sudo apt-get update
 
   # Debian and PPA 
-  - sudo apt-get install -y -q gnupg dh-make devscripts dput devscripts debhelper 
+  - sudo apt-get install -y -q gnupg dh-make devscripts dput devscripts debhelper bash-completion
   - gpg --version
   - dput -v
   - debuild --version

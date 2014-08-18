@@ -21,10 +21,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.syncany.tests.daemon.BasicWatchServerTest;
+import org.syncany.tests.daemon.NoCliRequestsWhileSyncingTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	BasicWatchServerTest.class
+	BasicWatchServerTest.class,
+	NoCliRequestsWhileSyncingTest.class
 })
 
 public class DaemonTestSuite {
