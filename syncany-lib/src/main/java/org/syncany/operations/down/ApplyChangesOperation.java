@@ -173,7 +173,7 @@ public class ApplyChangesOperation extends Operation {
 
 			// Execute the file system action
 			
-			// Note that exceptions are not thrown here, to prevent 
+			// Note that exceptions are not caught here, to prevent 
 			// apply-failed-delete-on-up situations.
 			
 			action.execute(); 
