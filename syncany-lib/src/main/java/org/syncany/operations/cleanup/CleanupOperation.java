@@ -102,7 +102,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		this.options = options;
 		this.result = new CleanupOperationResult();
 		this.localDatabase = new SqlDatabase(config);
-		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 	}
 
 	@Override
@@ -139,8 +138,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
 		}
-
-		remoteTransaction.commit();
 
 		// Committing in two steps because a) at this point it is atomic b) such that
 		// the purge file can be accounted for when merging, if needed
@@ -215,6 +212,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private void removeOldVersions() throws Exception {
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 
+		this.remoteTransaction = new RemoteTransaction(config, transferManager);
+
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount()));
 		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
 
@@ -239,7 +238,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		localDatabase.removeUnreferencedDatabaseEntities();
 
 		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
-		localDatabase.commit();
 
 		// Remote: serialize purge database version to file and upload
 		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
@@ -247,6 +245,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		addPurgeFileToTransaction(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
+
+		try {
+			remoteTransaction.commit();
+			localDatabase.commit();
+		}
+		catch (StorageException e) {
+			localDatabase.rollback();
+			throw (e);
+		}
 
 		// Update stats
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
