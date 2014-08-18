@@ -60,7 +60,7 @@ public class StatusOperationTest {
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
 
 		// Change all files, run 'status'
-		Thread.sleep(1000); // TODO [low] StatusOperation relies on file modified time and size, any other methods?
+		Thread.sleep(2000); // TODO [low] StatusOperation relies on file modified time and size, any other methods?
 
 		for (File file : originalFiles) {
 			TestFileUtil.changeRandomPartOfBinaryFile(file);
@@ -124,7 +124,7 @@ public class StatusOperationTest {
 		// Perform 'up', wait a second and then change test file
 		// IMPORTANT: Sleep to prevent detailed checksum-based update check in 'status' operation
 		new UpOperation(config).execute();				
-		Thread.sleep(1500);
+		Thread.sleep(2000);
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should NOT run a checksum-based file comparison
