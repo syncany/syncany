@@ -1,0 +1,42 @@
+apply plugin: 'java'
+
+public String getOsName() {
+	String osDefinition;
+	String os = System.getProperty('os.name').toLowerCase().split()[0]; 
+	String arch = System.getProperty("os.arch");
+	String realArch = arch.substring(arch.length()-2, arch.length());
+
+	return os + "_" + realArch;
+}
+
+public String getSwtLibrary() {
+	String osName = getOsName();	
+	String swtJarName;
+	
+	switch(getOsName()) {
+		case 'windows_86': swtJarName = 'win32.win32.x86'; break;
+		case 'windows_64': swtJarName = 'win32.win32.x86_64'; break; 
+		case 'linux_86': swtJarName = 'gtk.linux.x86'; break;
+		case 'linux_64': swtJarName = 'gtk.linux.x86_64'; break;
+		case 'mac_64': swtJarName = 'cocoa.macosx.x86_64'; break; 
+		case 'mac_86': swtJarName = 'cocoa.macosx'; break; 
+		default: throw new Exception('Unknown OS');
+	}
+	
+	return swtJarName;
+}
+
+repositories {
+	mavenCentral()
+
+	maven {
+		url "https://swt-repo.googlecode.com/svn/repo/"
+	}
+}
+
+dependencies {
+	compile			project(':syncany-util')
+	compile			project(':syncany-lib')
+	
+	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
+}
