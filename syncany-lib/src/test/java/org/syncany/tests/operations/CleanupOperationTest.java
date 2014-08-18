@@ -20,6 +20,7 @@ package org.syncany.tests.operations;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -532,5 +533,90 @@ public class CleanupOperationTest {
 		
 		// Tear down
 		clientA.deleteTestData();	
+	}
+	@Test
+	
+	public void testCleanupFailsMidCommit() throws Exception {
+		// Setup
+		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
+			// List of failing operations (regex)
+			// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+
+			"rel=(13|14|15).+move" // << 3 retries!				
+		}));
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		
+		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
+		forceChecksumStatusOperationOptions.setForceChecksum(true);
+		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(true);
+		options.setRemoveOldVersions(true);
+		options.setMinSecondsBetweenCleanups(40000000);		
+		options.setForce(true);
+		
+		File repoDir = testConnection.getRepositoryPath();
+		File repoMultiChunkDir = new File(testConnection.getRepositoryPath() + "/multichunks");
+		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
+		File repoDatabasesDir = new File(testConnection.getRepositoryPath() + "/databases");
+		
+		// Run
+		
+		clientA.createNewFile("A-file1", 5*1024);
+		clientA.up();
+
+		for (int i=0; i<5; i++) {
+			clientA.changeFile("A-file1");
+			clientA.upWithForceChecksum();
+		}		
+
+		assertEquals(6, repoDatabasesDir.listFiles().length);
+		assertEquals(6, repoMultiChunkDir.listFiles().length);
+		assertEquals(0, repoActionsDir.listFiles().length);
+		
+		// Run cleanup, fails mid-move!
+		boolean operationFailed = false;
+		
+		try {
+			clientA.cleanup(options);
+		}
+		catch (Exception e) {
+			operationFailed = true; // That is supposed to happen!
+		}
+		
+		assertTrue(operationFailed);
+		assertEquals(1, repoDir.list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("transaction-");
+			}
+		}).length);
+		assertEquals(1, repoDir.list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("temp-");
+			}
+		}).length);
+				
+		// Retry
+		clientA.cleanup(options);
+		
+		assertEquals(1, repoDatabasesDir.listFiles().length);
+		assertEquals(5, repoMultiChunkDir.listFiles().length);
+		assertEquals(0, repoActionsDir.listFiles().length);
+		assertEquals(0, repoDir.list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("transaction-");
+			}
+		}).length);
+		assertEquals(0, repoDir.list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("temp-");
+			}
+		}).length);		
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();	
 	}
 }

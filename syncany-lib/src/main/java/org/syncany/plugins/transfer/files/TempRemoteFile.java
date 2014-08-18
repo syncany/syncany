@@ -17,7 +17,6 @@
  */
 package org.syncany.plugins.transfer.files;
 
-import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,7 +51,7 @@ public class TempRemoteFile extends RemoteFile {
 	 * @throws StorageException
 	 */
 	public TempRemoteFile() throws StorageException {
-		super("temp-" + CipherUtil.createRandomAlphabeticString(20));
+		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(20)));
 	}
 
 	@Override
