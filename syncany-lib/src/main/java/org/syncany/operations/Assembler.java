@@ -21,12 +21,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.bouncycastle.util.Arrays;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.Deduper;
 import org.syncany.chunk.MultiChunk;
@@ -133,7 +133,7 @@ public class Assembler {
 		byte[] reconstructedFileExpectedChecksum = fileContent.getChecksum().getBytes();
 		byte[] reconstructedFileActualChecksum = reconstructedFileChecksum.digest();
 		
-		if (!Arrays.areEqual(reconstructedFileActualChecksum, reconstructedFileExpectedChecksum)) {
+		if (!Arrays.equals(reconstructedFileActualChecksum, reconstructedFileExpectedChecksum)) {
 			throw new Exception("Checksums do not match: actual " + fileVersion.getChecksum() + " != expected "
 					+ StringUtil.toHex(reconstructedFileActualChecksum));
 		}
