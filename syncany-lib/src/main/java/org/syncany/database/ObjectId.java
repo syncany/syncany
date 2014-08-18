@@ -43,14 +43,10 @@ public abstract class ObjectId {
 	
 	/**
 	 * Returns the raw representation of the object identifier in the
-	 * form of a byte array. 
-	 * 
-	 * <b>Note</b>: This method is deprecated and should not be used. Try
-	 * to avoid using the raw array. 
+	 * form of a byte array.  
 	 */
-	@Deprecated
-	public byte[] getRaw() {
-		return identifier;
+	public byte[] getBytes() {
+		return Arrays.copyOf(identifier, identifier.length);
 	}
 
 	/**
