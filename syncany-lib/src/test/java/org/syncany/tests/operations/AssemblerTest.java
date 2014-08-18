@@ -78,7 +78,7 @@ public class AssemblerTest {
 		
 		assertTrue(exceptionThrown);
 		
-		//clientA.deleteTestData();
-		//clientB.deleteTestData();
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}	
 }
