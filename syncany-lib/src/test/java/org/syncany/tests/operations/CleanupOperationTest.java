@@ -541,12 +541,12 @@ public class CleanupOperationTest {
 		}));
 
 		TestClient clientA = new TestClient("A", testConnection);
-		TestClient clientB = new TestClient("B", testConnection);
 
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setStatusOptions(forceChecksumStatusOperationOptions);
 		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(true);
 		options.setMinSecondsBetweenCleanups(40000000);
@@ -611,7 +611,6 @@ public class CleanupOperationTest {
 		}).length);
 
 		// Tear down
-		// clientA.deleteTestData();
-		// clientB.deleteTestData();
+		clientA.deleteTestData();		
 	}
 }
