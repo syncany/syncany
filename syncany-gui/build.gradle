@@ -14,9 +14,10 @@ dependencies {
 	compile			project(':syncany-plugin-gui')
     	
 	compile			"commons-beanutils:commons-beanutils:1.9.0"
-	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.3"
+	compile			"org.eclipse.swt:org.eclipse.swt.${getSwtLibrary()}:4.4"
 	compile			"org.java-websocket:Java-WebSocket:1.3.0"
 	compile			"org.eclipse.jetty:jetty-server:9.1.0.RC2"
+	compile			"net.sf.corn:corn-cps:1.1.2"
 }
 
 // Application Plugin ////////////////////////////////////////////////////////////
