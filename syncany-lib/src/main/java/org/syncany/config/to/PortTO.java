@@ -34,7 +34,7 @@ public class PortTO {
 	
 	@Element(name="user", required = true)
 	private UserTO user;
-	
+
 	public int getPort() {
 		return port;
 	}

@@ -64,7 +64,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 				// This simplified sequence also crashes/crashed
 				// 16x "1", merge happens after 15!
-				1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1
+				1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 		};
 
 		for (int i=0; i<clientUpSequence.length; i++) {
@@ -93,7 +94,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000001").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000005").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000010").exists());
-		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000011").exists());
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000030").exists());
+		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000031").exists());
 		
 		// Run
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading 
@@ -123,10 +125,14 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
 
-		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
-		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
-		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(true);
-		cleanupOptionsOnlyMergeDatabases.setKeepVersionsCount(5);		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(true);
+		options.setRemoveOldVersions(true);
+		options.setKeepVersionsCount(5);	
+		options.setMinSecondsBetweenCleanups(0);
+		options.setMaxDatabaseFiles(7);
+		
+		
 				
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -171,7 +177,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A4,B2) + (A4,B3) [PURGE]
-		clientB.cleanup();		
+		clientB.cleanup(options);		
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000002").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000003").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000004").exists());
@@ -179,7 +185,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A5,B3) + (A6,B3) [PURGE]
-		clientA.cleanup();
+		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000005").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000006").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000007").exists());
@@ -187,7 +193,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A6,B4) + (A6,B5) [PURGE]
-		clientB.cleanup();
+		clientB.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000004").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000005").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000006").exists());
@@ -206,7 +212,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		clientA.createNewFile("ADDED_IN_DBV_A7_B5");		
 		clientA.up(upOperationOptionsWithCleanupForce); // (A7,B5) + (A8,B5) [PURGE]
-		clientA.cleanup();
+		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000007").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000008").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000009").exists());
@@ -216,8 +222,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A8,B6) + (A8,B7) [PURGE]
-		clientB.cleanup();
-		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000006").exists());
+		clientB.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000007").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000008").exists());
 		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException+"'", 
@@ -226,7 +231,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");		
 		clientA.up(upOperationOptionsWithCleanupForce); // (A9,B7) + (A10,B7) [PURGE]
-		clientA.cleanup();
+		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000009").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000010").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000011").exists());
@@ -236,7 +241,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B8) + (A10,B9) [PURGE]
-		clientB.cleanup();
+		clientB.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000008").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000009").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000010").exists());
@@ -246,7 +251,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B10) + (A10,B11) [PURGE]
-		clientB.cleanup();
+		clientB.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000010").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000011").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000012").exists());
@@ -256,7 +261,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A11,B11) + (A12,B11) [PURGE]
-		clientA.cleanup();
+		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000011").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000012").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000013").exists());
@@ -268,7 +273,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A13,B11) + (A14,B11) [PURGE]
-		clientA.cleanup();
+		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000013").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000014").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());
@@ -278,7 +283,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A14,B12) + (A14,B13) [PURGE]
-		clientB.cleanup();
+		clientB.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000012").exists());
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000013").exists());
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-B-0000000014").exists());
@@ -288,8 +293,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A15,B13) + (A16,B13) [PURGE]
-		clientA.cleanup();
-		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());	
+		clientA.cleanup(options);
+		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000015").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000016").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000017").exists());
 		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='"+fileAndChunkChecksumThatRaisesException+"'", 
@@ -298,7 +303,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A17,B13) + (A18,B13) [PURGE]
-		clientA.cleanup();
+		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000017").exists());	
 		assertTrue(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000018").exists());	
 		assertFalse(new File(testConnection.getRepositoryPath(), "databases/db-A-0000000019").exists());

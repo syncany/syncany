@@ -15,20 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests;
+package org.syncany.config.to;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.daemon.BasicWatchServerTest;
-import org.syncany.tests.daemon.NoCliRequestsWhileSyncingTest;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-@RunWith(Suite.class)
-@SuiteClasses({
-	BasicWatchServerTest.class,
-	NoCliRequestsWhileSyncingTest.class
-})
-
-public class DaemonTestSuite {
-	// This class runs all daemon tests
+/**
+ * CleanupTO represents an xml file containing a single long value:
+ * the timestamp of the moment at which a cleanup was last performed
+ * by the relevant client.
+ * 
+ * @author Pim Otte
+ */
+@Root(name="cleanup", strict=false)
+public class CleanupTO {
+	@Element(name="lastTimeCleaned", required = false)
+	private long lastTimeCleaned = 0;
+	
+	public long getLastTimeCleaned() {
+		return lastTimeCleaned;
+	}
+	
+	public void setLastTimeCleaned(long lastTimeCleanup) {
+		this.lastTimeCleaned = lastTimeCleanup;
+	}
 }

@@ -95,7 +95,7 @@ public class DaemonOperation extends Operation {
 		return null;
 	}
 
-	private void startOperation() throws ServiceAlreadyStartedException, ConfigException, IOException {
+	private void startOperation() throws Exception {
 		if (PidFileUtil.isProcessRunning(pidFile)) {
 			throw new ServiceAlreadyStartedException("Syncany daemon already running.");
 		}
@@ -173,7 +173,8 @@ public class DaemonOperation extends Operation {
 				cliUser.setPassword(accessToken);
 				
 				portTO = new PortTO();
-				portTO.setPort(daemonConfig.getWebServer().getPort());
+				
+				portTO.setPort(daemonConfig.getWebServer().getBindPort());
 				portTO.setUser(cliUser);
 				
 				daemonConfig.setPortTO(portTO);
@@ -181,7 +182,7 @@ public class DaemonOperation extends Operation {
 			else if (daemonConfig.getPortTO() == null) {
 				// Access info is not included in the daemonConfig, but exists. (Happens when reloading)
 				// We reload the information about the port, but keep the accesstoken the same.
-				portTO.setPort(daemonConfig.getWebServer().getPort());
+				portTO.setPort(daemonConfig.getWebServer().getBindPort());
 				daemonConfig.setPortTO(portTO);
 			}
 		}
@@ -222,7 +223,7 @@ public class DaemonOperation extends Operation {
 
 	// Web server starting and stopping functions
 	
-	private void startWebServer() throws ServiceAlreadyStartedException {
+	private void startWebServer() throws Exception {
 		if (daemonConfig.getWebServer().isEnabled()) {
 			logger.log(Level.INFO, "Starting web server ...");
 

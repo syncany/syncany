@@ -122,5 +122,30 @@ public abstract class CipherParams {
 	 * 
 	 * @see #KEY_DERIVATION_DIGEST
      */
-    public static final byte[] KEY_DERIVATION_INFO = StringUtil.toBytesUTF8("Syncany_SHA256_Derivated_Key");        
+    public static final byte[] KEY_DERIVATION_INFO = StringUtil.toBytesUTF8("Syncany_SHA256_Derivated_Key");
+
+	/**
+	 * Key generation algorithm name used for the key pair generation (used for the self-signed certificate).
+	 */
+	public static final String CERTIFICATE_KEYPAIR_ALGORITHM = "RSA";
+	
+    /**
+     * Key size used for the key pair generation (used for the self-signed certificate).
+     */
+	public static final int CERTIFICATE_KEYPAIR_SIZE = 2048;
+	
+	/**
+	 * Certificate alias used to identify server certificate in the key store. 
+	 */
+    public static final String CERTIFICATE_IDENTIFIER = "SyMOTETIP"; 	        
+
+	/**
+     * Organization (O) set in the RDN of the self-signed certificate.
+     */
+    public static final String CERTIFICATE_ORGANIZATION = "Syncany";
+    
+    /**
+     * Organizational unit (OU) set in the RDN of the self-signed certificate.
+     */
+    public static final String CERTIFICATE_ORGUNIT = "Syncany";
 }

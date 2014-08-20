@@ -38,6 +38,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.SSLContext;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -48,17 +50,19 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
-import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
+import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
@@ -76,8 +80,8 @@ import org.syncany.util.EnvironmentUtil;
 public class CommandLineClient extends Client {
 	private static final Logger logger = Logger.getLogger(CommandLineClient.class.getSimpleName());
 	
-	private static final String SERVER_SCHEMA = "http://";
-	private static final String SERVER_HOSTNAME = "localhost";
+	private static final String SERVER_SCHEMA = "https://";
+	private static final String SERVER_HOSTNAME = "127.0.0.1";
 	private static final String SERVER_REST_API = "/api/rs";
 	
 	private static final String LOG_FILE_PATTERN = "syncany.log";
@@ -308,7 +312,7 @@ public class CommandLineClient extends Client {
 		File portFile = null;
 		
 		if (config != null) {
-			portFile = new File(config.getAppDir(), Config.FILE_PORT);
+			portFile = config.getPortFile();
 		}
 		
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
@@ -339,25 +343,34 @@ public class CommandLineClient extends Client {
 	}
 
 	private int sendToRest(Command command, String commandName, String[] commandArgs, File portFile) {
-		// Read port config (for daemon) from port file
-		PortTO portConfig = readPortConfig(portFile);
-
-		// Create authentication details
-		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-		credentialsProvider.setCredentials(
-			new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
-			new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
-
-		// Create client with authentication details
-		CloseableHttpClient client = HttpClients
-			.custom()
-			.setDefaultCredentialsProvider(credentialsProvider)
-			.build();
-
-		String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
-		HttpPost post = new HttpPost(SERVER_URI);
-
 		try {
+			// Read port config (for daemon) from port file
+			PortTO portConfig = readPortConfig(portFile);
+
+			// Create authentication details
+			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+			credentialsProvider.setCredentials(
+				new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
+				new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
+			
+			// Allow all hostnames in CN; this is okay as long as hostname is localhost/127.0.0.1!
+			// See: https://github.com/syncany/syncany/pull/196#issuecomment-52197017
+			X509HostnameVerifier hostnameVerifier = new AllowAllHostnameVerifier();			
+
+			// Fetch the SSL context (using the user key/trust store)
+			SSLContext sslContext = UserConfig.createUserSSLContext();
+			
+			// Create client with authentication details
+			CloseableHttpClient client = HttpClients
+				.custom()
+				.setSslcontext(sslContext)
+				.setHostnameVerifier(hostnameVerifier)
+				.setDefaultCredentialsProvider(credentialsProvider)
+				.build();
+
+			String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
+			HttpPost post = new HttpPost(SERVER_URI);
+			
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			
 			// Create and send HTTP/REST request

@@ -86,7 +86,6 @@ public class WatchRunner implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());
 	
 	private Config config;
-	private File portFile;
 	private PortTO portTO;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
@@ -97,7 +96,6 @@ public class WatchRunner implements WatchOperationListener {
 
 	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
-		this.portFile = new File(config.getAppDir(), Config.FILE_PORT);
 		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
 		
@@ -114,8 +112,10 @@ public class WatchRunner implements WatchOperationListener {
 				try {
 					logger.log(Level.INFO, "STARTING watch at" + config.getLocalDir());
 					watchOperationResult = null;
-					
+
 					// Write port to portFile
+					File portFile = config.getPortFile();
+					
 					portFile.createNewFile();
 					portFile.deleteOnExit();
 
@@ -137,7 +137,7 @@ public class WatchRunner implements WatchOperationListener {
 
 	public void stop() {
 		watchOperation.stop();
-		portFile.delete();
+		config.getPortFile().delete();
 
 		watchThread = null;
 	}

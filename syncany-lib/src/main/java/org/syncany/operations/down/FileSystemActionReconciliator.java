@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.MemoryDatabase;
@@ -314,13 +315,26 @@ public class FileSystemActionReconciliator {
 			FileVersionComparison localFileToVersionComparison) {
 
 		if (localFileToVersionComparison.getFileChanges().contains(FileChange.DELETED)) {	
-			logger.log(Level.INFO, "     -> (14) File deleted: Local file does not exist and SHOULD NOT: Nothing to do!");
+			boolean winningLastVersionDeleted = winningLastVersion.getStatus() == FileStatus.DELETED;
+			
+			if (!winningLastVersionDeleted) {
+				FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
+				fileSystemActions.add(action);
+		
+				logger.log(Level.INFO, "     -> (14) Content changed: Local file does NOT exist, and winning version changed: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+				logger.log(Level.INFO, "     -> "+action);	
+				
+				changeSet.getChangedFiles().add(winningLastVersion.getPath());
+			}
+			else {
+				logger.log(Level.INFO, "     -> (15) Doing nothing: Local file does NOT exist, and winning version is marked DELETED: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);				
+			}
 		}
 		else {
 			FileSystemAction action = new ChangeFileSystemAction(config, localLastVersion, winningLastVersion, winnersDatabase);
 			fileSystemActions.add(action);
 	
-			logger.log(Level.INFO, "     -> (15) Content changed: Local file differs from last version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
+			logger.log(Level.INFO, "     -> (16) Content changed: Local file differs from last version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
 			logger.log(Level.INFO, "     -> "+action);	
 			
 			changeSet.getChangedFiles().add(winningLastVersion.getPath());

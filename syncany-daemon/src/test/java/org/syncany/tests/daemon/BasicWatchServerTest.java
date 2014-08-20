@@ -78,7 +78,7 @@ public class BasicWatchServerTest {
 		DaemonConfigTO daemonConfig = TestDaemonUtil.loadDaemonConfig("daemonTwoFoldersNoWebServer.xml");
 		
 		// Set port to prevent conflicts with default daemons
-		daemonConfig.getWebServer().setPort(port);
+		daemonConfig.getWebServer().setBindPort(port);
 		
 		// Dynamically insert paths
 		daemonConfig.getFolders().get(0).setPath(clientA.getConfig().getLocalDir().getAbsolutePath());
@@ -271,7 +271,7 @@ public class BasicWatchServerTest {
 	private Response waitForResponse(int id) throws Exception {
 		int i = 0;
 		while (responses.containsKey(id) == false && i < 1000) {
-			Thread.sleep(10);
+			Thread.sleep(100);
 			i++;
 		}
 		

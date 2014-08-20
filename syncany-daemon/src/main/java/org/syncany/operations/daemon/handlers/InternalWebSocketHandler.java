@@ -25,8 +25,10 @@ import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
@@ -42,12 +44,16 @@ import org.syncany.operations.daemon.messages.Request;
  */
 public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());
+	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
+
 	private WebServer daemonWebServer;
 	private LocalEventBus eventBus;
+	private String certificateCommonName;
 	
-	public InternalWebSocketHandler(WebServer daemonWebServer) {
+	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName) {
 		this.daemonWebServer = daemonWebServer;
 		this.eventBus = LocalEventBus.getInstance();
+		this.certificateCommonName = certificateCommonName;
 		
 		this.eventBus.register(this);
 	}
@@ -58,10 +64,8 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		
 		// Validate origin header (security!)
 		String originHeader = exchange.getRequestHeader("Origin");
-		boolean allowedOriginHeader = (originHeader == null || 
-				WebServer.WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches());
 		
-		if (!allowedOriginHeader) {
+		if (!allowedOriginHeader(originHeader)) {
 			logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
 			exchange.close();
 		}
@@ -92,14 +96,43 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		}
 	}
 	
+	private boolean allowedOriginHeader(String originHeader) {
+		// Allow all non-browser clients (no "Origin:" header!)
+		if (originHeader == null) {
+			return true;
+		}
+		
+		// Allow localhost's hostname
+		try {
+			if (originHeader.equals(InetAddress.getLocalHost().getHostName())) {
+				return true;
+			}
+		}
+		catch (Exception e) {
+			// Continue trying.
+		}
+		
+		// Allow by whitelist
+		if (WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches()) {
+			return true;
+		}
+		
+		// Additional allowed origin header (certificate CN)
+		if (certificateCommonName != null && originHeader.startsWith("https://" + certificateCommonName + ":")) {
+			return true;
+		}
+		
+		// Otherwise, we fail
+		return false;
+	}
+
 	private void handleWebSocketRequest(WebSocketChannel clientSocket, String message) {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
 			Request request = MessageFactory.createRequest(message);
 
-			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);
-			
+			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
 			eventBus.post(request);
 		}
 		catch (Exception e) {

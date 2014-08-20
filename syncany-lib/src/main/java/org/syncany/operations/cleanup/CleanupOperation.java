@@ -20,6 +20,7 @@ package org.syncany.operations.cleanup;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,9 +31,11 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
+import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
@@ -80,9 +83,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());
 	
 	public static final String ACTION_ID = "cleanup";
-	public static final int MIN_KEEP_DATABASE_VERSIONS = 5;
-	public static final int MAX_KEEP_DATABASE_VERSIONS = 15;
-	
 	private static final int BEFORE_DOUBLE_CHECK_TIME = 1200;
 	
 	private CleanupOperationOptions options;
@@ -99,7 +99,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		this.options = options;
 		this.result = new CleanupOperationResult();
-
 		this.localDatabase = new SqlDatabase(config);
 	}
 
@@ -142,6 +141,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		removeLostMultiChunks();
 
+		setLastTimeCleaned(System.currentTimeMillis()/1000);
 		finishOperation();
 		return updateResultCode(result);
 	}
@@ -182,6 +182,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (hasDirtyDatabaseVersions()) {
 			return CleanupResultCode.NOK_DIRTY_LOCAL;
 		}
+		
+		if (!options.isForce() && wasCleanedRecently()) {
+			return CleanupResultCode.NOK_RECENTLY_CLEANED;
+		}
 
 		if (hasLocalChanges()) {
 			return CleanupResultCode.NOK_LOCAL_CHANGES;
@@ -190,6 +194,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (hasRemoteChanges()) {
 			return CleanupResultCode.NOK_REMOTE_CHANGES;
 		}
+		
+		
 
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID, UpOperation.ACTION_ID, DownOperation.ACTION_ID)) {
 			return CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING;
@@ -324,84 +330,141 @@ public class CleanupOperation extends AbstractTransferOperation {
 		LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config).execute();
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
 	}
+	
+	private boolean wasCleanedRecently() {
+		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis()/1000;
+	}
 
 	private void mergeRemoteFiles() throws IOException, StorageException {
-		// Retrieve and sort machine's database versions
-		TreeMap<String, DatabaseRemoteFile> ownDatabaseFilesMap = retrieveOwnRemoteDatabaseFiles();
+		
 
-		if (ownDatabaseFilesMap.size() <= MAX_KEEP_DATABASE_VERSIONS) {
-			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] { ownDatabaseFilesMap.size(),
-					MAX_KEEP_DATABASE_VERSIONS });
-
+		
+		// Retrieve all database versions
+		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
+		
+		List<DatabaseRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
+		Map<File, DatabaseRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DatabaseRemoteFile>();
+		
+		int numberOfDatabaseFiles = 0;
+		
+		for (String client : allDatabaseFilesMap.keySet()) {
+			numberOfDatabaseFiles += allDatabaseFilesMap.get(client).size();
+		}
+		
+		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
+		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size();
+		
+		if (!options.isForce() && notTooManyDatabaseFiles) {
+			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
+					numberOfDatabaseFiles, options.getMaxDatabaseFiles()*allDatabaseFilesMap.keySet().size() });
 			return;
 		}
+		
+		for (String client : allDatabaseFilesMap.keySet()) {
+			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
+			Collections.sort(clientDatabaseFiles);
+			logger.log(Level.INFO, "Databases: " + clientDatabaseFiles);
+			
+			// Now do the merge!
+			logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
+					new Object[] { clientDatabaseFiles.size(), options.getMaxDatabaseFiles() });
+	
+			// 1. Determine files to delete remotely
+			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
 
-		// // Now do the merge!
-		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
-				new Object[] { ownDatabaseFilesMap.size(), MAX_KEEP_DATABASE_VERSIONS });
+			// 2. Write merge file
+			DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
+			File lastLocalMergeDatabaseFile = config.getCache().getDatabaseFile(lastRemoteMergeDatabaseFile.getName());
 
-		// 1. Determine files to delete remotely
-		List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
-		int numOfDatabaseFilesToDelete = ownDatabaseFilesMap.size() - MIN_KEEP_DATABASE_VERSIONS;
+			logger.log(Level.INFO, "   + Writing new merge file (from {0}, to {1}) to {2} ...", new Object[] {
+					toDeleteDatabaseFiles.get(0).getClientVersion(), lastRemoteMergeDatabaseFile.getClientVersion(), lastLocalMergeDatabaseFile });
 
-		for (DatabaseRemoteFile ownDatabaseFile : ownDatabaseFilesMap.values()) {
-			if (toDeleteDatabaseFiles.size() < numOfDatabaseFilesToDelete) {
-				toDeleteDatabaseFiles.add(ownDatabaseFile);
-			}
+			long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
+			Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(client, lastLocalClientVersion);
+
+			DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
+			databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
+			
+			// Queue files for uploading and deletion
+			allToDeleteDatabaseFiles.addAll(toDeleteDatabaseFiles);
+			allMergedDatabaseFiles.put(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+
 		}
-
-		// 2. Write merge file
-		DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
-		File lastLocalMergeDatabaseFile = config.getCache().getDatabaseFile(lastRemoteMergeDatabaseFile.getName());
-
-		logger.log(Level.INFO, "   + Writing new merge file (from {0}, to {1}) to {2} ...", new Object[] {
-				toDeleteDatabaseFiles.get(0).getClientVersion(), lastRemoteMergeDatabaseFile.getClientVersion(), lastLocalMergeDatabaseFile });
-
-		long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
-		Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(config.getMachineName(), lastLocalClientVersion);
-
-		DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
-		databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
-
+		
 		// 3. Uploading merge file
 
 		// And delete others
-		for (RemoteFile toDeleteRemoteFile : toDeleteDatabaseFiles) {
+		for (RemoteFile toDeleteRemoteFile : allToDeleteDatabaseFiles) {
 			logger.log(Level.INFO, "   + Deleting remote file " + toDeleteRemoteFile + " ...");
 			transferManager.delete(toDeleteRemoteFile);
 		}
-
-		// TODO [high] Issue #64: TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might
-		// happen often if
-		// new file is bigger!
-
-		logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
-				lastLocalMergeDatabaseFile });
-
-		try {
-			// Make sure it's deleted
-			transferManager.delete(lastRemoteMergeDatabaseFile);
+		
+		for (File lastLocalMergeDatabaseFile : allMergedDatabaseFiles.keySet()) {
+			// TODO [high] Issue #64: TM cannot overwrite, might lead to chaos if operation does not finish, uploading the new merge file, this might
+			// happen often if new file is bigger!
+			
+			RemoteFile lastRemoteMergeDatabaseFile = allMergedDatabaseFiles.get(lastLocalMergeDatabaseFile);
+	
+			logger.log(Level.INFO, "   + Uploading new file {0} from local file {1} ...", new Object[] { lastRemoteMergeDatabaseFile,
+					lastLocalMergeDatabaseFile });
+	
+			try {
+				// Make sure it's deleted
+				transferManager.delete(lastRemoteMergeDatabaseFile);
+			}
+			catch (StorageException e) {
+				// Don't care!
+			}
+	
+			transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		}
-		catch (StorageException e) {
-			// Don't care!
-		}
-
-		transferManager.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 
 		// Update stats
-		result.setMergedDatabaseFilesCount(toDeleteDatabaseFiles.size());
+		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
 	}
 
-	private TreeMap<String, DatabaseRemoteFile> retrieveOwnRemoteDatabaseFiles() throws StorageException {
-		TreeMap<String, DatabaseRemoteFile> ownDatabaseRemoteFiles = new TreeMap<String, DatabaseRemoteFile>();
+	/**
+	 * retrieveAllRemoteDatabaseFiles returns a Map with clientNames as keys and
+	 * lists of corresponding DatabaseRemoteFiles as values.
+	 */
+	private Map<String, List<DatabaseRemoteFile>> retrieveAllRemoteDatabaseFiles() throws StorageException {
+		TreeMap<String, List<DatabaseRemoteFile>> allDatabaseRemoteFilesMap = new TreeMap<String, List<DatabaseRemoteFile>>();
 		Map<String, DatabaseRemoteFile> allDatabaseRemoteFiles = transferManager.list(DatabaseRemoteFile.class);
 
 		for (Map.Entry<String, DatabaseRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
-			if (config.getMachineName().equals(entry.getValue().getClientName())) {
-				ownDatabaseRemoteFiles.put(entry.getKey(), entry.getValue());
+			String clientName = entry.getValue().getClientName();
+			if (allDatabaseRemoteFilesMap.get(clientName) == null) {
+				allDatabaseRemoteFilesMap.put(clientName, new ArrayList<DatabaseRemoteFile>());
 			}
+			allDatabaseRemoteFilesMap.get(clientName).add(entry.getValue());
 		}
 
-		return ownDatabaseRemoteFiles;
+		return allDatabaseRemoteFilesMap;
+	}
+
+	private long getLastTimeCleaned() {
+		try {
+			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
+			return cleanupTO.getLastTimeCleaned();
+		}
+		catch (Exception e) {
+			logger.log(Level.INFO, "Something went wrong with reading cleanup.xml, assuming never cleaned." + e.getMessage());
+			return 0;
+		}
+	}
+	
+	private void setLastTimeCleaned(long lastTimeCleaned) {
+		CleanupTO cleanupTO = new CleanupTO();
+		cleanupTO.setLastTimeCleaned(lastTimeCleaned);
+		
+		try {
+			logger.log(Level.INFO, "Writing cleanup.xml");
+			(new Persister()).write(cleanupTO, config.getCleanupFile());
+		}
+		catch (Exception e) {
+			// Not doing anything else, because the worst that could happen is that cleanup is run an extra time
+			logger.log(Level.INFO, "Something went wrong with writing cleanup.xml." + e.getMessage());
+		}
+		
 	}
 }

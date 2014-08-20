@@ -65,7 +65,6 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private VectorClock versionTo;
 	private DatabaseReadType readType;
 	private DatabaseVersionType filterType;
-	private Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -84,7 +83,6 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 		this.versionTo = toVersion;
 		this.readType = readType;
 		this.filterType = filterType;
-		this.ignoredMostRecentFileVersions = ignoredMostRecentFileVersions;
 	}
 
 	@Override
@@ -178,75 +176,55 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 
 				// Filter it if it was purged somewhere in the future, see #58
 				Long fileVersionNum = Long.parseLong(fileVersionStr);
-				boolean addThisFileVersion = !filterFileVersion(fileHistory, fileVersionNum);
 				
 				// Go add it!
-				if (addThisFileVersion) {
-					FileVersion fileVersion = new FileVersion();
-	
-					fileVersion.setVersion(fileVersionNum);
-					
-					if (path != null) {
-						fileVersion.setPath(path);
-					}
-					else {
-						try {
-							fileVersion.setPath(new String(Base64.decodeBase64(pathEncoded), "UTF-8"));
-						}
-						catch (UnsupportedEncodingException e) {
-							throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
-						}
-					}
-					
-					fileVersion.setType(FileType.valueOf(typeStr));
-					fileVersion.setStatus(FileStatus.valueOf(statusStr));
-					fileVersion.setSize(Long.parseLong(sizeStr));
-					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
-	
-					if (updatedStr != null) {
-						fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
-					}
-	
-					if (checksumStr != null) {
-						fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
-					}
-	
-					if (linkTarget != null) {
-						fileVersion.setLinkTarget(linkTarget);
-					}
-	
-					if (dosAttributes != null) {
-						fileVersion.setDosAttributes(dosAttributes);
-					}
-	
-					if (posixPermissions != null) {
-						fileVersion.setPosixPermissions(posixPermissions);
-					}
-	
-					fileHistory.addFileVersion(fileVersion);
+				FileVersion fileVersion = new FileVersion();
+
+				fileVersion.setVersion(fileVersionNum);
+				
+				if (path != null) {
+					fileVersion.setPath(path);
 				}
+				else {
+					try {
+						fileVersion.setPath(new String(Base64.decodeBase64(pathEncoded), "UTF-8"));
+					}
+					catch (UnsupportedEncodingException e) {
+						throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
+					}
+				}
+				
+				fileVersion.setType(FileType.valueOf(typeStr));
+				fileVersion.setStatus(FileStatus.valueOf(statusStr));
+				fileVersion.setSize(Long.parseLong(sizeStr));
+				fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
+
+				if (updatedStr != null) {
+					fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
+				}
+
+				if (checksumStr != null) {
+					fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
+				}
+
+				if (linkTarget != null) {
+					fileVersion.setLinkTarget(linkTarget);
+				}
+
+				if (dosAttributes != null) {
+					fileVersion.setDosAttributes(dosAttributes);
+				}
+
+				if (posixPermissions != null) {
+					fileVersion.setPosixPermissions(posixPermissions);
+				}
+
+				fileHistory.addFileVersion(fileVersion);
+			
 			}
 		}
 	}
 
-	private boolean filterFileVersion(PartialFileHistory fileHistory, Long fileVersionNum) {
-		if (ignoredMostRecentFileVersions != null) {
-			FileVersion mostRecentPurgeVersion = ignoredMostRecentFileVersions.get(fileHistory.getFileHistoryId());
-			
-			if (mostRecentPurgeVersion != null) {
-				boolean hasBeenPurged = fileVersionNum.compareTo(mostRecentPurgeVersion.getVersion()) <= 0;
-				
-				if (hasBeenPurged) {
-					logger.log(Level.FINE, "   - File history {0}, version {1} will be ignored because it has been purged in a later version.",
-							new Object[] { fileHistory.getFileHistoryId(), fileVersionNum });
-					
-					return true;
-				}
-			}
-		}
-		
-		return false;		
-	}
 
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {

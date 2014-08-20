@@ -27,7 +27,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,8 +83,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private AtomicBoolean syncRequested;
 	private AtomicBoolean stopRequested;
 	private AtomicBoolean pauseRequested;
-	
-	private AtomicLong cleanupLastRun;
 	private AtomicInteger upCount;
 
 	private RecursiveWatcher recursiveWatcher;
@@ -107,8 +104,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.syncRequested = new AtomicBoolean(false);
 		this.stopRequested = new AtomicBoolean(false);
 		this.pauseRequested = new AtomicBoolean(false);
-		
-		this.cleanupLastRun = new AtomicLong(0);
 		this.upCount = new AtomicInteger(0);
 
 		this.recursiveWatcher = null;
@@ -258,21 +253,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				if (upOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED && upOperationResult.getChangeSet().hasChanges()) {
 					upCount.incrementAndGet();
 					notifyChanges = true;
-				}
+				}		
+
+				CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
 				
-				// Run cleanup
-				boolean lastCleanupExpired = cleanupLastRun.get() + options.getCleanupInterval() < System.currentTimeMillis();
-				boolean enoughUpsForCleanup = upCount.get() > CleanupOperation.MAX_KEEP_DATABASE_VERSIONS;
-				
-				if (lastCleanupExpired || enoughUpsForCleanup) {
-					CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
-					
-					if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
-						notifyChanges = true;
-						
-						cleanupLastRun.set(System.currentTimeMillis());
-						upCount.set(0);
-					}
+				if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
+					notifyChanges = true;
 				}
 				
 				// Fire change event if up and/or cleanup  
