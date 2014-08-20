@@ -189,8 +189,8 @@ public class RecursiveWatcherTest {
 		// Event on DEEPEST new subfolder
 		TestFileUtil.createRandomFileInDirectory(lastSubFolder, 10*1024);
 		assertFalse(eventOccurred.get());
-
-		Thread.sleep(350);
+		
+		Thread.sleep(500);
 		assertTrue(eventOccurred.get());
 		
 		// Stop watcher (close watches)
