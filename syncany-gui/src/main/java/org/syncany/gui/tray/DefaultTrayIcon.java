@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
-import org.syncany.daemon.command.CommandStatus;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.util.EnvironmentUtil;
 
@@ -82,7 +81,7 @@ public class DefaultTrayIcon extends TrayIcon {
 
 		trayItem.addListener(SWT.MenuDetect, showMenuListener);
 
-		if (!EnvironmentUtil.isLinux()) {
+		if (!EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			// Tray icon popup menu positioning in Linux is off,
 			// Disable it for now.
 
@@ -127,26 +126,11 @@ public class DefaultTrayIcon extends TrayIcon {
 
 			for (final String key : folders.keySet()) {
 				final File folder = new File(folders.get(key).get("folder"));
-				CommandStatus status = CommandStatus.valueOf(folders.get(key).get("status"));
 						
 				if (folder.exists()) {
 					MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
-					folderMenuItem.setText(folder.getName() + " [" + status + "]");
+					folderMenuItem.setText(folder.getName() + " [status]");
 					
-					switch (status) {
-						case SYNCING:
-							needSyncing = true;
-							break;
-						case STOPPED:
-						case PAUSED:
-							folderMenuItem.setImage(SWTResourceManager.getResizedImage("/images/tray/pause.png", 14, 14));
-							break;
-						case STARTING:
-						case STOPPING:
-						case UP_TODATE:
-							folderMenuItem.setImage(SWTResourceManager.getResizedImage("/images/tray/tray-uptodate.png", 14, 14));
-							break;
-					}
 						
 					Menu subMenu = new Menu(folderMenuItem);
 					folderMenuItem.setMenu(subMenu);

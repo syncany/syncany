@@ -22,15 +22,13 @@ import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
 import org.syncany.config.Logging;
-import org.syncany.daemon.Daemon;
-import org.syncany.daemon.exception.DaemonAlreadyStartedException;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.config.ProxyController;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.EventManager;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -52,17 +50,6 @@ public class Launcher {
 	}
 
 	private static void startApplication() {
-		try {
-			startDaemon();
-		}
-		catch (DaemonAlreadyStartedException e) {
-			log.warning("Daemon is already started, so connecting to existing one");
-		}
-		catch (Exception e){
-			log.warning(String.format("Error [%s]", e.getMessage()));
-			return;
-		}
-		
 		startWebSocketClient();
 		startGUI();
 	}
@@ -74,10 +61,6 @@ public class Launcher {
 		stopGUI();
 
 		System.exit(0);
-	}
-
-	private static void startDaemon() throws DaemonAlreadyStartedException {
-		new Daemon().start(true);
 	}
 
 	private static void startWebSocketClient() {

@@ -46,7 +46,7 @@ public class WidgetDecorator {
 	public static final Color COLOR_WIDGET = SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND);
 	
 	private static String FONT_NAME = "Segoe UI";
-	private static int FONT_SIZE = EnvironmentUtil.isMacOS() ? 12 : EnvironmentUtil.isWindows() ? 9 : 10;
+	private static int FONT_SIZE = EnvironmentUtil.isUnixLikeOperatingSystem() ? 12 : EnvironmentUtil.isWindows() ? 9 : 10;
 	
 	private static Font FONT_NORMAL = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.NORMAL);
 	private static Font FONT_BOLD = SWTResourceManager.getFont(FONT_NAME, FONT_SIZE, SWT.BOLD);

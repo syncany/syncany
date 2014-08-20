@@ -38,15 +38,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
 import org.syncany.gui.panel.PluginPanel.PluginPanelPurpose;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.StorageTestResult;
 import org.syncany.util.StringUtil;
 
 /**
@@ -251,19 +251,10 @@ public class RepositorySelectionPanel extends WizardPanelComposite {
 			Color tempColor = WidgetDecorator.BLACK;
 			
 			if (isValid){
-	    		switch (testResult){
-		    		case NO_REPO:
-		    			tempMessage = I18n.getString("plugin.storageTestResult.no_repo");
-		    			break;
-		    		case REPO_EXISTS:
-		    			tempMessage = I18n.getString("plugin.storageTestResult.repo_exists");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
-		    		case NO_REPO_CANNOT_CREATE:
-		    			tempMessage = I18n.getString("plugin.storageTestResult.no_repo_cannot_create");
-		    			tempColor = WidgetDecorator.RED;
-		    			break;
+	    		if (testResult.isRepoFileExists()) {
+	    			
 	    		}
+	    		
 	    	}
 	    	else {
 	    		tempMessage = I18n.getString("plugin.storageTestResult.notValid");

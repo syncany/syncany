@@ -30,7 +30,6 @@ import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.MainGUI;
 import org.syncany.gui.messaging.DaemonMessagesHandler;
-import org.syncany.util.JsonHelper;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -96,7 +95,7 @@ public class WebsocketClient {
 
 	public void handleCommand(Object command) {
 		try{
-			client.send(JsonHelper.fromObjectToString(command));
+			client.send(command.toString());
 		}
 		catch (NotYetConnectedException e){
 			log.warning("Not yet connected " + e.getMessage());

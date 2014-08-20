@@ -15,22 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.gui.messaging.event;
-
-import org.syncany.daemon.command.CommandStatus;
-
+package org.syncany.gui.util;
 
 /**
- * @author vincent
+ * @author vwiencek
  *
  */
-public class SyncingEvent {
-	private CommandStatus state;
+public class I18n {
 
-	public void setState(CommandStatus state) {
-		this.state = state;
+	public static String getString(String key, boolean b) {
+		return key;
 	}
-	public CommandStatus getState() {
-		return state;
+
+	public static String getString(String key) {
+		return key;
 	}
+
+	public static void registerBundleName(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public static void registerBundleFilter(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

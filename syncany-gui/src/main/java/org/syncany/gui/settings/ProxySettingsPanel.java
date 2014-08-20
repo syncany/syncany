@@ -35,8 +35,7 @@ import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ProxyController;
-import org.syncany.util.CollectionUtil;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 
 
 /**
@@ -260,7 +259,7 @@ public class ProxySettingsPanel extends Composite {
 			proxyPasswordText.setText(configuration.getProxyPassword());
 		
 		//Set proxy auth type
-		int idx = CollectionUtil.indexOfElement(proxyAuthValues, configuration.getProxyAuthType());
+		int idx = 1;//CollectionUtil.indexOfElement(proxyAuthValues, configuration.getProxyAuthType());
 		if (idx != -1){
 			proxyAuthTypeCombo.select(idx);
 		}

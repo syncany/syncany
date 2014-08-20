@@ -31,7 +31,7 @@ import org.syncany.util.EnvironmentUtil;
  */
 public class TrayIconFactory {
 	public TrayIcon createTrayIcon(Shell shell) {
-		if (EnvironmentUtil.isLinux() && isUnity()) {
+		if (EnvironmentUtil.isUnixLikeOperatingSystem() && isUnity()) {
 			return new UnityTrayIcon(shell);
 		}
 		else {

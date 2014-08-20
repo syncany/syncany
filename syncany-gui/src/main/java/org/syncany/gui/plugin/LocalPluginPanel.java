@@ -27,17 +27,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugin;
-import org.syncany.connection.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.connection.plugins.PluginOptionSpecs;
-import org.syncany.connection.plugins.Plugins;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.panel.PluginPanel;
-import org.syncany.gui.util.FileUtil;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -121,35 +115,7 @@ public class LocalPluginPanel extends PluginPanel {
 	public boolean isValid() {
 		boolean valid = true;
 
-		Plugin plugin = Plugins.get("local");
-		Connection c = plugin.createConnection();
-
-		PluginOptionSpecs poc = c.getOptionSpecs();
-		
-		OptionValidationResult res;
-		
-		res = poc.get("path").validateInput(pathText.getText());
-		if (!res.equals(OptionValidationResult.VALID)){
-			valid = false;
-		}
-		
-		String folder = pathText.getText();
-    	
-    	if (folder == null || folder.length() == 0){
-    		valid = false;
-    	}
-    	
-    	if (getPurpose().equals(PluginPanelPurpose.CONNECT)){
-    		if (!FileUtil.isExistingFolder(folder)){
-    			valid = false;
-    		}
-    	}
-    	else if (getPurpose().equals(PluginPanelPurpose.CREATE)){
-    		if (!FileUtil.isExistingAndEmptyFolder(folder)){
-    			valid = false;
-    		}
-    	}
-    	WidgetDecorator.markAs(valid, pathText);
+		//TODO 
     	return valid;
 	}
 

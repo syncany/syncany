@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>

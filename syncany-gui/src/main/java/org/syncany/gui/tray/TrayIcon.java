@@ -31,8 +31,8 @@ import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
+import org.syncany.gui.util.I18n;
 import org.syncany.gui.wizard.WizardDialog;
-import org.syncany.util.I18n;
 
 /**
  * @author pheckel

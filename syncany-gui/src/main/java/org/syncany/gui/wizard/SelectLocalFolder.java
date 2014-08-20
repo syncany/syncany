@@ -19,7 +19,7 @@ import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.util.FileUtil;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>

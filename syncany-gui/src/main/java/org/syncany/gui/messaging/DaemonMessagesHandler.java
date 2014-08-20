@@ -17,17 +17,7 @@
  */
 package org.syncany.gui.messaging;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.syncany.daemon.websocket.messages.DaemonMessage;
-import org.syncany.daemon.websocket.messages.DaemonResultInitMessage;
-import org.syncany.daemon.websocket.messages.DaemonWatchEvent;
-import org.syncany.daemon.websocket.messages.DaemonResultConnectMessage;
-import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
-import org.syncany.gui.MainGUI;
-import org.syncany.gui.messaging.event.EventManager;
-import org.syncany.util.JsonHelper;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -37,35 +27,7 @@ public class DaemonMessagesHandler {
 	private static final Logger logger = Logger.getLogger(DaemonMessagesHandler.class.getSimpleName());
 	
 	public void handleReceivedMessage(String messageString) {
-		DaemonMessage message = JsonHelper.fromStringToObject(messageString, DaemonMessage.class);
-		
-		switch (message.getAction()) {
-			case "daemon_watch_event":
-				DaemonWatchEvent dwe = JsonHelper.fromStringToObject(messageString, DaemonWatchEvent.class);
-				logger.log(Level.FINE, "event :" + dwe.getEvent());
-				break;
-			
-			case "daemon_init_result":
-				DaemonResultInitMessage r1 = JsonHelper.fromStringToObject(messageString, DaemonResultInitMessage.class);
-				// test if daemon update
-				if (MainGUI.getClientIdentification().equals(r1.getClientId()) && r1.getClientType().equals("syncany-gui")) {
-					EventManager.post(r1);
-				}
-				break;
-				
-			case "daemon_connect_result":
-				DaemonResultConnectMessage r2 = JsonHelper.fromStringToObject(messageString, DaemonResultConnectMessage.class);
-				// test if daemon update
-				if (MainGUI.getClientIdentification().equals(r2.getClientId()) && r2.getClientType().equals("syncany-gui")) {
-					EventManager.post(r2);
-				}
-				break;
-	
-			case "update_watched_folders":
-				DaemonWatchResultMessage rr = JsonHelper.fromStringToObject(messageString, DaemonWatchResultMessage.class);
-				EventManager.post(rr);
-				break;
 
-		}
+	
 	}
 }

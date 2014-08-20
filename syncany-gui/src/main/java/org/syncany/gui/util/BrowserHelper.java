@@ -38,10 +38,13 @@ public class BrowserHelper {
 				// this doesn't support showing urls in the form of "page.html#nameLink"
 				rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
 			}
+			//TODO add mac osx env detection
+			/**
 			else if (EnvironmentUtil.isMacOS()) {
 				rt.exec("open " + url);
 			}
-			else if (EnvironmentUtil.isLinux()) {
+			**/
+			else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				// Do a best guess on unix until we get a platform independent way
 				// Build a list of browsers to try, in this order.
 				String[] browsers = { "epiphany", "firefox", "mozilla", "konqueror", "netscape", "opera", "links", "lynx" };

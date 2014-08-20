@@ -36,14 +36,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
 import org.syncany.gui.Application;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.util.DialogUtil;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -269,7 +268,7 @@ public class SettingsDialog extends Dialog {
 	}
 	
 	@Subscribe
-	public void updateInterface(DaemonWatchResultMessage event) {
+	public void updateInterface(Object event) {
 		accountSettingsPanel.watchUpdateEvent(event);
 	}
 }

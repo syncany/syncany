@@ -17,13 +17,9 @@
  */
 package org.syncany.gui.panel;
 
-import java.util.Map;
-
 import org.eclipse.swt.widgets.Composite;
-import org.syncany.connection.plugins.Connection;
-import org.syncany.connection.plugins.Plugins;
-import org.syncany.connection.plugins.StorageException;
-import org.syncany.connection.plugins.TransferManager.StorageTestResult;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageTestResult;
 
 
 /**
@@ -53,11 +49,8 @@ public abstract class PluginPanel extends Composite implements UserParametersChe
 		this.purpose = purpose;
 	}
 	
-	public StorageTestResult testPluginConnection() throws StorageException{
-		Map<String, String> params = getUserSelection().getPluginParameters();
-		Connection connection = Plugins.get(getPluginId()).createConnection();
-		connection.init(params);
-		return connection.createTransferManager().test();
+	public StorageTestResult testPluginConnection() throws StorageException {
+		return new StorageTestResult();
 	}
 	
 	// Anstract Methods

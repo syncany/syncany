@@ -37,7 +37,7 @@ import org.syncany.crypto.CipherSpecs;
 import org.syncany.gui.CommonParameters;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
-import org.syncany.util.I18n;
+import org.syncany.gui.util.I18n;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 

@@ -20,15 +20,14 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.syncany.daemon.websocket.messages.DaemonWatchResultMessage;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.Profile;
 import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.EventManager;
+import org.syncany.gui.util.I18n;
 import org.syncany.gui.wizard.WizardDialog;
-import org.syncany.util.I18n;
 
 
 /**
@@ -125,7 +124,7 @@ public class AccountSettingsPanel extends Composite {
 		WidgetDecorator.normal(introductionLabel, table, deleteProfileButton);
 	}
 
-	public void watchUpdateEvent(DaemonWatchResultMessage event){
+	public void watchUpdateEvent(Object event){
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
