@@ -29,7 +29,7 @@ import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.MainGUI;
-import org.syncany.gui.messaging.DaemonMessagesHandler;
+import org.syncany.gui.command.CommandFactory;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -57,7 +57,7 @@ public class WebsocketClient {
 		Map<String, String> map = new HashMap<>();
 		map.put("client_id", MainGUI.getClientIdentification());
 		
-		final DaemonMessagesHandler handler = new DaemonMessagesHandler();
+		final CommandFactory cf = new CommandFactory();
 		
 		return new WebSocketClient(new URI(uri), new Draft_17(), map, 3000) {
 			@Override
@@ -68,7 +68,8 @@ public class WebsocketClient {
 			@Override
 			public void onMessage(String message) {
 				log.fine("Received: " + message);
-				handler.handleReceivedMessage(message);
+				
+				//handler.handleReceivedMessage(message);
 			}
 
 			@Override

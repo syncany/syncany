@@ -20,11 +20,10 @@ package org.syncany.gui;
 import java.io.File;
 
 /**
- * @author vincent
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  *
  */
 public class Application {
-	public static final String APPLICATION_DIRECTORY = ".syncany";
-	public static final String APPLICATION_CONFIGURATION = APPLICATION_DIRECTORY 
-			+ File.separator + "syncany-gui-config.xml";
+	public static final String APPLICATION_DIRECTORY = ".syncany-gui";
+	public static final String APPLICATION_CONFIGURATION = APPLICATION_DIRECTORY  + File.separator + "syncany-gui-config.xml";
 }
