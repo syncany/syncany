@@ -46,14 +46,15 @@ User Guide
 ----------
 To learn how to use Syncany, check out the brand new and awesome **[Syncany User Guide](http://syncany.readthedocs.org/)**. It'll tell you everything you want to know:
 
-* [What is Syncany?](http://syncany.readthedocs.org/en/latest/what_is_syncany.html)
-* [Installation](http://syncany.readthedocs.org/en/latest/installation.html)
-* [Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html)
-* [Concepts](http://syncany.readthedocs.org/en/latest/concepts.html)
-* [Commands](http://syncany.readthedocs.org/en/latest/commands.html)
-* [Plugins](http://syncany.readthedocs.org/en/latest/plugins.html)
-* [Security](http://syncany.readthedocs.org/en/latest/security.html)
-* [Configuration](http://syncany.readthedocs.org/en/latest/configuration.html)
+Contents:
+* [What is Syncany?](http://syncany.readthedocs.org/en/latest/what_is_syncany.html) - Learn about the basics of Syncany
+* [Installation](http://syncany.readthedocs.org/en/latest/installation.html) - Learn where to get Syncany
+* [Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html) - Learn how to sync your first folder
+* [Concepts](http://syncany.readthedocs.org/en/latest/concepts.html) - Get an in-depth view of Syncany's core concepts
+* [Commands](http://syncany.readthedocs.org/en/latest/commands.html) - Learn about all the commands
+* [Plugins](http://syncany.readthedocs.org/en/latest/plugins.html) - Find out what plugins are and how to install them
+* [Security](http://syncany.readthedocs.org/en/latest/security.html) - Get an overview of the security concepts behind Syncany
+* [Configuration](http://syncany.readthedocs.org/en/latest/configuration.html) - Learn how to configure Syncany
 
 Sample usage: Try Syncany
 -------------------------
