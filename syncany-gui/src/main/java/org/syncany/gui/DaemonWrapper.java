@@ -15,24 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.gui;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import org.syncany.cli.CommandLineClient;
 
-import org.simpleframework.xml.ElementList;
 
-public class ListWatchesResponse extends Response {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
-	
-	public ListWatchesResponse() {
-		
-	}
-	
-	public ListWatchesResponse(int requestId, List<File> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
+/**
+ * @author vwiencek
+ *
+ */
+public class DaemonWrapper {
+	public static void main(String[] args) throws Exception {
+		System.exit(new CommandLineClient(new String[]{"daemon"}).start());
 	}	
 }

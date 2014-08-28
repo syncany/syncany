@@ -29,7 +29,7 @@ import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.syncany.gui.MainGUI;
-import org.syncany.gui.command.CommandFactory;
+import org.syncany.gui.command.GUIClient;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -57,7 +57,7 @@ public class WebsocketClient {
 		Map<String, String> map = new HashMap<>();
 		map.put("client_id", MainGUI.getClientIdentification());
 		
-		final CommandFactory cf = new CommandFactory();
+		final GUIClient gc = new GUIClient();
 		
 		return new WebSocketClient(new URI(uri), new Draft_17(), map, 3000) {
 			@Override

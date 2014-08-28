@@ -17,9 +17,6 @@
  */
 package org.syncany.gui.command;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,52 +34,43 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.simpleframework.xml.core.Persister;
-import org.syncany.cli.Command;
+import org.syncany.Client;
+import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
-import org.syncany.config.to.PortTO;
-import org.syncany.operations.daemon.messages.CliRequest;
-import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
+import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
 
+
 /**
- * @author vwiencek
- *
+ *  
+ * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class CommandFactory {
-	private static final Logger logger = Logger.getLogger(CommandFactory.class.getSimpleName());
+public class GUIClient extends Client {
+	private static final Logger logger = Logger.getLogger(GUIClient.class.getSimpleName());
+	
+	private static final String userName = "admin";
+	private static final String password = "admin";
 	
 	private static final String SERVER_SCHEMA = "https://";
-	private static final String SERVER_HOSTNAME = "127.0.0.1";
+	private static final String SERVER_HOSTNAME = "localhost";
 	private static final String SERVER_REST_API = "/api/rs";
 	
-	private PortTO readPortConfig(File portFile) {
-		try {
-			return new Persister().read(PortTO.class, portFile);
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "ERROR: Could not read portFile to connect to daemon.", e);
-
-			showErrorAndExit("Cannot connect to daemon.");			
-			return null; // Never reached!
-		}
+	static {
+		Logging.init();
 	}
 	
-	private void showErrorAndExit(String errorMessage) {
-
+	public Response runCommand(Request request) {
+		return sendToRest(request, 8443, userName, password);
 	}
 	
-	public int sendToRest(Command command, String commandName, String[] commandArgs, File portFile) {
+	private Response sendToRest(Request request, int port, String userName, String password) {
 		try {
-			// Read port config (for daemon) from port file
-			PortTO portConfig = readPortConfig(portFile);
-
 			// Create authentication details
 			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 			credentialsProvider.setCredentials(
-				new AuthScope(SERVER_HOSTNAME, portConfig.getPort()), 
-				new UsernamePasswordCredentials(portConfig.getUser().getUsername(), portConfig.getUser().getPassword()));
+				new AuthScope(SERVER_HOSTNAME, port), 
+				new UsernamePasswordCredentials(userName, password));
 			
 			// Allow all hostnames in CN; this is okay as long as hostname is localhost/127.0.0.1!
 			// See: https://github.com/syncany/syncany/pull/196#issuecomment-52197017
@@ -99,20 +87,12 @@ public class CommandFactory {
 				.setDefaultCredentialsProvider(credentialsProvider)
 				.build();
 
-			String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
+			String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + port + SERVER_REST_API;
 			HttpPost post = new HttpPost(SERVER_URI);
 			
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			
-			// Create and send HTTP/REST request
-			CliRequest cliRequest = new CliRequest();
-			
-			cliRequest.setId(Math.abs(new Random().nextInt()));
-			cliRequest.setRoot("rootFolder");
-			cliRequest.setCommand(commandName);
-			cliRequest.setCommandArgs(Arrays.asList(commandArgs));
-			
-			post.setEntity(new StringEntity(MessageFactory.toRequest(cliRequest)));
+			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
 			
 			// Handle response
 			HttpResponse httpResponse = client.execute(post);
@@ -122,20 +102,11 @@ public class CommandFactory {
 			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 			
 			Response response = MessageFactory.createResponse(responseStr);
-			
-			if (response instanceof CliResponse) {
-				//out.print(((CliResponse) response).getOutput());	
-			}
-			else {
-				//out.println(response.getMessage());
-			}
-			
-			return 0;
+			return response;
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
-			showErrorAndExit(e.getMessage());
-			return -1;
+			logger.log(Level.SEVERE, "Request " + request.toString() + " FAILED. ", e);
 		}		
+		return null;
 	}
 }

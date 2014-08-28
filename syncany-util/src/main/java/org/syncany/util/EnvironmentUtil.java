@@ -43,6 +43,10 @@ public class EnvironmentUtil {
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
+	
+	public static boolean isOSX() {
+		return System.getProperty("os.name").toUpperCase().contains("OS X");
+	}
 
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
