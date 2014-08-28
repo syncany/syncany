@@ -9,7 +9,7 @@ PIDFILE=$APPDIR/daemon.pid
 LOGDIR=$APPDIR/logs
 LOGFILE=$LOGDIR/daemon.log
 
-DAEMON=$(dirname $(readlink -f "$0"))/syncany
+DAEMON=$(dirname $(greadlink -f "$0"))/syncany
 DAEMON_OPTS="--log=$LOGFILE daemon"
  
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
@@ -25,18 +25,33 @@ get_pid() {
 	fi
 }
 
+process_running() {
+	ID=$(get_pid)
+	if [ $ID -eq -1 ]; then
+		echo 0
+	elif [ -n $(ps -p$ID -opid=) ]; then
+		echo 1
+	else
+		echo 0
+	fi	
+}
+
 start() {
-	echo -n "Starting daemon: "
+	RUNNING=$(process_running)
 	
-	if [ -e /proc/$PID ]; then
+	echo "Starting daemon: "
+	
+	if [ $RUNNING -eq 1 ]; then
 		echo "$NAME already running (pid $PID)"
 	else
 		nohup $DAEMON $DAEMON_OPTS > /dev/null 2>&1 &
 		
 		PID=-1
 		TRIES=10
-		while [ ! -e /proc/$PID -a $TRIES -gt 0 ]; do
-			echo -n "."
+		
+		while [ $RUNNING -eq 0 -a $TRIES -gt 0 ]; do
+			RUNNING=$(process_running)
+			echo "."
 		
 			PID=$(get_pid)
 			TRIES=$(($TRIES-1))
@@ -54,16 +69,19 @@ start() {
 }
 
 stop() {
-	echo -n "Stopping daemon: "
+	RUNNING=$(process_running)
+
+	echo "Stopping daemon: "
 	
-	if [ ! -e /proc/$PID ]; then
+	if [ $RUNNING -eq 0 ]; then
 		echo "$NAME not running"
 	else
 		echo "shutdown" >> $CONTROLFILE
 		
 		TRIES=10
-		while [ -e /proc/$PID -a $TRIES -gt 0 ]; do
-			echo -n "."
+		while [ $RUNNING -eq 1 -a $TRIES -gt 0 ]; do
+			RUNNING=$(process_running)
+			echo "."
 		
 			TRIES=$(($TRIES-1))
 			sleep 1
@@ -74,20 +92,26 @@ stop() {
 			exit 3
 		fi
 		
-		echo " $NAME."
+		echo " $NAME stopped."
 	fi
 }
 
 force_stop() {
-	echo -n "Force-stopping daemon: "
+	RUNNING=$(process_running)
 
-	if [ ! -e /proc/$PID ]; then
+	echo "Force-stopping daemon: "
+
+	if [ $RUNNING -eq 0 ]; then
 		echo "$NAME not running"
 	else
 		kill -9 $PID
-		sleep 1
-
-		if [ -e /proc/$PID ]; then
+		
+		RUNNING=$(process_running)
+		
+		sleep 5
+			
+		RUNNING=$(process_running)
+		if [ $RUNNING -eq 1 ]; then
 			echo "Failed to kill -9 $PID. EXITING."
 		else 
 			rm $PIDFILE 2> /dev/null
