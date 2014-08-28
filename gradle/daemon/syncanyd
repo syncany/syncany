@@ -1,6 +1,12 @@
 #!/bin/sh
  
 set -e
+
+case "`uname`" in
+  Darwin* )
+    darwin=true
+    ;;
+esac
  
 NAME=syncanyd
 APPDIR=~/.config/syncany
@@ -9,7 +15,12 @@ PIDFILE=$APPDIR/daemon.pid
 LOGDIR=$APPDIR/logs
 LOGFILE=$LOGDIR/daemon.log
 
-DAEMON=$(dirname $(greadlink -f "$0"))/syncany
+if [ $darwin ]; then
+	DAEMON=$(dirname $(greadlink -f "$0"))/syncany
+else
+	DAEMON=$(dirname $(readlink -f "$0"))/syncany
+fi
+
 DAEMON_OPTS="--log=$LOGFILE daemon"
  
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
