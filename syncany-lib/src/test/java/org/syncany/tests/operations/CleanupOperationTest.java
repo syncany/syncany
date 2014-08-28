@@ -435,4 +435,107 @@ public class CleanupOperationTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();	
 	}
+	
+	@Test
+	public void testCleanupMaxDatabaseFiles() throws Exception {
+		// Setup
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(true);
+		options.setRemoveOldVersions(true);
+		options.setKeepVersionsCount(10);
+		options.setMaxDatabaseFiles(3);
+
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");		
+		for (int i=1; i<=4; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+				
+		// B: Cleanup
+		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
+		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(4, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		TestClient clientB = new TestClient("B", testConnection);
+		clientB.down();
+		
+		
+		// B: Create some file versions
+		clientB.createNewFile("file-B.jpg");		
+		for (int i=1; i<=6; i++) {
+			clientB.changeFile("file-B.jpg");
+			clientB.upWithForceChecksum();			
+		}
+		
+		// B: Cleanup (2 clients, so 7 databases is too much)
+		cleanupOperationResult = clientB.cleanup(options);
+		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(7, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}
+	
+
+	@Test
+	public void testQuickDoubleCleanup() throws Exception {
+		// Setup
+		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMergeRemoteFiles(true);
+		options.setRemoveOldVersions(false);
+		options.setMinSecondsBetweenCleanups(40000000);
+
+		// Run
+		
+		// A: Create some file versions
+		clientA.createNewFile("file.jpg");		
+		for (int i=1; i<=16; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+				
+		// B: Cleanup
+		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
+		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(16, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		for (int i=1; i<=15; i++) {
+			clientA.changeFile("file.jpg");
+			clientA.upWithForceChecksum();			
+		}
+		
+		// Because of minimum timeout, this cleanup should not do anything
+		cleanupOperationResult = clientA.cleanup(options);
+		assertEquals(CleanupResultCode.NOK_RECENTLY_CLEANED, cleanupOperationResult.getResultCode());
+		
+		// When force is on, the cleanup should go through
+		options.setForce(true);
+		
+		cleanupOperationResult = clientA.cleanup(options);
+		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
+		assertEquals(16, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
+		
+		// Tear down
+		clientA.deleteTestData();	
+	}
 }

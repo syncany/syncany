@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + HTTPS-only for WebSocket/REST-like API and web interface #185/#196
+  + Add bash-completion functionality (Debian/Ubuntu) #201
+  + New and awesome end user guide at https://syncany.org/r/userguide
+- Bugfixes and other things:
+  + Implement full cleanup to fix (big!) #187/#193 
+  + Fixed database integrity issue (solved by #187)
+  + Fixed winning branch race condition #178 (solved by #187)
+  + Fixed file not recreated from winning branch #200/#203
+  + Add LRU cache for local files; no re-download of exist. multichunks #169
+
 ### Syncany 0.1.8-alpha (Date: 9 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Breaks compatiblity to 0.1.7-alpha repositories!

@@ -20,6 +20,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.operations.AssemblerTest;
 import org.syncany.tests.operations.CleanupOperationTest;
 import org.syncany.tests.operations.ConnectOperationTest;
 import org.syncany.tests.operations.FileSystemActionComparatorTest;
@@ -35,6 +36,7 @@ import org.syncany.tests.operations.SyncUpOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+	AssemblerTest.class,
 	CleanupOperationTest.class,
 	ConnectOperationTest.class,
 	FileSystemActionComparatorTest.class,

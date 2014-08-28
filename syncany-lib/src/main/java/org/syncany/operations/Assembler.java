@@ -20,11 +20,14 @@ package org.syncany.operations;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
+import org.syncany.chunk.Chunker;
 import org.syncany.chunk.Deduper;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.chunk.MultiChunker;
@@ -35,6 +38,7 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.util.StringUtil;
 
 /**
  * The assembler re-assembles files broken down through the deduplication
@@ -82,10 +86,19 @@ public class Assembler {
 			throw new Exception("Cannot determine file content for checksum "+fileVersion.getChecksum());
 		}
 
-		// Create file
+		// Create empty file
+		if (fileContent == null) {
+			FileUtils.touch(reconstructedFileInCache);	
+			return reconstructedFileInCache;
+		}
+				
+		// Create non-empty file
+		Chunker chunker = config.getChunker();
 		MultiChunker multiChunker = config.getMultiChunker();
-		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);
-
+		
+		FileOutputStream reconstructedFileOutputStream = new FileOutputStream(reconstructedFileInCache);		
+		MessageDigest reconstructedFileChecksum = MessageDigest.getInstance(chunker.getChecksumAlgorithm());
+		
 		if (fileContent != null) { // File can be empty!
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
@@ -99,17 +112,31 @@ public class Assembler {
 				File decryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkIdForChunk);
 
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
-				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getRaw());
+				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getBytes());
 
-				// TODO [medium] Calculate checksum while writing file, to verify correct content
-				IOUtils.copy(chunkInputStream, reconstructedFileOutputStream);
-				
+		        byte[] buffer = new byte[4096];
+		        int read = 0;
+
+		        while (-1 != (read = chunkInputStream.read(buffer))) {
+		        	reconstructedFileChecksum.update(buffer, 0, read);
+		            reconstructedFileOutputStream.write(buffer, 0, read);
+		        }
+		        
 				chunkInputStream.close();
 				multiChunk.close();
 			}
 		}
 
 		reconstructedFileOutputStream.close();
+
+		// Validate checksum
+		byte[] reconstructedFileExpectedChecksum = fileContent.getChecksum().getBytes();
+		byte[] reconstructedFileActualChecksum = reconstructedFileChecksum.digest();
+		
+		if (!Arrays.equals(reconstructedFileActualChecksum, reconstructedFileExpectedChecksum)) {
+			throw new Exception("Checksums do not match: actual " + fileVersion.getChecksum() + " != expected "
+					+ StringUtil.toHex(reconstructedFileActualChecksum));
+		}
 		
 		return reconstructedFileInCache;
 	}	

@@ -26,6 +26,9 @@ public class CleanupOperationOptions implements OperationOptions {
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
 	
 	@Element(required = false)
+	private boolean force = false;
+	
+	@Element(required = false)
 	private boolean mergeRemoteFiles = true;
 	
 	@Element(required = false)
@@ -33,6 +36,12 @@ public class CleanupOperationOptions implements OperationOptions {
 	
 	@Element(required = false)
 	private int keepVersionsCount = 5;
+	
+	@Element(required = false)
+	private int maxDatabaseFiles = 15;
+	
+	@Element(required = false)
+	private long minSecondsBetweenCleanups = 10800;
 	
 	// TODO [medium] Implement multichunk repackaging
 	
@@ -69,5 +78,29 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public void setKeepVersionsCount(int keepVersionsCount) {
 		this.keepVersionsCount = keepVersionsCount;
+	}
+	
+	public void setMaxDatabaseFiles(int maxDatabaseFiles) {
+		this.maxDatabaseFiles = maxDatabaseFiles;
+	}
+	
+	public int getMaxDatabaseFiles() {
+		return maxDatabaseFiles;
+	}
+	
+	public void setMinSecondsBetweenCleanups(long minSecondsBetweenCleanups) {
+		this.minSecondsBetweenCleanups = minSecondsBetweenCleanups;
+	}
+	
+	public long getMinSecondsBetweenCleanups() {
+		return minSecondsBetweenCleanups;
+	}
+	
+	public boolean isForce() {
+		return force;
+	}
+	
+	public void setForce(boolean force) {
+		this.force = force;
 	}
 }

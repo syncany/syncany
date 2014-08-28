@@ -21,27 +21,41 @@ import org.simpleframework.xml.Element;
 
 public class WebServerTO {
 	@Element(required = false)
-	private boolean enabled = false;
+	private boolean enabled = true;
 	
 	@Element(required = false)
-	private int port = 8443;
+	private String bindAddress = "127.0.0.1";
 	
 	@Element(required = false)
-	private String host = "localhost";
+	private int bindPort = 8443;
+	
+	@Element(required = false)
+	private boolean certificateAutoGenerate = true;
+	
+	@Element(required = false)
+	private String certificateCommonName = "localhost";
 
 	public boolean isEnabled() {
 		return enabled;
 	}
 
-	public int getPort() {
-		return port;
-	}
-
-	public String getHost() {
-		return host;
+	public String getBindAddress() {
+		return bindAddress;
 	}
 	
-	public void setPort(int port) {
-		this.port = port;
+	public int getBindPort() {
+		return bindPort;
 	}
+
+	public void setBindPort(int port) {
+		this.bindPort = port;
+	}
+
+	public boolean isCertificateAutoGenerate() {
+		return certificateAutoGenerate;
+	}
+	
+	public String getCertificateCommonName() {
+		return certificateCommonName;
+	}	
 }

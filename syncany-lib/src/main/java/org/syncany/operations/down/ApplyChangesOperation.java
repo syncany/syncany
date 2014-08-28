@@ -171,12 +171,12 @@ public class ApplyChangesOperation extends Operation {
 				logger.log(Level.FINER, "   +  {0}", action);
 			}
 
-			try {
-				action.execute();
-			}
-			catch (Exception e) {
-				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
-			}
+			// Execute the file system action
+			
+			// Note that exceptions are not caught here, to prevent 
+			// apply-failed-delete-on-up situations.
+			
+			action.execute(); 
 		}
 	}
 }

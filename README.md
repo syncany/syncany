@@ -20,6 +20,7 @@ terms of storage type and provider:
 **Directly jump to ...**
 
 - [Download and install Syncany](#download-and-install-syncany)
+- [Syncany User Guide](#user-guide)
 - [Sample usage: Try Syncany](#sample-usage-try-syncany)
 - [Build and development instructions](#build-and-development-instructions)
 - [Buy us a coffee](#buy-us-a-coffee)
@@ -41,9 +42,19 @@ Syncany 0.1.8-alpha, 9 Aug 2014
 
 You can also check out the [snapshot releases](https://www.syncany.org/dist/snapshots/), the [PPA for snapshots](https://launchpad.net/~syncany/+archive/snapshot), and the [snapshot AUR package](https://aur.archlinux.org/packages/syncany-git/).
 
-Quick [install and usage instructions](https://github.com/syncany/syncany/wiki/CLI-quick-howto) can be found in the wiki.   
-If you like it a bit more detailed, [there's lots more you can explore](https://github.com/syncany/syncany/wiki).
+User Guide
+----------
+To learn how to use Syncany, check out the brand new and awesome **[Syncany User Guide](http://syncany.readthedocs.org/)**. It'll tell you everything you want to know:
 
+Contents:
+* [What is Syncany?](http://syncany.readthedocs.org/en/latest/what_is_syncany.html) - Learn about the basics of Syncany
+* [Installation](http://syncany.readthedocs.org/en/latest/installation.html) - Learn where to get Syncany
+* [Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html) - Learn how to sync your first folder
+* [Concepts](http://syncany.readthedocs.org/en/latest/concepts.html) - Get an in-depth view of Syncany's core concepts
+* [Commands](http://syncany.readthedocs.org/en/latest/commands.html) - Learn about all the commands
+* [Plugins](http://syncany.readthedocs.org/en/latest/plugins.html) - Find out what plugins are and how to install them
+* [Security](http://syncany.readthedocs.org/en/latest/security.html) - Get an overview of the security concepts behind Syncany
+* [Configuration](http://syncany.readthedocs.org/en/latest/configuration.html) - Learn how to configure Syncany
 
 Sample usage: Try Syncany
 -------------------------
