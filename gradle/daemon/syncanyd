@@ -1,13 +1,14 @@
-#!/bin/sh
- 
+#!/usr/bin/env bash
+
 set -e
 
-case "`uname`" in
-  Darwin* )
-    darwin=true
-    ;;
-esac
- 
+function get_realpath() {
+    [[ ! -f "$1" ]] && return 1 # failure : file does not exist.
+    [[ -n "$no_symlinks" ]] && local pwdp='pwd -P' || local pwdp='pwd' # do symlinks.
+    echo "$( cd "$( echo "${1%/*}" )" 2>/dev/null; $pwdp )"/"${1##*/}" # echo result.
+    return 0 # success
+}
+
 NAME=syncanyd
 APPDIR=~/.config/syncany
 CONTROLFILE=$APPDIR/daemon.ctrl
@@ -15,18 +16,18 @@ PIDFILE=$APPDIR/daemon.pid
 LOGDIR=$APPDIR/logs
 LOGFILE=$LOGDIR/daemon.log
 
-if [ $darwin ]; then
-	DAEMON=$(dirname $(greadlink -f "$0"))/syncany
-else
-	DAEMON=$(dirname $(readlink -f "$0"))/syncany
-fi
+PATH=$(get_realpath "$0")
+DAEMON=$(dirname $PATH)/syncany
 
 DAEMON_OPTS="--log=$LOGFILE daemon"
  
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
-mkdir -p $APPDIR
+mkdir -p $APPDIR	
 mkdir -p $LOGDIR
+
+echo "foufou"
+echo get_realpath "$0"
 
 get_pid() {
 	if [ -e $PIDFILE ]; then
@@ -62,7 +63,7 @@ start() {
 		
 		while [ $RUNNING -eq 0 -a $TRIES -gt 0 ]; do
 			RUNNING=$(process_running)
-			echo "."
+			echo -n "."
 		
 			PID=$(get_pid)
 			TRIES=$(($TRIES-1))
@@ -92,7 +93,7 @@ stop() {
 		TRIES=10
 		while [ $RUNNING -eq 1 -a $TRIES -gt 0 ]; do
 			RUNNING=$(process_running)
-			echo "."
+			echo -n "."
 		
 			TRIES=$(($TRIES-1))
 			sleep 1
@@ -119,7 +120,7 @@ force_stop() {
 		
 		RUNNING=$(process_running)
 		
-		sleep 5
+		sleep 1
 			
 		RUNNING=$(process_running)
 		if [ $RUNNING -eq 1 ]; then
