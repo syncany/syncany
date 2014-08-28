@@ -1,14 +1,6 @@
-#!/usr/bin/env bash
-
+#!/bin/sh
 set -e
-
-function get_realpath() {
-    [[ ! -f "$1" ]] && return 1 # failure : file does not exist.
-    [[ -n "$no_symlinks" ]] && local pwdp='pwd -P' || local pwdp='pwd' # do symlinks.
-    echo "$( cd "$( echo "${1%/*}" )" 2>/dev/null; $pwdp )"/"${1##*/}" # echo result.
-    return 0 # success
-}
-
+ 
 NAME=syncanyd
 APPDIR=~/.config/syncany
 CONTROLFILE=$APPDIR/daemon.ctrl
@@ -16,25 +8,19 @@ PIDFILE=$APPDIR/daemon.pid
 LOGDIR=$APPDIR/logs
 LOGFILE=$LOGDIR/daemon.log
 
-PATH=$(get_realpath "$0")
-DAEMON=$(dirname $PATH)/syncany
-
-DAEMON_OPTS="--log=$LOGFILE daemon"
- 
-export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
-
-mkdir -p $APPDIR	
-mkdir -p $LOGDIR
-
-echo "foufou"
-echo get_realpath "$0"
-
 get_pid() {
 	if [ -e $PIDFILE ]; then
 		echo $(cat $PIDFILE)
 	else
 		echo -1
 	fi
+}
+
+function get_realpath() {
+    [[ ! -f "$1" ]] && return 1 # failure : file does not exist.
+    [[ -n "$no_symlinks" ]] && local pwdp='pwd -P' || local pwdp='pwd' # do symlinks.
+    echo "$( cd "$( echo "${1%/*}" )" 2>/dev/null; $pwdp )"/"${1##*/}" # echo result.
+    return 0 # success
 }
 
 process_running() {
@@ -47,6 +33,14 @@ process_running() {
 		echo 0
 	fi	
 }
+
+DAEMON=$(dirname $(get_realpath "$0"))/syncany
+DAEMON_OPTS="--log=$LOGFILE daemon"
+ 
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+mkdir -p $APPDIR
+mkdir -p $LOGDIR
 
 start() {
 	RUNNING=$(process_running)
