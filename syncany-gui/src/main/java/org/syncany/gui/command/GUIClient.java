@@ -109,4 +109,9 @@ public class GUIClient extends Client {
 		}		
 		return null;
 	}
+
+	public void watchFolder(String folder) {
+		// TODO Auto-generated method stub
+		
+	}
 }

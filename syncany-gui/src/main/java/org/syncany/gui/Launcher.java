@@ -24,9 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.syncany.config.Logging;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
-import org.syncany.gui.config.Profile;
 import org.syncany.gui.config.ProxyController;
-import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.util.I18n;
 
@@ -50,21 +48,13 @@ public class Launcher {
 	}
 
 	private static void startApplication() {
-		startWebSocketClient();
 		startGUI();
 	}
 
 	public static void stopApplication() {
-		ClientCommandFactory.stopDaemon();
-		ClientCommandFactory.stopWebSocketClient();
-		
 		stopGUI();
 
 		System.exit(0);
-	}
-
-	private static void startWebSocketClient() {
-		ClientCommandFactory.startWebSocketClient();
 	}
 
 	private static void stopGUI() {
@@ -112,7 +102,7 @@ public class Launcher {
 
 		window = new MainGUI();
 		EventManager.register(window);
-		MainGUI.restoreWatchedFolders();
+		window.restoreWatchedFolders();
 		window.open();
 	}
 
@@ -143,15 +133,5 @@ public class Launcher {
 
 		ApplicationConfigurationTO acto = ApplicationConfigurationTO.load(f);
 		return acto;
-	}
-	
-	public static void updateProfiles(Profile p){
-//		Profile p = new Profile();
-//		p.setFolder(folder);
-//		p.setAutomaticSync(true);
-//		p.setWatchInterval(watchInterval);
-		
-		Launcher.applicationConfiguration.addProfile(p);
-		Launcher.saveConfiguration();
 	}
 }

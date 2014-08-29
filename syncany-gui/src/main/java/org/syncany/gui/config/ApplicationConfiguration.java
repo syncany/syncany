@@ -18,8 +18,6 @@
 package org.syncany.gui.config;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -38,24 +36,7 @@ public class ApplicationConfiguration {
 	private String proxyType;
 	private String proxyAuthType;
 	private boolean proxyAuth;
-	public List<Profile> profiles;
 
-	public void addProfile(Profile profil){
-		if (profiles == null) {
-			profiles = new ArrayList<>();
-		}
-		if (!profiles.contains(profil)) {
-			profiles.add(profil);
-		}
-	}
-
-	public void setProfiles(List<Profile> profiles) {
-		this.profiles = profiles;
-	}
-	public List<Profile> getProfiles() {
-		return profiles;
-	}
-	
 	public String getProxyHost() {
 		return proxyHost;
 	}
@@ -116,7 +97,6 @@ public class ApplicationConfiguration {
 		ApplicationConfiguration to = new ApplicationConfiguration();
 		try {
 			BeanUtils.copyProperties(to, from);
-			to.setProfiles(from.getProfiles());
 		}
 		catch (IllegalAccessException e) {
 			logger.warning("IllegalAccessException " + e);
@@ -131,29 +111,11 @@ public class ApplicationConfiguration {
 		ApplicationConfigurationTO from = new ApplicationConfigurationTO();
 		try {
 			BeanUtils.copyProperties(from, to);
-			from.setProfilesTO(to.getProfilesTO());
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			logger.warning("IllegalAccessException " + e);
 		}
 		
 		return from;
-	}
-
-	private List<ProfileTO> getProfilesTO() {
-		List<ProfileTO> ret = new ArrayList<>();
-		
-		for (Profile p : profiles){
-			ProfileTO pto = new ProfileTO();
-			try {
-				BeanUtils.copyProperties(pto, p);
-			}
-			catch (IllegalAccessException | InvocationTargetException e) {
-				logger.warning("IllegalAccessException " + e);
-			}
-			
-			ret.add(pto);
-		}
-		return ret;
 	}
 }

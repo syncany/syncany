@@ -151,3 +151,8 @@ task(runGui, dependsOn: 'classes', type: JavaExec) {
 	jvmArgs = getOsName().startsWith("mac") ? ['-XstartOnFirstThread'] : []	
 	classpath = sourceSets.main.runtimeClasspath
 }
+
+task(runDaemon, dependsOn: 'classes', type: JavaExec) {
+	main = "org.syncany.gui.DaemonWrapper"
+	classpath = sourceSets.main.runtimeClasspath
+}

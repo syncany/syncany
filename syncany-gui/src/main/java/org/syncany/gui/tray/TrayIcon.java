@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
-import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
@@ -106,11 +105,11 @@ public abstract class TrayIcon {
 	}
 
 	protected void pause(File folder) {
-		ClientCommandFactory.handlePauseWatch(folder.getAbsolutePath());
+		//ClientCommandFactory.handlePauseWatch(folder.getAbsolutePath());
 	}
 	
 	protected void resume(File folder) {
-		ClientCommandFactory.handleResumeWatch(folder.getAbsolutePath());
+		//ClientCommandFactory.handleResumeWatch(folder.getAbsolutePath());
 	}
 	
 	protected void showFolder(File folder) {

@@ -21,6 +21,7 @@ package org.syncany.gui.command;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
@@ -36,14 +37,9 @@ public class GUIClientTest {
 	@Test
 	public void testGuiClient() throws Exception {
 		GUIClient gc = new GUIClient();
-		
-		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
-		Map<String, String> clientB = TestCliUtil.createLocalTestEnv("B", connectionSettings);
-
 		Request req = new ListWatchesRequest();
 		req.setId(Math.abs(new Random().nextInt()));
 		Response response = gc.runCommand(req);
-		int i = 1;
+		logger.log(Level.FINE, response.toString());
 	}	
 }

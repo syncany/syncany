@@ -19,12 +19,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
-import org.syncany.gui.config.Profile;
-import org.syncany.gui.messaging.ClientCommandFactory;
 import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.util.I18n;
 import org.syncany.gui.wizard.WizardDialog;
@@ -105,17 +102,6 @@ public class AccountSettingsPanel extends Composite {
 				if (ft.isSupportedType(event.currentDataType)) {
 					fileList = (String[])event.data;
 					
-					for (String fileName : fileList){
-						Profile p = new Profile();
-						p.setFolder(fileName);
-						p.setAutomaticSync(true);
-						p.setWatchInterval(120000);
-						
-						if (p.isValid()) {
-							ClientCommandFactory.handleWatch(p.getFolder(), p.getWatchInterval(), p.isAutomaticSync());
-							Launcher.updateProfiles(p);
-						}
-					}
 				}
 			}
 		});
@@ -155,9 +141,6 @@ public class AccountSettingsPanel extends Composite {
 
 			int ret = dialog.open();
 			if (ret == SWT.YES) {
-				Profile p = configuration.getProfiles().get(idx);
-				ClientCommandFactory.handleStopWatch(p.getFolder());
-				configuration.getProfiles().remove(idx);
 				Launcher.saveConfiguration();
 			}
 		}
@@ -191,14 +174,5 @@ public class AccountSettingsPanel extends Composite {
 	private void updateTable(){
 		table.removeAll();
 		
-		for (Profile p : configuration.getProfiles()){
-			TableItem item = new TableItem(table,SWT.NONE);
-			item.setText(new String[] {
-				p.getFolder(),
-				p.getWatchInterval()+"", 
-				p.isAutomaticSync()+"" ,
-				p.isValid()+""
-			});
-		}
 	}
 }

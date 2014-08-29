@@ -126,11 +126,11 @@ public class DefaultTrayIcon extends TrayIcon {
 
 			for (final String key : folders.keySet()) {
 				final File folder = new File(folders.get(key).get("folder"));
+				final String status = folders.get(key).get("status");
 						
 				if (folder.exists()) {
 					MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
-					folderMenuItem.setText(folder.getName() + " [status]");
-					
+					folderMenuItem.setText(folder.getName() + " [" + status + "]");
 						
 					Menu subMenu = new Menu(folderMenuItem);
 					folderMenuItem.setMenu(subMenu);

@@ -18,14 +18,9 @@
 package org.syncany.gui.config;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -58,9 +53,6 @@ public class ApplicationConfigurationTO {
 	@Element(name="proxyType", required=false)
 	private String proxyType;
 	
-	@ElementList(name="profiles", required=false, type=ProfileTO.class, entry="profile", inline=false)
-	private List<ProfileTO> profilesTO;
-
 	public static ApplicationConfigurationTO load(File file) throws Exception {
 		try {
 			return new Persister().read(ApplicationConfigurationTO.class, file);
@@ -132,33 +124,9 @@ public class ApplicationConfigurationTO {
 		this.proxyAuthType = proxyAuthType;
 	}
 
-	public List<ProfileTO> getProfilesTO() {
-		return profilesTO;
-	}
-	public void setProfilesTO(List<ProfileTO> profilesTO) {
-		this.profilesTO = profilesTO;
-	}
-	
 	public static ApplicationConfigurationTO getDefault() {
 		ApplicationConfigurationTO acto = new ApplicationConfigurationTO();
 		acto.setProxyType(ProxyController.ProxyType.NONE.toString());
 		return acto;
-	}
-
-	public List<Profile> getProfiles() {
-		List<Profile> ret = new ArrayList<>();
-		if (profilesTO != null){
-			for (ProfileTO pto : profilesTO){
-				Profile p = new Profile();
-				try {
-					BeanUtils.copyProperties(p, pto);
-					ret.add(p);
-				}
-				catch (IllegalAccessException | InvocationTargetException e) {
-					logger.warning("IllegalAccessException " + e);
-				}
-			}
-		}
-		return ret;
 	}
 }

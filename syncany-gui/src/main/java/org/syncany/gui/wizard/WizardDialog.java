@@ -40,10 +40,11 @@ import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
-import org.syncany.gui.config.Profile;
-import org.syncany.gui.messaging.ClientCommandFactory;
+import org.syncany.gui.command.GUIClient;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.gui.util.I18n;
+
+import sun.java2d.cmm.Profile;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -217,8 +218,8 @@ public class WizardDialog extends Dialog {
 						toggleButtons(false);
 						summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
 
-						ClientCommandFactory.handleWatch(folder, 120000, true);
-						Launcher.updateProfiles(Profile.getDefault(folder));
+						GUIClient gc = new GUIClient();
+						gc.watchFolder(folder);
 					}
 				});
 			}
@@ -241,8 +242,8 @@ public class WizardDialog extends Dialog {
 				SelectLocalFolder wp = (SelectLocalFolder)panels.get(selectedPanel);
 				String f = wp.getUserSelection().getCommonParameter(CommonParameters.LOCAL_FOLDER);
 				
-				ClientCommandFactory.handleWatch(f, 120000, true);
-				Launcher.updateProfiles(Profile.getDefault(f));
+				GUIClient gc = new GUIClient();
+				gc.watchFolder(f);;
 				shell.dispose();
 				break;
 				
@@ -250,7 +251,7 @@ public class WizardDialog extends Dialog {
 				updateFinishButton(false);
 				this.commandId = UUID.randomUUID().toString();
 				userInput.putCommonParameter(CommonParameters.COMMAND_ID, this.commandId);
-				ClientCommandFactory.handleCommand(userInput);
+				//ClientCommandFactory.handleCommand(userInput);
 				SummaryPanel sp = (SummaryPanel)panels.get(selectedPanel);
 				sp.startIndeterminateProgressBar();
 				break;

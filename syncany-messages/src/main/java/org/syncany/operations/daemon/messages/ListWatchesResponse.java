@@ -35,4 +35,11 @@ public class ListWatchesResponse extends Response {
 		super(200, requestId, null);
 		this.watches = new ArrayList<File>(watches);
 	}	
+	
+	/**
+	 * @return the watches
+	 */
+	public ArrayList<File> getWatches() {
+		return watches;
+	}
 }
