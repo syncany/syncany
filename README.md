@@ -32,13 +32,13 @@ Download and install Syncany
 You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](http://syncany.org/dist/). **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 **Latest release:**   
-Syncany 0.1.8-alpha, 9 Aug 2014
+Syncany 0.1.9-alpha, 28 Aug 2014
 
 **Downloads:**   
-- Windows: [Installer (.exe)](https://syncany.org/dist/releases/syncany-0.1.8-alpha.exe)
-- Debian/Ubuntu: [Package (.deb)](https://syncany.org/dist/releases/syncany_0.1.8.alpha_all.deb), or via [Launchpad PPA](https://launchpad.net/~syncany/+archive/release)
+- Windows: [Installer (.exe)](https://syncany.org/dist/releases/syncany-0.1.9-alpha.exe)
+- Debian/Ubuntu: [Package (.deb)](https://syncany.org/dist/releases/syncany_0.1.9.alpha_all.deb), or via [Launchpad PPA](https://launchpad.net/~syncany/+archive/release)
 - Arch Linux: [Package (AUR)](https://aur.archlinux.org/packages/syncany/)
-- other operating systems: [ZIP archive](https://syncany.org/dist/releases/syncany-0.1.8-alpha.zip), or [Tarball (tar.gz)](https://syncany.org/dist/releases/syncany-0.1.8-alpha.tar.gz)
+- other operating systems: [ZIP archive](https://syncany.org/dist/releases/syncany-0.1.9-alpha.zip), or [Tarball (tar.gz)](https://syncany.org/dist/releases/syncany-0.1.9-alpha.tar.gz)
 
 You can also check out the [snapshot releases](https://www.syncany.org/dist/snapshots/), the [PPA for snapshots](https://launchpad.net/~syncany/+archive/snapshot), and the [snapshot AUR package](https://aur.archlinux.org/packages/syncany-git/).
 
