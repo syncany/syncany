@@ -27,7 +27,7 @@ You can download the current binary packages and installers from the [releases p
 
 Getting Started
 ---------------
-To learn how to use Syncany, check out the brand new and awesome [Syncany User Guide](http://syncany.readthedocs.org/). It'll tell you everything you want to know. For a step-by-step guide, navigate to the **[Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html)** page!
+To learn how to use Syncany, check out the brand new and awesome **[Syncany User Guide](http://syncany.readthedocs.org/)**. It'll tell you everything you want to know. For a step-by-step guide, navigate to the [Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html) page!
 
 Building
 --------
