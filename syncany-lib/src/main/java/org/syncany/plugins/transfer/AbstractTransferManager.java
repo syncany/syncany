@@ -166,7 +166,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 			}
 		}
 
-		// Execute transaction (if it is
+		// Execute transaction (if it isn't empty)
 		if (!remoteTransaction.isEmpty()) {
 			logger.log(Level.INFO, "Stale transactions found. Committing clean transaction ...");
 			remoteTransaction.commit();
