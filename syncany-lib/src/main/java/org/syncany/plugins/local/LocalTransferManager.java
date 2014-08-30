@@ -34,14 +34,15 @@ import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
+import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
  * {@link LocalPlugin}. 
  * 
- * <p>Using a {@link LocalConnection}, the transfer manager is configured and uses 
+ * <p>Using a {@link LocalTransferSettings}, the transfer manager is configured and uses 
  * any local folder to store the Syncany repository data. While repo and
  * master file are stored in the given folder, databases and multichunks are stored
  * in special sub-folders:
@@ -64,14 +65,16 @@ public class LocalTransferManager extends AbstractTransferManager {
 	private File multichunksPath;
 	private File databasesPath;
 	private File actionsPath;
+	private File transactionsPath;
 
-	public LocalTransferManager(LocalConnection connection, Config config) {
+	public LocalTransferManager(LocalTransferSettings connection, Config config) {
 		super(connection, config);
 
 		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
 		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
 		this.databasesPath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
 		this.actionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "actions");
+		this.transactionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transactions");
 	}
 
 	@Override
@@ -105,7 +108,11 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 
 		if (!actionsPath.mkdir()) {
-			throw new StorageException("Cannot create actions directory: " + databasesPath);
+			throw new StorageException("Cannot create actions directory: " + actionsPath);
+		}
+		
+		if (!transactionsPath.mkdir()) {
+			throw new StorageException("Cannot create transactions directory: " + transactionsPath);
 		}
 	}
 
@@ -240,6 +247,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 		else if (remoteFile.equals(ActionRemoteFile.class)) {
 			return actionsPath;
 		}
+		else if (remoteFile.equals(TransactionRemoteFile.class)) {
+			return transactionsPath;
+		}
 		else {
 			return repoPath;
 		}
@@ -285,7 +295,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	@Override
 	public boolean testRepoFileExists() {
 		try {
-			File repoFile = getRemoteFile(new RepoRemoteFile());
+			File repoFile = getRemoteFile(new SyncanyRemoteFile());
 
 			if (repoFile.exists()) {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");

@@ -38,7 +38,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
@@ -109,8 +109,8 @@ public abstract class AbstractTransferManagerTest {
 		cleanTestLocation(transferManager);
 
 		// Run!
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, RepoRemoteFile.class, new RepoRemoteFile[] {
-				new RepoRemoteFile()
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, SyncanyRemoteFile.class, new SyncanyRemoteFile[] {
+				new SyncanyRemoteFile()
 		});
 
 		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] {

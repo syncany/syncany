@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,9 +44,10 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
-	private TransferSettings settings;
-	private Config config;
+	protected static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
+	
+	protected TransferSettings settings;
+	protected Config config;
 
 	public AbstractTransferManager(TransferSettings settings, Config config) {
 		this.settings = settings;
@@ -55,12 +57,27 @@ public abstract class AbstractTransferManager implements TransferManager {
 	public TransferSettings getConnection() {
 		return settings;
 	}
-
-	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
+	
+	/**
+	 * Creates a temporary file, either using the config (if initialized) or 
+	 * using the global temporary directory.
+	 */
 	protected File createTempFile(String name) throws IOException {
-		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		if (config == null) {
+			return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		}
+		else {
+			return config.getCache().createTempFile(name);
+		}
 	}
 
+	/**
+	 * Checks whether the settings given to this transfer manager can be
+	 * used to create or connect to a remote repository. 
+	 * 
+	 * <p>Tests if the target exists, if it can be written to and if a 
+	 * repository can be created.
+	 */
 	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
 		logger.log(Level.INFO, "Performing storage test TM.test() ...");
@@ -107,9 +124,8 @@ public abstract class AbstractTransferManager implements TransferManager {
 	}
 
 	public void cleanTransactions() throws StorageException {
-		if (config == null) {
-			throw new StorageException("Cannot clean transactions if config is null.");
-		}
+		Objects.requireNonNull(config,  "Cannot clean transactions if config is null.");		
+		
 		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
 		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
 
@@ -210,13 +226,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
 			try {
-				File transactionFile = createTempFile("transaction");
+				File transactionFile = config.getCache().createTempFile("transaction");
 
 				// Download transaction file
 				download(transaction, transactionFile);
 
 				Transformer transformer = config == null ? null : config.getTransformer();
-				TransactionTO transactionTO = TransactionTO.load(config.getTransformer(), transactionFile);
+				TransactionTO transactionTO = TransactionTO.load(transformer, transactionFile);
 
 				// Extract final locations
 				transactions.put(transactionTO, transaction);

@@ -62,7 +62,7 @@ public class Config {
 
 	// Files in .syncany
 	public static final String FILE_CONFIG = "config.xml";
-	public static final String FILE_REPO = "repo";
+	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
 
 	// File in .syncany/db

@@ -34,7 +34,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection extends TransferSettings {
+public class LocalTransferSettings extends TransferSettings {
 	protected File repositoryPath;
 
 	public File getRepositoryPath() {

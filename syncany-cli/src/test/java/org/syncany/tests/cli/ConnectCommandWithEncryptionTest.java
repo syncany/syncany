@@ -107,12 +107,12 @@ public class ConnectCommandWithEncryptionTest {
 
 		assertTrue(localDirB.exists());
 		assertTrue(new File(localDirB + "/.syncany").exists());
-		assertTrue(new File(localDirB + "/.syncany/repo").exists());
+		assertTrue(new File(localDirB + "/.syncany/syncany").exists());
 		assertTrue(new File(localDirB + "/.syncany/master").exists());
 		assertTrue(new File(localDirB + "/.syncany/config.xml").exists());
 		assertTrue(cliOutputSingleLineA.contains("Repository connected"));
 
-		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/repo"), new File(initializedRepoConnectionSettings.get("path"), "repo"),
+		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/syncany"), new File(initializedRepoConnectionSettings.get("path"), "syncany"),
 				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
 		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/master"), new File(initializedRepoConnectionSettings.get("path"), "master"),
 				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
@@ -145,12 +145,12 @@ public class ConnectCommandWithEncryptionTest {
 
 		assertTrue(localDirB.exists());
 		assertTrue(new File(localDirB + "/.syncany").exists());
-		assertTrue(new File(localDirB + "/.syncany/repo").exists());
+		assertTrue(new File(localDirB + "/.syncany/syncany").exists());
 		assertTrue(new File(localDirB + "/.syncany/master").exists());
 		assertTrue(new File(localDirB + "/.syncany/config.xml").exists());
 		assertTrue(cliOutputSingleLineA.contains("Repository connected"));
 
-		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/repo"), new File(initializedRepoConnectionSettings.get("path"), "repo"),
+		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/syncany"), new File(initializedRepoConnectionSettings.get("path"), "syncany"),
 				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
 		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/master"), new File(initializedRepoConnectionSettings.get("path"), "master"),
 				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
@@ -200,7 +200,7 @@ public class ConnectCommandWithEncryptionTest {
 		String[] cliOutputA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(initArgs));
 		String cliOutputSingleLineA = StringUtil.join(cliOutputA, " ");
 
-		assertTrue(new File(initializedRepoFolder + "/repo").exists());
+		assertTrue(new File(initializedRepoFolder + "/syncany").exists());
 		assertTrue(new File(initializedRepoFolder + "/master").exists());
 		assertTrue(new File(initializedRepoFolder + "/databases").exists());
 		assertTrue(new File(initializedRepoFolder + "/multichunks").exists());

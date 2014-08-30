@@ -41,7 +41,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.up.UpOperation;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.CollectionUtil;
@@ -72,7 +72,7 @@ public class SyncUpOperationTest {
 		op.execute();
 
 		// Get databases (for comparison)
-		LocalConnection localConnection = (LocalConnection) testConfig.getConnection();
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
 
 		File localDatabaseDir = testConfig.getDatabaseDir();
 		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");

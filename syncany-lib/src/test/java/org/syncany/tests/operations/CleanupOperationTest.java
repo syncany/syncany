@@ -36,7 +36,7 @@ import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
@@ -51,7 +51,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testEasyCleanup() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -139,7 +139,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupFailsBecauseOfLocalChanges() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -180,7 +180,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupFailsBecauseOfRemoteChanges() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -220,7 +220,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupNoChanges() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -256,7 +256,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupManyUpsAfterCleanup() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -308,7 +308,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupNoChangeBecauseDirty() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
@@ -434,7 +434,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupMaxDatabaseFiles() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
@@ -484,7 +484,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testQuickDoubleCleanup() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();

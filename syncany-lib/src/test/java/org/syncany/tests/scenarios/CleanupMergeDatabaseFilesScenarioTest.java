@@ -30,7 +30,7 @@ import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -42,7 +42,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	@Test
 	public void testCleanupMergeDatabaseFilesScenario1() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -116,7 +116,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		 */
 
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -330,7 +330,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 	@Test
 	public void testIssue58_3() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -392,7 +392,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		// Test for https://github.com/syncany/syncany/issues/58#issuecomment-43472118
 
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -449,7 +449,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		// Test for https://github.com/syncany/syncany/issues/58#issuecomment-43472118
 
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

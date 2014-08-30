@@ -32,7 +32,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  * 
  * <p>The class implements defines the identifier, name and 
  * version of the plugin. It furthermore allows the instantiation 
- * of a plugin-specific {@link LocalConnection}. 
+ * of a plugin-specific {@link LocalTransferSettings}. 
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -47,11 +47,11 @@ public class LocalPlugin extends TransferPlugin {
 
 	@Override
 	public TransferSettings createSettings() {
-		return new LocalConnection();
+		return new LocalTransferSettings();
 	}
 
 	@Override
 	public TransferManager createTransferManager(TransferSettings connection, Config config) {
-		return new LocalTransferManager((LocalConnection) connection, config);
+		return new LocalTransferManager((LocalTransferSettings) connection, config);
 	}
 }

@@ -54,7 +54,7 @@ public class InitOperationTest {
 
 		// Test the repository
 		assertTrue((new File(repoDir, "databases").exists()));
-		assertTrue((new File(repoDir, "repo").exists()));
+		assertTrue((new File(repoDir, "syncany").exists()));
 		assertTrue((new File(repoDir, "multichunks").exists()));
 		assertEquals((new File(repoDir, "master").exists()), TestConfigUtil.getCrypto());
 

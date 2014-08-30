@@ -25,7 +25,7 @@ import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 
 /**
  * The transfer manager synchronously connects to the remote storage. It is
@@ -170,7 +170,7 @@ public interface TransferManager {
 	 * Tests whether the repository parameters are valid. In particular, the method tests
 	 * whether a target (folder, bucket, etc.) exists or, if not, whether it can be created.
 	 * It furthermore tests whether a repository at the target already exists by checking if the
-	 * {@link RepoRemoteFile} exists.
+	 * {@link SyncanyRemoteFile} exists.
 	 * 
 	 * <p>The relevant result is determined by the following methods:
 	 * 
@@ -233,7 +233,7 @@ public interface TransferManager {
 	public boolean testTargetCanCreate() throws StorageException;
 
 	/**
-	 * Tests whether the <b>repository file exists</b> (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
+	 * Tests whether the <b>repository file exists</b> (see {@link SyncanyRemoteFile}). This method is called by the {@link #test()} method 
 	 * (only during repository initialization (or initial connection).
 	 * 
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 

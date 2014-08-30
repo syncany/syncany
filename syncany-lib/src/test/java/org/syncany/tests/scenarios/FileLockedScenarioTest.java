@@ -40,7 +40,7 @@ import org.junit.Test;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.scenarios.framework.ClientActions;
 import org.syncany.tests.scenarios.framework.CreateFileTree;
@@ -129,7 +129,7 @@ public class FileLockedScenarioTest {
 		assertNotNull("There should be a new database version, because files should have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) connection).getRepositoryPath();
+		File repoPath = ((LocalTransferSettings) connection).getRepositoryPath();
 		assertEquals("Repository should contain any files.", 3, repoPath.list().length);
 	}
 
@@ -148,7 +148,7 @@ public class FileLockedScenarioTest {
 		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalConnection) connection).getRepositoryPath();
+		File repoPath = ((LocalTransferSettings) connection).getRepositoryPath();
 		String[] repoFileList = repoPath.list(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {

@@ -24,13 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 
 /**
  *
  * @author Philipp C. Heckel
  */
-public class UnreliableLocalConnection extends LocalConnection {
+public class UnreliableLocalConnection extends LocalTransferSettings {
 	private int totalOperationCounter;
 	private Map<String, Integer> typeOperationCounters;
 	private List<String> failingOperationPatterns;	

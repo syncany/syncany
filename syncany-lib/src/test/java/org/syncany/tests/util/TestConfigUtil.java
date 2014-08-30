@@ -43,7 +43,7 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
@@ -181,7 +181,7 @@ public class TestConfigUtil {
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
-		LocalConnection localConnection = (LocalConnection) connection;
+		LocalTransferSettings localConnection = (LocalTransferSettings) connection;
 		// Create connection TO
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
 		localConnectionSettings.put("path", localConnection.getRepositoryPath().getAbsolutePath());
@@ -321,7 +321,7 @@ public class TestConfigUtil {
 	}
 
 	private static void deleteTestLocalConnection(Config config) {
-		LocalConnection connection = (LocalConnection) config.getConnection();
+		LocalTransferSettings connection = (LocalTransferSettings) config.getConnection();
 		TestFileUtil.deleteDirectory(connection.getRepositoryPath());
 	}
 
