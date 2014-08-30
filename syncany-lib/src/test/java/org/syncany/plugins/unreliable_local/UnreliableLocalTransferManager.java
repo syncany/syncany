@@ -27,10 +27,6 @@ import org.syncany.plugins.StorageException;
 import org.syncany.plugins.local.LocalTransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
-/**
- *
- * @author Philipp C. Heckel
- */
 public class UnreliableLocalTransferManager extends LocalTransferManager {
 	private static final Logger logger = Logger.getLogger(UnreliableLocalTransferManager.class.getSimpleName());
 	private UnreliableLocalConnection connection;

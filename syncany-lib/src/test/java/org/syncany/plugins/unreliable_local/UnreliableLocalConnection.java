@@ -26,10 +26,6 @@ import java.util.Map;
 
 import org.syncany.plugins.local.LocalTransferSettings;
 
-/**
- *
- * @author Philipp C. Heckel
- */
 public class UnreliableLocalConnection extends LocalTransferSettings {
 	private int totalOperationCounter;
 	private Map<String, Integer> typeOperationCounters;

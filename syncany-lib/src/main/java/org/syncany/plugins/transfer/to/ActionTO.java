@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -30,12 +29,12 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 
 /**
  * A TransactionActionTO describes a single action on a file, which is to be bundled
- * with other actions to describe a full Transaction.
+ * with other actions to describe a full transaction.
+ * 
  * @author Pim Otte
  */
 
 @Root(name = "transactionAction")
-@Namespace(reference = "http://syncany.org/transaction/action/1")
 public class ActionTO {
 	private static final Logger logger = Logger.getLogger(ActionTO.class.getSimpleName());
 
@@ -91,5 +90,4 @@ public class ActionTO {
 	public File getLocalTempLocation() {
 		return new File(localTempLocation);
 	}
-
 }

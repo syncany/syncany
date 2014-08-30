@@ -22,13 +22,11 @@ import java.util.ArrayList;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 
 @Root(name = "daemon", strict = false)
-@Namespace(reference = "http://syncany.org/daemon/1")
 public class DaemonConfigTO {
 	@Element(name = "webServer", required = false)
 	private WebServerTO webServer = new WebServerTO();

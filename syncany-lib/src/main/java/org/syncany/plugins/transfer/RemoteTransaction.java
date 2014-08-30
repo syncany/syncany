@@ -48,6 +48,13 @@ public class RemoteTransaction {
 		this.transferManager = transferManager;
 		this.transactionTO = new TransactionTO(config.getMachineName());
 	}
+	
+	/**
+	 * Returns whether the transaction is empty.
+	 */
+	public boolean isEmpty() {
+		return transactionTO.getActions().size() == 0;
+	}
 
 	/**
 	 * Adds a file to this transaction. Generates a temporary file to store it.

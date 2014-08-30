@@ -45,7 +45,7 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  */
 public abstract class AbstractTransferManager implements TransferManager {
 	protected static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
-	
+
 	protected TransferSettings settings;
 	protected Config config;
 
@@ -57,7 +57,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 	public TransferSettings getConnection() {
 		return settings;
 	}
-	
+
 	/**
 	 * Creates a temporary file, either using the config (if initialized) or 
 	 * using the global temporary directory.
@@ -124,20 +124,27 @@ public abstract class AbstractTransferManager implements TransferManager {
 	}
 
 	public void cleanTransactions() throws StorageException {
-		Objects.requireNonNull(config,  "Cannot clean transactions if config is null.");		
-		
-		Map<TransactionTO, TransactionRemoteFile> transactions = getTransactionTOs();
+		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
+
+		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
 		RemoteTransaction remoteTransaction = new RemoteTransaction(config, this);
 
 		for (TransactionTO transaction : transactions.keySet()) {
-			if (transaction.getMachineName().equals(config.getMachineName())) {
-				// Delete all permanent or temporary files in this transaction.
+			boolean isOwnTransaction = transaction.getMachineName().equals(config.getMachineName());
+
+			if (isOwnTransaction) {
+				// If this transaction is from our machine,
+				// delete all permanent or temporary files in this transaction.
+
 				for (ActionTO action : transaction.getActions()) {
-					if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+					switch (action.getType()) {
+					case ActionTO.TYPE_UPLOAD:
 						remoteTransaction.delete(action.getRemoteFile());
 						remoteTransaction.delete(action.getTempRemoteFile());
-					}
-					else {
+
+						break;
+
+					case ActionTO.TYPE_DELETE:
 						try {
 							move(action.getTempRemoteFile(), action.getRemoteFile());
 						}
@@ -146,6 +153,11 @@ public abstract class AbstractTransferManager implements TransferManager {
 									"Restoring deleted file failed. This might be a problem if the original: " + action.getRemoteFile()
 											+ " also does not exist.");
 						}
+
+						break;
+
+					default:
+						throw new RuntimeException("Transaction contains invalid type: " + action.getType() + ". This should not happen.");
 					}
 				}
 
@@ -153,7 +165,15 @@ public abstract class AbstractTransferManager implements TransferManager {
 				remoteTransaction.delete(transactions.get(transaction));
 			}
 		}
-		remoteTransaction.commit();
+
+		// Execute transaction (if it is
+		if (!remoteTransaction.isEmpty()) {
+			logger.log(Level.INFO, "Stale transactions found. Committing clean transaction ...");
+			remoteTransaction.commit();
+		}
+		else {
+			logger.log(Level.INFO, "No stale transactions found. No cleansing necessary.");
+		}
 	}
 
 	/**
@@ -185,7 +205,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 		if (!remoteFileClass.equals(TransactionRemoteFile.class)) {
 			// If we are listing transaction files, we don't want to ignore any
-			transactions = getTransactionTOs().keySet();
+			transactions = retrieveRemoteTransactions().keySet();
 			filesToIgnore = getFilesInTransactions(transactions);
 			dummyDeletedFiles = getDummyDeletedFiles(transactions);
 		}
@@ -220,13 +240,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 		return dummyDeletedFiles;
 	}
 
-	private Map<TransactionTO, TransactionRemoteFile> getTransactionTOs() throws StorageException {
+	private Map<TransactionTO, TransactionRemoteFile> retrieveRemoteTransactions() throws StorageException {
 		Map<String, TransactionRemoteFile> transactionFiles = list(TransactionRemoteFile.class);
 		Map<TransactionTO, TransactionRemoteFile> transactions = new HashMap<TransactionTO, TransactionRemoteFile>();
 
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
 			try {
-				File transactionFile = config.getCache().createTempFile("transaction");
+				File transactionFile = createTempFile("transaction");
 
 				// Download transaction file
 				download(transaction, transactionFile);

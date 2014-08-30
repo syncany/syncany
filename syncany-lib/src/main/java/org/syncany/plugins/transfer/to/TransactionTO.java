@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -46,13 +45,12 @@ import org.syncany.chunk.Transformer;
  * @author Pim Otte
  */
 @Root(name = "transaction")
-@Namespace(reference = "http://syncany.org/transaction/1")
 public class TransactionTO {
 	@Element(name = "machineName")
 	private String machineName;
 
-	@ElementList(entry = "action")
-	private List<ActionTO> actionTOs;
+	@ElementList(name = "actions", entry = "action")
+	private ArrayList<ActionTO> actionTOs;
 
 	public TransactionTO() {
 		// Nothing
@@ -85,7 +83,7 @@ public class TransactionTO {
 			is = transformer.createInputStream(new FileInputStream(transactionFile));
 		}
 
-		return (new Persister()).read(TransactionTO.class, is);
+		return new Persister().read(TransactionTO.class, is);
 	}
 
 	public void save(Transformer transformer, File transactionFile) throws Exception {
@@ -102,6 +100,5 @@ public class TransactionTO {
 
 		Serializer serializer = new Persister();
 		serializer.write(this, out);
-
 	}
 }

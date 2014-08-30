@@ -138,12 +138,10 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
-		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
-		;
+		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());		
 
-		// Create delta database
+		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion);
-
 		remoteTransaction.commit();
 
 		// Save local database
