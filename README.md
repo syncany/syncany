@@ -17,7 +17,9 @@ terms of storage type and provider:
 - **Any storage**: Syncany uses a plug-in based storage system. It can
   be used with any type of remote storage.
 
-<img src="gradle/resources/what-is-syncany.png" align="center" />
+<div style="text-align: center">
+	<img src="gradle/resources/what-is-syncany.png" />
+</div>
 
 Installation
 ------------
