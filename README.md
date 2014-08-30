@@ -1,4 +1,4 @@
-<img src="gradle/resources/syncany-logo.png" style="float: right" />
+<img src="gradle/resources/syncany-logo.png" align="right" />
 
 Syncany
 =======
@@ -17,7 +17,7 @@ terms of storage type and provider:
 - **Any storage**: Syncany uses a plug-in based storage system. It can
   be used with any type of remote storage.
 
-<img src="gradle/resources/what-is-syncany.png" style="float: center" />
+<img src="gradle/resources/what-is-syncany.png" align="center" />
 
 Installation
 ------------
