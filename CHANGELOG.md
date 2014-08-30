@@ -1,11 +1,12 @@
 Change Log
 ==========
 
-### Syncany 0.1.9-alpha (Date: tbd.)
+### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + HTTPS-only for WebSocket/REST-like API and web interface #185/#196
   + Add bash-completion functionality (Debian/Ubuntu) #201
+  + New and awesome end user guide at https://syncany.org/r/userguide
 - Bugfixes and other things:
   + Implement full cleanup to fix (big!) #187/#193 
   + Fixed database integrity issue (solved by #187)
