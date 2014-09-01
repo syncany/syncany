@@ -1,6 +1,3 @@
-#!/bin/sh
-set -e
- 
 NAME=syncanyd
 APPDIR=~/.config/syncany
 CONTROLFILE=$APPDIR/daemon.ctrl
@@ -152,30 +149,3 @@ reload() {
 
 # Run main script
 PID=$(get_pid)
-
-case "$1" in
-start)
-	start
-	;;
-stop)
-	stop
-	;;
-force-stop)
-	force_stop
-	;;
-status)
-	status
-	;;
-reload)
-	reload
-	;;
-restart)
-	stop	
-	start
-	;;
-*)
-	echo "Usage: "$1" (start|stop|reload|restart|status|force-stop)"
-	exit 1
-esac
- 
-exit 0
