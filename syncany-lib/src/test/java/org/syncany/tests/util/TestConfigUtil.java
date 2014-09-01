@@ -46,7 +46,7 @@ import org.syncany.plugins.Plugins;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.util.StringUtil;
 
@@ -188,8 +188,8 @@ public class TestConfigUtil {
 
 		ConnectionTO connectionTO = new ConnectionTO();
 
-		if (connection instanceof UnreliableLocalConnection) { // Dirty hack
-			UnreliableLocalConnection unreliableConnection = (UnreliableLocalConnection) connection;
+		if (connection instanceof UnreliableLocalTransferSettings) { // Dirty hack
+			UnreliableLocalTransferSettings unreliableConnection = (UnreliableLocalTransferSettings) connection;
 			String failingPatterns = StringUtil.join(unreliableConnection.getFailingOperationPatterns(), ",");
 
 			localConnectionSettings.put("patterns", failingPatterns);
@@ -284,9 +284,9 @@ public class TestConfigUtil {
 		return conn;
 	}
 
-	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
+	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
-		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin,
+		UnreliableLocalTransferSettings unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin,
 				failingOperationPatterns);
 
 		unreliableLocalPlugin.createTransferManager(unreliableLocalConnection, null).init(true);
@@ -294,9 +294,9 @@ public class TestConfigUtil {
 		return unreliableLocalConnection;
 	}
 
-	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin,
+	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin,
 			List<String> failingOperationPatterns) throws Exception {
-		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createSettings();
+		UnreliableLocalTransferSettings unreliableLocalConnection = (UnreliableLocalTransferSettings) unreliableLocalPlugin.createSettings();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 

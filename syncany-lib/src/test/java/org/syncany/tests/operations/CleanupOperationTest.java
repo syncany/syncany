@@ -37,7 +37,7 @@ import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -362,7 +362,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupAfterFailedUpOperation() throws Exception {
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
@@ -533,7 +533,7 @@ public class CleanupOperationTest {
 	@Test
 	public void testCleanupFailsMidCommit() throws Exception {
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 

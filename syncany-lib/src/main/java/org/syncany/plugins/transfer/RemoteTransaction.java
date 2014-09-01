@@ -48,7 +48,7 @@ public class RemoteTransaction {
 		this.transferManager = transferManager;
 		this.transactionTO = new TransactionTO(config.getMachineName());
 	}
-	
+
 	/**
 	 * Returns whether the transaction is empty.
 	 */
@@ -62,8 +62,7 @@ public class RemoteTransaction {
 	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
 		TempRemoteFile temporaryRemoteFile = new TempRemoteFile();
 
-		logger.log(Level.INFO, "Adding file to transaction: " + localFile);
-		logger.log(Level.INFO, " -> Temp. remote file: " + temporaryRemoteFile + ", final location: " + remoteFile);
+		logger.log(Level.INFO, "- Adding file to TX for UPLOAD: " + localFile + " -> Temp. remote file: " + temporaryRemoteFile + ", final location: " + remoteFile);
 
 		ActionTO action = new ActionTO();
 		action.setType(ActionTO.TYPE_UPLOAD);
@@ -81,8 +80,7 @@ public class RemoteTransaction {
 	public void delete(RemoteFile remoteFile) throws StorageException {
 		TempRemoteFile temporaryRemoteFile = new TempRemoteFile();
 
-		logger.log(Level.INFO, "Adding file to transaction for deletion: " + remoteFile);
-		logger.log(Level.INFO, " -> Temp. remote file: " + temporaryRemoteFile);
+		logger.log(Level.INFO, "- Adding file to TX for DELETE: " + remoteFile + "-> Temp. remote file: " + temporaryRemoteFile);
 
 		ActionTO action = new ActionTO();
 		action.setType(ActionTO.TYPE_DELETE);
@@ -105,6 +103,8 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 
+		// 1. First, move all files to a temporary location 
+		
 		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
@@ -122,10 +122,12 @@ public class RemoteTransaction {
 					transferManager.move(remoteFile, tempRemoteFile);
 				}
 				catch (StorageMoveException e) {
-					logger.log(Level.INFO, "- Move to delete file failed because the remoteFile does not exist.", e);
+					logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile);
 				}
 			}
 		}
+		
+		// 2. Second, move uploaded files to final location
 
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
@@ -137,19 +139,24 @@ public class RemoteTransaction {
 			}
 		}
 
-		// After this deletion, the transaction is final!
-		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
-		transferManager.delete(remoteTransactionFile);
-
+		// 3. Third, delete all temporarily moved files and move the transaction file
+		
+		// Note: If the following deletion of the TX file fails, and any of the following temp.
+		//       file deletions fail, there will be left over temp. files. 
+				
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
-				logger.log(Level.INFO, "- Moving deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
+				logger.log(Level.INFO, "- Deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
 				transferManager.delete(tempRemoteFile);
 			}
-		}
+		}		
 
+		// After this deletion, the transaction is final!
+		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
+		transferManager.delete(remoteTransactionFile);		
+		
 		localTransactionFile.delete();
 		logger.log(Level.INFO, "Succesfully committed transaction.");
 	}

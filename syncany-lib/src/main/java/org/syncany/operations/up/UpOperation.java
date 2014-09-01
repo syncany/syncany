@@ -180,7 +180,7 @@ public class UpOperation extends AbstractTransferOperation {
 		// Check if other operations are running
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
 			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
-			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); // TODO [medium] Add new result code
+			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); 
 
 			return false;
 		}

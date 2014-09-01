@@ -34,7 +34,7 @@ import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
-import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -52,7 +52,7 @@ public class UploadInterruptedTest {
 		RetriableTransferManager.RETRY_MAX_COUNT = 3;
 
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 			Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
@@ -100,7 +100,7 @@ public class UploadInterruptedTest {
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
 
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 			Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
@@ -156,7 +156,7 @@ public class UploadInterruptedTest {
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
 
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 			Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
@@ -235,7 +235,7 @@ public class UploadInterruptedTest {
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
 
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 			Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
@@ -326,7 +326,7 @@ public class UploadInterruptedTest {
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
 
 		// Setup
-		UnreliableLocalConnection testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 			Arrays.asList(new String[] {
 				// List of failing operations (regex)
 				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
@@ -406,5 +406,131 @@ public class UploadInterruptedTest {
 		clientA.deleteTestData();
 	}	
 	
-	// TODO [high] Implement test in which the rollback transaction also fails
+	@Test
+	public void testUnreliableUpload_Test4_FailsAtTXCommitDuring2ndMultiChunkMoveAndDuringTXRollback() throws Exception {
+		/*
+		 * 1. upload(action-up-987, actions/action-up-987)             
+		 * 2. upload(transaction-123, transactions/transaction-123)    
+		 * 3. upload(multichunk-1, temp-1)
+		 * 4. upload(multichunk-2, temp-2)                               
+		 * 5. upload(database-123, temp-3)
+		 * 6. move(temp-1, multichunks/multichunk-1)
+		 * 7. move(temp-2, multichunks/multichunk-2)                    <<< FAILS HERE (first run)
+		 * 8. move(temp-3, databases/database-123)
+		 * 
+		 * 1.  upload(action-up-987, actions/action-up-987)             
+		 * 2.  list(databases/*)
+		 * 3.  list(transactions/*)
+		 * 4.  upload(transaction-345, transactions/transaction-345)    (rollback TX)
+		 * 5.  move(multichunks/multichunk-1, temp-80)
+		 * 6.  move(temp-1, temp-81)                                    (silently fails, b/c temp-1 does not exist)
+		 * 7.  move(multichunks/multichunk-2, temp-82)                  (silently fails, b/c tmultichunk-2 does not exist)
+		 * 8.  move(temp-2, temp-83)
+		 * 9.  move(databases/database-123, temp-84)                    (silently fails, b/c database-123 does not exist)
+		 * 10. move(temp-3, temp-85)
+		 * 10  move(transactions-345, temp-86)
+		 * 11. delete(temp-80)
+		 * 12. delete(temp-83)                                          <<< FAILS HERE (second run)
+		 * 
+		 *     Expected: temp-(83,85,86)
+		 * 
+		 */
+		
+		RetriableTransferManager.RETRY_MAX_COUNT = 1;
+
+		// Setup
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+			Arrays.asList(new String[] {
+				// List of failing operations (regex)
+				// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+
+				"rel=2.+move.+multichunk", 
+				"rel=2.+delete.+temp", 
+			}
+		));
+				
+		TestClient clientA = new TestClient("A", testConnection);
+
+		clientA.createNewFile("A-original", 5*1024*1024); // << larger than one multichunk!
+		
+		boolean firstUpFailed = false;
+		
+		try {
+			clientA.up();
+		}
+		catch (StorageException e) {
+			firstUpFailed = true;
+			logger.log(Level.INFO, e.getMessage());
+		}
+
+		assertTrue(firstUpFailed);
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
+		
+		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.contains("temp-");
+			}
+		});
+		
+		assertEquals(2, tempFiles.length);
+		assertTrue(tempFiles[0].length() > 500*1024 || tempFiles[1].length() > 500*1024); // The second multichunk should be >500 KB
+		assertTrue(tempFiles[0].length() < 100*1024 || tempFiles[1].length() < 100*1024); // The database file should be <100 KB
+				
+		File transactionFile = new File(testConnection.getRepositoryPath() + "/transactions/").listFiles()[0];
+		TransactionTO transactionTO = new Persister().read(TransactionTO.class, transactionFile);
+		
+		assertEquals(3, transactionTO.getActions().size());
+		assertTrue(transactionTO.getActions().get(0).getRemoteFile().getName().contains("multichunk-"));
+		assertTrue(transactionTO.getActions().get(1).getRemoteFile().getName().contains("multichunk-"));
+		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
+		
+		// 2. Double check if list() does not return the multichunk
+		TransferManager transferManager = new UnreliableLocalPlugin().createTransferManager(testConnection, null);
+		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);		
+		assertEquals(0, multiChunkList.size());
+				
+		// 3. Second try fails in the beginning, to see if cleanTransactions was successful
+		boolean secondUpFailed = false;
+		
+		try {
+			clientA.up();
+		}
+		catch (StorageException e) {
+			secondUpFailed = true;
+			logger.log(Level.INFO, e.getMessage());
+		}
+		
+		assertTrue(secondUpFailed);
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
+		assertEquals(2, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); 
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
+		
+		assertEquals(3, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.contains("temp-");
+			}
+		}).length);
+		
+		// 4. Third try; this should finally succeed	
+		clientA.up();
+		
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
+		assertEquals(2, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
+		assertEquals(2, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); 
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
+		
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.contains("temp-");
+			}
+		}).length);
+		
+		// Tear down
+		clientA.deleteTestData();
+	}	
+	
 }

@@ -37,11 +37,11 @@ public class UnreliableLocalPlugin extends LocalPlugin {
 
 	@Override
 	public TransferSettings createSettings() {
-		return new UnreliableLocalConnection();
+		return new UnreliableLocalTransferSettings();
 	}
 
 	@Override
 	public TransferManager createTransferManager(TransferSettings connection, Config config) {
-		return new UnreliableLocalTransferManager((UnreliableLocalConnection) connection, config);
+		return new UnreliableLocalTransferManager((UnreliableLocalTransferSettings) connection, config);
 	}
 }

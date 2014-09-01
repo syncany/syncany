@@ -29,9 +29,9 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 
 public class UnreliableLocalTransferManager extends LocalTransferManager {
 	private static final Logger logger = Logger.getLogger(UnreliableLocalTransferManager.class.getSimpleName());
-	private UnreliableLocalConnection connection;
+	private UnreliableLocalTransferSettings connection;
 
-	public UnreliableLocalTransferManager(UnreliableLocalConnection connection, Config config) {
+	public UnreliableLocalTransferManager(UnreliableLocalTransferSettings connection, Config config) {
 		super(connection, config);
 		this.connection = connection;
 	}
@@ -63,8 +63,8 @@ public class UnreliableLocalTransferManager extends LocalTransferManager {
 	}
 
 	@Override
-	public UnreliableLocalConnection getConnection() {
-		return (UnreliableLocalConnection) super.getConnection();
+	public UnreliableLocalTransferSettings getSettings() {
+		return (UnreliableLocalTransferSettings) super.getSettings();
 	}
 
 	@Override

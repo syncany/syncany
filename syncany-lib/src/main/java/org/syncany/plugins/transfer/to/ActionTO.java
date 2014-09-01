@@ -90,4 +90,10 @@ public class ActionTO {
 	public File getLocalTempLocation() {
 		return new File(localTempLocation);
 	}
+
+	@Override
+	public String toString() {
+		return "ActionTO [type=" + type + ", remoteLocation=" + remoteLocation + ", remoteTempLocation=" + remoteTempLocation
+				+ ", localTempLocation=" + localTempLocation + "]";
+	}		
 }

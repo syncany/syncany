@@ -26,12 +26,12 @@ import java.util.Map;
 
 import org.syncany.plugins.local.LocalTransferSettings;
 
-public class UnreliableLocalConnection extends LocalTransferSettings {
+public class UnreliableLocalTransferSettings extends LocalTransferSettings {
 	private int totalOperationCounter;
 	private Map<String, Integer> typeOperationCounters;
 	private List<String> failingOperationPatterns;	
 
-	public UnreliableLocalConnection() {
+	public UnreliableLocalTransferSettings() {
 		super();
 		
         this.totalOperationCounter = 0;
