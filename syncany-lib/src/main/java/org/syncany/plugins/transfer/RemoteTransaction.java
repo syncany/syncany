@@ -141,9 +141,6 @@ public class RemoteTransaction {
 
 		// 3. Third, delete all temporarily moved files and move the transaction file
 		
-		// Note: If the following deletion of the TX file fails, and any of the following temp.
-		//       file deletions fail, there will be left over temp. files. 
-				
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
