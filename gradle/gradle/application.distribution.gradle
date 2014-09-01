@@ -24,17 +24,51 @@ startScripts {
 		winPurgeFileDeletionCommands += ")\r\n\r\n";
 		
 		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
+		
+		def winText = winFile.text
+		def textTmp = ""
+		
+		winText.readLines().each {
+			line ->
+				if (line.startsWith("\"%JAVA_EXE%\"")) {
+					textTmp += "if \"%1\" == \"daemon\" (\r\n" 
+					textTmp += "   @rem start daemon\r\n"
+					textTmp += "   call %DIRNAME%syd.bat %2 %3 %4\r\n"
+					textTmp += ") else (\r\n"
+					textTmp += "   " + line + "\r\n"
+					textTmp += ")"
+				}
+				else {
+					textTmp += line + '\n'
+				}
+		}
+		
+		winFile.text = textTmp
+		
+		// Update unix text
+		def unixText = unixFile.text
+		textTmp = ""
+		
+		unixText.readLines().each {
+			line ->
+				if (line.startsWith("exec")) {
+					textTmp += "if [ \$51 = daemon ]; then         \n"
+					textTmp += "  /bin/bash syd                  \n"
+					textTmp += "else                             \n"
+					textTmp += "   " + line                   + "\n"
+					textTmp += "fi                               \n"
+				}
+				else {
+					textTmp += line + '\n'
+				}
+		}
+		
+		unixFile.text = textTmp
 	}
 }
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
-	
-	// Copy daemon script
-	from("gradle/daemon/") {
-		include "syncanyd", "syncanyd.bat"
-		into "bin"
-	}
 
 	// Copy syncany/syncanyd to sy/syd
 	from(files("gradle/daemon/", "${startScripts.outputDir}/")) {
