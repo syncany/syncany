@@ -47,6 +47,7 @@ startScripts {
 		
 		// Update unix text
 		def unixText = unixFile.text
+		def usage = "Usage: sy daemon (start|stop|reload|restart|status|force-stop)"
 		textTmp = ""
 		def daemonScript = new File('gradle/daemon/syncanyd').text
 		
@@ -63,11 +64,16 @@ startScripts {
 					textTmp += '    			stop   ;;     \n'
 					textTmp += '			status)           \n'
 					textTmp += '    			status ;;     \n'
+					textTmp += '			reload)           \n'
+					textTmp += '				reload ;;     \n'
+					textTmp += '			force-stop)       \n'
+					textTmp += '    			force_stop ;; \n'
+					
 					textTmp += '			*)                \n'
-					textTmp += '            	echo "Usage: sy daemon (start|stop|reload|restart|status|force-stop)"\n'
+					textTmp += '          echo "' + usage + '"\n'
 					textTmp += '		esac    ;;            \n'
 					textTmp += '     *)                       \n'
-					textTmp += 				line + '   ;;     \n'
+					textTmp += '        ' +	line + '   ;;     \n'
 					textTmp += 'esac                          \n'
 				}
 				else {
