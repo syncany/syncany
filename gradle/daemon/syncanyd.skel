@@ -46,7 +46,7 @@ daemon_start() {
 			DAEMON_RUNNING=$(daemon_running)
 			echo -n "."
 		
-			DAEMON_PID=$(get_pid)
+			DAEMON_PID=$(daemon_get_pid)
 			TRIES=$(($TRIES-1))
 			sleep 1
 		done
