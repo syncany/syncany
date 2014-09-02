@@ -25,73 +25,52 @@ startScripts {
 		
 		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
 		
+		def winTextTmp = ""
 		def winText = winFile.text
-		def textTmp = ""
 		
 		winText.readLines().each {
 			line ->
 				if (line.startsWith("\"%JAVA_EXE%\"")) {
-					textTmp += "if \"%1\" == \"daemon\" (\r\n" 
-					textTmp += "   @rem start daemon\r\n"
-					textTmp += "   call %DIRNAME%syd.bat %2 %3 %4\r\n"
-					textTmp += ") else (\r\n"
-					textTmp += "   " + line + "\r\n"
-					textTmp += ")"
+					winTextTmp += "if \"%1\" == \"daemon\" (\r\n" 
+					winTextTmp += "   @rem start daemon\r\n"
+					winTextTmp += "   call %DIRNAME%syd.bat %2 %3 %4\r\n"
+					winTextTmp += ") else (\r\n"
+					winTextTmp += "   " + line + "\r\n"
+					winTextTmp += ")"
 				}
 				else {
-					textTmp += line + '\n'
+					winTextTmp += line + '\n'
 				}
 		}
 		
-		winFile.text = textTmp
+		winFile.text = winTextTmp
 		
 		// Update unix text
+		def unixTextTmp = ""
 		def unixText = unixFile.text
-		def usage = "Usage: sy daemon (start|stop|reload|restart|status|force-stop)"
-		textTmp = ""
-		def daemonScript = new File('gradle/daemon/syncanyd').text
+		def unixDaemonScript = new File('gradle/daemon/syncanyd.skel').text		
 		
 		unixText.readLines().each {
 			line ->
 				if (line.startsWith("exec")) {
-					textTmp += daemonScript + '\n\n'
-					textTmp += 'case "\$1" in                 \n'
-					textTmp += '    daemon)                   \n'
-					textTmp += '		case "\$2" in         \n'
-					textTmp += '			start)            \n'
-					textTmp += '    			start  ;;     \n'
-					textTmp += '			stop)             \n'
-					textTmp += '    			stop   ;;     \n'
-					textTmp += '			status)           \n'
-					textTmp += '    			status ;;     \n'
-					textTmp += '			reload)           \n'
-					textTmp += '				reload ;;     \n'
-					textTmp += '			force-stop)       \n'
-					textTmp += '    			force_stop ;; \n'
-					
-					textTmp += '			*)                \n'
-					textTmp += '          echo "' + usage + '"\n'
-					textTmp += '		esac    ;;            \n'
-					textTmp += '     *)                       \n'
-					textTmp += '        ' +	line + '   ;;     \n'
-					textTmp += 'esac                          \n'
+					unixTextTmp += unixDaemonScript.replace("#JAVA_EXEC_REPLACEMENT_MARKER#", line);
 				}
 				else {
-					textTmp += line + '\n'
+					unixTextTmp += line + '\n'
 				}
 		}
 		
-		unixFile.text = textTmp
+		unixFile.text = unixTextTmp
 	}
 }
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
 
-	// Copy syncany/syncanyd to sy/syd
-	from(files("gradle/daemon/", "${startScripts.outputDir}/")) {
-		include "syncany*"
-		rename(/syncany(.*)/, 'sy$1')
+	// Copy syncany(.bat) to sy(.bat)
+	from("${startScripts.outputDir}/") {
+		include "syncany"
+		rename(/syncany/, 'sy')
 		into "bin"
 	}
 }
