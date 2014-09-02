@@ -1,5 +1,5 @@
 /*
-	 * Syncany, www.syncany.org
+ * Syncany, www.syncany.org
  * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,6 @@ package org.syncany.operations.daemon;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
