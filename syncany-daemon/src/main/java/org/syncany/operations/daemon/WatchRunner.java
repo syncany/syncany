@@ -130,7 +130,7 @@ public class WatchRunner implements WatchOperationListener {
 					logger.log(Level.SEVERE, "ERROR while running watch at " + config.getLocalDir(), e);
 				}
 			}
-		}, "WatchOpT/" + config.getLocalDir().getName());
+		}, "WR/" + config.getLocalDir().getName());
 		
 		watchThread.start();
 	}

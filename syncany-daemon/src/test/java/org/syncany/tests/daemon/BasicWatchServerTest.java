@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.daemon;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -196,21 +194,35 @@ public class BasicWatchServerTest {
 		
 		// Create big file to trigger sync
 		clientA.createNewFile("bigfileforlongsync", 5000);
-		// Wait to allow sync to start
-		Thread.sleep(100);
+
+		// ^^ Now sync should start and we send 'status' requests
+		CliResponse cliResponse = null;
+		boolean syncRunningMessageReceived = false;
 		
-		eventBus.post(cliRequest);
+		for (i = 30; i < 50; i++) {
+			cliRequest.setId(i);
+			eventBus.post(cliRequest);
+			
+			response = waitForResponse(i);
+			
+			assertTrue(response instanceof CliResponse);
+			cliResponse = (CliResponse) response;
+			
+			System.out.println(cliResponse.getOutput());			
+			
+			if ("Cannot run CLI commands while sync is running or requested.\n".equals(cliResponse.getOutput())) {
+				syncRunningMessageReceived = true;
+				break;
+			}			
+			
+			Thread.sleep(200);
+		}
 		
-		response = waitForResponse(30);
-		
-		assertTrue(response instanceof CliResponse);
-		CliResponse cliResponse = (CliResponse) response;
-		
-		assertEquals("Cannot run CLI commands while sync is running or requested.\n", cliResponse.getOutput());
+		assertTrue(syncRunningMessageReceived);
 		
 		// Allow daemon to sync
 		Thread.sleep(10000);
-		for (i = 31; i < 50; i++) {
+		for (i = 50; i < 60; i++) {
 			cliRequest.setId(i);
 			eventBus.post(cliRequest);
 			
@@ -224,6 +236,7 @@ public class BasicWatchServerTest {
 			Thread.sleep(1000);
 		}		
 		
+		assertNotNull(cliResponse);
 		assertEquals("No local changes.\n", cliResponse.getOutput());
 		
 		// Restore file test
