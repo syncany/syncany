@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Syncany 0.1.10-alpha (Date: Tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Bugfixes and other things:
+  + Fix daemon tests #185
+
 ### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
