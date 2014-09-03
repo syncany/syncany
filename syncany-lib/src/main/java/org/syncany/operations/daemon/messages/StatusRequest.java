@@ -17,7 +17,18 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
+
 
 public class StatusRequest extends WatchRequest {
+	@Element(required = false)
+	private boolean forceChecksum = false;
 
+	public boolean isForceChecksum() {
+		return forceChecksum;
+	}
+
+	public void setForceChecksum(boolean forceChecksum) {
+		this.forceChecksum = forceChecksum;
+	}	
 }

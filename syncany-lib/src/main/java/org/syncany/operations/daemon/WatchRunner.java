@@ -62,6 +62,7 @@ import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.status.StatusOperation;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
@@ -180,7 +181,10 @@ public class WatchRunner implements WatchOperationListener {
 
 	private void handleStatusRequest(StatusRequest statusRequest) {
 		try {
-			StatusOperation statusOperation = new StatusOperation(config);
+			StatusOperationOptions statusOperationOption = new StatusOperationOptions();
+			statusOperationOption.setForceChecksum(statusRequest.isForceChecksum());
+			
+			StatusOperation statusOperation = new StatusOperation(config, statusOperationOption);
 			StatusOperationResult statusOperationResult = statusOperation.execute();
 			StatusResponse statusResponse = new StatusResponse(statusRequest.getId());
 			

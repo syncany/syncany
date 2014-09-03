@@ -33,7 +33,7 @@ public class StatusResponse extends Response {
 	private ArrayList<String> deletedFiles;
 	
 	public StatusResponse() {
-		
+		// Required default constructor!
 	}
 	
 	public StatusResponse(int requestId) {

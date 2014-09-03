@@ -63,10 +63,15 @@ import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.daemon.DaemonOperation;
+import org.syncany.operations.daemon.messages.CleanUpRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
+import org.syncany.operations.daemon.messages.Request;
 import org.syncany.operations.daemon.messages.Response;
 import org.syncany.operations.daemon.messages.StatusRequest;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.PidFileUtil;
 
@@ -315,7 +320,7 @@ public class CommandLineClient extends Client {
 			portFile = config.getPortFile();
 		}
 		
-		File PIDFile = new File(UserConfig.getUserConfigDir(), "daemon.pid");
+		File PIDFile = new File(UserConfig.getUserConfigDir(), DaemonOperation.PID_FILE);
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
 		boolean daemonRunning = PidFileUtil.isProcessRunning(PIDFile);
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
@@ -375,18 +380,63 @@ public class CommandLineClient extends Client {
 			
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			
+			Request request = null;
+			
 			// Create and send HTTP/REST request
 			switch (commandName.toLowerCase()) {
 				case "status":
-					StatusRequest sr = new StatusRequest();
-					sr.setId(Math.abs(new Random().nextInt()));
-					sr.setRoot(config.getLocalDir().getAbsolutePath());
-					post.setEntity(new StringEntity(MessageFactory.toRequest(sr)));
+					request = new StatusRequest();
+					request.setId(Math.abs(new Random().nextInt()));
+					StatusOperationOptions statusOption = ((StatusCommand)command).parseOptions(args);
+					((StatusRequest)request).setForceChecksum(statusOption.isForceChecksum());
+					((StatusRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
+					
+					break;
+				case "cleanup":
+					request = new CleanUpRequest();
+					request.setId(Math.abs(new Random().nextInt()));
+					
+					// could use a fiel-to-field property copying utility
+					CleanupOperationOptions cleanupOption = ((CleanupCommand)command).parseOptions(args);
+					((CleanUpRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
+					((CleanUpRequest)request).setKeepVersionsCount(cleanupOption.getKeepVersionsCount());
+					((CleanUpRequest)request).setMaxDatabaseFiles(cleanupOption.getMaxDatabaseFiles());
+					((CleanUpRequest)request).setMinSecondsBetweenCleanups(cleanupOption.getMinSecondsBetweenCleanups());
+					((CleanUpRequest)request).setStatusOptions(cleanupOption.getStatusOptions());
+					((CleanUpRequest)request).setForce(cleanupOption.isForce());
+					((CleanUpRequest)request).setMergeRemoteFiles(cleanupOption.isMergeRemoteFiles());
+					((CleanUpRequest)request).setRemoveOldVersions(cleanupOption.isRemoveOldVersions());
 					break;
 					
+				case "debug":
+					break;
+
+				case "down":
+					break;
+
+				case "genlink":
+					break;
+
+				case "ls":
+					break;
+
+				case "ls-remote":
+					break;
+
+				case "restore":
+					break;
+
+				case "up":
+					break;
+
+				case "watch":
+					break;
+
 				default:
 					return 0;
 			}
+			
+			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
 			
 			// Handle response
 			HttpResponse httpResponse = client.execute(post);
