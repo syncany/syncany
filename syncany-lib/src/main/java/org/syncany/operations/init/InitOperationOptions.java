@@ -33,6 +33,7 @@ public class InitOperationOptions implements OperationOptions {
 	private boolean encryptionEnabled;
 	private List<CipherSpec> cipherSpecs;
 	private String password;
+	private boolean daemon;
 
 	public boolean isCreateTarget() {
 		return createTarget;
@@ -88,5 +89,13 @@ public class InitOperationOptions implements OperationOptions {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public boolean isDaemon() {
+		return daemon;
+	}
+
+	public void setDaemon(boolean daemon) {
+		this.daemon = daemon;
 	}
 }

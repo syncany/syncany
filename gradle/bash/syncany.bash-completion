@@ -91,7 +91,7 @@ _sy ()
 		cmdOpts=( -M --no-database-merge -V --no-version-remove -k --keep-versions= -f --force-checksum )
 		;;
 	connect)
-		cmdOpts=( -P --plugin= -o --plugin-option= -I --no-interaction )
+		cmdOpts=( -P --plugin= -o --plugin-option= -I --no-interaction -N --no-daemon )
 
 		case $curOpt in
 			--plugin|-P) 
@@ -107,7 +107,7 @@ _sy ()
 		cmdOpts=( -s --short )
 		;;
 	init)
-		cmdOpts=( -P --plugin= -o --plugin-option= -E --no-encryption -G --no-compression -t --create-target -a --advanced -I --no-interaction )
+		cmdOpts=( -P --plugin= -o --plugin-option= -E --no-encryption -G --no-compression -t --create-target -a --advanced -I --no-interaction -N --no-daemon )
 
 		case $curOpt in
 			--plugin|-P) 
