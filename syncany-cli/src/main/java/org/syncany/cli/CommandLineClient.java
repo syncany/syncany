@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -64,11 +63,12 @@ import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
-import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.MessageFactory;
 import org.syncany.operations.daemon.messages.Response;
+import org.syncany.operations.daemon.messages.StatusRequest;
 import org.syncany.util.EnvironmentUtil;
+import org.syncany.util.PidFileUtil;
 
 /**
  * The command line client implements a typical CLI. It represents the first entry
@@ -315,9 +315,11 @@ public class CommandLineClient extends Client {
 			portFile = config.getPortFile();
 		}
 		
+		File PIDFile = new File(UserConfig.getUserConfigDir(), "daemon.pid");
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
+		boolean daemonRunning = PidFileUtil.isProcessRunning(PIDFile);
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
-		boolean sendToRest = localDirHandledInDaemonScope && needsToRunInInitializedScope;
+		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
 		if (sendToRest) {
 			return sendToRest(command, commandName, commandArgs, portFile);
@@ -374,14 +376,17 @@ public class CommandLineClient extends Client {
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			
 			// Create and send HTTP/REST request
-			CliRequest cliRequest = new CliRequest();
-			
-			cliRequest.setId(Math.abs(new Random().nextInt()));
-			cliRequest.setRoot(config.getLocalDir().getAbsolutePath());
-			cliRequest.setCommand(commandName);
-			cliRequest.setCommandArgs(Arrays.asList(commandArgs));
-			
-			post.setEntity(new StringEntity(MessageFactory.toRequest(cliRequest)));
+			switch (commandName.toLowerCase()) {
+				case "status":
+					StatusRequest sr = new StatusRequest();
+					sr.setId(Math.abs(new Random().nextInt()));
+					sr.setRoot(config.getLocalDir().getAbsolutePath());
+					post.setEntity(new StringEntity(MessageFactory.toRequest(sr)));
+					break;
+					
+				default:
+					return 0;
+			}
 			
 			// Handle response
 			HttpResponse httpResponse = client.execute(post);

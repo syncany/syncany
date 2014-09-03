@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.daemon;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.simpleframework.xml.core.Persister;
-import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.to.PortTO;
@@ -45,8 +43,6 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Assembler;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.CliRequest;
-import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
 import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
@@ -58,11 +54,15 @@ import org.syncany.operations.daemon.messages.GetFileTreeRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeResponse;
 import org.syncany.operations.daemon.messages.RestoreRequest;
 import org.syncany.operations.daemon.messages.RestoreResponse;
+import org.syncany.operations.daemon.messages.StatusRequest;
+import org.syncany.operations.daemon.messages.StatusResponse;
 import org.syncany.operations.daemon.messages.WatchEventResponse;
 import org.syncany.operations.daemon.messages.WatchRequest;
 import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
+import org.syncany.operations.status.StatusOperation;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -166,13 +166,40 @@ public class WatchRunner implements WatchOperationListener {
 			else if (watchRequest instanceof RestoreRequest) {
 				handleRestoreRequest((RestoreRequest) watchRequest);			
 			}
-			else if (watchRequest instanceof CliRequest) {
-				handleCliRequest((CliRequest) watchRequest);
+			else if (watchRequest instanceof StatusRequest) {
+				handleStatusRequest((StatusRequest) watchRequest);			
 			}
+//			else if (watchRequest instanceof CliRequest) {
+//				handleCliRequest((CliRequest) watchRequest);
+//			}
 			else {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
 		}		
+	}
+
+	private void handleStatusRequest(StatusRequest statusRequest) {
+		try {
+			StatusOperation statusOperation = new StatusOperation(config);
+			StatusOperationResult statusOperationResult = statusOperation.execute();
+			StatusResponse statusResponse = new StatusResponse(statusRequest.getId());
+			
+			for (String f : statusOperationResult.getChangeSet().getChangedFiles()) {
+				statusResponse.addChangedFile(f);
+			}
+			for (String f : statusOperationResult.getChangeSet().getDeletedFiles()) {
+				statusResponse.addDeletedFile(f);
+			}
+			for (String f : statusOperationResult.getChangeSet().getNewFiles()) {
+				statusResponse.addNewFile(f);
+			}
+			
+			eventBus.post(statusResponse);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot reassemble file.", e);
+			eventBus.post(new BadRequestResponse(statusRequest.getId(), "Cannot obtain status."));
+		}
 	}
 
 	private void handleGetFileRequest(GetFileRequest fileRequest) {
@@ -222,50 +249,41 @@ public class WatchRunner implements WatchOperationListener {
 		}
 	}
 
-	private void handleCliRequest(CliRequest cliRequest) {
-		if (watchOperation.isSyncRunning() || watchOperation.isSyncRequested()) {
-			handleCliRequestSyncRunning(cliRequest);
-		}
-		else {
-			watchOperation.pause();
-			handleCliRequestNoSyncRunning(cliRequest);
-			watchOperation.resume();
-		}
-	}
+//	private void handleCliRequest(CliRequest cliRequest) {
+//		if (watchOperation.isSyncRunning() || watchOperation.isSyncRequested()) {
+//			handleCliRequestSyncRunning(cliRequest);
+//		}
+//		else {
+//			watchOperation.pause();
+//			handleCliRequestNoSyncRunning(cliRequest);
+//			watchOperation.resume();
+//		}
+//	}
 
-	private void handleCliRequestSyncRunning(CliRequest cliRequest) {
-		CliResponse cliResponse = new CliResponse(cliRequest.getId(), "Cannot run CLI commands while sync is running or requested.\n");
-		eventBus.post(cliResponse);
-	}
+//	private void handleCliRequestSyncRunning(CliRequest cliRequest) {
+//		CliResponse cliResponse = new CliResponse(cliRequest.getId(), "Cannot run CLI commands while sync is running or requested.\n");
+//		eventBus.post(cliResponse);
+//	}
 
-	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
-		try {
-			//Command command = CommandFactory.getInstance(cliRequest.getCommand());			
-			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]); 
-			
-			ByteArrayOutputStream cliOutputStream = new ByteArrayOutputStream();
-			
-			Client client = new Client();
-			client.setConfig(config);
-			
-			//command.setOut(new PrintStream(cliOutputStream));
-			//command.setClient(client);
-			//command.setLocalDir(config.getLocalDir());
-			
-			//command.execute(commandArgs);
-			
-			String cliOutput = cliOutputStream.toString();
-			
-			CliResponse cliResponse = new CliResponse(cliRequest.getId(), cliOutput);
-			eventBus.post(cliResponse);
-			
-			cliOutputStream.close();
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Exception thrown when running CLI command through daemon: " + e, e);
-			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
-		}		
-	}
+//	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
+//		try {
+//			Operation op = OperationFactory.getInstance(cliRequest.getCommand(), config);	
+//			OperationResult result = op.execute();
+//			
+//			ByteArrayOutputStream cliOutputStream = new ByteArrayOutputStream();
+//			
+//			String cliOutput = cliOutputStream.toString();
+//			
+//			CliResponse cliResponse = new CliResponse(cliRequest.getId(), cliOutput);
+//			eventBus.post(cliResponse);
+//			
+//			cliOutputStream.close();
+//		}
+//		catch (Exception e) {
+//			logger.log(Level.WARNING, "Exception thrown when running CLI command through daemon: " + e, e);
+//			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
+//		}		
+//	}
 
 	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
 		try {
