@@ -74,8 +74,8 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 
 	// Copy syncany(.bat) to sy(.bat)
 	from("${startScripts.outputDir}/") {
-		include "syncany"
-		rename(/syncany/, 'sy')
+		include "syncany*"
+		rename(/syncany(\.bat)?/, 'sy$1')
 		into "bin"
 	}
 }
