@@ -42,7 +42,12 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Assembler;
 import org.syncany.operations.Downloader;
+import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.CleanUpRequest;
+import org.syncany.operations.daemon.messages.CleanUpResponse;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
 import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
@@ -170,6 +175,9 @@ public class WatchRunner implements WatchOperationListener {
 			else if (watchRequest instanceof StatusRequest) {
 				handleStatusRequest((StatusRequest) watchRequest);			
 			}
+			else if (watchRequest instanceof CleanUpRequest) {
+				handleCleanUpRequest((CleanUpRequest) watchRequest);
+			}
 //			else if (watchRequest instanceof CliRequest) {
 //				handleCliRequest((CliRequest) watchRequest);
 //			}
@@ -177,6 +185,25 @@ public class WatchRunner implements WatchOperationListener {
 				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
 			}
 		}		
+	}
+
+	private void handleCleanUpRequest(CleanUpRequest cleanUpRequest) {
+		try {
+			CleanupOperationOptions cleanUpOperationOption = new CleanupOperationOptions();
+			cleanUpOperationOption.setForce(cleanUpRequest.isForce());
+			
+			CleanupOperation cleanUpOperation = new CleanupOperation(config, cleanUpOperationOption);
+			
+			CleanupOperationResult cleanUpOperationResult = cleanUpOperation.execute();
+			
+			CleanUpResponse cleanUpResponse = new CleanUpResponse();
+			
+			eventBus.post(cleanUpResponse);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot clean up.", e);
+			eventBus.post(new BadRequestResponse(cleanUpRequest.getId(), "Cannot clean up."));
+		}
 	}
 
 	private void handleStatusRequest(StatusRequest statusRequest) {
@@ -201,7 +228,7 @@ public class WatchRunner implements WatchOperationListener {
 			eventBus.post(statusResponse);
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot reassemble file.", e);
+			logger.log(Level.WARNING, "Cannot obtain status.", e);
 			eventBus.post(new BadRequestResponse(statusRequest.getId(), "Cannot obtain status."));
 		}
 	}
