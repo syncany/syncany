@@ -218,7 +218,7 @@ public class UploadInterruptedTest {
 	}	
 	
 	@Test
-	public void testUnreliableUpload_Test4_FailsAtSecondMultiChunkUpload() throws Exception {
+	public void testUnreliableUpload_Test4_1_FailsAtSecondMultiChunkUpload() throws Exception {
 		/*
 		 * This test fails when trying to upload the second multichunk, but succeeds on retry
 		 * 
@@ -300,7 +300,7 @@ public class UploadInterruptedTest {
 	}	
 	
 	@Test
-	public void testUnreliableUpload_Test4_FailsAtTXCommitDuring2ndMultiChunkMove() throws Exception {
+	public void testUnreliableUpload_Test4_2_FailsAtTXCommitDuring2ndMultiChunkMove() throws Exception {
 		/*
 		 * First run "Client A":
 		 *   This test fails when trying to execute the TX.commit() when moving the second multichunk.
@@ -407,7 +407,7 @@ public class UploadInterruptedTest {
 	}	
 	
 	@Test
-	public void testUnreliableUpload_Test4_FailsAtTXCommitDuring2ndMultiChunkMoveAndDuringTXRollback() throws Exception {
+	public void testUnreliableUpload_Test4_3_FailsAtTXCommitDuring2ndMultiChunkMoveAndDuringTXRollback() throws Exception {
 		/*
 		 * 1. upload(action-up-987, actions/action-up-987)             
 		 * 2. upload(transaction-123, transactions/transaction-123)    
@@ -506,7 +506,7 @@ public class UploadInterruptedTest {
 		assertTrue(secondUpFailed);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
-		assertEquals(2, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); 
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); 
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 		
 		assertEquals(3, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
@@ -520,7 +520,7 @@ public class UploadInterruptedTest {
 		
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
 		assertEquals(2, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
-		assertEquals(2, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); 
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); 
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 		
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
@@ -533,4 +533,5 @@ public class UploadInterruptedTest {
 		clientA.deleteTestData();
 	}	
 	
+	// [high] Add test for breaking TX.commit in 'removeOldFiles' in CleanupOperation 
 }

@@ -191,6 +191,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 			case ActionTO.TYPE_DELETE:
 				try {
+					logger.log(Level.INFO, "- Rollback action: Moving " + action.getTempRemoteFile().getName() + " to " + action.getRemoteFile().getName());
 					move(action.getTempRemoteFile(), action.getRemoteFile());
 				}
 				catch (StorageMoveException e) {
