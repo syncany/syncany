@@ -27,16 +27,21 @@ startScripts {
 		
 		def winTextTmp = ""
 		def winText = winFile.text
+		def windowsDaemonScript = new File('gradle/daemon/syncanyd.bat.skel').text		
 		
 		winText.readLines().each {
 			line ->
 				if (line.startsWith("\"%JAVA_EXE%\"")) {
-					winTextTmp += "if \"%1\" == \"daemon\" (\r\n" 
-					winTextTmp += "   @rem start daemon\r\n"
-					winTextTmp += "   call %DIRNAME%syd.bat %2 %3 %4\r\n"
-					winTextTmp += ") else (\r\n"
-					winTextTmp += "   " + line + "\r\n"
-					winTextTmp += ")"
+					winTextTmp += "if \"%1\" == \"daemon\" goto daemon" + "\r\n"
+					winTextTmp += line + "\r\n"
+					winTextTmp += "goto afterdaemon" + "\r\n"
+					
+					winTextTmp += "\r\n"
+					winTextTmp += ":daemon" + "\r\n"
+					winTextTmp += windowsDaemonScript + "\r\n"
+					
+					winTextTmp += "\r\n"
+					winTextTmp += ":afterdaemon" + "\r\n"
 				}
 				else {
 					winTextTmp += line + '\n'
@@ -69,8 +74,8 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 
 	// Copy syncany(.bat) to sy(.bat)
 	from("${startScripts.outputDir}/") {
-		include "syncany"
-		rename(/syncany/, 'sy')
+		include "syncany*"
+		rename(/syncany(\.bat)?/, 'sy$1')
 		into "bin"
 	}
 }
