@@ -19,7 +19,6 @@ package org.syncany.operations.daemon;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,8 +30,6 @@ import java.util.logging.Logger;
 
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
-import org.syncany.cli.Command;
-import org.syncany.cli.CommandFactory;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.to.PortTO;
@@ -243,7 +240,7 @@ public class WatchRunner implements WatchOperationListener {
 
 	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
 		try {
-			Command command = CommandFactory.getInstance(cliRequest.getCommand());			
+			//Command command = CommandFactory.getInstance(cliRequest.getCommand());			
 			String[] commandArgs = cliRequest.getCommandArgs().toArray(new String[0]); 
 			
 			ByteArrayOutputStream cliOutputStream = new ByteArrayOutputStream();
@@ -251,11 +248,11 @@ public class WatchRunner implements WatchOperationListener {
 			Client client = new Client();
 			client.setConfig(config);
 			
-			command.setOut(new PrintStream(cliOutputStream));
-			command.setClient(client);
-			command.setLocalDir(config.getLocalDir());
+			//command.setOut(new PrintStream(cliOutputStream));
+			//command.setClient(client);
+			//command.setLocalDir(config.getLocalDir());
 			
-			command.execute(commandArgs);
+			//command.execute(commandArgs);
 			
 			String cliOutput = cliOutputStream.toString();
 			
