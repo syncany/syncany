@@ -17,58 +17,42 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
-import java.util.ArrayList;
-
-import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Element;
 
 public class CleanUpResponse extends Response {
-	@ElementList(required = false, entry = "new")
-	private ArrayList<String> newFiles;
+	@Element(required = true)
+	private String resultCode;
 	
-	@ElementList(required = false, entry = "changed")
-	private ArrayList<String> changedFiles;
+	@Element(required = true)
+	private int mergedDatabaseFilesCount = 0;
 	
-	@ElementList(required = false, entry = "deleted")
-	private ArrayList<String> deletedFiles;
+	@Element(required = true)
+	private int removedOldVersionsCount = 0;
 	
 	public CleanUpResponse() {
 		// Required default constructor!
 	}
 	
-	public CleanUpResponse(int requestId) {
-		super(200, requestId, null);
+	public CleanUpResponse(int requestId, String message) {
+		super(200, requestId, message);
 	}	
 	
-	public ArrayList<String> getNewFiles() {
-		return newFiles;
+	public void setRemovedOldVersionsCount(int removedOldVersionsCount) {
+		this.removedOldVersionsCount = removedOldVersionsCount;
 	}
-	public void setNewFiles(ArrayList<String> newFiles) {
-		this.newFiles = newFiles;
+	public void setResultCode(String resultCode) {
+		this.resultCode = resultCode;
 	}
-	public ArrayList<String> getChangedFiles() {
-		return changedFiles;
+	public void setMergedDatabaseFilesCount(int mergedDatabaseFilesCount) {
+		this.mergedDatabaseFilesCount = mergedDatabaseFilesCount;
 	}
-	public void setChangedFiles(ArrayList<String> changedFiles) {
-		this.changedFiles = changedFiles;
+	public int getMergedDatabaseFilesCount() {
+		return mergedDatabaseFilesCount;
 	}
-	public ArrayList<String> getDeletedFiles() {
-		return deletedFiles;
+	public String getResultCode() {
+		return resultCode;
 	}
-	public void setDeletedFiles(ArrayList<String> deletedFiles) {
-		this.deletedFiles = deletedFiles;
-	}
-	
-	public void addNewFile(String file){
-		if (newFiles == null) newFiles = new ArrayList<>();
-		newFiles.add(file);
-	}
-	public void addChangedFile(String file){
-		if (changedFiles == null) changedFiles = new ArrayList<>();
-		changedFiles.add(file);
-	}
-	public void addDeletedFile(String file){
-		if (deletedFiles == null) deletedFiles = new ArrayList<>();
-		deletedFiles.add(file);
+	public int getRemovedOldVersionsCount() {
+		return removedOldVersionsCount;
 	}
 }

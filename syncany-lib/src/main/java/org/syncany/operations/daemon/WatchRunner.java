@@ -36,6 +36,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
+import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
@@ -196,7 +197,65 @@ public class WatchRunner implements WatchOperationListener {
 			
 			CleanupOperationResult cleanUpOperationResult = cleanUpOperation.execute();
 			
-			CleanUpResponse cleanUpResponse = new CleanUpResponse();
+			StringBuilder messageBuilder = new StringBuilder();
+			
+			switch (cleanUpOperationResult.getResultCode()) {
+				case NOK_DIRTY_LOCAL:
+					messageBuilder.append("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
+					break;
+					
+				case NOK_RECENTLY_CLEANED:
+					messageBuilder.append("Cleanup has been done recently, so it is not necessary. If you are sure it is necessary, override with --force.");
+					messageBuilder.append(System.getProperty("line.separator"));
+		
+				case NOK_LOCAL_CHANGES:
+					messageBuilder.append("Local changes detected. Please call 'up' first'.");
+					break;
+		
+				case NOK_REMOTE_CHANGES:
+					messageBuilder.append("Remote changes detected or repository is locked by another user. Please call 'down' first.");
+					break;
+					
+				case NOK_OTHER_OPERATIONS_RUNNING:
+					messageBuilder.append("Cannot run cleanup while other clients are performing up/down/cleanup. Try again later.");
+					break;
+		
+				case OK:
+					if (cleanUpOperationResult.getMergedDatabaseFilesCount() > 0) {
+						messageBuilder.append(cleanUpOperationResult.getMergedDatabaseFilesCount() + " database files merged.");
+					}
+					
+					if (cleanUpOperationResult.getRemovedMultiChunks().size() > 0) {
+						long totalRemovedMultiChunkSize = 0;
+						
+						for (MultiChunkEntry removedMultiChunk : cleanUpOperationResult.getRemovedMultiChunks().values()) {
+							totalRemovedMultiChunkSize += removedMultiChunk.getSize();
+						}
+						
+						messageBuilder.append(String.format("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n", 
+								cleanUpOperationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024));
+					}
+		
+					if (cleanUpOperationResult.getRemovedOldVersionsCount() > 0) {
+						messageBuilder.append(cleanUpOperationResult.getRemovedOldVersionsCount() + " file histories shortened.");
+						// TODO [low] This counts only the file histories, not file versions; not very helpful!
+					}
+		
+					messageBuilder.append("Cleanup successful.");			
+					break;
+		
+				case OK_NOTHING_DONE:
+					messageBuilder.append("Cleanup not necessary. Nothing done.");
+					break;
+		
+				default:
+					throw new RuntimeException("Invalid result code: " + cleanUpOperationResult.getResultCode().toString());
+			}	
+			
+			CleanUpResponse cleanUpResponse = new CleanUpResponse(cleanUpRequest.getId(), messageBuilder.toString());
+			cleanUpResponse.setMergedDatabaseFilesCount(cleanUpOperationResult.getMergedDatabaseFilesCount());
+			cleanUpResponse.setRemovedOldVersionsCount(cleanUpOperationResult.getRemovedOldVersionsCount());
+			cleanUpResponse.setResultCode(cleanUpOperationResult.getResultCode().toString());
 			
 			eventBus.post(cleanUpResponse);
 		}
