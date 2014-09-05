@@ -15,20 +15,10 @@ task fakeinstall(dependsOn: ["fakeuninstall"]) << {
 			rename("syncany.bat", "sy.bat")
 			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncany.bat")
 		}
-
-		copy {
-			from "gradle/windows/syncany.bat"
-			into System.getenv()["windir"]
-			rename("syncany.bat", "syd.bat")
-			expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncanyd.bat")
-		}
 	}
 	else{
     		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/syncany")
     		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/sy")
-    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/syncanyd", link: "/usr/local/bin/syncanyd")
-    		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/syncanyd", link: "/usr/local/bin/syd")
-
 	}
 }
 
@@ -38,14 +28,10 @@ task fakeuninstall << {
 	if (osName.startsWith("windows")) {
 		new File(System.getenv()["windir"] + "/syncany.bat").delete()
 		new File(System.getenv()["windir"] + "/sy.bat").delete()
-		new File(System.getenv()["windir"] + "/syncanyd.bat").delete()
-		new File(System.getenv()["windir"] + "/syd.bat").delete()
 	}
 	else {
 		new File("/usr/local/bin/syncany").delete()
 		new File("/usr/local/bin/sy").delete()
-		new File("/usr/local/bin/syncanyd").delete()
-		new File("/usr/local/bin/syd").delete()
 	}
 }
 

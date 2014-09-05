@@ -19,7 +19,6 @@ package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,7 +26,6 @@ import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
-import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
@@ -65,13 +63,10 @@ import com.google.common.eventbus.Subscribe;
  * @author Pim Otte 
  */
 public class DaemonOperation extends Operation {	
-	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());	
 	private static final String PID_FILE = "daemon.pid";
-	private static final String DAEMON_FILE = "daemon.xml";
-	private static final String DEFAULT_FOLDER = "Syncany";
 
 	private File pidFile;
-	private File daemonConfigFile;
 	
 	private WebServer webServer;
 	private WatchServer watchServer;
@@ -81,10 +76,8 @@ public class DaemonOperation extends Operation {
 	private PortTO portTO;
 
 	public DaemonOperation(Config config) {
-		super(config);
-		
-		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);
-		this.daemonConfigFile = new File(UserConfig.getUserConfigDir(), DAEMON_FILE);
+		super(config);		
+		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);		
 	}
 
 	@Override
@@ -156,11 +149,16 @@ public class DaemonOperation extends Operation {
 	
 	private void loadOrCreateConfig() {
 		try {
+			File daemonConfigFile = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_FILE);
+			File daemonConfigFileExample = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_EXAMPLE_FILE);
+			
 			if (daemonConfigFile.exists()) {
 				daemonConfig = DaemonConfigTO.load(daemonConfigFile);
 			}
 			else {
-				daemonConfig = createAndWriteDefaultConfig(daemonConfigFile);
+				// Write example config to daemon-example.xml, and default config to daemon.xml
+				UserConfig.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
+				daemonConfig = UserConfig.createAndWriteDefaultDaemonConfig(daemonConfigFile);
 			}
 			
 			// Add user and password for access from the CLI
@@ -169,7 +167,7 @@ public class DaemonOperation extends Operation {
 				String accessToken = CipherUtil.createRandomAlphabeticString(20);
 				
 				UserTO cliUser = new UserTO();
-				cliUser.setUsername("CLI");
+				cliUser.setUsername(UserConfig.USER_CLI);
 				cliUser.setPassword(accessToken);
 				
 				portTO = new PortTO();
@@ -180,8 +178,9 @@ public class DaemonOperation extends Operation {
 				daemonConfig.setPortTO(portTO);
 			}
 			else if (daemonConfig.getPortTO() == null) {
-				// Access info is not included in the daemonConfig, but exists. (Happens when reloading)
-				// We reload the information about the port, but keep the accesstoken the same.
+				// Access info is not included in the daemon config, but exists. Happens when reloading.
+				// We reload the information about the port, but keep the access token the same.
+				
 				portTO.setPort(daemonConfig.getWebServer().getBindPort());
 				daemonConfig.setPortTO(portTO);
 			}
@@ -189,37 +188,7 @@ public class DaemonOperation extends Operation {
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
 		}
-	}	
-
-	private DaemonConfigTO createAndWriteDefaultConfig(File configFile) {
-		File defaultFolder = new File(System.getProperty("user.home"), DEFAULT_FOLDER);
-		
-		FolderTO defaultFolderTO = new FolderTO();
-		defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
-		
-		ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
-		folders.add(defaultFolderTO);
-		
-		UserTO defaultUserTO = new UserTO();
-		defaultUserTO.setUsername("admin");
-		defaultUserTO.setPassword(CipherUtil.createRandomAlphabeticString(12));
-		
-		ArrayList<UserTO> users = new ArrayList<UserTO>();
-		users.add(defaultUserTO);
-		
-		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
-		defaultDaemonConfigTO.setFolders(folders);	
-		defaultDaemonConfigTO.setUsers(users);
-		
-		try {
-			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);
-		}
-		catch (Exception e) {
-			// Don't care!
-		}
-		
-		return defaultDaemonConfigTO;
-	}
+	}		
 
 	// Web server starting and stopping functions
 	

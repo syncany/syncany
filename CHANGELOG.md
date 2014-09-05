@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### Syncany 0.1.10-alpha (Date: Tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Combined `sy` and `syd` script into one #210
+  + Add folder to daemon config in `sy init` #215/#153
+- Bugfixes and other things:
+  + Fix daemon tests #185
+
 ### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:

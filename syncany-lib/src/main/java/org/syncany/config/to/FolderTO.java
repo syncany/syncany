@@ -28,8 +28,16 @@ public class FolderTO {
 	private boolean enabled = true;
 	
 	@Element(name="watch", required = false)
-	private WatchOperationOptions watchOptions = new WatchOperationOptions();
+	private WatchOperationOptions watchOptions;
 
+	public FolderTO() {
+		// Nothing!
+	}
+	
+	public FolderTO(String path) {
+		this.path = path;
+	}
+	
 	public String getPath() {
 		return path;
 	}

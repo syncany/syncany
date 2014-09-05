@@ -20,7 +20,11 @@ dependencies {
 	compile			"commons-codec:commons-codec:1.8"            
 	compile			"org.hsqldb:hsqldb:2.3.1"
 	compile			"com.github.zafarkhaja:java-semver:0.7.2"
-	
+
+	compile			"io.undertow:undertow-servlet:1.0.15.Final"
+	compile			"io.undertow:undertow-websockets-jsr:1.0.15.Final"
+	compile 		"commons-io:commons-io:2.4"	
+
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
 	testCompile		"junit:junit:4.9"
 }

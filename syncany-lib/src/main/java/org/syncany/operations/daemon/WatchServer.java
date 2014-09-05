@@ -104,7 +104,6 @@ public class WatchServer {
 	private void startWatchOperations(Map<File, FolderTO> newWatchedFolderTOs) throws ConfigException, ServiceAlreadyStartedException {
 		for (Map.Entry<File, FolderTO> folderEntry : newWatchedFolderTOs.entrySet()) {
 			File localDir = folderEntry.getKey();
-			WatchOperationOptions watchOperationOptions = folderEntry.getValue().getWatchOptions();
 
 			try {	
 				Config watchConfig = ConfigHelper.loadConfig(localDir);
@@ -112,10 +111,16 @@ public class WatchServer {
 				if (watchConfig != null) {
 					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
 					
-					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions, portTO);	
-					watchOperationThread.start();
+					WatchOperationOptions watchOptions = folderEntry.getValue().getWatchOptions();
+					
+					if (watchOptions == null) {
+						watchOptions = new WatchOperationOptions();
+					}
+					
+					WatchRunner watchRunner = new WatchRunner(watchConfig, watchOptions, portTO);	
+					watchRunner.start();
 	
-					watchOperations.put(localDir, watchOperationThread);
+					watchOperations.put(localDir, watchRunner);
 				}
 				else {
 					logger.log(Level.INFO, "- CANNOT start watch, because no config found at " + localDir + " ...");										
