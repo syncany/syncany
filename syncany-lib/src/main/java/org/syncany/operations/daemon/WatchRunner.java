@@ -213,17 +213,36 @@ public class WatchRunner implements WatchOperationListener {
 			
 			StatusOperation statusOperation = new StatusOperation(config, statusOperationOption);
 			StatusOperationResult statusOperationResult = statusOperation.execute();
-			StatusResponse statusResponse = new StatusResponse(statusRequest.getId());
 			
-			for (String f : statusOperationResult.getChangeSet().getChangedFiles()) {
-				statusResponse.addChangedFile(f);
+			StringBuilder messageBuilder = new StringBuilder();
+			
+			ArrayList<String> changedFilesList = new ArrayList<>();
+			ArrayList<String> deletedFilesList = new ArrayList<>();
+			ArrayList<String> newFilesList = new ArrayList<>(); 
+			
+			if (statusOperationResult.getChangeSet().hasChanges()) {
+				for (String f : statusOperationResult.getChangeSet().getChangedFiles()) {
+					changedFilesList.add(f);
+					messageBuilder.append(" M").append(f).append(System.getProperty("line.separator"));
+				}
+				for (String f : statusOperationResult.getChangeSet().getDeletedFiles()) {
+					deletedFilesList.add(f);
+					messageBuilder.append(" M").append(f).append(System.getProperty("line.separator"));
+				}
+				for (String f : statusOperationResult.getChangeSet().getNewFiles()) {
+					newFilesList.add(f);
+					messageBuilder.append(" M").append(f).append(System.getProperty("line.separator"));
+				}
 			}
-			for (String f : statusOperationResult.getChangeSet().getDeletedFiles()) {
-				statusResponse.addDeletedFile(f);
+			else {
+				messageBuilder.append("No Changes");
 			}
-			for (String f : statusOperationResult.getChangeSet().getNewFiles()) {
-				statusResponse.addNewFile(f);
-			}
+			
+			StatusResponse statusResponse = new StatusResponse(statusRequest.getId(), messageBuilder.toString());
+			
+			statusResponse.setChangedFiles(changedFilesList);
+			statusResponse.setDeletedFiles(deletedFilesList);
+			statusResponse.setNewFiles(newFilesList);
 			
 			eventBus.post(statusResponse);
 		}

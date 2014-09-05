@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.simpleframework.xml.ElementList;
@@ -36,8 +35,8 @@ public class StatusResponse extends Response {
 		// Required default constructor!
 	}
 	
-	public StatusResponse(int requestId) {
-		super(200, requestId, null);
+	public StatusResponse(int requestId, String message) {
+		super(200, requestId, message);
 	}	
 	
 	public ArrayList<String> getNewFiles() {
@@ -57,18 +56,5 @@ public class StatusResponse extends Response {
 	}
 	public void setDeletedFiles(ArrayList<String> deletedFiles) {
 		this.deletedFiles = deletedFiles;
-	}
-	
-	public void addNewFile(String file){
-		if (newFiles == null) newFiles = new ArrayList<>();
-		newFiles.add(file);
-	}
-	public void addChangedFile(String file){
-		if (changedFiles == null) changedFiles = new ArrayList<>();
-		changedFiles.add(file);
-	}
-	public void addDeletedFile(String file){
-		if (deletedFiles == null) deletedFiles = new ArrayList<>();
-		deletedFiles.add(file);
 	}
 }
