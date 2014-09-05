@@ -383,6 +383,8 @@ public class CommandLineClient extends Client {
 			Request request = null;
 			
 			// Create and send HTTP/REST request
+
+			// TODO [medium] : could use a fiel-to-field property copying utility
 			switch (commandName.toLowerCase()) {
 				case "status":
 					request = new StatusRequest();
@@ -396,7 +398,6 @@ public class CommandLineClient extends Client {
 					request = new CleanUpRequest();
 					request.setId(Math.abs(new Random().nextInt()));
 					
-					// could use a fiel-to-field property copying utility
 					CleanupOperationOptions cleanupOption = ((CleanupCommand)command).parseOptions(args);
 					((CleanUpRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
 					((CleanUpRequest)request).setKeepVersionsCount(cleanupOption.getKeepVersionsCount());
@@ -409,27 +410,35 @@ public class CommandLineClient extends Client {
 					break;
 					
 				case "debug":
+					// TODO
 					break;
 
 				case "down":
+					// TODO
 					break;
 
 				case "genlink":
+					// TODO
 					break;
 
 				case "ls":
+					// TODO
 					break;
 
 				case "ls-remote":
+					// TODO
 					break;
 
 				case "restore":
+					// TODO
 					break;
 
 				case "up":
+					// TODO
 					break;
 
 				case "watch":
+					// TODO
 					break;
 
 				default:
