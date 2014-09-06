@@ -54,7 +54,7 @@ import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
 import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
 import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
-import org.syncany.operations.daemon.messages.WatchEventResponse;
+import org.syncany.operations.daemon.messages.WatchEventFolderResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
 import org.syncany.operations.restore.RestoreOperation;
@@ -281,7 +281,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "UPLOAD_START";
 		
-		eventBus.post(new WatchEventResponse(root, action));
+		eventBus.post(new WatchEventFolderResponse(root, action));
 	}
 
 	@Override
@@ -290,7 +290,7 @@ public class WatchRunner implements WatchOperationListener {
 		String action = "UPLOAD_FILE";
 		String subject = fileName;
 		
-		eventBus.post(new WatchEventResponse(root, action, subject));
+		eventBus.post(new WatchEventFolderResponse(root, action, subject));
 	}
 
 	@Override
@@ -298,7 +298,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "UPLOAD_END";
 		
-		eventBus.post(new WatchEventResponse(root, action));
+		eventBus.post(new WatchEventFolderResponse(root, action));
 	}
 
 	@Override
@@ -306,7 +306,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "INDEX_START";
 		
-		eventBus.post(new WatchEventResponse(root, action));
+		eventBus.post(new WatchEventFolderResponse(root, action));
 	}
 
 	@Override
@@ -315,7 +315,7 @@ public class WatchRunner implements WatchOperationListener {
 		String action = "INDEX_FILE";
 		String subject = fileName;
 		
-		eventBus.post(new WatchEventResponse(root, action, subject));
+		eventBus.post(new WatchEventFolderResponse(root, action, subject));
 	}
 	
 	@Override
@@ -323,7 +323,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "INDEX_END";
 		
-		eventBus.post(new WatchEventResponse(root, action));
+		eventBus.post(new WatchEventFolderResponse(root, action));
 	}
 
 	@Override
@@ -331,7 +331,7 @@ public class WatchRunner implements WatchOperationListener {
 		String root = config.getLocalDir().getAbsolutePath();
 		String action = "DOWNLOAD_START";
 		
-		eventBus.post(new WatchEventResponse(root, action));
+		eventBus.post(new WatchEventFolderResponse(root, action));
 	}
 
 	@Override
@@ -340,6 +340,6 @@ public class WatchRunner implements WatchOperationListener {
 		String action = "DOWNLOAD_FILE";
 		String subject = fileName;
 		
-		eventBus.post(new WatchEventResponse(root, action, subject));
+		eventBus.post(new WatchEventFolderResponse(root, action, subject));
 	}
 }

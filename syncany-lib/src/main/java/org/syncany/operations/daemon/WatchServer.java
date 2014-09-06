@@ -35,6 +35,7 @@ import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -172,24 +173,23 @@ public class WatchServer {
 	}
 	
 	@Subscribe
-	public void onRequestReceived(Request request) {
+	public void onManagementRequestReceived(ManagementRequest request) {
 		if (request instanceof ListWatchesManagementRequest) {
 			processListWatchesRequest((ListWatchesManagementRequest) request);
-		}
-		else if (request instanceof FolderRequest) {
-			processWatchRequest((FolderRequest) request);
-		}
+		}		
 	}
 
+	@Subscribe
+	public void onFolderRequestReceived(FolderRequest folderRequest) {
+		File rootFolder = new File(folderRequest.getRoot());
+		
+		if (!watchOperations.containsKey(rootFolder)) {
+			eventBus.post(new BadRequestResponse(folderRequest.getId(), "Unknown root folder."));
+		}
+	}
+	
 	private void processListWatchesRequest(ListWatchesManagementRequest request) {
 		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
 	}
 	
-	private void processWatchRequest(FolderRequest watchRequest) {
-		File rootFolder = new File(watchRequest.getRoot());
-		
-		if (!watchOperations.containsKey(rootFolder)) {
-			eventBus.post(new BadRequestResponse(watchRequest.getId(), "Unknown root folder."));
-		}
-	}
 }

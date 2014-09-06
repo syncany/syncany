@@ -17,8 +17,8 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
 
-public class ListWatchesManagementRequest extends Request {
+public class ListWatchesManagementRequest extends ManagementRequest {
 	// Nothing here.
 }

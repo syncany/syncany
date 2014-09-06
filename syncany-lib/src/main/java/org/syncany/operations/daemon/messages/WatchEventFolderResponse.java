@@ -20,7 +20,7 @@ package org.syncany.operations.daemon.messages;
 import org.simpleframework.xml.Element;
 import org.syncany.operations.daemon.messages.api.Response;
 
-public class WatchEventResponse extends Response {
+public class WatchEventFolderResponse extends Response {
 	@Element(required = true)
 	private String root;
 	
@@ -30,11 +30,11 @@ public class WatchEventResponse extends Response {
 	@Element(required = false)
 	private String subject;
 	
-	public WatchEventResponse(String root, String action) {
+	public WatchEventFolderResponse(String root, String action) {
 		this(root, action, null);
 	}	
 	
-	public WatchEventResponse(String root, String action, String subject) {
+	public WatchEventFolderResponse(String root, String action, String subject) {
 		super(200, null, null);
 		
 		this.root = root;
