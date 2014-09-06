@@ -9,6 +9,7 @@ Change Log
 - Bugfixes and other things:
   + Fix daemon tests #185
   + Rewrite bash completion, fixes --localdir issue #209
+  + Fix issue with `sy daemon force-stop` #212
 
 ### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
