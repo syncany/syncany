@@ -147,8 +147,12 @@ public class UploadInterruptedTest {
 		/*
 		 * This test fails when trying to upload the first database file, but succeeds on retry
 		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 2. upload(transaction-123, transactions/transaction-123) 3. upload(multichunk-1, temp-1) 5.
-		 * upload(database-123, temp-2) <<< FAILS HERE 6. move(temp-1, multichunks/multichunk-1) 8. move(temp-2, databases/database-123)
+		 * 1. upload(action-up-987, actions/action-up-987) 
+		 * 2. upload(transaction-123, transactions/transaction-123) 
+		 * 3. upload(multichunk-1, temp-1) 
+		 * 5. upload(database-123, temp-2) <<< FAILS HERE 
+		 * 6. move(temp-1, multichunks/multichunk-1) 
+		 * 8. move(temp-2, databases/database-123)
 		 */
 
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
@@ -159,7 +163,7 @@ public class UploadInterruptedTest {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-						"rel=4.+upload.+database",
+						"rel=5.+upload.+database",
 				}
 						));
 
@@ -220,9 +224,13 @@ public class UploadInterruptedTest {
 		/*
 		 * This test fails when trying to upload the second multichunk, but succeeds on retry
 		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 2. upload(transaction-123, transactions/transaction-123) 3. upload(multichunk-1, temp-1) 4.
-		 * upload(multichunk-2, temp-2) <<< FAILS HERE 5. upload(database-123, temp-3) 6. move(temp-1, multichunks/multichunk-1) 7. move(temp-2,
-		 * multichunks/multichunk-2) 8. move(temp-3, databases/database-123)
+		 * 1. upload(action-up-987, actions/action-up-987) 
+		 * 2. upload(transaction-123, transactions/transaction-123) 
+		 * 3. upload(multichunk-1, temp-1) 
+		 * 4. upload(multichunk-2, temp-2) <<< FAILS HERE 
+		 * 5. upload(database-123, temp-3) 6. move(temp-1, multichunks/multichunk-1) 
+		 * 7. move(temp-2, multichunks/multichunk-2) 
+		 * 8. move(temp-3, databases/database-123)
 		 */
 
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
@@ -303,9 +311,14 @@ public class UploadInterruptedTest {
 		 * Second run "Client A": The second up() from Client A should revert the transaction. To verify this, we let the second run fail at the
 		 * transaction file upload
 		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 2. upload(transaction-123, transactions/transaction-123) <<< FAILS HERE (second run) 3.
-		 * upload(multichunk-1, temp-1) 4. upload(multichunk-2, temp-2) 5. upload(database-123, temp-3) 6. move(temp-1, multichunks/multichunk-1) 7.
-		 * move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run) 8. move(temp-3, databases/database-123)
+		 * 1. upload(action-up-987, actions/action-up-987) 
+		 * 2. upload(transaction-123, transactions/transaction-123) <<< FAILS HERE (second run) 
+		 * 3. upload(multichunk-1, temp-1) 
+		 * 4. upload(multichunk-2, temp-2) 
+		 * 5. upload(database-123, temp-3) 
+		 * 6. move(temp-1, multichunks/multichunk-1) 
+		 * 7. move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run) 
+		 * 8. move(temp-3, databases/database-123)
 		 */
 
 		RetriableTransferManager.RETRY_MAX_COUNT = 1;
@@ -394,15 +407,28 @@ public class UploadInterruptedTest {
 	@Test
 	public void testUnreliableUpload_Test4_3_FailsAtTXCommitDuring2ndMultiChunkMoveAndDuringTXRollback() throws Exception {
 		/*
-		 * 1. upload(action-up-987, actions/action-up-987) 2. upload(transaction-123, transactions/transaction-123) 3. upload(multichunk-1, temp-1) 4.
-		 * upload(multichunk-2, temp-2) 5. upload(database-123, temp-3) 6. move(temp-1, multichunks/multichunk-1) 7. move(temp-2,
-		 * multichunks/multichunk-2) <<< FAILS HERE (first run) 8. move(temp-3, databases/database-123)
+		 * 1. upload(action-up-987, actions/action-up-987) 
+		 * 2. upload(transaction-123, transactions/transaction-123) 
+		 * 3. upload(multichunk-1, temp-1) 
+		 * 4. upload(multichunk-2, temp-2) 
+		 * 5. upload(database-123, temp-3) 
+		 * 6. move(temp-1, multichunks/multichunk-1) 
+		 * 7. move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run) 
+		 * 8. move(temp-3, databases/database-123)
 		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 2. list(databases/*) 3. list(transactions/*) 4. upload(transaction-345,
-		 * transactions/transaction-345) (rollback TX) 5. move(multichunks/multichunk-1, temp-80) 6. move(temp-1, temp-81) (silently fails, b/c temp-1
-		 * does not exist) 7. move(multichunks/multichunk-2, temp-82) (silently fails, b/c tmultichunk-2 does not exist) 8. move(temp-2, temp-83) 9.
-		 * move(databases/database-123, temp-84) (silently fails, b/c database-123 does not exist) 10. move(temp-3, temp-85) 10 move(transactions-345,
-		 * temp-86) 11. delete(temp-80) 12. delete(temp-83) <<< FAILS HERE (second run)
+		 * 1. upload(action-up-987, actions/action-up-987) 
+		 * 2. list(databases/*) 
+		 * 3. list(transactions/*) 
+		 * 4. upload(transaction-345, transactions/transaction-345) (rollback TX) 
+		 * 5. move(multichunks/multichunk-1, temp-80) 
+		 * 6. move(temp-1, temp-81) (silently fails, b/c temp-1 does not exist) 
+		 * 7. move(multichunks/multichunk-2, temp-82) (silently fails, b/c tmultichunk-2 does not exist) 
+		 * 8. move(temp-2, temp-83) 
+		 * 9. move(databases/database-123, temp-84) (silently fails, b/c database-123 does not exist) 
+		 * 10. move(temp-3, temp-85) 
+		 * 10 move(transactions-345, temp-86)
+		 * 11. delete(temp-80) 
+		 * 12. delete(temp-83) <<< FAILS HERE (second run)
 		 * 
 		 * Expected: temp-(83,85,86)
 		 */
