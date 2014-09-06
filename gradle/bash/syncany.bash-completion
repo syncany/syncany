@@ -37,8 +37,7 @@
 #
 
 shopt -s progcomp
-_syncany ()
-{
+_sy() {
 	local cur prev firstword lastword complete_words complete_options
 
 	COMPREPLY=()
@@ -48,43 +47,185 @@ _syncany ()
 	firstword=$(_sy_get_firstword)
 	lastword=$(_sy_get_lastword)
 
-	PLUGINS='\
-		local\
-		webdav\
-		sftp\
-		ftp\
-		samba\
-		simpleweb\
-		s3'
+	GLOBAL_COMMANDS="\
+		cleanup\
+		connect\
+		daemon\
+		down\
+		genlink\
+		init\
+		ls\
+		ls-remote\
+		plugin\
+		restore\
+		status\
+		up\
+		watch"
 
-	CONFLICT_STRATEGIES='\
+	GLOBAL_OPTIONS="\
+		-l --localdir\
+		-d --debug\
+		-h --help\
+		-v -vv\
+		--print"
+
+	CONNECT_OPTIONS="\
+		-P --plugin\
+		-o --plugin-option\
+		-I --no-interaction\
+		-N --no-daemon"
+
+	DOWN_CONFLICT_STRATEGIES="\
 		ask\
-		rename'
+		rename"
+
+	DOWN_OPTIONS="\
+		-C --conflict-strategy\
+		-A --no-apply"
+
+	DAEMON_COMMANDS="\
+		force-stop\
+		reload\
+		restart\
+		start\
+		status\
+		stop"
+
+	GENLINK_OPTIONS="\
+		-s --short"
+
+	INIT_OPTIONS="\
+		-P --plugin\
+		-o --plugin-option\
+		-E --no-encryption\
+		-G --no-compression\
+		-t --create-target\
+		-a --advanced\
+		-I --no-interaction\
+		-N --no-daemon"
+
+	LS_OPTIONS="\
+		-V --versions\
+		-t --types\
+		-D --date\
+		-r --recursive\
+		-f --full-checksums\
+		-g --group"
+
+	LS_TYPES="\
+		t\
+		d\
+		f"
+
+	PLUGIN_COMMANDS="\
+		list\
+		install\
+		remove"
+
+	PLUGIN_IDS="\
+		ftp\
+		local\
+		s3\
+		samba\
+		sftp\
+		simpleweb\
+		webdav"
+
+	PLUGIN_LIST_OPTIONS="\
+		-R --remote-only\
+		-L --local-only\
+		-s --snapshots"
+
+	PLUGIN_INSTALL_OPTIONS="\
+		-s --snapshot"
+
+	PLUGIN_FTP_OPTIONS="\
+		hostname=\
+		username=\
+		password=\
+		path=\
+		port="
+
+	PLUGIN_LOCAL_OPTIONS="\
+		path="
+
+	PLUGIN_S3_OPTIONS="\
+		accessKey=\
+		secretKey=\
+		bucket=\
+		location="
+
+	PLUGIN_SAMBA_OPTIONS="\
+		hostname=\
+		username=\
+		password=\
+		share=\
+		path="
+
+	PLUGIN_SFTP_OPTIONS="\
+		hostname=\
+		username=\
+		privatekey=\
+		password=\
+		path=\
+		port="
+
+	PLUGIN_WEBDAV_OPTIONS="\
+		url=\
+		username=\
+		password="
+
+	RESTORE_OPTIONS="\
+		-r --revision\
+		-t --target"
+
+	STATUS_OPTIONS="\
+		-f --force-checksum"
+
+	UP_OPTIONS="\
+		$STATUS_OPTIONS"
+
+	WATCH_OPTIONS="\
+		-i --interval\
+		-s --delay\
+		-W --no-watcher\
+		-a --announce\
+		-N --no-announcements\
+		$UP_OPTIONS\
+		$DOWN_OPTIONS"
+
+	CLEANUP_OPTIONS="\
+		-M --no-database-merge\
+		-V --no-version-remove\
+		-k --keep-versions\
+		$STATUS_OPTIONS"
 
 	# Un-comment this for debug purposes:
 	#   echo -e "\nprev = $prev, cur = $cur, firstword = $firstword, lastword = $lastword\n"
 
 	case "${firstword}" in
 	cleanup)
-		complete_options='\
-			-M --no-database-merge\
-			-V --no-version-remove\
-			-k --keep-versions\
-			-f --force-checksum'
+		complete_options="$CLEANUP_OPTIONS"
 		;;
 
 	connect)
 		case "${prev}" in
 			--plugin|-P) 
-				complete_words="$PLUGINS"
+				complete_words="$PLUGIN_IDS"
+				;;
+
+			--plugin-option|-o)
+				# Special handling: Return plugin options and exit
+				complete_words=$(_sy_plugin_option_words)
+
+				compopt -o nospace
+				COMPREPLY=( $( compgen -W "$complete_words" -- $cur ) )
+
+				return 0
 				;;
 
 			*)
-				complete_options='\
-					-P --plugin\
-					-o --plugin-option\
-					-I --no-interaction\
-					-N --no-daemon'
+				complete_options="$CONNECT_OPTIONS"
 				;;
 		esac
 		;;
@@ -92,38 +233,48 @@ _syncany ()
 	down)
 		case "${prev}" in
 			--conflict-strategy|-C) 
-				complete_words="$CONFLICT_STRATEGIES"
+				complete_words="$DOWN_CONFLICT_STRATEGIES"
 				;;
 
 			*)
-				complete_options='\
-					-C --conflict-strategy\
-					-A --no-apply'
+				complete_options="$DOWN_OPTIONS"
 				;;	
 		esac
 		;;
 
+	daemon)
+		case "${lastword}" in
+			force-stop|reload|restart|start|status|stop)
+				;;
+			
+			*)
+				complete_words="$DAEMON_COMMANDS"
+				;;
+		esac
+		;;
+
 	genlink)
-		complete_options='\
-			-s --short'
+		complete_options="$GENLINK_OPTIONS"
 		;;
 
 	init)
 		case "${prev}" in
 			--plugin|-P) 
-				complete_words="$PLUGINS"
+				complete_words="$PLUGIN_IDS"
+				;;
+
+			--plugin-option|-o)
+				# Special handling: Return plugin options and exit
+				complete_words=$(_sy_plugin_option_words)
+
+				compopt -o nospace
+				COMPREPLY=( $( compgen -W "$complete_words" -- $cur ) )
+
+				return 0
 				;;
 
 			*)
-				complete_options='\
-					-P --plugin\
-					-o --plugin-option\
-					-E --no-encryption\
-					-G --no-compression\
-					-t --create-target\
-					-a --advanced\
-					-I --no-interaction\
-					-N --no-daemon'
+				complete_options="$INIT_OPTIONS"
 				;;
 		esac
 		;;
@@ -131,20 +282,11 @@ _syncany ()
 	ls)
 		case "${prev}" in
 			--types|-t) 
-				complete_words='\
-					t\
-					d\
-					f'
+				complete_words="$LS_TYPES"
 				;;
 
 			*)
-				complete_options='\
-					-V --versions\
-					-t --types\
-					-D --date\
-					-r --recursive\
-					-f --full-checksums\
-					-g --group'
+				complete_options="$LS_OPTIONS"
 				;;
 		esac
 		;;
@@ -155,28 +297,21 @@ _syncany ()
 	plugin)
 		case "${lastword}" in
 		list) 
-			complete_options='\
-				-R --remote-only\
-				-L --local-only\
-				-s --snapshots'
+			complete_options="$PLUGIN_LIST_OPTIONS"
 
 			;;
 		install) 
-			complete_words="$PLUGINS"
-			complete_options='\
-				-s --snapshot'
+			complete_words="$PLUGIN_IDS"
+			complete_options="$PLUGIN_INSTALL_OPTIONS"
 
 			;;
 
 		remove) 
-			complete_words="$PLUGINS"
+			complete_words="$PLUGIN_IDS"
 			;;
 
 		*) 
-			complete_words='\
-				list\
-				install\
-				remove'
+			complete_words="$PLUGIN_COMMANDS"
 			;;
 		esac
 		;;
@@ -184,44 +319,34 @@ _syncany ()
 	restore)
 		case "${prev}" in
 			--target|-t)
+				# Special handling: Return file names
+
 				COMPREPLY=( $( compgen -f -- $cur ) )
 				return 0
 				;;
 
 			*)
-				complete_options='\
-					-r --revision\
-					-t --target'
+				complete_options="$RESTORE_OPTIONS"
 				;;
 		esac
 		;;
 
 	status)
-		complete_options='\
-			-f --force-checksum'
+		complete_options="$STATUS_OPTIONS"
 		;;
 
 	up)
-		complete_options='\
-			-f --force-checksum'
+		complete_options="$UP_OPTIONS"
 		;;
 
 	watch)
 		case "${prev}" in
 			--conflict-strategy|-C) 
-				complete_words="$CONFLICT_STRATEGIES"
+				complete_words="$DOWN_CONFLICT_STRATEGIES"
 				;;
 
 			*)
-				complete_options='\
-					-i --interval\
-					-s --delay\
-					-W --no-watcher\
-					-a --announce\
-					-N --no-announcements\
-					-f --force-checksum\
-					-C --conflict-strategy\
-					-A --no-apply'
+				complete_options="$WATCH_OPTIONS"
 				;;
 		esac
 		;;			
@@ -229,6 +354,8 @@ _syncany ()
 	*)
 		case "${prev}" in
 			--localdir|-l)
+				# Special handling: return directories, no space at the end
+
 				compopt -o nospace
 				COMPREPLY=( $( compgen -d -S "/" -- $cur ) )
 
@@ -236,26 +363,8 @@ _syncany ()
 				;;
 
 			*)
-				complete_words='\
-					cleanup\
-					connect\
-					down\
-					genlink\
-					init\
-					ls\
-					ls-remote\
-					plugin\
-					restore\
-					status\
-					up\
-					watch'
-
-				complete_options='\
-					-l --localdir\
-					-d --debug\
-					-h --help\
-					-v -vv\
-					--print'
+				complete_words="$GLOBAL_COMMANDS"
+				complete_options="$GLOBAL_OPTIONS"
 				;;
 		esac
 		;;
@@ -273,6 +382,49 @@ _syncany ()
 }
 
 ## Helper functions ###
+
+# Determines the plugin-specific settings set by --plugin-option or -o
+# Requires: $COMP_WORDS
+_sy_plugin_option_words() {
+	local plugin_id i
+
+	plugin_id=
+	for ((i = 1; i < ${#COMP_WORDS[@]}; ++i)); do
+		if [[ ${COMP_WORDS[i]} == "-P" ]] || [[ ${COMP_WORDS[i]} == "--plugin" ]]; then
+			plugin_id=${COMP_WORDS[i+1]}
+			break
+		fi
+	done
+
+	case "${plugin_id}" in
+		ftp)
+			echo "$PLUGIN_FTP_OPTIONS"
+			;;
+
+		local)
+			echo "$PLUGIN_LOCAL_OPTIONS"
+			;;
+
+		s3)
+			echo "$PLUGIN_S3_OPTIONS"
+			;;
+
+		samba)
+			echo "$PLUGIN_SAMBA_OPTIONS"
+			;;
+
+		sftp)
+			echo "$PLUGIN_SFTP_OPTIONS"
+			;;
+
+		webdav)
+			echo "$PLUGIN_WEBDAV_OPTIONS"
+			;;
+
+		*)
+			;;
+	esac
+}
 
 # Determines the first non-option word of the command line. This
 # is usually the command; Requires: $COMP_WORDS
@@ -307,5 +459,5 @@ _sy_get_lastword() {
 
 ## Define bash completions ###
 
-complete -F _syncany sy
-complete -F _syncany syncany
+complete -F _sy sy
+complete -F _sy syncany
