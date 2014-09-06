@@ -32,10 +32,10 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.ListWatchesRequest;
-import org.syncany.operations.daemon.messages.ListWatchesResponse;
-import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.WatchRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 
@@ -104,7 +104,6 @@ public class WatchServer {
 	private void startWatchOperations(Map<File, FolderTO> newWatchedFolderTOs) throws ConfigException, ServiceAlreadyStartedException {
 		for (Map.Entry<File, FolderTO> folderEntry : newWatchedFolderTOs.entrySet()) {
 			File localDir = folderEntry.getKey();
-			WatchOperationOptions watchOperationOptions = folderEntry.getValue().getWatchOptions();
 
 			try {	
 				Config watchConfig = ConfigHelper.loadConfig(localDir);
@@ -112,10 +111,16 @@ public class WatchServer {
 				if (watchConfig != null) {
 					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
 					
-					WatchRunner watchOperationThread = new WatchRunner(watchConfig, watchOperationOptions, portTO);	
-					watchOperationThread.start();
+					WatchOperationOptions watchOptions = folderEntry.getValue().getWatchOptions();
+					
+					if (watchOptions == null) {
+						watchOptions = new WatchOperationOptions();
+					}
+					
+					WatchRunner watchRunner = new WatchRunner(watchConfig, watchOptions, portTO);	
+					watchRunner.start();
 	
-					watchOperations.put(localDir, watchOperationThread);
+					watchOperations.put(localDir, watchRunner);
 				}
 				else {
 					logger.log(Level.INFO, "- CANNOT start watch, because no config found at " + localDir + " ...");										
@@ -168,19 +173,19 @@ public class WatchServer {
 	
 	@Subscribe
 	public void onRequestReceived(Request request) {
-		if (request instanceof ListWatchesRequest) {
-			processListWatchesRequest((ListWatchesRequest) request);
+		if (request instanceof ListWatchesManagementRequest) {
+			processListWatchesRequest((ListWatchesManagementRequest) request);
 		}
-		else if (request instanceof WatchRequest) {
-			processWatchRequest((WatchRequest) request);
+		else if (request instanceof FolderRequest) {
+			processWatchRequest((FolderRequest) request);
 		}
 	}
 
-	private void processListWatchesRequest(ListWatchesRequest request) {
-		eventBus.post(new ListWatchesResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+	private void processListWatchesRequest(ListWatchesManagementRequest request) {
+		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
 	}
 	
-	private void processWatchRequest(WatchRequest watchRequest) {
+	private void processWatchRequest(FolderRequest watchRequest) {
 		File rootFolder = new File(watchRequest.getRoot());
 		
 		if (!watchOperations.containsKey(rootFolder)) {

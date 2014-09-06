@@ -32,15 +32,15 @@ import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
 import org.syncany.operations.daemon.messages.CliRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
-import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
-import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
-import org.syncany.operations.daemon.messages.GetFileRequest;
-import org.syncany.operations.daemon.messages.GetFileResponseInternal;
-import org.syncany.operations.daemon.messages.GetFileTreeRequest;
-import org.syncany.operations.daemon.messages.GetFileTreeResponse;
-import org.syncany.operations.daemon.messages.Response;
-import org.syncany.operations.daemon.messages.RestoreRequest;
-import org.syncany.operations.daemon.messages.RestoreResponse;
+import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
+import org.syncany.operations.daemon.messages.GetFileFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
+import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
+import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
+import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
+import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -58,7 +58,7 @@ import com.google.common.eventbus.Subscribe;
 public class BasicWatchServerTest {
 	private Map<Integer, Response> responses = new HashMap<Integer, Response>();
 	
-	private GetFileResponseInternal internalResponse;	
+	private GetFileFolderResponseInternal internalResponse;	
 	private LocalEventBus eventBus;
 
 	/**
@@ -115,7 +115,7 @@ public class BasicWatchServerTest {
 		List<FileVersion> files = new ArrayList<FileVersion>();
 		
 		for (int i = 0; i < 20; i++) {
-			GetFileTreeRequest request = new GetFileTreeRequest();
+			GetFileTreeFolderRequest request = new GetFileTreeFolderRequest();
 			request.setId(i);
 			request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 				
@@ -123,8 +123,8 @@ public class BasicWatchServerTest {
 			
 			Response response = waitForResponse(i);
 			
-			assertTrue(response instanceof GetFileTreeResponse);
-			GetFileTreeResponse treeResponse = (GetFileTreeResponse) response;
+			assertTrue(response instanceof GetFileTreeFolderResponse);
+			GetFileTreeFolderResponse treeResponse = (GetFileTreeFolderResponse) response;
 			
 			files = treeResponse.getFiles();
 			
@@ -152,7 +152,7 @@ public class BasicWatchServerTest {
 		assertEquals(files.get(1).getType(), FileVersion.FileType.FOLDER);
 
 		// Create GetFileHistoryRequest for the first returned file
-		GetFileHistoryRequest request = new GetFileHistoryRequest();
+		GetFileHistoryFolderRequest request = new GetFileHistoryFolderRequest();
 		request.setId(21);
 		request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 		request.setFileHistoryId(files.get(0).getFileHistoryId().toString());
@@ -160,13 +160,13 @@ public class BasicWatchServerTest {
 		eventBus.post(request);
 		
 		Response response = waitForResponse(21);
-		assertTrue(response instanceof GetFileHistoryResponse);
-		GetFileHistoryResponse fileHistoryResponse = (GetFileHistoryResponse) response;
+		assertTrue(response instanceof GetFileHistoryFolderResponse);
+		GetFileHistoryFolderResponse fileHistoryResponse = (GetFileHistoryFolderResponse) response;
 		assertEquals(1, fileHistoryResponse.getFiles().size());
 		assertEquals(files.get(0), fileHistoryResponse.getFiles().get(0));
 		
 		// Create GetFileRequest for the first returned file
-		GetFileRequest getFileRequest = new GetFileRequest();
+		GetFileFolderRequest getFileRequest = new GetFileFolderRequest();
 		getFileRequest.setId(22);
 		getFileRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 		getFileRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
@@ -241,7 +241,7 @@ public class BasicWatchServerTest {
 		
 		// Restore file test
 		
-		RestoreRequest restoreRequest = new RestoreRequest();
+		RestoreFileFolderRequest restoreRequest = new RestoreFileFolderRequest();
 		restoreRequest.setId(70);
 		restoreRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 		restoreRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
@@ -251,8 +251,8 @@ public class BasicWatchServerTest {
 		
 		response = waitForResponse(70);
 		
-		assertTrue(response instanceof RestoreResponse);
-		RestoreResponse restoreResponse = (RestoreResponse) response;
+		assertTrue(response instanceof RestoreFileFolderResponse);
+		RestoreFileFolderResponse restoreResponse = (RestoreFileFolderResponse) response;
 		
 		byte[] copyChecksum = FileUtil.createChecksum(clientA.getLocalFile("file-1.bak"), "SHA1");
 		byte[] restoreChecksum = FileUtil.createChecksum(restoreResponse.getRestoredFile(), "SHA1");
@@ -277,7 +277,7 @@ public class BasicWatchServerTest {
 	}
 	
 	@Subscribe
-	public void onGetFileResponseInternal(GetFileResponseInternal internalResponse) {
+	public void onGetFileResponseInternal(GetFileFolderResponseInternal internalResponse) {
 		this.internalResponse = internalResponse;
 	}
 	

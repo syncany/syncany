@@ -15,20 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
-import org.simpleframework.xml.Element;
-
-
-public class StatusRequest extends WatchRequest {
-	@Element(required = false)
-	private boolean forceChecksum = false;
-
-	public boolean isForceChecksum() {
-		return forceChecksum;
+public class FolderResponse extends Response {
+	public FolderResponse() {
+		// Required default constructor!
 	}
-
-	public void setForceChecksum(boolean forceChecksum) {
-		this.forceChecksum = forceChecksum;
-	}	
+	
+	public FolderResponse(int code, Integer requestId, String message) {
+		super(code, requestId, message);
+	}
 }

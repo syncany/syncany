@@ -17,28 +17,8 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.Request;
 
-public class RestoreRequest extends WatchRequest {
-	@Element(required = true)
-	private String fileHistoryId;
-	
-	@Element(required = true)
-	private int version;
-
-	public String getFileHistoryId() {
-		return fileHistoryId;
-	}
-
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setFileHistoryId(String fileHistoryId) {
-		this.fileHistoryId = fileHistoryId;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
-	}
+public class ListWatchesManagementRequest extends Request {
+	// Nothing here.
 }

@@ -18,40 +18,28 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
 
-@Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public abstract class Response extends Message {
+public class GetFileFolderRequest extends FolderRequest {
 	@Element(required = true)
-	private int code;
+	private String fileHistoryId;
 	
-	@Element(required = false)
-	private Integer requestId;
+	@Element(required = true)
+	private int version;
 	
-	@Element(required = false)
-	private String message;
-
-	public Response() {
-		// Required default constructor!
-	}
-	
-	public Response(int code, Integer requestId, String message) {
-		this.code = code;
-		this.requestId = requestId;
-		this.message = message;
+	public String getFileHistoryId() {
+		return fileHistoryId;
 	}
 
-	public int getCode() {
-		return code;
-	}
-
-	public Integer getRequestId() {
-		return requestId;
+	public int getVersion() {
+		return version;
 	}
 	
-	public String getMessage() {
-		return message;
+	public void setFileHistoryId(String fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
+	}
+	
+	public void setVersion(int version) {
+		this.version = version;
 	}
 }

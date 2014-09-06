@@ -15,34 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-
-public class CliRequest extends WatchRequest {
-	@Element(required = true)
-	private String command;
-	
-	@ElementList(entry = "arg")
-	private ArrayList<String> commandArgs;
-
-	public void setCommand(String command) {
-		this.command = command;
-	}
-
-	public void setCommandArgs(List<String> commandArgs) {
-		this.commandArgs = new ArrayList<>(commandArgs);
-	}
-
-	public String getCommand() {
-		return command;
-	}
-
-	public ArrayList<String> getCommandArgs() {
-		return commandArgs;
-	}	
+/**
+ * A message is either a request or a response sent to 
+ * or from the daemon. All messages must inherit from this
+ * class. Messages can be serialized/deserialized using the
+ * {@link MessageFactory}. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+public abstract class Message {
+	// Nothing here.
 }

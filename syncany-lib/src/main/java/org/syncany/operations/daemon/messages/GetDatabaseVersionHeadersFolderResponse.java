@@ -22,27 +22,20 @@ import java.util.List;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.syncany.database.FileVersion;
+import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
 
-public class GetFileTreeResponse extends Response {
+public class GetDatabaseVersionHeadersFolderResponse extends FolderResponse {
 	@Element(required = true)
 	private String root;
 	
-	@Element(required = true)
-	private String prefix;
+	@ElementList(required = true, entry="databaseVersionHeader")
+	private ArrayList<DatabaseVersionHeader> databaseVersionHeaders;	
 	
-	@ElementList(required = true, entry="file")
-	private ArrayList<FileVersion> files;	
-	
-	public GetFileTreeResponse(int requestId, String root, String prefix, List<FileVersion> files) {
+	public GetDatabaseVersionHeadersFolderResponse(int requestId, String root, List<DatabaseVersionHeader> databaseVersionHeaders) {
 		super(200, requestId, null);
 		
 		this.root = root;
-		this.prefix = prefix;
-		this.files = new ArrayList<FileVersion>(files);
+		this.databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(databaseVersionHeaders);
 	}	
-	
-	public List<FileVersion> getFiles() {
-		return files;
-	}
 }

@@ -77,6 +77,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
+		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
 
 		OptionSet options = parser.parse(operationArguments);
 		List<?> nonOptionArgs = options.nonOptionArguments();
@@ -109,6 +110,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
+		operationOptions.setDaemon(!options.has(optionNoDaemon));		
 
 		return operationOptions;
 	}
@@ -119,6 +121,11 @@ public class ConnectCommand extends AbstractInitCommand {
 			out.println("Repository connected, and local folder initialized.");
 			out.println("You can now use the 'syncany' command to sync your files.");
 			out.println();
+			
+			if (operationResult.isAddedToDaemon()) {
+				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
+				out.println();
+			}			
 		}
 		else if (operationResult.getResultCode() == ConnectResultCode.NOK_TEST_FAILED) {
 			StorageTestResult testResult = operationResult.getTestResult();

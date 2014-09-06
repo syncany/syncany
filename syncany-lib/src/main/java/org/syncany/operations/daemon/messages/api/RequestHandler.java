@@ -15,22 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
-import java.io.File;
-
-import org.simpleframework.xml.Element;
-
-public class RestoreResponse extends Response {
-	@Element(required = true)
-	private File restoredFile;	
-	
-	public RestoreResponse(int requestId, File restoredFile) {
-		super(200, requestId, null);
-		this.restoredFile = restoredFile;
-	}	
-
-	public File getRestoredFile() {
-		return restoredFile;
-	}
+public abstract class RequestHandler {
+	// Marker
 }

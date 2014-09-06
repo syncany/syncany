@@ -17,17 +17,8 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
 
-public class GetFileHistoryRequest extends WatchRequest {
-	@Element(required = true)
-	private String fileHistoryId;
-	
-	public String getFileHistoryId() {
-		return fileHistoryId;
-	}
-	
-	public void setFileHistoryId(String fileHistoryId) {
-		this.fileHistoryId = fileHistoryId;
-	}
+public class GetDatabaseVersionHeadersFolderRequest extends FolderRequest {
+	// Nothing here
 }

@@ -17,18 +17,29 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.syncany.database.FileVersion;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
 
-public class ListWatchesResponse extends Response {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
+public class GetFileHistoryFolderResponse extends FolderResponse {
+	@Element(required = true)
+	private String root;
+
+	@ElementList(required = true, entry="file")
+	private ArrayList<FileVersion> files;	
 	
-	public ListWatchesResponse(int requestId, List<File> watches) {
+	public GetFileHistoryFolderResponse(int requestId, String root, List<FileVersion> files) {
 		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
+		
+		this.root = root;
+		this.files = new ArrayList<FileVersion>(files);
 	}	
+	
+	public List<FileVersion> getFiles() {
+		return files;
+	}
 }

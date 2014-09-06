@@ -15,42 +15,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
 import org.simpleframework.xml.Element;
-import org.syncany.database.FileVersion.FileType;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-public class GetFileTreeRequest extends WatchRequest {
-	@Element(required = false)
-	private String prefix = "";
+@Root(strict = false)
+@Namespace(reference = "http://syncany.org/ws/1")
+public abstract class Response extends Message {
+	@Element(required = true)
+	private int code;
 	
 	@Element(required = false)
-	private FileType type = null;
+	private Integer requestId;
 	
 	@Element(required = false)
-	private String date = null;
+	private String message;
+
+	public Response() {
+		// Required default constructor!
+	}
 	
-	public String getPrefix() {
-		return prefix;
+	public Response(int code, Integer requestId, String message) {
+		this.code = code;
+		this.requestId = requestId;
+		this.message = message;
 	}
 
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
+	public int getCode() {
+		return code;
 	}
 
-	public FileType getType() {
-		return type;
+	public Integer getRequestId() {
+		return requestId;
 	}
-
-	public void setType(FileType type) {
-		this.type = type;
-	}
-
-	public String getDate() {
-		return date;
-	}
-
-	public void setDate(String date) {
-		this.date = date;
+	
+	public String getMessage() {
+		return message;
 	}
 }

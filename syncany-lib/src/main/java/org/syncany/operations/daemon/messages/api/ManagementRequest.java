@@ -15,24 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
-import org.simpleframework.xml.Element;
-
-public class CliResponse extends Response {
-	@Element(required = true)
-	private String output;	
-	
-	public CliResponse() {
-		// Required default constructor!
-	}
-	
-	public CliResponse(int requestId, String output) {
-		super(200, requestId, null);
-		this.output = output;
-	}	
-	
-	public String getOutput() {
-		return output;
-	}
+public class ManagementRequest extends Request {
+	// Marker
 }

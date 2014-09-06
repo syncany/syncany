@@ -15,23 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import java.util.logging.Logger;
 
-@Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public abstract class Request extends Message {
-	@Element(required = true)
-	private int id;	
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
+public abstract class ManagementRequestHandler {
+	protected static final Logger logger = Logger.getLogger(ManagementRequestHandler.class.getSimpleName());
+	
+	public abstract Response handleRequest(ManagementRequest request);
+	
+	public static ManagementRequestHandler createManagementRequestHandler(Request request) throws Exception {		
+		String fqClassName = request.getClass().getName()+ManagementRequestHandler.class.getSimpleName();		
+		Class<?> clazz = Class.forName(fqClassName);
+		
+		return (ManagementRequestHandler) clazz.newInstance();
+	}    
 }

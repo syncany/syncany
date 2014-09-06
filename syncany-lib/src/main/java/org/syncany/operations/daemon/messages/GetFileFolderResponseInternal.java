@@ -17,23 +17,22 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import java.io.File;
 
-public class GetFileResponse extends Response {
-	@Element(required = true)
-	private String root;
+public class GetFileFolderResponseInternal {
+	private GetFileFolderResponse fileResponse;
+	private File tempFile;
+	
+	public GetFileFolderResponseInternal(GetFileFolderResponse fileResponse, File tempFile) {
+		this.fileResponse = fileResponse;
+		this.tempFile = tempFile;
+	}
+	
+	public GetFileFolderResponse getFileResponse() {
+		return fileResponse;
+	}
 
-	@Element(required = true)
-	private String tempFileToken;	
-	
-	public GetFileResponse(int requestId, String root, String tempFileToken) {
-		super(200, requestId, null);
-		
-		this.root = root;
-		this.tempFileToken = tempFileToken;
-	}	
-	
-	public String getTempToken() {
-		return tempFileToken;
+	public File getTempFile() {
+		return tempFile;
 	}
 }

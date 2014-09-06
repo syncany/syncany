@@ -17,22 +17,33 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
-public class GetFileResponseInternal {
-	private GetFileResponse fileResponse;
-	private File tempFile;
-	
-	public GetFileResponseInternal(GetFileResponse fileResponse, File tempFile) {
-		this.fileResponse = fileResponse;
-		this.tempFile = tempFile;
-	}
-	
-	public GetFileResponse getFileResponse() {
-		return fileResponse;
-	}
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.syncany.database.FileVersion;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
 
-	public File getTempFile() {
-		return tempFile;
+public class GetFileTreeFolderResponse extends FolderResponse {
+	@Element(required = true)
+	private String root;
+	
+	@Element(required = true)
+	private String prefix;
+	
+	@ElementList(required = true, entry="file")
+	private ArrayList<FileVersion> files;	
+	
+	public GetFileTreeFolderResponse(int requestId, String root, String prefix, List<FileVersion> files) {
+		super(200, requestId, null);
+		
+		this.root = root;
+		this.prefix = prefix;
+		this.files = new ArrayList<FileVersion>(files);
+	}	
+	
+	public List<FileVersion> getFiles() {
+		return files;
 	}
 }

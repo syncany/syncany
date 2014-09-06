@@ -33,8 +33,8 @@ import java.util.regex.Pattern;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
+import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Request;
 
 /**
  * InternalWebSocketHandler handles the web socket requests 

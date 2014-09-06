@@ -17,14 +17,21 @@
  */
 package org.syncany.operations.daemon.messages;
 
-/**
- * A message is either a request or a response sent to 
- * or from the daemon. All messages must inherit from this
- * class. Messages can be serialized/deserialized using the
- * {@link MessageFactory}. 
- * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
-public abstract class Message {
-	// Nothing here.
+import java.io.File;
+
+import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
+
+public class RestoreFileFolderResponse extends FolderResponse {
+	@Element(required = true)
+	private File restoredFile;	
+	
+	public RestoreFileFolderResponse(int requestId, File restoredFile) {
+		super(200, requestId, null);
+		this.restoredFile = restoredFile;
+	}	
+
+	public File getRestoredFile() {
+		return restoredFile;
+	}
 }

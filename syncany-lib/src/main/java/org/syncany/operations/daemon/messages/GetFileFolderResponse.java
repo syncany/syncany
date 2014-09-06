@@ -17,6 +17,24 @@
  */
 package org.syncany.operations.daemon.messages;
 
-public class ListWatchesRequest extends Request {
-	// Nothing here.
+import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
+
+public class GetFileFolderResponse extends FolderResponse {
+	@Element(required = true)
+	private String root;
+
+	@Element(required = true)
+	private String tempFileToken;	
+	
+	public GetFileFolderResponse(int requestId, String root, String tempFileToken) {
+		super(200, requestId, null);
+		
+		this.root = root;
+		this.tempFileToken = tempFileToken;
+	}	
+	
+	public String getTempToken() {
+		return tempFileToken;
+	}
 }

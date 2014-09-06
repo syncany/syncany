@@ -18,41 +18,28 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
 
-public class CleanUpResponse extends Response {
+public class RestoreFileFolderRequest extends FolderRequest {
 	@Element(required = true)
-	private String resultCode;
-	
-	@Element(required = true)
-	private int mergedDatabaseFilesCount = 0;
+	private String fileHistoryId;
 	
 	@Element(required = true)
-	private int removedOldVersionsCount = 0;
-	
-	public CleanUpResponse() {
-		// Required default constructor!
+	private int version;
+
+	public String getFileHistoryId() {
+		return fileHistoryId;
+	}
+
+	public int getVersion() {
+		return version;
 	}
 	
-	public CleanUpResponse(int requestId, String message) {
-		super(200, requestId, message);
-	}	
+	public void setFileHistoryId(String fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
+	}
 	
-	public void setRemovedOldVersionsCount(int removedOldVersionsCount) {
-		this.removedOldVersionsCount = removedOldVersionsCount;
-	}
-	public void setResultCode(String resultCode) {
-		this.resultCode = resultCode;
-	}
-	public void setMergedDatabaseFilesCount(int mergedDatabaseFilesCount) {
-		this.mergedDatabaseFilesCount = mergedDatabaseFilesCount;
-	}
-	public int getMergedDatabaseFilesCount() {
-		return mergedDatabaseFilesCount;
-	}
-	public String getResultCode() {
-		return resultCode;
-	}
-	public int getRemovedOldVersionsCount() {
-		return removedOldVersionsCount;
+	public void setVersion(int version) {
+		this.version = version;
 	}
 }

@@ -17,17 +17,26 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.Response;
+import org.syncany.operations.status.StatusOperationResult;
 
-public class WatchRequest extends Request {
-	@Element(required = true)
-	private String root;
+public class StatusFolderResponse extends Response {
+	private StatusOperationResult result;
 
-	public String getRoot() {
-		return root;
+	public StatusFolderResponse() {
+		// Nothing
+	}
+	
+	public StatusFolderResponse(StatusOperationResult result) {
+		super();
+		this.result = result;
 	}
 
-	public void setRoot(String root) {
-		this.root = root;
+	public StatusOperationResult getResult() {
+		return result;
+	}
+
+	public void setResult(StatusOperationResult result) {
+		this.result = result;
 	}
 }

@@ -89,7 +89,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		super(null, null);
 		
 		this.options = options;
-		this.result = null;
+		this.result = new ConnectOperationResult();
 		this.listener = listener;
 	}		
 	
@@ -194,7 +194,14 @@ public class ConnectOperation extends AbstractInitOperation {
 		// Shutdown plugin
 		transferManager.disconnect();
 		
-		return new ConnectOperationResult(ConnectResultCode.OK);
+		// Add to daemon (if requested)
+		if (options.isDaemon()) {
+			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
+			result.setAddedToDaemon(addedToDaemonConfig);
+		}
+		
+		result.setResultCode(ConnectResultCode.OK);
+		return result;
 	}		
 
 	private boolean decryptAndVerifyRepoFile(File tmpRepoFile, SaltedSecretKey masterKey) throws StorageException {
@@ -315,7 +322,10 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 		else {
 			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
-			result = new ConnectOperationResult(ConnectResultCode.NOK_TEST_FAILED, testResult);			
+			
+			result.setResultCode(ConnectResultCode.NOK_TEST_FAILED);
+			result.setTestResult(testResult);
+			
 			return false;
 		}
 	}

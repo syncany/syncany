@@ -67,10 +67,10 @@ import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.daemon.DaemonOperation;
 import org.syncany.operations.daemon.messages.CleanUpRequest;
 import org.syncany.operations.daemon.messages.CliResponse;
-import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.Response;
-import org.syncany.operations.daemon.messages.StatusRequest;
+import org.syncany.operations.daemon.messages.StatusFolderRequest;
+import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.PidFileUtil;
@@ -387,27 +387,13 @@ public class CommandLineClient extends Client {
 			// TODO [medium] : could use a fiel-to-field property copying utility
 			switch (commandName.toLowerCase()) {
 				case "status":
-					request = new StatusRequest();
+					request = new StatusFolderRequest();
 					request.setId(Math.abs(new Random().nextInt()));
 					StatusOperationOptions statusOption = ((StatusCommand)command).parseOptions(args);
-					((StatusRequest)request).setForceChecksum(statusOption.isForceChecksum());
-					((StatusRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
+					((StatusFolderRequest)request).setForceChecksum(statusOption.isForceChecksum());
+					((StatusFolderRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
 					
-					break;
-				case "cleanup":
-					request = new CleanUpRequest();
-					request.setId(Math.abs(new Random().nextInt()));
-					
-					CleanupOperationOptions cleanupOption = ((CleanupCommand)command).parseOptions(args);
-					((CleanUpRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
-					((CleanUpRequest)request).setKeepVersionsCount(cleanupOption.getKeepVersionsCount());
-					((CleanUpRequest)request).setMaxDatabaseFiles(cleanupOption.getMaxDatabaseFiles());
-					((CleanUpRequest)request).setMinSecondsBetweenCleanups(cleanupOption.getMinSecondsBetweenCleanups());
-					((CleanUpRequest)request).setStatusOptions(cleanupOption.getStatusOptions());
-					((CleanUpRequest)request).setForce(cleanupOption.isForce());
-					((CleanUpRequest)request).setMergeRemoteFiles(cleanupOption.isMergeRemoteFiles());
-					((CleanUpRequest)request).setRemoveOldVersions(cleanupOption.isRemoveOldVersions());
-					break;
+					break;				
 					
 				case "debug":
 					// TODO

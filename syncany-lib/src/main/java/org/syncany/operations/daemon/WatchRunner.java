@@ -36,40 +36,30 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
-import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Assembler;
 import org.syncany.operations.Downloader;
-import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.CleanUpRequest;
-import org.syncany.operations.daemon.messages.CleanUpResponse;
-import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersRequest;
-import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersResponse;
-import org.syncany.operations.daemon.messages.GetFileHistoryRequest;
-import org.syncany.operations.daemon.messages.GetFileHistoryResponse;
-import org.syncany.operations.daemon.messages.GetFileRequest;
-import org.syncany.operations.daemon.messages.GetFileResponse;
-import org.syncany.operations.daemon.messages.GetFileResponseInternal;
-import org.syncany.operations.daemon.messages.GetFileTreeRequest;
-import org.syncany.operations.daemon.messages.GetFileTreeResponse;
-import org.syncany.operations.daemon.messages.RestoreRequest;
-import org.syncany.operations.daemon.messages.RestoreResponse;
-import org.syncany.operations.daemon.messages.StatusRequest;
-import org.syncany.operations.daemon.messages.StatusResponse;
+import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersFolderRequest;
+import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersFolderResponse;
+import org.syncany.operations.daemon.messages.GetFileFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileFolderResponse;
+import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
+import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
+import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
+import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
+import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
 import org.syncany.operations.daemon.messages.WatchEventResponse;
-import org.syncany.operations.daemon.messages.WatchRequest;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
 import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
-import org.syncany.operations.status.StatusOperation;
-import org.syncany.operations.status.StatusOperationOptions;
-import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -151,167 +141,49 @@ public class WatchRunner implements WatchOperationListener {
 	}
 	
 	@Subscribe
-	public void onRequestReceived(WatchRequest watchRequest) {		
-		File requestRootFolder = new File(watchRequest.getRoot());
+	public void onRequestReceived(FolderRequest folderRequest) {		
+		File requestRootFolder = new File(folderRequest.getRoot());
 		boolean localDirMatches = requestRootFolder.equals(config.getLocalDir());
 		
 		if (localDirMatches) {
-			logger.log(Level.INFO, "Received " + watchRequest);
+			logger.log(Level.INFO, "Received " + folderRequest);
 			
-			if (watchRequest instanceof GetFileTreeRequest) {
-				handleGetFileTreeRequest((GetFileTreeRequest) watchRequest);			
+			try {
+				FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest);
+				handler.handleRequest(folderRequest);
 			}
-			else if (watchRequest instanceof GetFileHistoryRequest) {
-				handleGetFileHistoryRequest((GetFileHistoryRequest) watchRequest);			
+			catch (Exception e) {
+				eventBus.post(new BadRequestResponse(folderRequest.getId(), "Invalid request."));
 			}
-			else if (watchRequest instanceof GetFileRequest) {
-				handleGetFileRequest((GetFileRequest) watchRequest);
+			
+			/*
+			if (folderRequest instanceof GetFileTreeFolderRequest) {
+				handleGetFileTreeRequest((GetFileTreeFolderRequest) folderRequest);			
 			}
-			else if (watchRequest instanceof GetDatabaseVersionHeadersRequest) {
-				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersRequest) watchRequest);			
+			else if (folderRequest instanceof GetFileHistoryFolderRequest) {
+				handleGetFileHistoryRequest((GetFileHistoryFolderRequest) folderRequest);			
 			}
-			else if (watchRequest instanceof RestoreRequest) {
-				handleRestoreRequest((RestoreRequest) watchRequest);			
+			else if (folderRequest instanceof GetFileFolderRequest) {
+				handleGetFileRequest((GetFileFolderRequest) folderRequest);
 			}
-			else if (watchRequest instanceof StatusRequest) {
-				handleStatusRequest((StatusRequest) watchRequest);			
+			else if (folderRequest instanceof GetDatabaseVersionHeadersFolderRequest) {
+				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersFolderRequest) folderRequest);			
 			}
-			else if (watchRequest instanceof CleanUpRequest) {
-				handleCleanUpRequest((CleanUpRequest) watchRequest);
+			else if (folderRequest instanceof RestoreFileFolderRequest) {
+				handleRestoreRequest((RestoreFileFolderRequest) folderRequest);			
 			}
-//			else if (watchRequest instanceof CliRequest) {
-//				handleCliRequest((CliRequest) watchRequest);
-//			}
+			else if (folderRequest instanceof StatusFolderRequest) {
+				handleStatusRequest((StatusFolderRequest) folderRequest);			
+			}
 			else {
-				eventBus.post(new BadRequestResponse(watchRequest.getId(), "Invalid watch request for root."));
-			}
+				
+			}*/
 		}		
 	}
 
-	private void handleCleanUpRequest(CleanUpRequest cleanUpRequest) {
-		try {
-			CleanupOperationOptions cleanUpOperationOption = new CleanupOperationOptions();
-			cleanUpOperationOption.setForce(cleanUpRequest.isForce());
-			
-			CleanupOperation cleanUpOperation = new CleanupOperation(config, cleanUpOperationOption);
-			
-			CleanupOperationResult cleanUpOperationResult = cleanUpOperation.execute();
-			
-			StringBuilder messageBuilder = new StringBuilder();
-			
-			switch (cleanUpOperationResult.getResultCode()) {
-				case NOK_DIRTY_LOCAL:
-					messageBuilder.append("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
-					break;
-					
-				case NOK_RECENTLY_CLEANED:
-					messageBuilder.append("Cleanup has been done recently, so it is not necessary. If you are sure it is necessary, override with --force.");
-					messageBuilder.append(System.getProperty("line.separator"));
-		
-				case NOK_LOCAL_CHANGES:
-					messageBuilder.append("Local changes detected. Please call 'up' first'.");
-					break;
-		
-				case NOK_REMOTE_CHANGES:
-					messageBuilder.append("Remote changes detected or repository is locked by another user. Please call 'down' first.");
-					break;
-					
-				case NOK_OTHER_OPERATIONS_RUNNING:
-					messageBuilder.append("Cannot run cleanup while other clients are performing up/down/cleanup. Try again later.");
-					break;
-		
-				case OK:
-					if (cleanUpOperationResult.getMergedDatabaseFilesCount() > 0) {
-						messageBuilder.append(cleanUpOperationResult.getMergedDatabaseFilesCount() + " database files merged.");
-					}
-					
-					if (cleanUpOperationResult.getRemovedMultiChunks().size() > 0) {
-						long totalRemovedMultiChunkSize = 0;
-						
-						for (MultiChunkEntry removedMultiChunk : cleanUpOperationResult.getRemovedMultiChunks().values()) {
-							totalRemovedMultiChunkSize += removedMultiChunk.getSize();
-						}
-						
-						messageBuilder.append(String.format("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n", 
-								cleanUpOperationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024));
-					}
-		
-					if (cleanUpOperationResult.getRemovedOldVersionsCount() > 0) {
-						messageBuilder.append(cleanUpOperationResult.getRemovedOldVersionsCount() + " file histories shortened.");
-						// TODO [low] This counts only the file histories, not file versions; not very helpful!
-					}
-		
-					messageBuilder.append("Cleanup successful.");			
-					break;
-		
-				case OK_NOTHING_DONE:
-					messageBuilder.append("Cleanup not necessary. Nothing done.");
-					break;
-		
-				default:
-					throw new RuntimeException("Invalid result code: " + cleanUpOperationResult.getResultCode().toString());
-			}	
-			
-			CleanUpResponse cleanUpResponse = new CleanUpResponse(cleanUpRequest.getId(), messageBuilder.toString());
-			cleanUpResponse.setMergedDatabaseFilesCount(cleanUpOperationResult.getMergedDatabaseFilesCount());
-			cleanUpResponse.setRemovedOldVersionsCount(cleanUpOperationResult.getRemovedOldVersionsCount());
-			cleanUpResponse.setResultCode(cleanUpOperationResult.getResultCode().toString());
-			
-			eventBus.post(cleanUpResponse);
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot clean up.", e);
-			eventBus.post(new BadRequestResponse(cleanUpRequest.getId(), "Cannot clean up."));
-		}
-	}
+	
 
-	private void handleStatusRequest(StatusRequest statusRequest) {
-		try {
-			StatusOperationOptions statusOperationOption = new StatusOperationOptions();
-			statusOperationOption.setForceChecksum(statusRequest.isForceChecksum());
-			
-			StatusOperation statusOperation = new StatusOperation(config, statusOperationOption);
-			StatusOperationResult statusOperationResult = statusOperation.execute();
-			
-			StringBuilder messageBuilder = new StringBuilder();
-			
-			ArrayList<String> changedFilesList = new ArrayList<>();
-			ArrayList<String> deletedFilesList = new ArrayList<>();
-			ArrayList<String> newFilesList = new ArrayList<>(); 
-			
-			if (statusOperationResult.getChangeSet().hasChanges()) {
-				for (String f : statusOperationResult.getChangeSet().getChangedFiles()) {
-					changedFilesList.add(f);
-					messageBuilder.append(" M").append(f).append(System.getProperty("line.separator"));
-				}
-				for (String f : statusOperationResult.getChangeSet().getDeletedFiles()) {
-					deletedFilesList.add(f);
-					messageBuilder.append(" M").append(f).append(System.getProperty("line.separator"));
-				}
-				for (String f : statusOperationResult.getChangeSet().getNewFiles()) {
-					newFilesList.add(f);
-					messageBuilder.append(" M").append(f).append(System.getProperty("line.separator"));
-				}
-			}
-			else {
-				messageBuilder.append("No Changes");
-			}
-			
-			StatusResponse statusResponse = new StatusResponse(statusRequest.getId(), messageBuilder.toString());
-			
-			statusResponse.setChangedFiles(changedFilesList);
-			statusResponse.setDeletedFiles(deletedFilesList);
-			statusResponse.setNewFiles(newFilesList);
-			
-			eventBus.post(statusResponse);
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot obtain status.", e);
-			eventBus.post(new BadRequestResponse(statusRequest.getId(), "Cannot obtain status."));
-		}
-	}
-
-	private void handleGetFileRequest(GetFileRequest fileRequest) {
+	private void handleGetFileRequest(GetFileFolderRequest fileRequest) {
 		try {
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileRequest.getFileHistoryId());
 			long version = fileRequest.getVersion();
@@ -329,8 +201,8 @@ public class WatchRunner implements WatchOperationListener {
 			File tempFile = assembler.assembleToCache(fileVersion);			
 			String tempFileToken = StringUtil.toHex(ObjectId.secureRandomBytes(40));
 			
-			GetFileResponse fileResponse = new GetFileResponse(fileRequest.getId(), fileRequest.getRoot(), tempFileToken);
-			GetFileResponseInternal fileResponseInternal = new GetFileResponseInternal(fileResponse, tempFile);
+			GetFileFolderResponse fileResponse = new GetFileFolderResponse(fileRequest.getId(), fileRequest.getRoot(), tempFileToken);
+			GetFileFolderResponseInternal fileResponseInternal = new GetFileFolderResponseInternal(fileResponse, tempFile);
 
 			eventBus.post(fileResponseInternal);
 		}
@@ -340,7 +212,7 @@ public class WatchRunner implements WatchOperationListener {
 		}		
 	}
 
-	private void handleRestoreRequest(RestoreRequest restoreRequest) {
+	private void handleRestoreRequest(RestoreFileFolderRequest restoreRequest) {
 		RestoreOperationOptions restoreOptions = new RestoreOperationOptions();
 		
 		restoreOptions.setFileHistoryId(FileHistoryId.parseFileId(restoreRequest.getFileHistoryId()));
@@ -349,7 +221,7 @@ public class WatchRunner implements WatchOperationListener {
 		try {
 			RestoreOperationResult restoreResult = new RestoreOperation(config, restoreOptions).execute();
 			
-			RestoreResponse restoreResponse = new RestoreResponse(restoreRequest.getId(), restoreResult.getTargetFile());
+			RestoreFileFolderResponse restoreResponse = new RestoreFileFolderResponse(restoreRequest.getId(), restoreResult.getTargetFile());
 			eventBus.post(restoreResponse);								
 		}
 		catch (Exception e) {
@@ -374,33 +246,13 @@ public class WatchRunner implements WatchOperationListener {
 //		eventBus.post(cliResponse);
 //	}
 
-//	private void handleCliRequestNoSyncRunning(CliRequest cliRequest) {
-//		try {
-//			Operation op = OperationFactory.getInstance(cliRequest.getCommand(), config);	
-//			OperationResult result = op.execute();
-//			
-//			ByteArrayOutputStream cliOutputStream = new ByteArrayOutputStream();
-//			
-//			String cliOutput = cliOutputStream.toString();
-//			
-//			CliResponse cliResponse = new CliResponse(cliRequest.getId(), cliOutput);
-//			eventBus.post(cliResponse);
-//			
-//			cliOutputStream.close();
-//		}
-//		catch (Exception e) {
-//			logger.log(Level.WARNING, "Exception thrown when running CLI command through daemon: " + e, e);
-//			eventBus.post(new BadRequestResponse(cliRequest.getId(), e.getMessage()));
-//		}		
-//	}
-
-	private void handleGetFileTreeRequest(GetFileTreeRequest fileTreeRequest) {
+	private void handleGetFileTreeRequest(GetFileTreeFolderRequest fileTreeRequest) {
 		try {
 			String prefixLikeQuery = fileTreeRequest.getPrefix() + "%";
 			Date date = (fileTreeRequest.getDate() != null) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(fileTreeRequest.getDate()) : null;
 			
 			Map<String, FileVersion> fileTree = localDatabase.getFileTree(prefixLikeQuery, date, false, (FileType[]) null);
-			GetFileTreeResponse fileTreeResponse = new GetFileTreeResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
+			GetFileTreeFolderResponse fileTreeResponse = new GetFileTreeFolderResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
 			
 			eventBus.post(fileTreeResponse);	
 		}
@@ -409,17 +261,17 @@ public class WatchRunner implements WatchOperationListener {
 		}	
 	}
 	
-	private void handleGetFileHistoryRequest(GetFileHistoryRequest fileHistoryRequest) {
+	private void handleGetFileHistoryRequest(GetFileHistoryFolderRequest fileHistoryRequest) {
 		FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileHistoryRequest.getFileHistoryId());
 		List<FileVersion> fileHistory = localDatabase.getFileHistory(fileHistoryId);
-		GetFileHistoryResponse fileHistoryRespose = new GetFileHistoryResponse(fileHistoryRequest.getId(), fileHistoryRequest.getRoot(), fileHistory);
+		GetFileHistoryFolderResponse fileHistoryRespose = new GetFileHistoryFolderResponse(fileHistoryRequest.getId(), fileHistoryRequest.getRoot(), fileHistory);
 		
 		eventBus.post(fileHistoryRespose);
 	}
 	
-	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersRequest headersRequest) {
+	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersFolderRequest headersRequest) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getNonEmptyDatabaseVersionHeaders(); 
-		GetDatabaseVersionHeadersResponse headersResponse = new GetDatabaseVersionHeadersResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
+		GetDatabaseVersionHeadersFolderResponse headersResponse = new GetDatabaseVersionHeadersFolderResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
 		
 		eventBus.post(headersResponse);
 	}

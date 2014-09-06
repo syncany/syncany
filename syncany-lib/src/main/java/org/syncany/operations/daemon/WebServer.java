@@ -62,10 +62,10 @@ import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
 import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
-import org.syncany.operations.daemon.messages.GetFileResponse;
-import org.syncany.operations.daemon.messages.GetFileResponseInternal;
-import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Response;
+import org.syncany.operations.daemon.messages.GetFileFolderResponse;
+import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
+import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.plugins.web.WebInterfacePlugin;
 
 import com.google.common.cache.Cache;
@@ -267,9 +267,9 @@ public class WebServer {
 	}
 
 	@Subscribe
-	public void onGetFileResponseInternal(GetFileResponseInternal fileResponseInternal) {
+	public void onGetFileResponseInternal(GetFileFolderResponseInternal fileResponseInternal) {
 		File tempFile = fileResponseInternal.getTempFile();
-		GetFileResponse fileResponse = fileResponseInternal.getFileResponse();
+		GetFileFolderResponse fileResponse = fileResponseInternal.getFileResponse();
 		
 		fileTokenTempFileCache.asMap().put(fileResponse.getTempToken(), tempFile);
 		eventBus.post(fileResponse);
