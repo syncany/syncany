@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
@@ -198,6 +199,6 @@ public abstract class AbstractTransferManagerTest {
 		TransferSettings connection = pluginInfo.createSettings();
 		connection.init(createPluginSettings());
 
-		return pluginInfo.createTransferManager(connection, null);
+		return new TransactionAwareTransferManager(pluginInfo.createTransferManager(connection, null), null);
 	}
 }

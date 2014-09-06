@@ -110,7 +110,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		if (!actionsPath.mkdir()) {
 			throw new StorageException("Cannot create actions directory: " + actionsPath);
 		}
-		
+
 		if (!transactionsPath.mkdir()) {
 			throw new StorageException("Cannot create transactions directory: " + transactionsPath);
 		}
@@ -230,7 +230,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 			}
 		}
 
-		return addAndFilterFilesInTransaction(remoteFileClass, remoteFiles);
+		return remoteFiles;
 	}
 
 	private File getRemoteFile(RemoteFile remoteFile) {
