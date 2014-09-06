@@ -62,7 +62,8 @@ public class RemoteTransaction {
 	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
 		TempRemoteFile temporaryRemoteFile = new TempRemoteFile();
 
-		logger.log(Level.INFO, "- Adding file to TX for UPLOAD: " + localFile + " -> Temp. remote file: " + temporaryRemoteFile + ", final location: " + remoteFile);
+		logger.log(Level.INFO, "- Adding file to TX for UPLOAD: " + localFile + " -> Temp. remote file: " + temporaryRemoteFile
+				+ ", final location: " + remoteFile);
 
 		ActionTO action = new ActionTO();
 		action.setType(ActionTO.TYPE_UPLOAD);
@@ -103,8 +104,8 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 
-		// 1. First, move all files to a temporary location 
-		
+		// 1. First, move all files to a temporary location
+
 		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
@@ -126,7 +127,7 @@ public class RemoteTransaction {
 				}
 			}
 		}
-		
+
 		// 2. Second, move uploaded files to final location
 
 		for (ActionTO action : transactionTO.getActions()) {
@@ -139,8 +140,17 @@ public class RemoteTransaction {
 			}
 		}
 
-		// 3. Third, delete all temporarily moved files and move the transaction file
-		
+		// After this deletion, the transaction is final!
+		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
+		transferManager.delete(remoteTransactionFile);
+		localTransactionFile.delete();
+		logger.log(Level.INFO, "Succesfully committed transaction.");
+
+		// Actually deleting remote files is done after finishing the transaction, because
+		// it cannot be rolled back! If this fails, the temporary files will eventually
+		// be cleaned up by CleanUp and download will not download these, because
+		// they are not in any transaction file.
+
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
@@ -148,14 +158,10 @@ public class RemoteTransaction {
 				logger.log(Level.INFO, "- Deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
 				transferManager.delete(tempRemoteFile);
 			}
-		}		
+		}
 
-		// After this deletion, the transaction is final!
-		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
-		transferManager.delete(remoteTransactionFile);		
-		
-		localTransactionFile.delete();
-		logger.log(Level.INFO, "Succesfully committed transaction.");
+		logger.log(Level.INFO, "Sucessfully deleted final files.");
+
 	}
 
 	private File writeLocalTransactionFile() throws StorageException {
