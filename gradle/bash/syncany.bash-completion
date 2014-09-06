@@ -5,7 +5,7 @@
 # 
 # Bash completion support for [Syncany](https://www.syncany.org/).
 # 
-# The script is largely based on the BZR/Bazaar bash completion script 
+# The script is inspired by the BZR/Bazaar bash completion script 
 # available at https://launchpad.net/bzr-bash-completion
 # 
 # Installation
@@ -17,170 +17,295 @@
 #   * /usr/local/etc/bash-completion.d
 #   * ~/bash-completion.d
 # 
-# 2. Open new bash, and type `sy [TAB]`
+# 2. Open new bash, and type `sy [TAB][TAB]`
 # 
+# Documentation
+# -------------
+# The script is called by bash whenever [TAB] or [TAB][TAB] is pressed after 
+# 'sy (..)'. By reading entered command line parameters, it determines possible
+# bash completions and writes them to the COMPREPLY variable. Bash then 
+# completes the user input if only one entry is listed in the variable or
+# shows the options if more than one is listed in COMPREPLY.
+#
+# The script first determines the current parameter ($cur), the previous 
+# parameter ($prev), the first word ($firstword) and the last word ($lastword).
+# Using the $firstword variable (= the command) and a giant switch/case, 
+# completions are written to $complete_words and $complete_options. 
+#
+# If the current user input ($cur) starts with '-', only $command_options are 
+# displayed/completed, otherwise only $command_words.
+#
 
 shopt -s progcomp
-_sy ()
+_syncany ()
 {
-	local plugins lastcmd
-	local cur cmds cmdIdx cmd cmdOpts fixedWords i globalOpts
-	local curOpt optEnums
-	local IFS=$' \n'
+	local cur prev firstword lastword complete_words complete_options
 
 	COMPREPLY=()
+
 	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	firstword=$(_sy_get_firstword)
+	lastword=$(_sy_get_lastword)
 
-	cmds='cleanup connect down genlink init ls ls-remote plugin restore status up watch'
-	plugins=( local webdav sftp ftp samba s3 )
-	globalOpts=( -l --localdir= -d --debug -h --help -v -vv --print )
+	PLUGINS='\
+		local\
+		webdav\
+		sftp\
+		ftp\
+		samba\
+		simpleweb\
+		s3'
 
-	# do ordinary expansion if we are anywhere after a -- argument
-	for ((i = 1; i < COMP_CWORD; ++i)); do
-		[[ ${COMP_WORDS[i]} == "--" ]] && return 0
-	done
+	CONFLICT_STRATEGIES='\
+		ask\
+		rename'
 
-	# find the command; it's the first word not starting in -
-	cmd=
-	for ((cmdIdx = 1; cmdIdx < ${#COMP_WORDS[@]}; ++cmdIdx)); do
-		if [[ ${COMP_WORDS[cmdIdx]} != -* ]]; then
-			cmd=${COMP_WORDS[cmdIdx]}
-			break
-		fi
-	done
+	# Un-comment this for debug purposes:
+	#   echo -e "\nprev = $prev, cur = $cur, firstword = $firstword, lastword = $lastword\n"
 
-	# complete command name if we are not already past the command
-	if [[ $COMP_CWORD -le cmdIdx ]]; then
-		if [[ $cur == -* ]]; then
-			COMPREPLY=( $( compgen -W "${globalOpts[*]}" -- $cur ) )
-		else
-			COMPREPLY=( $( compgen -W "$cmds" -- $cur ) )
-		fi	
-		
-		return 0
-	fi
-
-	# find the last sub-command; it's the last word not starting in -
-	# almost the same as above, but don't break and can't be empty
-	lastcmd=
-	for ((cmdIdx = 1; cmdIdx < ${#COMP_WORDS[@]}; ++cmdIdx)); do
-		if [[ ${COMP_WORDS[cmdIdx]} != -* ]] && [[ -n ${COMP_WORDS[cmdIdx]} ]] && [[ ${COMP_WORDS[cmdIdx]} != $cur ]]; then
-			lastcmd=${COMP_WORDS[cmdIdx]}
-		fi
-	done
-
-	# find the option for which we want to complete a value
-	curOpt=
-	if [[ $cur != -* ]] && [[ $COMP_CWORD -gt 1 ]]; then
-		curOpt=${COMP_WORDS[COMP_CWORD - 1]}
-		if [[ $curOpt == = ]]; then
-			curOpt=${COMP_WORDS[COMP_CWORD - 2]}
-		elif [[ $cur == : ]]; then
-			cur=
-			curOpt="$curOpt:"
-		elif [[ $curOpt == : ]]; then
-			curOpt=${COMP_WORDS[COMP_CWORD - 2]}:
-		fi
-	fi
-
-	cmdOpts=( )
-	optEnums=( )
-	fixedWords=( )
-	case $cmd in
+	case "${firstword}" in
 	cleanup)
-		cmdOpts=( -M --no-database-merge -V --no-version-remove -k --keep-versions= -f --force-checksum )
+		complete_options='\
+			-M --no-database-merge\
+			-V --no-version-remove\
+			-k --keep-versions\
+			-f --force-checksum'
 		;;
+
 	connect)
-		cmdOpts=( -P --plugin= -o --plugin-option= -I --no-interaction -N --no-daemon )
-
-		case $curOpt in
+		case "${prev}" in
 			--plugin|-P) 
-				optEnums=( "${plugins[@]}" )
-				;;		
+				complete_words="$PLUGINS"
+				;;
+
+			*)
+				complete_options='\
+					-P --plugin\
+					-o --plugin-option\
+					-I --no-interaction\
+					-N --no-daemon'
+				;;
 		esac
 		;;
+
 	down)
-		cmdOpts=( -C --conflict-strategy=ask --conflict-strategy=rename -A --no-apply )
-		cmdEnums=( ask rename )
-		;;
-	genlink)
-		cmdOpts=( -s --short )
-		;;
-	init)
-		cmdOpts=( -P --plugin= -o --plugin-option= -E --no-encryption -G --no-compression -t --create-target -a --advanced -I --no-interaction -N --no-daemon )
+		case "${prev}" in
+			--conflict-strategy|-C) 
+				complete_words="$CONFLICT_STRATEGIES"
+				;;
 
-		case $curOpt in
+			*)
+				complete_options='\
+					-C --conflict-strategy\
+					-A --no-apply'
+				;;	
+		esac
+		;;
+
+	genlink)
+		complete_options='\
+			-s --short'
+		;;
+
+	init)
+		case "${prev}" in
 			--plugin|-P) 
-				optEnums=( "${plugins[@]}" )
-				;;		
+				complete_words="$PLUGINS"
+				;;
+
+			*)
+				complete_options='\
+					-P --plugin\
+					-o --plugin-option\
+					-E --no-encryption\
+					-G --no-compression\
+					-t --create-target\
+					-a --advanced\
+					-I --no-interaction\
+					-N --no-daemon'
+				;;
 		esac
 		;;
+		
 	ls)
-		cmdOpts=( -V --versions= -t --types= -D --date= -r --recursive -f --full-checksums -g --group )
-		;;
-	ls-remote)
-		cmdOpts=( )
-		;;
-	plugin)
-		case $lastcmd in
-			list) 
-				cmdOpts=( -R --remote-only -L --local-only -s --snapshots )
+		case "${prev}" in
+			--types|-t) 
+				complete_words='\
+					t\
+					d\
+					f'
 				;;
-			install) 
-				cmdOpts=( -s --snapshot )
-				fixedWords=( "${plugins[@]}" )
-				;;
-			remove) 
-				cmdOpts=( )
-				fixedWords=( "${plugins[@]}" )
-				;;
-			*) 
-				cmdOpts=( )
-				fixedWords=( list install remove )
+
+			*)
+				complete_options='\
+					-V --versions\
+					-t --types\
+					-D --date\
+					-r --recursive\
+					-f --full-checksums\
+					-g --group'
 				;;
 		esac
 		;;
+
+	ls-remote)
+		;;
+
+	plugin)
+		case "${lastword}" in
+		list) 
+			complete_options='\
+				-R --remote-only\
+				-L --local-only\
+				-s --snapshots'
+
+			;;
+		install) 
+			complete_words="$PLUGINS"
+			complete_options='\
+				-s --snapshot'
+
+			;;
+
+		remove) 
+			complete_words="$PLUGINS"
+			;;
+
+		*) 
+			complete_words='\
+				list\
+				install\
+				remove'
+			;;
+		esac
+		;;
+	
 	restore)
-		cmdOpts=( -r --revision= -t --target= )
+		case "${prev}" in
+			--target|-t)
+				COMPREPLY=( $( compgen -f -- $cur ) )
+				return 0
+				;;
+
+			*)
+				complete_options='\
+					-r --revision\
+					-t --target'
+				;;
+		esac
 		;;
+
 	status)
-		cmdOpts=( -f --force-checksum )
+		complete_options='\
+			-f --force-checksum'
 		;;
+
 	up)
-		cmdOpts=( -f --force-checksum )
+		complete_options='\
+			-f --force-checksum'
 		;;
+
 	watch)
-		cmdOpts=( -i --interval= -s --delay -W --no-watcher -a --announce= -N --no-announcements -f --force-checksum -C --conflict-strategy=ask --conflict-strategy=rename -A --no-apply )
-		;;
+		case "${prev}" in
+			--conflict-strategy|-C) 
+				complete_words="$CONFLICT_STRATEGIES"
+				;;
+
+			*)
+				complete_options='\
+					-i --interval\
+					-s --delay\
+					-W --no-watcher\
+					-a --announce\
+					-N --no-announcements\
+					-f --force-checksum\
+					-C --conflict-strategy\
+					-A --no-apply'
+				;;
+		esac
+		;;			
+	
 	*)
-		cmdOpts=( --help -h )
+		case "${prev}" in
+			--localdir|-l)
+				compopt -o nospace
+				COMPREPLY=( $( compgen -d -S "/" -- $cur ) )
+
+				return 0
+				;;
+
+			*)
+				complete_words='\
+					cleanup\
+					connect\
+					down\
+					genlink\
+					init\
+					ls\
+					ls-remote\
+					plugin\
+					restore\
+					status\
+					up\
+					watch'
+
+				complete_options='\
+					-l --localdir\
+					-d --debug\
+					-h --help\
+					-v -vv\
+					--print'
+				;;
+		esac
 		;;
 	esac
 
-	IFS=$'\n'
-	if [[ ${#fixedWords[@]} -eq 0 ]] && [[ ${#optEnums[@]} -eq 0 ]] && [[ $cur != -* ]]; then
-		# return nothing.
-		return 0
-	elif [[ $cur == = ]] && [[ ${#optEnums[@]} -gt 0 ]]; then
-		# complete directly after "--option=", list all enum values
-		COMPREPLY=( "${optEnums[@]}" )
-		return 0
-	elif [[ $cur == -* ]]; then
-		# return all short and long options
-		fixedWords=( "${cmdOpts[@]}"
-		             "${globalOpts[@]}" )
-	else
-		# return all enums and fixed words
-		fixedWords=( "${optEnums[@]}"
-		             "${fixedWords[@]}" )
-	fi
-
-	if [[ ${#fixedWords[@]} -gt 0 ]]; then
-		COMPREPLY=( $( compgen -W "${fixedWords[*]}" -- $cur ) )
+	# Either display words or options, depending on the user input	
+	if [[ $cur == -* ]]; then
+		COMPREPLY=( $( compgen -W "$complete_options" -- $cur ))
+	
+	else 
+		COMPREPLY=( $( compgen -W "$complete_words" -- $cur ))
 	fi
 
 	return 0
 }
 
-complete -F _sy sy
-complete -F _sy syncany
+## Helper functions ###
+
+# Determines the first non-option word of the command line. This
+# is usually the command; Requires: $COMP_WORDS
+_sy_get_firstword() {
+	local firstword i
+
+	firstword=
+	for ((i = 1; i < ${#COMP_WORDS[@]}; ++i)); do
+		if [[ ${COMP_WORDS[i]} != -* ]]; then
+			firstword=${COMP_WORDS[i]}
+			break
+		fi
+	done
+
+	echo $firstword
+}
+
+# Determines the last non-option word of the command line. This
+# is usally a sub-command; Requires: $COMP_WORDS, $cur
+_sy_get_lastword() {
+	local lastword i
+
+	lastword=
+	for ((i = 1; i < ${#COMP_WORDS[@]}; ++i)); do
+		if [[ ${COMP_WORDS[i]} != -* ]] && [[ -n ${COMP_WORDS[i]} ]] && [[ ${COMP_WORDS[i]} != $cur ]]; then
+			lastword=${COMP_WORDS[i]}
+		fi
+	done
+
+	echo $lastword
+}
+
+## Define bash completions ###
+
+complete -F _syncany sy
+complete -F _syncany syncany
