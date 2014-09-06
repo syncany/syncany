@@ -22,6 +22,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
@@ -31,6 +33,7 @@ import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.UserConfigTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -194,34 +197,29 @@ public class UserConfig {
 	// Daemon XML config methods
 
     public static DaemonConfigTO createAndWriteDefaultDaemonConfig(File daemonConfigFile) {
-		return createAndWriteConfig(daemonConfigFile, new ArrayList<FolderTO>());
+		return createAndWriteDaemonConfig(daemonConfigFile, new ArrayList<FolderTO>());
 	}
 
-    public static DaemonConfigTO createAndWriteExampleDaemonConfig(File configFileExample) {
-		File defaultFolder = new File(System.getProperty("user.home"), UserConfig.DEFAULT_FOLDER);		
-		return createAndWriteDaemonConfig(configFileExample, defaultFolder);
+    public static DaemonConfigTO createAndWriteExampleDaemonConfig(File daemonConfigFile) {
+    	File defaultFolder = new File(System.getProperty("user.home"), UserConfig.DEFAULT_FOLDER);		
+    	
+    	FolderTO defaultFolderTO = new FolderTO();
+    	defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
+    	defaultFolderTO.setWatchOptions(new WatchOperationOptions());
+		
+    	return createAndWriteDaemonConfig(daemonConfigFile, Arrays.asList(new FolderTO[] { defaultFolderTO }));
 	}
 
-    public static DaemonConfigTO createAndWriteDaemonConfig(File configFile, File syncFolder) {
-		FolderTO defaultFolderTO = new FolderTO();
-		defaultFolderTO.setPath(syncFolder.getAbsolutePath());
-		
-		ArrayList<FolderTO> folders = new ArrayList<FolderTO>();
-		folders.add(defaultFolderTO);
-		
-		return createAndWriteConfig(configFile, folders);
-	}
-    
-    public static DaemonConfigTO createAndWriteConfig(File configFile, ArrayList<FolderTO> folders) {
+    public static DaemonConfigTO createAndWriteDaemonConfig(File configFile, List<FolderTO> folders) {
     	UserTO defaultUserTO = new UserTO();
 		defaultUserTO.setUsername(UserConfig.USER_ADMIN);
 		defaultUserTO.setPassword(CipherUtil.createRandomAlphabeticString(12));
 		
-		ArrayList<UserTO> users = new ArrayList<UserTO>();
+		ArrayList<UserTO> users = new ArrayList<>();
 		users.add(defaultUserTO);
 		
 		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
-		defaultDaemonConfigTO.setFolders(folders);	
+		defaultDaemonConfigTO.setFolders(new ArrayList<>(folders));	
 		defaultDaemonConfigTO.setUsers(users);
 		
 		try {
