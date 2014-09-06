@@ -22,7 +22,7 @@ daemon_running() {
 	ID=$(daemon_get_pid)
 	if [ $ID -eq -1 ]; then
 		echo 0
-	elif [ -n $(ps -p$ID -opid=) ]; then
+	elif [ -n "$(ps -p$ID -opid=)" ]; then
 		echo 1
 	else
 		echo 0
