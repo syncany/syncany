@@ -168,11 +168,11 @@ case "$1" in
 				daemon_force_stop
 				;; 
 			*) 
-				echo "Usage: sy daemon (start|stop|reload|restart|status|force-stop)"
+				#JAVA_EXEC_REPLACEMENT_MARKER#
 				;;
 		esac
 		;;            
 	*)                       
-        	#JAVA_EXEC_REPLACEMENT_MARKER#
+		#JAVA_EXEC_REPLACEMENT_MARKER#
 		;;
 esac                          
