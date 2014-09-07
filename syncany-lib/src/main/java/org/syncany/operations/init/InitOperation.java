@@ -70,7 +70,7 @@ public class InitOperation extends AbstractInitOperation {
 		super(null, listener);
 
 		this.options = options;
-		this.result = null;
+		this.result = new InitOperationResult();
 	}
 
 	@Override
@@ -143,10 +143,19 @@ public class InitOperation extends AbstractInitOperation {
 		// Shutdown plugin
 		transferManager.disconnect();
 
-		// Make link
+		// Add to daemon (if requested)
+		if (options.isDaemon()) {
+			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
+			result.setAddedToDaemon(addedToDaemonConfig);
+		}
+
+		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
 
-		return new InitOperationResult(InitResultCode.OK, genlinkOperationResult);
+		result.setResultCode(InitResultCode.OK);
+		result.setGenLinkResult(genlinkOperationResult);
+
+		return result;
 	}
 
 	private boolean performRepoTest() {
@@ -165,7 +174,10 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		else {
 			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
-			result = new InitOperationResult(InitResultCode.NOK_TEST_FAILED, testResult);
+
+			result.setResultCode(InitResultCode.NOK_TEST_FAILED);
+			result.setTestResult(testResult);
+
 			return false;
 		}
 	}
@@ -188,7 +200,7 @@ public class InitOperation extends AbstractInitOperation {
 			throw new StorageException("Couldn't upload to remote repo. Cleanup failed. There may be local directories left");
 		}
 
-		// TODO [medium] This throws construction is odd and the error message doesn't tell me anything.
+		// TODO [low] This throws construction is odd and the error message doesn't tell me anything. 
 		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 

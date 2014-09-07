@@ -32,6 +32,7 @@ public class ConnectOperationOptions implements OperationOptions {
 	private String connectLink;
 	private File localDir;
 	private String password;
+	private boolean daemon;
 	
 	public ConnectOptionsStrategy getStrategy() {
 		return strategy;
@@ -72,4 +73,12 @@ public class ConnectOperationOptions implements OperationOptions {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
+	public boolean isDaemon() {
+		return daemon;
+	}
+
+	public void setDaemon(boolean daemon) {
+		this.daemon = daemon;
+	}		
 }
