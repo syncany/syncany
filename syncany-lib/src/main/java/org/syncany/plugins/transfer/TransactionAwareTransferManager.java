@@ -31,9 +31,11 @@ import java.util.logging.Logger;
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageFileNotFoundException;
 import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
@@ -72,7 +74,23 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 	@Override
 	public void download(final RemoteFile remoteFile, final File localFile) throws StorageException {
-		underlyingTransferManager.download(remoteFile, localFile);
+		try {
+			underlyingTransferManager.download(remoteFile, localFile);
+		}
+		catch (StorageFileNotFoundException e) {
+			// This only occurs if a file is not exists, but is expensive
+			logger.log(Level.INFO, "File {0} not found, checking if it is being deleted.", remoteFile.getName());
+			Set<TransactionTO> transactions = retrieveRemoteTransactions().keySet();
+			Set<RemoteFile> dummyDeletedFiles = getDummyDeletedFiles(transactions);
+			if (dummyDeletedFiles.contains(remoteFile)) {
+				logger.log(Level.INFO, "File {0} in process of being deleted, downloading corresponding temporary file.", remoteFile.getName());
+				underlyingTransferManager.download(new TempRemoteFile(remoteFile.getName()), localFile);
+			}
+			else {
+				throw e;
+			}
+
+		}
 	}
 
 	@Override

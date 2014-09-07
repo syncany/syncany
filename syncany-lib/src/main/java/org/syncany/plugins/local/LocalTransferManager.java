@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageFileNotFoundException;
 import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
@@ -35,7 +36,6 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
-import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
@@ -123,11 +123,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File repoFile = getRemoteFile(remoteFile);
 
 		if (!repoFile.exists()) {
-			repoFile = getRemoteFile(new TempRemoteFile(remoteFile.getName()));
-		}
-
-		if (!repoFile.exists()) {
-			throw new StorageException("No such file in local repository: " + repoFile);
+			throw new StorageFileNotFoundException("No such file in local repository: " + repoFile);
 		}
 
 		try {
