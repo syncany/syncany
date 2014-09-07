@@ -37,10 +37,10 @@ import org.syncany.plugins.transfer.files.RemoteFile;
  */
 public class RetriableTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(RetriableTransferManager.class.getSimpleName());
-	
+
 	// Values are public to enable quicker testing
-	
-	public static int RETRY_MAX_COUNT = 3;
+
+	private static int RETRY_MAX_COUNT = 3;
 	public static int RETRY_SLEEP_MILLIS = 3000;
 
 	private interface RetriableMethod {
@@ -220,7 +220,8 @@ public class RetriableTransferManager implements TransferManager {
 					throw e;
 				}
 				else {
-					logger.log(Level.WARNING, "Transfer method failed. " + tryCount + "/" + RETRY_MAX_COUNT + " retries. Sleeping " + RETRY_SLEEP_MILLIS
+					logger.log(Level.WARNING, "Transfer method failed. " + tryCount + "/" + RETRY_MAX_COUNT + " retries. Sleeping "
+							+ RETRY_SLEEP_MILLIS
 							+ "ms ...", e);
 
 					try {

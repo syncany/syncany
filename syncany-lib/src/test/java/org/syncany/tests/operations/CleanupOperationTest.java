@@ -556,6 +556,7 @@ public class CleanupOperationTest {
 		File repoMultiChunkDir = new File(testConnection.getRepositoryPath() + "/multichunks");
 		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
 		File repoDatabasesDir = new File(testConnection.getRepositoryPath() + "/databases");
+		File repoTransactionsDir = new File(testConnection.getRepositoryPath() + "/transactions");
 
 		// Run
 
@@ -582,7 +583,7 @@ public class CleanupOperationTest {
 		}
 
 		assertTrue(operationFailed);
-		assertEquals(1, repoDir.list(new FilenameFilter() {
+		assertEquals(1, repoTransactionsDir.list(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.startsWith("transaction-");
 			}
@@ -611,6 +612,6 @@ public class CleanupOperationTest {
 		}).length);
 
 		// Tear down
-		clientA.deleteTestData();		
+		clientA.deleteTestData();
 	}
 }

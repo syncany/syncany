@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.RetriableTransferManager;
+import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
@@ -51,8 +52,6 @@ public class UploadInterruptedTest {
 
 	@Test
 	public void testUnreliableUpload_Test1_WithRetryFailsManyTimes() throws Exception {
-		RetriableTransferManager.RETRY_MAX_COUNT = 3;
-
 		// Setup
 		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 				Arrays.asList(new String[] {
@@ -98,8 +97,6 @@ public class UploadInterruptedTest {
 		/*
 		 * This test fails when trying to upload the first multichunk.
 		 */
-
-		RetriableTransferManager.RETRY_MAX_COUNT = 1;
 
 		// Setup
 		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
@@ -155,15 +152,13 @@ public class UploadInterruptedTest {
 		 * 8. move(temp-2, databases/database-123)
 		 */
 
-		RetriableTransferManager.RETRY_MAX_COUNT = 1;
-
 		// Setup
 		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-						"rel=5.+upload.+database",
+						"rel=[456].+upload.+database",
 				}
 						));
 
@@ -233,15 +228,13 @@ public class UploadInterruptedTest {
 		 * 8. move(temp-3, databases/database-123)
 		 */
 
-		RetriableTransferManager.RETRY_MAX_COUNT = 1;
-
 		// Setup
 		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-						"rel=4.+upload.+multichunk",
+						"rel=[456].+upload.+multichunk",
 				}
 						));
 
@@ -321,16 +314,14 @@ public class UploadInterruptedTest {
 		 * 8. move(temp-3, databases/database-123)
 		 */
 
-		RetriableTransferManager.RETRY_MAX_COUNT = 1;
-
 		// Setup
 		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-						"rel=2.+move.+multichunk",
-						"rel=8.+upload.+transaction",
+						"rel=[234].+move.+multichunk",
+						"rel=(8|9|10).+upload.+transaction",
 				}
 						));
 
@@ -373,7 +364,8 @@ public class UploadInterruptedTest {
 		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
 
 		// 2. Double check if list() does not return the multichunk
-		TransferManager transferManager = new UnreliableLocalPlugin().createTransferManager(testConnection, null);
+		TransferManager transferManager = new TransactionAwareTransferManager(
+				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 
@@ -433,16 +425,14 @@ public class UploadInterruptedTest {
 		 * Expected: temp-(83,85,86)
 		 */
 
-		RetriableTransferManager.RETRY_MAX_COUNT = 1;
-
 		// Setup
 		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
-						"rel=2.+move.+multichunk",
-						"rel=2.+delete.+temp",
+						"rel=[234].+move.+multichunk",
+						"rel=[234].+delete.+temp",
 				}
 						));
 
@@ -485,7 +475,8 @@ public class UploadInterruptedTest {
 		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
 
 		// 2. Double check if list() does not return the multichunk
-		TransferManager transferManager = new UnreliableLocalPlugin().createTransferManager(testConnection, null);
+		TransferManager transferManager = new TransactionAwareTransferManager(
+				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 
