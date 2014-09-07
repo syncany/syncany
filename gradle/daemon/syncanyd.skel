@@ -22,7 +22,7 @@ daemon_running() {
 	ID=$(daemon_get_pid)
 	if [ $ID -eq -1 ]; then
 		echo 0
-	elif [ -n $(ps -p$ID -opid=) ]; then
+	elif [ -n "$(ps -p$ID -opid=)" ]; then
 		echo 1
 	else
 		echo 0
@@ -168,11 +168,11 @@ case "$1" in
 				daemon_force_stop
 				;; 
 			*) 
-				echo "Usage: sy daemon (start|stop|reload|restart|status|force-stop)"
+				#JAVA_EXEC_REPLACEMENT_MARKER#
 				;;
 		esac
 		;;            
 	*)                       
-        	#JAVA_EXEC_REPLACEMENT_MARKER#
+		#JAVA_EXEC_REPLACEMENT_MARKER#
 		;;
 esac                          
