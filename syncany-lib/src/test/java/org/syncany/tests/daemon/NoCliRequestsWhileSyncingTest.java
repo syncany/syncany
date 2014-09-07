@@ -28,8 +28,6 @@ import org.junit.Test;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
-import org.syncany.operations.daemon.messages.CliRequest;
-import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;

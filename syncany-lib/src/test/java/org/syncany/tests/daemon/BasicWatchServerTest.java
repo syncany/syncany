@@ -17,7 +17,10 @@
  */
 package org.syncany.tests.daemon;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,12 +33,10 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
-import org.syncany.operations.daemon.messages.CliRequest;
-import org.syncany.operations.daemon.messages.CliResponse;
-import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
-import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
 import org.syncany.operations.daemon.messages.GetFileFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
+import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
+import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
 import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
 import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;

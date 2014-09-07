@@ -63,10 +63,7 @@ import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
-import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.daemon.DaemonOperation;
-import org.syncany.operations.daemon.messages.CleanUpRequest;
-import org.syncany.operations.daemon.messages.CliResponse;
 import org.syncany.operations.daemon.messages.StatusFolderRequest;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
@@ -384,13 +381,12 @@ public class CommandLineClient extends Client {
 			
 			// Create and send HTTP/REST request
 
-			// TODO [medium] : could use a fiel-to-field property copying utility
 			switch (commandName.toLowerCase()) {
 				case "status":
 					request = new StatusFolderRequest();
 					request.setId(Math.abs(new Random().nextInt()));
 					StatusOperationOptions statusOption = ((StatusCommand)command).parseOptions(args);
-					((StatusFolderRequest)request).setForceChecksum(statusOption.isForceChecksum());
+					((StatusFolderRequest)request).setOptions(statusOption);
 					((StatusFolderRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
 					
 					break;				
@@ -442,12 +438,7 @@ public class CommandLineClient extends Client {
 			
 			Response response = MessageFactory.createResponse(responseStr);
 			
-			if (response instanceof CliResponse) {
-				out.print(((CliResponse) response).getOutput());	
-			}
-			else {
-				out.println(response.getMessage());
-			}
+			out.println(response.getMessage());
 			
 			return 0;
 		}

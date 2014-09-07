@@ -29,6 +29,8 @@ import joptsimple.OptionSet;
 
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.ls.LsOperation;
 
 /**
@@ -91,5 +93,17 @@ public class DebugCommand extends Command {
 	
 	private boolean isInitializedScope() {
 		return client != null && client.getConfig() != null;
+	}
+
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void printResults(OperationResult result) {
+		// TODO Auto-generated method stub
+		
 	}
 }

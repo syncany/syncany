@@ -28,6 +28,8 @@ import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult;
@@ -115,20 +117,21 @@ public class ConnectCommand extends AbstractInitCommand {
 		return operationOptions;
 	}
 
-	private void printResults(ConnectOperationResult operationResult) {
-		if (operationResult.getResultCode() == ConnectResultCode.OK) {
+	public void printResults(OperationResult operationResult) {
+		ConnectOperationResult concreteOperationResult = (ConnectOperationResult)operationResult;
+		if (concreteOperationResult.getResultCode() == ConnectResultCode.OK) {
 			out.println();
 			out.println("Repository connected, and local folder initialized.");
 			out.println("You can now use the 'syncany' command to sync your files.");
 			out.println();
 			
-			if (operationResult.isAddedToDaemon()) {
+			if (concreteOperationResult.isAddedToDaemon()) {
 				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
 				out.println();
 			}			
 		}
-		else if (operationResult.getResultCode() == ConnectResultCode.NOK_TEST_FAILED) {
-			StorageTestResult testResult = operationResult.getTestResult();
+		else if (concreteOperationResult.getResultCode() == ConnectResultCode.NOK_TEST_FAILED) {
+			StorageTestResult testResult = concreteOperationResult.getTestResult();
 			out.println();			
 
 			if (!testResult.isTargetCanConnect()) {
@@ -155,7 +158,7 @@ public class ConnectCommand extends AbstractInitCommand {
 			out.println();
 			printTestResult(testResult);			
 		}		
-		else if (operationResult.getResultCode() == ConnectResultCode.NOK_DECRYPT_ERROR) {
+		else if (concreteOperationResult.getResultCode() == ConnectResultCode.NOK_DECRYPT_ERROR) {
 			out.println();
 			out.println("ERROR: Invalid password or corrupt ciphertext.");		
 			out.println();
@@ -168,5 +171,11 @@ public class ConnectCommand extends AbstractInitCommand {
 			out.println("ERROR: Cannot connect to repository. Unknown error code: " + operationResult);
 			out.println();
 		}
+	}
+
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

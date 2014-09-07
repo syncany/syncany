@@ -26,6 +26,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
 
@@ -77,10 +78,12 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 	
-	private void printResults(RestoreOperationResult operationResult) {
-		switch (operationResult.getResultCode()) {
+	public void printResults(OperationResult operationResult) {
+		RestoreOperationResult concreteOperationResult = (RestoreOperationResult) operationResult;
+		
+		switch (concreteOperationResult.getResultCode()) {
 		case ACK:
-			out.println("File restored to " + operationResult.getTargetFile());
+			out.println("File restored to " + concreteOperationResult.getTargetFile());
 			break;
 			
 		case NACK_INVALID_FILE:
@@ -92,7 +95,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 			break;
 			
 		default:
-			throw new RuntimeException("Invalid result code: " + operationResult.getResultCode());	
+			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode());	
 		}
-	}	
+	}
 }

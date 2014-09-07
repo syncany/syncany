@@ -17,6 +17,8 @@
  */
 package org.syncany.cli;
 
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.DaemonOperation;
 
 public class DaemonCommand extends Command {
@@ -29,5 +31,17 @@ public class DaemonCommand extends Command {
 	public int execute(String[] operationArgs) throws Exception {
 		new DaemonOperation(client.getConfig()).execute();		
 		return 0;
+	}
+
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void printResults(OperationResult result) {
+		// TODO Auto-generated method stub
+		
 	}
 }
