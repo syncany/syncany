@@ -17,29 +17,45 @@
  */
 package org.syncany.tests.config;
 
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.crypto.spec.SecretKeySpec;
-
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.FixedChunker;
+import org.syncany.chunk.MimeTypeChunker;
+import org.syncany.chunk.TttdChunker;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.TransformerTO;
-import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.tests.config.ConfigRule.ChunkerTOBuilder;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.util.StringUtil;
 
 public class ConfigTest {
+	
+	@Rule
+	public ConfigRule configRule = new ConfigRule();
+	
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+	
 	@Test
 	public void testConfigValid() throws Exception {
 		// Setup
@@ -58,10 +74,10 @@ public class ConfigTest {
 		Config config = new Config(localDir, configTO, repoTO);
 		
 		// Test
-		assertEquals("/some/folder/.syncany", config.getAppDir().getAbsolutePath());
-		assertEquals("/some/folder/.syncany/cache", config.getCacheDir().getAbsolutePath());
-		assertEquals("/some/folder/.syncany/db", config.getDatabaseDir().getAbsolutePath());
-		assertEquals("/some/folder/.syncany/db/local.db", config.getDatabaseFile().getAbsolutePath());
+		assertThat(config.getAppDir().getAbsolutePath(), is(absolutePathOf("/some/folder/.syncany")));
+		assertThat(config.getCacheDir().getAbsolutePath(), is(absolutePathOf("/some/folder/.syncany/cache")));
+		assertThat(config.getDatabaseDir().getAbsolutePath(), is(absolutePathOf("/some/folder/.syncany/db")));
+		assertThat(config.getDatabaseFile().getAbsolutePath(), is(absolutePathOf("/some/folder/.syncany/db/local.db")));
 
 		assertNotNull(config.getChunker());
 		assertEquals("FixedChunker", config.getChunker().getClass().getSimpleName());
@@ -74,6 +90,119 @@ public class ConfigTest {
 		assertEquals("NoTransformer", config.getTransformer().getClass().getSimpleName());
 		
 		assertNotNull(config.getCache());
+	}
+
+	private String absolutePathOf(String path) {
+		return Paths.get(path).toAbsolutePath().toString();
+	}
+	
+	@Test
+	public void initChunker_default(){
+		Config config = configRule.getDefaultConfig();
+		assertThat(config.getChunker(), is(instanceOf(FixedChunker.class)));
+		assertThat(config.getChunker().getChecksumAlgorithm(), is("SHA1"));
+	}
+	
+	@Test
+	public void initChunker_customFixedChunker(){
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+				.setType(FixedChunker.TYPE)
+				.addProperty(Chunker.PROPERTY_SIZE, "4000")
+				.build();
+		Config config = configRule.getConfigWithCustomChunker(chunker);
+		assertThat(config.getChunker(), is(instanceOf(FixedChunker.class)));
+		assertThat(config.getChunker().getChecksumAlgorithm(), is("SHA1"));
+
+	}
+	
+	@Test
+	public void initChunker_customMimeTypeChunker(){
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+				.setType(MimeTypeChunker.TYPE)
+				.addProperty(MimeTypeChunker.PROPERTY_SPECIAL_CHUNKER_MIME_TYPES, "image/jpeg")
+				.addNestedChunker(TestConfigUtil.createFixedChunkerTO())
+				.addNestedChunker(TestConfigUtil.createFixedChunkerTO()).build();
+		final Config config = configRule.getConfigWithCustomChunker(chunker);
+		assertThat(config.getChunker(), is(instanceOf(MimeTypeChunker.class)));
+		assertThat(config.getChunker().getChecksumAlgorithm(), is("SHA1"));
+	}
+	
+	@Test
+	public void initChunker_customMimeTypeChunker_multipleMimeTypes(){
+		final ChunkerTO chunker = ChunkerTOBuilder.of(MimeTypeChunker.class)
+		.setType(MimeTypeChunker.TYPE)
+		.addProperty(MimeTypeChunker.PROPERTY_SPECIAL_CHUNKER_MIME_TYPES, "image/jpeg")
+		.addProperty(MimeTypeChunker.PROPERTY_SPECIAL_CHUNKER_MIME_TYPES, "text/html")
+		.addNestedChunker(TestConfigUtil.createFixedChunkerTO())
+		.addNestedChunker(TestConfigUtil.createFixedChunkerTO()).build();
+		final Config config = configRule.getConfigWithCustomChunker(chunker);
+		assertThat(config.getChunker(), is(instanceOf(MimeTypeChunker.class)));
+		assertThat(config.getChunker().getChecksumAlgorithm(), is("SHA1"));
+	}
+	
+	@Test
+	public void initChunker_customMimeTypeChunker_tooManyNestedChunkers(){
+		thrown.expect(RuntimeException.class);
+		thrown.expectCause(isA(ConfigException.class));
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+		.setType(MimeTypeChunker.TYPE)
+		.addProperty(MimeTypeChunker.PROPERTY_SPECIAL_CHUNKER_MIME_TYPES, "image/jpeg")
+		.addNestedChunker(TestConfigUtil.createFixedChunkerTO())
+		.addNestedChunker(TestConfigUtil.createFixedChunkerTO())
+		.addNestedChunker(TestConfigUtil.createFixedChunkerTO()).build();
+		configRule.getConfigWithCustomChunker(chunker);
+	}
+	
+	@Test
+	public void initChunker_customMimeTypeChunker_notEnoughNestedChunkers(){
+		thrown.expect(RuntimeException.class);
+		thrown.expectCause(isA(ConfigException.class));
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+		.setType(MimeTypeChunker.TYPE)
+		.addProperty(MimeTypeChunker.PROPERTY_SPECIAL_CHUNKER_MIME_TYPES, "image/jpeg").build();
+		configRule.getConfigWithCustomChunker(chunker);
+	}
+	
+	@Test
+	public void initChunker_customTttdChunker(){
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+		.setType(TttdChunker.TYPE)
+		.addProperty(TttdChunker.PROPERTY_DIGEST_ALG, TttdChunker.DEFAULT_DIGEST_ALG)
+		.addProperty(TttdChunker.PROPERTY_FINGERPRINT_ALG, TttdChunker.DEFAULT_FINGERPRINT_ALG)
+		.addProperty(TttdChunker.PROPERTY_WINDOW_SIZE, TttdChunker.DEFAULT_WINDOW_SIZE)
+		.addProperty(TttdChunker.PROPERTY_AVG_CHUNK_SIZE, 512*1024).build();
+		final Config config = configRule.getConfigWithCustomChunker(chunker);
+		assertThat(config.getChunker(), is(instanceOf(TttdChunker.class)));
+		assertThat(config.getChunker().getChecksumAlgorithm(), is("SHA1"));
+	}
+	
+	@Test
+	public void initChunker_customTttdChunker_avgChunkSizeOnly(){
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+		.setType(TttdChunker.TYPE)
+		.addProperty(TttdChunker.PROPERTY_AVG_CHUNK_SIZE, 512*1024).build();
+		final Config config = configRule.getConfigWithCustomChunker(chunker);
+		assertThat(config.getChunker(), is(instanceOf(TttdChunker.class)));
+		assertThat(config.getChunker().getChecksumAlgorithm(), is("SHA1"));
+	}
+	
+	@Test
+	public void initChunker_customTttdChunker_noAvgChunkSize(){
+		thrown.expect(RuntimeException.class);
+		thrown.expectCause(isA(ConfigException.class));
+		final ChunkerTO chunker = new ChunkerTOBuilder().setType(TttdChunker.TYPE).build();
+		configRule.getConfigWithCustomChunker(chunker);
+	}
+	
+	@Test
+	public void initChunker_customTttdChunker_windowSizeGreaterThanTmin(){
+		thrown.expect(RuntimeException.class);
+		thrown.expectCause(isA(ConfigException.class));
+		final ChunkerTO chunker = new ChunkerTOBuilder()
+		.setType(TttdChunker.TYPE)
+		.addProperty(TttdChunker.PROPERTY_WINDOW_SIZE, 6000)
+		.build();
+		configRule.getConfigWithCustomChunker(chunker);
 	}
 	
 	@Test(expected = ConfigException.class)
@@ -237,7 +366,7 @@ public class ConfigTest {
 		repoTO.setChunkerTO(TestConfigUtil.createFixedChunkerTO()); // <<< valid
 		repoTO.setMultiChunker(TestConfigUtil.createZipMultiChunkerTO()); // <<< valid
 		repoTO.setRepoId(new byte[] { 0x01, 0x02 }); // <<< valid
-		configTO.setMasterKey(createDummyMasterKey()); // <<< valid
+		configTO.setMasterKey(TestConfigUtil.createDummyMasterKey()); // <<< valid
 		
 		// Set invalid transformer
 		TransformerTO invalidTransformerTO = new TransformerTO();
@@ -276,7 +405,7 @@ public class ConfigTest {
 		repoTO.setChunkerTO(TestConfigUtil.createFixedChunkerTO()); // <<< valid
 		repoTO.setMultiChunker(TestConfigUtil.createZipMultiChunkerTO()); // <<< valid
 		repoTO.setRepoId(new byte[] { 0x01, 0x02 }); // <<< valid
-		configTO.setMasterKey(createDummyMasterKey()); // <<< valid
+		configTO.setMasterKey(TestConfigUtil.createDummyMasterKey()); // <<< valid
 		
 		// Set invalid transformer
 		TransformerTO invalidTransformerTO = new TransformerTO();
@@ -302,13 +431,6 @@ public class ConfigTest {
 		}	
 	}	
 	
-	private SaltedSecretKey createDummyMasterKey() {
-		return new SaltedSecretKey(
-			new SecretKeySpec(
-				StringUtil.fromHex("44fda24d53b29828b62c362529bd9df5c8a92c2736bcae3a28b3d7b44488e36e246106aa5334813028abb2048eeb5e177df1c702d93cf82aeb7b6d59a8534ff0"),
-				"AnyAlgorithm"
-			),
-			StringUtil.fromHex("157599349e0f1bc713afff442db9d4c3201324073d51cb33407600f305500aa3fdb31136cb1f37bd51a48f183844257d42010a36133b32b424dd02bc63b349bc")			
-		);
-	}	
+
+	
 }

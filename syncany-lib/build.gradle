@@ -26,5 +26,6 @@ dependencies {
 	compile 		"commons-io:commons-io:2.4"	
 
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
-	testCompile		"junit:junit:4.9"
+	testCompile		"junit:junit:4.11"
+	testCompile		"org.hamcrest:hamcrest-all:1.3"
 }

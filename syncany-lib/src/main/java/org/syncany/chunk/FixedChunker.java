@@ -22,8 +22,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.base.Throwables;
 
 /**
  * The fixed chunker is an implementation of the {@link Chunker}. It implements a simple
@@ -40,12 +44,20 @@ import java.util.logging.Logger;
  */
 public class FixedChunker extends Chunker {
     private static final Logger logger = Logger.getLogger(FixedChunker.class.getSimpleName());   
-
+    
+    public static final String DIGEST_ALG = "checksumAlgorithm";
+    
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
 	public static final String TYPE = "fixed";
 
     private int chunkSize;   
     private String checksumAlgorithm;
+    
+	/**
+	 * Creates a new fixed offset chunker without initial chunk size and/or checksum algorithm.
+	 */
+	public FixedChunker() {
+	}
     
     /**
      * Creates a new fixed offset chunker with the default file/chunk 
@@ -66,6 +78,19 @@ public class FixedChunker extends Chunker {
     public FixedChunker(int chunkSize, String checksumAlgorithm) {
         this.chunkSize = chunkSize;        
         this.checksumAlgorithm = checksumAlgorithm;        
+    }
+    
+    @Override
+    public void init(Map<String, String> settings) {
+    	super.init(settings);
+    	String chunkSize = settings.get(PROPERTY_SIZE);
+    	Objects.requireNonNull(chunkSize);
+    	checksumAlgorithm = settings.get(DIGEST_ALG) == null?DEFAULT_DIGEST_ALG:settings.get(DIGEST_ALG);
+    	try{
+    		this.chunkSize = Integer.parseInt(chunkSize);
+    	}catch(NumberFormatException nfe){
+    		throw Throwables.propagate(nfe);
+    	}
     }
   
     @Override

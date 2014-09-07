@@ -17,13 +17,20 @@
  */
 package org.syncany.chunk;
 
+import static java.lang.Integer.parseInt;
+import static com.google.common.base.Preconditions.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.base.Optional;
 
 /**
  * The TTTD chunker is an implementation of the Two Threshold Two Divisor (TTTD) 
@@ -57,10 +64,17 @@ import java.util.logging.Logger;
 public class TttdChunker extends Chunker {   
     private static final Logger logger = Logger.getLogger(TttdChunker.class.getSimpleName());   
 
+    public static final String PROPERTY_AVG_CHUNK_SIZE = "avgChunkSize";
+    public static final String PROPERTY_WINDOW_SIZE= "windowSize";
+    public static final String PROPERTY_DIGEST_ALG= "digestAlg";
+    public static final String PROPERTY_FINGERPRINT_ALG= "fingerprintAlg";
+
+    public static final String TYPE = "tttd";
+
     public static final int DEFAULT_WINDOW_SIZE = 48; // like LBFS
     public static final String DEFAULT_DIGEST_ALG = "SHA1";
     public static final String DEFAULT_FINGERPRINT_ALG = "Adler32";
-    
+
     private int Tmin;
     private int Tmax;
     private int D;
@@ -68,7 +82,9 @@ public class TttdChunker extends Chunker {
     private int windowSize;
     private String checksumAlgorithm;
     private String fingerprintAlgorithm;
-    private String name;   
+    private String name;
+    
+    public TttdChunker(){}
     
     public TttdChunker(int Tmin, int Tmax, int D, int Ddash, int windowSize) {
         this(Tmin, Tmax, D, Ddash, windowSize, DEFAULT_DIGEST_ALG, DEFAULT_FINGERPRINT_ALG);
@@ -114,6 +130,30 @@ public class TttdChunker extends Chunker {
         }           
     }        
    
+    @Override
+    public void init(Map<String, String> settings) {
+    	super.init(settings);
+    	final String avgChunkSizeStr = settings.get(PROPERTY_AVG_CHUNK_SIZE);
+    	Objects.requireNonNull(avgChunkSizeStr, "Average chunk size has to be non null.");
+    	final Integer avgChunkSize = parseInt(avgChunkSizeStr);
+    	final Integer windowSize = settings.get(PROPERTY_WINDOW_SIZE) == null ? DEFAULT_WINDOW_SIZE : parseInt(settings.get(PROPERTY_WINDOW_SIZE));
+    	final String digestAlg = Optional.fromNullable(settings.get(PROPERTY_DIGEST_ALG)).or(DEFAULT_DIGEST_ALG);
+    	final String fingerprintAlg = Optional.fromNullable(settings.get(PROPERTY_FINGERPRINT_ALG)).or(DEFAULT_FINGERPRINT_ALG);
+    	initWithOptimalValues(avgChunkSize, windowSize, digestAlg, fingerprintAlg);
+    }
+    
+    private void initWithOptimalValues(int avgChunkSize, int windowSize, String digestAlg, String fingerprintAlg){
+    	this.Tmin = (int) Math.round(460.0*avgChunkSize/1015.0);
+    	checkArgument(windowSize < Tmin, "Window size must be smaller than Tmin.");
+    	this.Tmax = (int) Math.round(2800.0*avgChunkSize/1015.0);
+    	this.D = (int) Math.round(540.0*avgChunkSize/1015.0);
+    	this.Ddash = (int) Math.round(270.0*avgChunkSize/1015.0);
+    	this.windowSize = windowSize;
+    	this.checksumAlgorithm = digestAlg;
+    	this.fingerprintAlgorithm = fingerprintAlg;
+    	this.name = "TTTD-"+Tmin+"-"+Tmax+"-"+D+"-"+Ddash+"-"+digestAlg+"-"+fingerprintAlg;
+    }
+    
     @Override
     public ChunkEnumeration createChunks(File file) throws IOException {
         return new TTTDEnumeration(new FileInputStream(file));

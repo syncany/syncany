@@ -105,7 +105,17 @@ public class RepoTO {
 	}
 
 	public static class ChunkerTO extends TypedPropertyListTO {
-		// Nothing special about this
+		@ElementList(name="nestedChunkers", required=false, entry="chunker")
+		private List<ChunkerTO> nestedChunkers;
+
+		public List<ChunkerTO> getNestedChunkers() {
+			return nestedChunkers;
+		}
+
+		public void setNestedChunkers(List<ChunkerTO> nestedChunkers) {
+			this.nestedChunkers = nestedChunkers;
+		}
+		
 	}
 	
 	public static class MultiChunkerTO extends TypedPropertyListTO {

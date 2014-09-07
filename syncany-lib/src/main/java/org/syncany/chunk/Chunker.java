@@ -20,6 +20,9 @@ package org.syncany.chunk;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * The chunker implements a core part of the deduplication process by breaking
@@ -37,6 +40,25 @@ public abstract class Chunker {
 	 * approximate size of a chunk. In bytes. 
 	 */
 	public static final String PROPERTY_SIZE = "size";
+	
+	/**
+	 * Initializes this {@code Chunker} with given settings.
+	 * 
+	 * <p> The key set of the settings is defined by each {@code Chunker} through its publicly available
+	 * property constants; for instance {@link #PROPERTY_SIZE}. Before application, this method validates
+	 * the settings values. By default, settings have to be non null.
+	 */
+	public void init(Map<String, String> settings){
+		Objects.requireNonNull(settings);
+	}
+	
+	/**
+	 * Initializes this {@code Chunker} with given nested chunkers.
+	 * 
+	 * <p> Order of nested chunkers is preserved during persistence.
+	 */
+	public void initNestedChunkers(List<Chunker> nestedChunkers){
+	}
 	
     /**
      * Opens the given file and creates enumeration of {@link Chunk}s. This method 
