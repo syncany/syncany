@@ -152,9 +152,13 @@ public class WatchRunner implements WatchOperationListener {
 			
 			try {
 				if (!watchOperation.isSyncRunning() && !watchOperation.isSyncRequested()) {
+					watchOperation.pause();
+					
 					FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest, config);
 					Response response = handler.handleRequest(folderRequest);
 					eventBus.post(response);
+					
+					watchOperation.resume();
 				}
 				else {
 					logger.log(Level.WARNING, "FolderRequest discarded : ", folderRequest);
