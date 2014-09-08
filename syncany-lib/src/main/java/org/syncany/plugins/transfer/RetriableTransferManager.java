@@ -23,6 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.plugins.StorageException;
+import org.syncany.plugins.StorageFileNotFoundException;
+import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
@@ -211,6 +213,10 @@ public class RetriableTransferManager implements TransferManager {
 
 				tryCount = 0;
 				return result;
+			}
+			catch (StorageMoveException | StorageFileNotFoundException e) {
+				logger.log(Level.INFO, "StorageException caused by missing file, not the connection. Not retrying.");
+				throw e;
 			}
 			catch (StorageException e) {
 				tryCount++;
