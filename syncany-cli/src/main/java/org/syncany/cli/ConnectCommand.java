@@ -178,4 +178,9 @@ public class ConnectCommand extends AbstractInitCommand {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

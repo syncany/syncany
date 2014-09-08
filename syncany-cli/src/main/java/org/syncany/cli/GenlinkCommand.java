@@ -65,4 +65,10 @@ public class GenlinkCommand extends AbstractInitCommand {
 		
 		printLink(concreteOperationREsut, commandOptions.isShortOutput());			
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		// TODO [low] : right now only read commands in daemon scope
+		return false;
+	}
 }

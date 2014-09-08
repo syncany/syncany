@@ -80,4 +80,9 @@ public class StatusCommand extends Command {
 			out.println("No local changes.");
 		}
 	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
 }

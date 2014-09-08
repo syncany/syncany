@@ -324,7 +324,7 @@ public class CommandLineClient extends Client {
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
 		boolean daemonRunning = PidFileUtil.isProcessRunning(PIDFile);
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
-		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope;
+		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope && command.canExecuteInDaemonScope();
 		
 		command.setOut(out);
 		
@@ -385,12 +385,7 @@ public class CommandLineClient extends Client {
 			
 			// Create and send HTTP/REST request
 
-			if (command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR) {
-				request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
-			}
-			else {
-				request = buildManagementRequestFromCommand(command, commandName);
-			}
+			request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
 			
 			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
 			
@@ -422,27 +417,8 @@ public class CommandLineClient extends Client {
 		}		
 	}
 
-	private Request buildManagementRequestFromCommand(Command command, String commandName) throws Exception {
-		String thisPackage = "org.syncany.operations.daemon.messages";
-		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + "ManagementRequest";
-		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
-
-		// Try to load!
-		try {		
-			Class<? extends FolderRequest> message = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);
-			FolderRequest request = message.newInstance();
-			request.setId(new Random().nextInt());
-			request.setOptions(command.parseOptions(args));
-			return request;
-		} 
-		catch (Exception e) {
-			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
-			throw new Exception("Cannot read request class from request type: " + commandName, e);
-		}		
-	}
-
 	private Request buildFolderRequestFromCommand(Command command, String commandName, String root) throws Exception {
-		String thisPackage = "org.syncany.operations.daemon.messages";
+		String thisPackage = Request.class.getName().replaceAll(".api", "");
 		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + "FolderRequest";
 		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
 

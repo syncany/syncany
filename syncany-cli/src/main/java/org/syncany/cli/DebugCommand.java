@@ -104,6 +104,10 @@ public class DebugCommand extends Command {
 	@Override
 	public void printResults(OperationResult result) {
 		// TODO Auto-generated method stub
-		
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

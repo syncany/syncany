@@ -367,4 +367,9 @@ public class InitCommand extends AbstractInitCommand {
 
 		return cipherTransformerTO;
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

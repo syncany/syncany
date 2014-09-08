@@ -176,5 +176,9 @@ public class CleanupCommand extends Command {
 		}	
 	}
 	
-
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		// TODO [low] : right now only read commands in daemon scope
+		return false;
+	}
 }

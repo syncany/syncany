@@ -44,4 +44,9 @@ public class DaemonCommand extends Command {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

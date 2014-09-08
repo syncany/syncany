@@ -80,6 +80,8 @@ public abstract class Command {
 	public abstract OperationOptions parseOptions(String[] operationArgs) throws Exception;
 	public abstract void printResults(OperationResult result);
 	
+	public abstract boolean canExecuteInDaemonScope();
+	
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;
 	}
