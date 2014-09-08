@@ -59,7 +59,7 @@ public class CleanupInterruptedTest {
 		clientA.up();
 
 		clientA.changeFile("file");
-		clientA.up();
+		clientA.upWithForceChecksum();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setKeepVersionsCount(1);
@@ -81,6 +81,53 @@ public class CleanupInterruptedTest {
 
 		assertEquals(1, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
 		assertEquals(3, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(0, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(0, new File(testConnection.getRepositoryPath(), "actions").list().length);
+
+		clientA.deleteTestData();
+	}
+
+	@Test
+	public void testUnreliableCleanup_Test2_databaseFileMerge() throws Exception {
+		// Setup
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+				Arrays.asList(new String[] {
+						// List of failing operations (regex)
+						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+						"rel=(11|12|13).+upload.+database", // << 3 retries!!
+				}
+						));
+
+		TestClient clientA = new TestClient("A", testConnection);
+
+		clientA.createNewFile("file");
+
+		clientA.up();
+
+		clientA.changeFile("file");
+		clientA.upWithForceChecksum();
+
+		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+		cleanupOptions.setMaxDatabaseFiles(1);
+		boolean cleanupFailed = false;
+		try {
+			clientA.cleanup(cleanupOptions);
+		}
+		catch (StorageException e) {
+			cleanupFailed = true;
+		}
+
+		// TODO: somehow test if adjusted list is correct!
+		assertTrue(cleanupFailed);
+		assertEquals(2, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(0, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(1, new File(testConnection.getRepositoryPath(), "actions").list().length);
+
+		clientA.cleanup(cleanupOptions);
+
+		assertEquals(2, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(1, new File(testConnection.getRepositoryPath(), "databases").list().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath(), "transactions").list().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath(), "actions").list().length);
 	}
