@@ -320,9 +320,10 @@ public class CommandLineClient extends Client {
 			portFile = config.getPortFile();
 		}
 		
-		File PIDFile = new File(UserConfig.getUserConfigDir(), DaemonOperation.PID_FILE);
+		File daemonPidFile = new File(UserConfig.getUserConfigDir(), DaemonOperation.PID_FILE);
+		
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
-		boolean daemonRunning = PidFileUtil.isProcessRunning(PIDFile);
+		boolean daemonRunning = PidFileUtil.isProcessRunning(daemonPidFile);
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
 		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
@@ -379,47 +380,56 @@ public class CommandLineClient extends Client {
 			String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 			HttpPost post = new HttpPost(SERVER_URI);
 			
+			// Build and send request, print response
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			
-			Request request = null;
-			
-			// Create and send HTTP/REST request
-
-			if (command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR) {
-				request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
-			}
-			else {
-				request = buildManagementRequestFromCommand(command, commandName);
-			}
-			
+			Request request = createRestRequest(command, commandName);			
 			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
 			
-			// Handle response
-			HttpResponse httpResponse = client.execute(post);
-			logger.log(Level.FINE, "Received HttpResponse: " + httpResponse);
+			HttpResponse httpResponse = client.execute(post);			
+			int exitCode = handleRestResponse(command, httpResponse);
 			
-			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
-			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
-			
-			Response response = MessageFactory.createResponse(responseStr);
-			
-			if (response instanceof FolderResponse) {
-				FolderResponse folderResponse = (FolderResponse)response;
-				command.printResults(folderResponse.getResult());
-			}
-			else if (response instanceof AlreadySyncingResponse) {
-				out.println("Daemon is already syncing, please retry later");
-			}
-			else if (response instanceof BadRequestResponse) {
-				out.println("Invalid Request : " + response.getMessage());
-			}
-			
-			return 0;
+			return exitCode;
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
 		}		
+	}
+
+	private Request createRestRequest(Command command, String commandName) throws Exception {
+		if (command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR) {
+			return buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
+		}
+		else {
+			return buildManagementRequestFromCommand(command, commandName);
+		}
+	}
+
+	private int handleRestResponse(Command command, HttpResponse httpResponse) throws Exception {
+		logger.log(Level.FINE, "Received HttpResponse: " + httpResponse);
+		
+		String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
+		logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
+		
+		Response response = MessageFactory.createResponse(responseStr);
+		
+		if (response instanceof FolderResponse) {
+			FolderResponse folderResponse = (FolderResponse) response;
+			command.printResults(folderResponse.getResult());
+			
+			return 0;
+		}
+		else if (response instanceof AlreadySyncingResponse) {
+			out.println("Daemon is already syncing, please retry later.");
+			return 1;
+		}
+		else if (response instanceof BadRequestResponse) {
+			out.println("Invalid Request : " + response.getMessage());
+			return 1;
+		}
+		
+		return 1;
 	}
 
 	private Request buildManagementRequestFromCommand(Command command, String commandName) throws Exception {

@@ -44,7 +44,6 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
-import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
