@@ -104,13 +104,16 @@ public class WatchCommand extends Command {
 
 	@Override
 	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void printResults(OperationResult result) {
-		// TODO Auto-generated method stub
-		
+		// Nothing.
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

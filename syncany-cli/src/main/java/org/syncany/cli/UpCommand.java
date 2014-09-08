@@ -96,4 +96,9 @@ public class UpCommand extends Command {
 			out.println("Sync up skipped, no local changes.");
 		}
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

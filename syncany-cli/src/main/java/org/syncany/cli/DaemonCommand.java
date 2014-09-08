@@ -35,7 +35,6 @@ public class DaemonCommand extends Command {
 
 	@Override
 	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -43,5 +42,10 @@ public class DaemonCommand extends Command {
 	public void printResults(OperationResult result) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

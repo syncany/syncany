@@ -98,4 +98,9 @@ public class RestoreCommand extends AbstractHistoryCommand {
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode());	
 		}
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

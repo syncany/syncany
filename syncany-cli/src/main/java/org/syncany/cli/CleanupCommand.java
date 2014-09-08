@@ -176,5 +176,8 @@ public class CleanupCommand extends Command {
 		}	
 	}
 	
-
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

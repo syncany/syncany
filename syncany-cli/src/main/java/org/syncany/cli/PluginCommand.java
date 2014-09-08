@@ -281,7 +281,11 @@ public class PluginCommand extends Command {
 
 	@Override
 	public void printResults(OperationResult result) {
-		// TODO Auto-generated method stub
-		
+		// TODO [medium] Move output here.
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

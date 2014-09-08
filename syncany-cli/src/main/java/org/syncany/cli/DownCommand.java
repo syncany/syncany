@@ -112,4 +112,9 @@ public class DownCommand extends Command {
 		}
 
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

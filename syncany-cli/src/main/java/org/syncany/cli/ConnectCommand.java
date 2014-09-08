@@ -175,7 +175,11 @@ public class ConnectCommand extends AbstractInitCommand {
 
 	@Override
 	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
-		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

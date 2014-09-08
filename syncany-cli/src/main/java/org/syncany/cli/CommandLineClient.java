@@ -325,7 +325,7 @@ public class CommandLineClient extends Client {
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
 		boolean daemonRunning = PidFileUtil.isProcessRunning(daemonPidFile);
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
-		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope;
+		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope && command.canExecuteInDaemonScope();
 		
 		command.setOut(out);
 		
@@ -377,15 +377,16 @@ public class CommandLineClient extends Client {
 				.setDefaultCredentialsProvider(credentialsProvider)
 				.build();
 
-			String SERVER_URI = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
-			HttpPost post = new HttpPost(SERVER_URI);
 			
 			// Build and send request, print response
-			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
-			
-			Request request = createRestRequest(command, commandName);			
+			Request request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
+			String serverUri = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
+
+			HttpPost post = new HttpPost(serverUri);
 			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
-			
+
+			logger.log(Level.INFO, "Sending HTTP Request to: " + serverUri);
+						
 			HttpResponse httpResponse = client.execute(post);			
 			int exitCode = handleRestResponse(command, httpResponse);
 			
@@ -395,15 +396,6 @@ public class CommandLineClient extends Client {
 			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
 		}		
-	}
-
-	private Request createRestRequest(Command command, String commandName) throws Exception {
-		if (command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR) {
-			return buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
-		}
-		else {
-			return buildManagementRequestFromCommand(command, commandName);
-		}
 	}
 
 	private int handleRestResponse(Command command, HttpResponse httpResponse) throws Exception {
@@ -432,38 +424,20 @@ public class CommandLineClient extends Client {
 		return 1;
 	}
 
-	private Request buildManagementRequestFromCommand(Command command, String commandName) throws Exception {
-		String thisPackage = "org.syncany.operations.daemon.messages";
-		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + "ManagementRequest";
-		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
-
-		// Try to load!
-		try {		
-			Class<? extends FolderRequest> message = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);
-			FolderRequest request = message.newInstance();
-			request.setId(new Random().nextInt());
-			request.setOptions(command.parseOptions(args));
-			return request;
-		} 
-		catch (Exception e) {
-			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
-			throw new Exception("Cannot read request class from request type: " + commandName, e);
-		}		
-	}
-
 	private Request buildFolderRequestFromCommand(Command command, String commandName, String root) throws Exception {
-		String thisPackage = "org.syncany.operations.daemon.messages";
-		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + "FolderRequest";
+		String thisPackage = BadRequestResponse.class.getPackage().getName(); // TODO [low] Medium-dirty hack.
+		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + FolderRequest.class.getSimpleName();
 		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
 
-		// Try to load!
 		try {		
-			Class<? extends FolderRequest> message = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);
-			FolderRequest request = message.newInstance();
-			request.setRoot(root);
-			request.setId(new Random().nextInt());
-			request.setOptions(command.parseOptions(args));
-			return request;
+			Class<? extends FolderRequest> folderRequestClass = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);			
+			FolderRequest folderRequest = folderRequestClass.newInstance();
+			
+			folderRequest.setRoot(root);
+			folderRequest.setId(new Random().nextInt());
+			folderRequest.setOptions(command.parseOptions(args));
+			
+			return folderRequest;
 		} 
 		catch (Exception e) {
 			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);

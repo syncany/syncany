@@ -48,14 +48,17 @@ public class LsRemoteCommand extends Command {
 	}
 
 	@Override
-	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
-		// TODO Auto-generated method stub
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {		
 		return null;
 	}
 
 	@Override
 	public void printResults(OperationResult result) {
-		// TODO Auto-generated method stub
-		
+		// Nothing.
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

@@ -57,12 +57,18 @@ public class GenlinkCommand extends AbstractInitCommand {
 	}
 	
 	public void printResults(OperationResult operationResult) {
-		GenlinkOperationResult concreteOperationREsut = (GenlinkOperationResult) operationResult;
+		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
+		
 		if (!commandOptions.isShortOutput()) {
 			out.println();
 			out.println("To share the same repository with others, you can share this link:");
 		}
 		
-		printLink(concreteOperationREsut, commandOptions.isShortOutput());			
+		printLink(concreteOperationResult, commandOptions.isShortOutput());			
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }
