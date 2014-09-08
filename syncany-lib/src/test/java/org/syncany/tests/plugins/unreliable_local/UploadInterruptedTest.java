@@ -265,7 +265,7 @@ public class UploadInterruptedTest {
 		});
 
 		assertEquals(1, tempFiles.length);
-		assertTrue(tempFiles[0].length() > 4 * 1024 * 1024); // Multichunks are 4 MB+
+		assertTrue(tempFiles[0].length() > 500 * 1024); // 1 MC with 1 MB, 1 with 4 MB; must be larger than 500 KB
 
 		File transactionFile = new File(testConnection.getRepositoryPath() + "/transactions/").listFiles()[0];
 		TransactionTO transactionTO = new Persister().read(TransactionTO.class, transactionFile);
@@ -414,7 +414,7 @@ public class UploadInterruptedTest {
 		 * 4. upload(transaction-345, transactions/transaction-345) (rollback TX) 
 		 * 5. move(multichunks/multichunk-1, temp-80) 
 		 * 6. move(temp-1, temp-81) (silently fails, b/c temp-1 does not exist) 
-		 * 7. move(multichunks/multichunk-2, temp-82) (silently fails, b/c tmultichunk-2 does not exist) 
+		 * 7. move(multichunks/multichunk-2, temp-82) (silently fails, b/c multichunk-2 does not exist) 
 		 * 8. move(temp-2, temp-83) 
 		 * 9. move(databases/database-123, temp-84) (silently fails, b/c database-123 does not exist) 
 		 * 10. move(temp-3, temp-85) 
@@ -494,10 +494,10 @@ public class UploadInterruptedTest {
 		assertTrue(secondUpFailed);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
-		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
-		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
+		assertEquals(2, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); // left over, 2 failed ops
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		assertEquals(3, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
+		assertEquals(4, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.contains("temp-");
 			}
@@ -508,10 +508,10 @@ public class UploadInterruptedTest {
 
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/databases/").listFiles().length);
 		assertEquals(2, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
-		assertEquals(0, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); // cleaned
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		assertEquals(0, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
+		assertEquals(4, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.contains("temp-");
 			}
