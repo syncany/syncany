@@ -33,6 +33,7 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
+import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.GetFileFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
@@ -41,7 +42,10 @@ import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
 import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
 import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
+import org.syncany.operations.daemon.messages.StatusFolderRequest;
+import org.syncany.operations.daemon.messages.StatusFolderResponse;
 import org.syncany.operations.daemon.messages.api.Response;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -187,31 +191,28 @@ public class BasicWatchServerTest {
 		clientA.copyFile("file-1", "file-1.bak");
 		
 		// CLI request while running.
-		CliRequest cliRequest = new CliRequest();
-		cliRequest.setId(30);
-		cliRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-		cliRequest.setCommand("status");
-		cliRequest.setCommandArgs(new ArrayList<String>());
+		StatusFolderRequest statusRequest = new StatusFolderRequest();
+		StatusOperationOptions statusOperationOption = new StatusOperationOptions();
+		statusOperationOption.setForceChecksum(true);
+		
+		statusRequest.setId(30);
+		statusRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
+		statusRequest.setOptions(statusOperationOption);
 		
 		// Create big file to trigger sync
 		clientA.createNewFile("bigfileforlongsync", 5000);
 
 		// ^^ Now sync should start and we send 'status' requests
-		CliResponse cliResponse = null;
+		StatusFolderResponse statusResponse = null;
 		boolean syncRunningMessageReceived = false;
 		
 		for (i = 30; i < 50; i++) {
-			cliRequest.setId(i);
-			eventBus.post(cliRequest);
+			statusRequest.setId(i);
+			eventBus.post(statusRequest);
 			
 			response = waitForResponse(i);
 			
-			assertTrue(response instanceof CliResponse);
-			cliResponse = (CliResponse) response;
-			
-			System.out.println(cliResponse.getOutput());			
-			
-			if ("Cannot run CLI commands while sync is running or requested.\n".equals(cliResponse.getOutput())) {
+			if (response instanceof AlreadySyncingResponse) {
 				syncRunningMessageReceived = true;
 				break;
 			}			
@@ -222,23 +223,23 @@ public class BasicWatchServerTest {
 		assertTrue(syncRunningMessageReceived);
 		
 		// Allow daemon to sync
+		
 		Thread.sleep(10000);
 		for (i = 50; i < 60; i++) {
-			cliRequest.setId(i);
-			eventBus.post(cliRequest);
+			statusRequest.setId(i);
+			eventBus.post(statusRequest);
 			
 			response = waitForResponse(i);
-			cliResponse = (CliResponse) response;
 			
-			if (!"Cannot run CLI commands while sync is running or requested.\n".equals(cliResponse.getOutput())) {
+			if (response instanceof StatusFolderResponse) {
 				break;
 			}
 			
 			Thread.sleep(1000);
 		}		
 		
-		assertNotNull(cliResponse);
-		assertEquals("No local changes.\n", cliResponse.getOutput());
+		assertNotNull(response);
+		//assertEquals("No local changes.\n", cliResponse.getOutput());
 		
 		// Restore file test
 		

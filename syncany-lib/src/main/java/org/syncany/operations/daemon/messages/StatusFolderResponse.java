@@ -18,10 +18,10 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.syncany.operations.daemon.messages.api.Response;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
 import org.syncany.operations.status.StatusOperationResult;
 
-public class StatusFolderResponse extends Response {
+public class StatusFolderResponse extends FolderResponse {
 	@Element(required = true)
 	private StatusOperationResult result;
 
@@ -34,6 +34,7 @@ public class StatusFolderResponse extends Response {
 		this.result = result;
 	}
 
+	@Override
 	public StatusOperationResult getResult() {
 		return result;
 	}

@@ -64,14 +64,16 @@ import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.DaemonOperation;
-import org.syncany.operations.daemon.messages.StatusFolderRequest;
-import org.syncany.operations.daemon.messages.StatusFolderResponse;
+import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
+import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.Response;
-import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.PidFileUtil;
+import org.syncany.util.StringUtil;
 
 /**
  * The command line client implements a typical CLI. It represents the first entry
@@ -324,6 +326,8 @@ public class CommandLineClient extends Client {
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
 		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
+		command.setOut(out);
+		
 		if (sendToRest) {
 			return sendToRest(command, commandName, commandArgs, portFile);
 		}
@@ -334,7 +338,6 @@ public class CommandLineClient extends Client {
 	
 	private int runLocally(Command command, String[] commandArgs) {
 		command.setClient(this);
-		command.setOut(out);
 		command.setLocalDir(localDir);
 		
 		// Run!
@@ -382,50 +385,11 @@ public class CommandLineClient extends Client {
 			
 			// Create and send HTTP/REST request
 
-			switch (commandName.toLowerCase()) {
-				case "status":
-					request = new StatusFolderRequest();
-					request.setId(Math.abs(new Random().nextInt()));
-					StatusOperationOptions statusOption = ((StatusCommand)command).parseOptions(args);
-					((StatusFolderRequest)request).setOptions(statusOption);
-					((StatusFolderRequest)request).setRoot(config.getLocalDir().getAbsolutePath());
-					
-					break;				
-					
-				case "debug":
-					// TODO
-					break;
-
-				case "down":
-					// TODO
-					break;
-
-				case "genlink":
-					// TODO
-					break;
-
-				case "ls":
-					// TODO
-					break;
-
-				case "ls-remote":
-					// TODO
-					break;
-
-				case "restore":
-					// TODO
-					break;
-
-				case "up":
-					// TODO
-					break;
-
-				case "watch":
-					// TODO
-					break;
-
-				default:
-					return 0;
+			if (command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR) {
+				request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
+			}
+			else {
+				request = buildManagementRequestFromCommand(command, commandName);
 			}
 			
 			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
@@ -439,14 +403,61 @@ public class CommandLineClient extends Client {
 			
 			Response response = MessageFactory.createResponse(responseStr);
 			
-			command.setOut(out);
-			command.printResults(((StatusFolderResponse)response).getResult());
+			if (response instanceof FolderResponse) {
+				FolderResponse folderResponse = (FolderResponse)response;
+				command.printResults(folderResponse.getResult());
+			}
+			else if (response instanceof AlreadySyncingResponse) {
+				out.println("Daemon is already syncing, please retry later");
+			}
+			else if (response instanceof BadRequestResponse) {
+				out.println("Invalid Request : " + response.getMessage());
+			}
 			
 			return 0;
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Command " + command.toString() + " FAILED. ", e);
 			return showErrorAndExit(e.getMessage());
+		}		
+	}
+
+	private Request buildManagementRequestFromCommand(Command command, String commandName) throws Exception {
+		String thisPackage = "org.syncany.operations.daemon.messages";
+		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + "ManagementRequest";
+		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
+
+		// Try to load!
+		try {		
+			Class<? extends FolderRequest> message = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);
+			FolderRequest request = message.newInstance();
+			request.setId(new Random().nextInt());
+			request.setOptions(command.parseOptions(args));
+			return request;
+		} 
+		catch (Exception e) {
+			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
+			throw new Exception("Cannot read request class from request type: " + commandName, e);
+		}		
+	}
+
+	private Request buildFolderRequestFromCommand(Command command, String commandName, String root) throws Exception {
+		String thisPackage = "org.syncany.operations.daemon.messages";
+		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + "FolderRequest";
+		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
+
+		// Try to load!
+		try {		
+			Class<? extends FolderRequest> message = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);
+			FolderRequest request = message.newInstance();
+			request.setRoot(root);
+			request.setId(new Random().nextInt());
+			request.setOptions(command.parseOptions(args));
+			return request;
+		} 
+		catch (Exception e) {
+			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
+			throw new Exception("Cannot read request class from request type: " + commandName, e);
 		}		
 	}
 

@@ -15,24 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
-import org.syncany.operations.OperationOptions;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.Response;
 
-public abstract class FolderRequest extends Request {
-	@Element(required = true)
-	private String root;
-
-	public String getRoot() {
-		return root;
-	}
-
-	public void setRoot(String root) {
-		this.root = root;
+@Root(strict = false)
+@Namespace(reference = "http://syncany.org/ws/1")
+public class AlreadySyncingResponse extends Response {
+	public AlreadySyncingResponse() {
+		super(400, -1, null); // Required
 	}
 	
-	public void setOptions(OperationOptions option) {
-		// Nothing here
+	public AlreadySyncingResponse(int requestId, String message) {
+		super(400, requestId, message);
 	}
 }

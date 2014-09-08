@@ -17,7 +17,9 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
-public class FolderResponse extends Response {
+import org.syncany.operations.OperationResult;
+
+public abstract class FolderResponse extends Response {
 	public FolderResponse() {
 		// Required default constructor!
 	}
@@ -25,4 +27,9 @@ public class FolderResponse extends Response {
 	public FolderResponse(int code, Integer requestId, String message) {
 		super(code, requestId, message);
 	}
+
+	public OperationResult getResult() {
+		// Need to be overridden 
+		return null;
+	}	
 }

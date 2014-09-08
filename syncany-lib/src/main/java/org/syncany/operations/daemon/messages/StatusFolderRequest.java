@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.status.StatusOperationOptions;
 
@@ -27,7 +28,7 @@ public class StatusFolderRequest extends FolderRequest {
 		return options;
 	}
 
-	public void setOptions(StatusOperationOptions options) {
-		this.options = options;
+	public void setOptions(OperationOptions options) {
+		this.options = (StatusOperationOptions)options;
 	}
 }

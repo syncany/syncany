@@ -42,6 +42,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Assembler;
 import org.syncany.operations.Downloader;
+import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersFolderRequest;
 import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersFolderResponse;
@@ -150,10 +151,15 @@ public class WatchRunner implements WatchOperationListener {
 			logger.log(Level.INFO, "Received " + folderRequest);
 			
 			try {
-				FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest, config);
- 				Response response = handler.handleRequest(folderRequest);
- 				
- 				eventBus.post(response);
+				if (!watchOperation.isSyncRunning() && !watchOperation.isSyncRequested()) {
+					FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest, config);
+					Response response = handler.handleRequest(folderRequest);
+					eventBus.post(response);
+				}
+				else {
+					logger.log(Level.WARNING, "FolderRequest discarded : ", folderRequest);
+					eventBus.post(new AlreadySyncingResponse(folderRequest.getId(), "FolderRequest discarded."));
+				}
 			}
 			catch (Exception e) {
 				eventBus.post(new BadRequestResponse(folderRequest.getId(), "Invalid request."));
