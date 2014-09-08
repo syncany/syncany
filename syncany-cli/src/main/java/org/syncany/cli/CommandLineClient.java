@@ -65,6 +65,7 @@ import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.DaemonOperation;
 import org.syncany.operations.daemon.messages.StatusFolderRequest;
+import org.syncany.operations.daemon.messages.StatusFolderResponse;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.Response;
@@ -438,7 +439,8 @@ public class CommandLineClient extends Client {
 			
 			Response response = MessageFactory.createResponse(responseStr);
 			
-			out.println(response.getMessage());
+			command.setOut(out);
+			command.printResults(((StatusFolderResponse)response).getResult());
 			
 			return 0;
 		}

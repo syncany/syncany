@@ -38,8 +38,9 @@ public class StatusFolderRequestHandler extends FolderRequestHandler {
 		try {
 			StatusOperation operation = new StatusOperation(config, concreteRequest.getOptions());
 			StatusOperationResult operationResult = operation.execute();
-
-			return new StatusFolderResponse(operationResult);
+			StatusFolderResponse statusFolderResponse = new StatusFolderResponse(operationResult, request.getId());
+		
+			return statusFolderResponse;
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot obtain status.", e);

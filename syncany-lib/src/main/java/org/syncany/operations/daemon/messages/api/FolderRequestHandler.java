@@ -31,10 +31,10 @@ public abstract class FolderRequestHandler extends RequestHandler {
 	
 	public abstract Response handleRequest(Request request);
 	
-	public static FolderRequestHandler createFolderRequestHandler(Request request) throws Exception {		
-		String fqClassName = request.getClass().getName()+FolderRequestHandler.class.getSimpleName();		
+	public static FolderRequestHandler createFolderRequestHandler(Request request, Config config) throws Exception {		
+		String fqClassName = request.getClass().getName() + "Handler";		
 		Class<?> clazz = Class.forName(fqClassName);
 		
-		return (FolderRequestHandler) clazz.getConstructor(Config.class).newInstance();
+		return (FolderRequestHandler) clazz.getConstructor(Config.class).newInstance(config);
 	}    
 }

@@ -57,6 +57,7 @@ import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
 import org.syncany.operations.daemon.messages.WatchEventFolderResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
+import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
@@ -149,8 +150,10 @@ public class WatchRunner implements WatchOperationListener {
 			logger.log(Level.INFO, "Received " + folderRequest);
 			
 			try {
-				FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest);
-				handler.handleRequest(folderRequest);
+				FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest, config);
+ 				Response response = handler.handleRequest(folderRequest);
+ 				
+ 				eventBus.post(response);
 			}
 			catch (Exception e) {
 				eventBus.post(new BadRequestResponse(folderRequest.getId(), "Invalid request."));

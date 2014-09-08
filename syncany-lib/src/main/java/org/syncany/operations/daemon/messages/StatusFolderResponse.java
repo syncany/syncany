@@ -17,18 +17,20 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.status.StatusOperationResult;
 
 public class StatusFolderResponse extends Response {
+	@Element(required = true)
 	private StatusOperationResult result;
 
 	public StatusFolderResponse() {
 		// Nothing
 	}
 	
-	public StatusFolderResponse(StatusOperationResult result) {
-		super();
+	public StatusFolderResponse(StatusOperationResult result, int requestId) {
+		super(200, requestId, null);
 		this.result = result;
 	}
 
