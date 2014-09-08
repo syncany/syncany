@@ -199,10 +199,10 @@ public class ConnectOperation extends AbstractInitOperation {
 			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
 			result.setAddedToDaemon(addedToDaemonConfig);
 		}
-
+		
 		result.setResultCode(ConnectResultCode.OK);
 		return result;
-	}
+	}		
 
 	private boolean decryptAndVerifyRepoFile(File tmpRepoFile, SaltedSecretKey masterKey) throws StorageException {
 		try {
@@ -322,10 +322,10 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 		else {
 			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
-
+			
 			result.setResultCode(ConnectResultCode.NOK_TEST_FAILED);
 			result.setTestResult(testResult);
-
+			
 			return false;
 		}
 	}

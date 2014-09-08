@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
@@ -58,23 +57,21 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
-	private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());
-
-	private InitOperationOptions options;
-	private InitOperationResult result;
-
-	private TransferPlugin plugin;
-	private TransferManager transferManager;
-
+    private InitOperationOptions options;
+    private InitOperationResult result;
+    
+    private TransferPlugin plugin;
+    private TransferManager transferManager;
+    
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
 		super(null, listener);
-
-		this.options = options;
-		this.result = new InitOperationResult();
-	}
-
-	@Override
-	public InitOperationResult execute() throws Exception {
+        
+        this.options = options;
+        this.result = new InitOperationResult();
+    }        
+            
+    @Override
+    public InitOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -148,15 +145,15 @@ public class InitOperation extends AbstractInitOperation {
 			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
 			result.setAddedToDaemon(addedToDaemonConfig);
 		}
-
+		
 		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
-
+					
 		result.setResultCode(InitResultCode.OK);
 		result.setGenLinkResult(genlinkOperationResult);
-
+		
 		return result;
-	}
+    }             	
 
 	private boolean performRepoTest() {
 		boolean testCreateTarget = options.isCreateTarget();
@@ -177,7 +174,7 @@ public class InitOperation extends AbstractInitOperation {
 
 			result.setResultCode(InitResultCode.NOK_TEST_FAILED);
 			result.setTestResult(testResult);
-
+			
 			return false;
 		}
 	}

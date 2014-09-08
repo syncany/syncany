@@ -247,13 +247,13 @@ public class WatchRunner implements WatchOperationListener {
 
 			Client client = new Client();
 			client.setConfig(config);
-
+			
 			//command.setOut(new PrintStream(cliOutputStream));
 			//command.setClient(client);
 			//command.setLocalDir(config.getLocalDir());
-
+			
 			//command.execute(commandArgs);
-
+			
 			String cliOutput = cliOutputStream.toString();
 
 			CliResponse cliResponse = new CliResponse(cliRequest.getId(), cliOutput);
