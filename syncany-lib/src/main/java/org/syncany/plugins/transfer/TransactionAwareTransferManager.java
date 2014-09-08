@@ -35,7 +35,6 @@ import org.syncany.plugins.StorageFileNotFoundException;
 import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
@@ -81,15 +80,22 @@ public class TransactionAwareTransferManager implements TransferManager {
 			// This only occurs if a file is not exists, but is expensive
 			logger.log(Level.INFO, "File {0} not found, checking if it is being deleted.", remoteFile.getName());
 			Set<TransactionTO> transactions = retrieveRemoteTransactions().keySet();
-			Set<RemoteFile> dummyDeletedFiles = getDummyDeletedFiles(transactions);
-			if (dummyDeletedFiles.contains(remoteFile)) {
-				logger.log(Level.INFO, "File {0} in process of being deleted, downloading corresponding temporary file.", remoteFile.getName());
-				underlyingTransferManager.download(new TempRemoteFile(remoteFile.getName()), localFile);
-			}
-			else {
-				throw e;
+
+			for (TransactionTO transaction : transactions) {
+				for (ActionTO action : transaction.getActions()) {
+					// If the file is being deleted and the name matches, download temporary file instead.
+					if (action.getType().equals(ActionTO.TYPE_DELETE) && action.getRemoteFile().equals(remoteFile)) {
+						logger.log(Level.INFO, "File {0} in process of being deleted.",
+								remoteFile.getName());
+						logger.log(Level.INFO, "Donwloading corresponding file: {0}", action.getTempRemoteFile().getName());
+						underlyingTransferManager.download(action.getTempRemoteFile(), localFile);
+						return;
+					}
+				}
 			}
 
+			logger.log(Level.WARNING, "File {0} was requested, but does not exist and is not intransaction", remoteFile.getName());
+			throw e;
 		}
 	}
 
