@@ -20,8 +20,8 @@ package org.syncany.operations.daemon.messages;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
-import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationResult;
@@ -32,7 +32,7 @@ public class StatusFolderRequestHandler extends FolderRequestHandler {
 	}
 
 	@Override
-	public Response handleRequest(Request request) {
+	public Response handleRequest(FolderRequest request) {
 		StatusFolderRequest concreteRequest = (StatusFolderRequest) request;
 
 		try {

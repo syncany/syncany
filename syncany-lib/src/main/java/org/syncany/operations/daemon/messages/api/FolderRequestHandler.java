@@ -29,10 +29,10 @@ public abstract class FolderRequestHandler extends RequestHandler {
 		this.config = config;
 	}
 	
-	public abstract Response handleRequest(Request request);
+	public abstract Response handleRequest(FolderRequest request);
 	
 	public static FolderRequestHandler createFolderRequestHandler(Request request, Config config) throws Exception {		
-		String fqClassName = request.getClass().getName() + "Handler";		
+		String fqClassName = request.getClass().getName() + "Handler"; // TODO [medium] Ugly hardcoded string
 		Class<?> clazz = Class.forName(fqClassName);
 		
 		return (FolderRequestHandler) clazz.getConstructor(Config.class).newInstance(config);
