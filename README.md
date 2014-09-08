@@ -29,6 +29,8 @@ Getting Started
 ---------------
 To learn how to use Syncany, check out the brand new and awesome **[Syncany User Guide](http://syncany.readthedocs.org/)**. It'll tell you everything you want to know. For a step-by-step guide, navigate to the [Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html) page!
 
+[![User Guide](gradle/resources/user-guide-excerpt.png)](http://syncany.readthedocs.org/)
+
 Building
 --------
 Excited? Want to help? Or just build it yourself? For information about building, development, documentation, screencasts, diagrams and contributions, please check out **[the Syncany wiki page](https://github.com/syncany/syncany/wiki)**. It'll hopefully give you all the information you need!
