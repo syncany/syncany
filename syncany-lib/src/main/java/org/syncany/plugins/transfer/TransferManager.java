@@ -88,8 +88,7 @@ public interface TransferManager {
 	 * <p>Implementations must make sure that if a file matches the specified name
 	 * schema, it must be complete and consistent.
 	 * 
-	 * <p>If remoteFile does not exist, an attempt should be made to download the
-	 * fallback temporary file instead.
+	 * <p>If remoteFile does not exist, a StorageFileNotFoundException is thrown.
 	 *
 	 * @param remoteFile Existing source file on the remote storage.
 	 *        The only required property of the remote file is the name.
@@ -122,6 +121,8 @@ public interface TransferManager {
 
 	/**
 	 * Moves an existing file in the online storage.
+	 * 
+	 * <p> If the sourceFile does not exists, a StorageMoveException is thrown.
 	 * 
 	 * @param source Existing remote file that is to be moved.
 	 * @param target Destination for the remote file.
