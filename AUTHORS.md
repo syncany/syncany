@@ -9,15 +9,23 @@ Active Team Members:
 
 Contributors / Former Team Members:
 - Alexandre Viau (ReAzem)
+- Andreas Fenske
 - Anthony Miyaguchi (acmiyaguchi)
 - Armin Fisslthaler (afics)
 - Christian Roth (cr0)
 - Christof Schulze (christf)
 - Fabrice Rossi (fabrice-rossi)
 - Florian Spiegel
+- Gaétan Collaud
 - Gregor Trefs (gtrefs)
+- Julien Nicoulaud
 - kt3k
+- Marius Voilă
 - MatMaul
+- Nikolai Hellwig
+- Stefan Mai
 - spikeh
+- Olivier Tisun
+- Paul Steinhilber
 - Vadim Panin (vadimpanin)
 - Vincent Wiencek (vwiencek)
